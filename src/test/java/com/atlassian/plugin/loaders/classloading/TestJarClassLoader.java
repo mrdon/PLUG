@@ -5,7 +5,6 @@ import com.atlassian.plugin.util.ClassLoaderUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
 
@@ -14,7 +13,7 @@ public class TestJarClassLoader extends AbstractTestClassLoader
     /**
      * Here we try to load a specific JAR (paddington-test-plugin.jar) and get the descriptor out of it.
      */
-    public void testLoader() throws URISyntaxException, IOException, ClassNotFoundException, IllegalAccessException, InstantiationException
+    public void testLoader() throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException
     {
         // hacky way of getting to the paddington-test-plugin.jar (assume it's two levels below src/test/etc/test-disabled-plugin.xml)
         File pluginsDirectory = getPluginsDirectory();

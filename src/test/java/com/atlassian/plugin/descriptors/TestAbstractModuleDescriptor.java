@@ -100,7 +100,7 @@ public class TestAbstractModuleDescriptor extends TestCase
                 }
                 catch (Exception e)
                 {
-                    throw new RuntimeException("What happened Dave?", e);
+                    throw new RuntimeException("What happened Dave?");
                 }
             }
         };

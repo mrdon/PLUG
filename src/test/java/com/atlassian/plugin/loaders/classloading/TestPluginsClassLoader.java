@@ -1,17 +1,14 @@
 package com.atlassian.plugin.loaders.classloading;
 
-import com.atlassian.plugin.mock.MockBear;
-
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Enumeration;
 
 public class TestPluginsClassLoader extends AbstractTestClassLoader
 {
-    public void testLoaderWithDirectory() throws URISyntaxException, IOException, ClassNotFoundException, IllegalAccessException, InstantiationException
+    public void testLoaderWithDirectory() throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException
     {
         File pluginsDirectory = getPluginsDirectory();
 

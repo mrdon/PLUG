@@ -94,5 +94,10 @@
             <id>mockobjects+core</id>
             <version>0.09</version>
         </dependency>
+      <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xmlParserAPIs</artifactId>
+      <version>2.2.1</version>
+    </dependency>
     </dependencies>
 </project>
