@@ -6,13 +6,14 @@ import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.loaders.LoaderUtils;
+import com.atlassian.plugin.PluginParseException;
 
 import java.util.List;
 import java.util.Map;
 
 public class TestLoaderUtils extends TestCase
 {
-    public void testMultipleResources() throws DocumentException
+    public void testMultipleResources() throws DocumentException, PluginParseException
     {
         Document document = DocumentHelper.parseText("<foo>" +
                 "<resource type=\"velocity\" name=\"view\">the content</resource>" +
@@ -29,6 +30,25 @@ public class TestLoaderUtils extends TestCase
         assertEquals("velocity", second.getType());
         assertEquals("edit", second.getName());
     }
+
+    public void testMultipleResourceWithClashingKeysFail() throws DocumentException
+    {
+        Document document = DocumentHelper.parseText("<foo>" +
+                "<resource type=\"velocity\" name=\"view\">the content</resource>" +
+                "<resource type=\"velocity\" name=\"view\" />" +
+                "</foo>");
+
+        try
+        {
+            LoaderUtils.getResourceDescriptors(document.getRootElement());
+            fail("Should have thrown exception about duplicate resources.");
+        }
+        catch (Exception e)
+        {
+            assertEquals("Duplicate resource with type 'velocity' and name 'view' found", e.getMessage());
+        }
+    }
+
 
     public void testMultipleParameters() throws DocumentException
     {

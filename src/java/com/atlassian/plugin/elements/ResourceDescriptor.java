@@ -40,4 +40,25 @@ public class ResourceDescriptor
     {
         return content;
     }
+
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (!(o instanceof ResourceDescriptor)) return false;
+
+        final ResourceDescriptor resourceDescriptor = (ResourceDescriptor) o;
+
+        if (!name.equals(resourceDescriptor.name)) return false;
+        if (!type.equals(resourceDescriptor.type)) return false;
+
+        return true;
+    }
+
+    public int hashCode()
+    {
+        int result;
+        result = type.hashCode();
+        result = 29 * result + name.hashCode();
+        return result;
+    }
 }

@@ -12,7 +12,12 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.MalformedURLException;
 import java.util.*;
+import java.io.File;
+import java.io.InputStream;
 
 public class SinglePluginLoader implements PluginLoader
 {
@@ -20,15 +25,11 @@ public class SinglePluginLoader implements PluginLoader
 
     List plugins;
     private URL url;
+    private String resource;
 
     public SinglePluginLoader(String resource) throws PluginParseException
     {
-        this.url = ClassLoaderUtils.getResource(resource, SinglePluginLoader.class);
-
-        if (url == null)
-        {
-            throw new PluginParseException("Cannot load plugins from bad resource : " + resource);
-        }
+        this.resource = resource;
     }
 
     public SinglePluginLoader(URL url)
@@ -38,19 +39,21 @@ public class SinglePluginLoader implements PluginLoader
 
     private void loadPlugins(Map moduleDescriptors) throws PluginParseException
     {
-        if (url == null)
-            throw new PluginParseException("Cannot load plugins from null URL : " + url);
+        if (url == null && resource == null)
+            throw new PluginParseException("No resource or URL specified to load plugins from.");
 
         Plugin plugin = new Plugin();
 
-        SAXReader reader = new SAXReader();
         try
         {
-            Document doc = reader.read(url);
+            Document doc = getDocument();
             Element root = doc.getRootElement();
 
             plugin.setName(root.attributeValue("name"));
             plugin.setKey(root.attributeValue("key"));
+
+            if (plugin.getKey().indexOf(":") > 0)
+                throw new PluginParseException("Plugin key's cannot contain ':'. Key is '" + plugin.getKey() + "'");
 
             if ("disabled".equalsIgnoreCase(root.attributeValue("state")))
                 plugin.setEnabledByDefault(false);
@@ -65,7 +68,10 @@ public class SinglePluginLoader implements PluginLoader
                 }
                 else
                 {
-                    ModuleDescriptor moduleDescriptor = createModuleDescriptor(element, moduleDescriptors);
+                    ModuleDescriptor moduleDescriptor = createModuleDescriptor(plugin, element, moduleDescriptors);
+
+                    if (plugin.getModule(moduleDescriptor.getKey()) != null)
+                        throw new PluginParseException("Found duplicate key '" + moduleDescriptor.getKey() + "' within plugin '" + plugin.getKey() + "'");
 
                     if (moduleDescriptor != null)
                         plugin.addModule(moduleDescriptor);
@@ -80,25 +86,34 @@ public class SinglePluginLoader implements PluginLoader
         plugins.add(plugin);
     }
 
-    public Collection getPlugins(Map moduleDescriptors)
+    private Document getDocument() throws DocumentException, PluginParseException {
+        SAXReader reader = new SAXReader();
+
+        if (resource != null)
+        {
+            final InputStream is = ClassLoaderUtils.getResourceAsStream(resource, SinglePluginLoader.class);
+
+            if (is == null)
+                throw new PluginParseException("Couldn't find resource: " + resource);
+
+            return reader.read(is);
+        }
+        else
+            return reader.read(url);
+    }
+
+    public Collection getPlugins(Map moduleDescriptors) throws PluginParseException
     {
         if (plugins == null)
         {
-            try
-            {
-                plugins = new ArrayList();
-                loadPlugins(moduleDescriptors);
-            }
-            catch (PluginParseException e)
-            {
-                log.error("Could not load plugins for : " + url, e);
-            }
+            plugins = new ArrayList();
+            loadPlugins(moduleDescriptors);
         }
 
         return plugins;
     }
 
-    public ModuleDescriptor createModuleDescriptor(Element element, Map moduleDescriptors) throws PluginParseException
+    private ModuleDescriptor createModuleDescriptor(Plugin plugin, Element element, Map moduleDescriptors) throws PluginParseException
     {
         String name = element.getName();
 
@@ -106,7 +121,7 @@ public class SinglePluginLoader implements PluginLoader
 
         if (descriptorClass == null)
         {
-            throw new PluginParseException("Could not find interpreter for module: " + name);
+            throw new PluginParseException("Could not find descriptor for module: " + name);
         }
 
         ModuleDescriptor moduleDescriptorDescriptor = null;
@@ -128,7 +143,7 @@ public class SinglePluginLoader implements PluginLoader
             throw new PluginParseException("Could not find module descriptor class: " + descriptorClass.getName(), e);
         }
 
-        moduleDescriptorDescriptor.init(element);
+        moduleDescriptorDescriptor.init(plugin, element);
 
         return moduleDescriptorDescriptor;
     }

@@ -21,8 +21,7 @@ public class DefaultPluginManager implements PluginManager
         this.plugins = new HashMap();
     }
 
-    public void init()
-    {
+    public void init() throws PluginParseException {
         // retrieve all the plugins
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
         {
@@ -35,8 +34,12 @@ public class DefaultPluginManager implements PluginManager
         }
     }
 
-    private void addPlugin(Plugin plugin)
+    private void addPlugin(Plugin plugin) throws PluginParseException
     {
+        // testing to make sure plugin keys are unique
+        if (plugins.containsKey(plugin.getKey()))
+            throw new PluginParseException("Duplicate plugin key found: '" + plugin.getKey() + "'");
+
         plugins.put(plugin.getKey(), plugin);
     }
 
@@ -53,6 +56,34 @@ public class DefaultPluginManager implements PluginManager
     public Plugin getPlugin(String key)
     {
         return (Plugin) plugins.get(key);
+    }
+
+    public ModuleDescriptor getPluginModule(String completeKey)
+    {
+        final int sepIdx = completeKey.indexOf(":");
+
+        if (sepIdx <= 0)
+            throw new IllegalArgumentException("Invalid complete key specified: " + completeKey);
+
+        String pluginKey = completeKey.substring(0, sepIdx);
+        String moduleKey = completeKey.substring(sepIdx + 1);
+
+        return getPlugin(pluginKey).getModule(moduleKey);
+    }
+
+    public Collection getPluginModule(Class moduleClass)
+    {
+        for (Iterator iterator = plugins.entrySet().iterator(); iterator.hasNext();)
+        {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            Plugin plugin = (Plugin) entry.getValue();
+            List result = plugin.getModulesByClass(moduleClass);
+
+            if (!result.isEmpty())
+                return result;
+        }
+
+        return Collections.EMPTY_LIST;
     }
 
 
@@ -94,6 +125,33 @@ public class DefaultPluginManager implements PluginManager
     public boolean isPluginEnabled(String key)
     {
         return plugins.containsKey(key) && currentState.isEnabled((Plugin) plugins.get(key));
+    }
+
+    public List getAllModulesByClass(Class clazz) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public List getEnabledModulesByDescriptor(Class descriptorClazz) {
+        List result = new LinkedList();
+
+        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();) {
+            Plugin plugin = (Plugin) iterator.next();
+
+            if (isPluginEnabled(plugin.getKey()))
+            {
+                for (Iterator iterator1 = plugin.getModules().iterator(); iterator1.hasNext();)
+                {
+                    ModuleDescriptor module = (ModuleDescriptor) iterator1.next();
+
+                    if (descriptorClazz.isInstance(module))
+                    {
+                        result.add(module);
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 
 }

@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import com.atlassian.core.util.ClassLoaderUtils;
 import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.PluginParseException;
 
 public class ClassPathPluginLoader implements PluginLoader
 {
@@ -26,8 +27,7 @@ public class ClassPathPluginLoader implements PluginLoader
         this.fileNameToLoad = fileNameToLoad;
     }
 
-    private void loadClassPathPlugins(Map moduleDescriptors)
-    {
+    private void loadClassPathPlugins(Map moduleDescriptors) throws PluginParseException {
         URL url = null;
         final Enumeration pluginDescriptorFiles;
         plugins = new ArrayList();
@@ -44,13 +44,13 @@ public class ClassPathPluginLoader implements PluginLoader
 
         while (pluginDescriptorFiles.hasMoreElements())
         {
-                url = (URL) pluginDescriptorFiles.nextElement();
-                SinglePluginLoader loader = new SinglePluginLoader(url);
-                plugins.addAll(loader.getPlugins(moduleDescriptors));
+            url = (URL) pluginDescriptorFiles.nextElement();
+            SinglePluginLoader loader = new SinglePluginLoader(url);
+            plugins.addAll(loader.getPlugins(moduleDescriptors));
         }
     }
 
-    public Collection getPlugins(Map moduleDescriptors)
+    public Collection getPlugins(Map moduleDescriptors) throws PluginParseException
     {
         if (plugins == null)
         {
