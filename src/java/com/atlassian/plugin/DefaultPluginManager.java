@@ -2,7 +2,12 @@ package com.atlassian.plugin;
 
 import com.atlassian.plugin.loaders.PluginLoader;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 public class DefaultPluginManager implements PluginManager
 {
@@ -41,21 +46,25 @@ public class DefaultPluginManager implements PluginManager
     {
         // testing to make sure plugin keys are unique
         if (plugins.containsKey(plugin.getKey()) || licensedPlugins.containsKey(plugin.getKey()))
-            throw new PluginParseException("Duplicate plugin key found: '" + plugin.getKey() + "'");
-
-        plugins.put(plugin.getKey(), plugin);
-
-        // Store plugins requiring a license
-        if (plugin.getPluginInformation() != null
-                && plugin.getPluginInformation().getLicenseRegistryLocation() != null 
-                && plugin.getPluginInformation().getLicenseRegistryLocation() != "")
-            licensedPlugins.put(plugin.getName(), plugin);
- 
-        for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
         {
-            ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
-            if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
-                ((StateAware)descriptor).enabled();
+            System.err.println("Duplicate plugin key found: '" + plugin.getKey() + "' plugin will be ignored");
+        }
+        else
+        {
+            plugins.put(plugin.getKey(), plugin);
+
+            // Store plugins requiring a license
+            if (plugin.getPluginInformation() != null
+                    && plugin.getPluginInformation().getLicenseRegistryLocation() != null
+                    && plugin.getPluginInformation().getLicenseRegistryLocation() != "")
+                licensedPlugins.put(plugin.getName(), plugin);
+
+            for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
+            {
+                ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
+                if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
+                    ((StateAware)descriptor).enabled();
+            }
         }
     }
 
