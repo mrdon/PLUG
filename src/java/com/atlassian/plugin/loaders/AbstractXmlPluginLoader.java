@@ -56,7 +56,7 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
         }
     }
 
-    public abstract Collection getPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException;
+    public abstract Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException;
 
     protected ModuleDescriptor createModuleDescriptor(Plugin plugin, Element element, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {

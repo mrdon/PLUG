@@ -131,13 +131,38 @@ public class TestStateAware extends TestCase
 
     private PluginLoader setupPluginLoader(final Plugin plugin1)
     {
-        PluginLoader pluginLoader = new PluginLoader() {
+        PluginLoader pluginLoader = new PluginLoader() { //TODO: should this loader support removal and addition?
 
-            public Collection getPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+            public Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
             {
                 ArrayList list = new ArrayList();
                 list.add(plugin1);
                 return list;
+            }
+
+            public boolean supportsAddition()
+            {
+                return false;
+            }
+
+            public boolean supportsRemoval()
+            {
+                return false;
+            }
+
+            public Collection removeMissingPlugins()
+            {
+                return null;
+            }
+
+            public Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
+            {
+                return null;
+            }
+
+            public void removePlugin(Plugin plugin) throws PluginException
+            {
+                throw new PluginException("This PluginLoader does not support removal");
             }
         };
         return pluginLoader;

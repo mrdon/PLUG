@@ -48,4 +48,10 @@ public interface ModuleDescriptor
      * @return
      */
     boolean isEnabledByDefault();
+
+    /**
+     * Override this if your plugin needs to clean up when it's been removed.
+     * @param plugin
+     */
+    void destroy(Plugin plugin);
 }

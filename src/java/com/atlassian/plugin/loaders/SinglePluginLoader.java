@@ -4,6 +4,7 @@ import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginException;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 
@@ -28,7 +29,7 @@ public class SinglePluginLoader extends AbstractXmlPluginLoader
         this.is = is;
     }
 
-    public Collection getPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         if (plugins == null)
         {
@@ -37,6 +38,31 @@ public class SinglePluginLoader extends AbstractXmlPluginLoader
         }
 
         return plugins;
+    }
+
+    public boolean supportsRemoval()
+    {
+        return false;
+    }
+
+    public boolean supportsAddition()
+    {
+        return false;
+    }
+
+    public Collection removeMissingPlugins()
+    {
+        throw new UnsupportedOperationException("This PluginLoader does not support removal.");
+    }
+
+    public Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
+    {
+        throw new UnsupportedOperationException("This PluginLoader does not support addition.");
+    }
+
+    public void removePlugin(Plugin plugin) throws PluginException
+    {
+        throw new PluginException("This PluginLoader does not support removal.");
     }
 
     private void loadPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException

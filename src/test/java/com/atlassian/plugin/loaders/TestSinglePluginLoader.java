@@ -21,7 +21,7 @@ public class TestSinglePluginLoader extends TestCase
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
-        Collection plugins = loader.getPlugins(moduleDescriptorFactory);
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         assertEquals(1, plugins.size());
 
@@ -69,7 +69,7 @@ public class TestSinglePluginLoader extends TestCase
         SinglePluginLoader loader = new SinglePluginLoader("test-disabled-plugin.xml");
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
-        Collection plugins = loader.getPlugins(moduleDescriptorFactory);
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
         assertEquals(1, plugins.size());
         final Plugin plugin = (Plugin) plugins.iterator().next();
         assertFalse(plugin.isEnabledByDefault());
@@ -85,7 +85,7 @@ public class TestSinglePluginLoader extends TestCase
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
-        Collection plugins = loader.getPlugins(moduleDescriptorFactory);
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
         assertEquals(1, plugins.size());
         assertFalse(((Plugin) plugins.iterator().next()).isEnabledByDefault());
     }
@@ -95,7 +95,7 @@ public class TestSinglePluginLoader extends TestCase
         try
         {
             SinglePluginLoader loader = new SinglePluginLoader("bullshit.xml");
-            loader.getPlugins(null);
+            loader.loadAllPlugins(null);
             fail("Should have blown up.");
         }
         catch (PluginParseException e)
@@ -109,7 +109,7 @@ public class TestSinglePluginLoader extends TestCase
         try
         {
             SinglePluginLoader loader = new SinglePluginLoader("test-bad-plugin.xml");
-            loader.getPlugins(new DefaultModuleDescriptorFactory());
+            loader.loadAllPlugins(new DefaultModuleDescriptorFactory());
             fail("Should have blown up.");
         }
         catch (PluginParseException e)
@@ -123,7 +123,7 @@ public class TestSinglePluginLoader extends TestCase
         try
         {
             SinglePluginLoader loader = new SinglePluginLoader("test-bad-plugin-key-plugin.xml");
-            loader.getPlugins(null);
+            loader.loadAllPlugins(null);
             fail("Should have blown up.");
         }
         catch (PluginParseException e)
@@ -141,7 +141,7 @@ public class TestSinglePluginLoader extends TestCase
 
         try
         {
-            loader.getPlugins(moduleDescriptorFactory);
+            loader.loadAllPlugins(moduleDescriptorFactory);
             fail("Should have died with duplicate key exception.");
         }
         catch (PluginParseException e)
@@ -154,7 +154,7 @@ public class TestSinglePluginLoader extends TestCase
     {
         try
         {
-            new SinglePluginLoader("foo").getPlugins(null);
+            new SinglePluginLoader("foo").loadAllPlugins(null);
             fail("Should have thrown exception");
         }
         catch (PluginParseException e)

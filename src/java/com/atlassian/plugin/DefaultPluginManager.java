@@ -15,6 +15,8 @@ public class DefaultPluginManager implements PluginManager
     private HashMap plugins;
     private HashMap licensedPlugins;
     private HashMap dynamicPlugins;
+    private HashMap pluginLoaderToPlugin; //will store a pluginLoader as a key and the entry will be a list of plugins
+
 
     public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory)
     {
@@ -24,6 +26,13 @@ public class DefaultPluginManager implements PluginManager
         this.currentState = store.loadPluginState();
     }
 
+
+
+
+    /**
+     * Initialize all plugins the first time.
+     * @throws PluginParseException
+     */
     public void init() throws PluginParseException
     {
         this.plugins = new HashMap();
@@ -35,9 +44,70 @@ public class DefaultPluginManager implements PluginManager
         {
             PluginLoader loader = (PluginLoader) iterator.next();
 
-            for (Iterator iterator1 = loader.getPlugins(moduleDescriptorFactory).iterator(); iterator1.hasNext();)
+            for (Iterator iterator1 = loader.loadAllPlugins(moduleDescriptorFactory).iterator(); iterator1.hasNext();)
             {
                 addPlugin((Plugin) iterator1.next());
+//                addPlugin(pluginLoader, plugin); //stores the plugin with pluginloader
+            }
+        }
+    }
+
+    public void destroy(Plugin plugin)
+    {
+        //locate the individual plugin from pluginLoaderToPlugin
+        //call destroy
+    }
+
+    /**
+     * Re-initialize all plugins - this will destroy every plugin and then initialize afresh.
+     * @param plugin
+     * @throws PluginParseException
+     */
+    public void reInit() throws PluginParseException
+    {
+        for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
+        {
+            PluginLoader loader = (PluginLoader) iterator.next();
+
+            if (loader.supportsRemoval())
+            {
+                Collection removedPlugins = loader.removeMissingPlugins();
+                // remove each one
+            }
+
+            if (loader.supportsAddition())
+            {
+                Collection addedPlugins = loader.addFoundPlugins(moduleDescriptorFactory);
+                // add each one
+            }
+        }
+    }
+
+    /**
+     * Shutdown the plugin system by disabling (optionally) and then destroying all modules.
+     * <p>
+     * Be very careful when using this method - plugin system will not be in a usable state afterwards.
+     * <p>
+     * @see DefaultPluginManager#reInit();
+     */
+    public void destroy()
+    {
+        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
+        {
+            // remove the plugin from the plugins map
+            Plugin plugin = (Plugin) iterator.next();
+            iterator.remove();
+
+            for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
+            {
+                ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
+
+                // if the module is StateAware, then disable it (matches enable())
+                if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
+                    ((StateAware)descriptor).disabled();
+
+                // now destroy it (matches init())
+                descriptor.destroy(plugin);
             }
         }
     }

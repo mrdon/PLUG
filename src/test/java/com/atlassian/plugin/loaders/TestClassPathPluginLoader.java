@@ -17,7 +17,7 @@ public class TestClassPathPluginLoader extends TestCase
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
-        Collection plugins = loader.getPlugins(moduleDescriptorFactory);
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         assertEquals(1, plugins.size());
 

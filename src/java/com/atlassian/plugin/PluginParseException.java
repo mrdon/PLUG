@@ -1,8 +1,10 @@
 package com.atlassian.plugin;
 
-import org.apache.commons.lang.exception.NestableException;
+/**
+ * Parse plugin exception - thrown from code which must parse a plugin.
+ */
 
-public class PluginParseException extends NestableException
+public class PluginParseException extends PluginException
 {
     public PluginParseException()
     {

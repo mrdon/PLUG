@@ -7,9 +7,7 @@ import java.util.*;
 import java.net.URL;
 import java.io.IOException;
 
-import com.atlassian.plugin.PluginManager;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 
 public class ClassPathPluginLoader implements PluginLoader
@@ -49,7 +47,7 @@ public class ClassPathPluginLoader implements PluginLoader
             try
             {
                 SinglePluginLoader loader = new SinglePluginLoader(url.openConnection().getInputStream());
-                plugins.addAll(loader.getPlugins(moduleDescriptorFactory));
+                plugins.addAll(loader.loadAllPlugins(moduleDescriptorFactory));
             }
             catch (IOException e)
             {
@@ -58,7 +56,7 @@ public class ClassPathPluginLoader implements PluginLoader
         }
     }
 
-    public Collection getPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         if (plugins == null)
         {
@@ -66,5 +64,30 @@ public class ClassPathPluginLoader implements PluginLoader
         }
 
         return plugins;
+    }
+
+    public boolean supportsRemoval()
+    {
+        return false;
+    }
+
+    public boolean supportsAddition()
+    {
+        return false;
+    }
+
+    public Collection removeMissingPlugins()
+    {
+        throw new UnsupportedOperationException("This PluginLoader does not support removal.");
+    }
+
+    public Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
+    {
+        throw new UnsupportedOperationException("This PluginLoader does not support addition.");
+    }
+
+    public void removePlugin(Plugin plugin) throws PluginException
+    {
+        throw new PluginException("This PluginLoader does not support removal.");
     }
 }

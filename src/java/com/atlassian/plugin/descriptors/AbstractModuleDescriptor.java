@@ -50,6 +50,13 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
             singleton = isSingletonByDefault();
     }
 
+    /**
+     * Override this if your plugin needs to clean up when it's been removed.
+     * @param plugin
+     */
+    public void destroy(Plugin plugin)
+    {}
+
     public boolean isEnabledByDefault()
     {
         return enabledByDefault;

@@ -1,10 +1,15 @@
 package com.atlassian.plugin.util;
 
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.logging.Log;
+
 import java.io.*;
+import java.util.logging.Logger;
 
 public class FileUtils
 {
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
+    private static final Log log = LogFactory.getLog(FileUtils.class);
 
     private FileUtils()
     {
@@ -140,5 +145,116 @@ public class FileUtils
         catch (final IOException ioe)
         {
         }
+    }
+
+    /**
+     *
+     * @param srcDir
+     * @param destDir
+     * @throws IOException
+     * @throws IllegalArgumentException if the <code>srcDir</code> does not exist
+     */
+    public static void copyDirectory(File srcDir, File destDir) throws IOException
+    {
+        if (!srcDir.exists())
+            throw new IllegalArgumentException("Source dir [" + srcDir + "] does not exist");
+
+        copyDirectory(srcDir, destDir, false);
+    }
+
+    /**
+     *
+      * @param srcDir
+     * @param destDir
+     * @param overwrite
+     * @throws IOException
+     */
+    public static void copyDirectory(File srcDir, File destDir, boolean overwrite) throws IOException
+    {
+        File[] files = srcDir.listFiles();
+
+        if (!destDir.exists())
+            destDir.mkdirs();
+        else
+            log.debug(destDir.getAbsolutePath() + " already exists");
+
+        if (files != null)
+        {
+            for (int i = 0; i < files.length; i++)
+            {
+                File file = files[i];
+                File dest = new File(destDir, file.getName());
+
+                if (file.isFile())
+                    copyFile(file, dest);
+                else
+                    copyDirectory(file, dest, overwrite);
+            }
+        }
+    }
+
+    /**
+     * safely performs a recursive delete on a directory
+     *
+     * @param dir
+     * @return
+     */
+    public static boolean deleteDir(File dir)
+    {
+        if (dir == null)
+        {
+            return false;
+        }
+
+        // to see if this directory is actually a symbolic link to a directory,
+        // we want to get its canonical path - that is, we follow the link to
+        // the file it's actually linked to
+        File candir;
+        try
+        {
+            candir = dir.getCanonicalFile();
+        }
+        catch (IOException e)
+        {
+            return false;
+        }
+
+        // a symbolic link has a different canonical path than its actual path,
+        // unless it's a link to itself
+        if (!candir.equals(dir.getAbsoluteFile()))
+        {
+            // this file is a symbolic link, and there's no reason for us to
+            // follow it, because then we might be deleting something outside of
+            // the directory we were told to delete
+            return false;
+        }
+
+        // now we go through all of the files and subdirectories in the
+        // directory and delete them one by one
+        File[] files = candir.listFiles();
+        if (files != null)
+        {
+            for (int i = 0; i < files.length; i++)
+            {
+                File file = files[i];
+
+                // in case this directory is actually a symbolic link, or it's
+                // empty, we want to try to delete the link before we try
+                // anything
+                boolean deleted = !file.delete();
+                if (deleted)
+                {
+                    // deleting the file failed, so maybe it's a non-empty
+                    // directory
+                    if (file.isDirectory()) deleteDir(file);
+
+                    // otherwise, there's nothing else we can do
+                }
+            }
+        }
+
+        // now that we tried to clear the directory out, we can try to delete it
+        // again
+        return dir.delete();
     }
 }

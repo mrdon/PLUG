@@ -1,8 +1,7 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.*;
+import com.atlassian.plugin.util.FileUtils;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.loaders.classloading.Scanner;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
@@ -26,8 +25,9 @@ import org.dom4j.DocumentException;
 public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
 {
     private static Log log = LogFactory.getLog(ClassLoadingPluginLoader.class);
-    String fileNameToLoad;
+    private String fileNameToLoad;
     private Scanner scanner;
+    private Map plugins;
 
     public ClassLoadingPluginLoader(File path)
     {
@@ -39,57 +39,186 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
         log.debug("Creating classloader for url " + path);
         scanner = new Scanner(path);
         this.fileNameToLoad = fileNameToLoad;
+        plugins = new HashMap();
     }
 
-    public Collection getPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        List plugins = new ArrayList();
-
         scanner.scan();
 
         for (Iterator iterator = scanner.getDeploymentUnits().iterator(); iterator.hasNext();)
         {
             DeploymentUnit deploymentUnit = (DeploymentUnit) iterator.next();
-            PluginsClassLoader loader = (PluginsClassLoader)scanner.getClassLoader(deploymentUnit);
 
-            URL pluginDescriptor = loader.getResource(fileNameToLoad);
+            deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
 
-            if (pluginDescriptor == null)
+        }
+
+        return plugins.values();
+    }
+
+    /**
+     * @param deploymentUnit
+     * @param moduleDescriptorFactory
+     * @return
+     */
+    private DynamicPlugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory)
+    {
+        DynamicPlugin plugin = null;
+
+        PluginsClassLoader loader = getPluginsClassLoader(deploymentUnit);
+
+        URL pluginDescriptor = loader.getResource(fileNameToLoad);
+
+        if (pluginDescriptor == null)
+        {
+            log.error("No descriptor found in classloader for : " + deploymentUnit);
+        }
+        else
+        {
+            plugin = new DynamicPlugin(deploymentUnit, loader);
+
+            InputStream is = loader.getResourceAsStream(fileNameToLoad);
+
+            try
             {
-                log.error("No descriptor found in classloader for : " + deploymentUnit);
+                configurePlugin(moduleDescriptorFactory, getDocument(is), plugin);
+                plugins.put(deploymentUnit, plugin);
             }
-            else
+            catch (DocumentException e)
             {
-                DynamicPlugin plugin = new DynamicPlugin(deploymentUnit, loader);
-                InputStream is = loader.getResourceAsStream(fileNameToLoad);
-
+                log.error("Error getting descriptor document for : " + deploymentUnit, e);
+            }
+            catch (PluginParseException e)
+            {
+                log.error("Error loading descriptor for : " + deploymentUnit, e);
+            }
+            finally
+            {
                 try
                 {
-                    configurePlugin(moduleDescriptorFactory, getDocument(is), plugin);
-                    plugins.add(plugin);
+                    is.close();
                 }
-                catch (DocumentException e)
+                catch (IOException e)
                 {
-                    log.error("Error getting descriptor document for : " + deploymentUnit, e);
-                }
-                catch (PluginParseException e)
-                {
-                    log.error("Error loading descriptor for : " + deploymentUnit, e);
-                }
-                finally
-                {
-                    try
-                    {
-                        is.close();
-                    }
-                    catch (IOException e)
-                    {
-                        log.error("Error closing input stream for descriptor in: " + deploymentUnit, e);
-                    }
+                    System.out.println("e = " + e);
+                    log.error("Error closing input stream for descriptor in: " + deploymentUnit, e);
                 }
             }
         }
 
-        return plugins;
+        return plugin;
+    }
+
+    private PluginsClassLoader getPluginsClassLoader(DeploymentUnit deploymentUnit)
+    {
+        return (PluginsClassLoader)scanner.getClassLoader(deploymentUnit);
+    }
+
+    public boolean supportsRemoval()
+    {
+        return true;
+    }
+
+    public boolean supportsAddition()
+    {
+        return true;
+    }
+
+    /**
+     * @return a list representing plugins which have been removed from disk since the pluginloader
+     * last compared its lists of active plugins and present plugins.
+     */
+    public Collection removeMissingPlugins()
+    {
+        // find missing plugins
+        scanner.scan();
+
+        // create list while updating internal state
+        List missingPlugins = new ArrayList();
+        for (Iterator iterator = plugins.keySet().iterator(); iterator.hasNext();)
+        {
+            DeploymentUnit deploymentUnit = (DeploymentUnit) iterator.next();
+            if (!scanner.getDeploymentUnits().contains(deploymentUnit))
+            {
+                missingPlugins.add(plugins.get(deploymentUnit));
+                iterator.remove();
+            }
+        }
+
+        return missingPlugins;
+    }
+
+
+    /**
+     * @return all plugins, now loaded by the pluginLoader, which have been discovered and added since the
+     * last time a check was performed.
+     */
+    public Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
+    {
+        // find missing plugins
+        scanner.scan();
+
+        // create list while updating internal state
+        List foundPlugins = new ArrayList();
+        for (Iterator iterator = scanner.getDeploymentUnits().iterator(); iterator.hasNext();)
+        {
+            DeploymentUnit deploymentUnit = (DeploymentUnit) iterator.next();
+            if (!plugins.containsKey(deploymentUnit))
+            {
+
+                DynamicPlugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
+                foundPlugins.add(plugin);
+                iterator.remove();
+            }
+        }
+
+        return foundPlugins;
+    }
+
+    /**
+     * @param plugin - the plugin to remove
+     * @throws PluginException representing the reason for failure.
+     */
+    public void removePlugin(Plugin plugin) throws PluginException
+    {
+        if (plugin.isEnabled())
+            throw new PluginException("Cannot remove an enabled plugin");
+
+        if (!plugin.isUninstallable())
+        {
+            throw new PluginException("Cannot remove an uninstallable plugin: [" + plugin.getName() + "]" );
+        }
+
+        //find the matching deployment unit
+        Iterator iterator = plugins.keySet().iterator();
+        DeploymentUnit deploymentUnit = null;
+
+        while (iterator.hasNext())
+        {
+            Object o = iterator.next();
+
+            if (plugins.get(o) == plugin)
+            {
+                deploymentUnit = (DeploymentUnit) o;
+                break;
+            }
+        }
+
+        if (deploymentUnit == null) //the pluginLoader has no memory of deploying this plugin
+            throw new PluginException("This pluginLoader has no memory of deploying the plugin you are trying remove: [" + plugin.getName() + "]" );
+
+        //delete the plugin from the filesystem
+        File pluginOnDisk = deploymentUnit.getPath();
+
+        try
+        {
+            if (!pluginOnDisk.delete())
+                throw new PluginException("Could not delete plugin [" + plugin.getName() + "].");
+        }
+        catch (SecurityException e)
+        {
+            throw new PluginException(e);
+        }
     }
 }
