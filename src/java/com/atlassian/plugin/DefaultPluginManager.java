@@ -125,7 +125,7 @@ public class DefaultPluginManager implements PluginManager
                         continue;
 
                     if (moduleClass.isAssignableFrom(moduleDescriptor.getModuleClass()))
-                        result.add(moduleDescriptor);
+                        result.add(moduleDescriptor.getModule());
                 }
             }
         }
