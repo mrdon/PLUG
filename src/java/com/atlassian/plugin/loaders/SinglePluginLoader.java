@@ -21,9 +21,14 @@ public class SinglePluginLoader implements PluginLoader
     List plugins;
     private URL url;
 
-    public SinglePluginLoader(String resource)
+    public SinglePluginLoader(String resource) throws PluginParseException
     {
         this.url = ClassLoaderUtils.getResource(resource, SinglePluginLoader.class);
+
+        if (url == null)
+        {
+            throw new PluginParseException("Cannot load plugins from bad resource : " + resource);
+        }
     }
 
     public SinglePluginLoader(URL url)
@@ -33,6 +38,9 @@ public class SinglePluginLoader implements PluginLoader
 
     private void loadPlugins(Map moduleDescriptors) throws PluginParseException
     {
+        if (url == null)
+            throw new PluginParseException("Cannot load plugins from null URL : " + url);
+
         Plugin plugin = new Plugin();
 
         SAXReader reader = new SAXReader();
@@ -98,8 +106,7 @@ public class SinglePluginLoader implements PluginLoader
 
         if (descriptorClass == null)
         {
-            System.err.println("Could not find interpreter for module: " + name);
-            return null;
+            throw new PluginParseException("Could not find interpreter for module: " + name);
         }
 
         ModuleDescriptor moduleDescriptorDescriptor = null;

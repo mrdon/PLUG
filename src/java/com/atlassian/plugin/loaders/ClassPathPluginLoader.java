@@ -3,10 +3,7 @@ package com.atlassian.plugin.loaders;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.List;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.Collection;
+import java.util.*;
 import java.net.URL;
 import java.io.IOException;
 
@@ -17,15 +14,27 @@ public class ClassPathPluginLoader implements PluginLoader
 {
     private static Log log = LogFactory.getLog(ClassPathPluginLoader.class);
     List plugins;
+    String fileNameToLoad;
+
+    public ClassPathPluginLoader()
+    {
+        this(PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
+    }
+
+    public ClassPathPluginLoader(String fileNameToLoad)
+    {
+        this.fileNameToLoad = fileNameToLoad;
+    }
 
     private void loadClassPathPlugins(Map moduleDescriptors)
     {
         URL url = null;
         final Enumeration pluginDescriptorFiles;
-
+        plugins = new ArrayList();
+        
         try
         {
-            pluginDescriptorFiles = ClassLoaderUtils.getResources(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, this.getClass());
+            pluginDescriptorFiles = ClassLoaderUtils.getResources(fileNameToLoad, this.getClass());
         }
         catch (IOException e)
         {

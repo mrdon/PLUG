@@ -1,23 +1,21 @@
 package com.atlassian.plugin.loaders;
 
-import junit.framework.TestCase;
-import com.atlassian.plugin.loaders.SinglePluginLoader;
-import com.atlassian.plugin.Plugin;
+import com.atlassian.core.util.ClassLoaderUtils;
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.loaders.SinglePluginLoader;
-import com.atlassian.plugin.mock.*;
 import com.atlassian.plugin.descriptors.ResourcedModuleDescriptor;
-import org.dom4j.DocumentException;
-import org.xml.sax.SAXException;
+import com.atlassian.plugin.mock.*;
+import junit.framework.TestCase;
 
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class TestSinglePluginLoader extends TestCase
 {
+
     public void testAtlassianPlugin() throws Exception
     {
         SinglePluginLoader loader = new SinglePluginLoader("test-atlassian-plugin.xml");
@@ -48,7 +46,7 @@ public class TestSinglePluginLoader extends TestCase
 
         List goldDescriptors = plugin.getModulesByClass(MockGold.class);
         assertEquals(1, goldDescriptors.size());
-        ModuleDescriptor goldDescriptor = (ModuleDescriptor)goldDescriptors.get(0);
+        ModuleDescriptor goldDescriptor = (ModuleDescriptor) goldDescriptors.get(0);
         assertEquals(new MockGold(20), goldDescriptor.getModule());
         assertEquals(goldDescriptors, plugin.getModulesByClass(MockMineral.class));
     }
@@ -60,4 +58,33 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals(1, plugins.size());
         assertFalse(((Plugin) plugins.iterator().next()).isEnabledByDefault());
     }
+
+    public void testPluginByUrl() throws PluginParseException
+    {
+        SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResource("test-disabled-plugin.xml", SinglePluginLoader.class));
+        Collection plugins = loader.getPlugins(new HashMap());
+        assertEquals(1, plugins.size());
+        assertFalse(((Plugin) plugins.iterator().next()).isEnabledByDefault());
+    }
+
+    public void testUnfoundPlugin()
+    {
+        try
+        {
+            SinglePluginLoader loader = new SinglePluginLoader("bullshit.xml");
+            fail("should have thrown exception.");
+        }
+        catch (PluginParseException e)
+        {
+            return;
+        }
+        fail("Didn't throw exception correctly");
+    }
+
+    public void testUnknownPluginModule() throws PluginParseException
+    {
+        SinglePluginLoader loader = new SinglePluginLoader("test-bad-plugin.xml");
+        assertEquals(0, loader.getPlugins(new HashMap()).size());
+    }
+
 }
