@@ -172,6 +172,7 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
             if (plugins.get(o) == plugin)
             {
                 deploymentUnit = (DeploymentUnit) o;
+                plugins.remove(deploymentUnit);
                 break;
             }
         }

@@ -267,12 +267,12 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         //restore paddington to test plugins dir
         FileUtils.copyDirectory(pluginsDirectory, pluginsTestDir);
 
-        manager.findNewPlugins();
+        manager.scanForNewPlugins();
         assertEquals(2, manager.getPlugins().size());
         assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded2"));
         assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
 
-        manager.findNewPlugins();
+        manager.scanForNewPlugins();
         assertEquals(2, manager.getPlugins().size());
         assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded2"));
         assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded"));

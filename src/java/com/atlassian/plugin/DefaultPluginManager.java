@@ -43,8 +43,10 @@ public class DefaultPluginManager implements PluginManager
         }
     }
 
-    public void findNewPlugins() throws PluginParseException
+    public int scanForNewPlugins() throws PluginParseException
     {
+        int numberFound = 0;
+
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
         {
             PluginLoader loader = (PluginLoader) iterator.next();
@@ -55,10 +57,13 @@ public class DefaultPluginManager implements PluginManager
                 for (Iterator iterator1 = addedPlugins.iterator(); iterator1.hasNext();)
                 {
                     Plugin newPlugin = (Plugin) iterator1.next();
+                    numberFound++;
                     addPlugin(loader, newPlugin);
                 }
             }
         }
+
+        return numberFound;
     }
 
     /**

@@ -19,8 +19,9 @@ public interface PluginManager
 
     /**
      * Search all loaders and add any new plugins you find.
+     * @return The number of new plugins found.
      */
-    void findNewPlugins() throws PluginParseException;
+    int scanForNewPlugins() throws PluginParseException;
 
     /**
      * Get all of the currently installed plugins.
