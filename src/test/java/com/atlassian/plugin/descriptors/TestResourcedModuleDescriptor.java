@@ -15,23 +15,6 @@ import com.atlassian.plugin.mock.MockResourceParameterGenerator;
 
 public class TestResourcedModuleDescriptor extends TestCase
 {
-    public void testNoResourceGenerator() throws DocumentException, PluginParseException
-    {
-        ResourcedModuleDescriptor descriptor = makeResourceModuleDescriptor();
-        descriptor.init(null, DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\">the content</animal>").getRootElement());
-        assertFalse(descriptor.hasParameterGenerator());
-    }
-
-    public void testHasResourceGenerator() throws DocumentException, PluginParseException
-    {
-        ResourcedModuleDescriptor descriptor = makeResourceModuleDescriptor();
-        descriptor.init(null, DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\">" +
-                "<param name=\"resource.parameter.generator\">com.atlassian.plugin.mock.MockResourceParameterGenerator</param>" +
-                "</animal>").getRootElement());
-        assertTrue(descriptor.hasParameterGenerator());
-        assertEquals(new MockResourceParameterGenerator(), descriptor.getParameterGenerator());
-    }
-
     public void testGetResourceDescriptor() throws DocumentException, PluginParseException
     {
         ResourcedModuleDescriptor descriptor = makeResourceModuleDescriptor();

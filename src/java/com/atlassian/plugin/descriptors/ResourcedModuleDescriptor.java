@@ -1,29 +1,23 @@
 package com.atlassian.plugin.descriptors;
 
-import com.atlassian.plugin.loaders.LoaderUtils;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.core.util.ClassLoaderUtils;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.loaders.LoaderUtils;
 import org.dom4j.Element;
 
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 public abstract class ResourcedModuleDescriptor extends AbstractModuleDescriptor
 {
     List resourceDescriptors;
-    ResourceParameterGenerator parameterGenerator;
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);
         resourceDescriptors = LoaderUtils.getResourceDescriptors(element);
-
-        if (getParams().containsKey("resource.parameter.generator"))
-        {
-            parameterGenerator = constructParameterGenerator((String)getParams().get("resource.parameter.generator"));
-        }
     }
 
     protected ResourceParameterGenerator constructParameterGenerator(String clazz) throws PluginParseException
@@ -55,15 +49,5 @@ public abstract class ResourcedModuleDescriptor extends AbstractModuleDescriptor
         }
 
         return null;
-    }
-
-    public ResourceParameterGenerator getParameterGenerator()
-    {
-        return parameterGenerator;
-    }
-
-    public boolean hasParameterGenerator()
-    {
-        return parameterGenerator != null;
     }
 }
