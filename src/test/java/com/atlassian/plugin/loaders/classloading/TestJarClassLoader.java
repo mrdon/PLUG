@@ -20,12 +20,8 @@ public class TestJarClassLoader extends AbstractTestClassLoader
         File pluginsDirectory = getPluginsDirectory();
         File pluginJar = new File(pluginsDirectory, "paddington-test-plugin.jar");
 
-        MockBear bear = new MockBear();
-        
         // make the JAR loader
         JarClassLoader loader = new JarClassLoader(pluginJar, ClassLoader.getSystemClassLoader());
-
-        ClassLoaderUtils.printClassLoader(loader);
 
         // now make sure we only got one descriptor back
         Enumeration descriptors = loader.findResources("atlassian-plugin.xml");

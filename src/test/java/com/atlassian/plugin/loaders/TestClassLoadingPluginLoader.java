@@ -18,7 +18,6 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         // hacky way of getting to the directoryPluginLoaderFiles classloading
         File pluginsDirectory = getPluginsDirectory();
 
-        System.out.println("pluginsDirectory = " + pluginsDirectory);
         ClassLoadingPluginLoader loader = new ClassLoadingPluginLoader(pluginsDirectory);
 
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();

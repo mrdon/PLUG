@@ -40,7 +40,6 @@
             <includes>
                 <include>**/*Test.java</include>
                 <include>**/Test*.java</include>
-                <include>**/Mock*.java</include>
             </includes>
             <excludes>
                 <exclude>**/Abstract*.java</exclude>

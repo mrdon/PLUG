@@ -15,8 +15,6 @@ public class TestPluginsClassLoader extends AbstractTestClassLoader
     {
         File pluginsDirectory = getPluginsDirectory();
 
-        System.out.println("pluginsDirectory = " + pluginsDirectory);
-
         // first make a classloader of the entire directory.
         ClassLoader loader = PluginsClassLoader.getInstance(pluginsDirectory.toURL());
 
