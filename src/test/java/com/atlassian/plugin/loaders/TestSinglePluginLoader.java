@@ -1,16 +1,17 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.util.ClassLoaderUtils;
-import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.ResourcedModuleDescriptor;
+import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.mock.*;
+import com.atlassian.plugin.util.ClassLoaderUtils;
 import junit.framework.TestCase;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class TestSinglePluginLoader extends TestCase
 {

@@ -10,6 +10,7 @@ import java.util.Enumeration;
 import java.util.Collections;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URLClassLoader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
@@ -33,11 +34,6 @@ public abstract class PluginsClassLoader extends SecureClassLoader implements Cl
     protected PluginsClassLoader(ClassLoader parent)
     {
         super(parent);
-    }
-
-    public void setPackages(String[] p)
-    {
-        this.packages = p;
     }
 
     protected synchronized Class loadClass(String name, boolean resolve) throws ClassNotFoundException
@@ -112,19 +108,19 @@ public abstract class PluginsClassLoader extends SecureClassLoader implements Cl
 
     protected abstract byte[] getFile(String path);
 
-    public static PluginsClassLoader getInstance(URL url)
+    public static ClassLoader getInstance(URL url)
     {
         return getInstance(url, ClassLoader.getSystemClassLoader());
     }
 
-    public static PluginsClassLoader getInstance(URL url, ClassLoader parent)
+    public static ClassLoader getInstance(URL url, ClassLoader parent)
     {
-        PluginsClassLoader loader;
+        ClassLoader loader;
         File file = new File(url.getFile());
         if (file.isDirectory())
         {
             log.warn("Making a DirectoryClassLoader for: " + file);
-            loader = new DirectoryClassLoader(file, parent);
+            loader = new URLClassLoader(new URL[]{url}, parent);
         }
         else
         {

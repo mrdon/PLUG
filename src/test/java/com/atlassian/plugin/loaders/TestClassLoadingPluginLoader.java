@@ -1,31 +1,22 @@
 package com.atlassian.plugin.loaders;
 
-import junit.framework.TestCase;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
-import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.util.ClassLoaderUtils;
-import com.atlassian.plugin.descriptors.ResourcedModuleDescriptor;
+import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
-import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
+import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
-import java.net.URL;
-import java.net.URI;
-import java.io.File;
 
-public class TestClassLoadingPluginLoader extends TestCase
+public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
 {
     public void testAtlassianPlugin() throws Exception
     {
         // hacky way of getting to the directoryPluginLoaderFiles classloading
-        URL url = ClassLoaderUtils.getResource("test-disabled-plugin.xml", TestClassPathPluginLoader.class);
-        File disabledPluginXml = new File(new URI(url.toExternalForm()));
-        System.out.println("disabledPluginXml = " + disabledPluginXml);
-        File directoryPluginLoaderFiles = new File(disabledPluginXml.getParentFile().getParentFile(), "classLoadingTestFiles");
-        File pluginsDirectory = new File(directoryPluginLoaderFiles, "plugins");
+        File pluginsDirectory = getPluginsDirectory();
 
         System.out.println("pluginsDirectory = " + pluginsDirectory);
         ClassLoadingPluginLoader loader = new ClassLoadingPluginLoader(pluginsDirectory);

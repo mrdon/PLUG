@@ -1,12 +1,11 @@
 package com.atlassian.plugin.loaders;
 
-import junit.framework.TestCase;
-import org.dom4j.DocumentException;
-import org.dom4j.Document;
-import org.dom4j.DocumentHelper;
-import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.loaders.LoaderUtils;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.elements.ResourceDescriptor;
+import junit.framework.TestCase;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
 
 import java.util.List;
 import java.util.Map;

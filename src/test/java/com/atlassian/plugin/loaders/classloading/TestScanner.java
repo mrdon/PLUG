@@ -1,18 +1,14 @@
 package com.atlassian.plugin.loaders.classloading;
 
-import junit.framework.TestCase;
-
-import java.net.URL;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.io.File;
-import java.util.*;
-
-import com.atlassian.plugin.loaders.TestClassPathPluginLoader;
-import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.util.FileUtils;
 
-public class TestScanner extends TestCase
+import java.io.File;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
+
+public class TestScanner extends AbstractTestClassLoader
 {
     public void testNormalOperation() throws Exception
     {
@@ -92,16 +88,5 @@ public class TestScanner extends TestCase
         Scanner scanner = new Scanner(pluginsDirectory);
         assertTrue(scanner.accept(new File("myfile.jar")));
         assertFalse(scanner.accept(new File("myfile.txt")));
-    }
-
-    private File getPluginsDirectory()
-            throws URISyntaxException
-    {
-        // hacky way of getting to the directoryPluginLoaderFiles classloading
-        URL url = ClassLoaderUtils.getResource("test-disabled-plugin.xml", TestClassPathPluginLoader.class);
-        File disabledPluginXml = new File(new URI(url.toExternalForm()));
-        File directoryPluginLoaderFiles = new File(disabledPluginXml.getParentFile().getParentFile(), "classLoadingTestFiles");
-        File pluginsDirectory = new File(directoryPluginLoaderFiles, "plugins");
-        return pluginsDirectory;
     }
 }
