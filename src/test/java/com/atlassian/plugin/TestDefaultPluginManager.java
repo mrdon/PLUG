@@ -112,6 +112,24 @@ public class TestDefaultPluginManager extends TestCase
 
     }
 
+    public void testDuplicatePluginKeysAreBad() throws PluginParseException
+    {
+        List pluginLoaders = new ArrayList();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
+        pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        try
+        {
+            manager.init();
+            fail("Should have died with duplicate key exception.");
+        }
+        catch (PluginParseException e)
+        {
+            assertEquals("Duplicate plugin key found: 'test.disabled.plugin'", e.getMessage());
+        }
+    }
 
     public void testGetPluginAndModules() throws PluginParseException
     {
