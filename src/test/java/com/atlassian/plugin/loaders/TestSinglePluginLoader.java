@@ -98,7 +98,7 @@ public class TestSinglePluginLoader extends TestCase
         }
         catch (PluginParseException e)
         {
-            assertEquals("Could not find descriptor for module: unknown-plugin", e.getMessage());
+            assertEquals("Could not find descriptor for module 'unknown-plugin' in plugin 'Bad Plugin'", e.getMessage());
         }
     }
 
