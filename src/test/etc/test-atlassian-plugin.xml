@@ -13,7 +13,10 @@
         <param name="colour">brown</param>
 
         <resource type="velocity" name="view" location="/bear/display.vm" />
-        <resource type="velocity" name="search" location="/bear/display.vm" />
+        <resource type="velocity" name="search" location="/bear/display.vm">
+            <param name="max-results" value="20"/>
+            <param name="sort">relevance</param>
+        </resource>
         <resource type="velocity" name="edit">Show an input box here.</resource>
     </animal>
 

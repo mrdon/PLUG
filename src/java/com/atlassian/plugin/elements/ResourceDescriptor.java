@@ -2,18 +2,24 @@ package com.atlassian.plugin.elements;
 
 import org.dom4j.Element;
 
+import java.util.Map;
+
+import com.atlassian.plugin.loaders.LoaderUtils;
+
 public class ResourceDescriptor
 {
     String type;
     String name;
     String location;
     private String content;
+    private Map params;
 
     public ResourceDescriptor(Element element)
     {
         this.type = element.attributeValue("type");
         this.name = element.attributeValue("name");
         this.location = element.attributeValue("location");
+        this.params = LoaderUtils.getParams(element);
 
         if (element.getTextTrim() != null && !"".equals(element.getTextTrim()))
         {
@@ -39,6 +45,12 @@ public class ResourceDescriptor
     public String getContent()
     {
         return content;
+    }
+
+
+    public String getParameter(String key)
+    {
+        return (String) params.get(key);
     }
 
     public boolean equals(Object o)
