@@ -1,9 +1,9 @@
 package com.atlassian.plugin;
 
-import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.license.LicenseRegistry;
-import com.atlassian.license.LicenseFactory;
 import com.atlassian.core.util.ClassLoaderUtils;
+import com.atlassian.license.LicenseRegistry;
+import com.atlassian.license.LicenseTypeStore;
+import com.atlassian.plugin.elements.ResourceDescriptor;
 
 import java.util.*;
 
@@ -134,9 +134,35 @@ public class Plugin
         {
             try
             {
-                Class licenseRegistryClass = ClassLoaderUtils.loadClass(getPluginInformation().getLicenseRegistryLocation(), LicenseFactory.class);
+                Class licenseRegistryClass = ClassLoaderUtils.loadClass(getPluginInformation().getLicenseRegistryLocation(), Plugin.class);
 
                 return (LicenseRegistry) licenseRegistryClass.newInstance();
+            }
+            catch (ClassNotFoundException e)
+            {
+                throw new RuntimeException("Could not load License Registry");
+            }
+            catch (IllegalAccessException e)
+            {
+                throw new RuntimeException("Could not load License Registry");
+            }
+            catch (InstantiationException e)
+            {
+                throw new RuntimeException("Could not load License Registry");
+            }
+        }
+        return null;
+    }
+
+    public LicenseTypeStore getLicenseTypeStore()
+    {
+        if (getPluginInformation().getLicenseTypeStoreLocation() != null && !("").equals(getPluginInformation().getLicenseTypeStoreLocation()))
+        {
+            try
+            {
+                Class licenseTypeStoreClass = ClassLoaderUtils.loadClass(getPluginInformation().getLicenseTypeStoreLocation(), Plugin.class);
+
+                return (LicenseTypeStore) licenseTypeStoreClass.newInstance();
             }
             catch (ClassNotFoundException e)
             {
@@ -153,7 +179,7 @@ public class Plugin
         }
         return null;
     }
-    
+
     /**
      * @return true if the plugin has been enabled
      */

@@ -15,6 +15,7 @@ public class PluginInformation
     private float maxVersion;
     private float minVersion;
     private String licenseRegistryLocation;
+    private String licenseTypeStoreLocation;
 
     public String getDescription()
     {
@@ -85,5 +86,15 @@ public class PluginInformation
     public void setLicenseRegistryLocation(String licenseRegistryLocation)
     {
         this.licenseRegistryLocation = licenseRegistryLocation;
+    }
+
+    public String getLicenseTypeStoreLocation()
+    {
+        return licenseTypeStoreLocation;
+    }
+
+    public void setLicenseTypeStoreLocation(String licenseTypeStoreLocation)
+    {
+        this.licenseTypeStoreLocation = licenseTypeStoreLocation;
     }
 }

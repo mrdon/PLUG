@@ -197,6 +197,11 @@ public class SinglePluginLoader implements PluginLoader
             pluginInfo.setLicenseRegistryLocation(element.element("license-registry-location").getTextTrim());
         }
 
+        if (element.element("license-store-location") != null)
+        {
+            pluginInfo.setLicenseTypeStoreLocation(element.element("license-store-location").getTextTrim());
+        }
+
         return pluginInfo;
     }
 
