@@ -21,7 +21,8 @@ public class DefaultPluginManager implements PluginManager
         this.plugins = new HashMap();
     }
 
-    public void init() throws PluginParseException {
+    public void init() throws PluginParseException
+    {
         // retrieve all the plugins
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
         {
@@ -89,7 +90,7 @@ public class DefaultPluginManager implements PluginManager
         final Plugin plugin = getPlugin(key.getPluginKey());
 
         if (plugin != null)
-            return plugin.getModule(key.getModuleKey());
+            return plugin.getModuleDescriptor(key.getModuleKey());
 
         return null;
     }
@@ -100,7 +101,7 @@ public class DefaultPluginManager implements PluginManager
 
         if (isPluginModuleEnabled(completeKey))
         {
-            return getEnabledPlugin(key.getPluginKey()).getModule(key.getModuleKey());
+            return getEnabledPlugin(key.getPluginKey()).getModuleDescriptor(key.getModuleKey());
         }
 
         return null;
@@ -108,17 +109,28 @@ public class DefaultPluginManager implements PluginManager
 
     public List getEnabledModulesByClass(Class moduleClass)
     {
-        for (Iterator iterator = plugins.entrySet().iterator(); iterator.hasNext();)
-        {
-            Map.Entry entry = (Map.Entry) iterator.next();
-            Plugin plugin = (Plugin) entry.getValue();
-            List result = plugin.getModulesByClass(moduleClass);
+        List result = new LinkedList();
 
-            if (!result.isEmpty())
-                return result;
+        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
+        {
+            Plugin plugin = (Plugin) iterator.next();
+
+            if (isPluginEnabled(plugin.getKey()))
+            {
+                for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
+                {
+                    ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator1.next();
+
+                    if (!isPluginModuleEnabled(moduleDescriptor.getCompleteKey()))
+                        continue;
+
+                    if (moduleClass.isAssignableFrom(moduleDescriptor.getModuleClass()))
+                        result.add(moduleDescriptor);
+                }
+            }
         }
 
-        return Collections.EMPTY_LIST;
+        return result;
     }
 
 
@@ -204,15 +216,17 @@ public class DefaultPluginManager implements PluginManager
         return plugins.containsKey(key) && currentState.isEnabled((Plugin) plugins.get(key));
     }
 
-    public List getEnabledModuleDescriptorsByClass(Class descriptorClazz) {
+    public List getEnabledModuleDescriptorsByClass(Class descriptorClazz)
+    {
         List result = new LinkedList();
 
-        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();) {
+        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
+        {
             Plugin plugin = (Plugin) iterator.next();
 
             if (isPluginEnabled(plugin.getKey()))
             {
-                for (Iterator iterator1 = plugin.getModules().iterator(); iterator1.hasNext();)
+                for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
                 {
                     ModuleDescriptor module = (ModuleDescriptor) iterator1.next();
 
@@ -227,7 +241,10 @@ public class DefaultPluginManager implements PluginManager
         return result;
     }
 
-    public List getEnabledModuleDescriptorsByType(String type) throws PluginParseException
+    /**
+     * @throws IllegalArgumentException If the name is not a registered module descriptor
+     */
+    public List getEnabledModuleDescriptorsByType(String type) throws PluginParseException, IllegalArgumentException
     {
         final Class descriptorClazz = (Class) moduleDescriptorFactory.getModuleDescriptorClass(type);
 

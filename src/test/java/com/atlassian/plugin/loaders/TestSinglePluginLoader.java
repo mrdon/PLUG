@@ -37,9 +37,9 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals("http://www.atlassian.com", plugin.getPluginInformation().getVendorUrl());
         assertEquals(3f, plugin.getPluginInformation().getMinVersion(), 0);
         assertEquals(3.1f, plugin.getPluginInformation().getMaxVersion(), 0);
-        assertEquals(2, plugin.getModules().size());
+        assertEquals(2, plugin.getModuleDescriptors().size());
 
-        ResourcedModuleDescriptor bearDescriptor = (ResourcedModuleDescriptor) plugin.getModule("bear");
+        ResourcedModuleDescriptor bearDescriptor = (ResourcedModuleDescriptor) plugin.getModuleDescriptor("bear");
         assertEquals("test.atlassian.plugin:bear", bearDescriptor.getCompleteKey());
         assertEquals("bear", bearDescriptor.getKey());
         assertEquals("Bear Animal", bearDescriptor.getName());
@@ -53,12 +53,12 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals("20", bearDescriptor.getParams().get("height"));
         assertEquals("brown", bearDescriptor.getParams().get("colour"));
 
-        List goldDescriptors = plugin.getModuleDescriptorsByClass(MockGold.class);
+        List goldDescriptors = plugin.getModuleDescriptorsByModuleClass(MockGold.class);
         assertEquals(1, goldDescriptors.size());
         ModuleDescriptor goldDescriptor = (ModuleDescriptor) goldDescriptors.get(0);
         assertEquals("test.atlassian.plugin:gold", goldDescriptor.getCompleteKey());
         assertEquals(new MockGold(20), goldDescriptor.getModule());
-        assertEquals(goldDescriptors, plugin.getModuleDescriptorsByClass(MockMineral.class));
+        assertEquals(goldDescriptors, plugin.getModuleDescriptorsByModuleClass(MockMineral.class));
     }
 
     public void testDisabledPlugin() throws PluginParseException
@@ -71,8 +71,8 @@ public class TestSinglePluginLoader extends TestCase
         final Plugin plugin = (Plugin) plugins.iterator().next();
         assertFalse(plugin.isEnabledByDefault());
 
-        assertEquals(1, plugin.getModules().size());
-        final ModuleDescriptor module = plugin.getModule("gold");
+        assertEquals(1, plugin.getModuleDescriptors().size());
+        final ModuleDescriptor module = plugin.getModuleDescriptor("gold");
         assertFalse(module.isEnabledByDefault());
     }
 

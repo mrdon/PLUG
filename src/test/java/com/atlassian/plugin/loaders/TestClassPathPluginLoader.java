@@ -30,12 +30,9 @@ public class TestClassPathPluginLoader extends TestCase
         assertEquals("Test Plugin", plugin.getName());
         assertEquals("test.atlassian.plugin", plugin.getKey());
         assertEquals("This plugin descriptor is just used for test purposes!", plugin.getPluginInformation().getDescription());
-        assertEquals(2, plugin.getModules().size());
+        assertEquals(2, plugin.getModuleDescriptors().size());
 
-        assertEquals("Bear Animal", ((ResourcedModuleDescriptor) plugin.getModule("bear")).getName());
+        assertEquals("Bear Animal", ((ResourcedModuleDescriptor) plugin.getModuleDescriptor("bear")).getName());
 
-        List modules = plugin.getModulesByClass(MockGold.class);
-        assertEquals(1, modules.size());
-        assertEquals(new MockGold(20), modules.get(0));
     }
 }

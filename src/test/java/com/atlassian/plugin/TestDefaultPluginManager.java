@@ -4,6 +4,7 @@ import com.atlassian.plugin.loaders.SinglePluginLoader;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import junit.framework.TestCase;
 
 import java.util.*;
@@ -36,6 +37,7 @@ public class TestDefaultPluginManager extends TestCase
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("bullshit", MockUnusedModuleDescriptor.class);
         PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
@@ -44,6 +46,9 @@ public class TestDefaultPluginManager extends TestCase
         assertNull(manager.getEnabledPlugin("bull:shit"));
         assertNull(manager.getPluginModule("bull:shit"));
         assertNull(manager.getEnabledPluginModule("bull:shit"));
+        assertTrue(manager.getEnabledModuleDescriptorsByClass(TestCase.class).isEmpty());
+        assertTrue(manager.getEnabledModuleDescriptorsByType("bullshit").isEmpty());
+        assertTrue(manager.getEnabledModulesByClass(TestCase.class).isEmpty());
 
         final String pluginKey = "test.atlassian.plugin";
         final String moduleKey = pluginKey + ":bear";
@@ -54,6 +59,9 @@ public class TestDefaultPluginManager extends TestCase
         assertNotNull(manager.getPluginModule(moduleKey));
         assertNotNull(manager.getEnabledPluginModule(moduleKey));
         assertNull(manager.getEnabledPluginModule(pluginKey + ":shit"));
+        assertFalse(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
+        assertFalse(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
+        assertFalse(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
 
         // now only retrieve via always retrieve methods
         manager.disablePlugin(pluginKey);
@@ -61,6 +69,7 @@ public class TestDefaultPluginManager extends TestCase
         assertNull(manager.getEnabledPlugin(pluginKey));
         assertNotNull(manager.getPluginModule(moduleKey));
         assertNull(manager.getEnabledPluginModule(moduleKey));
+        assertTrue(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
 
         // now enable again and check back to start
         manager.enablePlugin(pluginKey);
@@ -68,6 +77,7 @@ public class TestDefaultPluginManager extends TestCase
         assertNotNull(manager.getEnabledPlugin(pluginKey));
         assertNotNull(manager.getPluginModule(moduleKey));
         assertNotNull(manager.getEnabledPluginModule(moduleKey));
+        assertFalse(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
 
         // now let's disable the module, but not the plugin
         manager.disablePluginModule(moduleKey);
@@ -75,6 +85,7 @@ public class TestDefaultPluginManager extends TestCase
         assertNotNull(manager.getEnabledPlugin(pluginKey));
         assertNotNull(manager.getPluginModule(moduleKey));
         assertNull(manager.getEnabledPluginModule(moduleKey));
+        assertTrue(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
 
         // now enable the module again
         manager.enablePluginModule(moduleKey);
@@ -82,6 +93,8 @@ public class TestDefaultPluginManager extends TestCase
         assertNotNull(manager.getEnabledPlugin(pluginKey));
         assertNotNull(manager.getPluginModule(moduleKey));
         assertNotNull(manager.getEnabledPluginModule(moduleKey));
+        assertFalse(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
+
     }
 
     public void testDuplicatePluginKeysAreBad() throws PluginParseException
@@ -118,7 +131,7 @@ public class TestDefaultPluginManager extends TestCase
         assertNotNull(plugin);
         assertEquals("Test Plugin", plugin.getName());
 
-        ModuleDescriptor bear = plugin.getModule("bear");
+        ModuleDescriptor bear = plugin.getModuleDescriptor("bear");
         assertEquals(bear, manager.getPluginModule("test.atlassian.plugin:bear"));
     }
 

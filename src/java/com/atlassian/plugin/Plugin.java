@@ -30,38 +30,22 @@ public class Plugin
         this.key = aPackage;
     }
 
-    public void addModule(ModuleDescriptor moduleDescriptor)
+    public void addModuleDescriptor(ModuleDescriptor moduleDescriptor)
     {
         modules.put(moduleDescriptor.getKey(), moduleDescriptor);
     }
 
-    public Collection getModules()
+    public Collection getModuleDescriptors()
     {
         return modules.values();
     }
 
-    public ModuleDescriptor getModule(String key)
+    public ModuleDescriptor getModuleDescriptor(String key)
     {
         return (ModuleDescriptor) modules.get(key);
     }
 
-    public List getModulesByClass(Class aClass)
-    {
-        List result = new ArrayList();
-
-        for (Iterator iterator = modules.values().iterator(); iterator.hasNext();)
-        {
-            ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator.next();
-
-            Class moduleClass = moduleDescriptor.getModuleClass();
-            if (aClass.isAssignableFrom(moduleClass))
-                result.add(moduleDescriptor.getModule());
-        }
-
-        return result;
-    }
-
-    public List getModuleDescriptorsByClass(Class aClass)
+    public List getModuleDescriptorsByModuleClass(Class aClass)
     {
         List result = new ArrayList();
 

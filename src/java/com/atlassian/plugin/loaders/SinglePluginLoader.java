@@ -67,11 +67,11 @@ public class SinglePluginLoader implements PluginLoader
                 {
                     ModuleDescriptor moduleDescriptor = createModuleDescriptor(plugin, element, moduleDescriptorFactory);
 
-                    if (plugin.getModule(moduleDescriptor.getKey()) != null)
+                    if (plugin.getModuleDescriptor(moduleDescriptor.getKey()) != null)
                         throw new PluginParseException("Found duplicate key '" + moduleDescriptor.getKey() + "' within plugin '" + plugin.getKey() + "'");
 
                     if (moduleDescriptor != null)
-                        plugin.addModule(moduleDescriptor);
+                        plugin.addModuleDescriptor(moduleDescriptor);
                 }
             }
         }
