@@ -12,10 +12,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 public class TestSinglePluginLoader extends TestCase
 {
-
     public void testAtlassianPlugin() throws Exception
     {
         SinglePluginLoader loader = new SinglePluginLoader("test-atlassian-plugin.xml");
@@ -128,4 +129,31 @@ public class TestSinglePluginLoader extends TestCase
             assertEquals("Found duplicate key 'bear' within plugin 'test.bad.plugin'", e.getMessage());
         }
     }
+
+    public void testBadResource()
+    {
+        try
+        {
+            new SinglePluginLoader("foo").getPlugins(null);
+            fail("Should have thrown exception");
+        }
+        catch (PluginParseException e)
+        {
+            return;
+        }
+    }
+
+    public void testBadUrl() throws MalformedURLException
+    {
+        try
+        {
+            new SinglePluginLoader(new URL("file://foo")).getPlugins(null);
+            fail("Should have thrown exception");
+        }
+        catch (PluginParseException e)
+        {
+            return;
+        }
+    }
+
 }

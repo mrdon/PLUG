@@ -53,25 +53,60 @@ public class DefaultPluginManager implements PluginManager
         return plugins.values();
     }
 
+    public Collection getEnabledPlugins()
+    {
+        List result = new ArrayList();
+
+        for (Iterator iterator = plugins.keySet().iterator(); iterator.hasNext();)
+        {
+            String key = (String) iterator.next();
+            Plugin p = getEnabledPlugin(key);
+
+            if (p != null)
+                result.add(p);
+        }
+
+        return result;
+    }
+
     public Plugin getPlugin(String key)
     {
         return (Plugin) plugins.get(key);
     }
 
-    public ModuleDescriptor getPluginModule(String completeKey)
+    public Plugin getEnabledPlugin(String pluginKey)
     {
-        final int sepIdx = completeKey.indexOf(":");
+        if (isPluginEnabled(pluginKey))
+            return getPlugin(pluginKey);
 
-        if (sepIdx <= 0)
-            throw new IllegalArgumentException("Invalid complete key specified: " + completeKey);
-
-        String pluginKey = completeKey.substring(0, sepIdx);
-        String moduleKey = completeKey.substring(sepIdx + 1);
-
-        return getPlugin(pluginKey).getModule(moduleKey);
+        return null;
     }
 
-    public Collection getEnabledModulesByClass(Class moduleClass)
+    public ModuleDescriptor getPluginModule(String completeKey)
+    {
+        ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
+
+        final Plugin plugin = getPlugin(key.getPluginKey());
+
+        if (plugin != null)
+            return plugin.getModule(key.getModuleKey());
+
+        return null;
+    }
+
+    public ModuleDescriptor getEnabledPluginModule(String completeKey)
+    {
+        ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
+
+        final Plugin plugin = getEnabledPlugin(key.getPluginKey());
+
+        if (plugin != null)
+            return plugin.getModule(key.getModuleKey());
+
+        return null;
+    }
+
+    public List getEnabledModulesByClass(Class moduleClass)
     {
         for (Iterator iterator = plugins.entrySet().iterator(); iterator.hasNext();)
         {
@@ -150,4 +185,13 @@ public class DefaultPluginManager implements PluginManager
         return result;
     }
 
+    public List getEnabledModuleDescriptorsByType(String type)
+    {
+        final Class descriptorClazz = (Class) moduleDescriptors.get(type);
+
+        if (descriptorClazz == null)
+            throw new IllegalArgumentException("No module descriptor of type: " + type + " found.");
+
+        return getEnabledModuleDescriptorsByClass(descriptorClazz);
+    }
 }

@@ -35,8 +35,19 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
             throw new PluginParseException("Could not load class: " + clazz);
         }
 
-        setDescription(element.elementTextTrim("description"));
+        this.description = element.elementTextTrim("description");
         params = LoaderUtils.getParams(element);
+    }
+
+    /**
+     * Check that the module class of this descriptor implements a given interface, or extends a given class.
+     * @param requiredModuleClazz The class this module's class must implement or extend.
+     * @throws PluginParseException If the module class does not implement or extend the given class.
+     */
+    final protected void assertModuleClassImplements(Class requiredModuleClazz) throws PluginParseException
+    {
+        if (!requiredModuleClazz.isAssignableFrom(getModuleClass()))
+            throw new PluginParseException("Given module class: " + getModuleClass().getName() + " does not implement " + requiredModuleClazz.getName());
     }
 
     public String getCompleteKey() {
@@ -48,19 +59,9 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         return key;
     }
 
-    public void setKey(String key)
-    {
-        this.key = key;
-    }
-
     public String getName()
     {
         return name;
-    }
-
-    public void setName(String name)
-    {
-        this.name = name;
     }
 
     public Class getModuleClass()
@@ -74,12 +75,6 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     {
         return description;
     }
-
-    public void setDescription(String description)
-    {
-        this.description = description;
-    }
-
 
     public Map getParams()
     {
