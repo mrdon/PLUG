@@ -100,5 +100,5 @@ public interface PluginManager
      *
      * @return List of {@link ModuleDescriptor}s that are of a given type.
      */
-    List getEnabledModuleDescriptorsByType(String type);
+    List getEnabledModuleDescriptorsByType(String type) throws PluginParseException;
 }

@@ -1,10 +1,7 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.core.util.ClassLoaderUtils;
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Document;
@@ -12,9 +9,12 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
-import java.io.InputStream;
 import java.io.IOException;
-import java.util.*;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 public class SinglePluginLoader implements PluginLoader
 {
@@ -34,7 +34,7 @@ public class SinglePluginLoader implements PluginLoader
         this.is = is;
     }
 
-    private void loadPlugins(Map moduleDescriptors) throws PluginParseException
+    private void loadPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         if (resource == null && is == null)
             throw new PluginParseException("No resource or inputstream specified to load plugins from.");
@@ -65,7 +65,7 @@ public class SinglePluginLoader implements PluginLoader
                 }
                 else
                 {
-                    ModuleDescriptor moduleDescriptor = createModuleDescriptor(plugin, element, moduleDescriptors);
+                    ModuleDescriptor moduleDescriptor = createModuleDescriptor(plugin, element, moduleDescriptorFactory);
 
                     if (plugin.getModule(moduleDescriptor.getKey()) != null)
                         throw new PluginParseException("Found duplicate key '" + moduleDescriptor.getKey() + "' within plugin '" + plugin.getKey() + "'");
@@ -83,7 +83,8 @@ public class SinglePluginLoader implements PluginLoader
         plugins.add(plugin);
     }
 
-    private Document getDocument() throws DocumentException, PluginParseException {
+    private Document getDocument() throws DocumentException, PluginParseException
+    {
         SAXReader reader = new SAXReader();
 
         if (resource != null)
@@ -117,24 +118,22 @@ public class SinglePluginLoader implements PluginLoader
             throw new PluginParseException("No resource or input stream specified.");
     }
 
-    public Collection getPlugins(Map moduleDescriptors) throws PluginParseException
+    public Collection getPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         if (plugins == null)
         {
             plugins = new ArrayList();
-            loadPlugins(moduleDescriptors);
+            loadPlugins(moduleDescriptorFactory);
         }
 
         return plugins;
     }
 
-    private ModuleDescriptor createModuleDescriptor(Plugin plugin, Element element, Map moduleDescriptors) throws PluginParseException
+    private ModuleDescriptor createModuleDescriptor(Plugin plugin, Element element, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         String name = element.getName();
 
-        Class descriptorClass = (Class) moduleDescriptors.get(name);
-
-        if (descriptorClass == null)
+        if (!moduleDescriptorFactory.hasModuleDescriptor(name))
         {
             throw new PluginParseException("Could not find descriptor for module '" + name +"' in plugin '" + (plugin == null ? "null" : plugin.getName()) + "'");
         }
@@ -143,19 +142,19 @@ public class SinglePluginLoader implements PluginLoader
 
         try
         {
-            moduleDescriptorDescriptor = (ModuleDescriptor) ClassLoaderUtils.loadClass(descriptorClass.getName(), SinglePluginLoader.class).newInstance();
+            moduleDescriptorDescriptor = moduleDescriptorFactory.getModuleDescriptor(name);
         }
         catch (InstantiationException e)
         {
-            throw new PluginParseException("Could not instantiate module descriptor: " + descriptorClass.getName(), e);
+            throw new PluginParseException("Could not instantiate module descriptor: " + moduleDescriptorFactory.getModuleDescriptorClass(name).getName(), e);
         }
         catch (IllegalAccessException e)
         {
-            throw new PluginParseException("Exception instantiating module descriptor: " + descriptorClass.getName(), e);
+            throw new PluginParseException("Exception instantiating module descriptor: " + moduleDescriptorFactory.getModuleDescriptorClass(name).getName(), e);
         }
         catch (ClassNotFoundException e)
         {
-            throw new PluginParseException("Could not find module descriptor class: " + descriptorClass.getName(), e);
+            throw new PluginParseException("Could not find module descriptor class: " + moduleDescriptorFactory.getModuleDescriptorClass(name).getName(), e);
         }
 
         moduleDescriptorDescriptor.init(plugin, element);

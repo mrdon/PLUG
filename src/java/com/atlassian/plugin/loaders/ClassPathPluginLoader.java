@@ -10,6 +10,7 @@ import java.io.IOException;
 import com.atlassian.core.util.ClassLoaderUtils;
 import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.ModuleDescriptorFactory;
 
 public class ClassPathPluginLoader implements PluginLoader
 {
@@ -27,7 +28,7 @@ public class ClassPathPluginLoader implements PluginLoader
         this.fileNameToLoad = fileNameToLoad;
     }
 
-    private void loadClassPathPlugins(Map moduleDescriptors) throws PluginParseException {
+    private void loadClassPathPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException {
         URL url = null;
         final Enumeration pluginDescriptorFiles;
         plugins = new ArrayList();
@@ -48,7 +49,7 @@ public class ClassPathPluginLoader implements PluginLoader
             try
             {
                 SinglePluginLoader loader = new SinglePluginLoader(url.openConnection().getInputStream());
-                plugins.addAll(loader.getPlugins(moduleDescriptors));
+                plugins.addAll(loader.getPlugins(moduleDescriptorFactory));
             }
             catch (IOException e)
             {
@@ -57,11 +58,11 @@ public class ClassPathPluginLoader implements PluginLoader
         }
     }
 
-    public Collection getPlugins(Map moduleDescriptors) throws PluginParseException
+    public Collection getPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         if (plugins == null)
         {
-            loadClassPathPlugins(moduleDescriptors);
+            loadClassPathPlugins(moduleDescriptorFactory);
         }
 
         return plugins;

@@ -15,10 +15,11 @@ public class TestDefaultPluginManager extends TestCase
         List pluginLoaders = new ArrayList();
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
         pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
-        Map moduleDescriptors = new HashMap();
-        moduleDescriptors.put("animal", MockAnimalModuleDescriptor.class);
-        moduleDescriptors.put("mineral", MockMineralModuleDescriptor.class);
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptors);
+
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         assertEquals(2, manager.getPlugins().size());
@@ -31,10 +32,11 @@ public class TestDefaultPluginManager extends TestCase
     {
         List pluginLoaders = new ArrayList();
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
-        Map moduleDescriptors = new HashMap();
-        moduleDescriptors.put("animal", MockAnimalModuleDescriptor.class);
-        moduleDescriptors.put("mineral", MockMineralModuleDescriptor.class);
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptors);
+
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         // check non existant plugins don't show
@@ -85,11 +87,11 @@ public class TestDefaultPluginManager extends TestCase
     public void testDuplicatePluginKeysAreBad() throws PluginParseException
     {
         List pluginLoaders = new ArrayList();
-        Map moduleDescriptors = new HashMap();
-        moduleDescriptors.put("mineral", MockMineralModuleDescriptor.class);
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
         pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptors);
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         try
         {
             manager.init();
@@ -105,11 +107,11 @@ public class TestDefaultPluginManager extends TestCase
     {
         List pluginLoaders = new ArrayList();
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
-        Map moduleDescriptors = new HashMap();
-        moduleDescriptors.put("animal", MockAnimalModuleDescriptor.class);
-        moduleDescriptors.put("mineral", MockMineralModuleDescriptor.class);
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptors);
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         Plugin plugin = manager.getPlugin("test.atlassian.plugin");
@@ -124,11 +126,12 @@ public class TestDefaultPluginManager extends TestCase
     {
         List pluginLoaders = new ArrayList();
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
-        Map moduleDescriptors = new HashMap();
-        moduleDescriptors.put("animal", MockAnimalModuleDescriptor.class);
-        moduleDescriptors.put("mineral", MockMineralModuleDescriptor.class);
 
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptors);
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         Collection descriptors = manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class);
@@ -148,11 +151,12 @@ public class TestDefaultPluginManager extends TestCase
     {
         List pluginLoaders = new ArrayList();
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
-        Map moduleDescriptors = new HashMap();
-        moduleDescriptors.put("animal", MockAnimalModuleDescriptor.class);
-        moduleDescriptors.put("mineral", MockMineralModuleDescriptor.class);
 
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptors);
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         final Collection descriptors = manager.getEnabledModulesByClass(java.lang.String.class);
@@ -164,11 +168,12 @@ public class TestDefaultPluginManager extends TestCase
     {
         List pluginLoaders = new ArrayList();
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
-        Map moduleDescriptors = new HashMap();
-        moduleDescriptors.put("animal", MockAnimalModuleDescriptor.class);
-        moduleDescriptors.put("mineral", MockMineralModuleDescriptor.class);
 
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptors);
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         Collection descriptors = manager.getEnabledModuleDescriptorsByType("animal");

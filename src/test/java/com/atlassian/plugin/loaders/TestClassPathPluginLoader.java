@@ -4,6 +4,7 @@ import com.atlassian.core.util.ClassLoaderUtils;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.descriptors.ResourcedModuleDescriptor;
 import com.atlassian.plugin.mock.*;
 import junit.framework.TestCase;
@@ -18,10 +19,10 @@ public class TestClassPathPluginLoader extends TestCase
     public void testAtlassianPlugin() throws Exception
     {
         ClassPathPluginLoader loader = new ClassPathPluginLoader("test-atlassian-plugin.xml");
-        Map moduleDescriptors = new HashMap();
-        moduleDescriptors.put("animal", MockAnimalModuleDescriptor.class);
-        moduleDescriptors.put("mineral", MockMineralModuleDescriptor.class);
-        Collection plugins = loader.getPlugins(moduleDescriptors);
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        Collection plugins = loader.getPlugins(moduleDescriptorFactory);
 
         assertEquals(1, plugins.size());
 

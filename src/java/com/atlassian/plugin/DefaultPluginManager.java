@@ -8,16 +8,16 @@ public class DefaultPluginManager implements PluginManager
 {
     private final List pluginLoaders;
     private final PluginStateStore store;
-    private Map moduleDescriptors;
+    private ModuleDescriptorFactory moduleDescriptorFactory;
     private PluginManagerState currentState;
     private HashMap plugins;
 
-    public DefaultPluginManager(PluginStateStore store, List pluginLoaders, Map moduleDescriptors)
+    public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory)
     {
         this.pluginLoaders = pluginLoaders;
         this.store = store;
+        this.moduleDescriptorFactory = moduleDescriptorFactory;
         this.currentState = store.loadPluginState();
-        this.moduleDescriptors = moduleDescriptors;
         this.plugins = new HashMap();
     }
 
@@ -27,7 +27,7 @@ public class DefaultPluginManager implements PluginManager
         {
             PluginLoader loader = (PluginLoader) iterator.next();
 
-            for (Iterator iterator1 = loader.getPlugins(moduleDescriptors).iterator(); iterator1.hasNext();)
+            for (Iterator iterator1 = loader.getPlugins(moduleDescriptorFactory).iterator(); iterator1.hasNext();)
             {
                 addPlugin((Plugin) iterator1.next());
             }
@@ -227,9 +227,9 @@ public class DefaultPluginManager implements PluginManager
         return result;
     }
 
-    public List getEnabledModuleDescriptorsByType(String type)
+    public List getEnabledModuleDescriptorsByType(String type) throws PluginParseException
     {
-        final Class descriptorClazz = (Class) moduleDescriptors.get(type);
+        final Class descriptorClazz = (Class) moduleDescriptorFactory.getModuleDescriptorClass(type);
 
         if (descriptorClazz == null)
             throw new IllegalArgumentException("No module descriptor of type: " + type + " found.");
