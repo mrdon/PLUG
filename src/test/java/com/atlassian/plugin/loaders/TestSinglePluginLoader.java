@@ -12,9 +12,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.io.IOException;
 
 public class TestSinglePluginLoader extends TestCase
 {
@@ -28,10 +25,17 @@ public class TestSinglePluginLoader extends TestCase
 
         assertEquals(1, plugins.size());
 
+        // test the plugin information
         Plugin plugin = (Plugin) plugins.iterator().next();
         assertEquals("Test Plugin", plugin.getName());
         assertEquals("test.atlassian.plugin", plugin.getKey());
-        assertEquals("This plugin descriptor is just used for test purposes!", plugin.getDescription());
+        assertNotNull(plugin.getPluginInformation());
+        assertEquals("1.0", plugin.getPluginInformation().getVersion());
+        assertEquals("This plugin descriptor is just used for test purposes!", plugin.getPluginInformation().getDescription());
+        assertEquals("Atlassian Software Systems Pty Ltd", plugin.getPluginInformation().getVendorName());
+        assertEquals("http://www.atlassian.com", plugin.getPluginInformation().getVendorUrl());
+        assertEquals(3f, plugin.getPluginInformation().getMinVersion(), 0);
+        assertEquals(3.1f, plugin.getPluginInformation().getMaxVersion(), 0);
         assertEquals(2, plugin.getModules().size());
 
         ResourcedModuleDescriptor bearDescriptor = (ResourcedModuleDescriptor) plugin.getModule("bear");

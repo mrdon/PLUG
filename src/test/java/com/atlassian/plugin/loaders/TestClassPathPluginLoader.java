@@ -28,7 +28,7 @@ public class TestClassPathPluginLoader extends TestCase
         Plugin plugin = (Plugin) plugins.iterator().next();
         assertEquals("Test Plugin", plugin.getName());
         assertEquals("test.atlassian.plugin", plugin.getKey());
-        assertEquals("This plugin descriptor is just used for test purposes!", plugin.getDescription());
+        assertEquals("This plugin descriptor is just used for test purposes!", plugin.getPluginInformation().getDescription());
         assertEquals(2, plugin.getModules().size());
 
         assertEquals("Bear Animal", ((ResourcedModuleDescriptor) plugin.getModule("bear")).getName());

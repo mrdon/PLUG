@@ -5,10 +5,10 @@ import java.util.*;
 public class Plugin
 {
     private String name;
-    private String description;
     private String key;
     private Map modules = new HashMap();
     private boolean enabledByDefault = true;
+    private PluginInformation pluginInformation;
 
     public String getName()
     {
@@ -18,16 +18,6 @@ public class Plugin
     public void setName(String name)
     {
         this.name = name;
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription(String description)
-    {
-        this.description = description;
     }
 
     public String getKey()
@@ -95,5 +85,15 @@ public class Plugin
     public void setEnabledByDefault(boolean enabledByDefault)
     {
         this.enabledByDefault = enabledByDefault;
+    }
+
+    public PluginInformation getPluginInformation()
+    {
+        return pluginInformation;
+    }
+
+    public void setPluginInformation(PluginInformation pluginInformation)
+    {
+        this.pluginInformation = pluginInformation;
     }
 }

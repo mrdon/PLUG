@@ -4,6 +4,7 @@ import com.atlassian.core.util.ClassLoaderUtils;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.PluginInformation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Document;
@@ -58,9 +59,9 @@ public class SinglePluginLoader implements PluginLoader
             {
                 Element element = (Element) i.next();
 
-                if ("description".equalsIgnoreCase(element.getName()))
+                if ("plugin-info".equalsIgnoreCase(element.getName()))
                 {
-                    plugin.setDescription(element.getTextTrim());
+                    plugin.setPluginInformation(createPluginInformation(element));
                 }
                 else
                 {
@@ -160,6 +161,32 @@ public class SinglePluginLoader implements PluginLoader
         moduleDescriptorDescriptor.init(plugin, element);
 
         return moduleDescriptorDescriptor;
+    }
+
+    private PluginInformation createPluginInformation(Element element)
+    {
+        PluginInformation pluginInfo = new PluginInformation();
+
+        if (element.element("description") != null)
+            pluginInfo.setDescription(element.element("description").getTextTrim());
+
+        if (element.element("version") != null)
+            pluginInfo.setVersion(element.element("version").getTextTrim());
+
+        if (element.element("vendor") != null)
+        {
+            final Element vendor = element.element("vendor");
+            pluginInfo.setVendorName(vendor.attributeValue("name"));
+            pluginInfo.setVendorUrl(vendor.attributeValue("url"));
+        }
+
+        if (element.element("application-version") != null)
+        {
+            pluginInfo.setMaxVersion(Float.parseFloat(element.element("application-version").attributeValue("max")));
+            pluginInfo.setMinVersion(Float.parseFloat(element.element("application-version").attributeValue("min")));
+        }
+
+        return pluginInfo;
     }
 
 }

@@ -1,5 +1,10 @@
-<atlassian-plugin key="test.atlassian.plugin" name="Test Plugin">
-    <description>This plugin descriptor is just used for test purposes!</description>
+<atlassian-plugin name="Test Plugin" key="test.atlassian.plugin">
+    <plugin-info>
+        <description>This plugin descriptor is just used for test purposes!</description>
+        <version>1.0</version>
+        <application-version min="3.0" max="3.1" />
+        <vendor name="Atlassian Software Systems Pty Ltd" url="http://www.atlassian.com" />
+    </plugin-info>
 
     <animal key="bear" name="Bear Animal" class="com.atlassian.plugin.mock.MockBear">
         <description>A plugin module to describe a bear</description>
