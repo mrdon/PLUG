@@ -63,7 +63,7 @@ public class SinglePluginLoader implements PluginLoader
                 {
                     plugin.setPluginInformation(createPluginInformation(element));
                 }
-                else
+                else if (!isResource(element))
                 {
                     ModuleDescriptor moduleDescriptor = createModuleDescriptor(plugin, element, moduleDescriptorFactory);
 
@@ -74,6 +74,8 @@ public class SinglePluginLoader implements PluginLoader
                         plugin.addModuleDescriptor(moduleDescriptor);
                 }
             }
+
+            plugin.setResourceDescriptors(LoaderUtils.getResourceDescriptors(root));
         }
         catch (DocumentException e)
         {
@@ -81,6 +83,11 @@ public class SinglePluginLoader implements PluginLoader
         }
 
         plugins.add(plugin);
+    }
+
+    private boolean isResource(Element element)
+    {
+        return "resource".equalsIgnoreCase(element.getName());
     }
 
     private Document getDocument() throws DocumentException, PluginParseException

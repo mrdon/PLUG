@@ -5,6 +5,7 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.descriptors.ResourcedModuleDescriptor;
 import com.atlassian.plugin.mock.*;
 import junit.framework.TestCase;
@@ -59,6 +60,10 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals("test.atlassian.plugin:gold", goldDescriptor.getCompleteKey());
         assertEquals(new MockGold(20), goldDescriptor.getModule());
         assertEquals(goldDescriptors, plugin.getModuleDescriptorsByModuleClass(MockMineral.class));
+
+        assertEquals(1, plugin.getResourceDescriptors().size());
+        ResourceDescriptor pluginResource = plugin.getResourceDescriptor("download", "icon.gif");
+        assertEquals("/icon.gif", pluginResource.getLocation());
     }
 
     public void testDisabledPlugin() throws PluginParseException

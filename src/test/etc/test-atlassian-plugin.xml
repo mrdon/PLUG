@@ -23,4 +23,6 @@
     <mineral key="gold" name="Bar" class="com.atlassian.plugin.mock.MockGold">
         <weight>20</weight>
     </mineral>
+
+    <resource type="download" name="icon.gif" location="/icon.gif" />
 </atlassian-plugin>

@@ -1,5 +1,7 @@
 package com.atlassian.plugin;
 
+import com.atlassian.plugin.elements.ResourceDescriptor;
+
 import java.util.*;
 
 public class Plugin
@@ -9,6 +11,7 @@ public class Plugin
     private Map modules = new HashMap();
     private boolean enabledByDefault = true;
     private PluginInformation pluginInformation;
+    List resourceDescriptors;
 
     public String getName()
     {
@@ -79,5 +82,45 @@ public class Plugin
     public void setPluginInformation(PluginInformation pluginInformation)
     {
         this.pluginInformation = pluginInformation;
+    }
+
+    public List getResourceDescriptors()
+    {
+        return resourceDescriptors;
+    }
+
+    public void setResourceDescriptors(List resourceDescriptors)
+    {
+        this.resourceDescriptors = resourceDescriptors;
+    }
+
+    public List getResourceDescriptors(String type)
+    {
+        List typedResourceDescriptors = new LinkedList();
+
+        for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
+        {
+            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator.next();
+            if (resourceDescriptor.getType().equalsIgnoreCase(type))
+            {
+                typedResourceDescriptors.add(resourceDescriptor);
+            }
+        }
+
+        return typedResourceDescriptors;
+    }
+
+    public ResourceDescriptor getResourceDescriptor(String type, String name)
+    {
+        for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
+        {
+            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator.next();
+            if (resourceDescriptor.getType().equalsIgnoreCase(type) && resourceDescriptor.getName().equalsIgnoreCase(name))
+            {
+                return resourceDescriptor;
+            }
+        }
+
+        return null;
     }
 }
