@@ -115,13 +115,13 @@ public class TestDefaultPluginManager extends TestCase
         PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptors);
         manager.init();
 
-        Collection descriptors = manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class);
+        Collection descriptors = manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class);
         assertNotNull(descriptors);
         assertEquals(1, descriptors.size());
         ModuleDescriptor moduleDescriptor = (ModuleDescriptor) descriptors.iterator().next();
         assertEquals("Bear Animal", moduleDescriptor.getName());
 
-        descriptors = manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockGold.class);
+        descriptors = manager.getEnabledModuleDescriptorsByClass(MockMineralModuleDescriptor.class);
         assertNotNull(descriptors);
         assertEquals(1, descriptors.size());
         moduleDescriptor = (ModuleDescriptor) descriptors.iterator().next();

@@ -65,6 +65,22 @@ public class Plugin
 
             Class moduleClass = moduleDescriptor.getModuleClass();
             if (aClass.isAssignableFrom(moduleClass))
+                result.add(moduleDescriptor.getModule());
+        }
+
+        return result;
+    }
+
+    public List getModuleDescriptorsByClass(Class aClass)
+    {
+        List result = new ArrayList();
+
+        for (Iterator iterator = modules.values().iterator(); iterator.hasNext();)
+        {
+            ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator.next();
+
+            Class moduleClass = moduleDescriptor.getModuleClass();
+            if (aClass.isAssignableFrom(moduleClass))
                 result.add(moduleDescriptor);
         }
 

@@ -47,12 +47,12 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals("20", bearDescriptor.getParams().get("height"));
         assertEquals("brown", bearDescriptor.getParams().get("colour"));
 
-        List goldDescriptors = plugin.getModulesByClass(MockGold.class);
+        List goldDescriptors = plugin.getModuleDescriptorsByClass(MockGold.class);
         assertEquals(1, goldDescriptors.size());
         ModuleDescriptor goldDescriptor = (ModuleDescriptor) goldDescriptors.get(0);
         assertEquals("test.atlassian.plugin:gold", goldDescriptor.getCompleteKey());
         assertEquals(new MockGold(20), goldDescriptor.getModule());
-        assertEquals(goldDescriptors, plugin.getModulesByClass(MockMineral.class));
+        assertEquals(goldDescriptors, plugin.getModuleDescriptorsByClass(MockMineral.class));
     }
 
     public void testDisabledPlugin() throws PluginParseException

@@ -33,9 +33,8 @@ public class TestClassPathPluginLoader extends TestCase
 
         assertEquals("Bear Animal", ((ResourcedModuleDescriptor) plugin.getModule("bear")).getName());
 
-        List goldDescriptors = plugin.getModulesByClass(MockGold.class);
-        assertEquals(1, goldDescriptors.size());
-        ModuleDescriptor goldDescriptor = (ModuleDescriptor) goldDescriptors.get(0);
-        assertEquals(new MockGold(20), goldDescriptor.getModule());
+        List modules = plugin.getModulesByClass(MockGold.class);
+        assertEquals(1, modules.size());
+        assertEquals(new MockGold(20), modules.get(0));
     }
 }
