@@ -37,7 +37,7 @@ public class DefaultPluginManager implements PluginManager
         }
     }
 
-    private void addPlugin(Plugin plugin) throws PluginParseException
+    protected void addPlugin(Plugin plugin) throws PluginParseException
     {
         // testing to make sure plugin keys are unique
         if (plugins.containsKey(plugin.getKey()) || licensedPlugins.containsKey(plugin.getKey()))
