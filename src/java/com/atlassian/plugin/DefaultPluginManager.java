@@ -230,7 +230,7 @@ public class DefaultPluginManager implements PluginManager
                 {
                     ModuleDescriptor module = (ModuleDescriptor) iterator1.next();
 
-                    if (descriptorClazz.isInstance(module))
+                    if (descriptorClazz.isInstance(module) && isPluginModuleEnabled(module.getCompleteKey()))
                     {
                         result.add(module);
                     }

@@ -70,6 +70,8 @@ public class TestDefaultPluginManager extends TestCase
         assertNotNull(manager.getPluginModule(moduleKey));
         assertNull(manager.getEnabledPluginModule(moduleKey));
         assertTrue(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
+        assertTrue(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
+        assertTrue(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
 
         // now enable again and check back to start
         manager.enablePlugin(pluginKey);
@@ -78,6 +80,8 @@ public class TestDefaultPluginManager extends TestCase
         assertNotNull(manager.getPluginModule(moduleKey));
         assertNotNull(manager.getEnabledPluginModule(moduleKey));
         assertFalse(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
+        assertFalse(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
+        assertFalse(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
 
         // now let's disable the module, but not the plugin
         manager.disablePluginModule(moduleKey);
@@ -86,6 +90,8 @@ public class TestDefaultPluginManager extends TestCase
         assertNotNull(manager.getPluginModule(moduleKey));
         assertNull(manager.getEnabledPluginModule(moduleKey));
         assertTrue(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
+        assertTrue(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
+        assertTrue(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
 
         // now enable the module again
         manager.enablePluginModule(moduleKey);
@@ -94,6 +100,8 @@ public class TestDefaultPluginManager extends TestCase
         assertNotNull(manager.getPluginModule(moduleKey));
         assertNotNull(manager.getEnabledPluginModule(moduleKey));
         assertFalse(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
+        assertFalse(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
+        assertFalse(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
 
     }
 
