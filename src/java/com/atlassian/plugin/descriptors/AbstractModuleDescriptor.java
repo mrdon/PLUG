@@ -29,7 +29,8 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         String clazz = element.attributeValue("class");
         try
         {
-            moduleClass = ClassLoaderUtils.loadClass(clazz, getClass());
+            if (clazz != null)  //not all plugins have to have a class
+                moduleClass = ClassLoaderUtils.loadClass(clazz, getClass());
         }
         catch (ClassNotFoundException e)
         {
