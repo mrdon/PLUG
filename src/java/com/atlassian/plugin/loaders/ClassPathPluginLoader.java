@@ -7,10 +7,10 @@ import java.util.*;
 import java.net.URL;
 import java.io.IOException;
 
-import com.atlassian.core.util.ClassLoaderUtils;
 import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.util.ClassLoaderUtils;
 
 public class ClassPathPluginLoader implements PluginLoader
 {

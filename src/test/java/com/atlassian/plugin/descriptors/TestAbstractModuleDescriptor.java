@@ -10,8 +10,9 @@ import junit.framework.TestCase;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.util.ClassLoaderUtils;
+import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.mock.MockMineral;
-import com.atlassian.core.util.ClassLoaderUtils;
 import org.dom4j.DocumentHelper;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -35,7 +36,7 @@ public class TestAbstractModuleDescriptor extends TestCase
 
         try
         {
-            descriptor.init(null, DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" />").getRootElement());
+            descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" />").getRootElement());
             fail("Should have blown up.");
         }
         catch (PluginParseException e)
@@ -44,7 +45,7 @@ public class TestAbstractModuleDescriptor extends TestCase
         }
 
         // now succeed
-        descriptor.init(null, DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockGold\" />").getRootElement());
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockGold\" />").getRootElement());
     }
 
     public void testSingletonness() throws DocumentException, PluginParseException
@@ -52,19 +53,19 @@ public class TestAbstractModuleDescriptor extends TestCase
         ModuleDescriptor descriptor = makeSingletonDescriptor();
 
         // try a default descriptor with no singleton="" element. Should _be_ a singleton
-        descriptor.init(null, DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" />").getRootElement());
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" />").getRootElement());
         Object module = descriptor.getModule();
         assertTrue(module == descriptor.getModule());
 
         // now try a default descriptor with singleton="true" element. Should still be a singleton
         descriptor = makeSingletonDescriptor();
-        descriptor.init(null, DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" singleton=\"true\" />").getRootElement());
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" singleton=\"true\" />").getRootElement());
         module = descriptor.getModule();
         assertTrue(module == descriptor.getModule());
 
         // now try reiniting as a non-singleton
         descriptor = makeSingletonDescriptor();
-        descriptor.init(null, DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" singleton=\"false\" />").getRootElement());
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" singleton=\"false\" />").getRootElement());
         module = descriptor.getModule();
         assertTrue(module != descriptor.getModule());
     }

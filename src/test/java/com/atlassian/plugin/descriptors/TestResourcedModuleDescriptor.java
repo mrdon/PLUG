@@ -7,6 +7,9 @@
 package com.atlassian.plugin.descriptors;
 
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.impl.StaticPlugin;
+import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import junit.framework.TestCase;
 import org.dom4j.DocumentException;
@@ -19,7 +22,7 @@ public class TestResourcedModuleDescriptor extends TestCase
     public void testGetResourceDescriptor() throws DocumentException, PluginParseException
     {
         ResourcedModuleDescriptor descriptor = makeResourceModuleDescriptor();
-        descriptor.init(null, DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\">" +
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\">" +
                 "<resource type='velocity' name='view' location='foo' />" +
                 "</animal>").getRootElement());
 
@@ -32,7 +35,7 @@ public class TestResourcedModuleDescriptor extends TestCase
     public void testGetResourceDescriptorByType() throws DocumentException, PluginParseException
     {
         ResourcedModuleDescriptor descriptor = makeResourceModuleDescriptor();
-        descriptor.init(null, DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\">" +
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\">" +
                 "<resource type='velocity' name='view' location='foo' />" +
                 "<resource type='velocity' name='input-params' location='bar' />" +
                 "</animal>").getRootElement());

@@ -1,201 +1,55 @@
 package com.atlassian.plugin;
 
-import com.atlassian.core.util.ClassLoaderUtils;
 import com.atlassian.license.LicenseRegistry;
-import com.atlassian.license.LicenseTypeStore;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
-public class Plugin
+public interface Plugin
 {
-    private String name;
-    private String key;
-    private Map modules = new HashMap();
-    private boolean enabledByDefault = true;
-    private PluginInformation pluginInformation;
-    List resourceDescriptors;
-    private boolean enabled;
+    String getName();
 
-    public String getName()
-    {
-        return name;
-    }
+    void setName(String name);
 
-    public void setName(String name)
-    {
-        this.name = name;
-    }
+    String getKey();
 
-    public String getKey()
-    {
-        return key;
-    }
+    void setKey(String aPackage);
 
-    public void setKey(String aPackage)
-    {
-        this.key = aPackage;
-    }
+    void addModuleDescriptor(ModuleDescriptor moduleDescriptor);
 
-    public void addModuleDescriptor(ModuleDescriptor moduleDescriptor)
-    {
-        modules.put(moduleDescriptor.getKey(), moduleDescriptor);
-    }
+    Collection getModuleDescriptors();
 
-    public Collection getModuleDescriptors()
-    {
-        return modules.values();
-    }
+    ModuleDescriptor getModuleDescriptor(String key);
 
-    public ModuleDescriptor getModuleDescriptor(String key)
-    {
-        return (ModuleDescriptor) modules.get(key);
-    }
+    List getModuleDescriptorsByModuleClass(Class aClass);
 
-    public List getModuleDescriptorsByModuleClass(Class aClass)
-    {
-        List result = new ArrayList();
+    boolean isEnabledByDefault();
 
-        for (Iterator iterator = modules.values().iterator(); iterator.hasNext();)
-        {
-            ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator.next();
+    void setEnabledByDefault(boolean enabledByDefault);
 
-            Class moduleClass = moduleDescriptor.getModuleClass();
-            if (aClass.isAssignableFrom(moduleClass))
-                result.add(moduleDescriptor);
-        }
+    PluginInformation getPluginInformation();
 
-        return result;
-    }
+    void setPluginInformation(PluginInformation pluginInformation);
 
-    public boolean isEnabledByDefault()
-    {
-        return enabledByDefault;
-    }
+    List getResourceDescriptors();
 
-    public void setEnabledByDefault(boolean enabledByDefault)
-    {
-        this.enabledByDefault = enabledByDefault;
-    }
+    void setResourceDescriptors(List resourceDescriptors);
 
-    public PluginInformation getPluginInformation()
-    {
-        return pluginInformation;
-    }
+    List getResourceDescriptors(String type);
 
-    public void setPluginInformation(PluginInformation pluginInformation)
-    {
-        this.pluginInformation = pluginInformation;
-    }
+    ResourceDescriptor getResourceDescriptor(String type, String name);
 
-    public List getResourceDescriptors()
-    {
-        return resourceDescriptors;
-    }
+    LicenseRegistry getLicenseRegistry();
 
-    public void setResourceDescriptors(List resourceDescriptors)
-    {
-        this.resourceDescriptors = resourceDescriptors;
-    }
+    boolean isEnabled();
 
-    public List getResourceDescriptors(String type)
-    {
-        List typedResourceDescriptors = new LinkedList();
-
-        for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
-        {
-            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator.next();
-            if (resourceDescriptor.getType().equalsIgnoreCase(type))
-            {
-                typedResourceDescriptors.add(resourceDescriptor);
-            }
-        }
-
-        return typedResourceDescriptors;
-    }
-
-    public ResourceDescriptor getResourceDescriptor(String type, String name)
-    {
-        for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
-        {
-            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator.next();
-            if (resourceDescriptor.getType().equalsIgnoreCase(type) && resourceDescriptor.getName().equalsIgnoreCase(name))
-            {
-                return resourceDescriptor;
-            }
-        }
-
-        return null;
-    }
-
-    public LicenseRegistry getLicenseRegistry()
-    {
-        if (getPluginInformation().getLicenseRegistryLocation() != null && !("").equals(getPluginInformation().getLicenseRegistryLocation()))
-        {
-            try
-            {
-                Class licenseRegistryClass = ClassLoaderUtils.loadClass(getPluginInformation().getLicenseRegistryLocation(), Plugin.class);
-
-                return (LicenseRegistry) licenseRegistryClass.newInstance();
-            }
-            catch (ClassNotFoundException e)
-            {
-                throw new RuntimeException("Could not load License Registry");
-            }
-            catch (IllegalAccessException e)
-            {
-                throw new RuntimeException("Could not load License Registry");
-            }
-            catch (InstantiationException e)
-            {
-                throw new RuntimeException("Could not load License Registry");
-            }
-        }
-        return null;
-    }
-
-    public LicenseTypeStore getLicenseTypeStore()
-    {
-        if (getPluginInformation().getLicenseTypeStoreLocation() != null && !("").equals(getPluginInformation().getLicenseTypeStoreLocation()))
-        {
-            try
-            {
-                Class licenseTypeStoreClass = ClassLoaderUtils.loadClass(getPluginInformation().getLicenseTypeStoreLocation(), Plugin.class);
-
-                return (LicenseTypeStore) licenseTypeStoreClass.newInstance();
-            }
-            catch (ClassNotFoundException e)
-            {
-                throw new RuntimeException("Could not load License Store");
-            }
-            catch (IllegalAccessException e)
-            {
-                throw new RuntimeException("Could not load License Store");
-            }
-            catch (InstantiationException e)
-            {
-                throw new RuntimeException("Could not load License Store");
-            }
-        }
-        return null;
-    }
+    void setEnabled(boolean enabled);
 
     /**
-     * @return true if the plugin has been enabled
+     * Whether or not this plugin can be 'uninstalled'.
      */
-    public boolean isEnabled()
-    {
-        return enabled;
-    }
+    boolean isUninstallable();
 
-    /**
-     * Setter for the enabled state of a plugin. If this is set to
-     * false then the plugin will not execute.
-     * @param enabled
-     */
-    public void setEnabled(boolean enabled)
-    {
-        this.enabled = enabled;
-    }
-    
+    Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException;
 }

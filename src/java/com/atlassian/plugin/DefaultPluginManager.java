@@ -1,8 +1,10 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.loaders.PluginLoader;
+import com.atlassian.plugin.impl.DynamicPlugin;
 
 import java.util.*;
+import java.io.InputStream;
 
 public class DefaultPluginManager implements PluginManager
 {
@@ -12,6 +14,7 @@ public class DefaultPluginManager implements PluginManager
     private PluginManagerState currentState;
     private HashMap plugins;
     private HashMap licensedPlugins;
+    private HashMap dynamicPlugins;
 
     public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory)
     {
@@ -19,12 +22,14 @@ public class DefaultPluginManager implements PluginManager
         this.store = store;
         this.moduleDescriptorFactory = moduleDescriptorFactory;
         this.currentState = store.loadPluginState();
-        this.plugins = new HashMap();
-        this.licensedPlugins = new HashMap();
     }
 
     public void init() throws PluginParseException
     {
+        this.plugins = new HashMap();
+        this.licensedPlugins = new HashMap();
+        this.dynamicPlugins = new HashMap();
+
         // retrieve all the plugins
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
         {
@@ -50,7 +55,10 @@ public class DefaultPluginManager implements PluginManager
                 && plugin.getPluginInformation().getLicenseRegistryLocation() != null 
                 && plugin.getPluginInformation().getLicenseRegistryLocation() != "")
             licensedPlugins.put(plugin.getName(), plugin);
- 
+
+        if (plugin instanceof DynamicPlugin)
+            dynamicPlugins.put(plugin.getName(), plugin);
+
         for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
         {
             ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
@@ -301,5 +309,24 @@ public class DefaultPluginManager implements PluginManager
     public HashMap getLicensedPluginsMap()
     {
         return licensedPlugins;
+    }
+
+    public InputStream getDynamicResourceAsStream(String name)
+    {
+        Iterator it = dynamicPlugins.values().iterator();
+
+        while (it.hasNext())
+        {
+            DynamicPlugin dynamicPlugin = (DynamicPlugin) it.next();
+            if (isPluginEnabled(dynamicPlugin.getKey()))
+            {
+                InputStream is = dynamicPlugin.getResourceAsStream(name);
+
+                if (is != null)
+                    return is;
+            }
+        }
+
+        return null;
     }
 }

@@ -3,6 +3,7 @@ package com.atlassian.plugin;
 import com.mockobjects.dynamic.Mock;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.atlassian.plugin.impl.StaticPlugin;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +30,7 @@ public class TestStateAware extends TestCase
         mockDisabled = makeMockModule(Combination.class, "key1", "disabled", false);
         mockThwarted = makeMockModule(ModuleDescriptor.class, "key1", "thwarted", true);
 
-        plugin1 = new Plugin();
+        plugin1 = new StaticPlugin();
         plugin1.setKey("key1");
         plugin1.setEnabled(true);
 

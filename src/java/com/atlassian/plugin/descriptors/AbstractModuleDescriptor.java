@@ -1,6 +1,5 @@
 package com.atlassian.plugin.descriptors;
 
-import com.atlassian.core.util.ClassLoaderUtils;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import com.atlassian.plugin.PluginParseException;
@@ -30,7 +29,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         try
         {
             if (clazz != null)  //not all plugins have to have a class
-                moduleClass = ClassLoaderUtils.loadClass(clazz, getClass());
+                moduleClass = plugin.loadClass(clazz, getClass());
         }
         catch (ClassNotFoundException e)
         {

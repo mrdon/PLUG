@@ -3,6 +3,7 @@ package com.atlassian.plugin;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.io.InputStream;
 
 /**
  * A plugin manager is responsible for retrieving plugins and modules, as well as managing plugin loading and state.
@@ -31,7 +32,6 @@ public interface PluginManager
      * Retrieve a given plugin (whether enabled or not).
      * @return The enabled plugin, or null if that plugin does not exist.
      */
-
     Plugin getPlugin(String key);
 
     /**
@@ -104,9 +104,14 @@ public interface PluginManager
     List getEnabledModuleDescriptorsByType(String type) throws PluginParseException;
 
     /**
-     * Get all plugins that require a license
+     * Get all plugins that require a license.
      *
      * @return Map of plugins with license (plugin name -> plugin).
      */
     HashMap getLicensedPluginsMap();
+
+    /**
+     * Retrieve resource as stream from currently loaded dynamic plugins.
+     */
+    InputStream getDynamicResourceAsStream(String name);
 }

@@ -1,10 +1,7 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.core.util.ClassLoaderUtils;
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.*;
+import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.descriptors.ResourcedModuleDescriptor;
 import com.atlassian.plugin.mock.*;
@@ -102,7 +99,7 @@ public class TestSinglePluginLoader extends TestCase
         }
         catch (PluginParseException e)
         {
-            assertEquals("Couldn't find resource: bullshit.xml", e.getMessage());
+            assertEquals("Invalid InputStream specified?", e.getMessage());
         }
     }
 

@@ -1,18 +1,11 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.core.util.ClassLoaderUtils;
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.descriptors.ResourcedModuleDescriptor;
 import com.atlassian.plugin.mock.*;
 import junit.framework.TestCase;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class TestClassPathPluginLoader extends TestCase
 {

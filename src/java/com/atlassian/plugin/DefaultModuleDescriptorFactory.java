@@ -1,7 +1,7 @@
 package com.atlassian.plugin;
 
-import com.atlassian.core.util.ClassLoaderUtils;
 import com.atlassian.plugin.loaders.SinglePluginLoader;
+import com.atlassian.plugin.util.ClassLoaderUtils;
 
 import java.util.Map;
 import java.util.HashMap;
