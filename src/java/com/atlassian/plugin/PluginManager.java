@@ -23,7 +23,9 @@ public interface PluginManager
 
     ModuleDescriptor getPluginModule(String completeKey);
 
-    void enableLibrary(String key);
+    void enablePlugin(String key);
+    
+    void disablePlugin(String key);
 
     boolean isPluginEnabled(String key);
 

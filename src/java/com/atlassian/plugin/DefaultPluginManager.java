@@ -87,7 +87,7 @@ public class DefaultPluginManager implements PluginManager
     }
 
 
-    public void enableLibrary(String key)
+    public void enablePlugin(String key)
     {
         if (key == null)
             throw new IllegalArgumentException("You must specify a plugin key to disable.");
