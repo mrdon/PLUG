@@ -6,3 +6,6 @@ maven.log
 target
 velocity.log
 xdocs
+atlassian-plugins.iml
+atlassian-plugins.ipr
+atlassian-plugins.iws
