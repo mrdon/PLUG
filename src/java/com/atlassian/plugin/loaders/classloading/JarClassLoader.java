@@ -61,4 +61,19 @@ public class JarClassLoader extends PluginsClassLoader
         loader.packages = packages;
         return loader;
     }
+
+    public void closeJar()
+    {
+        try
+        {
+            if (jar != null)
+                jar.close();
+
+            jar = null;
+        }
+        catch (IOException e)
+        {
+            log.error("Error closing JAR: " + e, e);
+        }
+    }
 }

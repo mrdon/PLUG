@@ -3,9 +3,9 @@ package com.atlassian.plugin;
 /**
  * Parse plugin exception - thrown from code which must parse a plugin.
  */
-
 public class PluginParseException extends PluginException
 {
+    ///CLOVER:OFF
     public PluginParseException()
     {
         super();

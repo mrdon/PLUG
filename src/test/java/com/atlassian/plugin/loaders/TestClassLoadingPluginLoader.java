@@ -17,41 +17,33 @@ import org.apache.commons.logging.LogFactory;
 
 public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
 {
-    public static final String PADDINGTON_JAR = "paddington-test-plugin.jar";
-    public static final String POOH_JAR = "pooh-test-plugin.jar";
-
     private static final Log log = LogFactory.getLog(TestClassLoadingPluginLoader.class);
     ClassLoadingPluginLoader loader;
-    File pluginsDirectory;
     DefaultModuleDescriptorFactory moduleDescriptorFactory;
-    File tempDir;
-    File pluginsTestDir;
 
     public void setUp() throws Exception
     {
         super.setUp();
-        pluginsDirectory = getPluginsDirectory(); // hacky way of getting to the directoryPluginLoaderFiles classloading
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
-        tempDir = new File(System.getProperty("java.io.tmpdir"));
-        addTestModuleDecriptors();
 
-        pluginsTestDir = new File(tempDir.toString() + File.separator +  "plugins");
-
-        FileUtils.copyDirectory(pluginsDirectory, pluginsTestDir);
-        loader = new ClassLoadingPluginLoader(pluginsTestDir);
+        createFillAndCleanTempPluginDirectory();
     }
 
     public void tearDown() throws Exception
     {
+        if (loader != null)
+        {
+           loader.shutDown();
+        }
+
+        assertTrue(FileUtils.deleteDir(pluginsTestDir));
         super.tearDown();
-
-        FileUtils.deleteDir(pluginsTestDir);
     }
-
 
     public void testAtlassianPlugin() throws Exception
     {
         addTestModuleDecriptors();
+        loader = new ClassLoadingPluginLoader(pluginsTestDir);
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         assertEquals(2, plugins.size());
@@ -97,39 +89,24 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
 
     public void testSupportsAddition()
     {
+        loader = new ClassLoadingPluginLoader(pluginsTestDir);
         assertTrue(loader.supportsAddition());
     }
 
     public void testSupportsRemoval()
     {
+        loader = new ClassLoadingPluginLoader(pluginsTestDir);
         assertTrue(loader.supportsRemoval());
-    }
-
-    public void testMissingPlugins() throws PluginParseException
-    {
-        loader.loadAllPlugins(moduleDescriptorFactory);
-
-        Collection col = loader.removeMissingPlugins();
-
-        assertTrue(col.isEmpty());
-
-        //delete safe copy of paddington plugin
-        File paddington = new File(tempDir + File.separator + "plugins" + File.separator + PADDINGTON_JAR);
-        paddington.delete();
-
-        col = loader.removeMissingPlugins();
-
-        assertEquals(1, col.size());
     }
 
     public void testNoFoundPlugins()
     {
+        addTestModuleDecriptors();
+        loader = new ClassLoadingPluginLoader(pluginsTestDir);
         Collection col = loader.addFoundPlugins(moduleDescriptorFactory);
-
         assertFalse(col.isEmpty());
 
         col = loader.addFoundPlugins(moduleDescriptorFactory);
-
         assertTrue(col.isEmpty());
     }
 
@@ -139,18 +116,24 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         File paddington = new File(pluginsTestDir + File.separator + PADDINGTON_JAR);
         paddington.delete();
 
+        addTestModuleDecriptors();
+        loader = new ClassLoadingPluginLoader(pluginsTestDir);
         loader.loadAllPlugins(moduleDescriptorFactory);
 
         //restore paddington to test plugins dir
         FileUtils.copyDirectory(pluginsDirectory, pluginsTestDir);
 
         Collection col = loader.addFoundPlugins(moduleDescriptorFactory);
-
         assertEquals(1, col.size());
+        // next time we shouldn't find any new plugins
+        col = loader.addFoundPlugins(moduleDescriptorFactory);
+        assertEquals(0, col.size());
     }
 
     public void testRemovePlugin() throws PluginException, IOException
     {
+        addTestModuleDecriptors();
+        loader = new ClassLoadingPluginLoader(pluginsTestDir);
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         //duplicate the paddington plugin before removing the original

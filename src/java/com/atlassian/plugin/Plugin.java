@@ -1,11 +1,10 @@
 package com.atlassian.plugin;
 
-import com.atlassian.license.LicenseRegistry;
-import com.atlassian.license.LicenseTypeStore;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
 import java.util.Collection;
 import java.util.List;
+import java.io.InputStream;
 
 public interface Plugin
 {
@@ -41,10 +40,6 @@ public interface Plugin
 
     ResourceDescriptor getResourceDescriptor(String type, String name);
 
-    LicenseRegistry getLicenseRegistry();
-
-    LicenseTypeStore getLicenseTypeStore();
-
     boolean isEnabled();
 
     void setEnabled(boolean enabled);
@@ -54,5 +49,25 @@ public interface Plugin
      */
     boolean isUninstallable();
 
+    /**
+     * Whether or not this plugin can load resources.
+     */
+    boolean isResourceLoading();
+
+    /**
+     * Get the plugin to load a specific class.
+     *
+     * @param clazz The name of the class to be loaded
+     * @param callingClass The class calling the loading (used to help find a classloader)
+     * @return The loaded class.
+     * @throws ClassNotFoundException
+     */
     Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException;
+
+    /**
+     * Load a given resource from the plugin.
+     * @param name The name of the resource to be loaded.
+     * @return An InputStream for the resource, or null if the resource is not found or the plugin does not support resource loading.
+     */
+    InputStream getResourceAsStream(String name);
 }

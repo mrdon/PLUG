@@ -5,10 +5,9 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.util.ClassLoaderUtils;
-import com.atlassian.license.LicenseRegistry;
-import com.atlassian.license.LicenseTypeStore;
 
 import java.util.*;
+import java.io.InputStream;
 
 public class StaticPlugin implements Plugin
 {
@@ -131,57 +130,6 @@ public class StaticPlugin implements Plugin
         return null;
     }
 
-    public LicenseRegistry getLicenseRegistry()
-    {
-        if (getPluginInformation().getLicenseRegistryLocation() != null && !("").equals(getPluginInformation().getLicenseRegistryLocation()))
-        {
-            try
-            {
-                Class licenseRegistryClass = ClassLoaderUtils.loadClass(getPluginInformation().getLicenseRegistryLocation(), Plugin.class);
-                return (LicenseRegistry) licenseRegistryClass.newInstance();
-            }
-            catch (ClassNotFoundException e)
-            {
-                throw new RuntimeException("Could not load License Registry");
-            }
-            catch (IllegalAccessException e)
-            {
-                throw new RuntimeException("Could not load License Registry");
-            }
-            catch (InstantiationException e)
-            {
-                throw new RuntimeException("Could not load License Registry");
-            }
-        }
-        return null;
-    }
-
-    public LicenseTypeStore getLicenseTypeStore()
-    {
-        if (getPluginInformation().getLicenseTypeStoreLocation() != null && !("").equals(getPluginInformation().getLicenseTypeStoreLocation()))
-        {
-            try
-            {
-                Class licenseTypeStoreClass = ClassLoaderUtils.loadClass(getPluginInformation().getLicenseTypeStoreLocation(), Plugin.class);
-
-                return (LicenseTypeStore) licenseTypeStoreClass.newInstance();
-            }
-            catch (ClassNotFoundException e)
-            {
-                throw new RuntimeException("Could not load License Store");
-            }
-            catch (IllegalAccessException e)
-            {
-                throw new RuntimeException("Could not load License Store");
-            }
-            catch (InstantiationException e)
-            {
-                throw new RuntimeException("Could not load License Store");
-            }
-        }
-        return null;
-    }
-
     /**
      * @return true if the plugin has been enabled
      */
@@ -211,6 +159,16 @@ public class StaticPlugin implements Plugin
     public Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException
     {
         return ClassLoaderUtils.loadClass(clazz, callingClass);
+    }
+
+    public InputStream getResourceAsStream(String name)
+    {
+        return null;
+    }
+
+    public boolean isResourceLoading()
+    {
+        return false;
     }
 }
 

@@ -1,7 +1,6 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.util.FileUtils;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.loaders.classloading.Scanner;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
@@ -49,9 +48,7 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
         for (Iterator iterator = scanner.getDeploymentUnits().iterator(); iterator.hasNext();)
         {
             DeploymentUnit deploymentUnit = (DeploymentUnit) iterator.next();
-
             deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
-
         }
 
         return plugins.values();
@@ -126,31 +123,6 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
     }
 
     /**
-     * @return a list representing plugins which have been removed from disk since the pluginloader
-     * last compared its lists of active plugins and present plugins.
-     */
-    public Collection removeMissingPlugins()
-    {
-        // find missing plugins
-        scanner.scan();
-
-        // create list while updating internal state
-        List missingPlugins = new ArrayList();
-        for (Iterator iterator = plugins.keySet().iterator(); iterator.hasNext();)
-        {
-            DeploymentUnit deploymentUnit = (DeploymentUnit) iterator.next();
-            if (!scanner.getDeploymentUnits().contains(deploymentUnit))
-            {
-                missingPlugins.add(plugins.get(deploymentUnit));
-                iterator.remove();
-            }
-        }
-
-        return missingPlugins;
-    }
-
-
-    /**
      * @return all plugins, now loaded by the pluginLoader, which have been discovered and added since the
      * last time a check was performed.
      */
@@ -166,10 +138,9 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
             DeploymentUnit deploymentUnit = (DeploymentUnit) iterator.next();
             if (!plugins.containsKey(deploymentUnit))
             {
-
                 DynamicPlugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
                 foundPlugins.add(plugin);
-                iterator.remove();
+                // iterator.remove();
             }
         }
 
@@ -210,6 +181,7 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
 
         //delete the plugin from the filesystem
         File pluginOnDisk = deploymentUnit.getPath();
+        scanner.undeploy(pluginOnDisk);
 
         try
         {
@@ -220,5 +192,10 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
         {
             throw new PluginException(e);
         }
+    }
+
+    public void shutDown()
+    {
+        scanner.undeployAll();
     }
 }

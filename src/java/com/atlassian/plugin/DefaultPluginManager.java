@@ -1,7 +1,6 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.loaders.PluginLoader;
-import com.atlassian.plugin.impl.DynamicPlugin;
 
 import java.util.*;
 import java.io.InputStream;
@@ -13,10 +12,7 @@ public class DefaultPluginManager implements PluginManager
     private ModuleDescriptorFactory moduleDescriptorFactory;
     private PluginManagerState currentState;
     private HashMap plugins;
-    private HashMap licensedPlugins;
-    private HashMap dynamicPlugins;
-    private HashMap pluginLoaderToPlugin; //will store a pluginLoader as a key and the entry will be a list of plugins
-
+    private HashMap pluginToPluginLoader; // will store a plugin as a key and pluginLoader as a value
 
     public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory)
     {
@@ -26,9 +22,6 @@ public class DefaultPluginManager implements PluginManager
         this.currentState = store.loadPluginState();
     }
 
-
-
-
     /**
      * Initialize all plugins the first time.
      * @throws PluginParseException
@@ -36,8 +29,7 @@ public class DefaultPluginManager implements PluginManager
     public void init() throws PluginParseException
     {
         this.plugins = new HashMap();
-        this.licensedPlugins = new HashMap();
-        this.dynamicPlugins = new HashMap();
+        this.pluginToPluginLoader = new HashMap();
 
         // retrieve all the plugins
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
@@ -46,88 +38,70 @@ public class DefaultPluginManager implements PluginManager
 
             for (Iterator iterator1 = loader.loadAllPlugins(moduleDescriptorFactory).iterator(); iterator1.hasNext();)
             {
-                addPlugin((Plugin) iterator1.next());
-//                addPlugin(pluginLoader, plugin); //stores the plugin with pluginloader
+                addPlugin(loader, (Plugin) iterator1.next());
             }
         }
     }
 
-    public void destroy(Plugin plugin)
-    {
-        //locate the individual plugin from pluginLoaderToPlugin
-        //call destroy
-    }
-
-    /**
-     * Re-initialize all plugins - this will destroy every plugin and then initialize afresh.
-     * @param plugin
-     * @throws PluginParseException
-     */
-    public void reInit() throws PluginParseException
+    public void findNewPlugins() throws PluginParseException
     {
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
         {
             PluginLoader loader = (PluginLoader) iterator.next();
 
-            if (loader.supportsRemoval())
-            {
-                Collection removedPlugins = loader.removeMissingPlugins();
-                // remove each one
-            }
-
             if (loader.supportsAddition())
             {
                 Collection addedPlugins = loader.addFoundPlugins(moduleDescriptorFactory);
-                // add each one
+                for (Iterator iterator1 = addedPlugins.iterator(); iterator1.hasNext();)
+                {
+                    Plugin newPlugin = (Plugin) iterator1.next();
+                    addPlugin(loader, newPlugin);
+                }
             }
         }
     }
 
     /**
-     * Shutdown the plugin system by disabling (optionally) and then destroying all modules.
+     * Uninstall (delete) a plugin if possible.
      * <p>
-     * Be very careful when using this method - plugin system will not be in a usable state afterwards.
-     * <p>
-     * @see DefaultPluginManager#reInit();
+     * Be very careful when using this method, the plugin cannot be brought back.
      */
-    public void destroy()
+    public void uninstall(Plugin plugin) throws PluginException
     {
-        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
+        if (!plugin.isUninstallable())
+            throw new PluginException("Plugin is not uninstallable: " + plugin.getKey());
+
+        PluginLoader loader = (PluginLoader) pluginToPluginLoader.remove(plugin);
+
+        if (loader == null || !loader.supportsRemoval())
         {
-            // remove the plugin from the plugins map
-            Plugin plugin = (Plugin) iterator.next();
-            iterator.remove();
-
-            for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
-            {
-                ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
-
-                // if the module is StateAware, then disable it (matches enable())
-                if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
-                    ((StateAware)descriptor).disabled();
-
-                // now destroy it (matches init())
-                descriptor.destroy(plugin);
-            }
+            throw new PluginException("Not uninstalling plugin - could not find plugin loader, or loader doesn't allow removal. Plugin: " + plugin.getKey());
         }
+
+        plugins.remove(plugin.getKey());
+
+        for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
+        {
+            ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
+
+            // if the module is StateAware, then disable it (matches enable())
+            if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
+                ((StateAware)descriptor).disabled();
+
+            // now destroy it (matches init())
+            descriptor.destroy(plugin);
+        }
+
+        loader.removePlugin(plugin);
     }
 
-    protected void addPlugin(Plugin plugin) throws PluginParseException
+    protected void addPlugin(PluginLoader loader, Plugin plugin) throws PluginParseException
     {
         // testing to make sure plugin keys are unique
-        if (plugins.containsKey(plugin.getKey()) || licensedPlugins.containsKey(plugin.getKey()))
+        if (plugins.containsKey(plugin.getKey()))
             throw new PluginParseException("Duplicate plugin key found: '" + plugin.getKey() + "'");
 
         plugins.put(plugin.getKey(), plugin);
-
-        // Store plugins requiring a license
-        if (plugin.getPluginInformation() != null
-                && plugin.getPluginInformation().getLicenseRegistryLocation() != null 
-                && plugin.getPluginInformation().getLicenseRegistryLocation() != "")
-            licensedPlugins.put(plugin.getName(), plugin);
-
-        if (plugin instanceof DynamicPlugin)
-            dynamicPlugins.put(plugin.getName(), plugin);
 
         for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
         {
@@ -135,6 +109,8 @@ public class DefaultPluginManager implements PluginManager
             if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
                 ((StateAware)descriptor).enabled();
         }
+
+        pluginToPluginLoader.put(plugin, loader);
     }
 
     private void saveState()
@@ -232,7 +208,6 @@ public class DefaultPluginManager implements PluginManager
 
         return result;
     }
-
 
     public void enablePlugin(String key)
     {
@@ -376,21 +351,14 @@ public class DefaultPluginManager implements PluginManager
         return getEnabledModuleDescriptorsByClass(descriptorClazz);
     }
 
-    public HashMap getLicensedPluginsMap()
-    {
-        return licensedPlugins;
-    }
-
     public InputStream getDynamicResourceAsStream(String name)
     {
-        Iterator it = dynamicPlugins.values().iterator();
-
-        while (it.hasNext())
+        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
         {
-            DynamicPlugin dynamicPlugin = (DynamicPlugin) it.next();
-            if (isPluginEnabled(dynamicPlugin.getKey()))
+            Plugin plugin = (Plugin) iterator.next();
+            if (plugin.isResourceLoading() && isPluginEnabled(plugin.getKey()))
             {
-                InputStream is = dynamicPlugin.getResourceAsStream(name);
+                InputStream is = plugin.getResourceAsStream(name);
 
                 if (is != null)
                     return is;

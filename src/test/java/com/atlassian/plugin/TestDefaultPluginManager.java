@@ -2,21 +2,36 @@ package com.atlassian.plugin;
 
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.loaders.SinglePluginLoader;
-import com.atlassian.plugin.loaders.PluginLoader;
+import com.atlassian.plugin.loaders.ClassLoadingPluginLoader;
+import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
-import com.mockobjects.dynamic.Mock;
-import com.mockobjects.dynamic.C;
+import com.atlassian.plugin.util.FileUtils;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.File;
 
-public class TestDefaultPluginManager extends TestCase
+public class TestDefaultPluginManager extends AbstractTestClassLoader
 {
+    private ClassLoadingPluginLoader classLoadingPluginLoader;
+
+    protected void tearDown() throws Exception
+    {
+        if (classLoadingPluginLoader != null)
+        {
+            classLoadingPluginLoader.shutDown();
+        }
+
+        super.tearDown();
+    }
+
     public void testRetrievePlugins() throws PluginParseException
     {
         List pluginLoaders = new ArrayList();
@@ -225,4 +240,92 @@ public class TestDefaultPluginManager extends TestCase
         {
         }
     }
+
+    public void testRetrievingDynamicResources() throws PluginParseException, IOException
+    {
+        createFillAndCleanTempPluginDirectory();
+
+        PluginManager manager = makeClassLoadingPluginManager();
+
+        InputStream is = manager.getDynamicResourceAsStream("atlassian-plugin.xml");
+        assertNotNull(is);
+    }
+
+    public void testFindingNewPlugins() throws PluginParseException, IOException
+    {
+        createFillAndCleanTempPluginDirectory();
+
+        //delete paddington for the timebeing
+        File paddington = new File(pluginsTestDir, PADDINGTON_JAR);
+        paddington.delete();
+
+        PluginManager manager = makeClassLoadingPluginManager();
+
+        assertEquals(1, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded2"));
+
+        //restore paddington to test plugins dir
+        FileUtils.copyDirectory(pluginsDirectory, pluginsTestDir);
+
+        manager.findNewPlugins();
+        assertEquals(2, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded2"));
+        assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
+
+        manager.findNewPlugins();
+        assertEquals(2, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded2"));
+        assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
+    }
+
+    private PluginManager makeClassLoadingPluginManager() throws PluginParseException
+    {
+        List pluginLoaders = new ArrayList();
+        classLoadingPluginLoader = new ClassLoadingPluginLoader(pluginsTestDir);
+        pluginLoaders.add(classLoadingPluginLoader);
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        manager.init();
+        return manager;
+    }
+
+    public void testRemovingPlugins() throws PluginException, IOException
+    {
+        createFillAndCleanTempPluginDirectory();
+
+        PluginManager manager = makeClassLoadingPluginManager();
+        assertEquals(2, manager.getPlugins().size());
+        manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded"));
+        assertEquals(1, manager.getPlugins().size());
+        assertNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
+        assertEquals(1, pluginsTestDir.listFiles().length);
+    }
+
+    public void testNonRemovablePlugins() throws PluginParseException
+    {
+        List pluginLoaders = new ArrayList();
+        pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        manager.init();
+
+        Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        assertFalse(plugin.isUninstallable());
+        assertFalse(plugin.isResourceLoading());
+        assertNull(plugin.getResourceAsStream("anything"));
+
+        try
+        {
+            manager.uninstall(plugin);
+            fail("Where was the exception?");
+        }
+        catch (PluginException p)
+        {
+        }
+    }
+
 }

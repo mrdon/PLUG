@@ -1,10 +1,12 @@
 package com.atlassian.plugin.loaders.classloading;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
 
 /**
@@ -15,6 +17,8 @@ import java.util.*;
  */
 public class Scanner implements FileFilter
 {
+    private static Log log = LogFactory.getLog(Scanner.class);
+
     /**
      * Tracks the classloading
      */
@@ -85,10 +89,9 @@ public class Scanner implements FileFilter
         DeploymentUnit unit = locateDeploymentUnit(file);
         if (unit != null)
         {
-            deployedLoaders.remove(unit);
+            JarClassLoader jcl = (JarClassLoader) deployedLoaders.remove(unit);
+            jcl.closeJar();
         }
-
-        /** Your undeploy stuff here **/
     }
 
     public boolean isModified()
@@ -161,5 +164,15 @@ public class Scanner implements FileFilter
     public ClassLoader getClassLoader(DeploymentUnit deploymentUnit)
     {
         return (ClassLoader) deployedLoaders.get(deploymentUnit);
+    }
+
+    public void undeployAll()
+    {
+        for (Iterator iterator = deployedLoaders.values().iterator(); iterator.hasNext();)
+        {
+            JarClassLoader jarClassLoader = (JarClassLoader) iterator.next();
+            jarClassLoader.closeJar();
+            iterator.remove();
+        }
     }
 }

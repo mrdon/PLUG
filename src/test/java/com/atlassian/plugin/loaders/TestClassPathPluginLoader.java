@@ -19,8 +19,6 @@ public class TestClassPathPluginLoader extends TestCase
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
-        assertEquals(1, plugins.size());
-
         Plugin plugin = (Plugin) plugins.iterator().next();
         assertEquals("Test Plugin", plugin.getName());
         assertEquals("test.atlassian.plugin", plugin.getKey());

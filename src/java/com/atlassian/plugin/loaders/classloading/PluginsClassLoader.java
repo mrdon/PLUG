@@ -26,11 +26,6 @@ public abstract class PluginsClassLoader extends SecureClassLoader implements Cl
     protected String[] packages = null;
     private Map cache = new HashMap();
 
-    protected PluginsClassLoader()
-    {
-        this(ClassLoader.getSystemClassLoader());
-    }
-
     protected PluginsClassLoader(ClassLoader parent)
     {
         super(parent);

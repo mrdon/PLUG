@@ -16,7 +16,7 @@ import java.util.Iterator;
 
 public abstract class AbstractXmlPluginLoader implements PluginLoader
 {
-    private static Log log = LogFactory.getLog(SinglePluginLoader.class);
+    private static Log log = LogFactory.getLog(AbstractXmlPluginLoader.class);
 
     protected boolean isResource(Element element)
     {
@@ -28,7 +28,7 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
         if (resource == null)
             throw new PluginParseException("Couldn't find resource: " + resource);
 
-        final InputStream is = ClassLoaderUtils.getResourceAsStream(resource, SinglePluginLoader.class);
+        final InputStream is = ClassLoaderUtils.getResourceAsStream(resource, AbstractXmlPluginLoader.class);
         return getDocument(is);
     }
 
@@ -112,16 +112,6 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
         {
             pluginInfo.setMaxVersion(Float.parseFloat(element.element("application-version").attributeValue("max")));
             pluginInfo.setMinVersion(Float.parseFloat(element.element("application-version").attributeValue("min")));
-        }
-
-        if (element.element("license-registry-location") != null)
-        {
-            pluginInfo.setLicenseRegistryLocation(element.element("license-registry-location").getTextTrim());
-        }
-
-        if (element.element("license-store-location") != null)
-        {
-            pluginInfo.setLicenseTypeStoreLocation(element.element("license-store-location").getTextTrim());
         }
 
         return pluginInfo;

@@ -15,6 +15,33 @@ public class TestDefaultModuleDescriptorFactory extends TestCase
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
     }
 
+    public void testInvalidModuleDescriptorType()
+    {
+        try
+        {
+            moduleDescriptorFactory.getModuleDescriptor("foobar");
+            fail("Should have thrown exception");
+        }
+        catch (IllegalAccessException e)
+        {
+            e.printStackTrace();
+        }
+        catch (PluginParseException e)
+        {
+            return;
+        }
+        catch (ClassNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+        catch (InstantiationException e)
+        {
+            e.printStackTrace();
+        }
+        
+        fail("Threw the wrong exception");
+    }
+
     public void testModuleDescriptorFactory() throws PluginParseException, IllegalAccessException, ClassNotFoundException, InstantiationException
     {
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);

@@ -4,17 +4,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
 import java.io.*;
-import java.util.logging.Logger;
 
 public class FileUtils
 {
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
     private static final Log log = LogFactory.getLog(FileUtils.class);
-
-    private FileUtils()
-    {
-        //utility class should not be instantiated
-    }
 
     /**
      * Copy file from source to destination. The directories up to <code>destination</code> will be
@@ -206,32 +200,9 @@ public class FileUtils
             return false;
         }
 
-        // to see if this directory is actually a symbolic link to a directory,
-        // we want to get its canonical path - that is, we follow the link to
-        // the file it's actually linked to
-        File candir;
-        try
-        {
-            candir = dir.getCanonicalFile();
-        }
-        catch (IOException e)
-        {
-            return false;
-        }
-
-        // a symbolic link has a different canonical path than its actual path,
-        // unless it's a link to itself
-        if (!candir.equals(dir.getAbsoluteFile()))
-        {
-            // this file is a symbolic link, and there's no reason for us to
-            // follow it, because then we might be deleting something outside of
-            // the directory we were told to delete
-            return false;
-        }
-
         // now we go through all of the files and subdirectories in the
         // directory and delete them one by one
-        File[] files = candir.listFiles();
+        File[] files = dir.listFiles();
         if (files != null)
         {
             for (int i = 0; i < files.length; i++)

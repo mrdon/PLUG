@@ -1,7 +1,6 @@
 package com.atlassian.plugin;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.io.InputStream;
 
@@ -17,6 +16,11 @@ public interface PluginManager
      * @throws PluginParseException If parsing the plugins failed.
      */
     void init() throws PluginParseException;
+
+    /**
+     * Search all loaders and add any new plugins you find.
+     */
+    void findNewPlugins() throws PluginParseException;
 
     /**
      * Get all of the currently installed plugins.
@@ -104,14 +108,9 @@ public interface PluginManager
     List getEnabledModuleDescriptorsByType(String type) throws PluginParseException;
 
     /**
-     * Get all plugins that require a license.
-     *
-     * @return Map of plugins with license (plugin name -> plugin).
-     */
-    HashMap getLicensedPluginsMap();
-
-    /**
      * Retrieve resource as stream from currently loaded dynamic plugins.
      */
     InputStream getDynamicResourceAsStream(String name);
+
+    void uninstall(Plugin plugin) throws PluginException;
 }

@@ -3,7 +3,7 @@
     <pomVersion>3</pomVersion>
     <id>atlassian-plugins</id>
     <name>Atlassian Plugins</name>
-    <currentVersion>0.4</currentVersion>
+    <currentVersion>0.5</currentVersion>
     <organization>
         <name>Atlassian Software Systems Pty Ltd</name>
     </organization>
@@ -56,16 +56,6 @@
     </build>
     <dependencies>
         <dependency>
-            <id>atlassian-extras</id>
-            <version>0.6</version>
-            <properties>
-                <war.bundle>true</war.bundle>
-                <atlassian.ship>jar</atlassian.ship>
-                <atlassian.module.dir>atlassian-extras</atlassian.module.dir>
-                <atlassian.cvs.tag>atlassian_extras_0_6</atlassian.cvs.tag>
-            </properties>
-        </dependency>
-        <dependency>
             <id>commons-lang</id>
             <version>2.0</version>
             <properties>
@@ -94,10 +84,10 @@
             <id>mockobjects+core</id>
             <version>0.09</version>
         </dependency>
-      <dependency>
-      <groupId>xerces</groupId>
-      <artifactId>xmlParserAPIs</artifactId>
-      <version>2.2.1</version>
-    </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xmlParserAPIs</artifactId>
+            <version>2.2.1</version>
+        </dependency>
     </dependencies>
 </project>

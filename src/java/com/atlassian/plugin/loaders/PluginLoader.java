@@ -24,12 +24,6 @@ public interface PluginLoader
     boolean supportsRemoval();
 
     /**
-     * Removes plugins this PluginLoader can no longer see, returning a list of them.
-     * @return List of plugins that were there once but now are not ... Once upon a time
-     */
-    Collection removeMissingPlugins();
-
-    /**
      * @return a collection of discovered plugins which have now been loaded by this pluginloader
      */
     Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory);
