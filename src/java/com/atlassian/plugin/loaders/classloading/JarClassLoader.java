@@ -9,15 +9,13 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 /**
- * User: Hani Suleiman
- * Date: Oct 22, 2003
- * Time: 3:56:56 PM
+ * User: Hani Suleiman & Mike Cannon-Brookes
+ * (originally sort-of copied from WebWork1 source)
  */
 public class JarClassLoader extends PluginsClassLoader
 {
     private JarFile jar;
     private File file;
-    private long jarLastModified;
 
     public JarClassLoader(File file, ClassLoader parent)
     {
@@ -35,7 +33,6 @@ public class JarClassLoader extends PluginsClassLoader
         if (jar == null)
         {
             jar = new JarFile(file);
-            jarLastModified = file.lastModified();
         }
     }
 
