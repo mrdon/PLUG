@@ -44,6 +44,10 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
 
         if ("false".equalsIgnoreCase(element.attributeValue("singleton")))
             singleton = false;
+        else if ("true".equalsIgnoreCase(element.attributeValue("singleton")))
+            singleton = true;
+        else
+            singleton = getIsSingletonByDefault();
     }
 
     public boolean isEnabledByDefault()
@@ -54,6 +58,16 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     public boolean isSingleton()
     {
         return singleton;
+    }
+
+    /**
+     * Override this method if you want your module descriptor to be or not be a singleton by default.
+     * <p>
+     * Default is "true" - ie all plugin modules are singletons by default.
+     */
+    protected boolean getIsSingletonByDefault()
+    {
+        return true;
     }
 
     /**
