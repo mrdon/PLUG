@@ -51,6 +51,7 @@ public class TestDefaultPluginManager extends TestCase
         assertNotNull(manager.getEnabledPlugin(pluginKey));
         assertNotNull(manager.getPluginModule(moduleKey));
         assertNotNull(manager.getEnabledPluginModule(moduleKey));
+        assertNull(manager.getEnabledPluginModule(pluginKey + ":shit"));
 
         // now only retrieve via always retrieve methods
         manager.disablePlugin(pluginKey);

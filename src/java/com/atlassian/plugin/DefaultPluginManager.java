@@ -195,7 +195,8 @@ public class DefaultPluginManager implements PluginManager
     {
         ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
 
-        return isPluginEnabled(key.getPluginKey()) && currentState.isEnabled(getPluginModule(completeKey));
+        final ModuleDescriptor pluginModule = getPluginModule(completeKey);
+        return isPluginEnabled(key.getPluginKey()) && pluginModule != null && currentState.isEnabled(pluginModule);
     }
 
     public boolean isPluginEnabled(String key)

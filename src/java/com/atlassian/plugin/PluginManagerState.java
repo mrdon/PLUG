@@ -56,6 +56,9 @@ public class PluginManagerState
      */
     public boolean isEnabled(ModuleDescriptor pluginModule)
     {
+        if (pluginModule == null)
+            return false;
+        
         Boolean bool = getState(pluginModule.getCompleteKey());
         return (bool == null) ? pluginModule.isEnabledByDefault() : bool.booleanValue();
     }
