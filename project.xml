@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<project>
+    <pomVersion>3</pomVersion>
+    <id>atlassian-plugins</id>
+    <name>Atlassian Plugins</name>
+    <currentVersion>0.1</currentVersion>
+    <organization>
+	    <name>Atlassian Software Systems Pty Ltd</name>
+    </organization>
+    <inceptionYear>2004</inceptionYear>
+    <package>com.atlassian.plugin</package>
+    <description>A library to give systems the ability to have plugins, make them more pluggable and hence add pluggability (it's late  - that makes sense in my head).</description>
+
+    <developers>
+	    <developer>
+		    <name>Mike Cannon-Brookes</name>
+		    <id>mike</id>
+		    <email>mike@atlassian.com</email>
+		    <organization>Atlassian</organization>
+		    <roles>
+			    <role>Developer</role>
+		    </roles>
+	    </developer>
+    </developers>
+
+    <dependencies>
+	    <dependency>
+		    <id>junit</id>
+		    <version>3.8.1</version>
+	    </dependency>
+	    <dependency>
+		    <id>atlassian-core</id>
+		    <version>2.0.19</version>
+	    </dependency>
+	    <dependency>
+		    <id>commons-lang</id>
+		    <version>2.0</version>
+	    </dependency>
+	    <dependency>
+		    <id>commons-logging</id>
+		    <version>1.1-dev</version>
+	    </dependency>
+	    <dependency>
+		    <id>dom4j</id>
+		    <version>1.4-full</version>
+	    </dependency>
+    </dependencies>
+    
+    <reports> 
+	    <report>maven-license-plugin</report> 
+	    <report>maven-faq-plugin</report> 
+	    <report>maven-pmd-plugin</report>
+	    <report>maven-simian-plugin</report> 
+	    <report>maven-jdepend-plugin</report> 
+	    <report>maven-jxr-plugin</report> 
+	    <report>maven-javadoc-plugin</report> 
+	    <report>maven-changes-plugin</report>
+	    <report>maven-junit-report-plugin</report>
+	    <report>maven-clover-plugin</report> 
+    </reports>
+
+    <build>
+	    <nagEmailAddress>dev@atlassian.com</nagEmailAddress>
+	    <sourceDirectory>src/java</sourceDirectory>
+	    <unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
+	    <unitTest>
+		    <includes>
+			    <include>**/*Test.java</include>
+			    <include>**/Test*.java</include>
+		    </includes>
+		    <excludes>
+			    <exclude>**/Abstract*.java</exclude>
+		    </excludes>
+            <resources>
+                <resource>
+                    <directory>src/test/etc</directory>
+                </resource>
+            </resources>
+	    </unitTest>
+    </build>
+</project>
