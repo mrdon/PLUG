@@ -1,6 +1,5 @@
 package com.atlassian.plugin.descriptors;
 
-import com.atlassian.core.util.ClassLoaderUtils;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.elements.ResourceDescriptor;

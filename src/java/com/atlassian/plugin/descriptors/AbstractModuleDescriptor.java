@@ -5,7 +5,6 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.loaders.LoaderUtils;
 import org.dom4j.Element;
 
 import java.util.Map;
@@ -18,6 +17,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     Class moduleClass;
     String description;
     boolean enabledByDefault = true;
+    protected boolean singleton = true;
     Map params;
 
     public void init(Plugin plugin, Element element) throws PluginParseException
@@ -41,11 +41,19 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
 
         if ("disabled".equalsIgnoreCase(element.attributeValue("state")))
             enabledByDefault = false;
+
+        if ("false".equalsIgnoreCase(element.attributeValue("singleton")))
+            singleton = false;
     }
 
     public boolean isEnabledByDefault()
     {
         return enabledByDefault;
+    }
+
+    public boolean isSingleton()
+    {
+        return singleton;
     }
 
     /**
