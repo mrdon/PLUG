@@ -12,9 +12,8 @@ public abstract class AbstractTestClassLoader extends TestCase
     protected File getPluginsDirectory()
     {
         URL url = ClassLoaderUtils.getResource("plugins", TestClassPathPluginLoader.class);
-        System.out.println("url.toExternalForm() = " + url.toExternalForm());
         String path = url.toExternalForm().substring(5);
-        System.out.println("path = " + path);
+    	path = path.replace('/', File.separatorChar);
         File pluginsDirectory = new File(path);
         return pluginsDirectory;
     }

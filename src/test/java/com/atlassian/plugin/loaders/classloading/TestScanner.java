@@ -54,32 +54,44 @@ public class TestScanner extends AbstractTestClassLoader
         assertEquals(2, scanner.getDeploymentUnits().size());
     }
 
-
     public void testModifyJar() throws Exception
     {
+        // Note windows is a piece of shit (can't modify files in the classpath) so
+        // we need to create a temporary directory outside the classpath where we can modify files freely.
         File pluginsDirectory = getPluginsDirectory();
         File paddington = new File(pluginsDirectory, "paddington-test-plugin.jar");
 
+        File testTempDirectory = new File(System.getProperty("java.io.tmpdir") + File.separator + "TestScannerTests");
+
+        if (testTempDirectory.exists()) // if the directory exists, nuke it.
+            testTempDirectory.delete();
+
+        testTempDirectory.mkdirs();
+
+        File newPaddington = new File(testTempDirectory, "paddington-test-plugin.jar");
+        FileUtils.copyFile(paddington, newPaddington);
+
         // set the original mod date - must be a multiple of 1000 on most (all?) file systems
         long originalModification = System.currentTimeMillis();
-        originalModification = originalModification - (originalModification % 1000);
-        paddington.setLastModified(originalModification);
+        originalModification = originalModification - (originalModification % 1000) - 3000;
+        newPaddington.setLastModified(originalModification);
+        assertEquals(originalModification, newPaddington.lastModified());
 
         // should be 2 to start with
-        Scanner scanner = new Scanner(pluginsDirectory);
+        Scanner scanner = new Scanner(testTempDirectory);
         scanner.scan();
-        assertEquals(2, scanner.getDeploymentUnits().size());
+        assertEquals(1, scanner.getDeploymentUnits().size());
 
-        DeploymentUnit paddingtonUnit = scanner.locateDeploymentUnit(paddington);
-        assertEquals(originalModification, paddingtonUnit.lastModified());
+        DeploymentUnit newPaddingtonUnit = scanner.locateDeploymentUnit(newPaddington);
+        assertEquals(originalModification, newPaddingtonUnit.lastModified());
 
-        // copy and scan - should have 3 files
+        // modify the JAR file
         long secondModification = originalModification + 2000;
-        paddington.setLastModified(secondModification);
+        newPaddington.setLastModified(secondModification);
         scanner.scan();
 
-        paddingtonUnit = scanner.locateDeploymentUnit(paddington);
-        assertEquals(secondModification, paddingtonUnit.lastModified());
+        newPaddingtonUnit = scanner.locateDeploymentUnit(newPaddington);
+        assertEquals(secondModification, newPaddingtonUnit.lastModified());
     }
 
     public void testAcceptOnlyJar() throws Exception
