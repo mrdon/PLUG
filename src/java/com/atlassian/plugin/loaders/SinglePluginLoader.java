@@ -93,13 +93,13 @@ public class SinglePluginLoader implements PluginLoader
             if (is == null)
                 throw new PluginParseException("Couldn't find resource: " + resource);
 
-            return reader.read(is);
+            return reader.read(is, resource);
         }
         else if (is != null)
         {
             try
             {
-                return reader.read(is);
+                return reader.read(is, resource);
             }
             finally
             {
