@@ -192,6 +192,11 @@ public class SinglePluginLoader implements PluginLoader
             pluginInfo.setMinVersion(Float.parseFloat(element.element("application-version").attributeValue("min")));
         }
 
+        if (element.element("license-registry-location") != null)
+        {
+            pluginInfo.setLicenseRegistryLocation(element.element("license-registry-location").getTextTrim());
+        }
+
         return pluginInfo;
     }
 

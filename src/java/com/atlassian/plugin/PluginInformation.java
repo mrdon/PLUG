@@ -14,6 +14,7 @@ public class PluginInformation
     private String vendorUrl;
     private float maxVersion;
     private float minVersion;
+    private String licenseRegistryLocation;
 
     public String getDescription()
     {
@@ -39,7 +40,6 @@ public class PluginInformation
     {
         this.vendorName = vendorName;
     }
-
 
     public void setVendorUrl(String vendorUrl)
     {
@@ -75,5 +75,15 @@ public class PluginInformation
     public float getMinVersion()
     {
         return minVersion;
+    }
+
+    public String getLicenseRegistryLocation()
+    {
+        return licenseRegistryLocation;
+    }
+
+    public void setLicenseRegistryLocation(String licenseRegistryLocation)
+    {
+        this.licenseRegistryLocation = licenseRegistryLocation;
     }
 }

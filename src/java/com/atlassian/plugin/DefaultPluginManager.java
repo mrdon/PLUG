@@ -11,6 +11,7 @@ public class DefaultPluginManager implements PluginManager
     private ModuleDescriptorFactory moduleDescriptorFactory;
     private PluginManagerState currentState;
     private HashMap plugins;
+    private HashMap licensedPlugins;
 
     public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory)
     {
@@ -19,6 +20,7 @@ public class DefaultPluginManager implements PluginManager
         this.moduleDescriptorFactory = moduleDescriptorFactory;
         this.currentState = store.loadPluginState();
         this.plugins = new HashMap();
+        this.licensedPlugins = new HashMap();
     }
 
     public void init() throws PluginParseException
@@ -38,10 +40,14 @@ public class DefaultPluginManager implements PluginManager
     private void addPlugin(Plugin plugin) throws PluginParseException
     {
         // testing to make sure plugin keys are unique
-        if (plugins.containsKey(plugin.getKey()))
+        if (plugins.containsKey(plugin.getKey()) || licensedPlugins.containsKey(plugin.getKey()))
             throw new PluginParseException("Duplicate plugin key found: '" + plugin.getKey() + "'");
 
         plugins.put(plugin.getKey(), plugin);
+
+        // Store plugins requiring a license
+        if (plugin.getPluginInformation().getLicenseRegistryLocation() != null && plugin.getPluginInformation().getLicenseRegistryLocation() != "")
+            licensedPlugins.put(plugin.getName(), plugin);
     }
 
     private void saveState()
@@ -252,5 +258,10 @@ public class DefaultPluginManager implements PluginManager
             throw new IllegalArgumentException("No module descriptor of type: " + type + " found.");
 
         return getEnabledModuleDescriptorsByClass(descriptorClazz);
+    }
+
+    public HashMap getLicensedPluginsMap()
+    {
+        return licensedPlugins;
     }
 }

@@ -1,5 +1,8 @@
 package com.atlassian.plugin;
 
+import com.atlassian.core.util.ClassLoaderUtils;
+import com.atlassian.license.LicenseFactory;
+import com.atlassian.license.LicenseRegistry;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
 import java.util.*;
@@ -121,6 +124,32 @@ public class Plugin
             }
         }
 
+        return null;
+    }
+
+    public LicenseRegistry getLicenseRegistry()
+    {
+        if (getPluginInformation().getLicenseRegistryLocation() != null && !("").equals(getPluginInformation().getLicenseRegistryLocation()))
+        {
+            try
+            {
+                Class licenseRegistryClass = ClassLoaderUtils.loadClass(getPluginInformation().getLicenseRegistryLocation(), LicenseFactory.class);
+
+                return (LicenseRegistry) licenseRegistryClass.newInstance();
+            }
+            catch (ClassNotFoundException e)
+            {
+                throw new RuntimeException("Could not load License Store");
+            }
+            catch (IllegalAccessException e)
+            {
+                throw new RuntimeException("Could not load License Store");
+            }
+            catch (InstantiationException e)
+            {
+                throw new RuntimeException("Could not load License Store");
+            }
+        }
         return null;
     }
 }
