@@ -3,7 +3,7 @@
     <pomVersion>3</pomVersion>
     <id>atlassian-plugins</id>
     <name>Atlassian Plugins</name>
-    <currentVersion>0.2.9.1</currentVersion>
+    <currentVersion>0.3</currentVersion>
     <organization>
         <name>Atlassian Software Systems Pty Ltd</name>
     </organization>
@@ -90,5 +90,9 @@
             <id>atlassian-extras</id>
             <version>0.2</version>
         </dependency>
+        <dependency>
+            <id>mockobjects+core</id>
+            <version>0.09</version>
+        </dependency>                
     </dependencies>
 </project>

@@ -1,9 +1,9 @@
 package com.atlassian.plugin;
 
-import com.atlassian.core.util.ClassLoaderUtils;
-import com.atlassian.license.LicenseFactory;
-import com.atlassian.license.LicenseRegistry;
 import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.license.LicenseRegistry;
+import com.atlassian.license.LicenseFactory;
+import com.atlassian.core.util.ClassLoaderUtils;
 
 import java.util.*;
 
@@ -15,6 +15,7 @@ public class Plugin
     private boolean enabledByDefault = true;
     private PluginInformation pluginInformation;
     List resourceDescriptors;
+    private boolean enabled;
 
     public String getName()
     {
@@ -152,4 +153,23 @@ public class Plugin
         }
         return null;
     }
+    
+    /**
+     * @return true if the plugin has been enabled
+     */
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    /**
+     * Setter for the enabled state of a plugin. If this is set to
+     * false then the plugin will not execute.
+     * @param enabled
+     */
+    public void setEnabled(boolean enabled)
+    {
+        this.enabled = enabled;
+    }
+    
 }

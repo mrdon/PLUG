@@ -2,10 +2,13 @@ package com.atlassian.plugin;
 
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.loaders.SinglePluginLoader;
+import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.mockobjects.dynamic.Mock;
+import com.mockobjects.dynamic.C;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;

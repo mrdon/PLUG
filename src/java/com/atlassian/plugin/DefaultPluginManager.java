@@ -48,6 +48,13 @@ public class DefaultPluginManager implements PluginManager
         // Store plugins requiring a license
         if (plugin.getPluginInformation().getLicenseRegistryLocation() != null && plugin.getPluginInformation().getLicenseRegistryLocation() != "")
             licensedPlugins.put(plugin.getName(), plugin);
+ 
+        for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
+        {
+            ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
+            if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
+                ((StateAware)descriptor).enabled();
+        }
     }
 
     private void saveState()
@@ -154,6 +161,13 @@ public class DefaultPluginManager implements PluginManager
             else
                 currentState.removeState(key);
 
+            for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
+            {
+                ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
+                if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
+                    ((StateAware)descriptor).enabled();
+            }
+            
             saveState();
         }
     }
@@ -166,10 +180,19 @@ public class DefaultPluginManager implements PluginManager
         if (plugins.containsKey(key))
         {
             Plugin plugin = (Plugin) plugins.get(key);
+
+            for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
+            {
+                ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
+                if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
+                    ((StateAware)descriptor).disabled();
+            }
+
             if (plugin.isEnabledByDefault())
                 currentState.setState(key, Boolean.FALSE);
             else
                 currentState.removeState(key);
+
 
             saveState();
         }
@@ -188,6 +211,9 @@ public class DefaultPluginManager implements PluginManager
             else
                 currentState.removeState(completeKey);
 
+            if (module instanceof StateAware)
+                ((StateAware) module).disabled();
+
             saveState();
         }
     }
@@ -204,6 +230,9 @@ public class DefaultPluginManager implements PluginManager
                 currentState.setState(completeKey, Boolean.TRUE);
             else
                 currentState.removeState(completeKey);
+
+            if (module instanceof StateAware)
+                ((StateAware) module).enabled();
 
             saveState();
         }
