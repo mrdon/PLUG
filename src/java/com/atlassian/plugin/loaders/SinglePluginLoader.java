@@ -11,36 +11,32 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
-import java.net.URL;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.MalformedURLException;
-import java.util.*;
-import java.io.File;
 import java.io.InputStream;
+import java.io.IOException;
+import java.util.*;
 
 public class SinglePluginLoader implements PluginLoader
 {
     private static Log log = LogFactory.getLog(SinglePluginLoader.class);
 
     List plugins;
-    private URL url;
     private String resource;
+    private InputStream is;
 
-    public SinglePluginLoader(String resource) throws PluginParseException
+    public SinglePluginLoader(String resource)
     {
         this.resource = resource;
     }
 
-    public SinglePluginLoader(URL url)
+    public SinglePluginLoader(InputStream is)
     {
-        this.url = url;
+        this.is = is;
     }
 
     private void loadPlugins(Map moduleDescriptors) throws PluginParseException
     {
-        if (url == null && resource == null)
-            throw new PluginParseException("No resource or URL specified to load plugins from.");
+        if (resource == null && is == null)
+            throw new PluginParseException("No resource or inputstream specified to load plugins from.");
 
         Plugin plugin = new Plugin();
 
@@ -80,7 +76,7 @@ public class SinglePluginLoader implements PluginLoader
         }
         catch (DocumentException e)
         {
-            throw new PluginParseException("Exception parsing plugin document: " + url, e);
+            throw new PluginParseException("Exception parsing plugin document", e);
         }
 
         plugins.add(plugin);
@@ -98,8 +94,26 @@ public class SinglePluginLoader implements PluginLoader
 
             return reader.read(is);
         }
+        else if (is != null)
+        {
+            try
+            {
+                return reader.read(is);
+            }
+            finally
+            {
+                try
+                {
+                    is.close();
+                }
+                catch (IOException e)
+                {
+                    log.error("Bad inputstream close: " + e, e);
+                }
+            }
+        }
         else
-            return reader.read(url);
+            throw new PluginParseException("No resource or input stream specified.");
     }
 
     public Collection getPlugins(Map moduleDescriptors) throws PluginParseException

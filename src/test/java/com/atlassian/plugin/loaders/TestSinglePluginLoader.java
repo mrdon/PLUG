@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.io.IOException;
 
 public class TestSinglePluginLoader extends TestCase
 {
@@ -64,8 +65,7 @@ public class TestSinglePluginLoader extends TestCase
 
     public void testPluginByUrl() throws PluginParseException
     {
-        SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResource("test-disabled-plugin.xml", SinglePluginLoader.class));
-        Collection plugins = loader.getPlugins(new HashMap());
+        SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResourceAsStream("test-disabled-plugin.xml", SinglePluginLoader.class));        Collection plugins = loader.getPlugins(new HashMap());
         assertEquals(1, plugins.size());
         assertFalse(((Plugin) plugins.iterator().next()).isEnabledByDefault());
     }
@@ -118,10 +118,9 @@ public class TestSinglePluginLoader extends TestCase
         Map moduleDescriptors = new HashMap();
         moduleDescriptors.put("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptors.put("mineral", MockMineralModuleDescriptor.class);
-        Collection plugins = null;
         try
         {
-            plugins = loader.getPlugins(moduleDescriptors);
+            loader.getPlugins(moduleDescriptors);
             fail("Should have died with duplicate key exception.");
         }
         catch (PluginParseException e)
@@ -142,18 +141,4 @@ public class TestSinglePluginLoader extends TestCase
             return;
         }
     }
-
-    public void testBadUrl() throws MalformedURLException
-    {
-        try
-        {
-            new SinglePluginLoader(new URL("file://foo")).getPlugins(null);
-            fail("Should have thrown exception");
-        }
-        catch (PluginParseException e)
-        {
-            return;
-        }
-    }
-
 }

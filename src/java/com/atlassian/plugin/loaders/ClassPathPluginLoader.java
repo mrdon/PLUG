@@ -45,8 +45,15 @@ public class ClassPathPluginLoader implements PluginLoader
         while (pluginDescriptorFiles.hasMoreElements())
         {
             url = (URL) pluginDescriptorFiles.nextElement();
-            SinglePluginLoader loader = new SinglePluginLoader(url);
-            plugins.addAll(loader.getPlugins(moduleDescriptors));
+            try
+            {
+                SinglePluginLoader loader = new SinglePluginLoader(url.openConnection().getInputStream());
+                plugins.addAll(loader.getPlugins(moduleDescriptors));
+            }
+            catch (IOException e)
+            {
+                log.error("IOException parsing inputstream for : " + url, e);
+            }
         }
     }
 
