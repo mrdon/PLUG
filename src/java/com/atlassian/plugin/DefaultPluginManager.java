@@ -141,7 +141,13 @@ public class DefaultPluginManager implements PluginManager
 
                     final Class moduleDescClass = moduleDescriptor.getModuleClass();
                     if (moduleDescClass != null && moduleClass.isAssignableFrom(moduleDescClass))
-                        result.add(moduleDescriptor.getModule());
+                    {
+                        final Object module = moduleDescriptor.getModule();
+                        if (module != null)
+                        {
+                            result.add(module);
+                        }
+                    }
                 }
             }
         }
