@@ -98,10 +98,10 @@ public class DefaultPluginManager implements PluginManager
     {
         ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
 
-        final Plugin plugin = getEnabledPlugin(key.getPluginKey());
-
-        if (plugin != null)
-            return plugin.getModule(key.getModuleKey());
+        if (isPluginModuleEnabled(completeKey))
+        {
+            return getEnabledPlugin(key.getPluginKey()).getModule(key.getModuleKey());
+        }
 
         return null;
     }
@@ -132,9 +132,9 @@ public class DefaultPluginManager implements PluginManager
             Plugin plugin = (Plugin) plugins.get(key);
 
             if (!plugin.isEnabledByDefault())
-                currentState.setPluginState(key, Boolean.TRUE);
+                currentState.setState(key, Boolean.TRUE);
             else
-                currentState.removePluginState(key);
+                currentState.removeState(key);
 
             saveState();
         }
@@ -149,12 +149,53 @@ public class DefaultPluginManager implements PluginManager
         {
             Plugin plugin = (Plugin) plugins.get(key);
             if (plugin.isEnabledByDefault())
-                currentState.setPluginState(key, Boolean.FALSE);
+                currentState.setState(key, Boolean.FALSE);
             else
-                currentState.removePluginState(key);
+                currentState.removeState(key);
 
             saveState();
         }
+    }
+
+    public void disablePluginModule(String completeKey)
+    {
+        if (completeKey == null)
+            throw new IllegalArgumentException("You must specify a plugin module key to disable.");
+
+        final ModuleDescriptor module = getPluginModule(completeKey);
+        if (module != null)
+        {
+            if (module.isEnabledByDefault())
+                currentState.setState(completeKey, Boolean.FALSE);
+            else
+                currentState.removeState(completeKey);
+
+            saveState();
+        }
+    }
+
+    public void enablePluginModule(String completeKey)
+    {
+        if (completeKey == null)
+            throw new IllegalArgumentException("You must specify a plugin module key to disable.");
+
+        final ModuleDescriptor module = getPluginModule(completeKey);
+        if (module != null)
+        {
+            if (!module.isEnabledByDefault())
+                currentState.setState(completeKey, Boolean.TRUE);
+            else
+                currentState.removeState(completeKey);
+
+            saveState();
+        }
+    }
+
+    public boolean isPluginModuleEnabled(String completeKey)
+    {
+        ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
+
+        return isPluginEnabled(key.getPluginKey()) && currentState.isEnabled(getPluginModule(completeKey));
     }
 
     public boolean isPluginEnabled(String key)

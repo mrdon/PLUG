@@ -17,6 +17,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     String name;
     Class moduleClass;
     String description;
+    boolean enabledByDefault = true;
     Map params;
 
     public void init(Plugin plugin, Element element) throws PluginParseException
@@ -37,6 +38,14 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
 
         this.description = element.elementTextTrim("description");
         params = LoaderUtils.getParams(element);
+
+        if ("disabled".equalsIgnoreCase(element.attributeValue("state")))
+            enabledByDefault = false;
+    }
+
+    public boolean isEnabledByDefault()
+    {
+        return enabledByDefault;
     }
 
     /**

@@ -17,16 +17,35 @@ public interface ModuleDescriptor
      */
     String getKey();
 
+    /**
+     * A simple string name for this descriptor.
+     */
     String getName();
 
+    /**
+     * A simple description of this descriptor.
+     */ 
+    String getDescription();
+
+    /**
+     * The class of the module this descriptor creates.
+     */
     Class getModuleClass();
 
+    /**
+     * The particular module object created by this plugin.
+     */
     Object getModule();
 
-    String getDescription();
 
     /**
      * Initialise a module given it's parent plugin and the XML element representing the module.
      */ 
     void init(Plugin plugin, Element element) throws PluginParseException;
+
+    /**
+     * Whether or not this plugin module is enabled by default.
+     * @return
+     */
+    boolean isEnabledByDefault();
 }

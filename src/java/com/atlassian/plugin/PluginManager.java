@@ -51,11 +51,35 @@ public interface PluginManager
      */
     ModuleDescriptor getEnabledPluginModule(String completeKey);
 
+    /**
+     * Enable a plugin by key.
+     */
     void enablePlugin(String key);
 
+    /**
+     * Disable a plugin by key.
+     */
     void disablePlugin(String key);
 
+    /**
+     * Enable a plugin module by key.
+     */
+    void enablePluginModule(String completeKey);
+
+    /**
+     * Disable a plugin module by key.
+     */
+    void disablePluginModule(String completeKey);
+
+    /**
+     * Whether or not a given plugin is currently enabled.
+     */
     boolean isPluginEnabled(String key);
+
+    /**
+     * Whether or not a given plugin module is currently enabled.
+     */
+    boolean isPluginModuleEnabled(String completeKey);
 
     /**
      * Retrieve all plugin modules that implement or extend a specific class.

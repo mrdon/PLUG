@@ -44,6 +44,7 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals("Bear Animal", bearDescriptor.getName());
         assertEquals(MockBear.class, bearDescriptor.getModuleClass());
         assertEquals("A plugin module to describe a bear", bearDescriptor.getDescription());
+        assertTrue(bearDescriptor.isEnabledByDefault());
 
         List resources = bearDescriptor.getResourceDescriptors();
         assertEquals(3, resources.size());
@@ -62,14 +63,25 @@ public class TestSinglePluginLoader extends TestCase
     public void testDisabledPlugin() throws PluginParseException
     {
         SinglePluginLoader loader = new SinglePluginLoader("test-disabled-plugin.xml");
-        Collection plugins = loader.getPlugins(new HashMap());
+        Map moduleDescriptors = new HashMap();
+        moduleDescriptors.put("mineral", MockMineralModuleDescriptor.class);
+        Collection plugins = loader.getPlugins(moduleDescriptors);
         assertEquals(1, plugins.size());
-        assertFalse(((Plugin) plugins.iterator().next()).isEnabledByDefault());
+        final Plugin plugin = (Plugin) plugins.iterator().next();
+        assertFalse(plugin.isEnabledByDefault());
+
+        assertEquals(1, plugin.getModules().size());
+        final ModuleDescriptor module = plugin.getModule("gold");
+        assertFalse(module.isEnabledByDefault());
     }
 
     public void testPluginByUrl() throws PluginParseException
     {
-        SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResourceAsStream("test-disabled-plugin.xml", SinglePluginLoader.class));        Collection plugins = loader.getPlugins(new HashMap());
+        SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResourceAsStream("test-disabled-plugin.xml", SinglePluginLoader.class));
+        Map moduleDescriptors = new HashMap();
+        moduleDescriptors.put("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptors.put("mineral", MockMineralModuleDescriptor.class);
+        Collection plugins = loader.getPlugins(moduleDescriptors);
         assertEquals(1, plugins.size());
         assertFalse(((Plugin) plugins.iterator().next()).isEnabledByDefault());
     }

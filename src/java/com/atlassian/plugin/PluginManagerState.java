@@ -29,7 +29,7 @@ public class PluginManagerState
     /**
      * Get the state of a given plugin.
      */
-    public Boolean getPluginState(String key)
+    public Boolean getState(String key)
     {
         return (Boolean) map.get(key);
     }
@@ -47,14 +47,23 @@ public class PluginManagerState
      */
     public boolean isEnabled(Plugin plugin)
     {
-        Boolean bool = getPluginState(plugin.getKey());
+        Boolean bool = getState(plugin.getKey());
         return (bool == null) ? plugin.isEnabledByDefault() : bool.booleanValue();
+    }
+
+    /**
+     * Whether or not a given plugin module is enabled in this state, calculated from it's current state AND default state.
+     */
+    public boolean isEnabled(ModuleDescriptor pluginModule)
+    {
+        Boolean bool = getState(pluginModule.getCompleteKey());
+        return (bool == null) ? pluginModule.isEnabledByDefault() : bool.booleanValue();
     }
 
     /**
      * Set a plugins state.
      */
-    public void setPluginState(String key, Boolean enabled)
+    public void setState(String key, Boolean enabled)
     {
         map.put(key, enabled);
     }
@@ -62,7 +71,7 @@ public class PluginManagerState
     /**
      * Remove a plugin's state.
      */
-    public void removePluginState(String key)
+    public void removeState(String key)
     {
         map.remove(key);
     }

@@ -65,15 +65,30 @@ public class TestDefaultPluginManager extends TestCase
         assertNotNull(manager.getEnabledPlugin(pluginKey));
         assertNotNull(manager.getPluginModule(moduleKey));
         assertNotNull(manager.getEnabledPluginModule(moduleKey));
+
+        // now let's disable the module, but not the plugin
+        manager.disablePluginModule(moduleKey);
+        assertNotNull(manager.getPlugin(pluginKey));
+        assertNotNull(manager.getEnabledPlugin(pluginKey));
+        assertNotNull(manager.getPluginModule(moduleKey));
+        assertNull(manager.getEnabledPluginModule(moduleKey));
+
+        // now enable the module again
+        manager.enablePluginModule(moduleKey);
+        assertNotNull(manager.getPlugin(pluginKey));
+        assertNotNull(manager.getEnabledPlugin(pluginKey));
+        assertNotNull(manager.getPluginModule(moduleKey));
+        assertNotNull(manager.getEnabledPluginModule(moduleKey));
     }
 
     public void testDuplicatePluginKeysAreBad() throws PluginParseException
     {
         List pluginLoaders = new ArrayList();
+        Map moduleDescriptors = new HashMap();
+        moduleDescriptors.put("mineral", MockMineralModuleDescriptor.class);
         pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
         pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
-
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, new HashMap());
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptors);
         try
         {
             manager.init();
