@@ -10,11 +10,6 @@ public interface PluginManager
 {
     public static final String PLUGIN_DESCRIPTOR_FILENAME = "atlassian-plugin.xml";
 
-    /**
-     * Get all enabled modules that have a specific descriptor class.
-     */
-    public List getEnabledModulesByDescriptor(Class descriptorClazz);
-
     void init() throws PluginParseException;
 
     Collection getPlugins();
@@ -24,10 +19,23 @@ public interface PluginManager
     ModuleDescriptor getPluginModule(String completeKey);
 
     void enablePlugin(String key);
-    
+
     void disablePlugin(String key);
 
     boolean isPluginEnabled(String key);
 
-    Collection getPluginModule(Class moduleClass);
+    /**
+     * Retrieve all plugin modules that implement or extend a specific class.
+     *
+     * @return List of modules that implement or extend the given class.
+     */
+    Collection getEnabledModulesByClass(Class moduleClass);
+
+    /**
+     * Get all enabled module descriptors that have a specific descriptor class.
+     *
+     * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
+     */
+    List getEnabledModuleDescriptorsByClass(Class descriptorClazz);
+
 }

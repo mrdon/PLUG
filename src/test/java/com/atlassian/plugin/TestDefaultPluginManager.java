@@ -58,14 +58,13 @@ public class TestDefaultPluginManager extends TestCase
         PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptors);
         manager.init();
 
-        Collection descriptors = manager.getPluginModule(com.atlassian.plugin.mock.MockBear.class);
+        Collection descriptors = manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class);
         assertNotNull(descriptors);
         assertEquals(1, descriptors.size());
         ModuleDescriptor moduleDescriptor = (ModuleDescriptor) descriptors.iterator().next();
         assertEquals("Bear Animal", moduleDescriptor.getName());
 
-
-        descriptors = manager.getPluginModule(com.atlassian.plugin.mock.MockGold.class);
+        descriptors = manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockGold.class);
         assertNotNull(descriptors);
         assertEquals(1, descriptors.size());
         moduleDescriptor = (ModuleDescriptor) descriptors.iterator().next();
@@ -83,7 +82,7 @@ public class TestDefaultPluginManager extends TestCase
         PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptors);
         manager.init();
 
-        final Collection descriptors = manager.getPluginModule(java.lang.String.class);
+        final Collection descriptors = manager.getEnabledModulesByClass(java.lang.String.class);
         assertNotNull(descriptors);
         assertTrue(descriptors.isEmpty());
     }

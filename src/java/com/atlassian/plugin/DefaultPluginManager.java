@@ -71,7 +71,7 @@ public class DefaultPluginManager implements PluginManager
         return getPlugin(pluginKey).getModule(moduleKey);
     }
 
-    public Collection getPluginModule(Class moduleClass)
+    public Collection getEnabledModulesByClass(Class moduleClass)
     {
         for (Iterator iterator = plugins.entrySet().iterator(); iterator.hasNext();)
         {
@@ -127,11 +127,7 @@ public class DefaultPluginManager implements PluginManager
         return plugins.containsKey(key) && currentState.isEnabled((Plugin) plugins.get(key));
     }
 
-    public List getAllModulesByClass(Class clazz) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    public List getEnabledModulesByDescriptor(Class descriptorClazz) {
+    public List getEnabledModuleDescriptorsByClass(Class descriptorClazz) {
         List result = new LinkedList();
 
         for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();) {
