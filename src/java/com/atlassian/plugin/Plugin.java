@@ -1,6 +1,7 @@
 package com.atlassian.plugin;
 
 import com.atlassian.license.LicenseRegistry;
+import com.atlassian.license.LicenseTypeStore;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
 import java.util.Collection;
@@ -41,6 +42,8 @@ public interface Plugin
     ResourceDescriptor getResourceDescriptor(String type, String name);
 
     LicenseRegistry getLicenseRegistry();
+
+    LicenseTypeStore getLicenseTypeStore();
 
     boolean isEnabled();
 

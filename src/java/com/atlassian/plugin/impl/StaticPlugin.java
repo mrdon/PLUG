@@ -138,7 +138,6 @@ public class StaticPlugin implements Plugin
             try
             {
                 Class licenseRegistryClass = ClassLoaderUtils.loadClass(getPluginInformation().getLicenseRegistryLocation(), Plugin.class);
-
                 return (LicenseRegistry) licenseRegistryClass.newInstance();
             }
             catch (ClassNotFoundException e)
