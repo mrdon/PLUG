@@ -3,7 +3,7 @@
     <pomVersion>3</pomVersion>
     <id>atlassian-plugins</id>
     <name>Atlassian Plugins</name>
-    <currentVersion>0.1-dev</currentVersion>
+    <currentVersion>0.1</currentVersion>
     <organization>
 	    <name>Atlassian Software Systems Pty Ltd</name>
     </organization>
