@@ -46,7 +46,9 @@ public class DefaultPluginManager implements PluginManager
         plugins.put(plugin.getKey(), plugin);
 
         // Store plugins requiring a license
-        if (plugin.getPluginInformation().getLicenseRegistryLocation() != null && plugin.getPluginInformation().getLicenseRegistryLocation() != "")
+        if (plugin.getPluginInformation() != null
+                && plugin.getPluginInformation().getLicenseRegistryLocation() != null 
+                && plugin.getPluginInformation().getLicenseRegistryLocation() != "")
             licensedPlugins.put(plugin.getName(), plugin);
  
         for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)

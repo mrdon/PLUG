@@ -24,7 +24,7 @@ public class TestClassPathPluginLoader extends TestCase
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         Collection plugins = loader.getPlugins(moduleDescriptorFactory);
 
-        assertEquals(1, plugins.size());
+        assertEquals(2, plugins.size());
 
         Plugin plugin = (Plugin) plugins.iterator().next();
         assertEquals("Test Plugin", plugin.getName());
