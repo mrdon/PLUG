@@ -136,7 +136,7 @@ public class SinglePluginLoader implements PluginLoader
 
         if (descriptorClass == null)
         {
-            throw new PluginParseException("Could not find descriptor for module: " + name);
+            throw new PluginParseException("Could not find descriptor for module '" + name +"' in plugin '" + (plugin == null ? "null" : plugin.getName()) + "'");
         }
 
         ModuleDescriptor moduleDescriptorDescriptor = null;
