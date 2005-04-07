@@ -17,6 +17,7 @@ import java.util.Iterator;
 public abstract class AbstractXmlPluginLoader implements PluginLoader
 {
     private static Log log = LogFactory.getLog(AbstractXmlPluginLoader.class);
+    protected boolean recogniseSystemPlugins = false;
 
     protected boolean isResource(Element element)
     {
@@ -129,6 +130,9 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
 
         if ("disabled".equalsIgnoreCase(root.attributeValue("state")))
             plugin.setEnabledByDefault(false);
+
+        if (recogniseSystemPlugins && "true".equalsIgnoreCase(root.attributeValue("system")))
+            plugin.setSystemPlugin(true);
 
         for (Iterator i = root.elementIterator(); i.hasNext();)
         {

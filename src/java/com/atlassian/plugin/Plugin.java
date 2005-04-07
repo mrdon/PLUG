@@ -42,6 +42,13 @@ public interface Plugin
 
     boolean isEnabled();
 
+    /**
+     * Whether the plugin is a "system" plugin that shouldn't be made visible to the user
+     */
+    boolean isSystemPlugin();
+
+    void setSystemPlugin(boolean system);
+
     void setEnabled(boolean enabled);
 
     /**
@@ -70,4 +77,5 @@ public interface Plugin
      * @return An InputStream for the resource, or null if the resource is not found or the plugin does not support resource loading.
      */
     InputStream getResourceAsStream(String name);
+
 }

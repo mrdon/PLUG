@@ -18,6 +18,7 @@ public class StaticPlugin implements Plugin
     private PluginInformation pluginInformation;
     List resourceDescriptors;
     private boolean enabled;
+    private boolean system;
 
     public String getName()
     {
@@ -169,6 +170,16 @@ public class StaticPlugin implements Plugin
     public boolean isResourceLoading()
     {
         return false;
+    }
+
+    public boolean isSystemPlugin()
+    {
+        return system;
+    }
+
+    public void setSystemPlugin(boolean system)
+    {
+        this.system = system;
     }
 }
 

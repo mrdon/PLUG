@@ -15,6 +15,37 @@ import java.util.List;
 
 public class TestSinglePluginLoader extends TestCase
 {
+    public void testSystemPluginRegularLoader() throws Exception
+    {
+        SinglePluginLoader loader = new SinglePluginLoader("test-system-plugin.xml");
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+
+        assertEquals(1, plugins.size());
+
+        // test the plugin information
+        Plugin plugin = (Plugin) plugins.iterator().next();
+        assertFalse(plugin.isSystemPlugin());
+    }
+
+    public void testSystemPluginSystemLoader() throws Exception
+    {
+        SinglePluginLoader loader = new SinglePluginLoader("test-system-plugin.xml");
+        loader.setRecogniseSystemPlugins(true);
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+
+        assertEquals(1, plugins.size());
+
+        // test the plugin information
+        Plugin plugin = (Plugin) plugins.iterator().next();
+        assertTrue(plugin.isSystemPlugin());
+    }
+
     public void testAtlassianPlugin() throws Exception
     {
         SinglePluginLoader loader = new SinglePluginLoader("test-atlassian-plugin.xml");

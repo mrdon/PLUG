@@ -92,4 +92,9 @@ public class SinglePluginLoader extends AbstractXmlPluginLoader
 
         return doc;
     }
+
+    public void setRecogniseSystemPlugins(boolean recogniseSystemPlugins)
+    {
+        this.recogniseSystemPlugins = recogniseSystemPlugins;
+    }
 }
