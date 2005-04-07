@@ -114,4 +114,6 @@ public interface PluginManager
     InputStream getDynamicResourceAsStream(String name);
 
     void uninstall(Plugin plugin) throws PluginException;
+
+    boolean isSystemPlugin(String key);
 }

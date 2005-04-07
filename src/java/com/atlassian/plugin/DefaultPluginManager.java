@@ -372,4 +372,10 @@ public class DefaultPluginManager implements PluginManager
 
         return null;
     }
+
+    public boolean isSystemPlugin(String key)
+    {
+        Plugin plugin = getPlugin(key);
+        return plugin != null && plugin.isSystemPlugin();
+    }
 }
