@@ -3,7 +3,6 @@ package com.atlassian.plugin;
 import com.atlassian.plugin.loaders.PluginLoader;
 
 import java.util.*;
-import java.io.InputStream;
 
 public class DefaultPluginManager implements PluginManager
 {
@@ -12,7 +11,7 @@ public class DefaultPluginManager implements PluginManager
     private ModuleDescriptorFactory moduleDescriptorFactory;
     private PluginManagerState currentState;
     private HashMap plugins;
-    private HashMap pluginToPluginLoader; // will store a plugin as a key and pluginLoader as a value
+    private HashMap licensedPlugins;
 
     public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory)
     {
@@ -20,102 +19,44 @@ public class DefaultPluginManager implements PluginManager
         this.store = store;
         this.moduleDescriptorFactory = moduleDescriptorFactory;
         this.currentState = store.loadPluginState();
+        this.plugins = new HashMap();
+        this.licensedPlugins = new HashMap();
     }
 
-    /**
-     * Initialize all plugins the first time.
-     * @throws PluginParseException
-     */
     public void init() throws PluginParseException
     {
-        this.plugins = new HashMap();
-        this.pluginToPluginLoader = new HashMap();
-
         // retrieve all the plugins
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
         {
             PluginLoader loader = (PluginLoader) iterator.next();
 
-            for (Iterator iterator1 = loader.loadAllPlugins(moduleDescriptorFactory).iterator(); iterator1.hasNext();)
+            for (Iterator iterator1 = loader.getPlugins(moduleDescriptorFactory).iterator(); iterator1.hasNext();)
             {
-                addPlugin(loader, (Plugin) iterator1.next());
+                addPlugin((Plugin) iterator1.next());
             }
         }
     }
 
-    public int scanForNewPlugins() throws PluginParseException
-    {
-        int numberFound = 0;
-
-        for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
-        {
-            PluginLoader loader = (PluginLoader) iterator.next();
-
-            if (loader.supportsAddition())
-            {
-                Collection addedPlugins = loader.addFoundPlugins(moduleDescriptorFactory);
-                for (Iterator iterator1 = addedPlugins.iterator(); iterator1.hasNext();)
-                {
-                    Plugin newPlugin = (Plugin) iterator1.next();
-                    numberFound++;
-                    addPlugin(loader, newPlugin);
-                }
-            }
-        }
-
-        return numberFound;
-    }
-
-    /**
-     * Uninstall (delete) a plugin if possible.
-     * <p>
-     * Be very careful when using this method, the plugin cannot be brought back.
-     */
-    public void uninstall(Plugin plugin) throws PluginException
-    {
-        if (!plugin.isUninstallable())
-            throw new PluginException("Plugin is not uninstallable: " + plugin.getKey());
-
-        PluginLoader loader = (PluginLoader) pluginToPluginLoader.remove(plugin);
-
-        if (loader == null || !loader.supportsRemoval())
-        {
-            throw new PluginException("Not uninstalling plugin - could not find plugin loader, or loader doesn't allow removal. Plugin: " + plugin.getKey());
-        }
-
-        plugins.remove(plugin.getKey());
-
-        for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
-        {
-            ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
-
-            // if the module is StateAware, then disable it (matches enable())
-            if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
-                ((StateAware)descriptor).disabled();
-
-            // now destroy it (matches init())
-            descriptor.destroy(plugin);
-        }
-
-        loader.removePlugin(plugin);
-    }
-
-    protected void addPlugin(PluginLoader loader, Plugin plugin) throws PluginParseException
+    protected void addPlugin(Plugin plugin) throws PluginParseException
     {
         // testing to make sure plugin keys are unique
-        if (plugins.containsKey(plugin.getKey()))
+        if (plugins.containsKey(plugin.getKey()) || licensedPlugins.containsKey(plugin.getKey()))
             throw new PluginParseException("Duplicate plugin key found: '" + plugin.getKey() + "'");
 
         plugins.put(plugin.getKey(), plugin);
 
+        // Store plugins requiring a license
+        if (plugin.getPluginInformation() != null
+                && plugin.getPluginInformation().getLicenseRegistryLocation() != null 
+                && plugin.getPluginInformation().getLicenseRegistryLocation() != "")
+            licensedPlugins.put(plugin.getName(), plugin);
+ 
         for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
         {
             ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
             if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
                 ((StateAware)descriptor).enabled();
         }
-
-        pluginToPluginLoader.put(plugin, loader);
     }
 
     private void saveState()
@@ -213,6 +154,7 @@ public class DefaultPluginManager implements PluginManager
 
         return result;
     }
+
 
     public void enablePlugin(String key)
     {
@@ -356,26 +298,8 @@ public class DefaultPluginManager implements PluginManager
         return getEnabledModuleDescriptorsByClass(descriptorClazz);
     }
 
-    public InputStream getDynamicResourceAsStream(String name)
+    public HashMap getLicensedPluginsMap()
     {
-        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
-        {
-            Plugin plugin = (Plugin) iterator.next();
-            if (plugin.isResourceLoading() && isPluginEnabled(plugin.getKey()))
-            {
-                InputStream is = plugin.getResourceAsStream(name);
-
-                if (is != null)
-                    return is;
-            }
-        }
-
-        return null;
-    }
-
-    public boolean isSystemPlugin(String key)
-    {
-        Plugin plugin = getPlugin(key);
-        return plugin != null && plugin.isSystemPlugin();
+        return licensedPlugins;
     }
 }
