@@ -1,9 +1,7 @@
 package com.atlassian.plugin.impl;
 
 import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 
 import java.util.*;
@@ -19,6 +17,7 @@ public class StaticPlugin implements Plugin
     List resourceDescriptors;
     private boolean enabled;
     private boolean system;
+    private Resourced resources;
 
     public String getName()
     {
@@ -91,44 +90,24 @@ public class StaticPlugin implements Plugin
         this.pluginInformation = pluginInformation;
     }
 
-    public List getResourceDescriptors()
+    public void setResources(Resourced resources)
     {
-        return resourceDescriptors;
+        this.resources = resources;
     }
 
-    public void setResourceDescriptors(List resourceDescriptors)
+    public List getResourceDescriptors()
     {
-        this.resourceDescriptors = resourceDescriptors;
+        return resources.getResourceDescriptors();
     }
 
     public List getResourceDescriptors(String type)
     {
-        List typedResourceDescriptors = new LinkedList();
-
-        for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
-        {
-            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator.next();
-            if (resourceDescriptor.getType().equalsIgnoreCase(type))
-            {
-                typedResourceDescriptors.add(resourceDescriptor);
-            }
-        }
-
-        return typedResourceDescriptors;
+        return resources.getResourceDescriptors(type);
     }
 
     public ResourceDescriptor getResourceDescriptor(String type, String name)
     {
-        for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
-        {
-            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator.next();
-            if (resourceDescriptor.getType().equalsIgnoreCase(type) && resourceDescriptor.getName().equalsIgnoreCase(name))
-            {
-                return resourceDescriptor;
-            }
-        }
-
-        return null;
+        return resources.getResourceDescriptor(type, name);
     }
 
     /**

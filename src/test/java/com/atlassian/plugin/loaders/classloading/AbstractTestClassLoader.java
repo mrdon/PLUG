@@ -69,5 +69,10 @@ public abstract class AbstractTestClassLoader extends TestCase
         pluginsTestDir.mkdirs();
 
         FileUtils.copyDirectory(pluginsDirectory, pluginsTestDir);
+
+        // Clean up CVS directory in case we copied it over by mistake.
+        File cvsDir = new File(pluginsTestDir, "CVS");
+        if (cvsDir.exists())
+            assertTrue(FileUtils.deleteDir(cvsDir));
     }
 }

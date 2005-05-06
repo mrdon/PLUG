@@ -10,12 +10,15 @@ import junit.framework.TestCase;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.mock.MockMineral;
 import org.dom4j.DocumentHelper;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+
+import java.util.List;
 
 public class TestAbstractModuleDescriptor extends TestCase
 {
@@ -68,6 +71,38 @@ public class TestAbstractModuleDescriptor extends TestCase
         descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" singleton=\"false\" />").getRootElement());
         module = descriptor.getModule();
         assertTrue(module != descriptor.getModule());
+    }
+
+    public void testGetResourceDescriptor() throws DocumentException, PluginParseException
+    {
+        ModuleDescriptor descriptor = makeSingletonDescriptor();
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\">" +
+                "<resource type='velocity' name='view' location='foo' />" +
+                "</animal>").getRootElement());
+
+        assertNull(descriptor.getResourceDescriptor("foo", "bar"));
+        assertNull(descriptor.getResourceDescriptor("velocity", "bar"));
+        assertNull(descriptor.getResourceDescriptor("foo", "view"));
+        assertEquals(new ResourceDescriptor(DocumentHelper.parseText("<resource type='velocity' name='view' location='foo' />").getRootElement()), descriptor.getResourceDescriptor("velocity", "view"));
+    }
+
+    public void testGetResourceDescriptorByType() throws DocumentException, PluginParseException
+    {
+        ModuleDescriptor descriptor = makeSingletonDescriptor();
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\">" +
+                "<resource type='velocity' name='view' location='foo' />" +
+                "<resource type='velocity' name='input-params' location='bar' />" +
+                "</animal>").getRootElement());
+
+        final List resourceDescriptors = descriptor.getResourceDescriptors("velocity");
+        assertNotNull(resourceDescriptors);
+        assertEquals(2, resourceDescriptors.size());
+
+        ResourceDescriptor resourceDescriptor = (ResourceDescriptor) resourceDescriptors.get(0);
+        assertEquals(new ResourceDescriptor(DocumentHelper.parseText("<resource type='velocity' name='view' location='foo' />").getRootElement()), resourceDescriptor);
+
+        resourceDescriptor = (ResourceDescriptor) resourceDescriptors.get(1);
+        assertEquals(new ResourceDescriptor(DocumentHelper.parseText("<resource type='velocity' name='input-params' location='bar' />").getRootElement()), resourceDescriptor);
     }
 
     private ModuleDescriptor makeSingletonDescriptor()

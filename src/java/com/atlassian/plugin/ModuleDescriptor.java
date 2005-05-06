@@ -2,7 +2,9 @@ package com.atlassian.plugin;
 
 import org.dom4j.Element;
 
-public interface ModuleDescriptor
+import java.util.Map;
+
+public interface ModuleDescriptor extends Resourced
 {
     /**
      * The complete key for this module, including the plugin key.
@@ -54,4 +56,6 @@ public interface ModuleDescriptor
      * @param plugin
      */
     void destroy(Plugin plugin);
+
+    Map getParams();
 }

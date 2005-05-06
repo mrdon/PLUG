@@ -4,9 +4,12 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.Resources;
+import com.atlassian.plugin.elements.ResourceDescriptor;
 import org.dom4j.Element;
 
 import java.util.Map;
+import java.util.List;
 
 public abstract class AbstractModuleDescriptor implements ModuleDescriptor
 {
@@ -18,6 +21,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     boolean enabledByDefault = true;
     protected boolean singleton = true;
     Map params;
+    private Resources resources;
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
@@ -48,6 +52,8 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
             singleton = true;
         else
             singleton = isSingletonByDefault();
+
+        resources = Resources.fromXml(element);
     }
 
     /**
@@ -117,5 +123,20 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     public Map getParams()
     {
         return params;
+    }
+
+    public List getResourceDescriptors()
+    {
+        return resources.getResourceDescriptors();
+    }
+
+    public List getResourceDescriptors(String type)
+    {
+        return resources.getResourceDescriptors(type);
+    }
+
+    public ResourceDescriptor getResourceDescriptor(String type, String name)
+    {
+        return resources.getResourceDescriptor(type, name);
     }
 }

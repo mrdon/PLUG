@@ -10,48 +10,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
 
+/**
+ * @deprecated All module descriptors now have resources. Use AbstractModuleDescriptor instead.
+ */
 public abstract class ResourcedModuleDescriptor extends AbstractModuleDescriptor
 {
-    List resourceDescriptors;
-
-    public void init(Plugin plugin, Element element) throws PluginParseException
-    {
-        super.init(plugin, element);
-        resourceDescriptors = LoaderUtils.getResourceDescriptors(element);
-    }
-
-    public List getResourceDescriptors()
-    {
-        return resourceDescriptors;
-    }
-
-    public List getResourceDescriptors(String type)
-    {
-        List typedResourceDescriptors = new LinkedList();
-
-        for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
-        {
-            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator.next();
-            if (resourceDescriptor.getType().equalsIgnoreCase(type))
-            {
-                typedResourceDescriptors.add(resourceDescriptor);
-            }
-        }
-
-        return typedResourceDescriptors;
-    }
-
-    public ResourceDescriptor getResourceDescriptor(String type, String name)
-    {
-        for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
-        {
-            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator.next();
-            if (resourceDescriptor.getType().equalsIgnoreCase(type) && resourceDescriptor.getName().equalsIgnoreCase(name))
-            {
-                return resourceDescriptor;
-            }
-        }
-
-        return null;
-    }
 }

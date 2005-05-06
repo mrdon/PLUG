@@ -4,7 +4,6 @@ import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.descriptors.ResourcedModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.mock.*;
 import com.atlassian.plugin.util.ClassLoaderUtils;
@@ -69,7 +68,7 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals(3.1f, plugin.getPluginInformation().getMaxVersion(), 0);
         assertEquals(2, plugin.getModuleDescriptors().size());
 
-        ResourcedModuleDescriptor bearDescriptor = (ResourcedModuleDescriptor) plugin.getModuleDescriptor("bear");
+        ModuleDescriptor bearDescriptor = plugin.getModuleDescriptor("bear");
         assertEquals("test.atlassian.plugin:bear", bearDescriptor.getCompleteKey());
         assertEquals("bear", bearDescriptor.getKey());
         assertEquals("Bear Animal", bearDescriptor.getName());

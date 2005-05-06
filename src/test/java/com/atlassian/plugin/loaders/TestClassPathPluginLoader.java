@@ -2,7 +2,6 @@ package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.descriptors.ResourcedModuleDescriptor;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 import junit.framework.TestCase;
@@ -25,6 +24,6 @@ public class TestClassPathPluginLoader extends TestCase
         assertEquals("This plugin descriptor is just used for test purposes!", plugin.getPluginInformation().getDescription());
         assertEquals(2, plugin.getModuleDescriptors().size());
 
-        assertEquals("Bear Animal", ((ResourcedModuleDescriptor) plugin.getModuleDescriptor("bear")).getName());
+        assertEquals("Bear Animal", plugin.getModuleDescriptor("bear").getName());
     }
 }

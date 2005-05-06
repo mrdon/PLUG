@@ -154,7 +154,7 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
             }
         }
 
-        plugin.setResourceDescriptors(LoaderUtils.getResourceDescriptors(root));
+        plugin.setResources(Resources.fromXml(root));
 
         return plugin;
     }

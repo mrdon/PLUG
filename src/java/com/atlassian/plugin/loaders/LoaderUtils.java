@@ -2,29 +2,19 @@ package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.Resources;
 import org.dom4j.Element;
 
 import java.util.*;
 
 public class LoaderUtils
 {
+    /**
+     * @deprecated use {@link com.atlassian.plugin.Resources#fromXml}
+     */
     public static List getResourceDescriptors(Element element) throws PluginParseException
     {
-        List elements = element.elements("resource");
-
-        List templates = new ArrayList(elements.size());
-
-        for (Iterator iterator = elements.iterator(); iterator.hasNext();)
-        {
-            final ResourceDescriptor resourceDescriptor = new ResourceDescriptor((Element) iterator.next());
-
-            if (templates.contains(resourceDescriptor))
-                throw new PluginParseException("Duplicate resource with type '" + resourceDescriptor.getType() + "' and name '" + resourceDescriptor.getName() + "' found");
-
-            templates.add(resourceDescriptor);
-        }
-
-        return templates;
+        return Resources.fromXml(element).getResourceDescriptors();
     }
 
     public static Map getParams(Element element)

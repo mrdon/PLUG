@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.io.InputStream;
 
-public interface Plugin
+public interface Plugin extends Resourced
 {
     String getName();
 
@@ -32,13 +32,7 @@ public interface Plugin
 
     void setPluginInformation(PluginInformation pluginInformation);
 
-    List getResourceDescriptors();
-
-    void setResourceDescriptors(List resourceDescriptors);
-
-    List getResourceDescriptors(String type);
-
-    ResourceDescriptor getResourceDescriptor(String type, String name);
+    void setResources(Resourced resources);
 
     boolean isEnabled();
 

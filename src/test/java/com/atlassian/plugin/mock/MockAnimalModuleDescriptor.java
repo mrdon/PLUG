@@ -1,11 +1,11 @@
 package com.atlassian.plugin.mock;
 
-import com.atlassian.plugin.descriptors.ResourcedModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import org.dom4j.Element;
 
-public class MockAnimalModuleDescriptor extends ResourcedModuleDescriptor
+public class MockAnimalModuleDescriptor extends AbstractModuleDescriptor
 {
     Object module;
 
