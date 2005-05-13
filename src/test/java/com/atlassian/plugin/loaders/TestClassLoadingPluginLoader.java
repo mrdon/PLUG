@@ -7,10 +7,12 @@ import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
+import java.util.jar.JarEntry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -99,7 +101,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         assertTrue(loader.supportsRemoval());
     }
 
-    public void testNoFoundPlugins()
+    public void testNoFoundPlugins() throws PluginParseException
     {
         addTestModuleDecriptors();
         loader = new ClassLoadingPluginLoader(pluginsTestDir);
@@ -161,6 +163,43 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         loader.removePlugin(paddingtonPlugin);
     }
 
+    public void testInvalidPluginHandled() throws IOException
+    {
+        String badJarTitle = "badplugin.jar";
+        File atlassianPluginXML = new File(pluginsTestDir, "atlassian-plugin.xml");
 
+        FileWriter writer = new FileWriter(atlassianPluginXML);
+        writer.write("this is invalid XML - the classloadingpluginloader should throw PluginParseException");
+        writer.close();
+
+        //now jar up the evilplugin
+
+        JarFile evilJar = createJarFile("evilplugin.jar", atlassianPluginXML.getName(), pluginsTestDir.getAbsolutePath());
+
+        loader = new ClassLoadingPluginLoader(pluginsTestDir);
+        try
+        {
+            Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+            fail("The ClassLoadingPluginLoader did not report an invalid atlassian-plugin.xml. This needs to happen as an invalid plugin can harm the state of the plugin manager.");
+        }
+        catch (PluginParseException e)
+        {
+        }
+    }
+
+    private JarFile createJarFile(String jarname, String jarEntry, String saveDir)
+            throws IOException
+    {
+        OutputStream os = new FileOutputStream(saveDir + File.separator + jarname);
+        JarOutputStream plugin1 = new JarOutputStream(os);
+        JarEntry jarEntry1 = new JarEntry(jarEntry);
+
+        plugin1.putNextEntry(jarEntry1);
+        plugin1.closeEntry();
+        plugin1.flush();
+        plugin1.close();
+
+        return new JarFile(saveDir + File.separator + jarname);
+    }
 
 }

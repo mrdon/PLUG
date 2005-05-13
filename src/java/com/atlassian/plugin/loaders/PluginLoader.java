@@ -26,7 +26,7 @@ public interface PluginLoader
     /**
      * @return a collection of discovered plugins which have now been loaded by this pluginloader
      */
-    Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory);
+    Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException;
 
     /**
      * Remove a specific plugin

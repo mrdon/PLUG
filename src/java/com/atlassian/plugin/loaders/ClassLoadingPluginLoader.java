@@ -59,7 +59,7 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
      * @param moduleDescriptorFactory
      * @return
      */
-    private DynamicPlugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory)
+    private DynamicPlugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         DynamicPlugin plugin = null;
 
@@ -85,10 +85,12 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
             catch (DocumentException e)
             {
                 log.error("Error getting descriptor document for : " + deploymentUnit, e);
+                throw new PluginParseException(e);
             }
             catch (PluginParseException e)
             {
                 log.error("Error loading descriptor for : " + deploymentUnit, e);
+                throw e;
             }
             finally
             {
@@ -126,7 +128,7 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
      * @return all plugins, now loaded by the pluginLoader, which have been discovered and added since the
      * last time a check was performed.
      */
-    public Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
+    public Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         // find missing plugins
         scanner.scan();
