@@ -51,9 +51,9 @@ public interface Plugin extends Resourced
     boolean isUninstallable();
 
     /**
-     * Whether or not this plugin can load resources.
+     * Whether or not this plugin is loaded dynamically at runtime
      */
-    boolean isResourceLoading();
+    boolean isDynamicallyLoaded();
 
     /**
      * Get the plugin to load a specific class.
@@ -66,10 +66,12 @@ public interface Plugin extends Resourced
     Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException;
 
     /**
-     * Load a given resource from the plugin.
+     * Load a given resource from the plugin. Plugins that are loaded dynamically will need
+     * to implement this in a way that loads the resource from the same context as the plugin.
+     * Static plugins can just pull them from their own classloader.
+     *
      * @param name The name of the resource to be loaded.
-     * @return An InputStream for the resource, or null if the resource is not found or the plugin does not support resource loading.
+     * @return An InputStream for the resource, or null if the resource is not found.
      */
     InputStream getResourceAsStream(String name);
-
 }

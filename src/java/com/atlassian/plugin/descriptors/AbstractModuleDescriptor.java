@@ -98,6 +98,11 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         return plugin.getKey() + ":" + getKey();
     }
 
+    public String getPluginKey()
+    {
+        return plugin.getKey();
+    }
+
     public String getKey()
     {
         return key;

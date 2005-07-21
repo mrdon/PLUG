@@ -5,8 +5,12 @@ import com.atlassian.plugin.loaders.PluginLoader;
 import java.util.*;
 import java.io.InputStream;
 
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.logging.Log;
+
 public class DefaultPluginManager implements PluginManager
 {
+    private static final Log log = LogFactory.getLog(DefaultPluginManager.class);
     private final List pluginLoaders;
     private final PluginStateStore store;
     private ModuleDescriptorFactory moduleDescriptorFactory;
@@ -361,7 +365,7 @@ public class DefaultPluginManager implements PluginManager
         for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
         {
             Plugin plugin = (Plugin) iterator.next();
-            if (plugin.isResourceLoading() && isPluginEnabled(plugin.getKey()))
+            if (plugin.isDynamicallyLoaded() && isPluginEnabled(plugin.getKey()))
             {
                 InputStream is = plugin.getResourceAsStream(name);
 
@@ -371,6 +375,19 @@ public class DefaultPluginManager implements PluginManager
         }
 
         return null;
+    }
+
+    public InputStream getPluginResourceAsStream(String pluginKey, String resourcePath)
+    {
+        Plugin plugin = getEnabledPlugin(pluginKey);
+
+        if (plugin == null)
+        {
+            log.error("Attempted to retreive resource " + resourcePath + " for non-existent or inactive plugin " + pluginKey);
+            return null;
+        }
+
+        return plugin.getResourceAsStream(resourcePath);
     }
 
     public boolean isSystemPlugin(String key)

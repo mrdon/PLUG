@@ -26,11 +26,6 @@ public class DynamicPlugin extends StaticPlugin
         return true;
     }
 
-    public boolean isResourceLoading()
-    {
-        return true;
-    }
-
     public InputStream getResourceAsStream(String name)
     {
         return loader.getResourceAsStream(name);

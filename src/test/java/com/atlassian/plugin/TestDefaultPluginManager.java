@@ -247,7 +247,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         PluginManager manager = makeClassLoadingPluginManager();
 
-        InputStream is = manager.getDynamicResourceAsStream("atlassian-plugin.xml");
+        InputStream is = manager.getPluginResourceAsStream("test.atlassian.plugin.classloaded", "atlassian-plugin.xml");
         assertNotNull(is);
     }
 
@@ -315,8 +315,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         Plugin plugin = manager.getPlugin("test.atlassian.plugin");
         assertFalse(plugin.isUninstallable());
-        assertFalse(plugin.isResourceLoading());
-        assertNull(plugin.getResourceAsStream("anything"));
+        assertNotNull(plugin.getResourceAsStream("test-atlassian-plugin.xml"));
 
         try
         {

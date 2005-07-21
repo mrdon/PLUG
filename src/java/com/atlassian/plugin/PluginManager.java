@@ -109,9 +109,20 @@ public interface PluginManager
     List getEnabledModuleDescriptorsByType(String type) throws PluginParseException;
 
     /**
-     * Retrieve resource as stream from currently loaded dynamic plugins.
+     * Retrieve a resource from a currently loaded (and active) dynamically loaded plugin. Will return the first resource
+     * found, so plugins with overlapping resource names will behave eratically.
+     *
+     * @param resourcePath the path to the resource to retrieve
+     * @return the dynamically loaded resource that matches that path, or null if no such resource is found
      */
-    InputStream getDynamicResourceAsStream(String name);
+    InputStream getDynamicResourceAsStream(String resourcePath);
+
+    /**
+     * Retrieve a resource from a currently loaded (and active) plugin. For statically loaded plugins, this just means
+     * pulling the resource from the PluginManager's classloader. For dynamically loaded plugins, this means retrieving
+     * the resource from the plugin's private classloader.
+     */
+    InputStream getPluginResourceAsStream(String pluginKey, String resourcePath);
 
     void uninstall(Plugin plugin) throws PluginException;
 

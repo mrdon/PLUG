@@ -143,10 +143,10 @@ public class StaticPlugin implements Plugin
 
     public InputStream getResourceAsStream(String name)
     {
-        return null;
+        return ClassLoaderUtils.getResourceAsStream(name, this.getClass());
     }
 
-    public boolean isResourceLoading()
+    public boolean isDynamicallyLoaded()
     {
         return false;
     }

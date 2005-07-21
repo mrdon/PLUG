@@ -15,6 +15,11 @@ public interface ModuleDescriptor extends Resourced
     String getCompleteKey();
 
     /**
+     * The plugin key for this module, derived from the complete key
+     */
+    String getPluginKey();
+
+    /**
      * The key for this module, unique within the plugin.
      */
     String getKey();
