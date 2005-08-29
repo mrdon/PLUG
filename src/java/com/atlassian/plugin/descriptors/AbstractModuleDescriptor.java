@@ -19,6 +19,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     Class moduleClass;
     String description;
     boolean enabledByDefault = true;
+    boolean systemModule = false;
     protected boolean singleton = true;
     Map params;
     private Resources resources;
@@ -46,6 +47,9 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         if ("disabled".equalsIgnoreCase(element.attributeValue("state")))
             enabledByDefault = false;
 
+        if ("true".equalsIgnoreCase(element.attributeValue("system")))
+            systemModule = true;
+
         if ("false".equalsIgnoreCase(element.attributeValue("singleton")))
             singleton = false;
         else if ("true".equalsIgnoreCase(element.attributeValue("singleton")))
@@ -66,6 +70,11 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     public boolean isEnabledByDefault()
     {
         return enabledByDefault;
+    }
+
+    public boolean isSystemModule()
+    {
+        return systemModule;
     }
 
     public boolean isSingleton()

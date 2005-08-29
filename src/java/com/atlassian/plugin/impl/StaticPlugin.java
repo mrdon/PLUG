@@ -130,7 +130,7 @@ public class StaticPlugin implements Plugin
 
     /**
      * Static plugins loaded from the classpath can't be uninstalled.
-     */ 
+     */
     public boolean isUninstallable()
     {
         return false;
@@ -154,6 +154,19 @@ public class StaticPlugin implements Plugin
     public boolean isSystemPlugin()
     {
         return system;
+    }
+
+    public boolean containsSystemModule()
+    {
+        for (Iterator iterator = modules.values().iterator(); iterator.hasNext();)
+        {
+            ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator.next();
+            if(moduleDescriptor.isSystemModule())
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void setSystemPlugin(boolean system)

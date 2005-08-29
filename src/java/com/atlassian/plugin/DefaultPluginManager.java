@@ -1,12 +1,11 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.loaders.PluginLoader;
-
-import java.util.*;
-import java.io.InputStream;
-
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.InputStream;
+import java.util.*;
 
 public class DefaultPluginManager implements PluginManager
 {
@@ -238,7 +237,7 @@ public class DefaultPluginManager implements PluginManager
                 if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
                     ((StateAware)descriptor).enabled();
             }
-            
+
             saveState();
         }
     }

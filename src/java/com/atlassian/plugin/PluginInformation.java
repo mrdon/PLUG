@@ -6,6 +6,9 @@
  */
 package com.atlassian.plugin;
 
+import java.util.Map;
+import java.util.HashMap;
+
 public class PluginInformation
 {
     private String description;
@@ -14,6 +17,7 @@ public class PluginInformation
     private String vendorUrl;
     private float maxVersion;
     private float minVersion;
+    private Map parameters = new HashMap();
 
     public String getDescription()
     {
@@ -74,5 +78,15 @@ public class PluginInformation
     public float getMinVersion()
     {
         return minVersion;
+    }
+
+    public Map getParameters()
+    {
+        return parameters;
+    }
+
+    public void addParameter(Object key, Object value)
+    {
+        this.parameters.put(key, value);
     }
 }

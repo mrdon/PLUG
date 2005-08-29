@@ -57,6 +57,12 @@ public interface ModuleDescriptor extends Resourced
     boolean isEnabledByDefault();
 
     /**
+     * Whether or not this plugin module is a "system" plugin that shouldn't be made visible/disableable to the user
+     * @return
+     */
+    boolean isSystemModule();
+
+    /**
      * Override this if your plugin needs to clean up when it's been removed.
      * @param plugin
      */

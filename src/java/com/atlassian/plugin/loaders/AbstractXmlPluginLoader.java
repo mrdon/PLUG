@@ -109,6 +109,13 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
             pluginInfo.setVendorUrl(vendor.attributeValue("url"));
         }
 
+        // initialize any parameters on the plugin xml definition
+        for (Iterator iterator = element.elements("param").iterator(); iterator.hasNext();)
+        {
+            Element param = (Element) iterator.next();
+            pluginInfo.addParameter(param.attribute("name"), param.getText());
+        }
+
         if (element.element("application-version") != null)
         {
             pluginInfo.setMaxVersion(Float.parseFloat(element.element("application-version").attributeValue("max")));

@@ -1,10 +1,8 @@
 package com.atlassian.plugin;
 
-import com.atlassian.plugin.elements.ResourceDescriptor;
-
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
-import java.io.InputStream;
 
 public interface Plugin extends Resourced
 {
@@ -40,6 +38,8 @@ public interface Plugin extends Resourced
      * Whether the plugin is a "system" plugin that shouldn't be made visible to the user
      */
     boolean isSystemPlugin();
+
+    boolean containsSystemModule();
 
     void setSystemPlugin(boolean system);
 
