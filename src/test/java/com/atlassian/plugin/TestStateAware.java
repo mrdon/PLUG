@@ -1,14 +1,13 @@
 package com.atlassian.plugin;
 
-import com.mockobjects.dynamic.Mock;
+import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
-import com.atlassian.plugin.impl.StaticPlugin;
+import com.mockobjects.dynamic.Mock;
+import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
-import junit.framework.TestCase;
 
 /**
  * Tests that the plugin manager properly notifies StateAware plugin modules of state
@@ -31,6 +30,7 @@ public class TestStateAware extends TestCase
         mockThwarted = makeMockModule(ModuleDescriptor.class, "key1", "thwarted", true);
 
         plugin1 = new StaticPlugin();
+        plugin1.setPluginInformation(new PluginInformation());
         plugin1.setKey("key1");
         plugin1.setEnabled(true);
 
@@ -69,6 +69,7 @@ public class TestStateAware extends TestCase
         plugin1.addModuleDescriptor(disabledModule);
         manager.init();
 
+        mockDisabled.expectAndReturn("satisfiesMinJavaVersion", true);
         mockDisabled.expect("enabled");
         manager.enablePluginModule(disabledModule.getCompleteKey());
         mockDisabled.verify();

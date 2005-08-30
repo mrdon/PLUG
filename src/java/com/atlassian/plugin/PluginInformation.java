@@ -6,6 +6,8 @@
  */
 package com.atlassian.plugin;
 
+import com.atlassian.plugin.util.JavaVersionUtils;
+
 import java.util.Map;
 import java.util.HashMap;
 
@@ -17,6 +19,7 @@ public class PluginInformation
     private String vendorUrl;
     private float maxVersion;
     private float minVersion;
+    private Float minJavaVersion;
     private Map parameters = new HashMap();
 
     public String getDescription()
@@ -80,6 +83,16 @@ public class PluginInformation
         return minVersion;
     }
 
+    public Float getMinJavaVersion()
+    {
+        return minJavaVersion;
+    }
+
+    public void setMinJavaVersion(Float minJavaVersion)
+    {
+        this.minJavaVersion = minJavaVersion;
+    }
+
     public Map getParameters()
     {
         return parameters;
@@ -88,5 +101,14 @@ public class PluginInformation
     public void addParameter(Object key, Object value)
     {
         this.parameters.put(key, value);
+    }
+
+    public boolean satisfiesMinJavaVersion()
+    {
+        if(minJavaVersion != null)
+        {
+            return JavaVersionUtils.satisfiesMinVersion(minJavaVersion.floatValue());
+        }
+        return true;
     }
 }

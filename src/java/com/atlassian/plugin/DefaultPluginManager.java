@@ -226,19 +226,21 @@ public class DefaultPluginManager implements PluginManager
         {
             Plugin plugin = (Plugin) plugins.get(key);
 
-            if (!plugin.isEnabledByDefault())
-                currentState.setState(key, Boolean.TRUE);
-            else
-                currentState.removeState(key);
-
-            for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
+            if(plugin.getPluginInformation().satisfiesMinJavaVersion())
             {
-                ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
-                if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
-                    ((StateAware)descriptor).enabled();
-            }
+                if (!plugin.isEnabledByDefault())
+                    currentState.setState(key, Boolean.TRUE);
+                else
+                    currentState.removeState(key);
 
-            saveState();
+                for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
+                {
+                    ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
+                    if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
+                        ((StateAware)descriptor).enabled();
+                }
+                saveState();
+            }
         }
     }
 
@@ -296,15 +298,19 @@ public class DefaultPluginManager implements PluginManager
         final ModuleDescriptor module = getPluginModule(completeKey);
         if (module != null)
         {
-            if (!module.isEnabledByDefault())
-                currentState.setState(completeKey, Boolean.TRUE);
-            else
-                currentState.removeState(completeKey);
+            if(module.satisfiesMinJavaVersion())
+            {
 
-            if (module instanceof StateAware)
-                ((StateAware) module).enabled();
+                if (!module.isEnabledByDefault())
+                    currentState.setState(completeKey, Boolean.TRUE);
+                else
+                    currentState.removeState(completeKey);
 
-            saveState();
+                if (module instanceof StateAware)
+                    ((StateAware) module).enabled();
+
+                saveState();
+            }
         }
     }
 

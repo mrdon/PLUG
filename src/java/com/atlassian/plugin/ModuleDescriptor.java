@@ -68,5 +68,15 @@ public interface ModuleDescriptor extends Resourced
      */
     void destroy(Plugin plugin);
 
+    Float getMinJavaVersion();
+
+    /**
+     * If a min java version has been specified this will return true if the running jvm
+     * is >= to the specified version. If this is not set then it is treated as not having
+     * a preference.
+     * @return true if satisfied, false otherwise.
+     */
+    boolean satisfiesMinJavaVersion();
+
     Map getParams();
 }

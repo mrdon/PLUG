@@ -122,6 +122,11 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
             pluginInfo.setMinVersion(Float.parseFloat(element.element("application-version").attributeValue("min")));
         }
 
+        if (element.element("java-version") != null)
+        {
+            pluginInfo.setMinJavaVersion(Float.valueOf(element.element("java-version").attributeValue("min")));
+        }
+
         return pluginInfo;
     }
 

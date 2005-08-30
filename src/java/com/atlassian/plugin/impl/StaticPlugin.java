@@ -72,7 +72,7 @@ public class StaticPlugin implements Plugin
 
     public boolean isEnabledByDefault()
     {
-        return enabledByDefault;
+        return enabledByDefault && pluginInformation.satisfiesMinJavaVersion();
     }
 
     public void setEnabledByDefault(boolean enabledByDefault)

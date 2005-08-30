@@ -1,15 +1,13 @@
 package com.atlassian.plugin.descriptors;
 
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.loaders.LoaderUtils;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.Resources;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.loaders.LoaderUtils;
+import com.atlassian.plugin.util.JavaVersionUtils;
 import org.dom4j.Element;
 
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractModuleDescriptor implements ModuleDescriptor
 {
@@ -23,6 +21,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     protected boolean singleton = true;
     Map params;
     private Resources resources;
+    private Float minJavaVersion;
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
@@ -34,7 +33,9 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         try
         {
             if (clazz != null)  //not all plugins have to have a class
+            {
                 moduleClass = plugin.loadClass(clazz, getClass());
+            }
         }
         catch (ClassNotFoundException e)
         {
@@ -45,17 +46,32 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         params = LoaderUtils.getParams(element);
 
         if ("disabled".equalsIgnoreCase(element.attributeValue("state")))
+        {
             enabledByDefault = false;
+        }
 
         if ("true".equalsIgnoreCase(element.attributeValue("system")))
+        {
             systemModule = true;
+        }
+
+        if (element.element("java-version") != null)
+        {
+            minJavaVersion = Float.valueOf(element.element("java-version").attributeValue("min"));
+        }
 
         if ("false".equalsIgnoreCase(element.attributeValue("singleton")))
+        {
             singleton = false;
+        }
         else if ("true".equalsIgnoreCase(element.attributeValue("singleton")))
+        {
             singleton = true;
+        }
         else
+        {
             singleton = isSingletonByDefault();
+        }
 
         resources = Resources.fromXml(element);
     }
@@ -69,7 +85,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
 
     public boolean isEnabledByDefault()
     {
-        return enabledByDefault;
+        return enabledByDefault && satisfiesMinJavaVersion();
     }
 
     public boolean isSystemModule()
@@ -100,7 +116,9 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     final protected void assertModuleClassImplements(Class requiredModuleClazz) throws PluginParseException
     {
         if (!requiredModuleClazz.isAssignableFrom(getModuleClass()))
+        {
             throw new PluginParseException("Given module class: " + getModuleClass().getName() + " does not implement " + requiredModuleClazz.getName());
+        }
     }
 
     public String getCompleteKey() {
@@ -152,5 +170,19 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     public ResourceDescriptor getResourceDescriptor(String type, String name)
     {
         return resources.getResourceDescriptor(type, name);
+    }
+
+    public Float getMinJavaVersion()
+    {
+        return minJavaVersion;
+    }
+
+    public boolean satisfiesMinJavaVersion()
+    {
+        if(minJavaVersion != null)
+        {
+            return JavaVersionUtils.satisfiesMinVersion(minJavaVersion.floatValue());
+        }
+        return true;
     }
 }
