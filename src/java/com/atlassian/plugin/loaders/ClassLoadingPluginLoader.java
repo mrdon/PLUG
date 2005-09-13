@@ -85,11 +85,19 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
             catch (DocumentException e)
             {
                 log.error("Error getting descriptor document for : " + deploymentUnit, e);
+
+                // Under normal conditions, the loader would be closed when the plugins are undeployed. However,
+                // these are not normal conditions, so we need to make sure that we close them explicitly.
+                loader.close();
                 throw new PluginParseException(e);
             }
             catch (PluginParseException e)
             {
                 log.error("Error loading descriptor for : " + deploymentUnit, e);
+
+                // Under normal conditions, the loader would be closed when the plugins are undeployed. However,
+                // these are not normal conditions, so we need to make sure that we close them explicitly.
+                loader.close();
                 throw e;
             }
             finally

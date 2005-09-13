@@ -212,8 +212,8 @@ public class FileUtils
                 // in case this directory is actually a symbolic link, or it's
                 // empty, we want to try to delete the link before we try
                 // anything
-                boolean deleted = !file.delete();
-                if (deleted)
+                boolean noDeleted = !file.delete();
+                if (noDeleted)
                 {
                     // deleting the file failed, so maybe it's a non-empty
                     // directory

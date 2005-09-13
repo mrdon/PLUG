@@ -89,15 +89,10 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
     }
 
-    public void testSupportsAddition()
+    public void testSupportsAdditionAndRemoval()
     {
         loader = new ClassLoadingPluginLoader(pluginsTestDir);
         assertTrue(loader.supportsAddition());
-    }
-
-    public void testSupportsRemoval()
-    {
-        loader = new ClassLoadingPluginLoader(pluginsTestDir);
         assertTrue(loader.supportsRemoval());
     }
 
@@ -174,7 +169,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
 
         //now jar up the evilplugin
 
-        JarFile evilJar = createJarFile("evilplugin.jar", atlassianPluginXML.getName(), pluginsTestDir.getAbsolutePath());
+        createJarFile("evilplugin.jar", atlassianPluginXML.getName(), pluginsTestDir.getAbsolutePath());
 
         loader = new ClassLoadingPluginLoader(pluginsTestDir);
         try
@@ -187,7 +182,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         }
     }
 
-    private JarFile createJarFile(String jarname, String jarEntry, String saveDir)
+    private void createJarFile(String jarname, String jarEntry, String saveDir)
             throws IOException
     {
         OutputStream os = new FileOutputStream(saveDir + File.separator + jarname);
@@ -198,8 +193,6 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         plugin1.closeEntry();
         plugin1.flush();
         plugin1.close();
-
-        return new JarFile(saveDir + File.separator + jarname);
     }
 
 }

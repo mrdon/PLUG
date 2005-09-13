@@ -38,13 +38,17 @@ public class JarClassLoader extends PluginsClassLoader
 
     public synchronized byte[] getFile(String path)
     {
+        InputStream in = null;
         try
         {
             openJar();
             ZipEntry entry = jar.getEntry(path);
 
-            if (entry == null) return null;
-            InputStream in = jar.getInputStream(entry);
+            if (entry == null)
+            {
+                return null;
+            }
+            in = jar.getInputStream(entry);
             int size = (int) entry.getSize();
             byte[] data = readStream(in, size);
             return data;
@@ -52,6 +56,22 @@ public class JarClassLoader extends PluginsClassLoader
         catch (IOException e)
         {
             return null;
+        }
+        finally
+        {
+            // ensure that we close the jar inputStream. Can not rely upon the readStream
+            // method to do this.
+            if (in != null)
+            {
+                try
+                {
+                    in.close();
+                }
+                catch (IOException e)
+                {
+                    // noop.
+                }
+            }
         }
     }
 
@@ -62,7 +82,10 @@ public class JarClassLoader extends PluginsClassLoader
         return loader;
     }
 
-    public void closeJar()
+    /**
+     * Close the jar open jar file.
+     */
+    public void close()
     {
         try
         {

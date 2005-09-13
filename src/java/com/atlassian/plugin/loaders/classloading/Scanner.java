@@ -5,7 +5,6 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.*;
 
@@ -90,7 +89,7 @@ public class Scanner implements FileFilter
         if (unit != null)
         {
             JarClassLoader jcl = (JarClassLoader) deployedLoaders.remove(unit);
-            jcl.closeJar();
+            jcl.close();
         }
     }
 
@@ -171,7 +170,7 @@ public class Scanner implements FileFilter
         for (Iterator iterator = deployedLoaders.values().iterator(); iterator.hasNext();)
         {
             JarClassLoader jarClassLoader = (JarClassLoader) iterator.next();
-            jarClassLoader.closeJar();
+            jarClassLoader.close();
             iterator.remove();
         }
     }

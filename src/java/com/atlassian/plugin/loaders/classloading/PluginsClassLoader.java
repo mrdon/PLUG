@@ -152,4 +152,11 @@ public abstract class PluginsClassLoader extends SecureClassLoader implements Cl
 
         return super.getResource(name);
     }
+
+    /**
+     * Clean any resources held by the Classloader. ie, close files etc etc.
+     */
+    public void close()
+    {
+    }
 }
