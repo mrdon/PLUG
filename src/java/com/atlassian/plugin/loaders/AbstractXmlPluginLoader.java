@@ -1,16 +1,16 @@
 package com.atlassian.plugin.loaders;
 
-import org.dom4j.Element;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.io.SAXReader;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.util.ClassLoaderUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -113,7 +113,10 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
         for (Iterator iterator = element.elements("param").iterator(); iterator.hasNext();)
         {
             Element param = (Element) iterator.next();
-            pluginInfo.addParameter(param.attribute("name"), param.getText());
+
+            // Retrieve the parameter info => name & text
+            if (param.attribute("name") != null)
+                pluginInfo.addParameter(param.attribute("name").getData().toString(), param.getText());
         }
 
         if (element.element("application-version") != null)
