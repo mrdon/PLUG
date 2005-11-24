@@ -31,8 +31,11 @@ public class SinglePluginLoader extends AbstractXmlPluginLoader
 
     public Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
+        if (plugins == null)
+        {
             plugins = new ArrayList();
             loadPlugins(moduleDescriptorFactory);
+        }
 
         return plugins;
     }
