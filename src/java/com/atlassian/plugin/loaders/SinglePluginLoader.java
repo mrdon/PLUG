@@ -1,10 +1,10 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.impl.StaticPlugin;
-import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.impl.StaticPlugin;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 
@@ -31,11 +31,8 @@ public class SinglePluginLoader extends AbstractXmlPluginLoader
 
     public Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        if (plugins == null)
-        {
             plugins = new ArrayList();
             loadPlugins(moduleDescriptorFactory);
-        }
 
         return plugins;
     }
