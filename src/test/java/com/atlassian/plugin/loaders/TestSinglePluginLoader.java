@@ -61,6 +61,8 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals("test.atlassian.plugin", plugin.getKey());
         assertNotNull(plugin.getPluginInformation());
         assertEquals("1.0", plugin.getPluginInformation().getVersion());
+        assertEquals("test.atlassian.plugin.i18n", plugin.getI18nNameKey());
+        assertEquals("test.atlassian.plugin.desc.i18n", plugin.getPluginInformation().getDescriptionKey());
         assertEquals("This plugin descriptor is just used for test purposes!", plugin.getPluginInformation().getDescription());
         assertEquals("Atlassian Software Systems Pty Ltd", plugin.getPluginInformation().getVendorName());
         assertEquals("http://www.atlassian.com", plugin.getPluginInformation().getVendorUrl());

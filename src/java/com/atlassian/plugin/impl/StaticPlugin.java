@@ -10,6 +10,7 @@ import java.io.InputStream;
 public class StaticPlugin implements Plugin
 {
     private String name;
+    private String i18nNameKey;
     private String key;
     private Map modules = new HashMap();
     private boolean enabledByDefault = true;
@@ -27,6 +28,16 @@ public class StaticPlugin implements Plugin
     public void setName(String name)
     {
         this.name = name;
+    }
+
+    public String getI18nNameKey()
+    {
+        return i18nNameKey;
+    }
+
+    public void setI18nNameKey(String i18nNameKey)
+    {
+        this.i18nNameKey = i18nNameKey;
     }
 
     public String getKey()
@@ -64,7 +75,9 @@ public class StaticPlugin implements Plugin
 
             Class moduleClass = moduleDescriptor.getModuleClass();
             if (aClass.isAssignableFrom(moduleClass))
+            {
                 result.add(moduleDescriptor);
+            }
         }
 
         return result;

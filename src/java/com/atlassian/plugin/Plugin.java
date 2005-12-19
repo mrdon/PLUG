@@ -10,6 +10,10 @@ public interface Plugin extends Resourced
 
     void setName(String name);
 
+    String getI18nNameKey();
+
+    void setI18nNameKey(String i18nNameKey);
+
     String getKey();
 
     void setKey(String aPackage);

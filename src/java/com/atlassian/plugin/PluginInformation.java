@@ -8,12 +8,13 @@ package com.atlassian.plugin;
 
 import com.atlassian.plugin.util.JavaVersionUtils;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 public class PluginInformation
 {
     private String description;
+    private String descriptionKey;
     private String version;
     private String vendorName;
     private String vendorUrl;
@@ -110,5 +111,15 @@ public class PluginInformation
             return JavaVersionUtils.satisfiesMinVersion(minJavaVersion.floatValue());
         }
         return true;
+    }
+
+    public void setDescriptionKey(String descriptionKey)
+    {
+        this.descriptionKey = descriptionKey;
+    }
+
+    public String getDescriptionKey()
+    {
+        return descriptionKey;
     }
 }

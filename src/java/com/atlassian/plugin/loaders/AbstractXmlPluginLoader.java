@@ -97,7 +97,13 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
         PluginInformation pluginInfo = new PluginInformation();
 
         if (element.element("description") != null)
+        {
             pluginInfo.setDescription(element.element("description").getTextTrim());
+            if(element.element("description").attributeValue("key") != null)
+            {
+                pluginInfo.setDescriptionKey(element.element("description").attributeValue("key"));
+            }
+        }
 
         if (element.element("version") != null)
             pluginInfo.setVersion(element.element("version").getTextTrim());
@@ -139,6 +145,11 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
 
         plugin.setName(root.attributeValue("name"));
         plugin.setKey(root.attributeValue("key"));
+
+        if(root.attributeValue("i18n-name-key") != null)
+        {
+            plugin.setI18nNameKey(root.attributeValue("i18n-name-key"));
+        }
 
         if (plugin.getKey().indexOf(":") > 0)
             throw new PluginParseException("Plugin key's cannot contain ':'. Key is '" + plugin.getKey() + "'");
