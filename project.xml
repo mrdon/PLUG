@@ -3,7 +3,7 @@
   <pomVersion>3</pomVersion>
   <id>atlassian-plugins</id>
   <name>Atlassian Plugins</name>
-  <currentVersion>0.3.14</currentVersion>
+  <currentVersion>0.3.15</currentVersion>
   <organization>
     <name>Atlassian Software Systems Pty Ltd</name>
   </organization>
@@ -98,6 +98,10 @@
       <properties>
         <war.bundle>true</war.bundle>
       </properties>
+    </dependency>
+    <dependency>
+      <id>servletapi</id>
+      <version>2.3</version>
     </dependency>
   </dependencies>
 </project>
