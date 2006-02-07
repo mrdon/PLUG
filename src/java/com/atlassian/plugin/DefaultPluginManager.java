@@ -204,10 +204,15 @@ public class DefaultPluginManager implements PluginManager
                     final Class moduleDescClass = moduleDescriptor.getModuleClass();
                     if (moduleDescClass != null && moduleClass.isAssignableFrom(moduleDescClass))
                     {
-                        final Object module = moduleDescriptor.getModule();
-                        if (module != null)
+                        try
                         {
-                            result.add(module);
+                            final Object module = moduleDescriptor.getModule();
+                            if (module != null)
+                            {
+                                result.add(module);
+                            }
+                        } catch (Exception e){
+                            log.error(e);
                         }
                     }
                 }
@@ -237,6 +242,7 @@ public class DefaultPluginManager implements PluginManager
                 {
                     ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
                     if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
+
                         ((StateAware)descriptor).enabled();
                 }
                 saveState();
