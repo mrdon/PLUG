@@ -101,6 +101,13 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
             return descriptor;
         }
 
+        // When the module descriptor has been excluded, null is returned (PLUG-5)
+        if (moduleDescriptorDescriptor == null)
+        {
+            log.info("The module '" + name + "' in plugin '" + plugin.getName() + "' is in the list of excluded module descriptors, so not enabling.");
+            return null;
+        }
+
         // Once we have the module descriptor, create it using the given information
         try
         {
@@ -213,6 +220,10 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
             else if (!isResource(element))
             {
                 ModuleDescriptor moduleDescriptor = createModuleDescriptor(plugin, element, moduleDescriptorFactory);
+
+                // If we're not loading the module descriptor, null is returned, so we skip it
+                if (moduleDescriptor == null)
+                    continue;
 
                 if (plugin.getModuleDescriptor(moduleDescriptor.getKey()) != null)
                     throw new PluginParseException("Found duplicate key '" + moduleDescriptor.getKey() + "' within plugin '" + plugin.getKey() + "'");

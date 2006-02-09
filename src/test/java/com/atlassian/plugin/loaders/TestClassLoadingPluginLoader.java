@@ -39,7 +39,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
     {
         if (loader != null)
         {
-           loader.shutDown();
+            loader.shutDown();
         }
 
         assertTrue(FileUtils.deleteDir(pluginsTestDir));
@@ -67,7 +67,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
                 assertEquals(1, plugin.getModuleDescriptors().size());
                 MockAnimalModuleDescriptor paddingtonDescriptor = (MockAnimalModuleDescriptor) plugin.getModuleDescriptor("paddington");
                 assertEquals("Paddington Bear", paddingtonDescriptor.getName());
-                MockBear paddington = (MockBear)paddingtonDescriptor.getModule();
+                MockBear paddington = (MockBear) paddingtonDescriptor.getModule();
                 assertEquals("com.atlassian.plugin.mock.MockPaddington", paddington.getClass().getName());
             }
             else if (plugin.getName().equals("Test Class Loaded Plugin 2")) // asserts for second plugin
@@ -77,7 +77,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
                 assertEquals(1, plugin.getModuleDescriptors().size());
                 MockAnimalModuleDescriptor poohDescriptor = (MockAnimalModuleDescriptor) plugin.getModuleDescriptor("pooh");
                 assertEquals("Pooh Bear", poohDescriptor.getName());
-                MockBear pooh = (MockBear)poohDescriptor.getModule();
+                MockBear pooh = (MockBear) poohDescriptor.getModule();
                 assertEquals("com.atlassian.plugin.mock.MockPooh", pooh.getClass().getName());
             }
             else

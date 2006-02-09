@@ -158,6 +158,34 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals(UnloadableModuleDescriptor.class, moduleList.get(0).getClass());
     }
 
+    // PLUG-5
+    public void testPluginWithExcludedModules() throws PluginParseException
+    {
+        SinglePluginLoader loader = new SinglePluginLoader("test-atlassian-plugin.xml");
+
+        // Define the module descriptor factory
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+
+        // Exclude mineral
+        List excludedList = new ArrayList();
+        excludedList.add("mineral");
+        moduleDescriptorFactory.setExcludedModuleKeys(excludedList);
+
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+
+        // 1 plugin returned
+        assertEquals(1, plugins.size());
+
+        Plugin plugin = (Plugin) plugins.iterator().next();
+
+        // Only one descriptor, animal
+        assertEquals(1, plugin.getModuleDescriptors().size());
+        assertNotNull(plugin.getModuleDescriptor("bear"));
+        assertNull(plugin.getModuleDescriptor("gold"));
+    }
+
     public void testPluginWithInvalidClass() throws PluginParseException
     {
         SinglePluginLoader loader = new SinglePluginLoader("test-bad-class-plugin.xml");

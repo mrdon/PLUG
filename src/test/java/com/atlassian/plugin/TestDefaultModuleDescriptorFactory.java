@@ -1,8 +1,11 @@
 package com.atlassian.plugin;
 
-import junit.framework.TestCase;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
+import junit.framework.TestCase;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestDefaultModuleDescriptorFactory extends TestCase
 {
@@ -38,7 +41,7 @@ public class TestDefaultModuleDescriptorFactory extends TestCase
         {
             e.printStackTrace();
         }
-        
+
         fail("Threw the wrong exception");
     }
 
@@ -63,5 +66,24 @@ public class TestDefaultModuleDescriptorFactory extends TestCase
         // Ensure the other one is still there
         assertTrue(moduleDescriptorFactory.hasModuleDescriptor("animal"));
         assertTrue(moduleDescriptorFactory.getModuleDescriptor("animal") instanceof MockAnimalModuleDescriptor);
+    }
+
+    // PLUG-5
+    public void testModuleDescriptorFactoryExcludedDescriptors() throws IllegalAccessException, PluginParseException, ClassNotFoundException, InstantiationException
+    {
+        // Add the "supported" module descriptors
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+
+        // Exclude "mineral"
+        List excludedList = new ArrayList();
+        excludedList.add("mineral");
+        moduleDescriptorFactory.setExcludedModuleKeys(excludedList);
+
+        // Try and grab the "animal" descriptor
+        assertNotNull(moduleDescriptorFactory.getModuleDescriptor("animal"));
+
+        // "mineral" is excluded, so it should return null
+        assertNull(moduleDescriptorFactory.getModuleDescriptor("mineral"));
     }
 }
