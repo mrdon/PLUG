@@ -4,11 +4,14 @@ import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.mock.*;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -138,16 +141,44 @@ public class TestSinglePluginLoader extends TestCase
 
     public void testUnknownPluginModule() throws PluginParseException
     {
-        try
-        {
-            SinglePluginLoader loader = new SinglePluginLoader("test-bad-plugin.xml");
-            loader.loadAllPlugins(new DefaultModuleDescriptorFactory());
-            fail("Should have blown up.");
-        }
-        catch (PluginParseException e)
-        {
-            assertEquals("Could not find descriptor for module 'unknown-plugin' in plugin 'Bad Plugin'", e.getMessage());
-        }
+        SinglePluginLoader loader = new SinglePluginLoader("test-bad-plugin.xml");
+        Collection plugins = loader.loadAllPlugins(new DefaultModuleDescriptorFactory());
+        List pluginsList = new ArrayList(plugins);
+
+        assertEquals(1, pluginsList.size());
+
+        // Since there were errors, we should get back an UnloadablePlugin
+        assertEquals(UnloadablePlugin.class, pluginsList.get(0).getClass());
+
+        UnloadablePlugin plugin = (UnloadablePlugin) pluginsList.get(0);
+
+        List moduleList = new ArrayList(plugin.getModuleDescriptors());
+
+        // The module that had the problem should be an UnloadableModuleDescriptor
+        assertEquals(UnloadableModuleDescriptor.class, moduleList.get(0).getClass());
+    }
+
+    public void testPluginWithInvalidClass() throws PluginParseException
+    {
+        SinglePluginLoader loader = new SinglePluginLoader("test-bad-class-plugin.xml");
+
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        List pluginsList = new ArrayList(plugins);
+
+        assertEquals(1, pluginsList.size());
+
+        // Since there were errors, we should get back an UnloadablePlugin
+        assertEquals(UnloadablePlugin.class, pluginsList.get(0).getClass());
+
+        UnloadablePlugin plugin = (UnloadablePlugin) pluginsList.get(0);
+
+        List moduleList = new ArrayList(plugin.getModuleDescriptors());
+
+        // There shouldn't be any modules
+        assertEquals(UnloadableModuleDescriptor.class, moduleList.get(0).getClass());
     }
 
     public void testBadPluginKey() throws PluginParseException

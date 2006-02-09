@@ -4,6 +4,10 @@ public class MockGold implements MockMineral
 {
     int weight;
 
+    public MockGold()
+    {
+    }
+
     public MockGold(int weight)
     {
         this.weight = weight;

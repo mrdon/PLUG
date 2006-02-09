@@ -1,7 +1,6 @@
 package com.atlassian.plugin.loaders.classloading;
 
 import com.atlassian.plugin.mock.MockBear;
-import com.atlassian.plugin.util.ClassLoaderUtils;
 
 import java.io.File;
 import java.io.IOException;

@@ -23,7 +23,7 @@ public abstract class AbstractTestClassLoader extends TestCase
         URL url = ClassLoaderUtils.getResource("plugins", TestClassPathPluginLoader.class);
         String path = url.toExternalForm().substring(5);
     	path = path.replace('/', File.separatorChar);
-        File pluginsDirectory = new File(path);
+        pluginsDirectory = new File(path);
         return pluginsDirectory;
     }
 

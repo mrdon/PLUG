@@ -11,7 +11,7 @@ import java.util.Map;
 
 public abstract class AbstractModuleDescriptor implements ModuleDescriptor
 {
-    private Plugin plugin;
+    protected Plugin plugin;
     String key;
     String name;
     Class moduleClass;
@@ -34,12 +34,28 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         {
             if (clazz != null)  //not all plugins have to have a class
             {
+                // First try and load the class, to make sure the class exists
                 moduleClass = plugin.loadClass(clazz, getClass());
+
+                // Then instantiate the class, so we can see if there are any dependencies that aren't satisfied
+                moduleClass.newInstance();
             }
         }
         catch (ClassNotFoundException e)
         {
-            throw new PluginParseException("Could not load class: " + clazz);
+            throw new PluginParseException("Could not load class: " + clazz, e);
+        }
+        catch (IllegalAccessException e)
+        {
+            throw new PluginParseException(e);
+        }
+        catch (InstantiationException e)
+        {
+            throw new PluginParseException(e);
+        }
+        catch (NoClassDefFoundError e)
+        {
+            throw new PluginParseException("Error retrieving dependency of class: " + clazz + ". Missing class: " + e.getMessage());
         }
 
         this.description = element.elementTextTrim("description");
@@ -184,5 +200,15 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
             return JavaVersionUtils.satisfiesMinVersion(minJavaVersion.floatValue());
         }
         return true;
+    }
+
+    /**
+     * Sets the plugin for the ModuleDescriptor
+     *
+     * @param plugin
+     */
+    public void setPlugin(Plugin plugin)
+    {
+        this.plugin = plugin;
     }
 }

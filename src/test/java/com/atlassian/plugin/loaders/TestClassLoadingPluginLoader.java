@@ -1,27 +1,31 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.util.FileUtils;
+import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
+import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
+import com.atlassian.plugin.util.FileUtils;
+import com.atlassian.plugin.util.ClassLoaderUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
 import java.util.jar.JarEntry;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.jar.JarOutputStream;
+import java.net.URL;
 
 public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
 {
     private static final Log log = LogFactory.getLog(TestClassLoadingPluginLoader.class);
     ClassLoadingPluginLoader loader;
     DefaultModuleDescriptorFactory moduleDescriptorFactory;
+
+    public static final String BAD_PLUGIN_JAR = "plugins/crap-plugin.jar";
 
     public void setUp() throws Exception
     {
@@ -81,6 +85,39 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
                 fail("What plugin name?!");
             }
         }
+    }
+
+    // Tests that an UnloadablePlugin is returned when there's a missing class dependency
+    public void testAtlassianPluginWithMissingClass() throws Exception
+    {
+        addTestModuleDecriptors();
+
+        URL url = ClassLoaderUtils.getResource(BAD_PLUGIN_JAR, TestClassPathPluginLoader.class);
+        String path = url.toExternalForm();
+        path = path.replace('/', File.separatorChar);
+        path = path.substring(5);
+        File pluginFile = new File(path);
+        loader = new ClassLoadingPluginLoader(pluginFile.getParentFile());
+
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+
+        assertEquals(1, plugins.size());
+
+        Object[] pluginsArray = plugins.toArray();
+
+        Plugin plugin = (Plugin) pluginsArray[0];
+
+        assertEquals(UnloadablePlugin.class, plugin.getClass());
+
+        // grab module descriptors
+        Collection moduleDescriptors = plugin.getModuleDescriptors();
+        Object[] descriptorsArray = moduleDescriptors.toArray();
+
+        assertEquals(1, moduleDescriptors.size());
+
+        ModuleDescriptor descriptor = (ModuleDescriptor) descriptorsArray[0];
+
+        assertEquals(UnloadableModuleDescriptor.class, descriptor.getClass());
     }
 
     private void addTestModuleDecriptors()

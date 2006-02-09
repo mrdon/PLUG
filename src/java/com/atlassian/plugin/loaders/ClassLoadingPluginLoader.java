@@ -2,19 +2,18 @@ package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.impl.DynamicPlugin;
-import com.atlassian.plugin.loaders.classloading.Scanner;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.loaders.classloading.PluginsClassLoader;
-
-import java.util.*;
-import java.io.File;
-import java.io.InputStream;
-import java.io.IOException;
-import java.net.URL;
-
+import com.atlassian.plugin.loaders.classloading.Scanner;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.DocumentException;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.*;
 
 /**
  * A plugin loader to load plugins from a classloading on disk.
@@ -48,7 +47,8 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
         for (Iterator iterator = scanner.getDeploymentUnits().iterator(); iterator.hasNext();)
         {
             DeploymentUnit deploymentUnit = (DeploymentUnit) iterator.next();
-            deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
+            Plugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
+            plugins.put(deploymentUnit, plugin);
         }
 
         return plugins.values();
@@ -57,11 +57,11 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
     /**
      * @param deploymentUnit
      * @param moduleDescriptorFactory
-     * @return
+     * @return the plugin loaded from the deployment unit, or an UnloadablePlugin instance if loading fails.
      */
-    private DynamicPlugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    private Plugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        DynamicPlugin plugin = null;
+        Plugin plugin = null;
 
         PluginsClassLoader loader = getPluginsClassLoader(deploymentUnit);
 
@@ -73,14 +73,11 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
         }
         else
         {
-            plugin = new DynamicPlugin(deploymentUnit, loader);
-
             InputStream is = loader.getResourceAsStream(fileNameToLoad);
-
             try
             {
-                configurePlugin(moduleDescriptorFactory, getDocument(is), plugin);
-                plugins.put(deploymentUnit, plugin);
+                // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
+                plugin = configurePlugin(moduleDescriptorFactory, getDocument(is), new DynamicPlugin(deploymentUnit, loader));
             }
             catch (DocumentException e)
             {
@@ -113,7 +110,6 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
                 }
             }
         }
-
         return plugin;
     }
 
@@ -148,7 +144,8 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
             DeploymentUnit deploymentUnit = (DeploymentUnit) iterator.next();
             if (!plugins.containsKey(deploymentUnit))
             {
-                DynamicPlugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
+                Plugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
+                plugins.put(deploymentUnit, plugin);
                 foundPlugins.add(plugin);
                 // iterator.remove();
             }
