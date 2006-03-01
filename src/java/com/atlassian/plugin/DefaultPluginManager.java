@@ -79,6 +79,9 @@ public class DefaultPluginManager implements PluginManager
         if (!plugin.isUninstallable())
             throw new PluginException("Plugin is not uninstallable: " + plugin.getKey());
 
+        if (isPluginEnabled(plugin.getKey()))
+            disablePlugin(plugin.getKey());
+
         PluginLoader loader = (PluginLoader) pluginToPluginLoader.remove(plugin);
 
         if (loader == null || !loader.supportsRemoval())
@@ -363,7 +366,7 @@ public class DefaultPluginManager implements PluginManager
      */
     public List getEnabledModuleDescriptorsByType(String type) throws PluginParseException, IllegalArgumentException
     {
-        final Class descriptorClazz = (Class) moduleDescriptorFactory.getModuleDescriptorClass(type);
+        final Class descriptorClazz = moduleDescriptorFactory.getModuleDescriptorClass(type);
 
         if (descriptorClazz == null)
             throw new IllegalArgumentException("No module descriptor of type: " + type + " found.");

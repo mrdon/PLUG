@@ -39,5 +39,4 @@ public class DynamicPlugin extends StaticPlugin
     {
         return true;
     }
-
 }

@@ -296,7 +296,10 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         PluginManager manager = makeClassLoadingPluginManager();
         assertEquals(2, manager.getPlugins().size());
+        MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
+        assertFalse(moduleDescriptor.disabled);
         manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded"));
+        assertTrue("Module must have had disable() called before being removed", moduleDescriptor.disabled);
         assertEquals(1, manager.getPlugins().size());
         assertNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
         assertEquals(1, pluginsTestDir.listFiles().length);
