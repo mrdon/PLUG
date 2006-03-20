@@ -3,6 +3,7 @@ package com.atlassian.plugin.servlet;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.util.LastModifiedHandler;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -11,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 
 /**
  * Created by IntelliJ IDEA.
@@ -93,7 +95,7 @@ public class PluginResourceDownload implements DownloadStrategy
         String[] parts = splitIntoLibraryAndResource(httpServletRequest.getRequestURI(), servlet);
         if (parts.length == 2)
         {
-            servePluginResource(servlet, httpServletResponse, parts[0], parts[1]);
+            servePluginResource(servlet, httpServletRequest, httpServletResponse, parts[0], parts[1]);
         }
         else
         {
@@ -102,7 +104,7 @@ public class PluginResourceDownload implements DownloadStrategy
         }
     }
 
-    private void servePluginResource(BaseFileServerServlet servlet, HttpServletResponse httpServletResponse, String moduleKey, String filePath)
+    private void servePluginResource(BaseFileServerServlet servlet, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, String moduleKey, String filePath)
             throws IOException
     {
         ModuleDescriptor moduleDescriptor = pluginManager.getPluginModule(moduleKey);
@@ -117,7 +119,8 @@ public class PluginResourceDownload implements DownloadStrategy
 
             if (resource != null)
             {
-                serveDownloadableResource(servlet, httpServletResponse, resource);
+                if (!checkResourceNotModified(resource, httpServletRequest, httpServletResponse))
+                    serveDownloadableResource(servlet, httpServletResponse, resource);
             }
             else
             {
@@ -129,6 +132,22 @@ public class PluginResourceDownload implements DownloadStrategy
             log.info("Module not found: " + moduleKey);
             httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
+    }
+
+    /**
+     * Checks any "If-Modified-Since" header from the request against the plugin's loading time, since plugins can't
+     * be modified after they've been loaded this is a good way to determine if a plugin resource has been modified
+     * or not.
+     *
+     * If this method returns true, don't do any more processing on the request -- the response code has already been
+     * set to "304 Not Modified" for you, and you don't need to serve the file.
+     */
+    private boolean checkResourceNotModified(DownloadableResource resource, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
+    {
+        Plugin plugin = pluginManager.getPlugin(resource.getPluginKey());
+        Date resourceLastModifiedDate = (plugin.getDateLoaded() == null) ? new Date() : plugin.getDateLoaded();
+        LastModifiedHandler lastModifiedHandler = new LastModifiedHandler(resourceLastModifiedDate);
+        return lastModifiedHandler.checkRequest(httpServletRequest, httpServletResponse);
     }
 
     private DownloadableResource getResourceFromPlugin(String moduleKey, String filePath, BaseFileServerServlet servlet)

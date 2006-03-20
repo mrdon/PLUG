@@ -3,6 +3,7 @@ package com.atlassian.plugin;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Date;
 
 public interface Plugin extends Resourced
 {
@@ -48,6 +49,11 @@ public interface Plugin extends Resourced
     void setSystemPlugin(boolean system);
 
     void setEnabled(boolean enabled);
+
+    /**
+     * The date this plugin was loaded into the system.
+     */
+    Date getDateLoaded();
 
     /**
      * Whether or not this plugin can be 'uninstalled'.
