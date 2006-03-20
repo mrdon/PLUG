@@ -19,6 +19,7 @@ public class StaticPlugin implements Plugin
     private boolean enabled;
     private boolean system;
     private Resourced resources;
+    private Date dateLoaded = new Date();
 
     public String getName()
     {
@@ -185,6 +186,11 @@ public class StaticPlugin implements Plugin
     public void setSystemPlugin(boolean system)
     {
         this.system = system;
+    }
+
+    public Date getDateLoaded()
+    {
+        return dateLoaded;
     }
 }
 
