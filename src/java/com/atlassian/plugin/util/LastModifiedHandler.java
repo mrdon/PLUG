@@ -94,7 +94,7 @@ public class LastModifiedHandler
 
     private static boolean etagMatches(String ifNoneMatch, String etagString)
     {
-        return ifNoneMatch != null && !ifNoneMatch.equals(etagString);
+        return ifNoneMatch != null && ifNoneMatch.equals(etagString);
     }
 
     private static boolean isContentModifiedSince(long ifModifiedSince, long lastModified)

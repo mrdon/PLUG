@@ -8,6 +8,7 @@ import org.dom4j.Element;
 
 import java.util.List;
 import java.util.Map;
+import java.lang.reflect.Constructor;
 
 public abstract class AbstractModuleDescriptor implements ModuleDescriptor
 {
@@ -38,7 +39,18 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
                 moduleClass = plugin.loadClass(clazz, getClass());
 
                 // Then instantiate the class, so we can see if there are any dependencies that aren't satisfied
-                moduleClass.newInstance();
+                try
+                {
+                    Constructor noargConstructor = moduleClass.getConstructor(new Class[]{});
+                    if(noargConstructor != null)
+                    {
+                        moduleClass.newInstance();
+                    }
+                }
+                catch (NoSuchMethodException e)
+                {
+                    // If there is no "noarg" constructor then don't do the check
+                }
             }
         }
         catch (ClassNotFoundException e)
