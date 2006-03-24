@@ -25,7 +25,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
     ClassLoadingPluginLoader loader;
     DefaultModuleDescriptorFactory moduleDescriptorFactory;
 
-    public static final String BAD_PLUGIN_JAR = "plugins/crap-plugin.jar";
+    public static final String BAD_PLUGIN_JAR = "bad-plugins/crap-plugin.jar";
 
     public void setUp() throws Exception
     {
