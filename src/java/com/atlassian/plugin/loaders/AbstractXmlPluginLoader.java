@@ -1,8 +1,9 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
+import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
+import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -15,8 +16,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class AbstractXmlPluginLoader implements PluginLoader
 {
@@ -77,26 +76,10 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
         // When there's a problem loading a module, note the problem and provide a dummy module that can report the error
         catch (Exception e)
         {
-            UnloadableModuleDescriptor descriptor = new UnloadableModuleDescriptor();
-            descriptor.init(plugin, element);
-
-            String errorMsg = null;
-
-            if (e instanceof PluginParseException)
-                errorMsg = "Could not find descriptor for module '" + name + "' in plugin '" + (plugin == null ? "null" : plugin.getName()) + "'";
-            else if (e instanceof InstantiationException)
-                errorMsg = "Could not instantiate module descriptor: " + moduleDescriptorFactory.getModuleDescriptorClass(name).getName();
-            else if (e instanceof IllegalAccessException)
-                errorMsg = "Exception instantiating module descriptor: " + moduleDescriptorFactory.getModuleDescriptorClass(name).getName();
-            else if (e instanceof ClassNotFoundException)
-                errorMsg = "Could not find module descriptor class: " + moduleDescriptorFactory.getModuleDescriptorClass(name).getName();
-            else
-                errorMsg = "There was a problem loading the module descriptor: " + moduleDescriptorFactory.getModuleDescriptorClass(name).getName();
+            UnloadableModuleDescriptor descriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin, element, e, moduleDescriptorFactory);
 
             log.error("There were problems loading the module '" + name + "'. The module and its plugin have been disabled.");
-            log.error(errorMsg, e);
-
-            descriptor.setErrorText(errorMsg);
+            log.error(descriptor.getErrorText(), e);
 
             return descriptor;
         }
@@ -116,13 +99,10 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
         // If it fails, return a dummy module that contains the error
         catch (PluginParseException e)
         {
-            UnloadableModuleDescriptor descriptor = new UnloadableModuleDescriptor();
-            descriptor.init(plugin, element);
-
-            descriptor.setErrorText(e.getMessage());
+            UnloadableModuleDescriptor descriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin, element, e, moduleDescriptorFactory);
 
             log.error("There were problems loading the module '" + name + "'. The module and its plugin have been disabled.");
-            log.error(e);
+            log.error(descriptor.getErrorText(), e);
 
             return descriptor;
         }
@@ -234,7 +214,7 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
                 if (moduleDescriptor instanceof UnloadableModuleDescriptor)
                 {
                     log.error("There were errors loading the plugin '" + plugin.getName() + "'. The plugin has been disabled.");
-                    return createUnloadablePlugin(plugin);
+                    return UnloadablePluginFactory.createUnloadablePlugin(plugin);
                 }
             }
         }
@@ -242,36 +222,5 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
         plugin.setResources(Resources.fromXml(root));
 
         return plugin;
-    }
-
-    /**
-     * Creates an UnloadablePlugin instance from a given plugin, when there were problems loading the modules or the plugin itself
-     *
-     * @param oldPlugin
-     * @return UnloadablePlugin instance
-     */
-    private UnloadablePlugin createUnloadablePlugin(Plugin oldPlugin)
-    {
-        UnloadablePlugin newPlugin = new UnloadablePlugin();
-
-        newPlugin.setName(oldPlugin.getName());
-        newPlugin.setKey(oldPlugin.getKey());
-        newPlugin.setI18nNameKey(oldPlugin.getI18nNameKey());
-
-        // Make sure it's visible to the user
-        newPlugin.setSystemPlugin(false);
-
-        newPlugin.setPluginInformation(oldPlugin.getPluginInformation());
-
-        List moduleDescriptors = new ArrayList(oldPlugin.getModuleDescriptors());
-
-        for (int i = 0; i < moduleDescriptors.size(); i++)
-        {
-            ModuleDescriptor descriptor = (ModuleDescriptor) moduleDescriptors.get(i);
-
-            newPlugin.addModuleDescriptor(descriptor);
-        }
-
-        return newPlugin;
     }
 }

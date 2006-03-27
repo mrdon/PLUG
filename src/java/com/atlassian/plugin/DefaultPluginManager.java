@@ -1,6 +1,10 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.loaders.PluginLoader;
+import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
+import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
+import com.atlassian.plugin.impl.UnloadablePlugin;
+import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -27,6 +31,7 @@ public class DefaultPluginManager implements PluginManager
 
     /**
      * Initialize all plugins the first time.
+     *
      * @throws PluginParseException
      */
     public void init() throws PluginParseException
@@ -71,7 +76,7 @@ public class DefaultPluginManager implements PluginManager
 
     /**
      * Uninstall (delete) a plugin if possible.
-     * <p>
+     * <p/>
      * Be very careful when using this method, the plugin cannot be brought back.
      */
     public void uninstall(Plugin plugin) throws PluginException
@@ -97,7 +102,7 @@ public class DefaultPluginManager implements PluginManager
 
             // if the module is StateAware, then disable it (matches enable())
             if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
-                ((StateAware)descriptor).disabled();
+                ((StateAware) descriptor).disabled();
 
             // now destroy it (matches init())
             descriptor.destroy(plugin);
@@ -114,11 +119,53 @@ public class DefaultPluginManager implements PluginManager
 
         plugins.put(plugin.getKey(), plugin);
 
-        for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
+        List moduleDescriptors = new ArrayList(plugin.getModuleDescriptors());
+
+        for (Iterator it = moduleDescriptors.iterator(); it.hasNext();)
         {
             ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
-            if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
-                ((StateAware)descriptor).enabled();
+
+            if (!(descriptor instanceof StateAware))
+            {
+                if (log.isDebugEnabled())
+                    log.debug("ModuleDescriptor '" + descriptor.getName() + "' is not StateAware. No need to enable.");
+
+                continue;
+            }
+
+            if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
+            {
+                if (log.isDebugEnabled())
+                    log.debug("Plugin is not enabled, so not enabling ModuleDescriptor '" + descriptor.getName() + "'.");
+
+                continue;
+            }
+
+            try
+            {
+                ((StateAware) descriptor).enabled();
+            }
+            /**
+             * Catch any exceptions thrown during the enabling of the plugin (PLUG-7)
+             *
+             * When a problem occurs, we should catch the exception and make an UnloadablePlugin.
+             */
+            catch (Exception t)
+            {
+                log.error("There was an error loading the descriptor '" + descriptor.getName() + "' of plugin '" + plugin.getKey() + "'. Disabling.", t);
+
+                UnloadableModuleDescriptor unloadableDescriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin, descriptor, t);
+
+                UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin, unloadableDescriptor);
+
+                // Replace the plugin
+                plugins.put(plugin.getKey(), unloadablePlugin);
+
+                plugin = unloadablePlugin;
+
+                // Make sure the plugin is disabled
+                currentState.setState(plugin.getKey(), Boolean.FALSE);
+            }
         }
 
         pluginToPluginLoader.put(plugin, loader);
@@ -157,10 +204,10 @@ public class DefaultPluginManager implements PluginManager
 
     public Plugin getEnabledPlugin(String pluginKey)
     {
-        if (isPluginEnabled(pluginKey))
-            return getPlugin(pluginKey);
+        if (!isPluginEnabled(pluginKey))
+            return null;
 
-        return null;
+        return getPlugin(pluginKey);
     }
 
     public ModuleDescriptor getPluginModule(String completeKey)
@@ -169,22 +216,21 @@ public class DefaultPluginManager implements PluginManager
 
         final Plugin plugin = getPlugin(key.getPluginKey());
 
-        if (plugin != null)
-            return plugin.getModuleDescriptor(key.getModuleKey());
+        if (plugin == null)
+            return null;
 
-        return null;
+        return plugin.getModuleDescriptor(key.getModuleKey());
     }
 
     public ModuleDescriptor getEnabledPluginModule(String completeKey)
     {
         ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
 
-        if (isPluginModuleEnabled(completeKey))
-        {
-            return getEnabledPlugin(key.getPluginKey()).getModuleDescriptor(key.getModuleKey());
-        }
+        // If it's disabled, return null
+        if (!isPluginModuleEnabled(completeKey))
+            return null;
 
-        return null;
+        return getEnabledPlugin(key.getPluginKey()).getModuleDescriptor(key.getModuleKey());
     }
 
     public List getEnabledModulesByClass(Class moduleClass)
@@ -195,28 +241,31 @@ public class DefaultPluginManager implements PluginManager
         {
             Plugin plugin = (Plugin) iterator.next();
 
-            if (isPluginEnabled(plugin.getKey()))
+            // Skip disabled plugins
+            if (!isPluginEnabled(plugin.getKey()))
+                continue;
+
+            for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
             {
-                for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
+                ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator1.next();
+
+                if (!isPluginModuleEnabled(moduleDescriptor.getCompleteKey()))
+                    continue;
+
+                final Class moduleDescClass = moduleDescriptor.getModuleClass();
+                if (moduleDescClass != null && moduleClass.isAssignableFrom(moduleDescClass))
                 {
-                    ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator1.next();
-
-                    if (!isPluginModuleEnabled(moduleDescriptor.getCompleteKey()))
-                        continue;
-
-                    final Class moduleDescClass = moduleDescriptor.getModuleClass();
-                    if (moduleDescClass != null && moduleClass.isAssignableFrom(moduleDescClass))
+                    try
                     {
-                        try
+                        final Object module = moduleDescriptor.getModule();
+                        if (module != null)
                         {
-                            final Object module = moduleDescriptor.getModule();
-                            if (module != null)
-                            {
-                                result.add(module);
-                            }
-                        } catch (Exception e){
-                            log.error(e);
+                            result.add(module);
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        log.error(e);
                     }
                 }
             }
@@ -230,27 +279,75 @@ public class DefaultPluginManager implements PluginManager
         if (key == null)
             throw new IllegalArgumentException("You must specify a plugin key to disable.");
 
-        if (plugins.containsKey(key))
+        if (!plugins.containsKey(key))
         {
-            Plugin plugin = (Plugin) plugins.get(key);
+            if (log.isInfoEnabled())
+                log.info("No plugin was found for key '" + key + "'. Not enabling.");
 
-            if(plugin.getPluginInformation().satisfiesMinJavaVersion())
+            return;
+        }
+
+        Plugin plugin = (Plugin) plugins.get(key);
+
+        if (!plugin.getPluginInformation().satisfiesMinJavaVersion())
+        {
+            log.error("Minimum Java version of '" + plugin.getPluginInformation().getMinJavaVersion() + "' was not satisfied for module '" + key + "'. Not enabling.");
+            return;
+        }
+
+        if (!plugin.isEnabledByDefault())
+            currentState.setState(key, Boolean.TRUE);
+        else
+            currentState.removeState(key);
+
+        List moduleDescriptors = new ArrayList(plugin.getModuleDescriptors());
+
+        for (Iterator it = moduleDescriptors.iterator(); it.hasNext();)
+        {
+            ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
+
+            if (!(descriptor instanceof StateAware))
             {
-                if (!plugin.isEnabledByDefault())
-                    currentState.setState(key, Boolean.TRUE);
-                else
-                    currentState.removeState(key);
+                if (log.isDebugEnabled())
+                    log.debug("ModuleDescriptor '" + descriptor.getName() + "' is not StateAware. No need to enable.");
 
-                for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
-                {
-                    ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
-                    if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
+                continue;
+            }
 
-                        ((StateAware)descriptor).enabled();
-                }
-                saveState();
+            if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
+            {
+                if (log.isDebugEnabled())
+                    log.debug("Plugin is not enabled, so not enabling ModuleDescriptor '" + descriptor.getName() + "'.");
+
+                continue;
+            }
+
+            try
+            {
+                ((StateAware) descriptor).enabled();
+            }
+            /**
+             * Catch any exceptions thrown during the enabling of the plugin (PLUG-7)
+             *
+             * When a problem occurs, we should catch the exception and make an UnloadablePlugin.
+             */
+            catch (Exception t)
+            {
+                log.error("There was an error loading the descriptor '" + descriptor.getName() + "' of plugin '" + plugin.getKey() + "'. Disabling.", t);
+
+                UnloadableModuleDescriptor unloadableDescriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin, descriptor, t);
+
+                UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin, unloadableDescriptor);
+
+                // Replace the plugin
+                plugins.put(plugin.getKey(), unloadablePlugin);
+
+                // Make sure the plugin is disabled
+                currentState.setState(key, Boolean.FALSE);
             }
         }
+
+        saveState();
     }
 
     public void disablePlugin(String key)
@@ -258,25 +355,46 @@ public class DefaultPluginManager implements PluginManager
         if (key == null)
             throw new IllegalArgumentException("You must specify a plugin key to disable.");
 
-        if (plugins.containsKey(key))
+        if (!plugins.containsKey(key))
         {
-            Plugin plugin = (Plugin) plugins.get(key);
+            if (log.isInfoEnabled())
+                log.info("No plugin was found for key '" + key + "'. Not disabling.");
 
-            for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
+            return;
+        }
+
+        Plugin plugin = (Plugin) plugins.get(key);
+
+        for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
+        {
+            ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
+
+            // Don't need to enable if not state aware
+            if (!(descriptor instanceof StateAware))
             {
-                ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
-                if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
-                    ((StateAware)descriptor).disabled();
+                if (log.isDebugEnabled())
+                    log.debug("ModuleDescriptor '" + descriptor.getName() + "' is not StateAware. No need to disable.");
+
+                continue;
             }
 
-            if (plugin.isEnabledByDefault())
-                currentState.setState(key, Boolean.FALSE);
-            else
-                currentState.removeState(key);
+            if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
+            {
+                if (log.isDebugEnabled())
+                    log.debug("Plugin is not enabled, so not disabling ModuleDescriptor '" + descriptor.getName() + "'.");
 
+                continue;
+            }
 
-            saveState();
+            ((StateAware) descriptor).disabled();
         }
+
+        if (plugin.isEnabledByDefault())
+            currentState.setState(key, Boolean.FALSE);
+        else
+            currentState.removeState(key);
+
+        saveState();
     }
 
     public void disablePluginModule(String completeKey)
@@ -285,18 +403,24 @@ public class DefaultPluginManager implements PluginManager
             throw new IllegalArgumentException("You must specify a plugin module key to disable.");
 
         final ModuleDescriptor module = getPluginModule(completeKey);
-        if (module != null)
+
+        if (module == null)
         {
-            if (module.isEnabledByDefault())
-                currentState.setState(completeKey, Boolean.FALSE);
-            else
-                currentState.removeState(completeKey);
+            if (log.isInfoEnabled())
+                log.info("Returned module for key '" + completeKey + "' was null. Not disabling.");
 
-            if (module instanceof StateAware)
-                ((StateAware) module).disabled();
-
-            saveState();
+            return;
         }
+
+        if (module.isEnabledByDefault())
+            currentState.setState(completeKey, Boolean.FALSE);
+        else
+            currentState.removeState(completeKey);
+
+        if (module instanceof StateAware)
+            ((StateAware) module).disabled();
+
+        saveState();
     }
 
     public void enablePluginModule(String completeKey)
@@ -305,22 +429,30 @@ public class DefaultPluginManager implements PluginManager
             throw new IllegalArgumentException("You must specify a plugin module key to disable.");
 
         final ModuleDescriptor module = getPluginModule(completeKey);
-        if (module != null)
+
+        if (module == null)
         {
-            if(module.satisfiesMinJavaVersion())
-            {
+            if (log.isInfoEnabled())
+                log.info("Returned module for key '" + completeKey + "' was null. Not enabling.");
 
-                if (!module.isEnabledByDefault())
-                    currentState.setState(completeKey, Boolean.TRUE);
-                else
-                    currentState.removeState(completeKey);
-
-                if (module instanceof StateAware)
-                    ((StateAware) module).enabled();
-
-                saveState();
-            }
+            return;
         }
+
+        if (!module.satisfiesMinJavaVersion())
+        {
+            log.error("Minimum Java version of '" + module.getMinJavaVersion() + "' was not satisfied for module '" + completeKey + "'. Not enabling.");
+            return;
+        }
+
+        if (!module.isEnabledByDefault())
+            currentState.setState(completeKey, Boolean.TRUE);
+        else
+            currentState.removeState(completeKey);
+
+        if (module instanceof StateAware)
+            ((StateAware) module).enabled();
+
+        saveState();
     }
 
     public boolean isPluginModuleEnabled(String completeKey)
@@ -344,16 +476,17 @@ public class DefaultPluginManager implements PluginManager
         {
             Plugin plugin = (Plugin) iterator.next();
 
-            if (isPluginEnabled(plugin.getKey()))
-            {
-                for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
-                {
-                    ModuleDescriptor module = (ModuleDescriptor) iterator1.next();
+            // Skip disabled plugins
+            if (!isPluginEnabled(plugin.getKey()))
+                continue;
 
-                    if (descriptorClazz.isInstance(module) && isPluginModuleEnabled(module.getCompleteKey()))
-                    {
-                        result.add(module);
-                    }
+            for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
+            {
+                ModuleDescriptor module = (ModuleDescriptor) iterator1.next();
+
+                if (descriptorClazz.isInstance(module) && isPluginModuleEnabled(module.getCompleteKey()))
+                {
+                    result.add(module);
                 }
             }
         }
