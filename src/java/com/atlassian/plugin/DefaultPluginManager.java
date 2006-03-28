@@ -148,9 +148,9 @@ public class DefaultPluginManager implements PluginManager
             /**
              * Catch any exceptions thrown during the enabling of the plugin (PLUG-7)
              *
-             * When a problem occurs, we should catch the exception and make an UnloadablePlugin.
+             * When a problem occurs, we should catch the throwable and make an UnloadablePlugin.
              */
-            catch (Exception t)
+            catch (Throwable t)
             {
                 log.error("There was an error loading the descriptor '" + descriptor.getName() + "' of plugin '" + plugin.getKey() + "'. Disabling.", t);
 
@@ -159,12 +159,9 @@ public class DefaultPluginManager implements PluginManager
                 UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin, unloadableDescriptor);
 
                 // Replace the plugin
-                plugins.put(plugin.getKey(), unloadablePlugin);
+                replacePluginWithUnloadablePlugin(plugin, unloadablePlugin);
 
                 plugin = unloadablePlugin;
-
-                // Make sure the plugin is disabled
-                currentState.setState(plugin.getKey(), Boolean.FALSE);
             }
         }
 
@@ -340,10 +337,7 @@ public class DefaultPluginManager implements PluginManager
                 UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin, unloadableDescriptor);
 
                 // Replace the plugin
-                plugins.put(plugin.getKey(), unloadablePlugin);
-
-                // Make sure the plugin is disabled
-                currentState.setState(key, Boolean.FALSE);
+                replacePluginWithUnloadablePlugin(plugin, unloadablePlugin);
             }
         }
 
@@ -535,6 +529,22 @@ public class DefaultPluginManager implements PluginManager
         }
 
         return plugin.getResourceAsStream(resourcePath);
+    }
+
+    /**
+     * Replaces a plugin currently loaded with an UnloadablePlugin.
+     *
+     * The plugin is also disabled.
+     *
+     * @param plugin the plugin to be replaced
+     * @param unloadablePlugin the plugin to replace it
+     */
+    protected void replacePluginWithUnloadablePlugin(Plugin plugin, UnloadablePlugin unloadablePlugin)
+    {
+        plugins.put(plugin.getKey(), unloadablePlugin);
+
+        // Disable it
+        currentState.setState(plugin.getKey(), Boolean.FALSE);
     }
 
     public boolean isSystemPlugin(String key)

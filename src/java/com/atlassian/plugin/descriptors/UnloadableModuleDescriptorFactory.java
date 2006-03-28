@@ -20,12 +20,12 @@ public final class UnloadableModuleDescriptorFactory
      *
      * @param plugin the Plugin the ModuleDescriptor belongs to
      * @param element the XML Element used to construct the ModuleDescriptor
-     * @param e the Exception thrown
+     * @param e the Throwable
      * @param moduleDescriptorFactory a ModuleDescriptorFactory used to retrieve ModuleDescriptor instances
      * @return a new UnloadableModuleDescriptor instance
      * @throws PluginParseException if there was a problem constructing the UnloadableModuleDescriptor
      */
-    public static UnloadableModuleDescriptor createUnloadableModuleDescriptor(Plugin plugin, Element element, Exception e, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public static UnloadableModuleDescriptor createUnloadableModuleDescriptor(Plugin plugin, Element element, Throwable e, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         UnloadableModuleDescriptor descriptor = new UnloadableModuleDescriptor();
         descriptor.init(plugin, element);
@@ -53,10 +53,10 @@ public final class UnloadableModuleDescriptorFactory
      *
      * @param plugin the Plugin the ModuleDescriptor belongs to
      * @param descriptor the ModuleDescriptor that reported an error
-     * @param e the Exception thrown
+     * @param e the Throwable
      * @return a new UnloadableModuleDescriptor instance
      */
-    public static UnloadableModuleDescriptor createUnloadableModuleDescriptor(Plugin plugin, ModuleDescriptor descriptor, Exception e)
+    public static UnloadableModuleDescriptor createUnloadableModuleDescriptor(Plugin plugin, ModuleDescriptor descriptor, Throwable e)
     {
         UnloadableModuleDescriptor unloadableDescriptor = new UnloadableModuleDescriptor();
         unloadableDescriptor.setName(descriptor.getName());
@@ -76,21 +76,23 @@ public final class UnloadableModuleDescriptorFactory
      * @param plugin the Plugin the module belongs to
      * @param moduleName the name of the module
      * @param moduleClass the class of the module
-     * @param e the Exception thrown
+     * @param e the Throwable
      * @return an appropriate String representing the error
      */
-    private static String constructErrorMessage(Plugin plugin, String moduleName, String moduleClass, Exception e)
+    private static String constructErrorMessage(Plugin plugin, String moduleName, String moduleClass, Throwable e)
     {
         String errorMsg;
 
         if (e instanceof PluginParseException)
-            errorMsg = "Could not find descriptor for module '" + moduleName + "' in plugin '" + (plugin == null ? "null" : plugin.getName()) + "'";
+            errorMsg = "There was a problem loading the descriptor for module '" + moduleName + "' in plugin '" + (plugin == null ? "null" : plugin.getName()) + "'";
         else if (e instanceof InstantiationException)
             errorMsg = "Could not instantiate module descriptor: " + moduleClass;
         else if (e instanceof IllegalAccessException)
             errorMsg = "Exception instantiating module descriptor: " + moduleClass;
         else if (e instanceof ClassNotFoundException)
             errorMsg = "Could not find module descriptor class: " + moduleClass;
+        else if (e instanceof NoClassDefFoundError)
+            errorMsg = "A required class was missing: " + moduleClass + ". Please check that you have all of the required dependencies.";
         else
             errorMsg = "There was a problem loading the module descriptor: " + moduleClass;
 
