@@ -3,7 +3,7 @@
   <pomVersion>3</pomVersion>
   <id>atlassian-plugins</id>
   <name>Atlassian Plugins</name>
-  <currentVersion>0.3.25</currentVersion>
+  <currentVersion>0.3.26</currentVersion>
   <organization>
     <name>Atlassian Software Systems Pty Ltd</name>
   </organization>
@@ -53,7 +53,7 @@
           <directory>src/test/classLoadingTestFiles</directory>
         </resource>
         <resource>
-            <directory>src/test/badPluginTestFiles</directory>
+          <directory>src/test/badPluginTestFiles</directory>
         </resource>
       </resources>
     </unitTest>
@@ -61,7 +61,7 @@
   <dependencies>
     <dependency>
       <id>commons-lang</id>
-      <version>2.0</version>
+      <version>2.1</version>
     </dependency>
     <dependency>
       <id>commons-logging</id>
@@ -81,12 +81,12 @@
     </dependency>
     <dependency>
       <id>seraph</id>
-      <version>0.7.15</version>
+      <version>0.7.17</version>
       <properties>
         <war.bundle>true</war.bundle>
         <atlassian.ship>source</atlassian.ship>
         <atlassian.repo>svn</atlassian.repo>
-        <atlassian.cvs.tag> seraph_0_7_15</atlassian.cvs.tag>
+        <atlassian.cvs.tag>seraph_0_7_17</atlassian.cvs.tag>
       </properties>
     </dependency>
     <dependency>
