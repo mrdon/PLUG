@@ -5,17 +5,14 @@ import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 
 public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
 {
     private static Log log = LogFactory.getLog(DefaultModuleDescriptorFactory.class);
 
     private Map moduleDescriptorClasses;
-    private List excludedModuleKeys;
+    private List permittedModuleKeys = Collections.EMPTY_LIST;
 
     public DefaultModuleDescriptorFactory()
     {
@@ -30,7 +27,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
     public ModuleDescriptor getModuleDescriptor(String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
     {
         // When the key is in the excluded list, return null
-        if (excludedModuleKeys != null && excludedModuleKeys.contains(type))
+        if (permittedModuleKeys != null && !permittedModuleKeys.isEmpty() && !permittedModuleKeys.contains(type))
             return null;
 
         Class moduleDescriptorClazz = getModuleDescriptorClass(type);
@@ -54,12 +51,11 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
 
     private Class getClassFromEntry(Map.Entry entry)
     {
-        Class descriptorClass = null;
-
         // Skip excluded module descriptors
-        if (excludedModuleKeys != null && excludedModuleKeys.contains(entry.getKey()))
+        if (permittedModuleKeys != null && !permittedModuleKeys.isEmpty() && !permittedModuleKeys.contains(entry.getKey()))
             return null;
 
+        Class descriptorClass = null;
         try
         {
             descriptorClass = ClassLoaderUtils.loadClass((String) entry.getValue(), getClass());
@@ -99,22 +95,16 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
     }
 
     /**
-     * Retrieves a list of module descriptor that will not be loaded.
+     * Sets the list of module keys that will be loaded. If this list is empty, then the factory will
+     * permit all recognised module types to load. This allows you to run the plugin system in a 'restricted mode'
      *
-     * @return List of (String) keys
+     * @param permittedModuleKeys List of (String) keys
      */
-    public List getExcludedModuleKeys()
+    public void setPermittedModuleKeys(List permittedModuleKeys)
     {
-        return excludedModuleKeys;
-    }
+        if (permittedModuleKeys == null)
+            permittedModuleKeys = Collections.EMPTY_LIST;
 
-    /**
-     * Set the list of module descriptors that will not be loaded
-     *
-     * @param excludedModuleKeys List of (String) keys
-     */
-    public void setExcludedModuleKeys(List excludedModuleKeys)
-    {
-        this.excludedModuleKeys = excludedModuleKeys;
+        this.permittedModuleKeys = permittedModuleKeys;
     }
 }

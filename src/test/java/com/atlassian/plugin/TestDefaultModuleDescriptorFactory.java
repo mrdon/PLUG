@@ -69,17 +69,16 @@ public class TestDefaultModuleDescriptorFactory extends TestCase
     }
 
     // PLUG-5
-    public void testModuleDescriptorFactoryExcludedDescriptors() throws IllegalAccessException, PluginParseException, ClassNotFoundException, InstantiationException
+    public void testModuleDescriptorFactoryOnlyPermittedDescriptors() throws IllegalAccessException, PluginParseException, ClassNotFoundException, InstantiationException
     {
         // Add the "supported" module descriptors
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
         // Exclude "mineral"
-        List excludedList = new ArrayList();
-        excludedList.add("mineral");
-        moduleDescriptorFactory.setExcludedModuleKeys(excludedList);
-
+        List permittedList = new ArrayList();
+        permittedList.add("animal");
+        moduleDescriptorFactory.setPermittedModuleKeys(permittedList);
         // Try and grab the "animal" descriptor
         assertNotNull(moduleDescriptorFactory.getModuleDescriptor("animal"));
 

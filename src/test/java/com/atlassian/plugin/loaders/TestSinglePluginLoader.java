@@ -159,7 +159,7 @@ public class TestSinglePluginLoader extends TestCase
     }
 
     // PLUG-5
-    public void testPluginWithExcludedModules() throws PluginParseException
+    public void testPluginWithOnlyPermittedModules() throws PluginParseException
     {
         SinglePluginLoader loader = new SinglePluginLoader("test-atlassian-plugin.xml");
 
@@ -169,9 +169,9 @@ public class TestSinglePluginLoader extends TestCase
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
         // Exclude mineral
-        List excludedList = new ArrayList();
-        excludedList.add("mineral");
-        moduleDescriptorFactory.setExcludedModuleKeys(excludedList);
+        List permittedList = new ArrayList();
+        permittedList.add("animal");
+        moduleDescriptorFactory.setPermittedModuleKeys(permittedList);
 
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
