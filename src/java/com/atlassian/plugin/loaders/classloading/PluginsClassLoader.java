@@ -3,17 +3,17 @@ package com.atlassian.plugin.loaders.classloading;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.security.SecureClassLoader;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Enumeration;
-import java.util.Collections;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.net.URLClassLoader;
-import java.io.File;
-import java.io.InputStream;
-import java.io.IOException;
 
 /**
  * @author Hani Suleiman (hani@formicary.net)
@@ -35,7 +35,7 @@ public abstract class PluginsClassLoader extends SecureClassLoader implements Cl
     {
         Class c = (Class) cache.get(name);
         if (c != null) return c;
-        boolean handles = false;
+        /* boolean handles = false;
         if (packages != null)
         {
             for (int i = 0; i < packages.length; i++)
@@ -51,6 +51,7 @@ public abstract class PluginsClassLoader extends SecureClassLoader implements Cl
         {
             return super.loadClass(name, resolve);
         }
+        */
         try
         {
             c = findClass(name);
