@@ -26,8 +26,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
 
     public ModuleDescriptor getModuleDescriptor(String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
     {
-        // When the key is in the excluded list, return null
-        if (permittedModuleKeys != null && !permittedModuleKeys.isEmpty() && !permittedModuleKeys.contains(type))
+        if (shouldSkipModuleOfType(type))
             return null;
 
         Class moduleDescriptorClazz = getModuleDescriptorClass(type);
@@ -36,6 +35,11 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
             throw new PluginParseException("Cannot find ModuleDescriptor class for plugin of type '" + type + "'.");
 
         return (ModuleDescriptor) ClassLoaderUtils.loadClass(moduleDescriptorClazz.getName(), SinglePluginLoader.class).newInstance();
+    }
+
+    protected boolean shouldSkipModuleOfType(String type)
+    {
+        return permittedModuleKeys != null && !permittedModuleKeys.isEmpty() && !permittedModuleKeys.contains(type);
     }
 
     public void setModuleDescriptors(Map moduleDescriptorClassNames)
@@ -51,8 +55,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
 
     private Class getClassFromEntry(Map.Entry entry)
     {
-        // Skip excluded module descriptors
-        if (permittedModuleKeys != null && !permittedModuleKeys.isEmpty() && !permittedModuleKeys.contains(entry.getKey()))
+        if (shouldSkipModuleOfType((String) entry.getKey()))
             return null;
 
         Class descriptorClass = null;
