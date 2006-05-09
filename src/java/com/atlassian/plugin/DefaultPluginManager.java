@@ -383,10 +383,8 @@ public class DefaultPluginManager implements PluginManager
             ((StateAware) descriptor).disabled();
         }
 
-        if (plugin.isEnabledByDefault())
-            currentState.setState(key, Boolean.FALSE);
-        else
-            currentState.removeState(key);
+        // PLUG-13. Plugins should not save state across uninstalls.
+        currentState.removeState(key);
 
         saveState();
     }
