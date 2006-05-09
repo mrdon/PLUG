@@ -162,7 +162,7 @@ public class JarClassLoader extends PluginsClassLoader
                         return data;
                     }
                 }
-                // Still nothing? - oh dear, what a pitty, never mind
+                // Still nothing? - oh dear, what a pity, never mind
                 cachedFiles.put(path, new FileBytes(null));
                 return null;
             }
