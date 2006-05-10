@@ -108,14 +108,37 @@ public class DefaultPluginManager implements PluginManager
             descriptor.destroy(plugin);
         }
 
-        loader.removePlugin(plugin);
+        // PLUG-13. Plugins should not save state across uninstalls.
+
+        currentState.removeState(plugin.getKey());
+        saveState();
+
+        if(plugin.isDeleteable())
+          loader.removePlugin(plugin);
     }
 
     protected void addPlugin(PluginLoader loader, Plugin plugin) throws PluginParseException
     {
         // testing to make sure plugin keys are unique
-        if (plugins.containsKey(plugin.getKey()))
-            throw new PluginParseException("Duplicate plugin key found: '" + plugin.getKey() + "'");
+        if (plugins.containsKey(plugin.getKey())) {
+          Plugin match = (Plugin) plugins.get(plugin.getKey());
+          if(plugin.compareTo(match) > 0 ){
+              if (log.isDebugEnabled())
+                  log.debug("We found a newer '" + plugin.getKey() + "'");
+              try
+              {
+                  uninstall(match);
+                  if (log.isDebugEnabled())
+                      log.debug("Older '" + plugin.getKey() + "' uninstalled.");
+              } catch (PluginException e) {
+                  throw new PluginParseException("Duplicate plugin found (installed version is older) and could not be removed: '" + plugin.getKey() + "'");
+              }
+          } else {
+              // If we find an older plugin, don't error, just ignore it. PLUG-12.
+              if (log.isDebugEnabled())
+                  log.debug("Duplicate plugin found (installed version is the same or newer): '" + plugin.getKey() + "'");
+          }
+        }
 
         plugins.put(plugin.getKey(), plugin);
 
@@ -383,8 +406,10 @@ public class DefaultPluginManager implements PluginManager
             ((StateAware) descriptor).disabled();
         }
 
-        // PLUG-13. Plugins should not save state across uninstalls.
-        currentState.removeState(key);
+         if (plugin.isEnabledByDefault())
+            currentState.setState(key, Boolean.FALSE);
+         else
+            currentState.removeState(key);
 
         saveState();
     }

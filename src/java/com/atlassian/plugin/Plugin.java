@@ -84,4 +84,12 @@ public interface Plugin extends Resourced
      * @return An InputStream for the resource, or null if the resource is not found.
      */
     InputStream getResourceAsStream(String name);
+
+    int compareTo(Object o);
+
+    /**
+     * Should the plugin file be deleted on unistall?
+     */
+    boolean isDeleteable();
+
 }

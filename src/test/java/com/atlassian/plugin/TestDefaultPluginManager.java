@@ -9,12 +9,13 @@ import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.util.FileUtils;
+import com.atlassian.plugin.impl.StaticPlugin;
+import com.atlassian.plugin.impl.DynamicPlugin;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Iterator;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.File;
@@ -22,6 +23,8 @@ import java.io.File;
 public class TestDefaultPluginManager extends AbstractTestClassLoader
 {
     private ClassLoadingPluginLoader classLoadingPluginLoader;
+    private MemoryPluginStateStore stateStore;
+
 
     protected void tearDown() throws Exception
     {
@@ -136,6 +139,33 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
         pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
         PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        manager.init();
+        System.out.println(manager.getPlugins().size());
+        assertTrue(manager.getPlugins().size() == 1);
+    }
+
+    public void testLoadOlderDuplicatePlugin() throws PluginParseException
+    {
+        List pluginLoaders = new ArrayList();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin-newer.xml"));
+        pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        manager.init();
+        assertTrue(manager.getEnabledPlugins().size() == 1);
+    }
+
+    public void testLoadNewerDuplicatePlugin() throws PluginParseException
+    {
+        List pluginLoaders = new ArrayList();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
+        pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin-newer.xml"));
+        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         try
         {
             manager.init();
@@ -143,7 +173,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         }
         catch (PluginParseException e)
         {
-            assertEquals("Duplicate plugin key found: 'test.disabled.plugin'", e.getMessage());
+            assertEquals("Duplicate plugin found (installed version is older) and could not be removed: 'test.atlassian.plugin'", e.getMessage());
         }
     }
 
@@ -286,7 +316,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders.add(classLoadingPluginLoader);
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        stateStore = new MemoryPluginStateStore();
+        PluginManager manager = new DefaultPluginManager(stateStore, pluginLoaders, moduleDescriptorFactory);
         manager.init();
         return manager;
     }
@@ -301,6 +332,10 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertFalse(moduleDescriptor.disabled);
         manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded"));
         assertTrue("Module must have had disable() called before being removed", moduleDescriptor.disabled);
+
+        // uninstalling a plugin should remove it's state completely from the state store - PLUG-13
+        assertNull(stateStore.loadPluginState().getState("test.atlassian.plugin.classloaded"));
+
         assertEquals(1, manager.getPlugins().size());
         assertNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
         assertEquals(1, pluginsTestDir.listFiles().length);
@@ -330,5 +365,131 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         {
         }
     }
+
+    public void testNonDeletablePlugins() throws PluginException, IOException
+    {
+        createFillAndCleanTempPluginDirectory();
+
+        PluginManager manager = makeClassLoadingPluginManager();
+        assertEquals(2, manager.getPlugins().size());
+
+        // Set plugin file can't be deleted.
+        DynamicPlugin pluginToRemove = (DynamicPlugin) manager.getPlugin("test.atlassian.plugin.classloaded");
+        pluginToRemove.setDeletable(false);
+
+        // Disable plugin module before uninstall
+        MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
+        assertFalse(moduleDescriptor.disabled);
+
+        manager.uninstall(pluginToRemove);
+
+        assertTrue("Module must have had disable() called before being removed", moduleDescriptor.disabled);
+        assertEquals(1, manager.getPlugins().size());
+        assertNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
+        assertEquals(2, pluginsTestDir.listFiles().length);
+    }
+
+
+
+    // These methods test the plugin compareTo() function, which compares plugins based on their version numbers.
+    public void testComparePluginNewer(){
+
+        Plugin p1 = createPluginWithVersion("1.1");
+        Plugin p2 = createPluginWithVersion("1.0");
+        assertTrue(p1.compareTo(p2) == 1);
+
+        p1.getPluginInformation().setVersion("1.10");
+        p2.getPluginInformation().setVersion("1.2");
+        assertTrue(p1.compareTo(p2) == 1);
+
+        p1.getPluginInformation().setVersion("1.2");
+        p2.getPluginInformation().setVersion("1.01");
+        assertTrue(p1.compareTo(p2) == 1);
+
+        p1.getPluginInformation().setVersion("1.0.1");
+        p2.getPluginInformation().setVersion("1.0");
+        assertTrue(p1.compareTo(p2) == 1);
+
+        p1.getPluginInformation().setVersion("1.2");
+        p2.getPluginInformation().setVersion("1.1.1");
+        assertTrue(p1.compareTo(p2) == 1);
+    }
+
+    public void testComparePluginOlder(){
+
+        Plugin p1 = createPluginWithVersion("1.0");
+        Plugin p2 = createPluginWithVersion("1.1");
+        assertTrue(p1.compareTo(p2) == -1);
+
+        p1.getPluginInformation().setVersion("1.2");
+        p2.getPluginInformation().setVersion("1.10");
+        assertTrue(p1.compareTo(p2) == -1);
+
+        p1.getPluginInformation().setVersion("1.01");
+        p2.getPluginInformation().setVersion("1.2");
+        assertTrue(p1.compareTo(p2) == -1);
+
+        p1.getPluginInformation().setVersion("1.0");
+        p2.getPluginInformation().setVersion("1.0.1");
+        assertTrue(p1.compareTo(p2) == -1);
+
+        p1.getPluginInformation().setVersion("1.1.1");
+        p2.getPluginInformation().setVersion("1.2");
+        assertTrue(p1.compareTo(p2) == -1);
+    }
+
+    public void testComparePluginEqual(){
+
+        Plugin p1 = createPluginWithVersion("1.0");
+        Plugin p2 = createPluginWithVersion("1.0");
+        assertTrue(p1.compareTo(p2) == 0);
+
+        p1.getPluginInformation().setVersion("1.1.0.0");
+        p2.getPluginInformation().setVersion("1.1");
+        assertTrue(p1.compareTo(p2) == 0);
+
+        p1.getPluginInformation().setVersion(" 1 . 1 ");
+        p2.getPluginInformation().setVersion("1.1");
+        assertTrue(p1.compareTo(p2) == 0);
+    }
+
+    // If we can't understand the version of a plugin, then take the new one.
+    public void testComparePluginNoVersion(){
+
+        Plugin p1 = createPluginWithVersion("1.0");
+        Plugin p2 = createPluginWithVersion("xxx");
+        assertTrue(p1.compareTo(p2) == -1);
+
+        p1.getPluginInformation().setVersion("xxx");
+        p2.getPluginInformation().setVersion("1.0");
+        assertTrue(p1.compareTo(p2) == -1);
+
+    }
+
+    public void testComparePluginBadPlugin(){
+
+        Plugin p1 = createPluginWithVersion("1.0");
+        Plugin p2 = createPluginWithVersion("1.0");
+
+        // Compare against something with a different key
+        p2.setKey("bad.key");
+        assertTrue(p1.compareTo(p2) == 1);
+
+        // Compare against something that isn't a plugin
+        assertTrue(p1.compareTo("not a plugin") == 1);
+    }
+
+
+    public Plugin createPluginWithVersion(String version){
+        Plugin p = new StaticPlugin();
+        p.setKey("test.default.plugin");
+        p.setPluginInformation(new PluginInformation());
+        PluginInformation pInfo = p.getPluginInformation();
+        pInfo.setVersion(version);
+        return p;
+    }
+
+
+
 
 }

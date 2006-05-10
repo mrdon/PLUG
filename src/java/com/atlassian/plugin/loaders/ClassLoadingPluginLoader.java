@@ -59,7 +59,7 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
      * @param moduleDescriptorFactory
      * @return the plugin loaded from the deployment unit, or an UnloadablePlugin instance if loading fails.
      */
-    private Plugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    protected Plugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         Plugin plugin = null;
 

@@ -7,8 +7,13 @@ import com.atlassian.plugin.util.ClassLoaderUtils;
 import java.util.*;
 import java.io.InputStream;
 
-public class StaticPlugin implements Plugin
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+public class StaticPlugin implements Plugin, Comparable
 {
+    private static final Log log = LogFactory.getLog(StaticPlugin.class);
     private String name;
     private String i18nNameKey;
     private String key;
@@ -192,5 +197,62 @@ public class StaticPlugin implements Plugin
     {
         return dateLoaded;
     }
+
+    /**
+     * Plugins are comparable by version number. It should correctly calculate the higher, lower or equal versions
+     * based on standard x.x.x-style version numbers. It ignores whitespaces. Any non-digit or period in a version
+     * number is assumed to be non-parseable and returns as equal.
+     * @param o
+     * @return int -1 for lesserthen , 0 for equal, 1 for greater than.
+     */
+    public int compareTo(Object o)
+    {
+        // If the compared object isn't a plugin, then the current object is greater
+        if (!(o instanceof Plugin)) return 1;
+
+        // If the compared plugin doesn't have the same key, the current object is greater
+        if (!((Plugin) o).getKey().equals(this.getKey())) return 1;
+
+        // Get the version numbers, remove all whitespaces
+        String thisVersion = "0";
+        if(StringUtils.isNotEmpty(this.getPluginInformation().getVersion())){
+            thisVersion = this.getPluginInformation().getVersion().replaceAll(" ", "");
+        }
+        String compareVersion = "0";
+        if(StringUtils.isNotEmpty(((Plugin) o).getPluginInformation().getVersion())) {
+            compareVersion = ((Plugin) o).getPluginInformation().getVersion().replaceAll(" ", "");
+        }
+
+        // If we can't read the version numbers, then take the new plugin is greater
+        String validVersionPattern = "[\\d\\.]*";
+        if( !thisVersion.matches(validVersionPattern) || !compareVersion.matches(validVersionPattern)){
+          //log.error("Can't parse the plugin version");
+          log.warn("Can't parse plugin version number. Taking the last loaded plugin ("  +
+                  " v1 = " + thisVersion + ", v2 = " + compareVersion + ").");
+          return -1;
+        }
+
+        // Split the version numbers
+        String [] v1 = thisVersion.split("\\.");
+        String [] v2 = compareVersion.split("\\.");
+
+        // Compare each place, until we find a difference and then return. If empty, assume zero.
+        for (int i = 0 ; i < (v1.length > v2.length ? v1.length : v2.length) ; i ++) {
+            if(Integer.parseInt(i >= v1.length ? "0" : v1[i]) < Integer.parseInt(i >= v2.length ? "0" : v2[i])) {
+                return -1;
+            } else if(Integer.parseInt(i >= v1.length ? "0" : v1[i]) > Integer.parseInt(i >= v2.length ? "0" : v2[i])) {
+                return 1;
+            }
+        }
+
+        return 0;
+
+    }
+
+    public boolean isDeleteable()
+    {
+        return false;
+    }
+
 }
 

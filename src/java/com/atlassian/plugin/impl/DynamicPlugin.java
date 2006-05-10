@@ -8,6 +8,7 @@ public class DynamicPlugin extends StaticPlugin
 {
     private DeploymentUnit deploymentUnit;
     private ClassLoader loader;
+    private boolean deletable = true;
 
     public DynamicPlugin(DeploymentUnit deploymentUnit, ClassLoader loader)
     {
@@ -38,5 +39,15 @@ public class DynamicPlugin extends StaticPlugin
     public boolean isDynamicallyLoaded()
     {
         return true;
+    }
+
+    public boolean isDeleteable()
+    {
+        return deletable;
+    }
+
+    public void setDeletable(boolean deletable)
+    {
+        this.deletable = deletable;
     }
 }
