@@ -84,18 +84,18 @@ public final class UnloadableModuleDescriptorFactory
         String errorMsg;
 
         if (e instanceof PluginParseException)
-            errorMsg = "There was a problem loading the descriptor for module '" + moduleName + "' in plugin '" + (plugin == null ? "null" : plugin.getName()) + "'";
+            errorMsg = "There was a problem loading the descriptor for module '" + moduleName + "' in plugin '" + (plugin == null ? "null" : plugin.getName()) + "'.\n ";
         else if (e instanceof InstantiationException)
-            errorMsg = "Could not instantiate module descriptor: " + moduleClass;
+            errorMsg = "Could not instantiate module descriptor: " + moduleClass + ".<br/>";
         else if (e instanceof IllegalAccessException)
-            errorMsg = "Exception instantiating module descriptor: " + moduleClass;
+            errorMsg = "Exception instantiating module descriptor: " + moduleClass + ".<br/>";
         else if (e instanceof ClassNotFoundException)
-            errorMsg = "Could not find module descriptor class: " + moduleClass;
+            errorMsg = "Could not find module descriptor class: " + moduleClass + ".<br/>";
         else if (e instanceof NoClassDefFoundError)
-            errorMsg = "A required class was missing: " + moduleClass + ". Please check that you have all of the required dependencies.";
+            errorMsg = "A required class was missing: " + moduleClass + ". Please check that you have all of the required dependencies.<br/>";
         else
-            errorMsg = "There was a problem loading the module descriptor: " + moduleClass;
+            errorMsg = "There was a problem loading the module descriptor: " + moduleClass + ".<br/>";
 
-        return errorMsg;
+        return errorMsg + e.getMessage();
     }
 }
