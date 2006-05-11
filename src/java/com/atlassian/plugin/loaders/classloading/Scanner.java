@@ -119,24 +119,30 @@ public class Scanner implements FileFilter
 
         // Checks for new files.
         File file[] = libDir.listFiles(this);
-        for (int i = 0; i < file.length; i++)
+        if (file == null)
         {
-            try
+            log.error("listFiles returned null for directory " + libDir.getAbsolutePath());
+        }
+        else
+        {
+            for (int i = 0; i < file.length; i++)
             {
-                if (isDeployed(file[i]) && isModified(file[i]))
+                try
                 {
-                    undeploy(file[i]);
-                    deploy(file[i]);
+                    if (isDeployed(file[i]) && isModified(file[i]))
+                    {
+                        undeploy(file[i]);
+                        deploy(file[i]);
+                    }
+                    else if (!isDeployed(file[i]))
+                    {
+                        deploy(file[i]);
+                    }
                 }
-                else if (!isDeployed(file[i]))
+                catch (MalformedURLException e)
                 {
-                    deploy(file[i]);
+                    log.error("Error deploying plugin " + file[i].getAbsolutePath(), e);
                 }
-            }
-            catch (MalformedURLException e)
-            {
-                // Change this to log somewhere
-                e.printStackTrace();
             }
         }
     }
