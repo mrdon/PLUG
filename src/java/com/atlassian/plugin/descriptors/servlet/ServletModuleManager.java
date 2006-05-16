@@ -77,6 +77,8 @@ public class ServletModuleManager
     {
         descriptors.remove(descriptor.getCompleteKey());
 
+        inittedServlets.remove(descriptor.getCompleteKey());
+
         for (Iterator iterator = descriptor.getPaths().iterator(); iterator.hasNext();)
         {
             String path = (String) iterator.next();
