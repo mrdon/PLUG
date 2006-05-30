@@ -4,6 +4,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
 import java.io.*;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipEntry;
 
 public class FileUtils
 {
@@ -227,5 +229,57 @@ public class FileUtils
         // now that we tried to clear the directory out, we can try to delete it
         // again
         return dir.delete();
+    }
+
+
+    /**
+     * Extract all the contents of a zip file into a target directory.
+     * @param zipFileName
+     * @param destintationDirectory
+     */
+    public static void extractZipFiles(String zipFileName, File destintationDirectory)
+    {
+        try
+        {
+            byte[] buf = new byte[1024];
+            ZipInputStream zipinputstream = null;
+            ZipEntry zipentry;
+            zipinputstream = new ZipInputStream(new FileInputStream(zipFileName));
+
+            zipentry = zipinputstream.getNextEntry();
+            while (zipentry != null)
+            {
+                //for each entry to be extracted
+                String entryName = zipentry.getName();
+                String destinationName = destintationDirectory + File.separator + entryName;
+
+                int n;
+                FileOutputStream fileoutputstream;
+                File newFile = new File(entryName);
+                String directory = newFile.getParent();
+
+                if (directory == null)
+                {
+                    if (newFile.isDirectory())
+                        break;
+                }
+
+                fileoutputstream = new FileOutputStream(destinationName);
+
+                while ((n = zipinputstream.read(buf, 0, 1024)) > -1)
+                    fileoutputstream.write(buf, 0, n);
+
+                fileoutputstream.close();
+                zipinputstream.closeEntry();
+                zipentry = zipinputstream.getNextEntry();
+
+            }//while
+
+            zipinputstream.close();
+        }
+        catch (Exception e)
+        {
+            log.error("Failed to extract zipfile", e);
+        }
     }
 }
