@@ -1,13 +1,13 @@
 package com.atlassian.plugin;
 
-import org.dom4j.DocumentException;
+import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
+import junit.framework.TestCase;
 import org.dom4j.Document;
+import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 
 import java.util.List;
-
-import com.atlassian.plugin.elements.ResourceDescriptor;
-import junit.framework.TestCase;
 
 public class TestResources extends TestCase
 {
@@ -47,12 +47,12 @@ public class TestResources extends TestCase
     {
         Resources resources = makeTestResources();
 
-        assertNull(resources.getResourceDescriptor("image", "edit"));
-        assertNull(resources.getResourceDescriptor("fish", "view"));
-        assertNull(resources.getResourceDescriptor(null, "view"));
-        assertNull(resources.getResourceDescriptor("image", null));
+        assertNull(resources.getResourceLocation("image", "edit"));
+        assertNull(resources.getResourceLocation("fish", "view"));
+        assertNull(resources.getResourceLocation(null, "view"));
+        assertNull(resources.getResourceLocation("image", null));
 
-        assertDescriptorMatches(resources.getResourceDescriptor("image", "view"), "image", "view");
+        assertLocationMatches(resources.getResourceLocation("image", "view"), "image", "view");
 
     }
 
@@ -73,6 +73,12 @@ public class TestResources extends TestCase
         {
             assertEquals("Duplicate resource with type 'velocity' and name 'view' found", e.getMessage());
         }
+    }
+
+    private void assertLocationMatches(ResourceLocation first, String type, String name)
+    {
+        assertEquals(type, first.getType());
+        assertEquals(name, first.getName());
     }
 
     private void assertDescriptorMatches(ResourceDescriptor first, String type, String name)

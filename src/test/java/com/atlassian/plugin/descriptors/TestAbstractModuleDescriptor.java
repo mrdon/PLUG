@@ -80,10 +80,10 @@ public class TestAbstractModuleDescriptor extends TestCase
                 "<resource type='velocity' name='view' location='foo' />" +
                 "</animal>").getRootElement());
 
-        assertNull(descriptor.getResourceDescriptor("foo", "bar"));
-        assertNull(descriptor.getResourceDescriptor("velocity", "bar"));
-        assertNull(descriptor.getResourceDescriptor("foo", "view"));
-        assertEquals(new ResourceDescriptor(DocumentHelper.parseText("<resource type='velocity' name='view' location='foo' />").getRootElement()), descriptor.getResourceDescriptor("velocity", "view"));
+        assertNull(descriptor.getResourceLocation("foo", "bar"));
+        assertNull(descriptor.getResourceLocation("velocity", "bar"));
+        assertNull(descriptor.getResourceLocation("foo", "view"));
+        assertEquals(new ResourceDescriptor(DocumentHelper.parseText("<resource type='velocity' name='view' location='foo' />").getRootElement()).getResourceLocationForName("view").getLocation(), descriptor.getResourceLocation("velocity", "view").getLocation());
     }
 
     public void testGetResourceDescriptorByType() throws DocumentException, PluginParseException

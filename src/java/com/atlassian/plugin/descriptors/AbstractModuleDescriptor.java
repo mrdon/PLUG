@@ -1,14 +1,18 @@
 package com.atlassian.plugin.descriptors;
 
-import com.atlassian.plugin.*;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.Resources;
+import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import com.atlassian.plugin.util.JavaVersionUtils;
 import org.dom4j.Element;
 
+import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
-import java.lang.reflect.Constructor;
 
 public abstract class AbstractModuleDescriptor implements ModuleDescriptor
 {
@@ -195,6 +199,14 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         return resources.getResourceDescriptors(type);
     }
 
+    public ResourceLocation getResourceLocation(String type, String name)
+    {
+        return resources.getResourceLocation(type, name);
+    }
+
+    /**
+     * @deprecated
+     */
     public ResourceDescriptor getResourceDescriptor(String type, String name)
     {
         return resources.getResourceDescriptor(type, name);

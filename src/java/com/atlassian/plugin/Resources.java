@@ -1,13 +1,13 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.elements.ResourceDescriptor;
-
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Iterator;
-import java.util.ArrayList;
-
+import com.atlassian.plugin.elements.ResourceLocation;
 import org.dom4j.Element;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Resources implements Resourced
 {
@@ -58,6 +58,23 @@ public class Resources implements Resourced
         return typedResourceDescriptors;
     }
 
+    public ResourceLocation getResourceLocation(String type, String name)
+    {
+        for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
+        {
+            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator.next();
+            if (resourceDescriptor.doesTypeAndNameMatch(type, name))
+            {
+                return resourceDescriptor.getResourceLocationForName(name);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @deprecated
+     */
     public ResourceDescriptor getResourceDescriptor(String type, String name)
     {
         for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)

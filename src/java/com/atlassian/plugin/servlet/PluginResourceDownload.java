@@ -3,8 +3,8 @@ package com.atlassian.plugin.servlet;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.util.LastModifiedHandler;
-import com.atlassian.plugin.elements.ResourceDescriptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -36,12 +36,12 @@ public class PluginResourceDownload implements DownloadStrategy
 
     private static class DownloadableResource
     {
-        private ResourceDescriptor resourceDescriptor;
+        private ResourceLocation resourceDescriptor;
         private String extraPath;
         private String pluginKey;
         private BaseFileServerServlet servlet;
 
-        public DownloadableResource(BaseFileServerServlet servlet, String pluginKey, ResourceDescriptor resourceDescriptor, String extraPath)
+        public DownloadableResource(BaseFileServerServlet servlet, String pluginKey, ResourceLocation resourceDescriptor, String extraPath)
         {
             if (extraPath != null && !"".equals(extraPath.trim()) && !resourceDescriptor.getLocation().endsWith("/"))
             {
@@ -56,12 +56,12 @@ public class PluginResourceDownload implements DownloadStrategy
 
         public String getContentType()
         {
-            if (resourceDescriptor.getParameter("content-type") == null)
+            if (resourceDescriptor.getContentType() == null)
             {
                 return servlet.getContentType(getLocation());
             }
 
-            return resourceDescriptor.getParameter("content-type");
+            return resourceDescriptor.getContentType();
         }
 
         public String getLocation()
@@ -168,7 +168,7 @@ public class PluginResourceDownload implements DownloadStrategy
 
     private DownloadableResource getResourceFromPlugin(Plugin plugin, String resourcePath, String filePath, BaseFileServerServlet servlet)
     {
-        ResourceDescriptor rd = plugin.getResourceDescriptor("download", resourcePath);
+        ResourceLocation rd = plugin.getResourceLocation("download", resourcePath);
 
         if (rd != null)
         {
@@ -195,7 +195,7 @@ public class PluginResourceDownload implements DownloadStrategy
 
     private DownloadableResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String resourcePath, String filePath, BaseFileServerServlet servlet)
     {
-        ResourceDescriptor rd = moduleDescriptor.getResourceDescriptor("download", resourcePath);
+        ResourceLocation rd = moduleDescriptor.getResourceLocation("download", resourcePath);
 
         if (rd != null)
         {

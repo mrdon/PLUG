@@ -5,7 +5,7 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
-import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.mock.*;
 import com.atlassian.plugin.util.ClassLoaderUtils;
@@ -95,7 +95,7 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals(goldDescriptors, plugin.getModuleDescriptorsByModuleClass(MockMineral.class));
 
         assertEquals(1, plugin.getResourceDescriptors().size());
-        ResourceDescriptor pluginResource = plugin.getResourceDescriptor("download", "icon.gif");
+        ResourceLocation pluginResource = plugin.getResourceLocation("download", "icon.gif");
         assertEquals("/icon.gif", pluginResource.getLocation());
     }
 

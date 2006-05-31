@@ -84,4 +84,20 @@ public class TestResourceDescriptor extends TestCase
         assertFalse(velEditResource.equals(velViewResource));
         assertFalse(fooEditResource.equals(velEditResource));
     }
+
+    public void testMultiResourceDescriptor() throws DocumentException
+    {
+        Document multiResources = DocumentHelper.parseText("<resource type=\"foo\" namePattern=\".*\\.jpg\" location=\"xxx/\"/>");
+        ResourceDescriptor rd = new ResourceDescriptor(multiResources.getRootElement());
+        assertNotNull(rd.getResourceLocationForName("fred.jpg"));
+        try
+        {
+            rd.getResourceLocationForName("fred.gif");
+            fail();
+        }
+        catch (RuntimeException re)
+        {
+            // expected
+        }
+    }
 }

@@ -1,15 +1,18 @@
 package com.atlassian.plugin.impl;
 
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.Resourced;
 import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.*;
+import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.util.ClassLoaderUtils;
-
-import java.util.*;
-import java.io.InputStream;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.InputStream;
+import java.util.*;
 
 public class StaticPlugin implements Plugin, Comparable
 {
@@ -124,9 +127,17 @@ public class StaticPlugin implements Plugin, Comparable
         return resources.getResourceDescriptors(type);
     }
 
+    public ResourceLocation getResourceLocation(String type, String name)
+    {
+        return resources.getResourceLocation(type, name);
+    }
+
+    /**
+     * @deprecated
+     */
     public ResourceDescriptor getResourceDescriptor(String type, String name)
     {
-        return resources.getResourceDescriptor(type, name);
+        return resources.getResourceDescriptor(type, name);  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     /**
