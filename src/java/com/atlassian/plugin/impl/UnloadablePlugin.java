@@ -9,6 +9,17 @@ package com.atlassian.plugin.impl;
 public class UnloadablePlugin extends StaticPlugin
 {
     private String errorText;
+    private boolean uninstallable;
+
+    public boolean isUninstallable()
+    {
+        return uninstallable;
+    }
+
+    public void setUninstallable(boolean uninstallable)
+    {
+        this.uninstallable = uninstallable;
+    }
 
     public boolean isEnabledByDefault()
     {

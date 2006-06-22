@@ -382,7 +382,10 @@ public class DefaultPluginManager implements PluginManager
 
         Plugin plugin = (Plugin) plugins.get(key);
 
-        for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
+        List moduleDescriptors = new ArrayList(plugin.getModuleDescriptors());
+        Collections.reverse(moduleDescriptors); // disable plugins in the opposite order they are enabled
+
+        for (Iterator it = moduleDescriptors.iterator(); it.hasNext();)
         {
             ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
 
@@ -564,6 +567,7 @@ public class DefaultPluginManager implements PluginManager
      */
     protected void replacePluginWithUnloadablePlugin(Plugin plugin, UnloadablePlugin unloadablePlugin)
     {
+        unloadablePlugin.setUninstallable(plugin.isUninstallable());
         plugins.put(plugin.getKey(), unloadablePlugin);
 
         // Disable it
