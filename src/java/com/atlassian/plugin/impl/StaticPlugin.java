@@ -20,7 +20,7 @@ public class StaticPlugin implements Plugin, Comparable
     private String name;
     private String i18nNameKey;
     private String key;
-    private Map modules = new HashMap();
+    private Map modules = new LinkedHashMap();
     private boolean enabledByDefault = true;
     private PluginInformation pluginInformation;
     List resourceDescriptors;

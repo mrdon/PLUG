@@ -14,6 +14,7 @@ import junit.framework.TestCase;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Iterator;
 
 public class TestSinglePluginLoader extends TestCase
 {
@@ -123,6 +124,21 @@ public class TestSinglePluginLoader extends TestCase
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
         assertEquals(1, plugins.size());
         assertFalse(((Plugin) plugins.iterator().next()).isEnabledByDefault());
+    }
+
+    public void testPluginsInOrder() throws PluginParseException
+    {
+        SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResourceAsStream("test-ordered-pluginmodules.xml", SinglePluginLoader.class));
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        final Plugin plugin = (Plugin) plugins.iterator().next();
+        Collection modules = plugin.getModuleDescriptors();
+        assertEquals(3, modules.size());
+        Iterator iterator = modules.iterator();
+        assertEquals("yogi1", ((MockAnimalModuleDescriptor)iterator.next()).getKey());
+        assertEquals("yogi2", ((MockAnimalModuleDescriptor)iterator.next()).getKey());
+        assertEquals("yogi3", ((MockAnimalModuleDescriptor)iterator.next()).getKey());
     }
 
     public void testUnfoundPlugin() throws PluginParseException
