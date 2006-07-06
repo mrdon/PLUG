@@ -5,6 +5,7 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
+import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.mock.*;
@@ -163,15 +164,11 @@ public class TestSinglePluginLoader extends TestCase
 
         assertEquals(1, pluginsList.size());
 
-        // Since there were errors, we should get back an UnloadablePlugin
-        assertEquals(UnloadablePlugin.class, pluginsList.get(0).getClass());
-
-        UnloadablePlugin plugin = (UnloadablePlugin) pluginsList.get(0);
-
+        Plugin plugin = (Plugin) plugins.iterator().next();
         List moduleList = new ArrayList(plugin.getModuleDescriptors());
 
-        // The module that had the problem should be an UnloadableModuleDescriptor
-        assertEquals(UnloadableModuleDescriptor.class, moduleList.get(0).getClass());
+        // The module that had the problem should be an UnrecognisedModuleDescriptor
+        assertEquals(UnrecognisedModuleDescriptor.class, moduleList.get(0).getClass());
     }
 
     // PLUG-5
