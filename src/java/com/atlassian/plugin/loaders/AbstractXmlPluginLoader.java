@@ -3,6 +3,8 @@ package com.atlassian.plugin.loaders;
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
+import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptorFactory;
+import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.apache.commons.logging.Log;
@@ -73,12 +75,12 @@ public abstract class AbstractXmlPluginLoader implements PluginLoader
         {
             moduleDescriptorDescriptor = moduleDescriptorFactory.getModuleDescriptor(name);
         }
-        // When there's a problem loading a module, note the problem and provide a dummy module that can report the error
+        // When there's a problem loading a module, return an UnrecognisedModuleDescriptor with error
         catch (Exception e)
         {
-            UnloadableModuleDescriptor descriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin, element, e, moduleDescriptorFactory);
+            UnrecognisedModuleDescriptor descriptor = UnrecognisedModuleDescriptorFactory.createUnrecognisedModuleDescriptor(plugin, element, e, moduleDescriptorFactory);
 
-            log.error("There were problems loading the module '" + name + "'. The module and its plugin have been disabled.");
+            log.error("There were problems loading the module '" + name + "' in plugin '" + plugin.getName() + "'. The module has been disabled.");
             log.error(descriptor.getErrorText(), e);
 
             return descriptor;
