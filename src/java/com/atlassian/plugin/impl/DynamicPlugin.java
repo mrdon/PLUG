@@ -32,6 +32,11 @@ public class DynamicPlugin extends StaticPlugin
         return loader.getResourceAsStream(name);
     }
 
+    public ClassLoader getClassLoader()
+    {
+        return loader;
+    }
+
     /**
      * This plugin is dynamically loaded, so returns true.
      * @return true
