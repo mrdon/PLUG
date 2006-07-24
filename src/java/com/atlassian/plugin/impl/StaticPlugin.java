@@ -137,7 +137,7 @@ public class StaticPlugin implements Plugin, Comparable
      */
     public ResourceDescriptor getResourceDescriptor(String type, String name)
     {
-        return resources.getResourceDescriptor(type, name);  //To change body of implemented methods use File | Settings | File Templates.
+        return resources.getResourceDescriptor(type, name);
     }
 
     /**
@@ -202,6 +202,11 @@ public class StaticPlugin implements Plugin, Comparable
     public void setSystemPlugin(boolean system)
     {
         this.system = system;
+    }
+
+    public boolean isBundledPlugin()
+    {
+        return false;
     }
 
     public Date getDateLoaded()

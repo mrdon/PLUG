@@ -9,6 +9,7 @@ public class DynamicPlugin extends StaticPlugin
     private DeploymentUnit deploymentUnit;
     private ClassLoader loader;
     private boolean deletable = true;
+    private boolean bundled = false;
 
     public DynamicPlugin(DeploymentUnit deploymentUnit, ClassLoader loader)
     {
@@ -55,4 +56,16 @@ public class DynamicPlugin extends StaticPlugin
     {
         this.deletable = deletable;
     }
+
+    public boolean isBundledPlugin()
+    {
+        return bundled;
+    }
+
+    public void setBundled(boolean bundled)
+    {
+        this.bundled = bundled;
+    }
+
+
 }

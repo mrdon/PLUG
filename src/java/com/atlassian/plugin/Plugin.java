@@ -39,6 +39,8 @@ public interface Plugin extends Resourced
 
     boolean isEnabled();
 
+    void setEnabled(boolean enabled);
+
     /**
      * Whether the plugin is a "system" plugin that shouldn't be made visible to the user
      */
@@ -48,7 +50,10 @@ public interface Plugin extends Resourced
 
     void setSystemPlugin(boolean system);
 
-    void setEnabled(boolean enabled);
+    /**
+     * Whether the plugin is a "bundled" plugin that can't be removed.
+     */
+    boolean isBundledPlugin();
 
     /**
      * The date this plugin was loaded into the system.
@@ -59,6 +64,11 @@ public interface Plugin extends Resourced
      * Whether or not this plugin can be 'uninstalled'.
      */
     boolean isUninstallable();
+
+    /**
+     * Should the plugin file be deleted on unistall?
+     */
+    boolean isDeleteable();
 
     /**
      * Whether or not this plugin is loaded dynamically at runtime
@@ -87,9 +97,5 @@ public interface Plugin extends Resourced
 
     int compareTo(Object o);
 
-    /**
-     * Should the plugin file be deleted on unistall?
-     */
-    boolean isDeleteable();
 
 }
