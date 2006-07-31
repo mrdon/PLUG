@@ -44,9 +44,11 @@ public class DefaultPluginManager implements PluginManager
         {
             PluginLoader loader = (PluginLoader) iterator.next();
 
-            for (Iterator iterator1 = loader.loadAllPlugins(moduleDescriptorFactory).iterator(); iterator1.hasNext();)
-            {
-                addPlugin(loader, (Plugin) iterator1.next());
+            if(loader != null){
+                for (Iterator iterator1 = loader.loadAllPlugins(moduleDescriptorFactory).iterator(); iterator1.hasNext();)
+                {
+                    addPlugin(loader, (Plugin) iterator1.next());
+                }
             }
         }
     }
@@ -59,14 +61,16 @@ public class DefaultPluginManager implements PluginManager
         {
             PluginLoader loader = (PluginLoader) iterator.next();
 
-            if (loader.supportsAddition())
-            {
-                Collection addedPlugins = loader.addFoundPlugins(moduleDescriptorFactory);
-                for (Iterator iterator1 = addedPlugins.iterator(); iterator1.hasNext();)
+            if(loader != null){
+                if (loader.supportsAddition())
                 {
-                    Plugin newPlugin = (Plugin) iterator1.next();
-                    numberFound++;
-                    addPlugin(loader, newPlugin);
+                    Collection addedPlugins = loader.addFoundPlugins(moduleDescriptorFactory);
+                    for (Iterator iterator1 = addedPlugins.iterator(); iterator1.hasNext();)
+                    {
+                        Plugin newPlugin = (Plugin) iterator1.next();
+                        numberFound++;
+                        addPlugin(loader, newPlugin);
+                    }
                 }
             }
         }
@@ -127,6 +131,7 @@ public class DefaultPluginManager implements PluginManager
                   log.debug("We found a newer '" + plugin.getKey() + "'");
               try
               {
+                  log.info("Uninstalling " + match.getName() + " to upgrade.");
                   uninstall(match);
                   if (log.isDebugEnabled())
                       log.debug("Older '" + plugin.getKey() + "' uninstalled.");
