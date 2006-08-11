@@ -331,6 +331,12 @@ public class DefaultPluginManager implements PluginManager
         else
             currentState.removeState(key);
         saveState(currentState);
+
+        notifyPluginEnabled(plugin);
+    }
+
+    protected void notifyPluginEnabled(Plugin plugin)
+    {
         List moduleDescriptors = new ArrayList(plugin.getModuleDescriptors());
 
         for (Iterator it = moduleDescriptors.iterator(); it.hasNext();)
@@ -391,6 +397,17 @@ public class DefaultPluginManager implements PluginManager
 
         Plugin plugin = (Plugin) plugins.get(key);
 
+        notifyPluginDisabled(plugin);
+        PluginManagerState currentState = getState();
+         if (plugin.isEnabledByDefault())
+            currentState.setState(key, Boolean.FALSE);
+         else
+            currentState.removeState(key);
+        saveState(currentState);
+    }
+
+    protected void notifyPluginDisabled(Plugin plugin)
+    {
         List moduleDescriptors = new ArrayList(plugin.getModuleDescriptors());
         Collections.reverse(moduleDescriptors); // disable plugins in the opposite order they are enabled
 
@@ -417,12 +434,6 @@ public class DefaultPluginManager implements PluginManager
 
             ((StateAware) descriptor).disabled();
         }
-        PluginManagerState currentState = getState();
-         if (plugin.isEnabledByDefault())
-            currentState.setState(key, Boolean.FALSE);
-         else
-            currentState.removeState(key);
-        saveState(currentState);
     }
 
     public void disablePluginModule(String completeKey)
@@ -446,6 +457,11 @@ public class DefaultPluginManager implements PluginManager
         else
             currentState.removeState(completeKey);
         saveState(currentState);
+        notifyModuleDisabled(module);
+    }
+
+    protected void notifyModuleDisabled(ModuleDescriptor module)
+    {
         if (module instanceof StateAware)
             ((StateAware) module).disabled();
     }
@@ -476,7 +492,11 @@ public class DefaultPluginManager implements PluginManager
         else
             currentState.removeState(completeKey);
         saveState(currentState);
+        notifyModuleEnabled(module);
+    }
 
+    protected void notifyModuleEnabled(ModuleDescriptor module)
+    {
         if (module instanceof StateAware)
             ((StateAware) module).enabled();
     }
