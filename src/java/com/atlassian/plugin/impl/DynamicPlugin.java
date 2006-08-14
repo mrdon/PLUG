@@ -47,6 +47,11 @@ public class DynamicPlugin extends StaticPlugin
         return true;
     }
 
+    public DeploymentUnit getDeploymentUnit()
+    {
+        return deploymentUnit;
+    }
+
     public boolean isDeleteable()
     {
         return deletable;
@@ -66,6 +71,4 @@ public class DynamicPlugin extends StaticPlugin
     {
         this.bundled = bundled;
     }
-
-
 }
