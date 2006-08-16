@@ -594,6 +594,7 @@ public class DefaultPluginManager implements PluginManager
     protected void replacePluginWithUnloadablePlugin(Plugin plugin, UnloadablePlugin unloadablePlugin)
     {
         unloadablePlugin.setUninstallable(plugin.isUninstallable());
+        unloadablePlugin.setDeletable(plugin.isDeleteable());
         plugins.put(plugin.getKey(), unloadablePlugin);
 
         // Disable it

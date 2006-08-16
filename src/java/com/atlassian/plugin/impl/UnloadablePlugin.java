@@ -10,10 +10,21 @@ public class UnloadablePlugin extends StaticPlugin
 {
     private String errorText;
     private boolean uninstallable;
+    private boolean deletable;
 
     public boolean isUninstallable()
     {
         return uninstallable;
+    }
+
+    public void setDeletable(boolean deletable)
+    {
+        this.deletable = deletable;
+    }
+
+    public boolean isDeleteable()
+    {
+        return deletable;
     }
 
     public void setUninstallable(boolean uninstallable)
