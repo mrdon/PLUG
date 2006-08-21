@@ -2,6 +2,7 @@ package com.atlassian.plugin.web.descriptors;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.web.WebInterfaceManager;
 import org.dom4j.Element;
 
 /**
@@ -10,6 +11,11 @@ import org.dom4j.Element;
 public class WebSectionModuleDescriptor extends AbstractWebFragmentModuleDescriptor
 {
     private String location;
+
+    public WebSectionModuleDescriptor(WebInterfaceManager webInterfaceManager)
+    {
+        super(webInterfaceManager);
+    }
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {

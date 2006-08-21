@@ -24,6 +24,13 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         refresh();
     }
 
+    public DefaultWebInterfaceManager(PluginManager pluginManager, WebFragmentHelper webFragmentHelper)
+    {
+        this.pluginManager = pluginManager;
+        this.webFragmentHelper = webFragmentHelper;
+        refresh();
+    }
+
     public boolean hasSectionsForLocation(String location)
     {
         return getSections(location).size() > 0;

@@ -25,6 +25,11 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     protected Condition condition;
     protected WebLabel label;
 
+    protected AbstractWebFragmentModuleDescriptor(WebInterfaceManager webInterfaceManager)
+    {
+        this.webInterfaceManager = webInterfaceManager;
+    }
+
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);

@@ -4,6 +4,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.model.WebIcon;
 import com.atlassian.plugin.web.model.WebLink;
+import com.atlassian.plugin.web.WebInterfaceManager;
 import org.dom4j.Element;
 
 public class WebItemModuleDescriptor extends AbstractWebFragmentModuleDescriptor
@@ -11,6 +12,11 @@ public class WebItemModuleDescriptor extends AbstractWebFragmentModuleDescriptor
     private String section;
     private WebIcon icon;
     private WebLink link;
+
+    public WebItemModuleDescriptor(WebInterfaceManager webInterfaceManager)
+    {
+        super(webInterfaceManager);
+    }
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
