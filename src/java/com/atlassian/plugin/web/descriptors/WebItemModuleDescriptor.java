@@ -18,6 +18,10 @@ public class WebItemModuleDescriptor extends AbstractWebFragmentModuleDescriptor
         super(webInterfaceManager);
     }
 
+    public WebItemModuleDescriptor()
+    {
+    }
+
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);

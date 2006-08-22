@@ -17,6 +17,11 @@ public class WebSectionModuleDescriptor extends AbstractWebFragmentModuleDescrip
         super(webInterfaceManager);
     }
 
+    public WebSectionModuleDescriptor()
+    {
+
+    }
+
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);

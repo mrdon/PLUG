@@ -30,6 +30,11 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         this.webInterfaceManager = webInterfaceManager;
     }
 
+    public AbstractWebFragmentModuleDescriptor()
+    {
+        
+    }
+
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);
