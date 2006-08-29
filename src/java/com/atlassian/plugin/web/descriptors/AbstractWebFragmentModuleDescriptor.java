@@ -24,6 +24,7 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     protected int weight;
     protected Condition condition;
     protected WebLabel label;
+    protected WebLabel tooltip;
 
     protected AbstractWebFragmentModuleDescriptor(WebInterfaceManager webInterfaceManager)
     {
@@ -49,6 +50,8 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         }
         label = new WebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper());
         condition = makeConditions(element.elements("condition"));
+        if (element.element("tooltip") != null)
+            tooltip = new WebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper());
     }
 
     protected Condition makeConditions(List elements) throws PluginParseException
@@ -121,6 +124,11 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     public WebLabel getWebLabel()
     {
         return label;
+    }
+
+    public WebLabel getTooltip()
+    {
+        return tooltip;
     }
 
     public void setWebInterfaceManager(WebInterfaceManager webInterfaceManager)
