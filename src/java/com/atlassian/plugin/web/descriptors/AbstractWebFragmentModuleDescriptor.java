@@ -4,8 +4,10 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.web.conditions.CompositeCondition;
 import com.atlassian.plugin.web.conditions.InvertedCondition;
+import com.atlassian.plugin.web.conditions.AndCondition;
+import com.atlassian.plugin.web.conditions.OrCondition;
+import com.atlassian.plugin.web.conditions.AbstractCompositeCondition;
 import com.atlassian.plugin.web.WebInterfaceManager;
 import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.model.WebLabel;
@@ -20,6 +22,9 @@ import java.util.Iterator;
  */
 public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModuleDescriptor implements StateAware, WeightedDescriptor
 {
+    private static final int COMPOSITE_TYPE_OR = 0;
+    private static final int COMPOSITE_TYPE_AND = 1;
+
     protected WebInterfaceManager webInterfaceManager;
     protected int weight;
     protected Condition condition;
@@ -33,7 +38,6 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
 
     public AbstractWebFragmentModuleDescriptor()
     {
-        
     }
 
     public void init(Plugin plugin, Element element) throws PluginParseException
@@ -49,12 +53,61 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         {
         }
         label = new WebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper());
-        condition = makeConditions(element.elements("condition"));
+        condition = makeConditions(element, COMPOSITE_TYPE_AND);
         if (element.element("tooltip") != null)
             tooltip = new WebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper());
     }
 
-    protected Condition makeConditions(List elements) throws PluginParseException
+    /**
+     * Create a condition for when this web fragment should be displayed
+     * @param element Element of web-section or web-item
+     * @param type logical operator type {@link #getCompositeType}
+     * @throws PluginParseException
+     */
+    protected Condition makeConditions(Element element, int type) throws PluginParseException
+    {
+        //make single conditions (all Anded together)
+        List singleConditionElements = element.elements("condition");
+        Condition singleConditions = null;
+        if (singleConditionElements != null && !singleConditionElements.isEmpty())
+        {
+            singleConditions = makeConditions(singleConditionElements, type);
+        }
+
+        //make composite conditions (logical operator can be specified by "type")
+        List nestedConditionsElements = element.elements("conditions");
+        AbstractCompositeCondition nestedConditions = null;
+        if (nestedConditionsElements != null && !nestedConditionsElements.isEmpty())
+        {
+            nestedConditions = getCompositeCondition(type);
+            for (Iterator iterator = nestedConditionsElements.iterator(); iterator.hasNext();)
+            {
+                Element nestedElement = (Element) iterator.next();
+                nestedConditions.addCondition(makeConditions(nestedElement, getCompositeType(nestedElement.attributeValue("type"))));
+            }
+        }
+
+        if (singleConditions != null && nestedConditions != null)
+        {
+            //Join together the single and composite conditions by this type
+            AbstractCompositeCondition compositeCondition = getCompositeCondition(type);
+            compositeCondition.addCondition(singleConditions);
+            compositeCondition.addCondition(nestedConditions);
+            return compositeCondition;
+        }
+        else if (singleConditions != null)
+        {
+            return singleConditions;
+        }
+        else if (nestedConditions != null)
+        {
+            return nestedConditions;
+        }
+
+        return null;
+    }
+
+    protected Condition makeConditions(List elements, int type) throws PluginParseException
     {
         if (elements.size() == 0)
         {
@@ -66,7 +119,7 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         }
         else
         {
-            CompositeCondition compositeCondition = new CompositeCondition();
+            AbstractCompositeCondition compositeCondition = getCompositeCondition(type);
             for (Iterator it = elements.iterator(); it.hasNext();)
             {
                 Element element = (Element) it.next();
@@ -99,6 +152,35 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         {
             throw new PluginParseException(t);
         }
+    }
+
+    private int getCompositeType(String type) throws PluginParseException
+    {
+        if ("or".equalsIgnoreCase(type))
+        {
+            return COMPOSITE_TYPE_OR;
+        }
+        else if ("and".equalsIgnoreCase(type))
+        {
+            return COMPOSITE_TYPE_AND;
+        }
+        throw new PluginParseException("Invalid condition type specified. type = " + type);
+    }
+
+    private AbstractCompositeCondition getCompositeCondition(int type) throws PluginParseException
+    {
+        switch (type)
+        {
+            case COMPOSITE_TYPE_OR:
+            {
+                return new OrCondition();
+            }
+            case COMPOSITE_TYPE_AND:
+            {
+                return new AndCondition();
+            }
+        }
+        throw new PluginParseException("Invalid condition type specified. type = " + type);
     }
 
     public void enabled()

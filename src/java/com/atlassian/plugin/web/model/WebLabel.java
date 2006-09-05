@@ -72,6 +72,6 @@ public class WebLabel
             }
         }
         else
-            return noKeyValue;
+            return webFragmentHelper.renderVelocityFragment(noKeyValue, context);
     }
 }
