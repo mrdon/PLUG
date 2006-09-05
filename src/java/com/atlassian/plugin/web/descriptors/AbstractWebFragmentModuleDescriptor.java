@@ -22,8 +22,8 @@ import java.util.Iterator;
  */
 public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModuleDescriptor implements StateAware, WeightedDescriptor
 {
-    private static final int COMPOSITE_TYPE_OR = 0;
-    private static final int COMPOSITE_TYPE_AND = 1;
+    public static final int COMPOSITE_TYPE_OR = 0;
+    public static final int COMPOSITE_TYPE_AND = 1;
 
     protected WebInterfaceManager webInterfaceManager;
     protected int weight;
