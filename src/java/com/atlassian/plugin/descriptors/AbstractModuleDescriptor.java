@@ -27,12 +27,15 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     Map params;
     private Resources resources;
     private Float minJavaVersion;
+    private String i18nNameKey;
+    private String descriptionKey;
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         this.plugin = plugin;
         this.key = element.attributeValue("key");
         this.name = element.attributeValue("name");
+        this.i18nNameKey = element.attributeValue("i18n-name-key");
 
         String clazz = element.attributeValue("class");
         try
@@ -75,6 +78,8 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         }
 
         this.description = element.elementTextTrim("description");
+        Element descriptionElement = element.element("description");
+        this.descriptionKey = (descriptionElement != null) ? descriptionElement.attributeValue("key") : null;
         params = LoaderUtils.getParams(element);
 
         if ("disabled".equalsIgnoreCase(element.attributeValue("state")))
@@ -187,6 +192,16 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     public Map getParams()
     {
         return params;
+    }
+
+    public String getI18nNameKey()
+    {
+        return i18nNameKey;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public String getDescriptionKey()
+    {
+        return descriptionKey;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     public List getResourceDescriptors()

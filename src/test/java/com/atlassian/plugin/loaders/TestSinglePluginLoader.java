@@ -82,6 +82,8 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals(MockBear.class, bearDescriptor.getModuleClass());
         assertEquals("A plugin module to describe a bear", bearDescriptor.getDescription());
         assertTrue(bearDescriptor.isEnabledByDefault());
+        assertEquals("test.atlassian.module.bear.name", bearDescriptor.getI18nNameKey());
+        assertEquals("test.atlassian.module.bear.description", bearDescriptor.getDescriptionKey());
 
         List resources = bearDescriptor.getResourceDescriptors();
         assertEquals(3, resources.size());

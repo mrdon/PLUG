@@ -51,6 +51,16 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements ModuleDescrip
         return abstractDescriptor.getModule();
     }
 
+    public String getI18nNameKey()
+    {
+        return abstractDescriptor.getI18nNameKey();
+    }
+
+    public String getDescriptionKey()
+    {
+        return abstractDescriptor.getDescriptionKey();
+    }
+
     public WebLabel getWebLabel()
     {
         return abstractDescriptor.getWebLabel();

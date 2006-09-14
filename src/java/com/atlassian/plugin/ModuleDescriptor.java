@@ -79,4 +79,18 @@ public interface ModuleDescriptor extends Resourced
     boolean satisfiesMinJavaVersion();
 
     Map getParams();
+
+    /**
+     * Key used to override {@link #getName()} when using internationalisation.
+     *
+     * @return the i18n key.  May be null.
+     */
+    String getI18nNameKey();
+
+    /**
+     * Key used to override {@link #getDescription()} when using internationalisation.
+     *
+     * @return the i18n key.  May be null.
+     */
+    String getDescriptionKey();
 }
