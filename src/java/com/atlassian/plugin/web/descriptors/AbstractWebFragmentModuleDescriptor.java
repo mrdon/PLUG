@@ -5,8 +5,8 @@ import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.web.conditions.InvertedCondition;
-import com.atlassian.plugin.web.conditions.AndCondition;
-import com.atlassian.plugin.web.conditions.OrCondition;
+import com.atlassian.plugin.web.conditions.AndCompositeCondition;
+import com.atlassian.plugin.web.conditions.OrCompositeCondition;
 import com.atlassian.plugin.web.conditions.AbstractCompositeCondition;
 import com.atlassian.plugin.web.WebInterfaceManager;
 import com.atlassian.plugin.web.Condition;
@@ -198,11 +198,11 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         {
             case COMPOSITE_TYPE_OR:
             {
-                return new OrCondition();
+                return new OrCompositeCondition();
             }
             case COMPOSITE_TYPE_AND:
             {
-                return new AndCondition();
+                return new AndCompositeCondition();
             }
         }
         throw new PluginParseException("Invalid condition type specified. type = " + type);
