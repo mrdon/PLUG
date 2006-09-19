@@ -2,7 +2,7 @@ package com.atlassian.plugin.web.model;
 
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.WebFragmentHelper;
-import com.atlassian.plugin.loaders.LoaderUtils;
+import com.atlassian.plugin.web.ContextProvider;
 import org.dom4j.Element;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,16 +11,14 @@ import java.util.*;
 /**
  * A simple bean to represent labels in the web interface.
  */
-public class WebLabel
+public class WebLabel extends AbstractWebItemParam
 {
     String key;
     String noKeyValue;
-    private Map params;
-    private WebFragmentHelper webFragmentHelper;
 
-    public WebLabel(Element labelEl, WebFragmentHelper webFragmentHelper) throws PluginParseException
+    public WebLabel(Element labelEl, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider) throws PluginParseException
     {
-        this.webFragmentHelper = webFragmentHelper;
+        super(labelEl, webFragmentHelper, contextProvider);
         if (labelEl == null)
         {
             throw new PluginParseException("You must specify a label for the section.");
@@ -33,8 +31,6 @@ public class WebLabel
             {
                 this.noKeyValue = labelEl.getTextTrim();
             }
-
-            this.params = new TreeMap(LoaderUtils.getParams(labelEl));
         }
     }
 
@@ -50,6 +46,7 @@ public class WebLabel
 
     public String getDisplayableLabel(HttpServletRequest req, Map context)
     {
+        context.putAll(getContextMap());
         if (key != null)
         {
             if (params == null || params.isEmpty())

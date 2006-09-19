@@ -10,6 +10,7 @@ import com.atlassian.plugin.web.conditions.OrCondition;
 import com.atlassian.plugin.web.conditions.AbstractCompositeCondition;
 import com.atlassian.plugin.web.WebInterfaceManager;
 import com.atlassian.plugin.web.Condition;
+import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.model.WebLabel;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import org.dom4j.Element;
@@ -28,6 +29,7 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     protected WebInterfaceManager webInterfaceManager;
     protected int weight;
     protected Condition condition;
+    protected ContextProvider contextProvider;
     protected WebLabel label;
     protected WebLabel tooltip;
 
@@ -52,10 +54,14 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         catch (NumberFormatException e)
         {
         }
-        label = new WebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper());
+        if (element.element("context-provider") != null)
+        {
+            contextProvider = makeContextProvider(element.element("context-provider"));
+        }
+        label = new WebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper(), contextProvider);
         condition = makeConditions(element, COMPOSITE_TYPE_AND);
         if (element.element("tooltip") != null)
-            tooltip = new WebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper());
+            tooltip = new WebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper(), contextProvider);
     }
 
     /**
@@ -154,6 +160,25 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         }
     }
 
+    protected ContextProvider makeContextProvider(Element element) throws PluginParseException
+    {
+        try
+        {
+            ContextProvider context = webInterfaceManager.getWebFragmentHelper().loadContextProvider(element.attributeValue("class"), plugin);
+            context.init(LoaderUtils.getParams(element));
+
+            return context;
+        }
+        catch (ClassCastException e)
+        {
+            throw new PluginParseException("Configured context-provider class does not implement the ContextProvider interface");
+        }
+        catch (Throwable t)
+        {
+            throw new PluginParseException(t);
+        }
+    }
+
     private int getCompositeType(String type) throws PluginParseException
     {
         if ("or".equalsIgnoreCase(type))
@@ -221,5 +246,10 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     public Condition getCondition()
     {
         return condition;
+    }
+
+    public ContextProvider getContextProvider()
+    {
+        return contextProvider;
     }
 }

@@ -1,7 +1,7 @@
 package com.atlassian.plugin.web.model;
 
 import com.atlassian.plugin.web.WebFragmentHelper;
-import com.atlassian.plugin.loaders.LoaderUtils;
+import com.atlassian.plugin.web.ContextProvider;
 import org.dom4j.Element;
 
 import javax.servlet.http.HttpServletRequest;
@@ -10,25 +10,23 @@ import java.util.Map;
 /**
  * Represents a single "href", with a variety of permutations.
  */
-public class WebLink
+public class WebLink extends AbstractWebItemParam
 {
     String url;
     String accessKey;
     String id;
-    private Map params;
-    private WebFragmentHelper webFragmentHelper;
 
-    public WebLink(Element linkEl, WebFragmentHelper webFragmentHelper)
+    public WebLink(Element linkEl, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider)
     {
-        this.webFragmentHelper = webFragmentHelper;
+        super(linkEl, webFragmentHelper, contextProvider);
         this.url = linkEl.getTextTrim();
         this.accessKey = linkEl.attributeValue("accessKey");
         this.id = linkEl.attributeValue("linkId");
-        this.params = LoaderUtils.getParams(linkEl);
     }
 
     public String getRenderedUrl(Map context)
     {
+        context.putAll(getContextMap());
         return webFragmentHelper.renderVelocityFragment(url, context);
     }
 
@@ -52,16 +50,12 @@ public class WebLink
 
     public String getAccessKey(Map context)
     {
+        context.putAll(getContextMap());
         return webFragmentHelper.renderVelocityFragment(accessKey, context);
     }
 
     public String getId()
     {
         return id;
-    }
-
-    public Map getParams()
-    {
-        return params;
     }
 }

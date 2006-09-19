@@ -1,6 +1,7 @@
 package com.atlassian.plugin.web.model;
 
 import com.atlassian.plugin.web.WebFragmentHelper;
+import com.atlassian.plugin.web.ContextProvider;
 import org.dom4j.Element;
 
 /**
@@ -12,9 +13,9 @@ public class WebIcon
     private int width;
     private int height;
 
-    public WebIcon(Element iconEl, WebFragmentHelper webFragmentHelper)
+    public WebIcon(Element iconEl, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider)
     {
-        this.url = new WebLink(iconEl.element("link"), webFragmentHelper);
+        this.url = new WebLink(iconEl.element("link"), webFragmentHelper, contextProvider);
         this.width = Integer.parseInt(iconEl.attributeValue("width"));
         this.height = Integer.parseInt(iconEl.attributeValue("height"));
     }

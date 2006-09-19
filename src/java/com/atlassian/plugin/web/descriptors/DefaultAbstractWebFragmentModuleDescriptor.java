@@ -2,6 +2,7 @@ package com.atlassian.plugin.web.descriptors;
 
 import com.atlassian.plugin.web.WebInterfaceManager;
 import com.atlassian.plugin.web.Condition;
+import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.model.WebLabel;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
@@ -74,6 +75,11 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements ModuleDescrip
     public Condition getCondition()
     {
         return abstractDescriptor.getCondition();
+    }
+
+    public ContextProvider getContextProvider()
+    {
+        return abstractDescriptor.getContextProvider();
     }
 
     //----------------------------------------------------------------------------------------- ModuleDescriptor methods

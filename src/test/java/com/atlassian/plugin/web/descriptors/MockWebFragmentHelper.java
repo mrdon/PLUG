@@ -2,6 +2,7 @@ package com.atlassian.plugin.web.descriptors;
 
 import com.atlassian.plugin.web.WebFragmentHelper;
 import com.atlassian.plugin.web.Condition;
+import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.conditions.ConditionLoadingException;
 import com.atlassian.plugin.web.conditions.AlwaysDisplayCondition;
 import com.atlassian.plugin.web.conditions.NeverDisplayCondition;
@@ -22,6 +23,11 @@ public class MockWebFragmentHelper implements WebFragmentHelper
         {
             return new NeverDisplayCondition();
         }
+    }
+
+    public ContextProvider loadContextProvider(String className, Plugin plugin) throws ConditionLoadingException
+    {
+        return null;
     }
 
     public String getI18nValue(String key, List arguments, Map context)
