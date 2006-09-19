@@ -58,7 +58,8 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         {
             contextProvider = makeContextProvider(element.element("context-provider"));
         }
-        label = new WebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper(), contextProvider);
+        if (element.element("label") != null)
+            label = new WebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper(), contextProvider);
         condition = makeConditions(element, COMPOSITE_TYPE_AND);
         if (element.element("tooltip") != null)
             tooltip = new WebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper(), contextProvider);
