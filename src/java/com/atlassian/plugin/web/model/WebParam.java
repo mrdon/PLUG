@@ -9,19 +9,34 @@ import java.util.HashMap;
 
 import org.dom4j.Element;
 
-public class AbstractWebItemParam extends AbstractWebItem
+/**
+ * Represents a map of params. Individual value of the param
+ * can be rendered
+ */
+public class WebParam extends AbstractWebItem
 {
     protected Map params;
 
-    protected AbstractWebItemParam(Element element, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider)
+    public WebParam(Element element, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider)
     {
         super(webFragmentHelper, contextProvider);
         this.params = LoaderUtils.getParams(element);
     }
 
+    public WebParam(Map params, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider)
+    {
+        super(webFragmentHelper, contextProvider);
+        this.params = params;
+    }
+
     public Map getParams()
     {
         return params;
+    }
+
+    public Object get(String key)
+    {
+        return params.get(key);
     }
 
     public String getRenderedParam(String paramKey)

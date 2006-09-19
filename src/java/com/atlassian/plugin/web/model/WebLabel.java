@@ -11,7 +11,7 @@ import java.util.*;
 /**
  * A simple bean to represent labels in the web interface.
  */
-public class WebLabel extends AbstractWebItemParam
+public class WebLabel extends WebParam
 {
     String key;
     String noKeyValue;

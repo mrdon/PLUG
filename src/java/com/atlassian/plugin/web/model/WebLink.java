@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * Represents a single "href", with a variety of permutations.
  */
-public class WebLink extends AbstractWebItemParam
+public class WebLink extends AbstractWebItem
 {
     String url;
     String accessKey;
@@ -18,7 +18,7 @@ public class WebLink extends AbstractWebItemParam
 
     public WebLink(Element linkEl, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider)
     {
-        super(linkEl, webFragmentHelper, contextProvider);
+        super(webFragmentHelper, contextProvider);
         this.url = linkEl.getTextTrim();
         this.accessKey = linkEl.attributeValue("accessKey");
         this.id = linkEl.attributeValue("linkId");

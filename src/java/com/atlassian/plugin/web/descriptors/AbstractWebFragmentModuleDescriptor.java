@@ -12,6 +12,7 @@ import com.atlassian.plugin.web.WebInterfaceManager;
 import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.model.WebLabel;
+import com.atlassian.plugin.web.model.WebParam;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import org.dom4j.Element;
 
@@ -32,6 +33,7 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     protected ContextProvider contextProvider;
     protected WebLabel label;
     protected WebLabel tooltip;
+    protected WebParam params;
 
     protected AbstractWebFragmentModuleDescriptor(WebInterfaceManager webInterfaceManager)
     {
@@ -63,6 +65,8 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         condition = makeConditions(element, COMPOSITE_TYPE_AND);
         if (element.element("tooltip") != null)
             tooltip = new WebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper(), contextProvider);
+        if (getParams() != null)
+            params = new WebParam(getParams(), webInterfaceManager.getWebFragmentHelper(), contextProvider);
     }
 
     /**
@@ -252,5 +256,10 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     public ContextProvider getContextProvider()
     {
         return contextProvider;
+    }
+
+    public WebParam getWebParams()
+    {
+        return params;
     }
 }
