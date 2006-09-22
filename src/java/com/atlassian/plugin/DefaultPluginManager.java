@@ -470,7 +470,8 @@ public class DefaultPluginManager implements PluginManager
 
     protected void notifyModuleDisabled(ModuleDescriptor module)
     {
-        disableIfStateAwareAndEnabled(module);
+        if (module instanceof StateAware)
+            ((StateAware) module).disabled();
     }
 
     public void enablePluginModule(String completeKey)
