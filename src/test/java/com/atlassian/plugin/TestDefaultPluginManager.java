@@ -479,6 +479,36 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertTrue(p1.compareTo("not a plugin") == 1);
     }
 
+    public void testInvalidationOfDynamicResourceCache() throws IOException, PluginException
+    {
+        createFillAndCleanTempPluginDirectory();
+
+        PluginManager manager = makeClassLoadingPluginManager();
+
+        checkResources(manager, true, true);
+        manager.disablePlugin("test.atlassian.plugin.classloaded");
+        checkResources(manager, false, false);
+        manager.enablePlugin("test.atlassian.plugin.classloaded");
+        checkResources(manager, true, true);
+        manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded"));
+        checkResources(manager, false, false);
+        //restore paddington to test plugins dir
+        FileUtils.copyDirectory(pluginsDirectory, pluginsTestDir);
+        manager.scanForNewPlugins();
+        checkResources(manager, true, true);
+        // Resources from disabled modules are still available
+        //manager.disablePluginModule("test.atlassian.plugin.classloaded:paddington");
+        //checkResources(manager, true, false);
+    }
+
+    private void checkResources(PluginManager manager, boolean canGetGlobal, boolean canGetModule)
+    {
+        InputStream is = manager.getDynamicResourceAsStream("icon.gif");
+        assertEquals(canGetGlobal, is != null);
+        is = manager.getDynamicResourceAsStream("bear/paddington.vm");
+        assertEquals(canGetModule, is != null);
+    }
+
 
     public Plugin createPluginWithVersion(String version){
         Plugin p = new StaticPlugin();
@@ -488,7 +518,6 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pInfo.setVersion(version);
         return p;
     }
-
 
 
 

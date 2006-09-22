@@ -18,8 +18,8 @@ public class DefaultPluginManager implements PluginManager
     private final PluginStateStore store;
     private ModuleDescriptorFactory moduleDescriptorFactory;
     //private PluginManagerState currentState;
-    private HashMap plugins;
-    private HashMap pluginToPluginLoader; // will store a plugin as a key and pluginLoader as a value
+    private HashMap plugins = new HashMap();
+    private HashMap pluginToPluginLoader = new HashMap(); // will store a plugin as a key and pluginLoader as a value
 
     public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory)
     {
@@ -36,9 +36,6 @@ public class DefaultPluginManager implements PluginManager
      */
     public void init() throws PluginParseException
     {
-        this.plugins = new HashMap();
-        this.pluginToPluginLoader = new HashMap();
-
         // retrieve all the plugins
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
         {
@@ -105,8 +102,7 @@ public class DefaultPluginManager implements PluginManager
             ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
 
             // if the module is StateAware, then disable it (matches enable())
-            if (descriptor instanceof StateAware && isPluginModuleEnabled(descriptor.getCompleteKey()))
-                ((StateAware) descriptor).disabled();
+            disableIfStateAwareAndEnabled(descriptor);
 
             // now destroy it (matches init())
             descriptor.destroy(plugin);
@@ -119,6 +115,18 @@ public class DefaultPluginManager implements PluginManager
 
         if(plugin.isDeleteable())
           loader.removePlugin(plugin);
+    }
+
+    private void disableIfStateAwareAndEnabled(ModuleDescriptor descriptor)
+    {
+        if (descriptor instanceof StateAware)
+            {
+                StateAware stateAware = (StateAware)descriptor;
+                if (stateAware.isEnabled())
+                {
+                    stateAware.disabled();
+                }
+            }
     }
 
     private PluginManagerState getState()
@@ -361,6 +369,7 @@ public class DefaultPluginManager implements PluginManager
 
             try
             {
+                System.out.println("Enabling " + descriptor.getKey());
                 ((StateAware) descriptor).enabled();
             }
             /**
@@ -415,24 +424,7 @@ public class DefaultPluginManager implements PluginManager
         {
             ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
 
-            // Don't need to enable if not state aware
-            if (!(descriptor instanceof StateAware))
-            {
-                if (log.isDebugEnabled())
-                    log.debug("ModuleDescriptor '" + descriptor.getName() + "' is not StateAware. No need to disable.");
-
-                continue;
-            }
-
-            if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
-            {
-                if (log.isDebugEnabled())
-                    log.debug("Plugin is not enabled, so not disabling ModuleDescriptor '" + descriptor.getName() + "'.");
-
-                continue;
-            }
-
-            ((StateAware) descriptor).disabled();
+            disableIfStateAwareAndEnabled(descriptor);
         }
     }
 
@@ -462,8 +454,7 @@ public class DefaultPluginManager implements PluginManager
 
     protected void notifyModuleDisabled(ModuleDescriptor module)
     {
-        if (module instanceof StateAware)
-            ((StateAware) module).disabled();
+        disableIfStateAwareAndEnabled(module);
     }
 
     public void enablePluginModule(String completeKey)
