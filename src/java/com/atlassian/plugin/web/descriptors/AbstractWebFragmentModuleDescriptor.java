@@ -4,7 +4,6 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.StateAwareHelper;
 import com.atlassian.plugin.web.conditions.InvertedCondition;
 import com.atlassian.plugin.web.conditions.AndCompositeCondition;
 import com.atlassian.plugin.web.conditions.OrCompositeCondition;
@@ -35,7 +34,6 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     protected WebLabel label;
     protected WebLabel tooltip;
     protected WebParam params;
-    private StateAwareHelper stateAware = new StateAwareHelper();
 
     protected AbstractWebFragmentModuleDescriptor(WebInterfaceManager webInterfaceManager)
     {
@@ -217,19 +215,12 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
 
     public void enabled()
     {
-        stateAware.enabled();
         webInterfaceManager.refresh();
     }
 
     public void disabled()
     {
-        stateAware.disabled();
         webInterfaceManager.refresh();
-    }
-
-    public boolean isEnabled()
-    {
-        return stateAware.isEnabled();
     }
 
     public int getWeight()

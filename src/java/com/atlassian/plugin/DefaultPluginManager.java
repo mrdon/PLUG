@@ -122,7 +122,7 @@ public class DefaultPluginManager implements PluginManager
         if (descriptor instanceof StateAware)
             {
                 StateAware stateAware = (StateAware)descriptor;
-                if (stateAware.isEnabled())
+                if (isPluginModuleEnabled(descriptor.getCompleteKey()))
                 {
                     stateAware.disabled();
                 }
@@ -406,7 +406,7 @@ public class DefaultPluginManager implements PluginManager
 
         Plugin plugin = (Plugin) plugins.get(key);
 
-        notifyPluginDisabled(plugin);
+        notifyPluginDisabled(plugin, getEnabledStateAwareModuleKeys(plugin));
         PluginManagerState currentState = getState();
          if (plugin.isEnabledByDefault())
             currentState.setState(key, Boolean.FALSE);
@@ -415,16 +415,32 @@ public class DefaultPluginManager implements PluginManager
         saveState(currentState);
     }
 
-    protected void notifyPluginDisabled(Plugin plugin)
+    protected List getEnabledStateAwareModuleKeys(Plugin plugin)
     {
+        List keys = new ArrayList();
         List moduleDescriptors = new ArrayList(plugin.getModuleDescriptors());
-        Collections.reverse(moduleDescriptors); // disable plugins in the opposite order they are enabled
-
+        Collections.reverse(moduleDescriptors);
         for (Iterator it = moduleDescriptors.iterator(); it.hasNext();)
         {
-            ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
+            ModuleDescriptor md = (ModuleDescriptor) it.next();
+            if (md instanceof StateAware)
+            {
+                if (isPluginModuleEnabled(md.getCompleteKey()))
+                {
+                    keys.add(md.getCompleteKey());
+                }
+            }
+        }
+        return keys;
+    }
 
-            disableIfStateAwareAndEnabled(descriptor);
+    protected void notifyPluginDisabled(Plugin plugin, List keysToDisable)
+    {
+        for (Iterator it = keysToDisable.iterator(); it.hasNext();)
+        {
+            String key = (String)it.next();
+            StateAware descriptor = (StateAware)getPluginModule(key);
+            descriptor.disabled();
         }
     }
 

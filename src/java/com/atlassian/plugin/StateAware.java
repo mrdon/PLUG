@@ -18,10 +18,4 @@ public interface StateAware
      * the server will <i>not</i> cause this method to be called on any plugins.
      */
     void disabled();
-
-    /**
-     * Called to check whether this module is enabled. This is not used for the configuration of modules,
-     * it simply returns true if enabled() has been called and disabled() has not yet been called.
-     */
-    boolean isEnabled();
 }

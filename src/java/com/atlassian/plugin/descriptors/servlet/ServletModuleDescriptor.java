@@ -4,7 +4,6 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
-import com.atlassian.plugin.StateAwareHelper;
 import org.dom4j.Element;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -17,12 +16,6 @@ public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor i
     private static final Log log = LogFactory.getLog(ServletModuleDescriptor.class);
     List paths;
     private Map initParams;
-    private StateAwareHelper stateAware = new StateAwareHelper();
-
-    public boolean isEnabled()
-    {
-        return stateAware.isEnabled();
-    }
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
@@ -57,13 +50,11 @@ public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor i
 
     public void enabled()
     {
-        stateAware.enabled();
         getServletModuleManager().addModule(this);
     }
 
     public void disabled()
     {
-        stateAware.enabled();
         getServletModuleManager().removeModule(this);
     }
 
