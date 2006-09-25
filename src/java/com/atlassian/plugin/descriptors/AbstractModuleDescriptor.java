@@ -250,4 +250,9 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     {
         this.plugin = plugin;
     }
+
+    public String toString()
+    {
+        return getCompleteKey() + " (" + getDescription() + ")";
+    }
 }
