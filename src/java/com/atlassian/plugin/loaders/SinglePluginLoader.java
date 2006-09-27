@@ -4,20 +4,35 @@ import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.parsers.DescriptorParser;
+import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
+import com.atlassian.plugin.parsers.DescriptorParserFactory;
+import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.impl.StaticPlugin;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 
-public class SinglePluginLoader extends AbstractXmlPluginLoader
+/**
+ * Loads a single plugin from the descriptor provided, which can either be an InputStream
+ * or a resource on the classpath. The classes used by the plugin must already be available
+ * on the classpath because this plugin loader does <b>not</b> load any classes.
+ * <p/>
+ * Because the code which is run by these plugins must already be in the classpath (and
+ * is therefore more trusted than an uploaded plugin), if the plugin is marked as a system
+ * plugin in the descriptor file, it will actually be marked as a system plugin at runtime.
+ *
+ * @see PluginLoader
+ * @see ClassPathPluginLoader
+ * @see DescriptorParser#isSystemPlugin()
+ */
+public class SinglePluginLoader implements PluginLoader
 {
-    List plugins;
+    Collection plugins;
     protected String resource;
     protected InputStream is;
+    private DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
 
     public SinglePluginLoader(String resource)
     {
@@ -32,11 +47,7 @@ public class SinglePluginLoader extends AbstractXmlPluginLoader
     public Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         if (plugins == null)
-        {
-            plugins = new ArrayList();
-            loadPlugins(moduleDescriptorFactory);
-        }
-
+            plugins = Collections.singleton(loadPlugin(moduleDescriptorFactory));
         return plugins;
     }
 
@@ -65,36 +76,25 @@ public class SinglePluginLoader extends AbstractXmlPluginLoader
         throw new PluginException("This PluginLoader does not support removal.");
     }
 
-    private void loadPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    private Plugin loadPlugin(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        if (resource == null && is == null)
-            throw new PluginParseException("No resource or inputstream specified to load plugins from.");
+        InputStream source = getSource();
+        if (source == null)
+            throw new PluginParseException("Invalid resource or inputstream specified to load plugins from.");
 
-        try
-        {
-            Plugin plugin = configurePlugin(moduleDescriptorFactory, getDocument(), new StaticPlugin());
-            plugins.add(plugin);
-        }
-        catch (DocumentException e)
-        {
-            throw new PluginParseException("Exception parsing plugin document", e);
-        }
+        DescriptorParser parser = descriptorParserFactory.getInstance(source);
+        Plugin plugin = parser.configurePlugin(moduleDescriptorFactory, new StaticPlugin());
+        if (parser.isSystemPlugin())
+            plugin.setSystemPlugin(true);
+
+        return plugin;
     }
 
-    protected Document getDocument() throws DocumentException, PluginParseException
+    protected InputStream getSource()
     {
-        Document doc = null;
+        if (resource == null)
+            return is;
 
-        if (resource != null)
-            doc = getDocument(resource);
-        else
-            doc = getDocument(is);
-
-        return doc;
-    }
-
-    public void setRecogniseSystemPlugins(boolean recogniseSystemPlugins)
-    {
-        this.recogniseSystemPlugins = recogniseSystemPlugins;
+        return ClassLoaderUtils.getResourceAsStream(resource, this.getClass());
     }
 }

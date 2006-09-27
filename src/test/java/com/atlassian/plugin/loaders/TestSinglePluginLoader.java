@@ -19,25 +19,9 @@ import java.util.Iterator;
 
 public class TestSinglePluginLoader extends TestCase
 {
-    public void testSystemPluginRegularLoader() throws Exception
+    public void testSinglePluginLoader() throws Exception
     {
         SinglePluginLoader loader = new SinglePluginLoader("test-system-plugin.xml");
-        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
-        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
-        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
-        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
-
-        assertEquals(1, plugins.size());
-
-        // test the plugin information
-        Plugin plugin = (Plugin) plugins.iterator().next();
-        assertFalse(plugin.isSystemPlugin());
-    }
-
-    public void testSystemPluginSystemLoader() throws Exception
-    {
-        SinglePluginLoader loader = new SinglePluginLoader("test-system-plugin.xml");
-        loader.setRecogniseSystemPlugins(true);
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
@@ -142,20 +126,6 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals("yogi1", ((MockAnimalModuleDescriptor)iterator.next()).getKey());
         assertEquals("yogi2", ((MockAnimalModuleDescriptor)iterator.next()).getKey());
         assertEquals("yogi3", ((MockAnimalModuleDescriptor)iterator.next()).getKey());
-    }
-
-    public void testUnfoundPlugin() throws PluginParseException
-    {
-        try
-        {
-            SinglePluginLoader loader = new SinglePluginLoader("bullshit.xml");
-            loader.loadAllPlugins(null);
-            fail("Should have blown up.");
-        }
-        catch (PluginParseException e)
-        {
-            assertEquals("Invalid InputStream specified?", e.getMessage());
-        }
     }
 
     public void testUnknownPluginModule() throws PluginParseException
@@ -292,7 +262,7 @@ public class TestSinglePluginLoader extends TestCase
         }
         catch (PluginParseException e)
         {
-            return;
+            // Expected exception
         }
     }
 }

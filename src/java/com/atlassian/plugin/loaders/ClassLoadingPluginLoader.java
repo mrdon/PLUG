@@ -1,16 +1,18 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.parsers.DescriptorParser;
+import com.atlassian.plugin.parsers.DescriptorParserFactory;
+import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
+import com.atlassian.plugin.util.FileUtils;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.loaders.classloading.PluginsClassLoader;
 import com.atlassian.plugin.loaders.classloading.Scanner;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.dom4j.DocumentException;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
@@ -20,12 +22,13 @@ import java.util.*;
  * <p>
  * This creates a classloader for that classloading and loads plugins from all JARs from within it.
  */
-public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
+public class ClassLoadingPluginLoader implements PluginLoader
 {
     private static Log log = LogFactory.getLog(ClassLoadingPluginLoader.class);
     private String fileNameToLoad;
     private Scanner scanner;
     private Map plugins;
+    private DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
 
     public ClassLoadingPluginLoader(File path)
     {
@@ -55,8 +58,6 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
     }
 
     /**
-     * @param deploymentUnit
-     * @param moduleDescriptorFactory
      * @return the plugin loaded from the deployment unit, or an UnloadablePlugin instance if loading fails.
      */
     protected Plugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
@@ -77,16 +78,8 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
             try
             {
                 // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
-                plugin = configurePlugin(moduleDescriptorFactory, getDocument(is), new DynamicPlugin(deploymentUnit, loader));
-            }
-            catch (DocumentException e)
-            {
-                log.error("Error getting descriptor document for : " + deploymentUnit, e);
-
-                // Under normal conditions, the loader would be closed when the plugins are undeployed. However,
-                // these are not normal conditions, so we need to make sure that we close them explicitly.
-                loader.close();
-                throw new PluginParseException(e);
+                DescriptorParser parser = descriptorParserFactory.getInstance(is);
+                plugin = parser.configurePlugin(moduleDescriptorFactory, new DynamicPlugin(deploymentUnit, loader));
             }
             catch (PluginParseException e)
             {
@@ -99,15 +92,7 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
             }
             finally
             {
-                try
-                {
-                    is.close();
-                }
-                catch (IOException e)
-                {
-                    System.out.println("e = " + e);
-                    log.error("Error closing input stream for descriptor in: " + deploymentUnit, e);
-                }
+                FileUtils.shutdownStream(is);
             }
         }
         return plugin;
@@ -115,7 +100,7 @@ public class ClassLoadingPluginLoader extends AbstractXmlPluginLoader
 
     private PluginsClassLoader getPluginsClassLoader(DeploymentUnit deploymentUnit)
     {
-        return (PluginsClassLoader)scanner.getClassLoader(deploymentUnit);
+        return (PluginsClassLoader) scanner.getClassLoader(deploymentUnit);
     }
 
     public boolean supportsRemoval()

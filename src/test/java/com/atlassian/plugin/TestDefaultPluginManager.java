@@ -3,6 +3,7 @@ package com.atlassian.plugin;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.loaders.SinglePluginLoader;
 import com.atlassian.plugin.loaders.ClassLoadingPluginLoader;
+import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
@@ -11,14 +12,20 @@ import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.util.FileUtils;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
+import com.atlassian.plugin.parsers.DescriptorParserFactory;
+import com.atlassian.plugin.parsers.DescriptorParser;
+import com.mockobjects.dynamic.Mock;
+import com.mockobjects.dynamic.C;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Collections;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.File;
+import java.io.ByteArrayInputStream;
 
 public class TestDefaultPluginManager extends AbstractTestClassLoader
 {
@@ -45,7 +52,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         assertEquals(2, manager.getPlugins().size());
@@ -63,7 +70,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("bullshit", MockUnusedModuleDescriptor.class);
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         // check non existant plugins don't show
@@ -138,7 +145,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
         pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
         System.out.println(manager.getPlugins().size());
         assertTrue(manager.getPlugins().size() == 1);
@@ -152,7 +159,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin-newer.xml"));
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
         assertTrue(manager.getEnabledPlugins().size() == 1);
     }
@@ -165,7 +172,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin-newer.xml"));
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         try
         {
             manager.init();
@@ -185,7 +192,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         Plugin plugin = manager.getPlugin("test.atlassian.plugin");
@@ -205,7 +212,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         Collection descriptors = manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class);
@@ -230,7 +237,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         final Collection descriptors = manager.getEnabledModulesByClass(java.lang.String.class);
@@ -247,7 +254,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         Collection descriptors = manager.getEnabledModuleDescriptorsByType("animal");
@@ -276,7 +283,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         createFillAndCleanTempPluginDirectory();
 
-        PluginManager manager = makeClassLoadingPluginManager();
+        DefaultPluginManager manager = makeClassLoadingPluginManager();
 
         InputStream is = manager.getPluginResourceAsStream("test.atlassian.plugin.classloaded", "atlassian-plugin.xml");
         assertNotNull(is);
@@ -290,7 +297,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         File paddington = new File(pluginsTestDir, PADDINGTON_JAR);
         paddington.delete();
 
-        PluginManager manager = makeClassLoadingPluginManager();
+        DefaultPluginManager manager = makeClassLoadingPluginManager();
 
         assertEquals(1, manager.getPlugins().size());
         assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded2"));
@@ -309,7 +316,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
     }
 
-    private PluginManager makeClassLoadingPluginManager() throws PluginParseException
+    private DefaultPluginManager makeClassLoadingPluginManager() throws PluginParseException
     {
         List pluginLoaders = new ArrayList();
         classLoadingPluginLoader = new ClassLoadingPluginLoader(pluginsTestDir);
@@ -317,7 +324,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         stateStore = new MemoryPluginStateStore();
-        PluginManager manager = new DefaultPluginManager(stateStore, pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(stateStore, pluginLoaders, moduleDescriptorFactory);
         manager.init();
         return manager;
     }
@@ -326,7 +333,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         createFillAndCleanTempPluginDirectory();
 
-        PluginManager manager = makeClassLoadingPluginManager();
+        DefaultPluginManager manager = makeClassLoadingPluginManager();
         assertEquals(2, manager.getPlugins().size());
         MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
         assertFalse(moduleDescriptor.disabled);
@@ -349,7 +356,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
-        PluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
         manager.init();
 
         Plugin plugin = manager.getPlugin("test.atlassian.plugin");
@@ -370,7 +377,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         createFillAndCleanTempPluginDirectory();
 
-        PluginManager manager = makeClassLoadingPluginManager();
+        DefaultPluginManager manager = makeClassLoadingPluginManager();
         assertEquals(2, manager.getPlugins().size());
 
         // Set plugin file can't be deleted.
@@ -483,7 +490,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         createFillAndCleanTempPluginDirectory();
 
-        PluginManager manager = makeClassLoadingPluginManager();
+        DefaultPluginManager manager = makeClassLoadingPluginManager();
 
         checkResources(manager, true, true);
         manager.disablePlugin("test.atlassian.plugin.classloaded");
@@ -501,7 +508,63 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         //checkResources(manager, true, false);
     }
 
-    private void checkResources(PluginManager manager, boolean canGetGlobal, boolean canGetModule)
+    public void testInstallPlugin() throws Exception
+    {
+        Mock mockPluginStateStore = new Mock(PluginStateStore.class);
+        Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
+        Mock mockPluginLoader = new Mock(PluginLoader.class);
+        Mock mockDescriptorParserFactory = new Mock(DescriptorParserFactory.class);
+        Mock mockDescriptorParser = new Mock(DescriptorParser.class);
+        Mock mockPluginJar = new Mock(PluginJar.class);
+        Mock mockRepository = new Mock(PluginInstaller.class);
+        Mock mockPlugin = new Mock(Plugin.class);
+
+        ModuleDescriptorFactory moduleDescriptorFactory = (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy();
+
+        DefaultPluginManager pluginManager = new DefaultPluginManager(
+                (PluginStateStore) mockPluginStateStore.proxy(),
+                Collections.singletonList(mockPluginLoader.proxy()),
+                moduleDescriptorFactory
+        );
+
+        Plugin plugin = (Plugin) mockPlugin.proxy();
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(new byte[0]);
+        PluginJar pluginJar = (PluginJar) mockPluginJar.proxy();
+        Object descriptorParser = mockDescriptorParser.proxy();
+
+        mockPluginJar.expectAndReturn("getFile", "atlassian-plugin.xml", inputStream);
+        mockPluginJar.expectAndReturn("getFile", "atlassian-plugin.xml", inputStream);
+        mockPluginStateStore.expectAndReturn("loadPluginState", new PluginManagerState());
+        mockDescriptorParserFactory.expectAndReturn("getInstance", inputStream, descriptorParser);
+        mockDescriptorParserFactory.expectAndReturn("getInstance", inputStream, descriptorParser);
+        mockDescriptorParser.matchAndReturn("getKey", "test");
+        mockRepository.expect("installPlugin", C.args(C.eq("test"), C.eq(pluginJar)));
+        mockPluginLoader.expectAndReturn("loadAllPlugins", C.eq(moduleDescriptorFactory), Collections.EMPTY_LIST);
+        mockPluginLoader.expectAndReturn("supportsAddition", true);
+        mockPluginLoader.expectAndReturn("addFoundPlugins", moduleDescriptorFactory, Collections.singletonList(plugin));
+        mockPlugin.matchAndReturn("getKey", "test");
+        mockPlugin.matchAndReturn("hashCode", mockPlugin.hashCode());
+        mockPlugin.expectAndReturn("getModuleDescriptors", new ArrayList());
+        mockPlugin.expectAndReturn("isEnabledByDefault", true);
+
+        pluginManager.setDescriptorParserFactory((DescriptorParserFactory) mockDescriptorParserFactory.proxy());
+        pluginManager.setPluginInstaller((PluginInstaller) mockRepository.proxy());
+        pluginManager.init();
+        pluginManager.installPlugin(pluginJar);
+
+        assertEquals(plugin, pluginManager.getPlugin("test"));
+        assertTrue(pluginManager.isPluginEnabled("test"));
+
+        mockPlugin.verify();
+        mockRepository.verify();
+        mockPluginJar.verify();
+        mockDescriptorParser.verify();
+        mockDescriptorParserFactory.verify();
+        mockPluginLoader.verify();
+        mockPluginStateStore.verify();
+    }
+
+    private void checkResources(PluginAccessor manager, boolean canGetGlobal, boolean canGetModule)
     {
         InputStream is = manager.getDynamicResourceAsStream("icon.gif");
         assertEquals(canGetGlobal, is != null);
