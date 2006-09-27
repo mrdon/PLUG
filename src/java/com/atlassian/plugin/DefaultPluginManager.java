@@ -156,6 +156,8 @@ public class DefaultPluginManager implements PluginManager
               // If we find an older plugin, don't error, just ignore it. PLUG-12.
               if (log.isDebugEnabled())
                   log.debug("Duplicate plugin found (installed version is the same or newer): '" + plugin.getKey() + "'");
+              // and don't install the older plugin
+              return;
           }
         }
 
