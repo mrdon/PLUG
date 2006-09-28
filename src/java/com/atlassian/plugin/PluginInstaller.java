@@ -6,10 +6,7 @@ package com.atlassian.plugin;
 public interface PluginInstaller
 {
     /**
-     * Installs the plugin with the given key. If the JAR filename
-     * already exists, it is replaced silently.
-     *
-     * @see PluginJar#getFileName() 
+     * Installs the plugin with the given key. If the plugin already exists, it is replaced silently.
      */
-    void installPlugin(String key, PluginJar pluginJar) throws PluginParseException;
+    void installPlugin(String key, PluginJar pluginJar);
 }

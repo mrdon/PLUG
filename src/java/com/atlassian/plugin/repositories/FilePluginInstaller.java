@@ -2,7 +2,6 @@ package com.atlassian.plugin.repositories;
 
 import com.atlassian.plugin.PluginInstaller;
 import com.atlassian.plugin.PluginJar;
-import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.util.FileUtils;
 
 import java.io.*;
@@ -30,7 +29,7 @@ public class FilePluginInstaller implements PluginInstaller
      *
      * @throws RuntimeException if there was an exception reading or writing files.
      */
-    public void installPlugin(String key, PluginJar pluginJar) throws PluginParseException
+    public void installPlugin(String key, PluginJar pluginJar)
     {
         File newPluginFile = new File(directory, pluginJar.getFileName());
         if (newPluginFile.exists())

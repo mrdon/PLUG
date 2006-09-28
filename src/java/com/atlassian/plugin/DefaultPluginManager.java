@@ -56,29 +56,37 @@ public class DefaultPluginManager implements PluginManager
     }
 
     /**
-     * Initialize all plugins in all loaders.
+     * Initialize all plugins in all loaders
      *
      * @throws PluginParseException
      */
     public void init() throws PluginParseException
     {
-        // retrieve all the plugins
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
         {
             PluginLoader loader = (PluginLoader) iterator.next();
+            if (loader == null) continue;
 
-            if(loader != null){
-                for (Iterator iterator1 = loader.loadAllPlugins(moduleDescriptorFactory).iterator(); iterator1.hasNext();)
-                {
-                    addPlugin(loader, (Plugin) iterator1.next());
-                }
+            for (Iterator pluginIterator = loader.loadAllPlugins(moduleDescriptorFactory).iterator(); pluginIterator.hasNext();)
+            {
+                addPlugin(loader, (Plugin) pluginIterator.next());
             }
         }
     }
 
+    /**
+     * Set the plugin installation strategy for this manager
+     * @see PluginInstaller
+     * @param pluginInstaller
+     */
     public void setPluginInstaller(PluginInstaller pluginInstaller)
     {
         this.pluginInstaller = pluginInstaller;
+    }
+
+    protected final PluginStateStore getStore()
+    {
+        return store;
     }
 
     public String installPlugin(PluginJar pluginJar) throws PluginParseException
@@ -95,6 +103,11 @@ public class DefaultPluginManager implements PluginManager
         return key;
     }
 
+    /**
+     * Validate a plugin jar
+     * @param pluginJar
+     * @throws PluginParseException
+     */
     private void validatePlugin(PluginJar pluginJar) throws PluginParseException
     {
         InputStream descriptorStream = pluginJar.getFile(PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
@@ -140,9 +153,14 @@ public class DefaultPluginManager implements PluginManager
         unloadPlugin(plugin);
 
         // PLUG-13: Plugins should not save state across uninstalls.
-        PluginManagerState currentState = getState();
+        removeStateFromStore(getStore(), plugin);
+    }
+
+    protected void removeStateFromStore(PluginStateStore stateStore, Plugin plugin)
+    {
+        PluginManagerState currentState = stateStore.loadPluginState();
         currentState.removeState(plugin.getKey());
-        saveState(currentState);
+        stateStore.savePluginState(currentState);
     }
 
     /**
@@ -192,9 +210,9 @@ public class DefaultPluginManager implements PluginManager
         }
     }
 
-    private PluginManagerState getState()
+    protected PluginManagerState getState()
     {
-        return store.loadPluginState();
+        return getStore().loadPluginState();
     }
 
     /**
@@ -263,11 +281,6 @@ public class DefaultPluginManager implements PluginManager
         }
 
         pluginToPluginLoader.put(plugin, loader);
-    }
-
-    private void saveState(PluginManagerState state)
-    {
-        store.savePluginState(state);
     }
 
     public Collection getPlugins()
@@ -388,14 +401,20 @@ public class DefaultPluginManager implements PluginManager
             log.error("Minimum Java version of '" + plugin.getPluginInformation().getMinJavaVersion() + "' was not satisfied for module '" + key + "'. Not enabling.");
             return;
         }
-        PluginManagerState currentState = getState();
+
+        enablePluginState(plugin, getStore());
+        notifyPluginEnabled(plugin);
+    }
+
+    protected void enablePluginState(Plugin plugin, PluginStateStore stateStore)
+    {
+        PluginManagerState currentState = stateStore.loadPluginState();
+        String key = plugin.getKey();
         if (!plugin.isEnabledByDefault())
             currentState.setState(key, Boolean.TRUE);
         else
             currentState.removeState(key);
-        saveState(currentState);
-
-        notifyPluginEnabled(plugin);
+        stateStore.savePluginState(currentState);
     }
 
     /**
@@ -453,12 +472,18 @@ public class DefaultPluginManager implements PluginManager
         Plugin plugin = (Plugin) plugins.get(key);
 
         notifyPluginDisabled(plugin);
-        PluginManagerState currentState = getState();
+        disablePluginState(plugin, getStore());
+    }
+
+    protected void disablePluginState(Plugin plugin, PluginStateStore stateStore)
+    {
+        String key = plugin.getKey();
+        PluginManagerState currentState = stateStore.loadPluginState();
         if (plugin.isEnabledByDefault())
             currentState.setState(key, Boolean.FALSE);
         else
             currentState.removeState(key);
-        saveState(currentState);
+        stateStore.savePluginState(currentState);
     }
 
     protected List getEnabledStateAwareModuleKeys(Plugin plugin)
@@ -505,14 +530,19 @@ public class DefaultPluginManager implements PluginManager
 
             return;
         }
-        PluginManagerState currentState = getState();
+        disablePluginModuleState(module, getStore());
+        notifyModuleDisabled(module);
+    }
 
+    protected void disablePluginModuleState(ModuleDescriptor module, PluginStateStore stateStore)
+    {
+        String completeKey = module.getCompleteKey();
+        PluginManagerState currentState = stateStore.loadPluginState();
         if (module.isEnabledByDefault())
             currentState.setState(completeKey, Boolean.FALSE);
         else
             currentState.removeState(completeKey);
-        saveState(currentState);
-        notifyModuleDisabled(module);
+        stateStore.savePluginState(currentState);
     }
 
     protected void notifyModuleDisabled(ModuleDescriptor module)
@@ -541,13 +571,19 @@ public class DefaultPluginManager implements PluginManager
             log.error("Minimum Java version of '" + module.getMinJavaVersion() + "' was not satisfied for module '" + completeKey + "'. Not enabling.");
             return;
         }
-        PluginManagerState currentState = getState();
+        enablePluginModuleState(module, getStore());
+        notifyModuleEnabled(module);
+    }
+
+    protected void enablePluginModuleState(ModuleDescriptor module, PluginStateStore stateStore)
+    {
+        String completeKey = module.getCompleteKey();
+        PluginManagerState currentState = stateStore.loadPluginState();
         if (!module.isEnabledByDefault())
             currentState.setState(completeKey, Boolean.TRUE);
         else
             currentState.removeState(completeKey);
-        saveState(currentState);
-        notifyModuleEnabled(module);
+        stateStore.savePluginState(currentState);
     }
 
     protected void notifyModuleEnabled(ModuleDescriptor module)
@@ -657,9 +693,7 @@ public class DefaultPluginManager implements PluginManager
         plugins.put(plugin.getKey(), unloadablePlugin);
 
         // Disable it
-        PluginManagerState currentState = getState();
-        currentState.setState(plugin.getKey(), Boolean.FALSE);
-        saveState(currentState);
+        disablePluginState(plugin, getStore());
         return unloadablePlugin;
     }
 
