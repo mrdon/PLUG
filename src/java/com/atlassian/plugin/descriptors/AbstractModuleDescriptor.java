@@ -64,17 +64,17 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         {
             throw new PluginParseException("Could not load class: " + clazz, e);
         }
-        catch (IllegalAccessException e)
-        {
-            throw new PluginParseException(e);
-        }
-        catch (InstantiationException e)
-        {
-            throw new PluginParseException(e);
-        }
         catch (NoClassDefFoundError e)
         {
             throw new PluginParseException("Error retrieving dependency of class: " + clazz + ". Missing class: " + e.getMessage());
+        }
+        catch (UnsupportedClassVersionError e)
+        {
+            throw new PluginParseException("Class version is incompatible with current JVM: " + clazz, e);
+        }
+        catch (Throwable t)
+        {
+            throw new PluginParseException(t);
         }
 
         this.description = element.elementTextTrim("description");
