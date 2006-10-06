@@ -348,19 +348,12 @@ public class DefaultPluginManager implements PluginManager
         {
             Plugin plugin = (Plugin) iterator.next();
 
-            // Skip disabled plugins
-            if (!isPluginEnabled(plugin.getKey()))
-                continue;
-
             for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
             {
                 ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator1.next();
 
-                if (!isPluginModuleEnabled(moduleDescriptor.getCompleteKey()))
-                    continue;
-
                 final Class moduleDescClass = moduleDescriptor.getModuleClass();
-                if (moduleDescClass != null && moduleClass.isAssignableFrom(moduleDescClass))
+                if (moduleDescClass != null && moduleClass.isAssignableFrom(moduleDescClass) && isPluginModuleEnabled(moduleDescriptor.getCompleteKey()))
                 {
                     try
                     {
