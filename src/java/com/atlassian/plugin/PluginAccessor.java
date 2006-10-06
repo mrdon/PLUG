@@ -49,7 +49,9 @@ public interface PluginAccessor
     boolean isPluginEnabled(String key);
 
     /**
-     * Whether or not a given plugin module is currently enabled.
+     * Whether or not a given plugin module is currently enabled.  This also checks
+     * if the plugin it is contained within is enabled also
+     * @see #isPluginEnabled(String)
      */
     boolean isPluginModuleEnabled(String completeKey);
 
