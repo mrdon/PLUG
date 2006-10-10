@@ -3,6 +3,7 @@ package com.atlassian.plugin.web.model;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.WebFragmentHelper;
 import com.atlassian.plugin.web.ContextProvider;
+import com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor;
 import org.dom4j.Element;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,9 +17,9 @@ public class WebLabel extends WebParam
     String key;
     String noKeyValue;
 
-    public WebLabel(Element labelEl, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider) throws PluginParseException
+    public WebLabel(Element labelEl, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider, AbstractWebFragmentModuleDescriptor descriptor) throws PluginParseException
     {
-        super(labelEl, webFragmentHelper, contextProvider);
+        super(labelEl, webFragmentHelper, contextProvider, descriptor);
         if (labelEl == null)
         {
             throw new PluginParseException("You must specify a label for the section.");
@@ -51,7 +52,7 @@ public class WebLabel extends WebParam
         {
             if (params == null || params.isEmpty())
             {
-                return webFragmentHelper.getI18nValue(key, null, context);
+                return getWebFragmentHelper().getI18nValue(key, null, context);
             }
             else
             {
@@ -62,13 +63,15 @@ public class WebLabel extends WebParam
                 {
                     String key = (String) iterator.next();
                     if (key.startsWith("param"))
-                        arguments.add(webFragmentHelper.renderVelocityFragment((String) params.get(key), context));
+                        arguments.add(getWebFragmentHelper().renderVelocityFragment((String) params.get(key), context));
                 }
 
-                return webFragmentHelper.getI18nValue(key, arguments, context);
+                return getWebFragmentHelper().getI18nValue(key, arguments, context);
             }
         }
         else
-            return webFragmentHelper.renderVelocityFragment(noKeyValue, context);
+        {
+            return getWebFragmentHelper().renderVelocityFragment(noKeyValue, context);
+        }
     }
 }

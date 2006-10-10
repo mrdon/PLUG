@@ -1,12 +1,15 @@
 package com.atlassian.plugin.web;
 
 import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor;
 import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
 import com.atlassian.plugin.web.descriptors.WebSectionModuleDescriptor;
 import com.atlassian.plugin.web.descriptors.WeightedDescriptorComparator;
-import com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor;
 
 import java.util.*;
+
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.logging.Log;
 
 /**
  * Stores and manages flexible web interface sections available in the system.
@@ -17,6 +20,8 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
     private WebFragmentHelper webFragmentHelper;
     private Map sections;
     private Map items;
+    private static final Log log = LogFactory.getLog(DefaultWebInterfaceManager.class);
+
     public static final WeightedDescriptorComparator WEIGHTED_DESCRIPTOR_COMPARATOR = new WeightedDescriptorComparator();
 
     public DefaultWebInterfaceManager()
@@ -33,15 +38,17 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
 
     public boolean hasSectionsForLocation(String location)
     {
-        return getSections(location).size() > 0;
+        return !getSections(location).isEmpty();
     }
 
     public List getSections(String location)
     {
         if (location == null)
+        {
             return Collections.EMPTY_LIST;
+        }
 
-        List result = (List)sections.get(location);
+        List result = (List) sections.get(location);
 
         if (result == null)
         {
@@ -69,9 +76,11 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
     public List getItems(String section)
     {
         if (section == null)
+        {
             return Collections.EMPTY_LIST;
+        }
 
-        List result = (List)items.get(section);
+        List result = (List) items.get(section);
 
         if (result == null)
         {
@@ -99,9 +108,11 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
     private List filterFragmentsByCondition(List relevantItems, Map context)
     {
         if (relevantItems.isEmpty())
+        {
             return relevantItems;
-        List result = new ArrayList(relevantItems);
+        }
 
+        List result = new ArrayList(relevantItems);
         for (Iterator iterator = result.iterator(); iterator.hasNext();)
         {
             AbstractWebFragmentModuleDescriptor descriptor = (AbstractWebFragmentModuleDescriptor) iterator.next();
@@ -114,6 +125,8 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
             }
             catch (Throwable t)
             {
+                log.error("Could not evaluate condition: " + t);
+                iterator.remove();
             }
         }
 

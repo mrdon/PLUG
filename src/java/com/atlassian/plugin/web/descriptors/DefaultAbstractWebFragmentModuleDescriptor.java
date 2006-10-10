@@ -62,6 +62,11 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements ModuleDescrip
         return abstractDescriptor.getDescriptionKey();
     }
 
+    public Plugin getPlugin()
+    {
+        return abstractDescriptor.getPlugin();
+    }
+
     public WebLabel getWebLabel()
     {
         return abstractDescriptor.getWebLabel();

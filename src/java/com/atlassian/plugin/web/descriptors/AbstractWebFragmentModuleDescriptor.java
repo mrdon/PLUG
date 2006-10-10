@@ -56,17 +56,28 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         catch (NumberFormatException e)
         {
         }
+
         if (element.element("context-provider") != null)
         {
             contextProvider = makeContextProvider(element.element("context-provider"));
         }
+
         if (element.element("label") != null)
-            label = new WebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper(), contextProvider);
-        condition = makeConditions(element, COMPOSITE_TYPE_AND);
+        {
+            label = new WebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
+        }
+
         if (element.element("tooltip") != null)
-            tooltip = new WebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper(), contextProvider);
+        {
+            tooltip = new WebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
+        }
+
         if (getParams() != null)
-            params = new WebParam(getParams(), webInterfaceManager.getWebFragmentHelper(), contextProvider);
+        {
+            params = new WebParam(getParams(), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
+        }
+
+        condition = makeConditions(element, COMPOSITE_TYPE_AND);
     }
 
     /**

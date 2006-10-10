@@ -2,6 +2,7 @@ package com.atlassian.plugin.web.model;
 
 import com.atlassian.plugin.web.WebFragmentHelper;
 import com.atlassian.plugin.web.ContextProvider;
+import com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor;
 import org.dom4j.Element;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,9 +17,9 @@ public class WebLink extends AbstractWebItem
     String accessKey;
     String id;
 
-    public WebLink(Element linkEl, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider)
+    public WebLink(Element linkEl, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider, AbstractWebFragmentModuleDescriptor descriptor)
     {
-        super(webFragmentHelper, contextProvider);
+        super(webFragmentHelper, contextProvider, descriptor);
         this.url = linkEl.getTextTrim();
         this.accessKey = linkEl.attributeValue("accessKey");
         this.id = linkEl.attributeValue("linkId");
@@ -27,7 +28,7 @@ public class WebLink extends AbstractWebItem
     public String getRenderedUrl(Map context)
     {
         context.putAll(getContextMap());
-        return webFragmentHelper.renderVelocityFragment(url, context);
+        return getWebFragmentHelper().renderVelocityFragment(url, context);
     }
 
     public boolean isRelativeUrl()
@@ -51,7 +52,7 @@ public class WebLink extends AbstractWebItem
     public String getAccessKey(Map context)
     {
         context.putAll(getContextMap());
-        return webFragmentHelper.renderVelocityFragment(accessKey, context);
+        return getWebFragmentHelper().renderVelocityFragment(accessKey, context);
     }
 
     public String getId()

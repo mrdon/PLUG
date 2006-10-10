@@ -2,9 +2,9 @@ package com.atlassian.plugin.web.model;
 
 import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.WebFragmentHelper;
+import com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor;
 
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * Represents web items that can be rendered using velocity, and inject its
@@ -12,13 +12,15 @@ import java.util.HashMap;
  */
 public abstract class AbstractWebItem
 {
-    protected WebFragmentHelper webFragmentHelper;
+    private WebFragmentHelper webFragmentHelper;
     private ContextProvider contextProvider;
+    private final AbstractWebFragmentModuleDescriptor descriptor;
 
-    protected AbstractWebItem(WebFragmentHelper webFragmentHelper, ContextProvider contextProvider)
+    protected AbstractWebItem(WebFragmentHelper webFragmentHelper, ContextProvider contextProvider, AbstractWebFragmentModuleDescriptor descriptor)
     {
         this.webFragmentHelper = webFragmentHelper;
         this.contextProvider = contextProvider;
+        this.descriptor = descriptor;
     }
 
     public Map getContextMap()
@@ -28,5 +30,15 @@ public abstract class AbstractWebItem
             return contextProvider.getContextMap();
         }
         return new HashMap();
+    }
+
+    public WebFragmentHelper getWebFragmentHelper()
+    {
+        return webFragmentHelper;
+    }
+
+    public AbstractWebFragmentModuleDescriptor getDescriptor()
+    {
+        return descriptor;
     }
 }

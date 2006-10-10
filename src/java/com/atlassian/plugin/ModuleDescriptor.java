@@ -93,4 +93,9 @@ public interface ModuleDescriptor extends Resourced
      * @return the i18n key.  May be null.
      */
     String getDescriptionKey();
+
+    /**
+     * @return The plugin this module descriptor is associated with
+     */
+    Plugin getPlugin();
 }

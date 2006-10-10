@@ -29,9 +29,11 @@ public class WebItemModuleDescriptor extends AbstractWebFragmentModuleDescriptor
         section = element.attributeValue("section");
 
         if (element.element("icon") != null)
-            icon = new WebIcon(element.element("icon"), webInterfaceManager.getWebFragmentHelper(), contextProvider);
+        {
+            icon = new WebIcon(element.element("icon"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
+        }
 
-        link = new WebLink(element.element("link"), webInterfaceManager.getWebFragmentHelper(), contextProvider);
+        link = new WebLink(element.element("link"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
     }
 
     public String getSection()

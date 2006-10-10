@@ -251,6 +251,14 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         this.plugin = plugin;
     }
 
+    /**
+     * @return The plugin this module descriptor is associated with
+     */
+    public Plugin getPlugin()
+    {
+        return plugin;
+    }
+
     public String toString()
     {
         return getCompleteKey() + " (" + getDescription() + ")";
