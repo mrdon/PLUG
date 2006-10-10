@@ -31,17 +31,18 @@ public class WebLink extends AbstractWebItem
         return getWebFragmentHelper().renderVelocityFragment(url, context);
     }
 
-    public boolean isRelativeUrl()
+    private boolean isRelativeUrl(String url)
     {
         return !(url.startsWith("http://") || url.startsWith("https://"));
     }
 
     public String getDisplayableUrl(HttpServletRequest req, Map context)
     {
-        if (isRelativeUrl())
-            return req.getContextPath() + getRenderedUrl(context);
+        String renderedUrl = getRenderedUrl(context);
+        if (isRelativeUrl(renderedUrl))
+            return req.getContextPath() + renderedUrl;
         else
-            return getRenderedUrl(context);
+            return renderedUrl;
     }
 
     public boolean hasAccessKey()
