@@ -7,30 +7,34 @@ import com.atlassian.plugin.loaders.LoaderUtils;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.TreeMap;
+import java.util.SortedMap;
 
 import org.dom4j.Element;
 
 /**
- * Represents a map of params. Individual value of the param
- * can be rendered
+ * Represents a sorted map of parameters. Individual value of the param can be rendered using velocity.
  */
 public class WebParam extends AbstractWebItem
 {
-    protected Map params;
+    /**
+     * parameters are sorted in order for the i18n arguments to be in order
+     */
+    protected SortedMap params;
 
     public WebParam(Element element, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider, AbstractWebFragmentModuleDescriptor descriptor)
     {
         super(webFragmentHelper, contextProvider, descriptor);
-        this.params = LoaderUtils.getParams(element);
+        this.params =  new TreeMap(LoaderUtils.getParams(element));
     }
 
     public WebParam(Map params, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider, AbstractWebFragmentModuleDescriptor descriptor)
     {
         super(webFragmentHelper, contextProvider, descriptor);
-        this.params = params;
+        this.params = new TreeMap(params);
     }
 
-    public Map getParams()
+    public SortedMap getParams()
     {
         return params;
     }
