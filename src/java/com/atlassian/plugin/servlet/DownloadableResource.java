@@ -58,14 +58,14 @@ public class DownloadableResource
         return pluginKey;
     }
 
-    public void serveResource(BaseFileServerServlet servlet, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, PluginAccessor pluginAccessor) throws IOException
+    public void serveResource(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, PluginAccessor pluginAccessor) throws IOException
     {
         log.debug("Serving: " + this);
         InputStream resourceStream = pluginAccessor.getPluginResourceAsStream(getPluginKey(), getLocation());
         if (resourceStream != null)
         {
             httpServletResponse.setContentType(getContentType());
-            servlet.serveFileImpl(httpServletResponse, resourceStream);
+            ResourceDownloadUtils.serveFileImpl(httpServletResponse, resourceStream);
 
             try
             {
