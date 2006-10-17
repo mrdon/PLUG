@@ -73,8 +73,7 @@ public class PluginResourceDownload implements DownloadStrategy
 
             if (resource != null)
             {
-                if (!checkResourceNotModified(resource, httpServletRequest, httpServletResponse))
-                    resource.serveResource(httpServletRequest, httpServletResponse);
+                resource.serveResource(httpServletRequest, httpServletResponse);
             }
             else
             {
@@ -86,22 +85,6 @@ public class PluginResourceDownload implements DownloadStrategy
             log.info("Module not found: " + moduleKey);
             httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
-    }
-
-    /**
-     * Checks any "If-Modified-Since" header from the request against the plugin's loading time, since plugins can't
-     * be modified after they've been loaded this is a good way to determine if a plugin resource has been modified
-     * or not.
-     *
-     * If this method returns true, don't do any more processing on the request -- the response code has already been
-     * set to "304 Not Modified" for you, and you don't need to serve the file.
-     */
-    private boolean checkResourceNotModified(DownloadableResource resource, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
-    {
-        Plugin plugin = pluginAccessor.getPlugin(resource.getPluginKey());
-        Date resourceLastModifiedDate = (plugin.getDateLoaded() == null) ? new Date() : plugin.getDateLoaded();
-        LastModifiedHandler lastModifiedHandler = new LastModifiedHandler(resourceLastModifiedDate);
-        return lastModifiedHandler.checkRequest(httpServletRequest, httpServletResponse);
     }
 
     private DownloadableResource getResourceFromPlugin(String moduleKey, String filePath, BaseFileServerServlet servlet)
