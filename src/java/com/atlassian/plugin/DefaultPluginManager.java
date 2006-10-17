@@ -428,10 +428,10 @@ public class DefaultPluginManager implements PluginManager
                 continue;
             }
 
-            if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
+            if (isPluginModuleEnabled(descriptor.getCompleteKey()))
             {
                 if (log.isDebugEnabled())
-                    log.debug("Plugin is not enabled, so not enabling ModuleDescriptor '" + descriptor.getName() + "'.");
+                    log.debug("Plugin is already enabled, so not enabling ModuleDescriptor '" + descriptor.getName() + "'.");
                 continue;
             }
 
