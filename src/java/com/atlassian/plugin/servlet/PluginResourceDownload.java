@@ -2,17 +2,15 @@ package com.atlassian.plugin.servlet;
 
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.elements.ResourceLocation;
-import com.atlassian.plugin.util.LastModifiedHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Date;
 
 /**
  * Created by IntelliJ IDEA.
@@ -29,9 +27,9 @@ public class PluginResourceDownload implements DownloadStrategy
     // no arg constructor for confluence
     public PluginResourceDownload(){}
 
-    public PluginResourceDownload(PluginManager pluginManager)
+    public PluginResourceDownload(PluginAccessor pluginAccessor)
     {
-        this.pluginAccessor = pluginManager;
+        this.pluginAccessor = pluginAccessor;
     }
 
     public boolean matches(String urlPath)
@@ -64,7 +62,7 @@ public class PluginResourceDownload implements DownloadStrategy
         ModuleDescriptor moduleDescriptor = pluginAccessor.getPluginModule(moduleKey);
         if (moduleDescriptor != null && pluginAccessor.isPluginModuleEnabled(moduleKey))
         {
-            DownloadablePluginResource resource = getResourceFromModule(moduleDescriptor, filePath, servlet);
+            DownloadableResource resource = getResourceFromModule(moduleDescriptor, filePath, servlet);
 
             if (resource == null)
             {
@@ -87,7 +85,7 @@ public class PluginResourceDownload implements DownloadStrategy
         }
     }
 
-    private DownloadablePluginResource getResourceFromPlugin(String moduleKey, String filePath, BaseFileServerServlet servlet)
+    private DownloadableResource getResourceFromPlugin(String moduleKey, String filePath, BaseFileServerServlet servlet)
     {
         if (moduleKey.indexOf(':') < 0 || moduleKey.indexOf(':') == moduleKey.length() - 1)
         {
@@ -103,13 +101,13 @@ public class PluginResourceDownload implements DownloadStrategy
         return getResourceFromPlugin(plugin, filePath, "", servlet);
     }
 
-    private DownloadablePluginResource getResourceFromPlugin(Plugin plugin, String resourcePath, String filePath, BaseFileServerServlet servlet)
+    private DownloadableResource getResourceFromPlugin(Plugin plugin, String resourcePath, String filePath, BaseFileServerServlet servlet)
     {
         ResourceLocation rd = plugin.getResourceLocation("download", resourcePath);
 
         if (rd != null)
         {
-            return new DownloadableResource(pluginAccessor, servlet, plugin.getKey(), rd, filePath);
+            return getDownloadablePluginResource(servlet, plugin, rd, filePath);
         }
         else
         {
@@ -125,18 +123,19 @@ public class PluginResourceDownload implements DownloadStrategy
         }
     }
 
-    private DownloadablePluginResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String filePath, BaseFileServerServlet servlet)
+    private DownloadableResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String filePath, BaseFileServerServlet servlet)
     {
         return getResourceFromModule(moduleDescriptor, filePath, "", servlet);
     }
 
-    private DownloadablePluginResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String resourcePath, String filePath, BaseFileServerServlet servlet)
+    private DownloadableResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String resourcePath, String filePath, BaseFileServerServlet servlet)
     {
+        Plugin plugin = pluginAccessor.getPlugin(moduleDescriptor.getPluginKey());
         ResourceLocation rd = moduleDescriptor.getResourceLocation("download", resourcePath);
 
         if (rd != null)
         {
-            return new DownloadableResource(pluginAccessor, servlet, moduleDescriptor.getPluginKey(), rd, filePath);
+            return getDownloadablePluginResource(servlet, plugin, rd, filePath);
         }
         else
         {
@@ -150,6 +149,14 @@ public class PluginResourceDownload implements DownloadStrategy
                 return getResourceFromModule(moduleDescriptor, nextParts[0], nextParts[1] + filePath, servlet);
             }
         }
+    }
+
+    private DownloadableResource getDownloadablePluginResource(BaseFileServerServlet servlet, Plugin plugin, ResourceLocation rd, String filePath)
+    {
+        if ("web".equalsIgnoreCase(rd.getParameter("loadFrom")))    // this allows plugins that are loaded from the web to be served
+            return new DownloadableWebResource(servlet, plugin, rd, filePath);
+        else
+            return new DownloadableClasspathResource(servlet, plugin, rd, filePath);
     }
 
     private String[] splitLastPathPart(String resourcePath)
@@ -181,6 +188,7 @@ public class PluginResourceDownload implements DownloadStrategy
         requestUri = requestUri.substring(afterTheResourcesString + BaseFileServerServlet.RESOURCE_URL_PREFIX.length() + 1);
         return requestUri.split("/", 2);
     }
+
 
 }
 
