@@ -3,6 +3,7 @@ package com.atlassian.plugin.servlet;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.util.LastModifiedHandler;
 import org.apache.commons.logging.Log;
@@ -11,7 +12,6 @@ import org.apache.commons.logging.LogFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Date;
 
 /**
@@ -24,60 +24,14 @@ import java.util.Date;
 public class PluginResourceDownload implements DownloadStrategy
 {
     private static final Log log = LogFactory.getLog(PluginResourceDownload.class);
-    private PluginManager pluginManager;
+    private PluginAccessor pluginAccessor;
 
     // no arg constructor for confluence
     public PluginResourceDownload(){}
 
     public PluginResourceDownload(PluginManager pluginManager)
     {
-        this.pluginManager = pluginManager;
-    }
-
-    private static class DownloadableResource
-    {
-        private ResourceLocation resourceDescriptor;
-        private String extraPath;
-        private String pluginKey;
-        private BaseFileServerServlet servlet;
-
-        public DownloadableResource(BaseFileServerServlet servlet, String pluginKey, ResourceLocation resourceDescriptor, String extraPath)
-        {
-            if (extraPath != null && !"".equals(extraPath.trim()) && !resourceDescriptor.getLocation().endsWith("/"))
-            {
-                extraPath = "/" + extraPath;
-            }
-
-            this.resourceDescriptor = resourceDescriptor;
-            this.extraPath = extraPath;
-            this.pluginKey = pluginKey;
-            this.servlet = servlet;
-        }
-
-        public String getContentType()
-        {
-            if (resourceDescriptor.getContentType() == null)
-            {
-                return servlet.getContentType(getLocation());
-            }
-
-            return resourceDescriptor.getContentType();
-        }
-
-        public String getLocation()
-        {
-            return resourceDescriptor.getLocation() + extraPath;
-        }
-
-        public String toString()
-        {
-            return "Resource: " + getLocation() + " (" + getContentType() + ")";
-        }
-
-        public String getPluginKey()
-        {
-            return pluginKey;
-        }
+        this.pluginAccessor = pluginManager;
     }
 
     public boolean matches(String urlPath)
@@ -87,7 +41,7 @@ public class PluginResourceDownload implements DownloadStrategy
 
     public void setPluginManager(PluginManager pluginManager)
     {
-        this.pluginManager = pluginManager;
+        this.pluginAccessor = pluginManager;
     }
 
     public void serveFile(BaseFileServerServlet servlet, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException
@@ -107,8 +61,8 @@ public class PluginResourceDownload implements DownloadStrategy
     private void servePluginResource(BaseFileServerServlet servlet, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, String moduleKey, String filePath)
             throws IOException
     {
-        ModuleDescriptor moduleDescriptor = pluginManager.getPluginModule(moduleKey);
-        if (moduleDescriptor != null && pluginManager.isPluginModuleEnabled(moduleKey))
+        ModuleDescriptor moduleDescriptor = pluginAccessor.getPluginModule(moduleKey);
+        if (moduleDescriptor != null && pluginAccessor.isPluginModuleEnabled(moduleKey))
         {
             DownloadableResource resource = getResourceFromModule(moduleDescriptor, filePath, servlet);
 
@@ -120,7 +74,7 @@ public class PluginResourceDownload implements DownloadStrategy
             if (resource != null)
             {
                 if (!checkResourceNotModified(resource, httpServletRequest, httpServletResponse))
-                    serveDownloadableResource(servlet, httpServletResponse, resource);
+                    resource.serveResource(servlet, httpServletRequest, httpServletResponse, pluginAccessor);
             }
             else
             {
@@ -144,7 +98,7 @@ public class PluginResourceDownload implements DownloadStrategy
      */
     private boolean checkResourceNotModified(DownloadableResource resource, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
     {
-        Plugin plugin = pluginManager.getPlugin(resource.getPluginKey());
+        Plugin plugin = pluginAccessor.getPlugin(resource.getPluginKey());
         Date resourceLastModifiedDate = (plugin.getDateLoaded() == null) ? new Date() : plugin.getDateLoaded();
         LastModifiedHandler lastModifiedHandler = new LastModifiedHandler(resourceLastModifiedDate);
         return lastModifiedHandler.checkRequest(httpServletRequest, httpServletResponse);
@@ -157,7 +111,7 @@ public class PluginResourceDownload implements DownloadStrategy
             return null;
         }
 
-        Plugin plugin = pluginManager.getPlugin(moduleKey.substring(0, moduleKey.indexOf(':')));
+        Plugin plugin = pluginAccessor.getPlugin(moduleKey.substring(0, moduleKey.indexOf(':')));
         if (plugin == null)
         {
             return null;
@@ -236,32 +190,6 @@ public class PluginResourceDownload implements DownloadStrategy
                 resourcePath.substring(i + 1) + slash
         };
     }
-
-    private void serveDownloadableResource(BaseFileServerServlet servlet, HttpServletResponse httpServletResponse, DownloadableResource resource) throws IOException
-    {
-        log.debug("Serving: " + resource);
-        InputStream resourceStream = pluginManager.getPluginResourceAsStream(resource.getPluginKey(), resource.getLocation());
-        if (resourceStream != null)
-        {
-            httpServletResponse.setContentType(resource.getContentType());
-            servlet.serveFileImpl(httpServletResponse, resourceStream);
-
-            try
-            {
-                resourceStream.close();
-            }
-            catch (IOException e)
-            {
-                log.error("Could not close input stream on resource:", e);
-            }
-
-        }
-        else
-        {
-            log.info("Resource not found: " + resource);
-        }
-    }
-
 
     private String[] splitIntoLibraryAndResource(String requestUri, BaseFileServerServlet servlet)
     {
