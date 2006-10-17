@@ -19,9 +19,11 @@ public class DownloadableResource
     private String extraPath;
     private String pluginKey;
     private BaseFileServerServlet servlet;
+    private final PluginAccessor pluginAccessor;
 
-    public DownloadableResource(BaseFileServerServlet servlet, String pluginKey, ResourceLocation resourceDescriptor, String extraPath)
+    public DownloadableResource(PluginAccessor pluginAccessor, BaseFileServerServlet servlet, String pluginKey, ResourceLocation resourceDescriptor, String extraPath)
     {
+        this.pluginAccessor = pluginAccessor;
         if (extraPath != null && !"".equals(extraPath.trim()) && !resourceDescriptor.getLocation().endsWith("/"))
         {
             extraPath = "/" + extraPath;
@@ -43,7 +45,7 @@ public class DownloadableResource
         return resourceDescriptor.getContentType();
     }
 
-    public String getLocation()
+    private String getLocation()
     {
         return resourceDescriptor.getLocation() + extraPath;
     }
@@ -58,7 +60,7 @@ public class DownloadableResource
         return pluginKey;
     }
 
-    public void serveResource(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, PluginAccessor pluginAccessor) throws IOException
+    public void serveResource(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException
     {
         log.debug("Serving: " + this);
         InputStream resourceStream = pluginAccessor.getPluginResourceAsStream(getPluginKey(), getLocation());

@@ -74,7 +74,7 @@ public class PluginResourceDownload implements DownloadStrategy
             if (resource != null)
             {
                 if (!checkResourceNotModified(resource, httpServletRequest, httpServletResponse))
-                    resource.serveResource(httpServletRequest, httpServletResponse, pluginAccessor);
+                    resource.serveResource(httpServletRequest, httpServletResponse);
             }
             else
             {
@@ -126,7 +126,7 @@ public class PluginResourceDownload implements DownloadStrategy
 
         if (rd != null)
         {
-            return new DownloadableResource(servlet, plugin.getKey(), rd, filePath);
+            return new DownloadableResource(pluginAccessor, servlet, plugin.getKey(), rd, filePath);
         }
         else
         {
@@ -153,7 +153,7 @@ public class PluginResourceDownload implements DownloadStrategy
 
         if (rd != null)
         {
-            return new DownloadableResource(servlet, moduleDescriptor.getPluginKey(), rd, filePath);
+            return new DownloadableResource(pluginAccessor, servlet, moduleDescriptor.getPluginKey(), rd, filePath);
         }
         else
         {
