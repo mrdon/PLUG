@@ -153,7 +153,7 @@ public class PluginResourceDownload implements DownloadStrategy
 
     private DownloadableResource getDownloadablePluginResource(BaseFileServerServlet servlet, Plugin plugin, ResourceLocation rd, String filePath)
     {
-        if ("web".equalsIgnoreCase(rd.getParameter("loadFrom")))    // this allows plugins that are loaded from the web to be served
+        if ("webContext".equalsIgnoreCase(rd.getParameter("source")))    // this allows plugins that are loaded from the web to be served
             return new DownloadableWebResource(servlet, plugin, rd, filePath);
         else
             return new DownloadableClasspathResource(servlet, plugin, rd, filePath);
