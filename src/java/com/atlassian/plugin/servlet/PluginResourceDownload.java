@@ -64,7 +64,7 @@ public class PluginResourceDownload implements DownloadStrategy
         ModuleDescriptor moduleDescriptor = pluginAccessor.getPluginModule(moduleKey);
         if (moduleDescriptor != null && pluginAccessor.isPluginModuleEnabled(moduleKey))
         {
-            DownloadableResource resource = getResourceFromModule(moduleDescriptor, filePath, servlet);
+            DownloadablePluginResource resource = getResourceFromModule(moduleDescriptor, filePath, servlet);
 
             if (resource == null)
             {
@@ -87,7 +87,7 @@ public class PluginResourceDownload implements DownloadStrategy
         }
     }
 
-    private DownloadableResource getResourceFromPlugin(String moduleKey, String filePath, BaseFileServerServlet servlet)
+    private DownloadablePluginResource getResourceFromPlugin(String moduleKey, String filePath, BaseFileServerServlet servlet)
     {
         if (moduleKey.indexOf(':') < 0 || moduleKey.indexOf(':') == moduleKey.length() - 1)
         {
@@ -103,7 +103,7 @@ public class PluginResourceDownload implements DownloadStrategy
         return getResourceFromPlugin(plugin, filePath, "", servlet);
     }
 
-    private DownloadableResource getResourceFromPlugin(Plugin plugin, String resourcePath, String filePath, BaseFileServerServlet servlet)
+    private DownloadablePluginResource getResourceFromPlugin(Plugin plugin, String resourcePath, String filePath, BaseFileServerServlet servlet)
     {
         ResourceLocation rd = plugin.getResourceLocation("download", resourcePath);
 
@@ -125,12 +125,12 @@ public class PluginResourceDownload implements DownloadStrategy
         }
     }
 
-    private DownloadableResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String filePath, BaseFileServerServlet servlet)
+    private DownloadablePluginResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String filePath, BaseFileServerServlet servlet)
     {
         return getResourceFromModule(moduleDescriptor, filePath, "", servlet);
     }
 
-    private DownloadableResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String resourcePath, String filePath, BaseFileServerServlet servlet)
+    private DownloadablePluginResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String resourcePath, String filePath, BaseFileServerServlet servlet)
     {
         ResourceLocation rd = moduleDescriptor.getResourceLocation("download", resourcePath);
 

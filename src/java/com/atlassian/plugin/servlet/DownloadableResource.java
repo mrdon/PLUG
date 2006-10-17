@@ -14,7 +14,7 @@ import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class DownloadableResource
+public class DownloadableResource implements DownloadablePluginResource
 {
     private static final Log log = LogFactory.getLog(DownloadableResource.class);
 
@@ -58,7 +58,7 @@ public class DownloadableResource
         return "Resource: " + getLocation() + " (" + getContentType() + ")";
     }
 
-    public String getPluginKey()
+    private String getPluginKey()
     {
         return pluginKey;
     }
