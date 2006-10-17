@@ -27,6 +27,7 @@ public abstract class BaseFileServerServlet extends HttpServlet
     static
     {
         downloadStrategies.add(PluginResourceDownload.class);
+        downloadStrategies.add(PluginStaticResourceDownload.class);
     }
 
     public static String SERVLET_PATH = "download";

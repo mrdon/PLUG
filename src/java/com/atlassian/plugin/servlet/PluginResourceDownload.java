@@ -13,11 +13,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * Created by IntelliJ IDEA.
- * User: detkin
- * Date: Jan 20, 2006
- * Time: 12:00:35 PM
- * To change this template use File | Settings | File Templates.
+ * A downloadable plugin resource, as described here: http://confluence.atlassian.com/display/JIRA/Downloadable+plugin+resource
+ * <p>
+ * The URL that it parses looks like this: <br>
+ * <code>{server root}/download/resources/{plugin key}:{module key}/{resource name}</code>
  */
 public class PluginResourceDownload implements DownloadStrategy
 {
@@ -56,7 +55,7 @@ public class PluginResourceDownload implements DownloadStrategy
         }
     }
 
-    private void servePluginResource(BaseFileServerServlet servlet, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, String moduleKey, String filePath)
+    protected void servePluginResource(BaseFileServerServlet servlet, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, String moduleKey, String filePath)
             throws IOException
     {
         ModuleDescriptor moduleDescriptor = pluginAccessor.getPluginModule(moduleKey);
