@@ -77,6 +77,12 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
 
     }
 
+    public String getStaticResourcePrefix()
+    {
+        // "/download/static/{build num}/{system date}/include"
+        return "/download/static/" + getSystemBuildNumber() + "/" + getCacheFlushDate() + "/include";
+    }
+
     /**
      * Applications must implement this method to get access to the applications PluginAccessor
      */
@@ -97,5 +103,20 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
      * version, and for others, you may want to serve them dynamically.
      */
     protected abstract ResourceLinkFactory getResourceLinkFactory();
+
+    /**
+     * Represents the last date at which the cache should be flushed.  For most 'system-wide' resources,
+     * this should be a date stored in the global application-properties.  For other resources (such as 'header' files
+     * which contain colour changes), this should be the date of the last update.
+     *
+     * @return A string representing the date, which can be of format "yyMMddHHmmssZ".
+     */
+    protected abstract String getCacheFlushDate();
+
+    /**
+     * Represents the last time the system was updated.  This is generally obtained from BuildUtils or similar.
+     */
+    protected abstract String getSystemBuildNumber();
+
 
 }

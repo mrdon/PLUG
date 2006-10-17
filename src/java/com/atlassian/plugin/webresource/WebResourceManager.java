@@ -35,4 +35,23 @@ public interface WebResourceManager
      * @throws java.io.IOException  If the {@link Writer} passed in throws an exception when being written to
      */
     public void includeResources(String contextPath, Writer writer) throws IOException;
+
+    /**
+     * A helper method to return a prefix for 'system' static resources.  Generally the implementation will return
+     *
+     * <pre><code>/download/static/{build num}/{system date}/include</code></pre>
+     *
+     * Note that the servlet context is not prepended, and there is no trailing slash.
+     * <p>
+     *
+     * Typical usage is to replace:
+     *
+     * <pre><code>&lt;%= request.getContextPath() %>/styles/global.css</code></pre>
+     * with
+     * <pre><code>&lt;%= request.getContextPath() + webResourceManager.getStaticResourcePrefix() %>/styles/global.css</code></pre>
+     *
+     * @return  A prefix that can be used to prefix 'static system' resources.
+     * @see com.atlassian.plugin.servlet.StaticWebResourceDownload
+     */
+    public String getStaticResourcePrefix();
 }
