@@ -1,5 +1,8 @@
 package com.atlassian.plugin.servlet;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.io.IOException;
@@ -7,6 +10,8 @@ import java.io.OutputStream;
 
 public class ResourceDownloadUtils
 {
+    private static final Log log = LogFactory.getLog(ResourceDownloadUtils.class);
+
     public static void serveFileImpl(HttpServletResponse httpServletResponse, InputStream in) throws IOException
     {
         OutputStream out = httpServletResponse.getOutputStream();
@@ -21,11 +26,11 @@ public class ResourceDownloadUtils
                 out.write(buffer, 0, read_count);
             }
 
-            BaseFileServerServlet.log.info("Serving file done.");
+            log.info("Serving file done.");
         }
         catch (Exception e)
         {
-            BaseFileServerServlet.log.info("I/O Error serving the requested file: " + e.toString());
+            log.info("I/O Error serving the requested file: " + e.toString());
         }
         finally
         {
@@ -49,7 +54,7 @@ public class ResourceDownloadUtils
                 }
                 catch (Exception e)
                 {
-                    BaseFileServerServlet.log.info("Error flushing output stream: " + e.toString());
+                    log.info("Error flushing output stream: " + e.toString());
                 }
             }
         }
