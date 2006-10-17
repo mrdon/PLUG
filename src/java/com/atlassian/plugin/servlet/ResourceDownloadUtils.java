@@ -11,6 +11,7 @@ import java.io.OutputStream;
 public class ResourceDownloadUtils
 {
     private static final Log log = LogFactory.getLog(ResourceDownloadUtils.class);
+    private static final long ONE_MONTH = 1000L * 60L * 60L * 24L *31L;
 
     public static void serveFileImpl(HttpServletResponse httpServletResponse, InputStream in) throws IOException
     {
@@ -58,5 +59,15 @@ public class ResourceDownloadUtils
                 }
             }
         }
+    }
+
+    /**
+     * Set 'expire' headers to cache for one month.
+     */
+    public static void addCachingHeaders(HttpServletResponse httpServletResponse)
+    {
+        httpServletResponse.setDateHeader("Expires", System.currentTimeMillis() + ONE_MONTH);
+        httpServletResponse.setHeader("Cache-Control", "max-age=" + ONE_MONTH);
+        httpServletResponse.addHeader("Cache-Control", "private");
     }
 }

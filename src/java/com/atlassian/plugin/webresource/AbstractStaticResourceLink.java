@@ -16,7 +16,7 @@ public abstract class AbstractStaticResourceLink implements ResourceLink
     {
          return "/" + BaseFileServerServlet.SERVLET_PATH + "/static/" + getSystemBuildNumber() + "/" +
                  moduleDescriptor.getPlugin().getPluginInformation().getVersion() + "/" + getCacheFlushDate()
-                 + "/pluginKey/" + moduleDescriptor.getCompleteKey() + "/" + resourceDescriptor.getName();
+                 + "/pluginkey/" + moduleDescriptor.getCompleteKey() + "/" + resourceDescriptor.getName();
     }
 
     /**
