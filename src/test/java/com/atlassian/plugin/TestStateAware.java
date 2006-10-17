@@ -101,7 +101,7 @@ public class TestStateAware extends TestCase
      * If a plugin is disabled, any modules that are currently enabled should be sent the disabled
      * message
      */
-    public void testStateAwareOnPluginEnable() throws PluginParseException
+    public void testDisabledModuleDescriptorsAreEnabled() throws PluginParseException
     {
         plugin1.addModuleDescriptor((ModuleDescriptor) mockEnabling.proxy());
         plugin1.addModuleDescriptor((ModuleDescriptor) mockDisabled.proxy());
@@ -109,9 +109,11 @@ public class TestStateAware extends TestCase
 
         manager.init();
 
-        mockEnabling.expect("enabled");
+        mockDisabled.expect("enabled");
         manager.enablePlugin(plugin1.getKey());
+
         mockEnabling.verify();
+        mockDisabled.verify();
     }
 
     private void verifyMocks()
