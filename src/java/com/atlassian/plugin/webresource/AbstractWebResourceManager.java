@@ -2,6 +2,7 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.servlet.BaseFileServerServlet;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
@@ -15,15 +16,15 @@ import java.util.Map;
 
 /**
  * A handy super-class that handles most of the resource management.
- * <p>
+ * <p/>
  * Sub-classes should implement the abstract methods
  */
 public abstract class AbstractWebResourceManager implements WebResourceManager
 {
     private static final String JAVA_SCRIPT_EXTENSION = ".js";
     private static final String CSS_EXTENSION = ".css";
-    private static final String STATIC_RESOURCE_PREFIX ="/s/";
-    private static final String STATIC_RESOURCE_SUFFIX ="/c";
+    private static final String STATIC_RESOURCE_PREFIX = "/s/";
+    private static final String STATIC_RESOURCE_SUFFIX = "/c";
 
     public void requireResource(String resourceName)
     {
@@ -40,7 +41,7 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
     {
         Collection webResourceNames = (Collection) getRequestCache().get(getRequestCacheKey());
         if (webResourceNames == null || webResourceNames.isEmpty())
-            return ;
+            return;
 
         for (Iterator iterator = webResourceNames.iterator(); iterator.hasNext();)
         {
@@ -51,7 +52,7 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
                 writer.write("<!-- Error loading resource \"" + descriptor + "\".  Resource not found -->\n");
                 continue;
             }
-            if (!(descriptor instanceof WebResourceModuleDescriptor))
+            else if (!(descriptor instanceof WebResourceModuleDescriptor))
             {
                 writer.write("<!-- Error loading resource \"" + descriptor + "\". Resource is not a WebResourceModule -->\n");
                 continue;
@@ -76,6 +77,33 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
                 }
             }
         }
+/*
+    This is half-finished code to allow linking to resources in *any* module, not just web resources
+        for (Iterator iterator = webResourceNames.iterator(); iterator.hasNext();)
+        {
+            String resourceName = (String) iterator.next();
+            if (resourceName == null)
+                continue;
+
+            String pluginKey = resourceName.substring(0, resourceName.indexOf(":"));
+            String resourceKey = resourceName.substring(resourceName.indexOf(":") + 1);
+            Plugin plugin = getPluginAccessor().getPlugin(pluginKey);
+            String linkToResource = getStaticPrefix(plugin) + "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" +
+                    resourceKey + "/" + resourceKey;
+            if (resourceName.endsWith(JAVA_SCRIPT_EXTENSION))
+            {
+                writer.write("<script type=\"text/javascript\" src=\"" + contextPath + linkToResource + "\"></script>\n");
+            }
+            else if (resourceName.endsWith(CSS_EXTENSION))
+            {
+                writer.write("<link type=\"text/css\" rel=\"styleSheet\" media=\"all\" href=\"" + contextPath + linkToResource + "\" />\n");
+            }
+            else
+            {
+                writer.write("<!-- Error loading resource. Type " + resourceName + " is not handled -->\n");
+            }
+        }
+*/
 
     }
 
@@ -87,7 +115,7 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
 
     public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, ResourceDescriptor resourceDescriptor)
     {
-        return getStaticPrefix(moduleDescriptor) + getPluginResourceUrl(moduleDescriptor, resourceDescriptor);
+        return getStaticPrefix(moduleDescriptor.getPlugin()) + getPluginResourceUrl(moduleDescriptor, resourceDescriptor);
     }
 
     private String getPluginResourceUrl(ModuleDescriptor moduleDescriptor, ResourceDescriptor resourceDescriptor)
@@ -95,9 +123,9 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
         return "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleDescriptor.getCompleteKey() + "/" + resourceDescriptor.getName();
     }
 
-    private String getStaticPrefix(ModuleDescriptor moduleDescriptor)
+    private String getStaticPrefix(Plugin plugin)
     {
-        String pluginVersion = moduleDescriptor.getPlugin().getPluginInformation().getVersion();
+        String pluginVersion = plugin.getPluginInformation().getVersion();
 
         // "/s/{build num}/{plugin version}/{system date}/c"
         return STATIC_RESOURCE_PREFIX + getSystemBuildNumber() + "/" + pluginVersion + "/" + getCacheFlushDate() + STATIC_RESOURCE_SUFFIX;
