@@ -12,7 +12,7 @@ import java.io.OutputStream;
 public class ResourceDownloadUtils
 {
     private static final Log log = LogFactory.getLog(ResourceDownloadUtils.class);
-    private static final long ONE_MONTH = 1000L * 60L * 60L * 24L *31L;
+    private static final long TEN_YEARS = 1000L * 60L * 60L * 24L *365L * 10L;
 
     public static void serveFileImpl(HttpServletResponse httpServletResponse, InputStream in) throws IOException
     {
@@ -63,17 +63,17 @@ public class ResourceDownloadUtils
     }
 
     /**
-     * Set 'expire' headers to cache for one month.
+     * Set 'expire' headers to cache for ten years.
      */
     public static void addCachingHeaders(HttpServletResponse httpServletResponse)
     {
-        httpServletResponse.setDateHeader("Expires", System.currentTimeMillis() + ONE_MONTH);
-        httpServletResponse.setHeader("Cache-Control", "max-age=" + ONE_MONTH);
+        httpServletResponse.setDateHeader("Expires", System.currentTimeMillis() + TEN_YEARS);
+        httpServletResponse.setHeader("Cache-Control", "max-age=" + TEN_YEARS);
         httpServletResponse.addHeader("Cache-Control", "private");
     }
 
     /**
-     * Set 'expire' headers to cache for one month.  This method is called from UrlRewriteFilter, and therefore needs
+     * Set 'expire' headers to cache for ten years.  This method is called from UrlRewriteFilter, and therefore needs
      * to have 'request' and 'response' as parameters.
      *
      * @see <a href="http://tuckey.org/urlrewrite/manual/2.6/">http://tuckey.org/urlrewrite/manual/2.6/</a>
