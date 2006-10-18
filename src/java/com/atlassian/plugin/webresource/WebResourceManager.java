@@ -1,5 +1,8 @@
 package com.atlassian.plugin.webresource;
 
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.elements.ResourceDescriptor;
+
 import java.io.Writer;
 import java.io.IOException;
 
@@ -39,7 +42,7 @@ public interface WebResourceManager
     /**
      * A helper method to return a prefix for 'system' static resources.  Generally the implementation will return
      *
-     * <pre><code>/download/static/{build num}/{system date}/include</code></pre>
+     * <pre><code>/s/{build num}/{system date}/c</code></pre>
      *
      * Note that the servlet context is not prepended, and there is no trailing slash.
      * <p>
@@ -51,7 +54,25 @@ public interface WebResourceManager
      * <pre><code>&lt;%= request.getContextPath() + webResourceManager.getStaticResourcePrefix() %>/styles/global.css</code></pre>
      *
      * @return  A prefix that can be used to prefix 'static system' resources.
-     * @see com.atlassian.plugin.servlet.StaticWebResourceDownload
      */
     public String getStaticResourcePrefix();
+
+    /**
+     * A helper method to return a prefix for 'plugin' static resources.  Generally the implementation will return
+     *
+     * <pre><code>/s/{build num}/{system date}/{plugin version}/c/</code></pre>
+     *
+     * Note that the servlet context is not prepended, and there is no trailing slash.
+     * <p>
+     *
+     * Typical usage is to replace:
+     *
+     * <pre><code>&lt;%= request.getContextPath() %>/styles/global.css</code></pre>
+     * with
+     * <pre><code>&lt;%= request.getContextPath() + webResourceManager.getStaticPluginResourcePrefix(descriptor, resourceDescriptor) %>/styles/global.css</code></pre>
+     *
+     * @return  A prefix that can be used to prefix 'static plugin' resources.
+     */
+    public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, ResourceDescriptor resourceDescriptor);
+
 }

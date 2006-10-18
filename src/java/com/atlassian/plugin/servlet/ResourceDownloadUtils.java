@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -69,5 +70,16 @@ public class ResourceDownloadUtils
         httpServletResponse.setDateHeader("Expires", System.currentTimeMillis() + ONE_MONTH);
         httpServletResponse.setHeader("Cache-Control", "max-age=" + ONE_MONTH);
         httpServletResponse.addHeader("Cache-Control", "private");
+    }
+
+    /**
+     * Set 'expire' headers to cache for one month.  This method is called from UrlRewriteFilter, and therefore needs
+     * to have 'request' and 'response' as parameters.
+     *
+     * @see <a href="http://tuckey.org/urlrewrite/manual/2.6/">http://tuckey.org/urlrewrite/manual/2.6/</a>
+     */
+    public static void addCachingHeaders(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
+    {
+        addCachingHeaders(httpServletResponse);
     }
 }

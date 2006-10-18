@@ -2,6 +2,7 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.servlet.BaseFileServerServlet;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
 import java.io.IOException;
@@ -15,13 +16,14 @@ import java.util.Map;
 /**
  * A handy super-class that handles most of the resource management.
  * <p>
- * Sub-classes should implement {@link #getPluginAccessor()}, {@link #getRequestCache()} and
- * {@link #getRequestCacheKey()} and {@link #getResourceLinkFactory()} which are application specific
+ * Sub-classes should implement the abstract methods
  */
 public abstract class AbstractWebResourceManager implements WebResourceManager
 {
     private static final String JAVA_SCRIPT_EXTENSION = ".js";
     private static final String CSS_EXTENSION = ".css";
+    private static final String STATIC_RESOURCE_PREFIX ="/s/";
+    private static final String STATIC_RESOURCE_SUFFIX ="/c";
 
     public void requireResource(String resourceName)
     {
@@ -59,7 +61,7 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
             {
                 ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator1.next();
                 String name = resourceDescriptor.getName();
-                String linkToResource = getResourceLinkFactory().getResourceLink(resourceDescriptor).getLinkToResource(descriptor, resourceDescriptor);
+                String linkToResource = getStaticPluginResourcePrefix(descriptor, resourceDescriptor);
                 if (name != null && name.endsWith(JAVA_SCRIPT_EXTENSION))
                 {
                     writer.write("<script type=\"text/javascript\" src=\"" + contextPath + linkToResource + "\"></script>\n");
@@ -79,9 +81,28 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
 
     public String getStaticResourcePrefix()
     {
-        // "/download/static/{build num}/{system date}/include"
-        return "/download/static/" + getSystemBuildNumber() + "/" + getCacheFlushDate() + "/include";
+        // "/s/{build num}/{system date}/c"
+        return STATIC_RESOURCE_PREFIX + getSystemBuildNumber() + "/" + getCacheFlushDate() + STATIC_RESOURCE_SUFFIX;
     }
+
+    public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, ResourceDescriptor resourceDescriptor)
+    {
+        return getStaticPrefix(moduleDescriptor) + getPluginResourceUrl(moduleDescriptor, resourceDescriptor);
+    }
+
+    private String getPluginResourceUrl(ModuleDescriptor moduleDescriptor, ResourceDescriptor resourceDescriptor)
+    {
+        return "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleDescriptor.getCompleteKey() + "/" + resourceDescriptor.getName();
+    }
+
+    private String getStaticPrefix(ModuleDescriptor moduleDescriptor)
+    {
+        String pluginVersion = moduleDescriptor.getPlugin().getPluginInformation().getVersion();
+
+        // "/s/{build num}/{plugin version}/{system date}/c"
+        return STATIC_RESOURCE_PREFIX + getSystemBuildNumber() + "/" + pluginVersion + "/" + getCacheFlushDate() + STATIC_RESOURCE_SUFFIX;
+    }
+
 
     /**
      * Applications must implement this method to get access to the applications PluginAccessor
@@ -97,12 +118,6 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
      * The key to use when getting and putting objects into {@link #getRequestCache()}
      */
     protected abstract String getRequestCacheKey();
-
-    /**
-     * A factory for writing links to resources.  For example for some resources you may want to use the 'cached'
-     * version, and for others, you may want to serve them dynamically.
-     */
-    protected abstract ResourceLinkFactory getResourceLinkFactory();
 
     /**
      * Represents the last date at which the cache should be flushed.  For most 'system-wide' resources,
