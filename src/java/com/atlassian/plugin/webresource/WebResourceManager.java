@@ -20,8 +20,9 @@ public interface WebResourceManager
      * this page.
      *
      * @param resourceName The fully qualified plugin name to include (eg <code>jira.webresources:scriptaculous</code>)
+     * @param writer    The writer to write the links to if the {@link WebResourceManager.IncludeMode} equals {@link WebResourceManager#INLINE_INCLUDE_MODE}
      */
-    public void requireResource(String resourceName);
+    public void requireResource(String resourceName, Writer writer);
 
     /**
      * Include the resources that have already been specified by the request in the page.  This is done by including
@@ -33,25 +34,23 @@ public interface WebResourceManager
      * </code></pre>
      * Similarly for other supported resources
      *
-     * @param contextPath   For linking to resources, we need to specify the context path
      * @param writer    The writer to write the links to
-     * @throws java.io.IOException  If the {@link Writer} passed in throws an exception when being written to
      */
-    public void includeResources(String contextPath, Writer writer) throws IOException;
+    public void includeResources(Writer writer);
 
     /**
      * A helper method to return a prefix for 'system' static resources.  Generally the implementation will return
      *
      * <pre><code>/s/{build num}/{system date}/c</code></pre>
      *
-     * Note that the servlet context is not prepended, and there is no trailing slash.
+     * Note that the servlet context is prepended, and there is no trailing slash.
      * <p>
      *
      * Typical usage is to replace:
      *
      * <pre><code>&lt;%= request.getContextPath() %>/styles/global.css</code></pre>
      * with
-     * <pre><code>&lt;%= request.getContextPath() + webResourceManager.getStaticResourcePrefix() %>/styles/global.css</code></pre>
+     * <pre><code>&lt;%= webResourceManager.getStaticResourcePrefix() %>/styles/global.css</code></pre>
      *
      * @return  A prefix that can be used to prefix 'static system' resources.
      */
@@ -74,5 +73,35 @@ public interface WebResourceManager
      * @return  A prefix that can be used to prefix 'static plugin' resources.
      */
     public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, ResourceDescriptor resourceDescriptor);
+
+    /**
+     *
+     * @param includeMode
+     * @see #DELAYED_INCLUDE_MODE
+     * @see #INLINE_INCLUDE_MODE
+     */
+    public void setIncludeMode(IncludeMode includeMode);
+
+
+    public static final IncludeMode DELAYED_INCLUDE_MODE = new IncludeMode()
+    {
+        public String getModeName()
+        {
+            return "delayed";
+        }
+    };
+
+    public static final IncludeMode INLINE_INCLUDE_MODE = new IncludeMode()
+    {
+        public String getModeName()
+        {
+            return "inline";
+        }
+    };
+
+    public static interface IncludeMode
+    {
+        public String getModeName();
+    }
 
 }
