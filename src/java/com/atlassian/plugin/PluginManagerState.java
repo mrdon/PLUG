@@ -11,6 +11,8 @@ import java.util.Map;
  * <p>The state stored in this object represents only the <i>differences</i> between the desired state
  * and the default state configured in the plugin. So if "getPluginState()" or "getPluginModuleState()" return
  * null, then the manager should assume that the default state applies instead.
+ * <p>
+ * Please note that this method is not threadsafe.  Access to instances should be synchronised.
  */
 public class PluginManagerState
 {
