@@ -3,14 +3,14 @@
   <pomVersion>3</pomVersion>
   <id>atlassian-plugins</id>
   <name>Atlassian Plugins</name>
-  <currentVersion>2006-10-23-1</currentVersion>
+  <currentVersion>2006-10-23-2</currentVersion>
   <organization>
     <name>Atlassian Software Systems Pty Ltd</name>
   </organization>
   <inceptionYear>2004</inceptionYear>
   <package>com.atlassian.plugin</package>
   <description>A library to give systems the ability to have plugins, make them more pluggable and hence add
-        pluggability (it&apos;s late - that makes sense in my head).</description>
+        pluggability (it's late - that makes sense in my head).</description>
   <developers>
     <developer>
       <name>Mike Cannon-Brookes</name>
