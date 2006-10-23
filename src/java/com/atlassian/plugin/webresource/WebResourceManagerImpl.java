@@ -1,8 +1,6 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.servlet.BaseFileServerServlet;
 import org.apache.commons.logging.Log;
@@ -30,9 +28,9 @@ import java.util.Map;
  *
  * Sub-classes should implement the abstract methods
  */
-public abstract class AbstractWebResourceManager implements WebResourceManager
+public class WebResourceManagerImpl implements WebResourceManager
 {
-    private Log log = LogFactory.getLog(AbstractWebResourceManager.class);
+    private Log log = LogFactory.getLog(WebResourceManagerImpl.class);
     private static final String JAVA_SCRIPT_EXTENSION = ".js";
     private static final String CSS_EXTENSION = ".css";
     private static final String STATIC_RESOURCE_PREFIX = "/s/";
@@ -42,6 +40,13 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
     private static final String REQUEST_CACHE_MODE_KEY = "plugin.webresource.mode";
 
     private static final IncludeMode DEFAULT_INCLUDE_MODE = WebResourceManager.DELAYED_INCLUDE_MODE;
+
+    private final WebResourceIntegration webResourceIntegration;
+
+    public WebResourceManagerImpl(WebResourceIntegration webResourceIntegration)
+    {
+        this.webResourceIntegration = webResourceIntegration; //constructor for JIRA / Pico
+    }
 
     public void requireResource(String resourceName, Writer writer)
     {
@@ -64,7 +69,7 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
 
     private void requireDelayedResource(String resourceName)
     {
-        Map cache = getRequestCache();
+        Map cache = webResourceIntegration.getRequestCache();
         Collection webResourceNames = (Collection) cache.get(REQUEST_CACHE_RESOURCE_KEY);
         if (webResourceNames == null)
             webResourceNames = new ArrayList(); // todo - need a set to ensure uniqueness, but we need to also have ordering
@@ -91,7 +96,7 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
 
     private void includeDelayedResources(Writer writer) throws IOException
     {
-        Collection webResourceNames = (Collection) getRequestCache().get(REQUEST_CACHE_RESOURCE_KEY);
+        Collection webResourceNames = (Collection) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_RESOURCE_KEY);
         if (webResourceNames == null || webResourceNames.isEmpty())
             return;
 
@@ -104,7 +109,7 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
 
     private void includeResource(String resourceName, Writer writer) throws IOException
     {
-        ModuleDescriptor descriptor = getPluginAccessor().getEnabledPluginModule(resourceName);
+        ModuleDescriptor descriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resourceName);
         if (descriptor == null)
         {
             writer.write("<!-- Error loading resource \"" + descriptor + "\".  Resource not found -->\n");
@@ -120,14 +125,14 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
         {
             ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator1.next();
             String name = resourceDescriptor.getName();
-            String linkToResource = getStaticPluginResourcePrefix(descriptor, resourceDescriptor);
+            String linkToResource = getStaticPluginResourcePrefix(descriptor, resourceDescriptor.getName());
             if (name != null && name.endsWith(JAVA_SCRIPT_EXTENSION))
             {
-                writer.write("<script type=\"text/javascript\" src=\"" + getBaseUrl() + linkToResource + "\"></script>\n");
+                writer.write("<script type=\"text/javascript\" src=\"" + webResourceIntegration.getBaseUrl() + linkToResource + "\"></script>\n");
             }
             else if (name != null && name.endsWith(CSS_EXTENSION))
             {
-                writer.write("<link type=\"text/css\" rel=\"styleSheet\" media=\"all\" href=\"" + getBaseUrl() + linkToResource + "\" />\n");
+                writer.write("<link type=\"text/css\" rel=\"styleSheet\" media=\"all\" href=\"" + webResourceIntegration.getBaseUrl() + linkToResource + "\" />\n");
             }
             else
             {
@@ -167,71 +172,39 @@ public abstract class AbstractWebResourceManager implements WebResourceManager
 
     public String getStaticResourcePrefix()
     {
-        // "{base url}/s/{build num}/{system date}/_"
-        return getBaseUrl() + STATIC_RESOURCE_PREFIX + getSystemBuildNumber() + "/" + getCacheFlushCounter() + STATIC_RESOURCE_SUFFIX;
+        // "{base url}/s/{build num}/{system counter}/_"
+        return webResourceIntegration.getBaseUrl() + STATIC_RESOURCE_PREFIX + webResourceIntegration.getSystemBuildNumber() + "/" + webResourceIntegration.getSystemCounter() + STATIC_RESOURCE_SUFFIX;
     }
 
-    public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, ResourceDescriptor resourceDescriptor)
+    public String getStaticResourcePrefix(String resourceCounter)
     {
-        return getStaticPrefix(moduleDescriptor.getPlugin()) + getPluginResourceUrl(moduleDescriptor, resourceDescriptor);
+        // "{base url}/s/{build num}/{system counter}/{resource counter}/_"
+        return webResourceIntegration.getBaseUrl() + STATIC_RESOURCE_PREFIX + webResourceIntegration.getSystemBuildNumber() + "/" + webResourceIntegration.getSystemCounter() + "/" + resourceCounter + STATIC_RESOURCE_SUFFIX;
     }
 
-    private String getPluginResourceUrl(ModuleDescriptor moduleDescriptor, ResourceDescriptor resourceDescriptor)
+    public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, String resourceName)
     {
-        return "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleDescriptor.getCompleteKey() + "/" + resourceDescriptor.getName();
-    }
+        // "{base url}/s/{build num}/{system counter}/{plugin version}/_"
+        String prefix = getStaticResourcePrefix(moduleDescriptor.getPlugin().getPluginInformation().getVersion());
 
-    private String getStaticPrefix(Plugin plugin)
-    {
-        String pluginVersion = plugin.getPluginInformation().getVersion();
-
-        // "/s/{build num}/{plugin version}/{system date}/_"
-        return STATIC_RESOURCE_PREFIX + getSystemBuildNumber() + "/" + pluginVersion + "/" + getCacheFlushCounter() + STATIC_RESOURCE_SUFFIX;
+        // "/download/resources/plugin.key:module.key/resource.name"
+        String suffix = "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleDescriptor.getCompleteKey() + "/" + resourceName;
+        return prefix + suffix;
     }
 
     public void setIncludeMode(IncludeMode includeMode)
     {
-        getRequestCache().put(REQUEST_CACHE_MODE_KEY, includeMode);
+        webResourceIntegration.getRequestCache().put(REQUEST_CACHE_MODE_KEY, includeMode);
     }
 
     private IncludeMode getIncludeMode()
     {
-        IncludeMode includeMode = (IncludeMode) getRequestCache().get(REQUEST_CACHE_MODE_KEY);
+        IncludeMode includeMode = (IncludeMode) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_MODE_KEY);
         if (includeMode == null)
             includeMode = DEFAULT_INCLUDE_MODE;
         return includeMode;
     }
 
-
-    /**
-     * Applications must implement this method to get access to the application's PluginAccessor
-     */
-    protected abstract PluginAccessor getPluginAccessor();
-
-    /**
-     * This must be a thread-local cache that will be accessable from both the page, and the decorator
-     */
-    protected abstract Map getRequestCache();
-
-    /**
-     * Represents the unique number, which when updated will flush the cache.  For most 'system-wide' resources,
-     * this should be a number stored in the global application-properties.  For other resources (such as 'header' files
-     * which contain colour changes), this should be a separate number
-     *
-     * @return A string representing the count
-     */
-    protected abstract String getCacheFlushCounter();
-
-    /**
-     * Represents the last time the system was updated.  This is generally obtained from BuildUtils or similar.
-     */
-    protected abstract String getSystemBuildNumber();
-
-    /**
-     * This should be the 'short' contextPath for the system.  In most cases, this would equal request.getContextPath()
-     * (perhaps retrieved from a thread local), or else parsed from the application's base URL.
-     */
-    protected abstract String getBaseUrl();
 
 
 }
