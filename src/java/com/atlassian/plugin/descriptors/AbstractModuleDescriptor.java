@@ -25,7 +25,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     boolean systemModule = false;
     protected boolean singleton = true;
     Map params;
-    private Resources resources;
+    protected Resources resources;
     private Float minJavaVersion;
     private String i18nNameKey;
     private String descriptionKey;

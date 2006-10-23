@@ -2,14 +2,10 @@ package com.atlassian.plugin.descriptors;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.Resources;
 import org.dom4j.Element;
 
-/**
- * Created by IntelliJ IDEA.
- * User: Jeremy Higgs
- * Date: 6/02/2006
- * Time: 14:36:55
- */
+import java.util.Collections;
 
 public class UnrecognisedModuleDescriptor extends AbstractModuleDescriptor
 {
@@ -27,6 +23,7 @@ public class UnrecognisedModuleDescriptor extends AbstractModuleDescriptor
         this.description = element.elementTextTrim("description");
 
         this.plugin = plugin;
+        this.resources = new Resources(Collections.EMPTY_LIST);
     }
 
     public boolean isEnabledByDefault()
