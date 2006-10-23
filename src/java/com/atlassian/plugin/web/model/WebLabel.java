@@ -47,7 +47,7 @@ public class WebLabel extends WebParam
 
     public String getDisplayableLabel(HttpServletRequest req, Map context)
     {
-        context.putAll(getContextMap());
+        context.putAll(getContextMap(context));
         if (key != null)
         {
             if (params == null || params.isEmpty())

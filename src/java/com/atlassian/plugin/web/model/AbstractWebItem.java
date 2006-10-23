@@ -23,13 +23,13 @@ public abstract class AbstractWebItem
         this.descriptor = descriptor;
     }
 
-    public Map getContextMap()
+    public Map getContextMap(Map context)
     {
         if (contextProvider != null)
         {
-            return contextProvider.getContextMap();
+            return contextProvider.getContextMap(context);
         }
-        return new HashMap();
+        return Collections.EMPTY_MAP;
     }
 
     public WebFragmentHelper getWebFragmentHelper()

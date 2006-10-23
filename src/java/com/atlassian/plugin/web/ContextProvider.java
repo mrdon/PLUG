@@ -22,5 +22,5 @@ public interface ContextProvider
      *
      * @return context map for velocity templates
      */
-    public Map getContextMap();
+    public Map getContextMap(Map context);
 }

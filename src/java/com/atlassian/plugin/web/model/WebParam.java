@@ -6,7 +6,6 @@ import com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor;
 import com.atlassian.plugin.loaders.LoaderUtils;
 
 import java.util.Map;
-import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.SortedMap;
 
@@ -44,14 +43,9 @@ public class WebParam extends AbstractWebItem
         return params.get(key);
     }
 
-    public String getRenderedParam(String paramKey)
-    {
-        return getRenderedParam(paramKey, new HashMap());
-    }
-
     public String getRenderedParam(String paramKey, Map context)
     {
-        context.putAll(getContextMap());
+        context.putAll(getContextMap(context));
         return getWebFragmentHelper().renderVelocityFragment((String) params.get(paramKey), context);
     }
 }

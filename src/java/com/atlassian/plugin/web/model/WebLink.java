@@ -27,7 +27,7 @@ public class WebLink extends AbstractWebItem
 
     public String getRenderedUrl(Map context)
     {
-        context.putAll(getContextMap());
+        context.putAll(getContextMap(context));
         return getWebFragmentHelper().renderVelocityFragment(url, context);
     }
 
@@ -52,7 +52,7 @@ public class WebLink extends AbstractWebItem
 
     public String getAccessKey(Map context)
     {
-        context.putAll(getContextMap());
+        context.putAll(getContextMap(context));
         return getWebFragmentHelper().renderVelocityFragment(accessKey, context);
     }
 
