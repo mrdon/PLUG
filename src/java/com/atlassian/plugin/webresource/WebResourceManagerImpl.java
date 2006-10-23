@@ -128,11 +128,11 @@ public class WebResourceManagerImpl implements WebResourceManager
             String linkToResource = getStaticPluginResourcePrefix(descriptor, resourceDescriptor.getName());
             if (name != null && name.endsWith(JAVA_SCRIPT_EXTENSION))
             {
-                writer.write("<script type=\"text/javascript\" src=\"" + webResourceIntegration.getBaseUrl() + linkToResource + "\"></script>\n");
+                writer.write("<script type=\"text/javascript\" src=\"" + linkToResource + "\"></script>\n");
             }
             else if (name != null && name.endsWith(CSS_EXTENSION))
             {
-                writer.write("<link type=\"text/css\" rel=\"styleSheet\" media=\"all\" href=\"" + webResourceIntegration.getBaseUrl() + linkToResource + "\" />\n");
+                writer.write("<link type=\"text/css\" rel=\"styleSheet\" media=\"all\" href=\"" + linkToResource + "\" />\n");
             }
             else
             {
