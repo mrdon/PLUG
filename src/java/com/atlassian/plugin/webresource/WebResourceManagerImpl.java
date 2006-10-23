@@ -112,7 +112,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         ModuleDescriptor descriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resourceName);
         if (descriptor == null)
         {
-            writer.write("<!-- Error loading resource \"" + descriptor + "\".  Resource not found -->\n");
+            writer.write("<!-- Error loading resource \"" + resourceName + "\".  Resource not found -->\n");
             return;
         }
         else if (!(descriptor instanceof WebResourceModuleDescriptor))
