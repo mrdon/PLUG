@@ -7,12 +7,13 @@ import com.atlassian.plugin.Resourced;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.util.ClassLoaderUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.atlassian.plugin.util.VersionStringComparator;
 
 import java.io.InputStream;
 import java.util.*;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class StaticPlugin implements Plugin, Comparable
 {
@@ -215,60 +216,39 @@ public class StaticPlugin implements Plugin, Comparable
     }
 
     /**
-     * Plugins are comparable by version number. It should correctly calculate the higher, lower or equal versions
-     * based on standard x.x.x-style version numbers. It ignores whitespaces. Any non-digit or period in a version
-     * number is assumed to be non-parseable and returns as equal.
-     * @param o
-     * @return int -1 for lesserthen , 0 for equal, 1 for greater than.
+     * Plugins with the same key are compared by version number, using {@link VersionStringComparator}.
+     * If the other plugin has a different key, this method returns <tt>1</tt>.
+     *
+     * @return <tt>-1</tt> if the other plugin is newer, <tt>0</tt> if equal,
+     * <tt>1</tt> if the other plugin is older or has a different plugin key.
      */
-    public int compareTo(Object o)
+    public int compareTo(Object other)
     {
         // If the compared object isn't a plugin, then the current object is greater
-        if (!(o instanceof Plugin)) return 1;
+        if (!(other instanceof Plugin)) return 1;
+        Plugin otherPlugin = (Plugin) other;
 
         // If the compared plugin doesn't have the same key, the current object is greater
-        if (!((Plugin) o).getKey().equals(this.getKey())) return 1;
+        if (!otherPlugin.getKey().equals(this.getKey())) return 1;
 
-        // Get the version numbers, remove all whitespaces
-        String thisVersion = "0";
-        if(StringUtils.isNotEmpty(this.getPluginInformation().getVersion())){
-            thisVersion = this.getPluginInformation().getVersion().replaceAll(" ", "");
-        }
-        String compareVersion = "0";
-        if(StringUtils.isNotEmpty(((Plugin) o).getPluginInformation().getVersion())) {
-            compareVersion = ((Plugin) o).getPluginInformation().getVersion().replaceAll(" ", "");
-        }
+        String thisVersion = cleanVersionString(this.getPluginInformation().getVersion());
+        String otherVersion = cleanVersionString(otherPlugin.getPluginInformation().getVersion());
 
-        // If we can't read the version numbers, then take the new plugin is greater
-        String validVersionPattern = "[\\d\\.]*";
-        if( !thisVersion.matches(validVersionPattern) || !compareVersion.matches(validVersionPattern)){
-          //log.error("Can't parse the plugin version");
-          log.warn("Can't parse plugin version number. Taking the last loaded plugin ("  +
-                  " v1 = " + thisVersion + ", v2 = " + compareVersion + ").");
-          return -1;
-        }
+        if (!VersionStringComparator.isValidVersionString(thisVersion)) return -1;
+        if (!VersionStringComparator.isValidVersionString(otherVersion)) return -1;
 
-        // Split the version numbers
-        String [] v1 = thisVersion.split("\\.");
-        String [] v2 = compareVersion.split("\\.");
+        return new VersionStringComparator().compare(thisVersion, otherVersion);
+    }
 
-        // Compare each place, until we find a difference and then return. If empty, assume zero.
-        for (int i = 0 ; i < (v1.length > v2.length ? v1.length : v2.length) ; i ++) {
-            if(Integer.parseInt(i >= v1.length ? "0" : v1[i]) < Integer.parseInt(i >= v2.length ? "0" : v2[i])) {
-                return -1;
-            } else if(Integer.parseInt(i >= v1.length ? "0" : v1[i]) > Integer.parseInt(i >= v2.length ? "0" : v2[i])) {
-                return 1;
-            }
-        }
-
-        return 0;
-
+    private String cleanVersionString(String version)
+    {
+        if (version == null || version.trim().equals("")) return "0";
+        return version.replaceAll(" ", "");
     }
 
     public boolean isDeleteable()
     {
         return false;
     }
-
 }
 

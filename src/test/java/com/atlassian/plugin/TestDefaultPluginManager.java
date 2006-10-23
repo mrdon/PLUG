@@ -464,12 +464,12 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     public void testComparePluginNoVersion(){
 
         Plugin p1 = createPluginWithVersion("1.0");
-        Plugin p2 = createPluginWithVersion("xxx");
-        assertTrue(p1.compareTo(p2) == -1);
+        Plugin p2 = createPluginWithVersion("#$%");
+        assertEquals(-1, p1.compareTo(p2));
 
-        p1.getPluginInformation().setVersion("xxx");
+        p1.getPluginInformation().setVersion("#$%");
         p2.getPluginInformation().setVersion("1.0");
-        assertTrue(p1.compareTo(p2) == -1);
+        assertEquals(-1, p1.compareTo(p2));
 
     }
 
