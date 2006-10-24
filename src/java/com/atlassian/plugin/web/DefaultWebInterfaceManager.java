@@ -1,10 +1,7 @@
 package com.atlassian.plugin.web;
 
 import com.atlassian.plugin.PluginManager;
-import com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor;
-import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
-import com.atlassian.plugin.web.descriptors.WebSectionModuleDescriptor;
-import com.atlassian.plugin.web.descriptors.WeightedDescriptorComparator;
+import com.atlassian.plugin.web.descriptors.*;
 
 import java.util.*;
 
@@ -115,7 +112,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         List result = new ArrayList(relevantItems);
         for (Iterator iterator = result.iterator(); iterator.hasNext();)
         {
-            AbstractWebFragmentModuleDescriptor descriptor = (AbstractWebFragmentModuleDescriptor) iterator.next();
+            WebFragmentModuleDescriptor descriptor = (WebFragmentModuleDescriptor) iterator.next();
             try
             {
                 if (descriptor.getCondition() != null && !descriptor.getCondition().shouldDisplay(context))
@@ -135,8 +132,8 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
 
     public void refresh()
     {
-        sections = new HashMap();
-        items = new HashMap();
+        sections = Collections.synchronizedMap(new HashMap());
+        items = Collections.synchronizedMap(new HashMap());
     }
 
     public void setPluginManager(PluginManager pluginManager)

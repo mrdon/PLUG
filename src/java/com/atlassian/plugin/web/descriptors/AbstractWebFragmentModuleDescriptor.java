@@ -11,8 +11,10 @@ import com.atlassian.plugin.web.conditions.AbstractCompositeCondition;
 import com.atlassian.plugin.web.WebInterfaceManager;
 import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.ContextProvider;
-import com.atlassian.plugin.web.model.WebLabel;
+import com.atlassian.plugin.web.model.DefaultWebLabel;
+import com.atlassian.plugin.web.model.DefaultWebParam;
 import com.atlassian.plugin.web.model.WebParam;
+import com.atlassian.plugin.web.model.WebLabel;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import org.dom4j.Element;
 
@@ -20,19 +22,16 @@ import java.util.List;
 import java.util.Iterator;
 
 /**
- * An abstract class providing utility methods to different forms of web fragment descriptors.
+ * An abstract convenience class for web fragment descriptors.
  */
-public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModuleDescriptor implements StateAware, WeightedDescriptor
+public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModuleDescriptor implements StateAware, WebFragmentModuleDescriptor
 {
-    public static final int COMPOSITE_TYPE_OR = 0;
-    public static final int COMPOSITE_TYPE_AND = 1;
-
     protected WebInterfaceManager webInterfaceManager;
     protected int weight;
     protected Condition condition;
     protected ContextProvider contextProvider;
-    protected WebLabel label;
-    protected WebLabel tooltip;
+    protected DefaultWebLabel label;
+    protected DefaultWebLabel tooltip;
     protected WebParam params;
 
     protected AbstractWebFragmentModuleDescriptor(WebInterfaceManager webInterfaceManager)
@@ -64,17 +63,17 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
 
         if (element.element("label") != null)
         {
-            label = new WebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
+            label = new DefaultWebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
         }
 
         if (element.element("tooltip") != null)
         {
-            tooltip = new WebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
+            tooltip = new DefaultWebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
         }
 
         if (getParams() != null)
         {
-            params = new WebParam(getParams(), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
+            params = new DefaultWebParam(getParams(), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
         }
 
         condition = makeConditions(element, COMPOSITE_TYPE_AND);

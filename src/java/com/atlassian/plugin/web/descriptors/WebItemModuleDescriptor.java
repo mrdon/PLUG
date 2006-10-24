@@ -1,53 +1,18 @@
 package com.atlassian.plugin.web.descriptors;
 
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.model.WebIcon;
 import com.atlassian.plugin.web.model.WebLink;
-import com.atlassian.plugin.web.WebInterfaceManager;
-import org.dom4j.Element;
 
-public class WebItemModuleDescriptor extends AbstractWebFragmentModuleDescriptor
+/**
+ * A web-item plugin adds extra links to a particular section.
+ *
+ * @see WebSectionModuleDescriptor
+ */
+public interface WebItemModuleDescriptor extends WebFragmentModuleDescriptor
 {
-    private String section;
-    private WebIcon icon;
-    private WebLink link;
+    String getSection();
 
-    public WebItemModuleDescriptor(WebInterfaceManager webInterfaceManager)
-    {
-        super(webInterfaceManager);
-    }
+    WebLink getLink();
 
-    public WebItemModuleDescriptor()
-    {
-    }
-
-    public void init(Plugin plugin, Element element) throws PluginParseException
-    {
-        super.init(plugin, element);
-
-        section = element.attributeValue("section");
-
-        if (element.element("icon") != null)
-        {
-            icon = new WebIcon(element.element("icon"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
-        }
-
-        link = new WebLink(element.element("link"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
-    }
-
-    public String getSection()
-    {
-        return section;
-    }
-
-    public WebLink getLink()
-    {
-        return link;
-    }
-
-    public WebIcon getIcon()
-    {
-        return icon;
-    }
+    WebIcon getIcon();
 }

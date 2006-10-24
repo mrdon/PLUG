@@ -6,6 +6,9 @@ import com.atlassian.plugin.web.conditions.ConditionLoadingException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Provides application specific methods to build/render web fragments
+ */
 public interface WebFragmentHelper
 {
     Condition loadCondition(String className, Plugin plugin) throws ConditionLoadingException;

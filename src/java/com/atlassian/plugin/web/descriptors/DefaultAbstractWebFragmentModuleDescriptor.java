@@ -4,9 +4,10 @@ import com.atlassian.plugin.web.WebInterfaceManager;
 import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.model.WebLabel;
-import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.web.model.WebParam;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import org.dom4j.Element;
@@ -18,7 +19,7 @@ import java.util.List;
  * Wrapper for {@link AbstractWebFragmentModuleDescriptor}, so that it could be extended by application specific
  * wrappers to provide additional methods.
  */
-public class DefaultAbstractWebFragmentModuleDescriptor implements ModuleDescriptor
+public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, WebFragmentModuleDescriptor
 {
     protected AbstractWebFragmentModuleDescriptor abstractDescriptor;
 
@@ -72,6 +73,11 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements ModuleDescrip
         return abstractDescriptor.getWebLabel();
     }
 
+    public WebLabel getTooltip()
+    {
+        return abstractDescriptor.getTooltip();
+    }
+
     public void setWebInterfaceManager(WebInterfaceManager webInterfaceManager)
     {
         abstractDescriptor.setWebInterfaceManager(webInterfaceManager);
@@ -85,6 +91,11 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements ModuleDescrip
     public ContextProvider getContextProvider()
     {
         return abstractDescriptor.getContextProvider();
+    }
+
+    public WebParam getWebParams()
+    {
+        return abstractDescriptor.getWebParams();
     }
 
     //----------------------------------------------------------------------------------------- ModuleDescriptor methods

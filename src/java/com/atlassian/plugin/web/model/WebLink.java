@@ -1,63 +1,21 @@
 package com.atlassian.plugin.web.model;
 
-import com.atlassian.plugin.web.WebFragmentHelper;
-import com.atlassian.plugin.web.ContextProvider;
-import com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor;
-import org.dom4j.Element;
+import com.atlassian.plugin.web.descriptors.WebFragmentModuleDescriptor;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
-/**
- * Represents a single "href", with a variety of permutations.
- */
-public class WebLink extends AbstractWebItem
+public interface WebLink
 {
-    String url;
-    String accessKey;
-    String id;
+    String getRenderedUrl(Map context);
 
-    public WebLink(Element linkEl, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider, AbstractWebFragmentModuleDescriptor descriptor)
-    {
-        super(webFragmentHelper, contextProvider, descriptor);
-        this.url = linkEl.getTextTrim();
-        this.accessKey = linkEl.attributeValue("accessKey");
-        this.id = linkEl.attributeValue("linkId");
-    }
+    String getDisplayableUrl(HttpServletRequest req, Map context);
 
-    public String getRenderedUrl(Map context)
-    {
-        context.putAll(getContextMap(context));
-        return getWebFragmentHelper().renderVelocityFragment(url, context);
-    }
+    boolean hasAccessKey();
 
-    private boolean isRelativeUrl(String url)
-    {
-        return !(url.startsWith("http://") || url.startsWith("https://"));
-    }
+    String getAccessKey(Map context);
 
-    public String getDisplayableUrl(HttpServletRequest req, Map context)
-    {
-        String renderedUrl = getRenderedUrl(context);
-        if (isRelativeUrl(renderedUrl))
-            return req.getContextPath() + renderedUrl;
-        else
-            return renderedUrl;
-    }
+    String getId();
 
-    public boolean hasAccessKey()
-    {
-        return accessKey != null && !"".equals(accessKey);
-    }
-
-    public String getAccessKey(Map context)
-    {
-        context.putAll(getContextMap(context));
-        return getWebFragmentHelper().renderVelocityFragment(accessKey, context);
-    }
-
-    public String getId()
-    {
-        return id;
-    }
+    WebFragmentModuleDescriptor getDescriptor();
 }
