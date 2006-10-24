@@ -67,9 +67,12 @@ public class ResourceDownloadUtils
      */
     public static void addCachingHeaders(HttpServletResponse httpServletResponse)
     {
-        httpServletResponse.setDateHeader("Expires", System.currentTimeMillis() + TEN_YEARS);
-        httpServletResponse.setHeader("Cache-Control", "max-age=" + TEN_YEARS);
-        httpServletResponse.addHeader("Cache-Control", "private");
+        if (!Boolean.getBoolean("atlassian.disable.caches"))
+        {
+            httpServletResponse.setDateHeader("Expires", System.currentTimeMillis() + TEN_YEARS);
+            httpServletResponse.setHeader("Cache-Control", "max-age=" + TEN_YEARS);
+            httpServletResponse.addHeader("Cache-Control", "private");
+        }
     }
 
     /**
