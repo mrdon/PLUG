@@ -148,7 +148,7 @@ public abstract class PluginsClassLoader extends SecureClassLoader implements Cl
     {
         URL url = findResource(name);
 
-        if (name != null)
+        if (url != null)
             return url;
 
         return super.getResource(name);
