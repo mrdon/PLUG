@@ -2,11 +2,14 @@ package com.atlassian.plugin;
 
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.List;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
 public interface Plugin extends Resourced
 {
+    public static final Comparator NAME_COMPARATOR = new PluginNameComparator();
+
     String getName();
 
     void setName(String name);
@@ -78,7 +81,7 @@ public interface Plugin extends Resourced
     /**
      * Get the plugin to load a specific class.
      *
-     * @param clazz The name of the class to be loaded
+     * @param clazz        The name of the class to be loaded
      * @param callingClass The class calling the loading (used to help find a classloader)
      * @return The loaded class.
      * @throws ClassNotFoundException
@@ -96,6 +99,5 @@ public interface Plugin extends Resourced
     InputStream getResourceAsStream(String name);
 
     int compareTo(Object o);
-
 
 }
