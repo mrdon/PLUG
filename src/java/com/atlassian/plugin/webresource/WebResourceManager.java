@@ -1,10 +1,8 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.elements.ResourceDescriptor;
 
 import java.io.Writer;
-import java.io.IOException;
 
 /**
  * Manage 'css', 'javascript' and other 'resources' that are usually linked at the top of pages using
@@ -80,7 +78,7 @@ public interface WebResourceManager
     public String getStaticResourcePrefix(String resourceCounter);
 
     /**
-     * A helper method to return a prefix for 'plugin' resources.  Generally the implementation will return
+     * A helper method to return a url for 'plugin' resources.  Generally the implementation will return
      *
      * <pre><code>/s/{build num}/{system counter}/{plugin version}/_/download/resources/plugin.key:module.key/resource.name</code></pre>
      *
@@ -91,11 +89,22 @@ public interface WebResourceManager
      *
      * <pre><code>&lt;%= request.getContextPath() %>/download/resources/plugin.key:module.key/resource.name</code></pre>
      * with
-     * <pre><code>&lt;%= webResourceManager.getStaticPluginResourcePrefix(descriptor, resourceName) %></code></pre>
+     * <pre><code>&lt;%= webResourceManager.getStaticPluginResource(descriptor, resourceName) %></code></pre>
      *
      * @return  A url that can be used to request 'plugin' resources.
      */
+    public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName);
+
+    /**
+     * @deprecated Use #getStaticPluginResource instead
+     */
     public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, String resourceName);
+
+    /**
+     * @param pluginModuleKey complete plugin module key
+     * @return returns the url of this plugin resource
+     */
+    public String getStaticPluginResource(String pluginModuleKey, String resourceName);
 
     /**
      * Whether resources should be included inline, or at the top of the page.  In most cases, you want to leave this

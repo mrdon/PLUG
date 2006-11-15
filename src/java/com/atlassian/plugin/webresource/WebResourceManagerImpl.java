@@ -8,10 +8,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -33,8 +30,8 @@ public class WebResourceManagerImpl implements WebResourceManager
     private Log log = LogFactory.getLog(WebResourceManagerImpl.class);
     private static final String JAVA_SCRIPT_EXTENSION = ".js";
     private static final String CSS_EXTENSION = ".css";
-    private static final String STATIC_RESOURCE_PREFIX = "/s/";
-    private static final String STATIC_RESOURCE_SUFFIX = "/_";
+    static final String STATIC_RESOURCE_PREFIX = "s";
+    static final String STATIC_RESOURCE_SUFFIX = "_";
 
     private static final String REQUEST_CACHE_RESOURCE_KEY = "plugin.webresource.names";
     private static final String REQUEST_CACHE_MODE_KEY = "plugin.webresource.mode";
@@ -173,16 +170,33 @@ public class WebResourceManagerImpl implements WebResourceManager
     public String getStaticResourcePrefix()
     {
         // "{base url}/s/{build num}/{system counter}/_"
-        return webResourceIntegration.getBaseUrl() + STATIC_RESOURCE_PREFIX + webResourceIntegration.getSystemBuildNumber() + "/" + webResourceIntegration.getSystemCounter() + STATIC_RESOURCE_SUFFIX;
+        return webResourceIntegration.getBaseUrl() + "/" +
+                STATIC_RESOURCE_PREFIX + "/" +
+                webResourceIntegration.getSystemBuildNumber() + "/" +
+                webResourceIntegration.getSystemCounter() + "/" +
+                STATIC_RESOURCE_SUFFIX;
     }
 
     public String getStaticResourcePrefix(String resourceCounter)
     {
         // "{base url}/s/{build num}/{system counter}/{resource counter}/_"
-        return webResourceIntegration.getBaseUrl() + STATIC_RESOURCE_PREFIX + webResourceIntegration.getSystemBuildNumber() + "/" + webResourceIntegration.getSystemCounter() + "/" + resourceCounter + STATIC_RESOURCE_SUFFIX;
+        return webResourceIntegration.getBaseUrl() + "/" +
+                STATIC_RESOURCE_PREFIX + "/" +
+                webResourceIntegration.getSystemBuildNumber() + "/" +
+                webResourceIntegration.getSystemCounter() + "/" +
+                resourceCounter + "/" +
+                STATIC_RESOURCE_SUFFIX;
     }
 
+    /**
+     * @deprecated
+     */
     public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, String resourceName)
+    {
+        return getStaticPluginResource(moduleDescriptor, resourceName);
+    }
+
+    public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName)
     {
         // "{base url}/s/{build num}/{system counter}/{plugin version}/_"
         String prefix = getStaticResourcePrefix(moduleDescriptor.getPlugin().getPluginInformation().getVersion());
@@ -190,6 +204,11 @@ public class WebResourceManagerImpl implements WebResourceManager
         // "/download/resources/plugin.key:module.key/resource.name"
         String suffix = "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleDescriptor.getCompleteKey() + "/" + resourceName;
         return prefix + suffix;
+    }
+
+    public String getStaticPluginResource(String pluginModuleKey, String resourceName)
+    {
+        return getStaticPluginResource(webResourceIntegration.getPluginAccessor().getEnabledPluginModule(pluginModuleKey), resourceName);
     }
 
     public void setIncludeMode(IncludeMode includeMode)
