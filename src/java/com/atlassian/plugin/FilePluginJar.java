@@ -18,9 +18,12 @@ public class FilePluginJar implements PluginJar
         this.jarFile = jarFile;
     }
 
+    /**
+     * @return an input stream for the this file in the jar. Closing this stream also closes the jar file this stream comes from.
+     */
     public InputStream getFile(String fileName) throws PluginParseException
     {
-        JarFile jar;
+        final JarFile jar;
         try
         {
             jar = new JarFile(jarFile);
@@ -39,7 +42,16 @@ public class FilePluginJar implements PluginJar
         InputStream descriptorStream;
         try
         {
-            descriptorStream = jar.getInputStream(entry);
+            descriptorStream = new BufferedInputStream(jar.getInputStream(entry)) {
+
+                // because we do not expose a handle to the jar file this stream is associated with, we need to make sure
+                // we explicitly close the jar file when we're done with the stream (else we'll have a file handle leak)
+                public void close() throws IOException
+                {
+                    super.close();
+                    jar.close();
+                }
+            };
         }
         catch (IOException e)
         {
