@@ -55,32 +55,43 @@ public class PluginResourceDownload implements DownloadStrategy
         }
     }
 
-    protected void servePluginResource(BaseFileServerServlet servlet, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, String moduleKey, String filePath)
+    protected void servePluginResource(BaseFileServerServlet servlet, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, String key, String filePath)
             throws IOException
     {
-        ModuleDescriptor moduleDescriptor = pluginAccessor.getPluginModule(moduleKey);
-        if (moduleDescriptor != null && pluginAccessor.isPluginModuleEnabled(moduleKey))
+       DownloadableResource resource = null;
+
+        // resource from the module
+        if (key.indexOf(":") > -1)
         {
-            DownloadableResource resource = getResourceFromModule(moduleDescriptor, filePath, servlet);
-
-            if (resource == null)
+            ModuleDescriptor moduleDescriptor = pluginAccessor.getPluginModule(key);
+            if (moduleDescriptor != null && pluginAccessor.isPluginModuleEnabled(key))
             {
-                resource = getResourceFromPlugin(moduleKey, filePath, servlet);
-            }
-
-            if (resource != null)
-            {
-                resource.serveResource(httpServletRequest, httpServletResponse);
+                resource = getResourceFromModule(moduleDescriptor, filePath, servlet);
             }
             else
             {
-                log.info("Unable to find resource for module: " + moduleKey + " and path: " + filePath);
+                log.info("Module not found: " + key);
+                httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
+        }
+       else // resource from plugin
+        {
+            Plugin plugin = pluginAccessor.getPlugin(key);
+            resource = getResourceFromPlugin(plugin, filePath, "", servlet);
+        }
+
+        if (resource == null)
+        {
+            resource = getResourceFromPlugin(key, filePath, servlet);
+        }
+
+        if (resource != null)
+        {
+            resource.serveResource(httpServletRequest, httpServletResponse);
         }
         else
         {
-            log.info("Module not found: " + moduleKey);
-            httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
+            log.info("Unable to find resource for plugin: " + key + " and path: " + filePath);
         }
     }
 
