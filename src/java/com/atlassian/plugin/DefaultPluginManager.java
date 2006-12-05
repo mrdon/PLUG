@@ -175,16 +175,19 @@ public class DefaultPluginManager implements PluginManager
 
         PluginLoader loader = (PluginLoader) pluginToPluginLoader.get(plugin);
 
-        if (loader == null || !loader.supportsRemoval())
+        if (loader != null && !loader.supportsRemoval())
         {
-            throw new PluginException("Not uninstalling plugin - could not find plugin loader, or loader doesn't allow removal. Plugin: " + plugin.getKey());
+            throw new PluginException("Not uninstalling plugin - loader doesn't allow removal. Plugin: " + plugin.getKey());
         }
 
         if (isPluginEnabled(plugin.getKey()))
             notifyPluginDisabled(plugin);
 
         notifyUninstallPlugin(plugin);
-        removePluginFromLoader(plugin);
+        if (loader != null)
+        {
+            removePluginFromLoader(plugin);
+        }
 
         plugins.remove(plugin.getKey());
     }
@@ -249,36 +252,7 @@ public class DefaultPluginManager implements PluginManager
 
         plugins.put(plugin.getKey(), plugin);
 
-        List moduleDescriptors = new ArrayList(plugin.getModuleDescriptors());
-
-        for (Iterator it = moduleDescriptors.iterator(); it.hasNext();)
-        {
-            ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
-
-            if (!(descriptor instanceof StateAware))
-            {
-                if (log.isDebugEnabled())
-                    log.debug("ModuleDescriptor '" + descriptor.getName() + "' is not StateAware. No need to enable.");
-                continue;
-            }
-
-            if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
-            {
-                if (log.isDebugEnabled())
-                    log.debug("Plugin is not enabled, so not enabling ModuleDescriptor '" + descriptor.getName() + "'.");
-                continue;
-            }
-
-            try
-            {
-                ((StateAware) descriptor).enabled();
-            }
-            catch (Throwable t) // insert an UnloadablePlugin if an error occurs (PLUG-7)
-            {
-                log.error("There was an error loading the descriptor '" + descriptor.getName() + "' of plugin '" + plugin.getKey() + "'. Disabling.", t);
-                plugin = replacePluginWithUnloadablePlugin(plugin, descriptor, t);
-            }
-        }
+        enablePluginModules(plugin);
 
         pluginToPluginLoader.put(plugin, loader);
     }
@@ -417,6 +391,15 @@ public class DefaultPluginManager implements PluginManager
      */
     protected void notifyPluginEnabled(Plugin plugin)
     {
+        enablePluginModules(plugin);
+    }
+
+    /**
+     * For each module in the plugin, call the module descriptor's enabled() method if the module is StateAware and enabled.
+     * @param plugin
+     */
+    private void enablePluginModules(Plugin plugin)
+    {
         for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
         {
             ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
@@ -428,10 +411,10 @@ public class DefaultPluginManager implements PluginManager
                 continue;
             }
 
-            if (isPluginModuleEnabled(descriptor.getCompleteKey()))
+            if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
             {
                 if (log.isDebugEnabled())
-                    log.debug("Plugin is already enabled, so not enabling ModuleDescriptor '" + descriptor.getName() + "'.");
+                    log.debug("Plugin module is disabled, so not enabling ModuleDescriptor '" + descriptor.getName() + "'.");
                 continue;
             }
 
