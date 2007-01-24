@@ -89,7 +89,7 @@ public class JarClassLoader extends PluginsClassLoader
 
     private JarFile jar;
     private File file;
-    private LinkedList innerLibraries;
+    private LinkedList innerLibraries; // list of ZipEntry's referencing jar resources inside the jar associated with this JarClassLoader
     private HashMap cachedFiles = new HashMap();
 
     public JarClassLoader(File file, ClassLoader parent)
@@ -124,7 +124,7 @@ public class JarClassLoader extends PluginsClassLoader
             String name = entry.getName();
             if (name.startsWith("META-INF/lib/") && name.endsWith(".jar"))
             {
-                innerLibraries.add(new InnerJar(jar, entry));
+                innerLibraries.add(entry);
             }
         }
     }
@@ -154,7 +154,7 @@ public class JarClassLoader extends PluginsClassLoader
                 byte[] data;
                 for (Iterator iter = innerLibraries.iterator(); iter.hasNext();)
                 {
-                    InnerJar innerJar = (InnerJar) iter.next();
+                    InnerJar innerJar = new InnerJar(jar, (ZipEntry) iter.next());
                     data = innerJar.getFile(path);
                     if (data != null)
                     {
