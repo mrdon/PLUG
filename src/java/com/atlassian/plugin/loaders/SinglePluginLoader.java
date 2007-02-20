@@ -82,10 +82,18 @@ public class SinglePluginLoader implements PluginLoader
         if (source == null)
             throw new PluginParseException("Invalid resource or inputstream specified to load plugins from.");
 
-        DescriptorParser parser = descriptorParserFactory.getInstance(source);
-        Plugin plugin = parser.configurePlugin(moduleDescriptorFactory, new StaticPlugin());
-        if (parser.isSystemPlugin())
-            plugin.setSystemPlugin(true);
+        Plugin plugin = null;
+        try
+        {
+            DescriptorParser parser = descriptorParserFactory.getInstance(source);
+            plugin = parser.configurePlugin(moduleDescriptorFactory, new StaticPlugin());
+            if (parser.isSystemPlugin())
+                plugin.setSystemPlugin(true);
+        }
+        catch (PluginParseException e)
+        {
+            throw new PluginParseException("Unable to load plugin resource: "+resource,e);
+        }
 
         return plugin;
     }
