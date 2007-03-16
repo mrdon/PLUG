@@ -231,7 +231,7 @@ public class TestSinglePluginLoader extends TestCase
         }
         catch (PluginParseException e)
         {
-            assertEquals("Plugin key's cannot contain ':'. Key is 'test:bad'", e.getMessage());
+            assertTrue(e.getMessage().endsWith("Plugin key's cannot contain ':'. Key is 'test:bad'"));
         }
     }
 
@@ -249,7 +249,7 @@ public class TestSinglePluginLoader extends TestCase
         }
         catch (PluginParseException e)
         {
-            assertEquals("Found duplicate key 'bear' within plugin 'test.bad.plugin'", e.getMessage());
+            assertTrue(e.getMessage().endsWith("Found duplicate key 'bear' within plugin 'test.bad.plugin'"));
         }
     }
 

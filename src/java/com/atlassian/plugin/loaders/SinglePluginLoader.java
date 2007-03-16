@@ -82,7 +82,7 @@ public class SinglePluginLoader implements PluginLoader
         if (source == null)
             throw new PluginParseException("Invalid resource or inputstream specified to load plugins from.");
 
-        Plugin plugin = null;
+        Plugin plugin;
         try
         {
             DescriptorParser parser = descriptorParserFactory.getInstance(source);
@@ -92,7 +92,7 @@ public class SinglePluginLoader implements PluginLoader
         }
         catch (PluginParseException e)
         {
-            throw new PluginParseException("Unable to load plugin resource: "+resource,e);
+            throw new PluginParseException("Unable to load plugin resource: " + resource + " - " + e.getMessage() ,e);
         }
 
         return plugin;
