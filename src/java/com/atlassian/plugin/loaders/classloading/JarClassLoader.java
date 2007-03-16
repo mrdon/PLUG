@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
@@ -34,17 +31,47 @@ public class JarClassLoader extends PluginsClassLoader
     {
         private JarFile jar;
         private ZipEntry entry;
+        private Set knownPackagePrefixes = new HashSet();
 
         private InnerJar(JarFile jar, ZipEntry entry)
         {
             this.jar = jar;
             this.entry = entry;
+            scanForPrefixes();
+        }
+
+        // We keep a list of known package names within the inner jar. Otherwise EVERY class lookup that goes
+        // through this classloader has to scan linearly through EVERY inner jar. Which is frighteningly slow
+        // if you're packaging any decent-sized library. (PLUG-28)
+        private void scanForPrefixes()
+        {
+            try
+            {
+                JarInputStream jarStream = new JarInputStream(jar.getInputStream(entry));
+                // Find the entry for this path
+                ZipEntry eachEntry;
+                while ((eachEntry = jarStream.getNextEntry()) != null)
+                {
+                    if (eachEntry.isDirectory())
+                        knownPackagePrefixes.add(eachEntry.getName());
+                }
+
+            } catch (IOException e)
+            {
+                log.error(e, e);
+            }
         }
 
         private byte[] getFile(String path)
         {
             // Check for a null path
             if (path == null) return null;
+
+            // Check if the package prefix is one that we've detected as being served by this jar
+            String prefix = getPrefix(path);
+            if (prefix.length() != 0 && !knownPackagePrefixes.contains(prefix))
+                return null;
+
             // Get the file
             try
             {
@@ -82,8 +109,14 @@ public class JarClassLoader extends PluginsClassLoader
             } catch (IOException e)
             {
                 log.error(e, e);
-                return null;
+                return null;    
             }
+        }
+
+        private String getPrefix(String path)
+        {
+            int i = path.lastIndexOf("/");
+            return (i >= 0) ? path.substring(0, i + 1) : "";
         }
     }
 
@@ -222,5 +255,28 @@ public class JarClassLoader extends PluginsClassLoader
         {
             log.error("Error closing JAR: " + e, e);
         }
+    }
+
+
+    protected Class findClass(String name) throws ClassNotFoundException
+    {
+        String path = name.replace('.', '/').concat(".class");
+        byte[] data = getFile(path);
+        if (data == null)
+            throw new ClassNotFoundException();
+
+        // Make sure the package is defined (PLUG-27)
+        int pkgOffset = name.lastIndexOf(".");
+        if (pkgOffset != -1)
+        {
+            String pkgName = name.substring(0, pkgOffset);
+            Package pkg = getPackage(pkgName);
+            if (pkg == null)
+            {
+                definePackage(pkgName, null, null, null, null, null, null, null);
+            }
+        }
+
+        return defineClass(name, data, 0, data.length);
     }
 }
