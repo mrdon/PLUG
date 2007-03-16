@@ -270,10 +270,14 @@ public class JarClassLoader extends PluginsClassLoader
         if (pkgOffset != -1)
         {
             String pkgName = name.substring(0, pkgOffset);
-            Package pkg = getPackage(pkgName);
-            if (pkg == null)
+
+            synchronized (this)
             {
-                definePackage(pkgName, null, null, null, null, null, null, null);
+                Package pkg = getPackage(pkgName);
+                if (pkg == null)
+                {
+                    definePackage(pkgName, null, null, null, null, null, null, null);
+                }
             }
         }
 
