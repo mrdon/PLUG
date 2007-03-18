@@ -30,6 +30,9 @@ public abstract class AbstractTestClassLoader extends TestCase
 
     /**
      * Generate a random string of characters - including numbers
+     *
+     * @param length the length of the string to return
+     * @return a random string of characters
      */
     public static String randomString(int length)
     {
@@ -45,6 +48,8 @@ public abstract class AbstractTestClassLoader extends TestCase
 
     /**
      * Generate a random character from the alphabet - either a-z or A-Z
+     *
+     * @return a random alphabetic character
      */
     public static char randomAlpha()
     {
@@ -72,8 +77,16 @@ public abstract class AbstractTestClassLoader extends TestCase
         FileUtils.copyDirectory(pluginsDirectory, pluginsTestDir);
 
         // Clean up CVS directory in case we copied it over by mistake.
-        File cvsDir = new File(pluginsTestDir, "CVS");
-        if (cvsDir.exists())
-            assertTrue(FileUtils.deleteDir(cvsDir));
+        removeSourceControlMetadata("CVS");
+
+        // Clean up SVN directory in case we copied it over by mistake.
+        removeSourceControlMetadata(".svn");
+    }
+
+    private void removeSourceControlMetadata(String directoryName)
+    {
+        File dir = new File(pluginsTestDir, directoryName);
+        if (dir.exists())
+            assertTrue(FileUtils.deleteDir(dir));
     }
 }
