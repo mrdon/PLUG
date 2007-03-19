@@ -180,8 +180,55 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         }
         catch (PluginParseException e)
         {
-            assertEquals("Duplicate plugin found (installed version is older) and could not be removed: 'test.atlassian.plugin'", e.getMessage());
+            assertEquals("Duplicate plugin found (installed version is older) and could not be unloaded: 'test.atlassian.plugin'", e.getMessage());
         }
+    }
+
+    public void testLoadNewerDuplicateDynamicPluginPreservesPluginState() throws PluginParseException
+    {
+        List pluginLoaders = new ArrayList();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+
+        pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin.xml"));
+        pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
+
+        MemoryPluginStateStore stateStore1 = new MemoryPluginStateStore();
+        PluginManagerState state = stateStore1.loadPluginState();
+        state.setState("test.atlassian.plugin", Boolean.FALSE);
+        stateStore1.savePluginState(state);
+        DefaultPluginManager manager = new DefaultPluginManager(stateStore1, pluginLoaders, moduleDescriptorFactory);
+
+        manager.init();
+
+        Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        assertEquals("1.1", plugin.getPluginInformation().getVersion());
+        assertFalse(manager.isPluginEnabled("test.atlassian.plugin"));
+    }
+
+    public void testLoadNewerDuplicateDynamicPluginPreservesModuleState() throws PluginParseException
+    {
+        List pluginLoaders = new ArrayList();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+
+        pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin.xml"));
+        pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
+
+        MemoryPluginStateStore stateStore1 = new MemoryPluginStateStore();
+        PluginManagerState state = stateStore1.loadPluginState();
+        state.setState("test.atlassian.plugin:bear", Boolean.FALSE);
+        stateStore1.savePluginState(state);
+        DefaultPluginManager manager = new DefaultPluginManager(stateStore1, pluginLoaders, moduleDescriptorFactory);
+
+        manager.init();
+
+        Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        assertEquals("1.1", plugin.getPluginInformation().getVersion());
+        assertFalse(manager.isPluginModuleEnabled("test.atlassian.plugin:bear"));
+        assertTrue(manager.isPluginModuleEnabled("test.atlassian.plugin:gold"));
     }
 
     public void testGetPluginAndModules() throws PluginParseException
@@ -396,8 +443,6 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(2, pluginsTestDir.listFiles().length);
     }
 
-
-
     // These methods test the plugin compareTo() function, which compares plugins based on their version numbers.
     public void testComparePluginNewer(){
 
@@ -582,6 +627,41 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         return p;
     }
 
+    /** Dummy plugin loader that reports that removal is supported and returns plugins that report that they can
+     * be uninstalled.
+     */
+    private static class SinglePluginLoaderWithRemoval extends SinglePluginLoader
+    {
+        public SinglePluginLoaderWithRemoval(String resource)
+        {
+            super(resource);
+        }
 
+        public SinglePluginLoaderWithRemoval(InputStream is)
+        {
+            super(is);
+        }
 
+        public boolean supportsRemoval()
+        {
+
+            return true;
+        }
+
+        public void removePlugin(Plugin plugin) throws PluginException
+        {
+            plugins = Collections.EMPTY_LIST;
+        }
+
+        protected StaticPlugin getNewPlugin()
+        {
+            return new StaticPlugin() {
+                public boolean isUninstallable()
+                {
+                    System.out.println("Enabled by default: " + this.isEnabledByDefault());
+                    return true;
+                }
+            };
+        }
+    }
 }

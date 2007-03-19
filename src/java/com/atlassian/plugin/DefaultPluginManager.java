@@ -10,6 +10,8 @@ import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 
 import java.io.*;
 import java.util.*;
@@ -227,19 +229,20 @@ public class DefaultPluginManager implements PluginManager
     protected void addPlugin(PluginLoader loader, Plugin plugin) throws PluginParseException
     {
         // testing to make sure plugin keys are unique
+
         if (plugins.containsKey(plugin.getKey())) {
-          Plugin match = (Plugin) plugins.get(plugin.getKey());
-          if(plugin.compareTo(match) > 0 ){
+          Plugin existingPlugin = (Plugin) plugins.get(plugin.getKey());
+          if(plugin.compareTo(existingPlugin) > 0 ) {
               if (log.isDebugEnabled())
                   log.debug("We found a newer '" + plugin.getKey() + "'");
               try
               {
-                  log.info("Uninstalling " + match.getName() + " to upgrade.");
-                  uninstall(match);
+                  log.info("Unloading " + existingPlugin.getName() + " to upgrade.");
+                  updatePlugin(existingPlugin, plugin);
                   if (log.isDebugEnabled())
-                      log.debug("Older '" + plugin.getKey() + "' uninstalled.");
+                      log.debug("Older '" + plugin.getKey() + "' unloaded.");
               } catch (PluginException e) {
-                  throw new PluginParseException("Duplicate plugin found (installed version is older) and could not be removed: '" + plugin.getKey() + "'");
+                  throw new PluginParseException("Duplicate plugin found (installed version is older) and could not be unloaded: '" + plugin.getKey() + "'");
               }
           } else {
               // If we find an older plugin, don't error, just ignore it. PLUG-12.
@@ -255,6 +258,49 @@ public class DefaultPluginManager implements PluginManager
         enablePluginModules(plugin);
 
         pluginToPluginLoader.put(plugin, loader);
+    }
+
+    /**
+     * Replace an already loaded plugin with another version. Relevant stored configuration for the plugin will be
+     * preserved.
+     * @param oldPlugin Plugin to replace
+     * @param newPlugin New plugin to install
+     * @throws PluginException
+     */
+    protected void updatePlugin(final Plugin oldPlugin, final Plugin newPlugin) throws PluginException
+    {
+        if (!oldPlugin.getKey().equals(newPlugin.getKey()))
+            throw new IllegalArgumentException("New plugin must have the same key as the old plugin");
+
+        // Preserve the old plugin configuration - uninstall changes it (as disable is called on all modules) and then
+        // removes it
+        Map oldPluginState = getState().getPluginStateMap(oldPlugin);
+        
+        uninstall(oldPlugin);
+
+        // Build a set of module keys from the new plugin version
+        final Set newModuleKeys = new HashSet();
+        newModuleKeys.add(newPlugin.getKey());
+
+        for (Iterator moduleIter = newPlugin.getModuleDescriptors().iterator(); moduleIter.hasNext(); )
+        {
+            ModuleDescriptor moduleDescriptor = (ModuleDescriptor) moduleIter.next();
+            newModuleKeys.add(moduleDescriptor.getKey());
+        }
+
+        // Remove any keys from the old plugin state that do not exist in the new version
+        CollectionUtils.filter(oldPluginState.keySet(), new Predicate() {
+            public boolean evaluate(Object object)
+            {
+                String key = (String) object;
+                return newModuleKeys.contains(key);
+            }
+        });
+
+        // Restore the configuration
+        PluginManagerState currentState = getState();
+        currentState.getMap().putAll(oldPluginState);
+        getStore().savePluginState(currentState);
     }
 
     public Collection getPlugins()

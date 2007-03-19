@@ -1,5 +1,8 @@
 package com.atlassian.plugin;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -79,5 +82,28 @@ public class PluginManagerState
     public void removeState(String key)
     {
         map.remove(key);
+    }
+
+    public Map getPluginStateMap(final Plugin plugin)
+    {
+        Map state = new HashMap(getMap());
+        CollectionUtils.filter(state.keySet(), new StringStartsWith(plugin.getKey()));
+        return state;
+    }
+
+    private static class StringStartsWith implements Predicate
+    {
+        private final String prefix;
+
+        public StringStartsWith(String keyPrefix)
+        {
+            this.prefix = keyPrefix;
+        }
+
+        public boolean evaluate(Object object)
+        {
+            String str = (String) object;
+            return str.startsWith(prefix);
+        }
     }
 }

@@ -3,7 +3,7 @@
   <pomVersion>3</pomVersion>
   <id>atlassian-plugins</id>
   <name>Atlassian Plugins</name>
-  <currentVersion>2007-01-24</currentVersion>
+  <currentVersion>2007-03-19</currentVersion>
   <organization>
     <name>Atlassian Software Systems Pty Ltd</name>
   </organization>
@@ -66,6 +66,10 @@
     <dependency>
       <id>commons-logging</id>
       <version>1.0.4</version>
+    </dependency>
+    <dependency>
+      <id>commons-collections</id>
+      <version>3.1</version>
     </dependency>
     <dependency>
       <id>dom4j</id>

@@ -29,7 +29,7 @@ import java.util.Collections;
  */
 public class SinglePluginLoader implements PluginLoader
 {
-    Collection plugins;
+    protected Collection plugins;
     protected String resource;
     protected InputStream is;
     private DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
@@ -76,7 +76,7 @@ public class SinglePluginLoader implements PluginLoader
         throw new PluginException("This PluginLoader does not support removal.");
     }
 
-    private Plugin loadPlugin(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    protected Plugin loadPlugin(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         InputStream source = getSource();
         if (source == null)
@@ -86,7 +86,7 @@ public class SinglePluginLoader implements PluginLoader
         try
         {
             DescriptorParser parser = descriptorParserFactory.getInstance(source);
-            plugin = parser.configurePlugin(moduleDescriptorFactory, new StaticPlugin());
+            plugin = parser.configurePlugin(moduleDescriptorFactory, getNewPlugin());
             if (parser.isSystemPlugin())
                 plugin.setSystemPlugin(true);
         }
@@ -96,6 +96,11 @@ public class SinglePluginLoader implements PluginLoader
         }
 
         return plugin;
+    }
+
+    protected StaticPlugin getNewPlugin()
+    {
+        return new StaticPlugin();
     }
 
     protected InputStream getSource()
