@@ -50,8 +50,16 @@ public class ClassLoadingPluginLoader implements PluginLoader
         for (Iterator iterator = scanner.getDeploymentUnits().iterator(); iterator.hasNext();)
         {
             DeploymentUnit deploymentUnit = (DeploymentUnit) iterator.next();
-            Plugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
-            plugins.put(deploymentUnit, plugin);
+            try
+            {
+                Plugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
+                plugins.put(deploymentUnit, plugin);
+            }
+            catch (PluginParseException e)
+            {
+                // The exception has already been logged. We just ignore it and move on to the next
+                // plugin
+            }
         }
 
         return plugins.values();

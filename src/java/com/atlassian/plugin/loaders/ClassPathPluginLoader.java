@@ -53,6 +53,10 @@ public class ClassPathPluginLoader implements PluginLoader
             {
                 log.error("IOException parsing inputstream for : " + url, e);
             }
+            catch (PluginParseException e)
+            {
+                log.error("Unable to load plugin at url: " + url + ", " + e.getMessage(), e);
+            }
         }
     }
 
