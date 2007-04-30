@@ -195,9 +195,8 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         loader.removePlugin(paddingtonPlugin);
     }
 
-    public void testInvalidPluginHandled() throws IOException
+    public void testInvalidPluginHandled() throws IOException, PluginParseException
     {
-        String badJarTitle = "badplugin.jar";
         File atlassianPluginXML = new File(pluginsTestDir, "atlassian-plugin.xml");
 
         FileWriter writer = new FileWriter(atlassianPluginXML);
@@ -209,14 +208,16 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         createJarFile("evilplugin.jar", atlassianPluginXML.getName(), pluginsTestDir.getAbsolutePath());
 
         loader = new ClassLoadingPluginLoader(pluginsTestDir);
-        try
-        {
-            Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
-            fail("The ClassLoadingPluginLoader did not report an invalid atlassian-plugin.xml. This needs to happen as an invalid plugin can harm the state of the plugin manager.");
-        }
-        catch (PluginParseException e)
-        {
-        }
+
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+
+        assertEquals("evil jar wasn't loaded, but other plugins were", pluginsTestDir.list(new FilenameFilter(){
+
+            public boolean accept(File directory, String fileName)
+            {
+                return fileName.endsWith(".jar");
+            }
+        }).length - 1, plugins.size());
     }
 
     private void createJarFile(String jarname, String jarEntry, String saveDir)
