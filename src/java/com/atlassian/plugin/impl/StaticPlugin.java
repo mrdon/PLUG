@@ -95,7 +95,7 @@ public class StaticPlugin implements Plugin, Comparable
 
     public boolean isEnabledByDefault()
     {
-        return enabledByDefault && pluginInformation.satisfiesMinJavaVersion();
+        return enabledByDefault && (pluginInformation == null || pluginInformation.satisfiesMinJavaVersion());
     }
 
     public void setEnabledByDefault(boolean enabledByDefault)
