@@ -3,12 +3,12 @@ package com.atlassian.plugin.webresource;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.servlet.BaseFileServerServlet;
+import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -20,12 +20,12 @@ import java.util.Map;
  * To use this manager, you need to have the following UrlRewriteFilter code:
  * <pre>
  * &lt;rule>
-        &lt;from>^/s/(.*)/_/(.*)&lt;/from>
-        &lt;run class="com.atlassian.plugin.servlet.ResourceDownloadUtils" method="addCachingHeaders" />
-        &lt;to type="forward">/$2&lt;/to>
-    &lt;/rule>
+ * &lt;from>^/s/(.*)/_/(.*)&lt;/from>
+ * &lt;run class="com.atlassian.plugin.servlet.ResourceDownloadUtils" method="addCachingHeaders" />
+ * &lt;to type="forward">/$2&lt;/to>
+ * &lt;/rule>
  * </pre>
- *
+ * <p/>
  * Sub-classes should implement the abstract methods
  */
 public class WebResourceManagerImpl implements WebResourceManager
@@ -46,6 +46,18 @@ public class WebResourceManagerImpl implements WebResourceManager
     public WebResourceManagerImpl(WebResourceIntegration webResourceIntegration)
     {
         this.webResourceIntegration = webResourceIntegration; //constructor for JIRA / Pico
+    }
+
+    public void requireResource(String resourceName)
+    {
+        if (WebResourceManager.DELAYED_INCLUDE_MODE.equals(getIncludeMode()))
+        {
+            requireDelayedResource(resourceName);
+        }
+        else
+        {
+            throw new IllegalStateException("Require Writer for Inline mode.");
+        }
     }
 
     public void requireResource(String resourceName, Writer writer)
@@ -72,7 +84,9 @@ public class WebResourceManagerImpl implements WebResourceManager
         Map cache = webResourceIntegration.getRequestCache();
         Collection webResourceNames = (Collection) cache.get(REQUEST_CACHE_RESOURCE_KEY);
         if (webResourceNames == null)
-            webResourceNames = new ArrayList(); // todo - need a set to ensure uniqueness, but we need to also have ordering
+        {
+            webResourceNames = new ListOrderedSet();
+        }
 
         webResourceNames.add(resourceName);
         cache.put(REQUEST_CACHE_RESOURCE_KEY, webResourceNames);
@@ -98,7 +112,9 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         Collection webResourceNames = (Collection) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_RESOURCE_KEY);
         if (webResourceNames == null || webResourceNames.isEmpty())
+        {
             return;
+        }
 
         for (Iterator iterator = webResourceNames.iterator(); iterator.hasNext();)
         {
@@ -197,14 +213,15 @@ public class WebResourceManagerImpl implements WebResourceManager
         webResourceIntegration.getRequestCache().put(REQUEST_CACHE_MODE_KEY, includeMode);
     }
 
-    private IncludeMode getIncludeMode()
+    IncludeMode getIncludeMode()
     {
         IncludeMode includeMode = (IncludeMode) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_MODE_KEY);
         if (includeMode == null)
+        {
             includeMode = DEFAULT_INCLUDE_MODE;
+        }
         return includeMode;
     }
-
 
 
 }

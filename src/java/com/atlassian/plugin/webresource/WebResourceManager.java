@@ -17,6 +17,16 @@ public interface WebResourceManager
 {
     /**
      * Called by a component to indicate that a certain resource is required to be inserted into
+     * this page.  Note that this will always include the resources as if we are in {@link #DELAYED_INCLUDE_MODE}.
+     * Use this if you do not want to inline a resource.
+     *
+     * @param resourceName The fully qualified plugin name to include (eg <code>jira.webresources:scriptaculous</code>)
+     * @throws IllegalStateException If this method is called while not in {@link #DELAYED_INCLUDE_MODE}.
+     */
+    void requireResource(String resourceName);
+
+    /**
+     * Called by a component to indicate that a certain resource is required to be inserted into
      * this page.
      *
      * @param resourceName The fully qualified plugin name to include (eg <code>jira.webresources:scriptaculous</code>)
