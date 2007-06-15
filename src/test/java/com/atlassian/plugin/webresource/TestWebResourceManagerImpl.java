@@ -1,12 +1,16 @@
 package com.atlassian.plugin.webresource;
 
-import junit.framework.TestCase;
-import com.mockobjects.dynamic.Mock;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginInformation;
-import com.atlassian.plugin.servlet.BaseFileServerServlet;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
+import com.atlassian.plugin.servlet.BaseFileServerServlet;
+import com.mockobjects.dynamic.Mock;
+import junit.framework.TestCase;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestWebResourceManagerImpl extends TestCase
 {
@@ -61,7 +65,81 @@ public class TestWebResourceManagerImpl extends TestCase
         animalModuleDescriptor.setPlugin(animalPlugin);
 
         String resourceName = "foo.js";
-        String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + ANIMAL_PLUGIN_VERSION + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" + animalModuleDescriptor.getCompleteKey() + "/" + resourceName;;
+        String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + ANIMAL_PLUGIN_VERSION + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" + animalModuleDescriptor.getCompleteKey() + "/" + resourceName;
         assertEquals(expectedPrefix, webResourceManager.getStaticPluginResource(animalModuleDescriptor, resourceName));
+    }
+
+
+    public void testRequireResourceWithoutWriter()
+    {
+        WebResourceManagerImpl manager = new WebResourceManagerImpl(new FakeWebResourceIntegration(new HashMap()));
+        //default should be delayed mode
+        assertEquals(WebResourceManager.DELAYED_INCLUDE_MODE, manager.getIncludeMode());
+
+        //lets add a resource and check
+        manager.requireResource("resource1");
+
+        // lets try the same in inline mode.  Should throw an exception.
+        manager.setIncludeMode(WebResourceManager.INLINE_INCLUDE_MODE);
+        assertEquals(WebResourceManager.INLINE_INCLUDE_MODE, manager.getIncludeMode());
+        try
+        {
+            manager.requireResource("resource1");
+            fail();
+        } catch (IllegalStateException e)
+        {
+            //expected exception.
+        }
+    }
+
+    public void testSettingIncludedMode()
+    {
+        WebResourceManagerImpl manager = new WebResourceManagerImpl(new FakeWebResourceIntegration(new HashMap()));
+        //default should be delayed mode
+        assertEquals(WebResourceManager.DELAYED_INCLUDE_MODE, manager.getIncludeMode());
+
+        // lets try the same in inline mode.
+        manager.setIncludeMode(WebResourceManager.INLINE_INCLUDE_MODE);
+        assertEquals(WebResourceManager.INLINE_INCLUDE_MODE, manager.getIncludeMode());
+
+        // lets switch back
+        manager.setIncludeMode(WebResourceManager.DELAYED_INCLUDE_MODE);
+        assertEquals(WebResourceManager.DELAYED_INCLUDE_MODE, manager.getIncludeMode());
+    }
+
+    private class FakeWebResourceIntegration implements WebResourceIntegration
+    {
+        private final Map requestCache;
+
+
+        public FakeWebResourceIntegration(Map requestCache)
+        {
+            this.requestCache = requestCache;
+        }
+
+        public PluginAccessor getPluginAccessor()
+        {
+            return null;
+        }
+
+        public Map getRequestCache()
+        {
+            return requestCache;
+        }
+
+        public String getSystemCounter()
+        {
+            return null;
+        }
+
+        public String getSystemBuildNumber()
+        {
+            return null;
+        }
+
+        public String getBaseUrl()
+        {
+            return null;
+        }
     }
 }
