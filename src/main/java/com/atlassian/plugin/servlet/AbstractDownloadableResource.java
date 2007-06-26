@@ -11,19 +11,19 @@ import java.util.Date;
 
 public abstract class AbstractDownloadableResource implements DownloadableResource
 {
-    protected ResourceLocation resourceDescriptor;
+    protected ResourceLocation resourceLocation;
     protected String extraPath;
     protected Plugin plugin;
     protected BaseFileServerServlet servlet;
 
-    public AbstractDownloadableResource(BaseFileServerServlet servlet, Plugin plugin, ResourceLocation resourceDescriptor, String extraPath)
+    public AbstractDownloadableResource(BaseFileServerServlet servlet, Plugin plugin, ResourceLocation resourceLocation, String extraPath)
     {
-        if (extraPath != null && !"".equals(extraPath.trim()) && !resourceDescriptor.getLocation().endsWith("/"))
+        if (extraPath != null && !"".equals(extraPath.trim()) && !resourceLocation.getLocation().endsWith("/"))
         {
             extraPath = "/" + extraPath;
         }
 
-        this.resourceDescriptor = resourceDescriptor;
+        this.resourceLocation = resourceLocation;
         this.extraPath = extraPath;
         this.plugin = plugin;
         this.servlet = servlet;
@@ -32,17 +32,17 @@ public abstract class AbstractDownloadableResource implements DownloadableResour
 
     protected String getContentType()
     {
-        if (resourceDescriptor.getContentType() == null)
+        if (resourceLocation.getContentType() == null)
         {
             return servlet.getContentType(getLocation());
         }
 
-        return resourceDescriptor.getContentType();
+        return resourceLocation.getContentType();
     }
 
     protected String getLocation()
     {
-        return resourceDescriptor.getLocation() + extraPath;
+        return resourceLocation.getLocation() + extraPath;
     }
 
     public String toString()
