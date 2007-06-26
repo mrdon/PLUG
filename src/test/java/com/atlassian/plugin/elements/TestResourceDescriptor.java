@@ -89,7 +89,10 @@ public class TestResourceDescriptor extends TestCase
     {
         Document multiResources = DocumentHelper.parseText("<resource type=\"foo\" namePattern=\".*\\.jpg\" location=\"xxx/\"/>");
         ResourceDescriptor rd = new ResourceDescriptor(multiResources.getRootElement());
-        assertNotNull(rd.getResourceLocationForName("fred.jpg"));
+        final ResourceLocation location = rd.getResourceLocationForName("fred.jpg");
+        assertEquals("foo", location.getType());
+        assertEquals("fred.jpg", location.getName());
+        assertEquals("xxx/", location.getLocation());
         try
         {
             rd.getResourceLocationForName("fred.gif");
@@ -97,7 +100,18 @@ public class TestResourceDescriptor extends TestCase
         }
         catch (RuntimeException re)
         {
-            // expected
+            // expect to fail when name doesn't match pattern
         }
     }
+
+    public void testGetResourceLocationForNameForSingleResource() throws DocumentException
+    {
+        Document xml = DocumentHelper.parseText("<resource type=\"foo\" name=\"bob.jpg\" location=\"path/to/builders/\"/>");
+        ResourceDescriptor rd = new ResourceDescriptor(xml.getRootElement());
+        final ResourceLocation location = rd.getResourceLocationForName("builders/bob.jpg");
+        assertEquals(rd.getLocation(), location.getLocation());
+        assertEquals(rd.getType(), location.getType());
+        assertEquals(rd.getName(), location.getName());
+    }
+
 }
