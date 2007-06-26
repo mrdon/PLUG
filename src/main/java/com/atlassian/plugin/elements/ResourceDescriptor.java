@@ -147,6 +147,12 @@ public class ResourceDescriptor
         return result;
     }
 
+    /**
+     * Used for resource descriptors that specify multiple resources, via {@link #pattern}.
+     *
+     * @return the location of an individual resource with the name if it matches the pattern,
+     * otherwise the location for the actual resource descriptor.
+     */
     public ResourceLocation getResourceLocationForName(String name)
     {
 
