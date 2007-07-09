@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
         <artifactId>atlassian-base</artifactId>
         <groupId>com.atlassian.base</groupId>
@@ -10,15 +8,15 @@
     <groupId>com.atlassian.plugins</groupId>
     <artifactId>atlassian-plugins</artifactId>
     <name>Atlassian Plugins</name>
-    <version>0.6-SNAPSHOT</version>
+    <version>0.6</version>
     <description>A library to give systems the ability to have plugins, make
         them more pluggable and hence add pluggability (it's late - that makes sense in my head).
     </description>
     <scm>
-        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/atlassian-core/trunk/</connection>
-        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/atlassian-core/trunk/
-        </developerConnection>
-    </scm>
+        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/atlassian-core/tags/atlassian-plugins-0.6</connection>
+        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/atlassian-core/tags/atlassian-plugins-0.6</developerConnection>
+      <url>https://svn.atlassian.com/svn/private/atlassian/atlassian-base/tags/atlassian-plugins-0.6</url>
+  </scm>
     <build>
         <testResources>
             <testResource>
@@ -90,4 +88,3 @@
         </dependency>
     </dependencies>
 </project>
-
