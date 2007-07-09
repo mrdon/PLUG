@@ -34,7 +34,7 @@ public class TestScanner extends AbstractTestClassLoader
         File paddington = new File(pluginsDirectory, "paddington-test-plugin.jar");
         File duplicate = new File(pluginsDirectory, "duplicate-test-plugin.jar");
 
-        // make sure it's not thate from a bad test
+        // make sure it's not there already from a bad test
         if (duplicate.canRead())
             duplicate.delete();
 
@@ -96,9 +96,8 @@ public class TestScanner extends AbstractTestClassLoader
 
     public void testAcceptOnlyJar() throws Exception
     {
-        File pluginsDirectory = getPluginsDirectory();
-        Scanner scanner = new Scanner(pluginsDirectory);
-        assertTrue(scanner.accept(new File("myfile.jar")));
-        assertFalse(scanner.accept(new File("myfile.txt")));
+        Scanner.JarFileFilter filter = new Scanner.JarFileFilter();
+        assertTrue(filter.accept(new File("myfile.jar")));
+        assertFalse(filter.accept(new File("myfile.txt")));
     }
 }

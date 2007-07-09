@@ -231,7 +231,7 @@ public class TestSinglePluginLoader extends TestCase
         }
         catch (PluginParseException e)
         {
-            assertTrue(e.getMessage().endsWith("Plugin key's cannot contain ':'. Key is 'test:bad'"));
+            assertTrue(e.getMessage().endsWith("Plugin keys cannot contain ':'. Key is 'test:bad'"));
         }
     }
 

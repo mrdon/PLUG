@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-public interface Plugin extends Resourced
+public interface Plugin extends Resourced, Comparable
 {
     public static final Comparator NAME_COMPARATOR = new PluginNameComparator();
 
@@ -98,6 +98,8 @@ public interface Plugin extends Resourced
      */
     InputStream getResourceAsStream(String name);
 
-    int compareTo(Object o);
-
+    /**
+     * Free any resources held by this plugin.  To be called during uninstallation of the {@link Plugin}.
+     */
+    void close();
 }

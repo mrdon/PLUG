@@ -1,17 +1,18 @@
 package com.atlassian.plugin.impl;
 
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
+import com.atlassian.plugin.loaders.classloading.PluginsClassLoader;
 
 import java.io.InputStream;
 
 public class DynamicPlugin extends StaticPlugin
 {
-    private DeploymentUnit deploymentUnit;
-    private ClassLoader loader;
+    private final DeploymentUnit deploymentUnit;
+    private final PluginsClassLoader loader;
     private boolean deletable = true;
     private boolean bundled = false;
 
-    public DynamicPlugin(DeploymentUnit deploymentUnit, ClassLoader loader)
+    public DynamicPlugin(DeploymentUnit deploymentUnit, PluginsClassLoader loader)
     {
         super();
         this.deploymentUnit = deploymentUnit;
@@ -70,5 +71,11 @@ public class DynamicPlugin extends StaticPlugin
     public void setBundled(boolean bundled)
     {
         this.bundled = bundled;
+    }
+
+
+    public void close()
+    {
+        loader.close();
     }
 }

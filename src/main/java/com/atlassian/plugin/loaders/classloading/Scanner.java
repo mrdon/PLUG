@@ -9,34 +9,27 @@ import java.net.MalformedURLException;
 import java.util.*;
 
 /**
- * Deployment Scanner
- *
- * @author <a href="vsalaman@softekpr.com">Victor Salaman</a>
- * @version 1.0
+ * Scans the filesystem for changed or added plugin jars and stores a map of the currently known ones.
  */
-public class Scanner implements FileFilter
+public class Scanner
 {
     private static Log log = LogFactory.getLog(Scanner.class);
 
     /**
+     * File filter used to load just the jars.
+     */
+    private final static FileFilter fileFilter = new JarFileFilter();
+
+    /**
      * Tracks the classloading
      */
-    File libDir;
+    private File libDir;
 
     /**
-     * Tracks classloading modifications. Keeps a value of last modified for the plugin dir.
+     * A Map of {@link String} absolute file paths to {@link DeploymentUnit}s.
      */
-    long lastModified;
+    private Map scannedDeploymentUnits = new HashMap();
 
-    /**
-     * Holds the plugin extension.
-     */
-    String pluginExtension = ".jar";
-
-    /**
-     * Holds the classloaders keyed by deployment units.
-     */
-    Map deployedLoaders = new HashMap();
 
     /**
      * Constructor for scanner.
@@ -48,103 +41,100 @@ public class Scanner implements FileFilter
         this.libDir = libDir;
     }
 
-    public boolean accept(File file)
+    private DeploymentUnit createAndStoreDeploymentUnit(File file) throws MalformedURLException
     {
-        return file.getName().endsWith(pluginExtension);
-    }
-
-    private void deploy(File file) throws MalformedURLException
-    {
-        if (isDeployed(file)) return;
+        if (isScanned(file))
+            return null;
 
         DeploymentUnit unit = new DeploymentUnit(file);
-        JarClassLoader cl = new JarClassLoader(file, Thread.currentThread().getContextClassLoader());
-        deployedLoaders.put(unit, cl);
+        scannedDeploymentUnits.put(file.getAbsolutePath(), unit);
 
-        /** Your deploy stuff here **/
+        return unit;
     }
 
+    /**
+     * Given a file, finds the deployment unit for it if one has already been scanned.
+     * @param file a jar file.
+     * @return the stored deploymentUnit matching the file or null if none exists.
+     */
     public DeploymentUnit locateDeploymentUnit(File file)
     {
-        Collection dUnits = deployedLoaders.keySet();
-        for (Iterator iterator = dUnits.iterator(); iterator.hasNext();)
-        {
-            DeploymentUnit unit = (DeploymentUnit) iterator.next();
-            if (unit.path.getAbsolutePath().equals(file.getAbsolutePath()))
-            {
-                return unit;
-            }
-        }
-        return null;
+        return (DeploymentUnit) scannedDeploymentUnits.get(file.getAbsolutePath());
     }
 
-    public boolean isDeployed(File file)
+    /**
+     * Finds whether the given file has been scanned already.
+     */
+    private boolean isScanned(File file)
     {
         return locateDeploymentUnit(file) != null;
     }
 
-    public void undeploy(File file)
+    /**
+     * Tells the Scanner to forget about a file it has loaded so that it will reload it
+     * next time it scans.
+     *
+     * @param file a file that may have already been scanned.
+     */
+    public void clear(File file)
     {
-        DeploymentUnit unit = locateDeploymentUnit(file);
-        if (unit != null)
-        {
-            JarClassLoader jcl = (JarClassLoader) deployedLoaders.remove(unit);
-            jcl.close();
-        }
-    }
-
-    public boolean isModified()
-    {
-        return libDir.canRead() && (lastModified != libDir.lastModified());
+        scannedDeploymentUnits.remove(file.getAbsolutePath());
     }
 
     /**
-     * Scans the plugin classloading and does the proper things.
-     * Handles deployment and undeployment.
+     * Scans for jars that have been added or modified since the last call to scan.
+     *
+     * @return Collection of {@link DeploymentUnit}s that describe newly added Jars.
      */
-    public void scan()
+    public Collection scan()
     {
-        // Checks to see if we have deleted one of the deployment units.
-        Collection dUnits = deployedLoaders.keySet();
-        List toUndeploy = new ArrayList();
-        for (Iterator iterator = dUnits.iterator(); iterator.hasNext();)
+        // Checks to see if we have deleted any of the deployment units.
+        List removedFiles = new ArrayList();
+        for (Iterator iterator = scannedDeploymentUnits.values().iterator(); iterator.hasNext();)
         {
             DeploymentUnit unit = (DeploymentUnit) iterator.next();
             if (!unit.path.exists() || !unit.path.canRead())
             {
-                toUndeploy.add(unit.getPath());
+                removedFiles.add(unit.getPath());
             }
         }
-        undeploy(toUndeploy);
+        clear(removedFiles);
 
         // Checks for new files.
-        File file[] = libDir.listFiles(this);
-        if (file == null)
+        Collection result = new ArrayList();
+        File files[] = libDir.listFiles(fileFilter);
+        if (files == null)
         {
             log.error("listFiles returned null for directory " + libDir.getAbsolutePath());
         }
         else
         {
-            for (int i = 0; i < file.length; i++)
+            for (int i = 0; i < files.length; i++)
             {
+                File file = files[i];
                 try
                 {
-                    if (isDeployed(file[i]) && isModified(file[i]))
+                    if (isScanned(file) && isModified(file))
                     {
-                        undeploy(file[i]);
-                        deploy(file[i]);
+                        clear(file);
+                        DeploymentUnit unit = createAndStoreDeploymentUnit(file);
+                        if (unit != null)
+                            result.add(unit);
                     }
-                    else if (!isDeployed(file[i]))
+                    else if (!isScanned(file))
                     {
-                        deploy(file[i]);
+                        DeploymentUnit unit = createAndStoreDeploymentUnit(file);
+                        if (unit != null)
+                            result.add(unit);                        
                     }
                 }
                 catch (MalformedURLException e)
                 {
-                    log.error("Error deploying plugin " + file[i].getAbsolutePath(), e);
+                    log.error("Error deploying plugin " + file.getAbsolutePath(), e);
                 }
             }
         }
+        return result;
     }
 
     private boolean isModified(File file)
@@ -153,31 +143,40 @@ public class Scanner implements FileFilter
         return file.lastModified() > unit.lastModified();
     }
 
-    private void undeploy(List toUndeploy)
+    private void clear(List toUndeploy)
     {
         for (Iterator iterator = toUndeploy.iterator(); iterator.hasNext();)
         {
-            undeploy((File) iterator.next());
+            clear((File) iterator.next());
         }
     }
 
+    /**
+     * Retrieve all the {@link DeploymentUnit}s currently stored.
+     *
+     * @return the complete unmodifiable list of scanned {@link DeploymentUnit}s.
+     */
     public Collection getDeploymentUnits()
     {
-        return deployedLoaders.keySet();
+        return Collections.unmodifiableCollection(scannedDeploymentUnits.values());
     }
 
-    public ClassLoader getClassLoader(DeploymentUnit deploymentUnit)
+    /**
+     * Clears the list of scanned deployment units.
+     */
+    public void clearAll()
     {
-        return (ClassLoader) deployedLoaders.get(deploymentUnit);
+        scannedDeploymentUnits.clear();
     }
 
-    public void undeployAll()
+    /**
+     * Reinvents the wheel and lets only files ending in .jar pass through.
+     */
+    static class JarFileFilter implements FileFilter
     {
-        for (Iterator iterator = deployedLoaders.values().iterator(); iterator.hasNext();)
+        public boolean accept(File file)
         {
-            JarClassLoader jarClassLoader = (JarClassLoader) iterator.next();
-            jarClassLoader.close();
-            iterator.remove();
+            return file.getName().endsWith(".jar");
         }
     }
 }

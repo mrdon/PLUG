@@ -17,14 +17,12 @@ import org.apache.commons.logging.LogFactory;
 
 public class StaticPlugin implements Plugin, Comparable
 {
-    private static final Log log = LogFactory.getLog(StaticPlugin.class);
     private String name;
     private String i18nNameKey;
     private String key;
     private Map modules = new LinkedHashMap();
     private boolean enabledByDefault = true;
     private PluginInformation pluginInformation;
-    List resourceDescriptors;
     private boolean enabled;
     private boolean system;
     private Resourced resources;
@@ -249,6 +247,12 @@ public class StaticPlugin implements Plugin, Comparable
     public boolean isDeleteable()
     {
         return false;
+    }
+
+
+    public void close()
+    {
+
     }
 }
 

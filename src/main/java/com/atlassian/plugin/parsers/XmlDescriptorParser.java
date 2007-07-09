@@ -67,7 +67,7 @@ public class XmlDescriptorParser implements DescriptorParser
         }
 
         if (plugin.getKey().indexOf(":") > 0)
-            throw new PluginParseException("Plugin key's cannot contain ':'. Key is '" + plugin.getKey() + "'");
+            throw new PluginParseException("Plugin keys cannot contain ':'. Key is '" + plugin.getKey() + "'");
 
         if ("disabled".equalsIgnoreCase(pluginElement.attributeValue("state")))
             plugin.setEnabledByDefault(false);

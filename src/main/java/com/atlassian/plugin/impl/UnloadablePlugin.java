@@ -45,4 +45,10 @@ public class UnloadablePlugin extends StaticPlugin
     {
         this.errorText = errorText;
     }
+
+
+    public void close()
+    {
+
+    }
 }
