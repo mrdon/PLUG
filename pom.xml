@@ -13,9 +13,9 @@
         them more pluggable and hence add pluggability (it's late - that makes sense in my head).
     </description>
     <scm>
-        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/atlassian-core/trunk/</connection>
-        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/atlassian-core/trunk/</developerConnection>
-      <url>https://svn.atlassian.com/svn/private/atlassian/atlassian-base/tags/atlassian-base-2.3.2/atlassian-plugins</url>
+        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/</connection>
+        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/</developerConnection>
+      <url>https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</url>
   </scm>
     <build>
         <testResources>
