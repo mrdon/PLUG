@@ -1,14 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
-        <artifactId>atlassian-base</artifactId>
-        <groupId>com.atlassian.base</groupId>
-        <version>2.5</version>
+      <artifactId>atlassian-plugins</artifactId>
+      <groupId>com.atlassian.plugins</groupId>
+      <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.atlassian.plugins</groupId>
-    <artifactId>atlassian-plugins</artifactId>
-    <name>Atlassian Plugins</name>
-    <version>0.8-SNAPSHOT</version>
+    <artifactId>atlassian-plugins-core</artifactId>
+    <name>Atlassian Plugins Core</name>
+    <version>1.0-SNAPSHOT</version>
     <description>A library to give systems the ability to have plugins, make
         them more pluggable and hence add pluggability (it's late - that makes sense in my head).
     </description>
@@ -77,8 +77,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>mockobjects</groupId>
