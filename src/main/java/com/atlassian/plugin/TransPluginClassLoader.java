@@ -1,104 +1,42 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.impl.DynamicPlugin;
+import com.atlassian.plugin.util.MultiDelegationClassLoader;
 
-import java.net.URL;
-import java.io.InputStream;
-import java.util.List;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * This class loader will search the class loaders of all enabled dynamic plugins if it cannot find a class in the
  * default class loader.
  */
-public class TransPluginClassLoader extends ClassLoader
+public class TransPluginClassLoader extends MultiDelegationClassLoader
 {
-    private PluginManager pluginManager;
+    private PluginAccessor pluginAccessor;
 
-    /**
-     * This class encapsulates our class loading strategy.
-     */
-    private abstract class Search
+    protected List/*<ClassLoader>*/ getClassLoaders()
     {
-        public abstract Object eachClassLoader(ClassLoader cl);
+        Collection allPlugins = pluginAccessor.getPlugins();
 
-        public Object doSearch()
+        List classLoaders = new ArrayList(allPlugins.size());
+
+        for (Iterator it = allPlugins.iterator(); it.hasNext();)
         {
-            Object o = eachClassLoader(Thread.currentThread().getContextClassLoader());
-            if (o != null)
+            Plugin p = (Plugin) it.next();
+            if (p instanceof DynamicPlugin)
             {
-                return o;
+                DynamicPlugin dp = (DynamicPlugin) p;
+                classLoaders.add(dp.getClassLoader());
             }
-            o = eachClassLoader(TransPluginClassLoader.class.getClassLoader());
-            if (o != null)
-            {
-                return o;
-            }
-            Collection plugins = pluginManager.getPlugins();
-            for (Iterator i = plugins.iterator(); i.hasNext();)
-            {
-                Plugin p = (Plugin) i.next();
-                if (p instanceof DynamicPlugin)
-                {
-                    DynamicPlugin dp = (DynamicPlugin) p;
-                    o = eachClassLoader(dp.getClassLoader());
-                    if (o != null)
-                    {
-                        return o;
-                    }
-                }
-            }
-            return null;
         }
 
+        return classLoaders;
     }
 
-    public URL getResource(final String name)
+    public void setPluginManager(PluginAccessor pluginAccessor)
     {
-        return (URL)new Search() {
-            public Object eachClassLoader(ClassLoader cl)
-            {
-                return cl.getResource(name);
-            }
-        }.doSearch();
-    }
-
-    public InputStream getResourceAsStream(final String name)
-    {
-        return (InputStream)new Search() {
-            public Object eachClassLoader(ClassLoader cl)
-            {
-                return cl.getResourceAsStream(name);
-            }
-        }.doSearch();
-    }
-
-    public Class loadClass(final String name) throws ClassNotFoundException
-    {
-        Class c = (Class)new Search() {
-            public Object eachClassLoader(ClassLoader cl)
-            {
-                try
-                {
-                    return cl.loadClass(name);
-                }
-                catch (ClassNotFoundException e)
-                {
-                    return null;
-                }
-            }
-        }.doSearch();
-        if (c == null)
-        {
-            throw new ClassNotFoundException(name);
-        }
-        return c;
-    }
-
-
-    public void setPluginManager(PluginManager pluginManager)
-    {
-        this.pluginManager = pluginManager;
+        this.pluginAccessor = pluginAccessor;
     }
 }
