@@ -1,0 +1,29 @@
+<project default="jar:install" xmlns:j="jelly:core" xmlns:doc="doc">
+    <preGoal name="xdoc:jelly-transform">
+        <attainGoal name="html2xdoc"/>
+
+        <doc:text-xdoc
+            title="Project License"
+            section="Project License"
+            output="${pom.getPluginContext('maven-xdoc-plugin').getVariable('maven.gen.docs')}/license.xml"
+            inputFile="${basedir}/LICENSE.txt"/>
+    </preGoal>
+
+    <goal name="atlassian:install" prereqs="site, dist">
+        <!-- copy the site to atlassian.site.destination property -->
+        <delete dir="${atlassian.site.destination}"/>
+        <mkdir dir="${atlassian.site.destination}"/>
+        <copy todir="${atlassian.site.destination}">
+            <fileset dir="${maven.build.dir}/docs">
+                <include name="**"/>
+            </fileset>
+        </copy>
+
+        <!-- copy the distribution files to atlassian.dist.destination property -->
+        <copy todir="${atlassian.dist.destination}">
+            <fileset dir="${maven.build.dir}/distributions">
+                <include name="**"/>
+            </fileset>
+        </copy>
+    </goal>
+</project>

@@ -1,0 +1,3 @@
+- add unit test for resource.parameter.generator construction 
+- add caching to plugin manager (particularly getByClass(x))
+- add plugin dependency (my plugin X depends on plugin Y to be loaded)

@@ -1,0 +1,13 @@
+import com.atlassian.plugin.modulefactory.*
+
+class MySubclass extends TestSuperclass {
+
+    MySubclass() {
+        super("foobar")
+    }
+
+    public String someOtherMethod() {
+        return "foobar"
+    }
+}
+return new MySubclass()
