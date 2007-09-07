@@ -141,7 +141,15 @@ public class WebResourceManagerImpl implements WebResourceManager
         {
             ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator1.next();
             String name = resourceDescriptor.getName();
-            String linkToResource = getStaticPluginResourcePrefix(descriptor, resourceDescriptor.getName());
+            String linkToResource;
+            if ("false".equalsIgnoreCase(resourceDescriptor.getParameter("cache")))
+            {
+                linkToResource = webResourceIntegration.getBaseUrl() + getResourceUrl(descriptor, resourceDescriptor.getName());
+            }
+            else
+            {
+                linkToResource = getStaticPluginResource(descriptor, resourceDescriptor.getName());
+            }
             if (name != null && name.endsWith(JAVA_SCRIPT_EXTENSION))
             {
                 writer.write("<script type=\"text/javascript\" src=\"" + linkToResource + "\"></script>\n");
@@ -208,21 +216,30 @@ public class WebResourceManagerImpl implements WebResourceManager
     }
 
     /**
-     * @deprecated
+     * @deprecated Use {@link #getStaticPluginResource(com.atlassian.plugin.ModuleDescriptor, String)} instead
      */
     public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, String resourceName)
     {
         return getStaticPluginResource(moduleDescriptor, resourceName);
     }
 
+    /**
+     * @return "{base url}/s/{build num}/{system counter}/{plugin version}/_/download/resources/{plugin.key:module.key}/{resource.name}"
+     */
     public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName)
     {
         // "{base url}/s/{build num}/{system counter}/{plugin version}/_"
         String prefix = getStaticResourcePrefix(moduleDescriptor.getPlugin().getPluginInformation().getVersion());
 
         // "/download/resources/plugin.key:module.key/resource.name"
-        String suffix = "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleDescriptor.getCompleteKey() + "/" + resourceName;
+        String suffix = getResourceUrl(moduleDescriptor, resourceName);
         return prefix + suffix;
+    }
+
+    // "/download/resources/plugin.key:module.key/resource.name"
+    private String getResourceUrl(ModuleDescriptor moduleDescriptor, String resourceName)
+    {
+        return "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleDescriptor.getCompleteKey() + "/" + resourceName;
     }
 
     public String getStaticPluginResource(String pluginModuleKey, String resourceName)
