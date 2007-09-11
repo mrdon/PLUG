@@ -62,9 +62,9 @@
             <version>1.0.b2</version>
         </dependency>
         <dependency>
-            <groupId>seraph</groupId>
-            <artifactId>seraph</artifactId>
-            <version>0.7.17</version>
+            <groupId>com.atlassian.seraph</groupId>
+            <artifactId>atlassian-seraph</artifactId>
+            <version>0.10-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
