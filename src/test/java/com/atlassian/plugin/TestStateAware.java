@@ -9,6 +9,9 @@ import junit.framework.TestCase;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 /**
  * Tests that the plugin manager properly notifies StateAware plugin modules of state
  * transitions.
@@ -25,6 +28,10 @@ public class TestStateAware extends TestCase
 
     protected void setUp() throws Exception
     {
+    	// FIXME - the next line is here to prevent a null pointer exception caused by a debug logging
+    	// a variable in the lifecycle is not initialized, which is fine for testing, but a debug logging causes an NPE
+    	
+    	Logger.getRootLogger().setLevel(Level.INFO);
         mockEnabling = makeMockModule(Combination.class, "key1", "enabling", true);
         mockDisabled = makeMockModule(Combination.class, "key1", "disabled", false);
         mockThwarted = makeMockModule(ModuleDescriptor.class, "key1", "thwarted", true);
