@@ -34,6 +34,8 @@ public class ServletModuleManager
                 {
                     servlet = descriptor.getServlet();
                     servlet.init(new ServletConfig() {
+                        final ServletContext context = new ServletContextWrapper(descriptor, servletConfig.getServletContext());
+                        
                         public String getServletName()
                         {
                             return descriptor.getName();
@@ -41,7 +43,7 @@ public class ServletModuleManager
 
                         public ServletContext getServletContext()
                         {
-                            return servletConfig.getServletContext();
+                            return context;
                         }
 
                         public String getInitParameter(String s)
@@ -79,10 +81,6 @@ public class ServletModuleManager
 
         inittedServlets.remove(descriptor.getCompleteKey());
 
-        for (Iterator iterator = descriptor.getPaths().iterator(); iterator.hasNext();)
-        {
-            String path = (String) iterator.next();
-            mapper.put(path, null);
-        }
+        mapper.put(descriptor.getCompleteKey(), null);
     }
 }
