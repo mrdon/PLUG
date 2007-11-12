@@ -85,7 +85,7 @@ public class ClassLoadingPluginLoader implements PluginLoader
             pluginDescriptor = loader.getResourceAsStream(pluginDescriptorFileName);
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
-            plugin = parser.configurePlugin(moduleDescriptorFactory, createPlugin(deploymentUnit, loader));
+            plugin = parser.configurePlugin(moduleDescriptorFactory, new DynamicPlugin(deploymentUnit, loader));
         }
         // Under normal conditions, the loader would be closed when the plugins are undeployed. However,
         // these are not normal conditions, so we need to make sure that we close them explicitly.        
@@ -109,11 +109,6 @@ public class ClassLoadingPluginLoader implements PluginLoader
             FileUtils.shutdownStream(pluginDescriptor);
         }
         return plugin;
-    }
-    
-    protected Plugin createPlugin(DeploymentUnit deploymentUnit, PluginsClassLoader loader)
-    {
-        return new DynamicPlugin(deploymentUnit, loader);
     }
 
     public boolean supportsRemoval()

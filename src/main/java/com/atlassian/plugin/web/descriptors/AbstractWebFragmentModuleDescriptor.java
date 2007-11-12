@@ -1,7 +1,6 @@
 package com.atlassian.plugin.web.descriptors;
 
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Plugin;
@@ -28,9 +27,7 @@ import java.util.Iterator;
 public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModuleDescriptor implements StateAware, WebFragmentModuleDescriptor
 {
     protected WebInterfaceManager webInterfaceManager;
-    protected Element element;
     protected int weight;
-    
     protected Condition condition;
     protected ContextProvider contextProvider;
     protected DefaultWebLabel label;
@@ -50,7 +47,6 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     {
         super.init(plugin, element);
 
-        this.element = element; 
         weight = 1000;
         try
         {
@@ -59,6 +55,28 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         catch (NumberFormatException e)
         {
         }
+
+        if (element.element("context-provider") != null)
+        {
+            contextProvider = makeContextProvider(element.element("context-provider"));
+        }
+
+        if (element.element("label") != null)
+        {
+            label = new DefaultWebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
+        }
+
+        if (element.element("tooltip") != null)
+        {
+            tooltip = new DefaultWebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
+        }
+
+        if (getParams() != null)
+        {
+            params = new DefaultWebParam(getParams(), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
+        }
+
+        condition = makeConditions(element, COMPOSITE_TYPE_AND);
     }
 
     /**
@@ -207,38 +225,6 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
 
     public void enabled()
     {
-        // this was moved to the enabled() method because spring beans declared
-        // by the plugin are not available for injection during the init() phase
-        try
-        {
-            if (element.element("context-provider") != null)
-            {
-                contextProvider = makeContextProvider(element.element("context-provider"));
-            }
-    
-            if (element.element("label") != null)
-            {
-                label = new DefaultWebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
-            }
-    
-            if (element.element("tooltip") != null)
-            {
-                tooltip = new DefaultWebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
-            }
-    
-            if (getParams() != null)
-            {
-                params = new DefaultWebParam(getParams(), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
-            }
-    
-            condition = makeConditions(element, COMPOSITE_TYPE_AND);
-        }
-        catch (PluginParseException e)
-        {
-            // is there a better exception to throw?
-            throw new RuntimeException("Unable to enable web fragment", e);
-        }
-        
         webInterfaceManager.refresh();
     }
 
