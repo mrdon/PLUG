@@ -1,4 +1,4 @@
-Copyright (c) 2007 - Atlassian Software System Pty Ltd
+Copyright (c) 2007 - Atlassian Software Systems Pty Ltd
 
 All rights reserved.
 
