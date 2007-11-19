@@ -1,6 +1,7 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
+import com.atlassian.plugin.loaders.DefaultPluginFactory;
 import com.atlassian.plugin.loaders.SinglePluginLoader;
 import com.atlassian.plugin.loaders.ClassLoadingPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
@@ -366,7 +367,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     private DefaultPluginManager makeClassLoadingPluginManager() throws PluginParseException
     {
         List pluginLoaders = new ArrayList();
-        classLoadingPluginLoader = new ClassLoadingPluginLoader(pluginsTestDir);
+        classLoadingPluginLoader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
         pluginLoaders.add(classLoadingPluginLoader);
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);

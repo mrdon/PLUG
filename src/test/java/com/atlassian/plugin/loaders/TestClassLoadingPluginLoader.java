@@ -49,7 +49,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
     public void testAtlassianPlugin() throws Exception
     {
         addTestModuleDecriptors();
-        loader = new ClassLoadingPluginLoader(pluginsTestDir);
+        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         assertEquals(2, plugins.size());
@@ -97,7 +97,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         path = path.replace('/', File.separatorChar);
         path = path.substring(5);
         File pluginFile = new File(path);
-        loader = new ClassLoadingPluginLoader(pluginFile.getParentFile());
+        loader = new ClassLoadingPluginLoader(pluginFile.getParentFile(), new DefaultPluginFactory());
 
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
@@ -128,7 +128,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
 
     public void testSupportsAdditionAndRemoval()
     {
-        loader = new ClassLoadingPluginLoader(pluginsTestDir);
+        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
         assertTrue(loader.supportsAddition());
         assertTrue(loader.supportsRemoval());
     }
@@ -136,7 +136,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
     public void testNoFoundPlugins() throws PluginParseException
     {
         addTestModuleDecriptors();
-        loader = new ClassLoadingPluginLoader(pluginsTestDir);
+        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
         Collection col = loader.addFoundPlugins(moduleDescriptorFactory);
         assertFalse(col.isEmpty());
 
@@ -151,7 +151,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         paddington.delete();
 
         addTestModuleDecriptors();
-        loader = new ClassLoadingPluginLoader(pluginsTestDir);
+        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
         loader.loadAllPlugins(moduleDescriptorFactory);
 
         //restore paddington to test plugins dir
@@ -167,7 +167,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
     public void testRemovePlugin() throws PluginException, IOException
     {
         addTestModuleDecriptors();
-        loader = new ClassLoadingPluginLoader(pluginsTestDir);
+        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         //duplicate the paddington plugin before removing the original
@@ -207,7 +207,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
 
         createJarFile("evilplugin.jar", atlassianPluginXML.getName(), pluginsTestDir.getAbsolutePath());
 
-        loader = new ClassLoadingPluginLoader(pluginsTestDir);
+        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
 
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 

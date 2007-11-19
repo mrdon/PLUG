@@ -1,21 +1,30 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.*;
+import java.io.File;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
+import com.atlassian.plugin.loaders.classloading.JarClassLoader;
+import com.atlassian.plugin.loaders.classloading.PluginsClassLoader;
+import com.atlassian.plugin.loaders.classloading.Scanner;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
 import com.atlassian.plugin.util.FileUtils;
-import com.atlassian.plugin.impl.DynamicPlugin;
-import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
-import com.atlassian.plugin.loaders.classloading.PluginsClassLoader;
-import com.atlassian.plugin.loaders.classloading.Scanner;
-import com.atlassian.plugin.loaders.classloading.JarClassLoader;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import java.io.File;
-import java.io.InputStream;
-import java.util.*;
 
 /**
  * A plugin loader to load plugins from a classloading on disk.
@@ -26,21 +35,23 @@ public class ClassLoadingPluginLoader implements PluginLoader
 {
     private static Log log = LogFactory.getLog(ClassLoadingPluginLoader.class);
     private final String pluginDescriptorFileName;
+    private final PluginFactory pluginFactory;
     private final Scanner scanner;
     /** Maps {@link DeploymentUnit}s to {@link Plugin}s. */
     private final Map plugins;
     private final DescriptorParserFactory descriptorParserFactory;
-
-    public ClassLoadingPluginLoader(File path)
+    
+    public ClassLoadingPluginLoader(File path, PluginFactory pluginFactory)
     {
-        this(path, PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
+        this(path, PluginManager.PLUGIN_DESCRIPTOR_FILENAME, pluginFactory);
     }
 
-    public ClassLoadingPluginLoader(File path, String pluginDescriptorFileName)
+    public ClassLoadingPluginLoader(File path, String pluginDescriptorFileName, PluginFactory pluginFactory)
     {
         log.debug("Creating classloader for url " + path);
         scanner = new Scanner(path);
         this.pluginDescriptorFileName = pluginDescriptorFileName;
+        this.pluginFactory = pluginFactory;
         this.descriptorParserFactory = new XmlDescriptorParserFactory();
         plugins = new HashMap();
     }
@@ -85,7 +96,7 @@ public class ClassLoadingPluginLoader implements PluginLoader
             pluginDescriptor = loader.getResourceAsStream(pluginDescriptorFileName);
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
-            plugin = parser.configurePlugin(moduleDescriptorFactory, new DynamicPlugin(deploymentUnit, loader));
+            plugin = parser.configurePlugin(moduleDescriptorFactory, pluginFactory.createPlugin(deploymentUnit, loader));
         }
         // Under normal conditions, the loader would be closed when the plugins are undeployed. However,
         // these are not normal conditions, so we need to make sure that we close them explicitly.        
@@ -110,7 +121,7 @@ public class ClassLoadingPluginLoader implements PluginLoader
         }
         return plugin;
     }
-
+    
     public boolean supportsRemoval()
     {
         return true;
