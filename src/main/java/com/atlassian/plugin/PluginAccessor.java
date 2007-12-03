@@ -73,6 +73,16 @@ public interface PluginAccessor
     List getEnabledModulesByClassAndDescriptor(Class[] descriptorClazz, Class moduleClass);
 
     /**
+     * Retrieve all plugin modules that implement or extend a specific class, and has a descriptor class
+     * as the descriptorClazz
+     *
+     * @param descriptorClazz @NotNull
+     * @param moduleClass @NotNull
+     * @return List of modules that implement or extend the given class. Empty list if none found
+     */
+    List getEnabledModulesByClassAndDescriptor(Class descriptorClazz, Class moduleClass);
+
+    /**
      * Get all enabled module descriptors that have a specific descriptor class.
      *
      * @return List of {@link com.atlassian.plugin.ModuleDescriptor}s that implement or extend the given class.

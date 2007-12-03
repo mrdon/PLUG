@@ -430,6 +430,11 @@ public class DefaultPluginManager implements PluginManager
         return result;
     }
 
+    public List getEnabledModulesByClassAndDescriptor(Class descriptorClazz, Class moduleClass)
+    {
+        return getEnabledModulesByClassAndDescriptor(new Class[] {descriptorClazz}, moduleClass);
+    }
+
     public void enablePlugin(String key)
     {
         if (key == null)
