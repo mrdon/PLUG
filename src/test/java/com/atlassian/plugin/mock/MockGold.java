@@ -1,6 +1,6 @@
 package com.atlassian.plugin.mock;
 
-public class MockGold implements MockMineral
+public class MockGold implements MockMineral, MockThing
 {
     int weight;
 

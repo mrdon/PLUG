@@ -1,6 +1,6 @@
 package com.atlassian.plugin.mock;
 
-public class MockBear
+public class MockBear implements MockAnimal, MockThing
 {
     public int hashCode()
     {
