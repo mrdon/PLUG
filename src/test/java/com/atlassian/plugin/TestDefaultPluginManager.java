@@ -1,32 +1,30 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
-import com.atlassian.plugin.loaders.DefaultPluginFactory;
-import com.atlassian.plugin.loaders.SinglePluginLoader;
+import com.atlassian.plugin.impl.DynamicPlugin;
+import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.loaders.ClassLoadingPluginLoader;
+import com.atlassian.plugin.loaders.DefaultPluginFactory;
 import com.atlassian.plugin.loaders.PluginLoader;
+import com.atlassian.plugin.loaders.SinglePluginLoader;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
-import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
-import com.atlassian.plugin.mock.MockBear;
-import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
+import com.atlassian.plugin.mock.*;
+import com.atlassian.plugin.parsers.DescriptorParser;
+import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.util.FileUtils;
-import com.atlassian.plugin.impl.StaticPlugin;
-import com.atlassian.plugin.impl.DynamicPlugin;
-import com.atlassian.plugin.parsers.DescriptorParserFactory;
-import com.atlassian.plugin.parsers.DescriptorParser;
-import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
+import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Collections;
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.File;
-import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class TestDefaultPluginManager extends AbstractTestClassLoader
 {
@@ -274,6 +272,40 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(1, descriptors.size());
         moduleDescriptor = (ModuleDescriptor) descriptors.iterator().next();
         assertEquals("Bar", moduleDescriptor.getName());
+    }
+
+    public void testGetModuleByModuleClassAndDescriptor() throws PluginParseException
+    {
+        List pluginLoaders = new ArrayList();
+        pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
+
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+
+        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, moduleDescriptorFactory);
+        manager.init();
+
+        Collection bearModules = manager.getEnabledModulesByClassAndDescriptor(new Class[] {MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class}, MockBear.class);
+        assertNotNull(bearModules);
+        assertEquals(1, bearModules.size());
+        assertTrue(bearModules.iterator().next() instanceof MockBear);
+
+        Collection noModules = manager.getEnabledModulesByClassAndDescriptor(new Class[]{}, MockBear.class);
+        assertNotNull(noModules);
+        assertEquals(0, noModules.size());
+
+        Collection mockThings = manager.getEnabledModulesByClassAndDescriptor(new Class[] {MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class}, MockThing.class);
+        assertNotNull(mockThings);
+        assertEquals(2, mockThings.size());
+        assertTrue(mockThings.iterator().next() instanceof MockThing);
+        assertTrue(mockThings.iterator().next() instanceof MockThing);
+
+        Collection mockThingsFromMineral = manager.getEnabledModulesByClassAndDescriptor(new Class[]{MockMineralModuleDescriptor.class}, MockThing.class);
+        assertNotNull(mockThingsFromMineral);
+        assertEquals(1, mockThingsFromMineral.size());
+        final Object o = mockThingsFromMineral.iterator().next();
+        assertTrue(o instanceof MockMineral);
     }
 
     public void testGetModuleByModuleClassNoneFound() throws PluginParseException

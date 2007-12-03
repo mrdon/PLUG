@@ -1,19 +1,20 @@
 package com.atlassian.plugin;
 
-import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
+import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
+import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -386,6 +387,41 @@ public class DefaultPluginManager implements PluginManager
                     catch (Exception e)
                     {
                         log.error(e);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public List getEnabledModulesByClassAndDescriptor(Class[] descriptorClazz, Class moduleClass)
+    {
+        List result = new LinkedList();
+
+        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
+        {
+            Plugin plugin = (Plugin) iterator.next();
+            for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
+            {
+                ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator1.next();
+                if (ArrayUtils.contains(descriptorClazz, moduleDescriptor.getClass()))
+                {
+                    final Class moduleDescClass = moduleDescriptor.getModuleClass();
+                    if (moduleDescClass != null && moduleClass.isAssignableFrom(moduleDescClass) && isPluginModuleEnabled(moduleDescriptor.getCompleteKey()))
+                    {
+                        try
+                        {
+                            final Object module = moduleDescriptor.getModule();
+                            if (module != null)
+                            {
+                                result.add(module);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            log.error("Unable to load module class " + moduleDescClass, e);
+                        }
                     }
                 }
             }
