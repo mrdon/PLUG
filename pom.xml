@@ -8,14 +8,14 @@
     <groupId>com.atlassian.plugins</groupId>
     <artifactId>atlassian-plugins</artifactId>
     <name>Atlassian Plugins</name>
-    <version>0.14-SNAPSHOT</version>
+    <version>0.14</version>
     <description>A library to give systems the ability to have plugins, make
         them more pluggable and hence add pluggability (it's late - that makes sense in my head).
     </description>
     <scm>
-        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/</connection>
-        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/</developerConnection>
-      <url>https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</url>
+        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/tags/atlassian-plugins-0.14</connection>
+        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/tags/atlassian-plugins-0.14</developerConnection>
+      <url>https://svn.atlassian.com/svn/private/atlassian/plugins/tags/atlassian-plugins-0.14</url>
   </scm>
     <build>
         <testResources>
