@@ -2,7 +2,7 @@
     <parent>
         <artifactId>atlassian-public-pom</artifactId>
         <groupId>com.atlassian.pom</groupId>
-        <version>5</version>
+        <version>9</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.atlassian.plugins</groupId>
