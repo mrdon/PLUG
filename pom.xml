@@ -92,4 +92,10 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <distributionManagement>
+        <site>
+            <id>atlassian-documentation</id>
+            <url>dav:https://docs.atlassian.com/${project.artifactId}/${project.version}</url>
+        </site>
+    </distributionManagement>
 </project>
