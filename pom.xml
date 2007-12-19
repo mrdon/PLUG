@@ -1,22 +1,46 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>atlassian-public-pom</artifactId>
         <groupId>com.atlassian.pom</groupId>
         <version>9</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
+
     <groupId>com.atlassian.plugins</groupId>
     <artifactId>atlassian-plugins</artifactId>
-    <name>Atlassian Plugins</name>
     <version>0.17-SNAPSHOT</version>
-    <description>A library to give systems the ability to have plugins, make
-        them more pluggable and hence add pluggability (it's late - that makes sense in my head).
+
+    <name>Atlassian Plugins</name>
+    <description>
+        A library to give systems the ability to have plugins, make them more pluggable and hence add pluggability
+        (it's late - that makes sense in my head).
     </description>
+    <url>http://docs.atlassian.com/${project.artifactId}/${project.version}</url>
+
+    <licenses>
+        <license>
+            <name>BSD</name>
+            <url>LICENSE.txt</url>
+        </license>
+    </licenses>
+
+    <issueManagement>
+        <system>Jira</system>
+        <url>http://jira.atlassian.com/secure/BrowseProject.jspa?id=10610</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>Bamboo</system>
+        <url>https://bamboo.developer.atlassian.com/browse/ATLASSIANPLUGINS</url>
+    </ciManagement>
+
     <scm>
         <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/</connection>
         <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/</developerConnection>
-      <url>https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</url>
-  </scm>
+        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</url>
+    </scm>
+
     <build>
         <testResources>
             <testResource>
@@ -30,6 +54,7 @@
             </testResource>
         </testResources>
     </build>
+
     <dependencies>
         <dependency>
             <groupId>commons-lang</groupId>
@@ -92,6 +117,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <distributionManagement>
         <site>
             <id>atlassian-documentation</id>
