@@ -15,4 +15,6 @@ public interface WebItemModuleDescriptor extends WebFragmentModuleDescriptor
     WebLink getLink();
 
     WebIcon getIcon();
+
+    String getStyleName();
 }

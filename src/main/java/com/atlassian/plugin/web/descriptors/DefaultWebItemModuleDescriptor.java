@@ -17,6 +17,7 @@ public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDes
     private String section;
     private WebIcon icon;
     private DefaultWebLink link;
+    private String styleName;
 
     public DefaultWebItemModuleDescriptor(WebInterfaceManager webInterfaceManager)
     {
@@ -38,6 +39,15 @@ public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDes
             icon = new DefaultWebIcon(element.element("icon"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
         }
 
+        if (element.element("styleName") != null)
+        {
+            styleName = element.element("styleName").getTextTrim();
+        }
+        else
+        {
+            styleName = "";
+        }
+
         link = new DefaultWebLink(element.element("link"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
     }
 
@@ -54,5 +64,10 @@ public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDes
     public WebIcon getIcon()
     {
         return icon;
+    }
+
+    public String getStyleName()
+    {
+        return styleName;
     }
 }
