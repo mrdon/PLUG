@@ -66,7 +66,8 @@ public class TestDefaultWebItemModuleDescriptor extends TestCase
         Element element = createElement(styleClass);
         descriptor.init(null, element);
 
-        assertEquals("", descriptor.getStyleClass());   // should not be null!
+        assertNotNull(descriptor.getStyleClass());
+        assertEquals("", descriptor.getStyleClass());
     }
 
     private Element createElement(String childElement) throws DocumentException
