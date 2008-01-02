@@ -14,6 +14,7 @@ import java.io.IOException;
 public abstract class ServletModuleContainerServlet extends HttpServlet
 {
     private static final Log log = LogFactory.getLog(ServletModuleContainerServlet.class);
+
     private ServletConfig servletConfig;
 
     public void init(ServletConfig servletConfig) throws ServletException
@@ -40,7 +41,10 @@ public abstract class ServletModuleContainerServlet extends HttpServlet
         }
         else
         {
-            log.debug("No servlet found for: " + request.getRequestURI());
+            if (log.isDebugEnabled())
+            {
+                log.debug("No servlet found for request URI <" + request.getRequestURI() + ">");
+            }
             response.sendError(404, "Could not find servlet for: " + request.getRequestURI());
         }
     }
