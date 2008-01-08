@@ -10,12 +10,23 @@ import java.io.InputStream;
 public interface PluginAccessor
 {
     /**
-     * Get all of the currently installed plugins.
+     * Gets all of the currently installed plugins.
+     * @return a collection of installed {@link Plugin}s.
      */
     Collection getPlugins();
 
     /**
+     * Gets all installed plugins that match the given predicate.
+     * @param pluginPredicate the {@link PluginPredicate} to match.
+     * @return a collection of {@link Plugin}s that match the given predicate.
+     * @since 0.17
+     */
+    Collection getPlugins(final PluginPredicate pluginPredicate);
+
+    /**
      * Get all of the currently enabled plugins.
+     * @return a collection of installed and enabled {@link Plugin}s.
+     * @deprecated since 0.17, use {@link #getPlugins(PluginPredicate)} with {@link EnabledPluginPredicate} instead.
      */
     Collection getEnabledPlugins();
 
@@ -85,14 +96,14 @@ public interface PluginAccessor
     /**
      * Get all enabled module descriptors that have a specific descriptor class.
      *
-     * @return List of {@link com.atlassian.plugin.ModuleDescriptor}s that implement or extend the given class.
+     * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
      */
     List getEnabledModuleDescriptorsByClass(Class descriptorClazz);
 
     /**
      * Get all enabled module descriptors that have a specific descriptor type.
      *
-     * @return List of {@link com.atlassian.plugin.ModuleDescriptor}s that are of a given type.
+     * @return List of {@link ModuleDescriptor}s that are of a given type.
      */
     List getEnabledModuleDescriptorsByType(String type) throws PluginParseException;
 

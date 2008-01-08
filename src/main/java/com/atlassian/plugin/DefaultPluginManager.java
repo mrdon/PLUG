@@ -110,11 +110,12 @@ public class DefaultPluginManager implements PluginManager
      * Validate a plugin jar
      * @param pluginJar
      * @throws PluginParseException
+     * @throws NullPointerException if <code>pluginJar</code> is null.
      */
     private void validatePlugin(PluginJar pluginJar) throws PluginParseException
     {
-        InputStream descriptorStream = pluginJar.getFile(PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
-        DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
+        final InputStream descriptorStream = pluginJar.getFile(PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
+        final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
         if (descriptorParser.getKey() == null)
         {
             throw new PluginParseException("Plugin key could not be found in " + PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
@@ -309,25 +310,35 @@ public class DefaultPluginManager implements PluginManager
         return plugins.values();
     }
 
-    public Collection getEnabledPlugins()
+    /**
+     * @since 0.17
+     * @see PluginAccessor#getPlugins(PluginPredicate) 
+     */
+    public Collection getPlugins(final PluginPredicate pluginPredicate)
     {
-        List result = new ArrayList();
-
-        for (Iterator iterator = plugins.keySet().iterator(); iterator.hasNext();)
+        final Collection result = new ArrayList();
+        for (final Iterator plugins = getPlugins().iterator(); plugins.hasNext();)
         {
-            String key = (String) iterator.next();
-            Plugin p = getEnabledPlugin(key);
-
-            if (p != null)
-                result.add(p);
+            final Plugin plugin = (Plugin) plugins.next();
+            if (pluginPredicate.matches(plugin))
+            {
+                result.add(plugin);
+            }
         }
-
         return result;
     }
 
     public Plugin getPlugin(String key)
     {
         return (Plugin) plugins.get(key);
+    }
+
+    /**
+     * @deprecated since 0.17, see {@link PluginAccessor#getEnabledPlugins()}
+     */
+    public Collection getEnabledPlugins()
+    {
+        return getPlugins(new EnabledPluginPredicate(this));
     }
 
     public Plugin getEnabledPlugin(String pluginKey)
