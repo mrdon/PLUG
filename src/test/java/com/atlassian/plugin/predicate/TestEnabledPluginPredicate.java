@@ -1,5 +1,7 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.predicate;
 
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginAccessor;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;

@@ -11,6 +11,8 @@ import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.*;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
+import com.atlassian.plugin.predicate.PluginPredicate;
+import com.atlassian.plugin.predicate.ModulePredicate;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.util.FileUtils;
 import com.mockobjects.dynamic.C;
@@ -240,7 +242,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockPluginPredicate = new Mock(PluginPredicate.class);
-        mockPluginPredicate.expectAndReturn("matches", C.ANY_ARGS, true);
+        mockPluginPredicate.expectAndReturn("matches", C.eq(plugin), true);
 
         manager.addPlugin(null, plugin);
         final Collection plugins = manager.getPlugins((PluginPredicate) mockPluginPredicate.proxy());
@@ -260,7 +262,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockPluginPredicate = new Mock(PluginPredicate.class);
-        mockPluginPredicate.expectAndReturn("matches", C.ANY_ARGS, false);
+        mockPluginPredicate.expectAndReturn("matches", C.eq(plugin), false);
 
         manager.addPlugin(null, plugin);
         final Collection plugins = manager.getPlugins((PluginPredicate) mockPluginPredicate.proxy());
@@ -268,7 +270,103 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(0, plugins.size());
         mockPluginPredicate.verify();
     }
-    
+
+    public void testGetPluginModulesWithModuleMatchingPredicate() throws Exception
+    {
+        final Object module = new Object();
+        final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
+        final ModuleDescriptor moduleDescriptor = (ModuleDescriptor) mockModuleDescriptor.proxy();
+        mockModuleDescriptor.expectAndReturn("getModule", module);
+
+        final Mock mockPlugin = new Mock(Plugin.class);
+        mockPlugin.matchAndReturn("getKey", "some-plugin-key");
+        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(moduleDescriptor));
+        mockPlugin.matchAndReturn("hashCode", 12);
+
+        final Plugin plugin = (Plugin) mockPlugin.proxy();
+
+        final Mock mockModulePredicate = new Mock(ModulePredicate.class);
+        mockModulePredicate.expectAndReturn("matches", C.eq(moduleDescriptor), true);
+
+        manager.addPlugin(null, plugin);
+        final Collection modules = manager.getModules((ModulePredicate) mockModulePredicate.proxy());
+
+        assertEquals(1, modules.size());
+        assertTrue(modules.contains(module));
+
+        mockModulePredicate.verify();
+    }
+
+    public void testGetPluginModulesWithModuleNotMatchingPredicate() throws Exception
+    {
+        final Mock mockModule = new Mock(ModuleDescriptor.class);
+        final ModuleDescriptor module = (ModuleDescriptor) mockModule.proxy();
+
+        final Mock mockPlugin = new Mock(Plugin.class);
+        mockPlugin.matchAndReturn("getKey", "some-plugin-key");
+        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(module));
+        mockPlugin.matchAndReturn("hashCode", 12);
+
+        final Plugin plugin = (Plugin) mockPlugin.proxy();
+
+        final Mock mockModulePredicate = new Mock(ModulePredicate.class);
+        mockModulePredicate.expectAndReturn("matches", C.eq(module), false);
+
+        manager.addPlugin(null, plugin);
+        final Collection modules = manager.getModules((ModulePredicate) mockModulePredicate.proxy());
+
+        assertEquals(0, modules.size());
+
+        mockModulePredicate.verify();
+    }
+
+    public void testGetPluginModuleDescriptorWithModuleMatchingPredicate() throws Exception
+    {
+        final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
+        final ModuleDescriptor moduleDescriptor = (ModuleDescriptor) mockModuleDescriptor.proxy();
+
+        final Mock mockPlugin = new Mock(Plugin.class);
+        mockPlugin.matchAndReturn("getKey", "some-plugin-key");
+        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(moduleDescriptor));
+        mockPlugin.matchAndReturn("hashCode", 12);
+
+        final Plugin plugin = (Plugin) mockPlugin.proxy();
+
+        final Mock mockModulePredicate = new Mock(ModulePredicate.class);
+        mockModulePredicate.expectAndReturn("matches", C.eq(moduleDescriptor), true);
+
+        manager.addPlugin(null, plugin);
+        final Collection modules = manager.getModuleDescritpors((ModulePredicate) mockModulePredicate.proxy());
+
+        assertEquals(1, modules.size());
+        assertTrue(modules.contains(moduleDescriptor));
+
+        mockModulePredicate.verify();
+    }
+
+    public void testGetPluginModuleDescriptorsWithModuleNotMatchingPredicate() throws Exception
+    {
+        final Mock mockModule = new Mock(ModuleDescriptor.class);
+        final ModuleDescriptor module = (ModuleDescriptor) mockModule.proxy();
+
+        final Mock mockPlugin = new Mock(Plugin.class);
+        mockPlugin.matchAndReturn("getKey", "some-plugin-key");
+        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(module));
+        mockPlugin.matchAndReturn("hashCode", 12);
+
+        final Plugin plugin = (Plugin) mockPlugin.proxy();
+
+        final Mock mockModulePredicate = new Mock(ModulePredicate.class);
+        mockModulePredicate.expectAndReturn("matches", C.eq(module), false);
+
+        manager.addPlugin(null, plugin);
+        final Collection modules = manager.getModuleDescritpors((ModulePredicate) mockModulePredicate.proxy());
+
+        assertEquals(0, modules.size());
+
+        mockModulePredicate.verify();
+    }
+
     public void testGetPluginAndModules() throws PluginParseException
     {
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
@@ -377,10 +475,10 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         try
         {
             manager.getEnabledModuleDescriptorsByType("foobar");
-            fail("Should have thrown exception.");
         }
         catch (IllegalArgumentException e)
         {
+            fail("Shouldn't have thrown exception.");
         }
     }
 

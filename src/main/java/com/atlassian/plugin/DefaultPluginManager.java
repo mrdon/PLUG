@@ -8,9 +8,12 @@ import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
+import com.atlassian.plugin.predicate.EnabledPluginPredicate;
+import com.atlassian.plugin.predicate.ModulePredicate;
+import com.atlassian.plugin.predicate.ModulePredicateFactory;
+import com.atlassian.plugin.predicate.PluginPredicate;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -328,6 +331,51 @@ public class DefaultPluginManager implements PluginManager
         return result;
     }
 
+    /**
+     * @since 0.17
+     * @see PluginAccessor#getModules(ModulePredicate)
+     */
+    public Collection getModules(final ModulePredicate modulePredicate)
+    {
+        final Collection result = new ArrayList();
+        for (Iterator pluginsIt = getPlugins().iterator(); pluginsIt.hasNext();)
+        {
+            final Plugin plugin = (Plugin) pluginsIt.next();
+            for (Iterator modulesIt = plugin.getModuleDescriptors().iterator(); modulesIt.hasNext();)
+            {
+                final ModuleDescriptor moduleDescriptor = (ModuleDescriptor) modulesIt.next();
+                if (modulePredicate.matches(moduleDescriptor))
+                {
+                    result.add(moduleDescriptor.getModule());
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * @since 0.17
+     * @see PluginAccessor#getModuleDescritpors(ModulePredicate)
+     */
+    public Collection getModuleDescritpors(ModulePredicate modulePredicate)
+    {
+        final Collection result = new ArrayList();
+        for (Iterator pluginsIt = getPlugins().iterator(); pluginsIt.hasNext();)
+        {
+            final Plugin plugin = (Plugin) pluginsIt.next();
+            for (Iterator modulesIt = plugin.getModuleDescriptors().iterator(); modulesIt.hasNext();)
+            {
+                final ModuleDescriptor moduleDescriptor = (ModuleDescriptor) modulesIt.next();
+                if (modulePredicate.matches(moduleDescriptor))
+                {
+                    result.add(moduleDescriptor);
+                }
+            }
+        }
+        return result;
+    }
+
     public Plugin getPlugin(String key)
     {
         return (Plugin) plugins.get(key);
@@ -372,78 +420,31 @@ public class DefaultPluginManager implements PluginManager
         return getEnabledPlugin(key.getPluginKey()).getModuleDescriptor(key.getModuleKey());
     }
 
+    /**
+     * @see PluginAccessor#getEnabledModulesByClass(Class)
+     * @deprecated since 0.17, use {@link #getModules(ModulePredicate)} with an appropriate predicate instead.
+     */
     public List getEnabledModulesByClass(Class moduleClass)
     {
-        List result = new LinkedList();
-
-        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
-        {
-            Plugin plugin = (Plugin) iterator.next();
-
-            for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
-            {
-                ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator1.next();
-
-                final Class moduleDescClass = moduleDescriptor.getModuleClass();
-                if (moduleDescClass != null && moduleClass.isAssignableFrom(moduleDescClass) && isPluginModuleEnabled(moduleDescriptor.getCompleteKey()))
-                {
-                    try
-                    {
-                        final Object module = moduleDescriptor.getModule();
-                        if (module != null)
-                        {
-                            result.add(module);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        log.error(e);
-                    }
-                }
-            }
-        }
-
-        return result;
+        return (List) getModules(ModulePredicateFactory.getEnabledModuleOfClassPredicate(this, moduleClass));
     }
 
+    /**
+     * @see PluginAccessor#getEnabledModulesByClassAndDescriptor(Class[], Class)
+     * @deprecated since 0.17, use {@link #getModules(ModulePredicate)} with an appropriate predicate instead.
+     */
     public List getEnabledModulesByClassAndDescriptor(Class[] descriptorClazz, Class moduleClass)
     {
-        List result = new LinkedList();
-
-        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
-        {
-            Plugin plugin = (Plugin) iterator.next();
-            for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
-            {
-                ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator1.next();
-                if (ArrayUtils.contains(descriptorClazz, moduleDescriptor.getClass()))
-                {
-                    final Class moduleDescClass = moduleDescriptor.getModuleClass();
-                    if (moduleDescClass != null && moduleClass.isAssignableFrom(moduleDescClass) && isPluginModuleEnabled(moduleDescriptor.getCompleteKey()))
-                    {
-                        try
-                        {
-                            final Object module = moduleDescriptor.getModule();
-                            if (module != null)
-                            {
-                                result.add(module);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            log.error("Unable to load module class " + moduleDescClass, e);
-                        }
-                    }
-                }
-            }
-        }
-
-        return result;
+        return (List) getModules(ModulePredicateFactory.getEnabledModuleOfClassAndDescriptorClassPredicate(this, moduleClass, descriptorClazz));
     }
 
+    /**
+     * @see PluginAccessor#getEnabledModulesByClassAndDescriptor(Class, Class)
+     * @deprecated since 0.17, use {@link #getModules(ModulePredicate)} with an appropriate predicate instead.
+     */
     public List getEnabledModulesByClassAndDescriptor(Class descriptorClazz, Class moduleClass)
     {
-        return getEnabledModulesByClassAndDescriptor(new Class[] {descriptorClazz}, moduleClass);
+        return (List) getModules(ModulePredicateFactory.getEnabledModuleOfClassAndDescriptorClassPredicate(this, moduleClass, descriptorClazz));
     }
 
     public void enablePlugin(String key)
@@ -679,43 +680,22 @@ public class DefaultPluginManager implements PluginManager
         return plugins.containsKey(key) && getState().isEnabled((Plugin) plugins.get(key));
     }
 
-    public List getEnabledModuleDescriptorsByClass(Class descriptorClazz)
+    /**
+     * @see PluginAccessor#getEnabledModuleDescriptorsByClass(Class)
+     * @deprecated since 0.17, use {@link #getModuleDescritpors(ModulePredicate)} with an appropriate predicate instead.
+     */
+    public List getEnabledModuleDescriptorsByClass(Class descriptorClass)
     {
-        List result = new LinkedList();
-
-        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
-        {
-            Plugin plugin = (Plugin) iterator.next();
-
-            // Skip disabled plugins
-            if (!isPluginEnabled(plugin.getKey()))
-                continue;
-
-            for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
-            {
-                ModuleDescriptor module = (ModuleDescriptor) iterator1.next();
-
-                if (descriptorClazz.isInstance(module) && isPluginModuleEnabled(module.getCompleteKey()))
-                {
-                    result.add(module);
-                }
-            }
-        }
-
-        return result;
+        return (List) getModuleDescritpors(ModulePredicateFactory.getEnabledModuleWithDescriptorClass(this,descriptorClass));
     }
 
     /**
-     * @throws IllegalArgumentException If the name is not a registered module descriptor
+     * @see PluginAccessor#getEnabledModuleDescriptorsByType(String)
+     * @deprecated since 0.17, use {@link #getModuleDescritpors(ModulePredicate)} with an appropriate predicate instead.
      */
     public List getEnabledModuleDescriptorsByType(String type) throws PluginParseException, IllegalArgumentException
     {
-        final Class descriptorClazz = moduleDescriptorFactory.getModuleDescriptorClass(type);
-
-        if (descriptorClazz == null)
-            throw new IllegalArgumentException("No module descriptor of type: " + type + " found.");
-
-        return getEnabledModuleDescriptorsByClass(descriptorClazz);
+        return (List) getModuleDescritpors(ModulePredicateFactory.getEnabledModuleWithDescriptorType(this, moduleDescriptorFactory, type));
     }
 
     public InputStream getDynamicResourceAsStream(String name)

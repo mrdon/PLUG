@@ -1,4 +1,6 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.predicate;
+
+import com.atlassian.plugin.Plugin;
 
 /**
  * Interface used to match plugins according to implementation specific rules.
