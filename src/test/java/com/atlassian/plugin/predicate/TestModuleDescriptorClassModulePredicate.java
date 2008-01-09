@@ -41,7 +41,7 @@ public class TestModuleDescriptorClassModulePredicate extends TestCase
 
     public void testDoesNotMatchModuleWithModuleDescriptorClassExtendingButNotExactlyMatchingClass()
     {
-        assertFalse(modulePredicate.matches(new ModuleDescriptorStubB()));
+        assertTrue(modulePredicate.matches(new ModuleDescriptorStubB()));
     }
 
     public void testDoesNotMatchModuleWithModuleDescriptorClassNotMatchingClass()
