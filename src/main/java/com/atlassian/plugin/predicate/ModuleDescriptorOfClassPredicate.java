@@ -10,13 +10,13 @@ import java.util.Collections;
 import org.apache.commons.collections.Predicate;
 
 /**
- * A {@link ModulePredicate} that matches modules for which their descriptor is an instance of one of the given {@link Class}.
+ * A {@link ModuleDescriptorPredicate} that matches modules for which their descriptor is an instance of one of the given {@link Class}.
  */
-public class ModuleDescriptorClassModulePredicate implements ModulePredicate
+public class ModuleDescriptorOfClassPredicate implements ModuleDescriptorPredicate
 {
     private final Collection moduleDescriptorClasses;
 
-    public ModuleDescriptorClassModulePredicate(final Class moduleDescriptorClass)
+    public ModuleDescriptorOfClassPredicate(final Class moduleDescriptorClass)
     {
         moduleDescriptorClasses = Collections.singleton(moduleDescriptorClass);
     }
@@ -24,11 +24,11 @@ public class ModuleDescriptorClassModulePredicate implements ModulePredicate
     /**
      * @throws IllegalArgumentException if the moduleDescriptorClasses is <code>null</code>
      */
-    public ModuleDescriptorClassModulePredicate(final Class[] moduleDescriptorClasses)
+    public ModuleDescriptorOfClassPredicate(final Class[] moduleDescriptorClasses)
     {
         if (moduleDescriptorClasses == null)
         {
-            throw new IllegalArgumentException("Module descriptor classes array should not be null when constructing ModuleClassModulePredicate!");
+            throw new IllegalArgumentException("Module descriptor classes array should not be null when constructing ModuleOfClassPredicate!");
         }
         this.moduleDescriptorClasses = Arrays.asList(moduleDescriptorClasses);
     }

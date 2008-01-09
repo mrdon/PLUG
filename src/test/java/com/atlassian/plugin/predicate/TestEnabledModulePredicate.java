@@ -14,13 +14,13 @@ public class TestEnabledModulePredicate extends TestCase
     private static final String MODULE_TEST_KEY = "some-module-key";
 
     private Mock mockPluginAccessor;
-    private ModulePredicate modulePredicate;
+    private ModuleDescriptorPredicate moduleDescriptorPredicate;
     private ModuleDescriptor moduleDescriptor;
 
     protected void setUp() throws Exception
     {
         mockPluginAccessor = new Mock(PluginAccessor.class);
-        modulePredicate = new EnabledModulePredicate((PluginAccessor) mockPluginAccessor.proxy());
+        moduleDescriptorPredicate = new EnabledModulePredicate((PluginAccessor) mockPluginAccessor.proxy());
 
         final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         mockModuleDescriptor.matchAndReturn("getCompleteKey", MODULE_TEST_KEY);
@@ -29,7 +29,7 @@ public class TestEnabledModulePredicate extends TestCase
 
     protected void tearDown() throws Exception
     {
-        modulePredicate = null;
+        moduleDescriptorPredicate = null;
         mockPluginAccessor = null;
         moduleDescriptor = null;
     }
@@ -50,12 +50,12 @@ public class TestEnabledModulePredicate extends TestCase
     public void testMatchesEnabledModule()
     {
         mockPluginAccessor.matchAndReturn("isPluginModuleEnabled", C.eq(MODULE_TEST_KEY), true);
-        assertTrue(modulePredicate.matches(moduleDescriptor));
+        assertTrue(moduleDescriptorPredicate.matches(moduleDescriptor));
     }
 
     public void testDoesNotMatchDisabledModule()
     {
         mockPluginAccessor.matchAndReturn("isPluginModuleEnabled", C.eq(MODULE_TEST_KEY), false);
-        assertFalse(modulePredicate.matches(moduleDescriptor));
+        assertFalse(moduleDescriptorPredicate.matches(moduleDescriptor));
     }
 }

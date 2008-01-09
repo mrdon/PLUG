@@ -5,19 +5,20 @@ import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 
 /**
+ * Testing {@link ModuleOfClassPredicate}
  */
-public class TestModuleClassModulePredicate extends TestCase
+public class TestModuleOfClassPredicate extends TestCase
 {
     private final static Class TEST_MODULE_CLASS = TestCase.class;
 
-    private ModulePredicate modulePredicate;
+    private ModuleDescriptorPredicate moduleDescriptorPredicate;
 
     private Mock mockModuleDescriptor;
     private ModuleDescriptor moduleDescriptor;
 
     protected void setUp() throws Exception
     {
-        modulePredicate = new ModuleClassModulePredicate(TEST_MODULE_CLASS);
+        moduleDescriptorPredicate = new ModuleOfClassPredicate(TEST_MODULE_CLASS);
 
         mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         moduleDescriptor = (ModuleDescriptor) mockModuleDescriptor.proxy();
@@ -25,7 +26,7 @@ public class TestModuleClassModulePredicate extends TestCase
 
     protected void tearDown() throws Exception
     {
-        modulePredicate = null;
+        moduleDescriptorPredicate = null;
         moduleDescriptor = null;
         mockModuleDescriptor = null;
     }
@@ -34,7 +35,7 @@ public class TestModuleClassModulePredicate extends TestCase
     {
         try
         {
-            new ModuleClassModulePredicate(null);
+            new ModuleOfClassPredicate(null);
             fail("Constructor should have thrown illegal argument exception.");
         }
         catch (IllegalArgumentException e)
@@ -46,12 +47,12 @@ public class TestModuleClassModulePredicate extends TestCase
     public void testMatchesModuleExtendingClass()
     {
         mockModuleDescriptor.matchAndReturn("getModuleClass", this.getClass());
-        assertTrue(modulePredicate.matches(moduleDescriptor));
+        assertTrue(moduleDescriptorPredicate.matches(moduleDescriptor));
     }
 
     public void testDoesNotMatchModuleNotExtendingClass()
     {
         mockModuleDescriptor.matchAndReturn("getModuleClass", Object.class);
-        assertFalse(modulePredicate.matches(moduleDescriptor));
+        assertFalse(moduleDescriptorPredicate.matches(moduleDescriptor));
     }
 }

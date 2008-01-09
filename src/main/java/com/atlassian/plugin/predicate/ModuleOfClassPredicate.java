@@ -3,20 +3,20 @@ package com.atlassian.plugin.predicate;
 import com.atlassian.plugin.ModuleDescriptor;
 
 /**
- * A {@link ModulePredicate} that matches modules that are is an instance of the given {@link Class}.
+ * A {@link ModuleDescriptorPredicate} that matches modules that are is an instance of the given {@link Class}.
  */
-public class ModuleClassModulePredicate implements ModulePredicate
+public class ModuleOfClassPredicate implements ModuleDescriptorPredicate
 {
     private final Class moduleClass;
 
     /**
      * @throws IllegalArgumentException if the moduleClass is <code>null</code>
      */
-    public ModuleClassModulePredicate(final Class moduleClass)
+    public ModuleOfClassPredicate(final Class moduleClass)
     {
         if (moduleClass == null)
         {
-            throw new IllegalArgumentException("Module class should not be null when constructing ModuleClassModulePredicate!");
+            throw new IllegalArgumentException("Module class should not be null when constructing ModuleOfClassPredicate!");
         }
         this.moduleClass = moduleClass;
     }

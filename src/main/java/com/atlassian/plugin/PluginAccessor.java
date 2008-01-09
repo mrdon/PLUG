@@ -1,6 +1,6 @@
 package com.atlassian.plugin;
 
-import com.atlassian.plugin.predicate.ModulePredicate;
+import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.predicate.PluginPredicate;
 
 import java.io.InputStream;
@@ -27,27 +27,26 @@ public interface PluginAccessor
     Collection getPlugins(final PluginPredicate pluginPredicate);
 
     /**
+     * Get all of the currently enabled plugins.
+     * @return a collection of installed and enabled {@link Plugin}s.
+     */
+    Collection getEnabledPlugins();
+
+    /**
      * Gets all installed modules that match the given predicate.
-     * @param modulePredicate the {@link ModulePredicate} to match.
+     * @param moduleDescriptorPredicate the {@link com.atlassian.plugin.predicate.ModuleDescriptorPredicate} to match.
      * @return a collection of modules as per {@link ModuleDescriptor#getModule()} that match the given predicate.
      * @since 0.17
      */
-    Collection getModules(final ModulePredicate modulePredicate);
+    Collection getModules(final ModuleDescriptorPredicate moduleDescriptorPredicate);
 
     /**
      * Gets all module descriptors of installed modules that match the given predicate.
-     * @param modulePredicate the {@link ModulePredicate} to match.
+     * @param moduleDescriptorPredicate the {@link com.atlassian.plugin.predicate.ModuleDescriptorPredicate} to match.
      * @return a collection of {@link ModuleDescriptor}s that match the given predicate.
      * @since 0.17
      */
-    Collection getModuleDescritptors(final ModulePredicate modulePredicate);
-
-    /**
-     * Get all of the currently enabled plugins.
-     * @return a collection of installed and enabled {@link Plugin}s.
-     * @deprecated since 0.17, use {@link #getPlugins(PluginPredicate)} with {@link com.atlassian.plugin.predicate.EnabledPluginPredicate} instead.
-     */
-    Collection getEnabledPlugins();
+    Collection getModuleDescriptors(final ModuleDescriptorPredicate moduleDescriptorPredicate);
 
     /**
      * Retrieve a given plugin (whether enabled or not).
@@ -89,7 +88,7 @@ public interface PluginAccessor
      * Retrieve all plugin modules that implement or extend a specific class.
      *
      * @return List of modules that implement or extend the given class.
-     * @deprecated since 0.17, use {@link #getModules(ModulePredicate)} with an appropriate predicate instead.
+     * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     List getEnabledModulesByClass(Class moduleClass);
 
@@ -100,7 +99,7 @@ public interface PluginAccessor
      * @param descriptorClazz @NotNull
      * @param moduleClass @NotNull
      * @return List of modules that implement or extend the given class. Empty list if none found
-     * @deprecated since 0.17, use {@link #getModules(ModulePredicate)} with an appropriate predicate instead.
+     * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     List getEnabledModulesByClassAndDescriptor(Class[] descriptorClazz, Class moduleClass);
 
@@ -111,7 +110,7 @@ public interface PluginAccessor
      * @param descriptorClazz @NotNull
      * @param moduleClass @NotNull
      * @return List of modules that implement or extend the given class. Empty list if none found
-     * @deprecated since 0.17, use {@link #getModules(ModulePredicate)} with an appropriate predicate instead.
+     * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     List getEnabledModulesByClassAndDescriptor(Class descriptorClazz, Class moduleClass);
 
@@ -119,7 +118,7 @@ public interface PluginAccessor
      * Get all enabled module descriptors that have a specific descriptor class.
      *
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
-     * @deprecated since 0.17, use {@link #getModuleDescritptors(ModulePredicate)} with an appropriate predicate instead.
+     * @deprecated since 0.17, use {@link #getModuleDescriptors(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     List getEnabledModuleDescriptorsByClass(Class descriptorClazz);
 
@@ -127,7 +126,7 @@ public interface PluginAccessor
      * Get all enabled module descriptors that have a specific descriptor type.
      *
      * @return List of {@link ModuleDescriptor}s that are of a given type.
-     * @deprecated since 0.17, use {@link #getModuleDescritptors(ModulePredicate)} with an appropriate predicate instead.
+     * @deprecated since 0.17, use {@link #getModuleDescriptors(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     List getEnabledModuleDescriptorsByType(String type) throws PluginParseException;
 

@@ -4,9 +4,9 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
 
 /**
- * A {@link ModulePredicate} that matches enabled modules.
+ * A {@link ModuleDescriptorPredicate} that matches enabled modules.
  */
-public class EnabledModulePredicate implements ModulePredicate
+public class EnabledModulePredicate implements ModuleDescriptorPredicate
 {
     private final PluginAccessor pluginAccessor;
 
