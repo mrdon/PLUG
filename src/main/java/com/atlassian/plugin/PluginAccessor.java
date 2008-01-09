@@ -40,7 +40,7 @@ public interface PluginAccessor
      * @return a collection of {@link ModuleDescriptor}s that match the given predicate.
      * @since 0.17
      */
-    Collection getModuleDescritpors(final ModulePredicate modulePredicate);
+    Collection getModuleDescritptors(final ModulePredicate modulePredicate);
 
     /**
      * Get all of the currently enabled plugins.
@@ -119,7 +119,7 @@ public interface PluginAccessor
      * Get all enabled module descriptors that have a specific descriptor class.
      *
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
-     * @deprecated since 0.17, use {@link #getModuleDescritpors(ModulePredicate)} with an appropriate predicate instead.
+     * @deprecated since 0.17, use {@link #getModuleDescritptors(ModulePredicate)} with an appropriate predicate instead.
      */
     List getEnabledModuleDescriptorsByClass(Class descriptorClazz);
 
@@ -127,7 +127,7 @@ public interface PluginAccessor
      * Get all enabled module descriptors that have a specific descriptor type.
      *
      * @return List of {@link ModuleDescriptor}s that are of a given type.
-     * @deprecated since 0.17, use {@link #getModuleDescritpors(ModulePredicate)} with an appropriate predicate instead.
+     * @deprecated since 0.17, use {@link #getModuleDescritptors(ModulePredicate)} with an appropriate predicate instead.
      */
     List getEnabledModuleDescriptorsByType(String type) throws PluginParseException;
 

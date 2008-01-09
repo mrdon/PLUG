@@ -336,7 +336,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockModulePredicate.expectAndReturn("matches", C.eq(moduleDescriptor), true);
 
         manager.addPlugin(null, plugin);
-        final Collection modules = manager.getModuleDescritpors((ModulePredicate) mockModulePredicate.proxy());
+        final Collection modules = manager.getModuleDescritptors((ModulePredicate) mockModulePredicate.proxy());
 
         assertEquals(1, modules.size());
         assertTrue(modules.contains(moduleDescriptor));
@@ -360,7 +360,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockModulePredicate.expectAndReturn("matches", C.eq(module), false);
 
         manager.addPlugin(null, plugin);
-        final Collection modules = manager.getModuleDescritpors((ModulePredicate) mockModulePredicate.proxy());
+        final Collection modules = manager.getModuleDescritptors((ModulePredicate) mockModulePredicate.proxy());
 
         assertEquals(0, modules.size());
 

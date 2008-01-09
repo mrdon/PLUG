@@ -356,9 +356,9 @@ public class DefaultPluginManager implements PluginManager
 
     /**
      * @since 0.17
-     * @see PluginAccessor#getModuleDescritpors(ModulePredicate)
+     * @see PluginAccessor#getModuleDescritptors(ModulePredicate)
      */
-    public Collection getModuleDescritpors(ModulePredicate modulePredicate)
+    public Collection getModuleDescritptors(ModulePredicate modulePredicate)
     {
         final Collection result = new ArrayList();
         for (Iterator pluginsIt = getPlugins().iterator(); pluginsIt.hasNext();)
@@ -682,20 +682,20 @@ public class DefaultPluginManager implements PluginManager
 
     /**
      * @see PluginAccessor#getEnabledModuleDescriptorsByClass(Class)
-     * @deprecated since 0.17, use {@link #getModuleDescritpors(ModulePredicate)} with an appropriate predicate instead.
+     * @deprecated since 0.17, use {@link #getModuleDescritptors(ModulePredicate)} with an appropriate predicate instead.
      */
     public List getEnabledModuleDescriptorsByClass(Class descriptorClass)
     {
-        return (List) getModuleDescritpors(ModulePredicateFactory.getEnabledModuleWithDescriptorClass(this,descriptorClass));
+        return (List) getModuleDescritptors(ModulePredicateFactory.getEnabledModuleWithDescriptorClass(this,descriptorClass));
     }
 
     /**
      * @see PluginAccessor#getEnabledModuleDescriptorsByType(String)
-     * @deprecated since 0.17, use {@link #getModuleDescritpors(ModulePredicate)} with an appropriate predicate instead.
+     * @deprecated since 0.17, use {@link #getModuleDescritptors(ModulePredicate)} with an appropriate predicate instead.
      */
     public List getEnabledModuleDescriptorsByType(String type) throws PluginParseException, IllegalArgumentException
     {
-        return (List) getModuleDescritpors(ModulePredicateFactory.getEnabledModuleWithDescriptorType(this, moduleDescriptorFactory, type));
+        return (List) getModuleDescritptors(ModulePredicateFactory.getEnabledModuleWithDescriptorType(this, moduleDescriptorFactory, type));
     }
 
     public InputStream getDynamicResourceAsStream(String name)
