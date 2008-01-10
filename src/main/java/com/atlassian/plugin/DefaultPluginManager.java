@@ -435,7 +435,7 @@ public class DefaultPluginManager implements PluginManager
      */
     public List getEnabledModulesByClass(final Class moduleClass)
     {
-        return (List) getModules(getEnabledModuleDescriptorByModuleClass(moduleClass));
+        return (List) getModules(getEnabledModuleDescriptorsByModuleClass(moduleClass));
     }
 
     /**
@@ -444,7 +444,7 @@ public class DefaultPluginManager implements PluginManager
      */
     public List getEnabledModulesByClassAndDescriptor(final Class[] descriptorClasses, final Class moduleClass)
     {
-        final Collection moduleDescriptors = getEnabledModuleDescriptorByModuleClass(moduleClass);
+        final Collection moduleDescriptors = getEnabledModuleDescriptorsByModuleClass(moduleClass);
         filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfClassPredicate(descriptorClasses));
 
         return (List) getModules(moduleDescriptors);
@@ -456,7 +456,7 @@ public class DefaultPluginManager implements PluginManager
      */
     public List getEnabledModulesByClassAndDescriptor(final Class descriptorClass, final Class moduleClass)
     {
-        final Collection moduleDescriptors = getEnabledModuleDescriptorByModuleClass(moduleClass);
+        final Collection moduleDescriptors = getEnabledModuleDescriptorsByModuleClass(moduleClass);
         filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfClassPredicate(descriptorClass));
 
         return (List) getModules(moduleDescriptors);
@@ -467,7 +467,7 @@ public class DefaultPluginManager implements PluginManager
      * @param moduleClass the class of the module within the module descriptor.
      * @return a collection of {@link ModuleDescriptor}s
      */
-    private Collection getEnabledModuleDescriptorByModuleClass(final Class moduleClass)
+    private Collection getEnabledModuleDescriptorsByModuleClass(final Class moduleClass)
     {
         final Collection moduleDescriptors = getModuleDescriptors(getEnabledPlugins());
         filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate(this));
@@ -504,7 +504,7 @@ public class DefaultPluginManager implements PluginManager
      * @param moduleDescriptors the collection of {@link ModuleDescriptor}s to filter.
      * @param moduleDescriptorPredicate the predicate to use for filtering.
      */
-    private void filterModuleDescriptors(final Collection moduleDescriptors, final ModuleDescriptorPredicate moduleDescriptorPredicate)
+    private static void filterModuleDescriptors(final Collection moduleDescriptors, final ModuleDescriptorPredicate moduleDescriptorPredicate)
     {
         CollectionUtils.filter(moduleDescriptors, new Predicate()
         {

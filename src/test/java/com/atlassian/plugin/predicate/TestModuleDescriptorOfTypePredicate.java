@@ -10,7 +10,7 @@ import com.mockobjects.dynamic.C;
 /**
  * Testing {@link ModuleDescriptorOfTypePredicate}
  */
-public class TestModuleDescriptorOFTypePredicate extends TestCase
+public class TestModuleDescriptorOfTypePredicate extends TestCase
 {
     private ModuleDescriptorPredicate moduleDescriptorPredicate;
 
