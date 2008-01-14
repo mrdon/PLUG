@@ -4,6 +4,7 @@ import com.atlassian.plugin.loaders.LoaderUtils;
 import org.dom4j.Element;
 
 import java.util.Map;
+import java.util.Collections;
 import java.util.regex.Pattern;
 
 public class ResourceDescriptor
@@ -108,6 +109,10 @@ public class ResourceDescriptor
         }
     }
 
+    public Map getParameters()
+    {
+        return Collections.unmodifiableMap(params);
+    }
 
     public String getParameter(String key)
     {

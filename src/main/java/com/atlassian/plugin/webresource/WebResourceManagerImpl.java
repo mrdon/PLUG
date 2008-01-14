@@ -9,10 +9,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-
+import java.util.*;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -31,8 +28,7 @@ import java.util.Map;
 public class WebResourceManagerImpl implements WebResourceManager
 {
     private Log log = LogFactory.getLog(WebResourceManagerImpl.class);
-    private static final String JAVA_SCRIPT_EXTENSION = ".js";
-    private static final String CSS_EXTENSION = ".css";
+
     static final String STATIC_RESOURCE_PREFIX = "s";
     static final String STATIC_RESOURCE_SUFFIX = "_";
 
@@ -40,6 +36,10 @@ public class WebResourceManagerImpl implements WebResourceManager
     private static final String REQUEST_CACHE_MODE_KEY = "plugin.webresource.mode";
 
     private static final IncludeMode DEFAULT_INCLUDE_MODE = WebResourceManager.DELAYED_INCLUDE_MODE;
+    private static final WebResourceFormatter[] WEB_RESOURCE_FORMATTERS = new WebResourceFormatter[] {
+        new CssWebResourceFormatter(),
+        new JavascriptWebResourceFormatter(),
+    };
 
     private final WebResourceIntegration webResourceIntegration;
 
@@ -144,54 +144,36 @@ public class WebResourceManagerImpl implements WebResourceManager
             String linkToResource;
             if ("false".equalsIgnoreCase(resourceDescriptor.getParameter("cache")))
             {
-                linkToResource = webResourceIntegration.getBaseUrl() + getResourceUrl(descriptor, resourceDescriptor.getName());
+                linkToResource = webResourceIntegration.getBaseUrl() + getResourceUrl(descriptor, name);
             }
             else
             {
-                linkToResource = getStaticPluginResource(descriptor, resourceDescriptor.getName());
+                linkToResource = getStaticPluginResource(descriptor, name);
             }
-            if (name != null && name.endsWith(JAVA_SCRIPT_EXTENSION))
+
+            WebResourceFormatter webResourceFormatter = getWebResourceFormatter(name);
+            if(webResourceFormatter != null)
             {
-                writer.write("<script type=\"text/javascript\" src=\"" + linkToResource + "\"></script>\n");
-            }
-            else if (name != null && name.endsWith(CSS_EXTENSION))
-            {
-                writer.write("<link type=\"text/css\" rel=\"styleSheet\" media=\"all\" href=\"" + linkToResource + "\" />\n");
+                writer.write(webResourceFormatter.formatResource(name, linkToResource, resourceDescriptor.getParameters()));
             }
             else
             {
                 writer.write("<!-- Error loading resource \"" + descriptor + "\". Type " + resourceDescriptor.getType() + " is not handled -->\n");
             }
         }
+    }
 
-/*
-    This is half-finished code to allow linking to resources in *any* module, not just web resources
-        for (Iterator iterator = webResourceNames.iterator(); iterator.hasNext();)
+    private WebResourceFormatter getWebResourceFormatter(String name)
+    {
+        for (int i = 0; i < WEB_RESOURCE_FORMATTERS.length; i++)
         {
-            String resourceName = (String) iterator.next();
-            if (resourceName == null)
-                continue;
-
-            String pluginKey = resourceName.substring(0, resourceName.indexOf(":"));
-            String resourceKey = resourceName.substring(resourceName.indexOf(":") + 1);
-            Plugin plugin = getPluginAccessor().getPlugin(pluginKey);
-            String linkToResource = getStaticPrefix(plugin) + "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" +
-                    resourceKey + "/" + resourceKey;
-            if (resourceName.endsWith(JAVA_SCRIPT_EXTENSION))
+            WebResourceFormatter webResourceFormatter = WEB_RESOURCE_FORMATTERS[i];
+            if(webResourceFormatter.matches(name))
             {
-                writer.write("<script type=\"text/javascript\" src=\"" + contextPath + linkToResource + "\"></script>\n");
-            }
-            else if (resourceName.endsWith(CSS_EXTENSION))
-            {
-                writer.write("<link type=\"text/css\" rel=\"styleSheet\" media=\"all\" href=\"" + contextPath + linkToResource + "\" />\n");
-            }
-            else
-            {
-                writer.write("<!-- Error loading resource. Type " + resourceName + " is not handled -->\n");
+                return webResourceFormatter;
             }
         }
-*/
-
+        return null;
     }
 
     public String getStaticResourcePrefix()
