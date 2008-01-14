@@ -2,6 +2,12 @@ package com.atlassian.plugin.webresource;
 
 import java.util.Map;
 
+/**
+ * A formatter to format web resources into HTML.
+ * <p/>
+ * The {@link #matches(String)} method should be called before calling {@link #formatResource(String, String, Map)},
+ * to ensure correct formatting of the resource.
+ */
 public interface WebResourceFormatter
 {
     /**

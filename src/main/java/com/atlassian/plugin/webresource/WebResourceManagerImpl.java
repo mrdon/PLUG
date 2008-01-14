@@ -27,7 +27,7 @@ import java.util.*;
  */
 public class WebResourceManagerImpl implements WebResourceManager
 {
-    private Log log = LogFactory.getLog(WebResourceManagerImpl.class);
+    private static final Log log = LogFactory.getLog(WebResourceManagerImpl.class);
 
     static final String STATIC_RESOURCE_PREFIX = "s";
     static final String STATIC_RESOURCE_SUFFIX = "_";
