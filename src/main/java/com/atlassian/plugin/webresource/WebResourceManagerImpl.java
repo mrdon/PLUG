@@ -141,7 +141,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         {
             ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator1.next();
             String name = resourceDescriptor.getName();
-            String linkToResource;
+            final String linkToResource;
             if ("false".equalsIgnoreCase(resourceDescriptor.getParameter("cache")))
             {
                 linkToResource = webResourceIntegration.getBaseUrl() + getResourceUrl(descriptor, name);

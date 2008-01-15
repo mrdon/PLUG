@@ -1,12 +1,13 @@
 package com.atlassian.plugin.webresource;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.BooleanUtils;
 
 import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 
-public class CssWebResourceFormatter extends AbstractWebResourceFormatter
+class CssWebResourceFormatter extends AbstractWebResourceFormatter
 {
     private static final String CSS_EXTENSION = ".css";
     private static final List/*<String>*/ HANDLED_PARAMETERS = Arrays.asList(new String[] {"title", "media", "charset"});
@@ -34,7 +35,7 @@ public class CssWebResourceFormatter extends AbstractWebResourceFormatter
         buffer.append("/>\n");
 
         // ie conditional commment
-        if(Boolean.TRUE == Boolean.valueOf((String) params.get("ieonly")))
+        if(BooleanUtils.toBoolean((String) params.get("ieonly")))
         {
             buffer.insert(0, "<!--[if IE]>\n");
             buffer.append("<![endif]-->\n");

@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 
-public abstract class AbstractWebResourceFormatter implements WebResourceFormatter
+abstract class AbstractWebResourceFormatter implements WebResourceFormatter
 {
     /**
      * Should return a List of parameter name {@link String}s, which the WebResourceFormatter will write out as

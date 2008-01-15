@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 
-public class JavascriptWebResourceFormatter extends AbstractWebResourceFormatter
+class JavascriptWebResourceFormatter extends AbstractWebResourceFormatter
 {
     private static final String JAVA_SCRIPT_EXTENSION = ".js";
     private static final List/*<String>*/ HANDLED_PARAMETERS = Arrays.asList(new String[] {"charset"});

@@ -8,7 +8,7 @@ import java.util.Map;
  * The {@link #matches(String)} method should be called before calling {@link #formatResource(String, String, Map)},
  * to ensure correct formatting of the resource.
  */
-public interface WebResourceFormatter
+interface WebResourceFormatter
 {
     /**
      * Returns a boolean indicating whether the WebResourceFormatter can support
