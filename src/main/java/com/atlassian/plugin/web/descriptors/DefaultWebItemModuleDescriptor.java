@@ -34,11 +34,6 @@ public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDes
 
         section = element.attributeValue("section");
 
-        if (element.element("icon") != null)
-        {
-            icon = new DefaultWebIcon(element.element("icon"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
-        }
-
         if (element.element("styleClass") != null)
         {
             styleClass = element.element("styleClass").getTextTrim();
@@ -46,11 +41,6 @@ public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDes
         else
         {
             styleClass = "";
-        }
-
-        if (element.element("link") != null)
-        {
-            link = new DefaultWebLink(element.element("link"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
         }
     }
 
@@ -72,5 +62,20 @@ public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDes
     public String getStyleClass()
     {
         return styleClass;
+    }
+
+    public void enabled()
+    {
+        super.enabled();
+
+        // contextProvider is not available until the module is enabled because they may need to have dependencies injected
+        if (element.element("icon") != null)
+        {
+            icon = new DefaultWebIcon(element.element("icon"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
+        }
+        if (element.element("link") != null)
+        {
+            link = new DefaultWebLink(element.element("link"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
+        }
     }
 }
