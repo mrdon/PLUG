@@ -1,6 +1,7 @@
 package com.atlassian.plugin;
 
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
@@ -87,6 +88,21 @@ public interface Plugin extends Resourced, Comparable
      * @throws ClassNotFoundException
      */
     Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException;
+
+    /**
+     * Get the classloader for the plugin.
+     * 
+     * @return The classloader used to load classes for this plugin
+     */
+    ClassLoader getClassLoader();
+    
+    /**
+     * Retrieve the URL of the resource from the plugin.
+     * 
+     * @param path the name of the resource to be loaded
+     * @return The URL to the resource, or null if the resource is not found
+     */
+    URL getResource(String path);
 
     /**
      * Load a given resource from the plugin. Plugins that are loaded dynamically will need
