@@ -88,7 +88,6 @@ public interface PluginAccessor
      * Retrieve all plugin modules that implement or extend a specific class.
      *
      * @return List of modules that implement or extend the given class.
-     * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     List getEnabledModulesByClass(Class moduleClass);
 
@@ -118,7 +117,6 @@ public interface PluginAccessor
      * Get all enabled module descriptors that have a specific descriptor class.
      *
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
-     * @deprecated since 0.17, use {@link #getModuleDescriptors(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     List getEnabledModuleDescriptorsByClass(Class descriptorClazz);
 
