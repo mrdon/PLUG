@@ -1,11 +1,12 @@
 package com.atlassian.plugin.impl;
 
+import java.io.InputStream;
+import java.net.URL;
+
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.loaders.classloading.PluginsClassLoader;
 
-import java.io.InputStream;
-
-public class DynamicPlugin extends StaticPlugin
+public class DynamicPlugin extends AbstractPlugin
 {
     private final DeploymentUnit deploymentUnit;
     private final PluginsClassLoader loader;
@@ -14,7 +15,6 @@ public class DynamicPlugin extends StaticPlugin
 
     public DynamicPlugin(DeploymentUnit deploymentUnit, PluginsClassLoader loader)
     {
-        super();
         this.deploymentUnit = deploymentUnit;
         this.loader = loader;
     }
@@ -29,6 +29,11 @@ public class DynamicPlugin extends StaticPlugin
         return true;
     }
 
+    public URL getResource(String name)
+    {
+        return loader.getResource(name);
+    }
+    
     public InputStream getResourceAsStream(String name)
     {
         return loader.getResourceAsStream(name);
