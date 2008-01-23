@@ -18,7 +18,7 @@ public class TransPluginClassLoader extends MultiDelegationClassLoader
 
     protected List/*<ClassLoader>*/ getClassLoaders()
     {
-        Collection allPlugins = pluginAccessor.getPlugins();
+        Collection allPlugins = pluginAccessor.getEnabledPlugins();
 
         List classLoaders = new ArrayList(allPlugins.size());
 

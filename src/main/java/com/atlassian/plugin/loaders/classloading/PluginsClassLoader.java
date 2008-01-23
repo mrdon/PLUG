@@ -35,23 +35,7 @@ public abstract class PluginsClassLoader extends SecureClassLoader implements Cl
     {
         Class c = (Class) cache.get(name);
         if (c != null) return c;
-        /* boolean handles = false;
-        if (packages != null)
-        {
-            for (int i = 0; i < packages.length; i++)
-            {
-                if (name.startsWith(packages[i]))
-                {
-                    handles = true;
-                    break;
-                }
-            }
-        }
-        if (!handles)
-        {
-            return super.loadClass(name, resolve);
-        }
-        */
+
         try
         {
             c = findClass(name);
@@ -115,12 +99,12 @@ public abstract class PluginsClassLoader extends SecureClassLoader implements Cl
         File file = new File(url.getFile());
         if (file.isDirectory())
         {
-            log.warn("Making a DirectoryClassLoader for: " + file);
+            log.debug("Making a DirectoryClassLoader for: " + file);
             loader = new URLClassLoader(new URL[]{url}, parent);
         }
         else
         {
-            log.warn("Making a JarClassLoader for: " + file);
+            log.debug("Making a JarClassLoader for: " + file);
             loader = new JarClassLoader(file, parent);
         }
         return loader;
