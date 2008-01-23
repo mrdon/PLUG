@@ -19,7 +19,7 @@ public class JarClassLoader extends PluginsClassLoader
 {
     private static class FileBytes
     {
-        private byte[] data;
+        private final byte[] data;
 
         private FileBytes(byte[] data)
         {
@@ -124,6 +124,7 @@ public class JarClassLoader extends PluginsClassLoader
     private File file;
     private LinkedList innerLibraries; // list of ZipEntry's referencing jar resources inside the jar associated with this JarClassLoader
     private HashMap cachedFiles = new HashMap();
+    private boolean closed = false;
 
     public JarClassLoader(File file, ClassLoader parent)
     {
@@ -157,7 +158,7 @@ public class JarClassLoader extends PluginsClassLoader
             String name = entry.getName();
             if (name.startsWith("META-INF/lib/") && name.endsWith(".jar"))
             {
-                innerLibraries.add(entry);
+                innerLibraries.add(new InnerJar(jar,entry));
             }
         }
     }
@@ -170,7 +171,10 @@ public class JarClassLoader extends PluginsClassLoader
         {
             return cacheLookup.data;
         }
-        //
+
+        if (closed)
+            throw new IllegalStateException("Cannot scan for resource, jar has been closed");
+
         InputStream in = null;
         try
         {
@@ -187,7 +191,7 @@ public class JarClassLoader extends PluginsClassLoader
                 byte[] data;
                 for (Iterator iter = innerLibraries.iterator(); iter.hasNext();)
                 {
-                    InnerJar innerJar = new InnerJar(jar, (ZipEntry) iter.next());
+                    InnerJar innerJar = (InnerJar) iter.next();
                     data = innerJar.getFile(path);
                     if (data != null)
                     {
@@ -242,7 +246,7 @@ public class JarClassLoader extends PluginsClassLoader
     /**
      * Close the jar open jar file.
      */
-    public void close()
+    public synchronized void close()
     {
         try
         {
@@ -250,6 +254,7 @@ public class JarClassLoader extends PluginsClassLoader
                 jar.close();
 
             jar = null;
+            closed = true;
         }
         catch (IOException e)
         {
