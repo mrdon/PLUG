@@ -3,7 +3,6 @@ package com.atlassian.plugin.descriptors.servlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletContext;
 import java.util.*;
 
 import com.atlassian.seraph.util.PathMapper;
@@ -32,30 +31,8 @@ public class ServletModuleManager
 
                 if (descriptor != null)
                 {
-                    servlet = descriptor.getServlet();
-                    servlet.init(new ServletConfig() {
-                        final ServletContext context = new ServletContextWrapper(descriptor, servletConfig.getServletContext());
-                        
-                        public String getServletName()
-                        {
-                            return descriptor.getName();
-                        }
-
-                        public ServletContext getServletContext()
-                        {
-                            return context;
-                        }
-
-                        public String getInitParameter(String s)
-                        {
-                            return (String) descriptor.getInitParams().get(s);
-                        }
-
-                        public Enumeration getInitParameterNames()
-                        {
-                            return Collections.enumeration(descriptor.getInitParams().keySet());
-                        }
-                    });
+                    servlet = new DelegatingPluginServlet(descriptor);
+                    servlet.init(new PluginServetConfig(descriptor, servletConfig));
                     inittedServlets.put(completeKey, servlet);
                 }
             }

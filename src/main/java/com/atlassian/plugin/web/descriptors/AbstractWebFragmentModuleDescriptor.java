@@ -1,26 +1,26 @@
 package com.atlassian.plugin.web.descriptors;
 
-import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.PluginException;
-import com.atlassian.plugin.StateAware;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.web.conditions.InvertedCondition;
-import com.atlassian.plugin.web.conditions.AndCompositeCondition;
-import com.atlassian.plugin.web.conditions.OrCompositeCondition;
-import com.atlassian.plugin.web.conditions.AbstractCompositeCondition;
-import com.atlassian.plugin.web.WebInterfaceManager;
-import com.atlassian.plugin.web.Condition;
-import com.atlassian.plugin.web.ContextProvider;
-import com.atlassian.plugin.web.model.DefaultWebLabel;
-import com.atlassian.plugin.web.model.DefaultWebParam;
-import com.atlassian.plugin.web.model.WebParam;
-import com.atlassian.plugin.web.model.WebLabel;
-import com.atlassian.plugin.loaders.LoaderUtils;
+import java.util.Iterator;
+import java.util.List;
+
 import org.dom4j.Element;
 
-import java.util.List;
-import java.util.Iterator;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.StateAware;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.loaders.LoaderUtils;
+import com.atlassian.plugin.web.Condition;
+import com.atlassian.plugin.web.ContextProvider;
+import com.atlassian.plugin.web.WebInterfaceManager;
+import com.atlassian.plugin.web.conditions.AbstractCompositeCondition;
+import com.atlassian.plugin.web.conditions.AndCompositeCondition;
+import com.atlassian.plugin.web.conditions.InvertedCondition;
+import com.atlassian.plugin.web.conditions.OrCompositeCondition;
+import com.atlassian.plugin.web.model.DefaultWebLabel;
+import com.atlassian.plugin.web.model.DefaultWebParam;
+import com.atlassian.plugin.web.model.WebLabel;
+import com.atlassian.plugin.web.model.WebParam;
 
 /**
  * An abstract convenience class for web fragment descriptors.

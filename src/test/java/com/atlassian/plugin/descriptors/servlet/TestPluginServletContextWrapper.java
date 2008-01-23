@@ -1,16 +1,13 @@
-package com.atlassian.plugin.servlet;
+package com.atlassian.plugin.descriptors.servlet;
 
 import javax.servlet.ServletContext;
 
 import junit.framework.TestCase;
 
-import com.atlassian.plugin.descriptors.servlet.ServletContextWrapper;
-import com.atlassian.plugin.descriptors.servlet.ServletModuleDescriptor;
-import com.atlassian.plugin.descriptors.servlet.ServletModuleManager;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 
-public class TestServletContextWrapper extends TestCase
+public class TestPluginServletContextWrapper extends TestCase
 {
     Mock mockServletContext;
     
@@ -27,7 +24,7 @@ public class TestServletContextWrapper extends TestCase
             protected ServletModuleManager getServletModuleManager() { return null; }
         };
         
-        contextWrapper = new ServletContextWrapper(descriptor, (ServletContext) mockServletContext.proxy());
+        contextWrapper = new PluginServletContextWrapper(descriptor, (ServletContext) mockServletContext.proxy());
     }
     
     public void testPutAttribute()

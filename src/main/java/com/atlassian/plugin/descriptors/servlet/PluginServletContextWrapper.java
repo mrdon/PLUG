@@ -21,13 +21,13 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentMap;
  * A wrapper around servlet context that allows plugin servlets to add
  * attributes which will not be shared/clobbered by other plugins.
  */
-public class ServletContextWrapper implements ServletContext
+public class PluginServletContextWrapper implements ServletContext
 {
     private final ServletModuleDescriptor descriptor;
     private final ServletContext context;
     private final ConcurrentMap attributes;
     
-    public ServletContextWrapper(ServletModuleDescriptor descriptor, ServletContext context)
+    public PluginServletContextWrapper(ServletModuleDescriptor descriptor, ServletContext context)
     {
         this.descriptor = descriptor;
         this.context = context;
@@ -104,6 +104,34 @@ public class ServletContextWrapper implements ServletContext
     }
 
     /**
+     * @return the resource from the plugin classloader if it exists, otherwise the 
+     *         resource is looked up from the wrapped context and returned
+     */
+    public URL getResource(String path) throws MalformedURLException
+    {
+        URL url = descriptor.getPlugin().getResource(path);
+        if (url == null)
+        {
+            url = context.getResource(path);
+        }
+        return url;
+    }
+
+    /**
+     * @return the resource stream from the plugin classloader if it exists, otherwise
+     *         the resource stream is attempted to be retrieved from the wrapped context
+     */
+    public InputStream getResourceAsStream(String path)
+    {
+        InputStream in = descriptor.getPlugin().getResourceAsStream(path);
+        if (in == null)
+        {
+            in = context.getResourceAsStream(path);
+        }
+        return in;
+    }
+
+    /**
      * @return null so that servlet plugins can't escape their box
      */
     public ServletContext getContext(String uripath)
@@ -141,16 +169,6 @@ public class ServletContextWrapper implements ServletContext
     public RequestDispatcher getRequestDispatcher(String path)
     {
         return context.getRequestDispatcher(path);
-    }
-
-    public URL getResource(String path) throws MalformedURLException
-    {
-        return context.getResource(path);
-    }
-
-    public InputStream getResourceAsStream(String path)
-    {
-        return context.getResourceAsStream(path);
     }
 
     public Set getResourcePaths(String arg0)
