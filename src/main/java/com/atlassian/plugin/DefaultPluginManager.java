@@ -480,10 +480,28 @@ public class DefaultPluginManager implements PluginManager
      */
     public List getEnabledModuleDescriptorsByClass(Class moduleDescriptorClass)
     {
-        final Collection moduleDescriptors = getModuleDescriptors(getEnabledPlugins());
-		filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfClassPredicate(moduleDescriptorClass));
-        filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate(this));
-        return (List) moduleDescriptors;
+        List result = new LinkedList();
+
+        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
+        {
+            Plugin plugin = (Plugin) iterator.next();
+
+            // Skip disabled plugins
+            if (!isPluginEnabled(plugin.getKey()))
+                continue;
+
+            for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
+            {
+                ModuleDescriptor module = (ModuleDescriptor) iterator1.next();
+
+                if (moduleDescriptorClass.isInstance(module) && isPluginModuleEnabled(module.getCompleteKey()))
+                {
+                    result.add(module);
+                }
+            }
+        }
+
+        return result;
     }
 
     /**
