@@ -469,19 +469,20 @@ public class DefaultPluginManager implements PluginManager
     private Collection getEnabledModuleDescriptorsByModuleClass(final Class moduleClass)
     {
         final Collection moduleDescriptors = getModuleDescriptors(getEnabledPlugins());
+		filterModuleDescriptors(moduleDescriptors, new ModuleOfClassPredicate(moduleClass));
         filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate(this));
-        filterModuleDescriptors(moduleDescriptors, new ModuleOfClassPredicate(moduleClass));
         return moduleDescriptors;
     }
 
     /**
      * @see PluginAccessor#getEnabledModuleDescriptorsByClass(Class)
+     * @deprecated since 0.17, use {@link #getModuleDescriptors(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     public List getEnabledModuleDescriptorsByClass(Class moduleDescriptorClass)
     {
         final Collection moduleDescriptors = getModuleDescriptors(getEnabledPlugins());
+		filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfClassPredicate(moduleDescriptorClass));
         filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate(this));
-        filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfClassPredicate(moduleDescriptorClass));
         return (List) moduleDescriptors;
     }
 
@@ -492,8 +493,8 @@ public class DefaultPluginManager implements PluginManager
     public List getEnabledModuleDescriptorsByType(String type) throws PluginParseException, IllegalArgumentException
     {
         final Collection moduleDescriptors = getModuleDescriptors(getEnabledPlugins());
+		filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfTypePredicate(moduleDescriptorFactory, type));
         filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate(this));
-        filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfTypePredicate(moduleDescriptorFactory, type));
         return (List) moduleDescriptors;
     }
 
