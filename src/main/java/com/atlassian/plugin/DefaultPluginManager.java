@@ -431,7 +431,6 @@ public class DefaultPluginManager implements PluginManager
 
     /**
      * @see PluginAccessor#getEnabledModulesByClass(Class)
-     * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     public List getEnabledModulesByClass(final Class moduleClass)
     {
@@ -470,8 +469,8 @@ public class DefaultPluginManager implements PluginManager
     private Collection getEnabledModuleDescriptorsByModuleClass(final Class moduleClass)
     {
         final Collection moduleDescriptors = getModuleDescriptors(getEnabledPlugins());
+		filterModuleDescriptors(moduleDescriptors, new ModuleOfClassPredicate(moduleClass));
         filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate(this));
-        filterModuleDescriptors(moduleDescriptors, new ModuleOfClassPredicate(moduleClass));
         return moduleDescriptors;
     }
 
@@ -481,10 +480,28 @@ public class DefaultPluginManager implements PluginManager
      */
     public List getEnabledModuleDescriptorsByClass(Class moduleDescriptorClass)
     {
-        final Collection moduleDescriptors = getModuleDescriptors(getEnabledPlugins());
-        filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate(this));
-        filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfClassPredicate(moduleDescriptorClass));
-        return (List) moduleDescriptors;
+        List result = new LinkedList();
+
+        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
+        {
+            Plugin plugin = (Plugin) iterator.next();
+
+            // Skip disabled plugins
+            if (!isPluginEnabled(plugin.getKey()))
+                continue;
+
+            for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
+            {
+                ModuleDescriptor module = (ModuleDescriptor) iterator1.next();
+
+                if (moduleDescriptorClass.isInstance(module) && isPluginModuleEnabled(module.getCompleteKey()))
+                {
+                    result.add(module);
+                }
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -494,8 +511,8 @@ public class DefaultPluginManager implements PluginManager
     public List getEnabledModuleDescriptorsByType(String type) throws PluginParseException, IllegalArgumentException
     {
         final Collection moduleDescriptors = getModuleDescriptors(getEnabledPlugins());
+		filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfTypePredicate(moduleDescriptorFactory, type));
         filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate(this));
-        filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfTypePredicate(moduleDescriptorFactory, type));
         return (List) moduleDescriptors;
     }
 
