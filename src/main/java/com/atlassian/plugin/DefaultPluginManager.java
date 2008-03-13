@@ -476,7 +476,6 @@ public class DefaultPluginManager implements PluginManager
 
     /**
      * @see PluginAccessor#getEnabledModuleDescriptorsByClass(Class)
-     * @deprecated since 0.17, use {@link #getModuleDescriptors(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     public List getEnabledModuleDescriptorsByClass(Class moduleDescriptorClass)
     {
