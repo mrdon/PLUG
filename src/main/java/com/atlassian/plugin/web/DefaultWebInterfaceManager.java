@@ -122,7 +122,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
             }
             catch (Throwable t)
             {
-                log.error("Could not evaluate condition: " + t);
+                log.error("Could not evaluate condition for descriptor: " + descriptor + ", with throwable: " + t);
                 iterator.remove();
             }
         }
