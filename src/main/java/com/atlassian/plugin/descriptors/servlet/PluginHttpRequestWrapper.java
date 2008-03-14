@@ -32,13 +32,8 @@ public class PluginHttpRequestWrapper extends HttpServletRequestWrapper
     public String getPathInfo()
     {
         String pathInfo = super.getPathInfo();
-        if (pathInfo != null)
-        {
-            if (basePath != null)
-            {
-                return pathInfo.substring(basePath.length());
-            }
-        }
+        if (pathInfo != null && basePath != null)
+            return pathInfo.substring(basePath.length());
         return pathInfo;
     }
     
