@@ -475,6 +475,9 @@ public class DefaultPluginManager implements PluginManager
     }
 
     /**
+     * This method has been reverted to pre PLUG-40 to fix performance issues that were encountered during
+     * load testing. This should be reverted to the state it was in at 54639 when the fundamental issue leading
+     * to this slowdown has been corrected (that is, slowness of PluginClassLoader).
      * @see PluginAccessor#getEnabledModuleDescriptorsByClass(Class)
      */
     public List getEnabledModuleDescriptorsByClass(Class moduleDescriptorClass)
