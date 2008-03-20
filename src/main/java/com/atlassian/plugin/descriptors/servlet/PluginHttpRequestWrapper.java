@@ -63,13 +63,22 @@ public class PluginHttpRequestWrapper extends HttpServletRequestWrapper
             for (Iterator pathIterator = descriptor.getPaths().iterator(); pathIterator.hasNext(); )
             {
                 String basePath = (String) pathIterator.next();
-                if (basePath.startsWith("/") && basePath.endsWith("/*")
-                 && pathInfo.startsWith(basePath.substring(0, basePath.length() - 2)))
+                if (isPathMapping(basePath) && pathInfo.startsWith(getMappingRootPath(basePath)))
                 {
-                    return basePath.substring(0, basePath.length() - 2);
+                    return getMappingRootPath(basePath);
                 }
             }
         }
         return null;
+    }
+    
+    private boolean isPathMapping(String path)
+    {
+        return path.startsWith("/") && path.endsWith("/*");
+    }
+    
+    private String getMappingRootPath(String pathMapping)
+    {
+        return pathMapping.substring(0, pathMapping.length() - 2);
     }
 }
