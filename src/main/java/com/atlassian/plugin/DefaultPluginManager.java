@@ -762,6 +762,12 @@ public class DefaultPluginManager implements PluginManager
         return isPluginEnabled(key.getPluginKey()) && pluginModule != null && getState().isEnabled(pluginModule);
     }
 
+    public boolean isPluginModuleEnabledRegardlessOfPluginState(String completeKey)
+    {
+        final ModuleDescriptor pluginModule = getPluginModule(completeKey);
+        return pluginModule != null && getState().isEnabled(pluginModule);
+    }
+
     public boolean isPluginEnabled(String key)
     {
         return plugins.containsKey(key) && getState().isEnabled((Plugin) plugins.get(key));

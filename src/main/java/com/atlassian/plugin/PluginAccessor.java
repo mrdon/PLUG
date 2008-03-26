@@ -85,6 +85,12 @@ public interface PluginAccessor
     boolean isPluginModuleEnabled(String completeKey);
 
     /**
+     * Whether or not a given plugin module is currently enabled, regardless of whether or not the plugin the module is
+     * contained in is enabled.
+     */
+    boolean isPluginModuleEnabledRegardlessOfPluginState(String completeKey);
+
+    /**
      * Retrieve all plugin modules that implement or extend a specific class.
      *
      * @return List of modules that implement or extend the given class.
