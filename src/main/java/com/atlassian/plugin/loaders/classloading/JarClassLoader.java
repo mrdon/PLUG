@@ -123,7 +123,7 @@ public class JarClassLoader extends PluginsClassLoader
     private JarFile jar;
     private File file;
     private LinkedList innerLibraries; // list of ZipEntry's referencing jar resources inside the jar associated with this JarClassLoader
-    private HashMap cachedFiles = new HashMap();
+    private Map cachedFiles = new HashMap();
     private boolean closed = false;
 
     public JarClassLoader(File file, ClassLoader parent)

@@ -775,10 +775,12 @@ public class DefaultPluginManager implements PluginManager
 
     public InputStream getDynamicResourceAsStream(String name)
     {
-        for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
+        final Collection enabledPlugins = getEnabledPlugins();
+
+        for (Iterator iterator = enabledPlugins.iterator(); iterator.hasNext();)
         {
             Plugin plugin = (Plugin) iterator.next();
-            if (plugin.isDynamicallyLoaded() && isPluginEnabled(plugin.getKey()))
+            if (plugin.isDynamicallyLoaded())
             {
                 InputStream is = plugin.getResourceAsStream(name);
 

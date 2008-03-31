@@ -29,6 +29,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     private Float minJavaVersion;
     private String i18nNameKey;
     private String descriptionKey;
+	private String completeKey;
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
@@ -36,6 +37,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         this.key = element.attributeValue("key");
         this.name = element.attributeValue("name");
         this.i18nNameKey = element.attributeValue("i18n-name-key");
+        this.completeKey = buildCompleteKey(plugin, key);
 
         String clazz = element.attributeValue("class");
         try
@@ -114,6 +116,23 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     }
 
     /**
+     * Build the complete key based on the provided plugin and module key. This method has no
+     * side effects.
+     * @param plugin The plugin for which the module belongs
+     * @param moduleKey The key for the module
+     * @return A newly constructed complete key, null if the plugin is null
+     */
+    private String buildCompleteKey(Plugin plugin, String moduleKey)
+    {
+        if (plugin == null)
+            return null;
+
+        final StringBuffer completeKeyBuffer = new StringBuffer(32);
+        completeKeyBuffer.append(plugin.getKey()).append(":").append(moduleKey);
+        return completeKeyBuffer.toString();
+    }
+
+    /**
      * Override this if your plugin needs to clean up when it's been removed.
      * @param plugin
      */
@@ -158,8 +177,9 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         }
     }
 
-    public String getCompleteKey() {
-        return plugin.getKey() + ":" + getKey();
+    public String getCompleteKey() 
+	{
+        return completeKey;
     }
 
     public String getPluginKey()
@@ -248,6 +268,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
      */
     public void setPlugin(Plugin plugin)
     {
+        this.completeKey = buildCompleteKey(plugin, key);
         this.plugin = plugin;
     }
 
