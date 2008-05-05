@@ -491,6 +491,21 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         InputStream is = manager.getPluginResourceAsStream("test.atlassian.plugin.classloaded", "atlassian-plugin.xml");
         assertNotNull(is);
     }
+    
+    public void testGetDynamicPluginClass() throws IOException, PluginParseException
+    {
+        createFillAndCleanTempPluginDirectory();
+
+        DefaultPluginManager manager = makeClassLoadingPluginManager();
+        try
+        {
+            manager.getDynamicPluginClass("com.atlassian.plugin.mock.MockPooh");
+        }
+        catch (ClassNotFoundException e)
+        {
+            fail(e.getMessage());
+        }
+    }
 
     public void testFindingNewPlugins() throws PluginParseException, IOException
     {
@@ -704,6 +719,25 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         //checkResources(manager, true, false);
     }
 
+    public void testInvalidationOfDynamicClassCache() throws IOException, PluginException
+    {
+        createFillAndCleanTempPluginDirectory();
+
+        DefaultPluginManager manager = makeClassLoadingPluginManager();
+
+        checkClasses(manager, true);
+        manager.disablePlugin("test.atlassian.plugin.classloaded");
+        checkClasses(manager, false);
+        manager.enablePlugin("test.atlassian.plugin.classloaded");
+        checkClasses(manager, true);
+        manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded"));
+        checkClasses(manager, false);
+        //restore paddington to test plugins dir
+        FileUtils.copyDirectory(pluginsDirectory, pluginsTestDir);
+        manager.scanForNewPlugins();
+        checkClasses(manager, true);
+    }
+
     public void testInstallPlugin() throws Exception
     {
         Mock mockPluginStateStore = new Mock(PluginStateStore.class);
@@ -766,6 +800,25 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(canGetGlobal, is != null);
         is = manager.getDynamicResourceAsStream("bear/paddington.vm");
         assertEquals(canGetModule, is != null);
+    }
+    
+    private void checkClasses(PluginAccessor manager, boolean canGet)
+    {
+        try
+        {
+            manager.getDynamicPluginClass("com.atlassian.plugin.mock.MockPaddington");
+            if (!canGet)
+            {
+                fail("Class in plugin was successfully loaded");
+            }
+        }
+        catch (ClassNotFoundException e)
+        {
+            if (canGet)
+            {
+                fail(e.getMessage());
+            }
+        }
     }
 
 

@@ -85,12 +85,6 @@ public interface PluginAccessor
     boolean isPluginModuleEnabled(String completeKey);
 
     /**
-     * Whether or not a given plugin module is currently enabled, regardless of whether or not the plugin the module is
-     * contained in is enabled.
-     */
-    boolean isPluginModuleEnabledRegardlessOfPluginState(String completeKey);
-
-    /**
      * Retrieve all plugin modules that implement or extend a specific class.
      *
      * @return List of modules that implement or extend the given class.
@@ -150,6 +144,16 @@ public interface PluginAccessor
      */
     InputStream getPluginResourceAsStream(String pluginKey, String resourcePath);
 
+    /**
+     * Retrieve a class from a currently loaded (and active) dynamically loaded plugin. Will return the first class
+     * found, so plugins with overlapping class names will behave eratically.
+     *
+     * @param className the name of the class to retrieve
+     * @return the dynamically loaded class that matches that name
+     * @throws ClassNotFoundException thrown if no classes by that name could be found in any of the enabled dynamic plugins
+     */
+    Class getDynamicPluginClass(String className) throws ClassNotFoundException;
+    
     /**
      * @return true if the plugin is a system plugin.
      */

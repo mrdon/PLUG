@@ -1,5 +1,23 @@
 package com.atlassian.plugin;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections.Closure;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -8,15 +26,13 @@ import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
-import com.atlassian.plugin.predicate.*;
-import org.apache.commons.collections.Closure;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import java.io.InputStream;
-import java.util.*;
+import com.atlassian.plugin.predicate.EnabledModulePredicate;
+import com.atlassian.plugin.predicate.EnabledPluginPredicate;
+import com.atlassian.plugin.predicate.ModuleDescriptorOfClassPredicate;
+import com.atlassian.plugin.predicate.ModuleDescriptorOfTypePredicate;
+import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
+import com.atlassian.plugin.predicate.ModuleOfClassPredicate;
+import com.atlassian.plugin.predicate.PluginPredicate;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -36,6 +52,7 @@ public class DefaultPluginManager implements PluginManager
     private final PluginStateStore store;
     private ModuleDescriptorFactory moduleDescriptorFactory;
     private HashMap plugins = new HashMap();
+    private HashMap resourceToPluginCache = new HashMap();
 
     /**
      * Factory for retrieving descriptor parsers. Typically overridden for testing.
@@ -194,6 +211,7 @@ public class DefaultPluginManager implements PluginManager
             removePluginFromLoader(plugin);
         }
 
+        removeResourcePluginCacheEntries(plugin);
         plugins.remove(plugin.getKey());
     }
 
@@ -207,6 +225,18 @@ public class DefaultPluginManager implements PluginManager
         }
 
         pluginToPluginLoader.remove(plugin);
+    }
+    
+    private void removeResourcePluginCacheEntries(Plugin plugin)
+    {
+        for (Iterator it = resourceToPluginCache.entrySet().iterator(); it.hasNext(); )
+        {
+            Map.Entry entry = (Map.Entry) it.next();
+            if (plugin.compareTo(entry.getValue()) == 0)
+            {
+                it.remove();
+            }
+        }
     }
 
     protected void notifyUninstallPlugin(Plugin plugin)
@@ -635,6 +665,7 @@ public class DefaultPluginManager implements PluginManager
 
         notifyPluginDisabled(plugin);
         disablePluginState(plugin, getStore());
+        removeResourcePluginCacheEntries(plugin);
     }
 
     protected void disablePluginState(Plugin plugin, PluginStateStore stateStore)
@@ -762,12 +793,6 @@ public class DefaultPluginManager implements PluginManager
         return isPluginEnabled(key.getPluginKey()) && pluginModule != null && getState().isEnabled(pluginModule);
     }
 
-    public boolean isPluginModuleEnabledRegardlessOfPluginState(String completeKey)
-    {
-        final ModuleDescriptor pluginModule = getPluginModule(completeKey);
-        return pluginModule != null && getState().isEnabled(pluginModule);
-    }
-
     public boolean isPluginEnabled(String key)
     {
         return plugins.containsKey(key) && getState().isEnabled((Plugin) plugins.get(key));
@@ -775,21 +800,74 @@ public class DefaultPluginManager implements PluginManager
 
     public InputStream getDynamicResourceAsStream(String name)
     {
-        final Collection enabledPlugins = getEnabledPlugins();
-
-        for (Iterator iterator = enabledPlugins.iterator(); iterator.hasNext();)
+        Plugin plugin = (Plugin) resourceToPluginCache.get(name);
+        if (plugin == null)
         {
-            Plugin plugin = (Plugin) iterator.next();
-            if (plugin.isDynamicallyLoaded())
+            plugin = findDynamicPluginWithResource(name);
+            if (plugin == null)
             {
-                InputStream is = plugin.getResourceAsStream(name);
-
-                if (is != null)
-                    return is;
+                return null;
             }
+            resourceToPluginCache.put(name, plugin);
         }
+        return plugin.getResourceAsStream(name);
+    }
 
-        return null;
+    public Class getDynamicPluginClass(String className) throws ClassNotFoundException
+    {
+        Plugin plugin = (Plugin) resourceToPluginCache.get(className);
+        if (plugin == null)
+        {
+            plugin = findDynamicPluginWithClass(className);
+            if (plugin == null)
+            {
+                // class was not in the cache and no plugins could load it, so it must not exist
+                throw new ClassNotFoundException(className);
+            }
+            resourceToPluginCache.put(className, plugin);
+        }
+        return plugin.loadClass(className, getClass());
+    }
+
+    private Plugin findDynamicPluginWithClass(final String className)
+    {
+        return (Plugin) CollectionUtils.find(getPlugins(), new Predicate()
+        {
+            public boolean evaluate(Object object)
+            {
+                Plugin plugin = (Plugin) object;
+                if (!isPluginEnabled(plugin.getKey()) || !plugin.isDynamicallyLoaded())
+                {
+                    return false;
+                }
+                try 
+                {
+                    plugin.loadClass(className, getClass());
+                    // if there was no exception thrown, we've found the plugin that can loada the class
+                    return true;
+                }
+                catch (ClassNotFoundException e)
+                {
+                    return false;
+                }
+            }
+        });
+    }
+    
+    private Plugin findDynamicPluginWithResource(final String name)
+    {
+        return (Plugin) CollectionUtils.find(getPlugins(), new Predicate()
+        {
+            public boolean evaluate(Object object)
+            {
+                Plugin plugin = (Plugin) object;
+                if (!isPluginEnabled(plugin.getKey()) || !plugin.isDynamicallyLoaded())
+                {
+                    return false;
+                }
+                return plugin.getResourceAsStream(name) != null;
+            }
+        });
     }
 
     public InputStream getPluginResourceAsStream(String pluginKey, String resourcePath)
@@ -804,7 +882,7 @@ public class DefaultPluginManager implements PluginManager
 
         return plugin.getResourceAsStream(resourcePath);
     }
-
+    
     /**
      * Disables and replaces a plugin currently loaded with an UnloadablePlugin.
      *
@@ -837,5 +915,5 @@ public class DefaultPluginManager implements PluginManager
     public void setDescriptorParserFactory(DescriptorParserFactory descriptorParserFactory)
     {
         this.descriptorParserFactory = descriptorParserFactory;
-    }
+    }    
 }
