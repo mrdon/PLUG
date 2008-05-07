@@ -141,6 +141,8 @@ public interface PluginAccessor
      * Retrieve a resource from a currently loaded (and active) plugin. For statically loaded plugins, this just means
      * pulling the resource from the PluginManager's classloader. For dynamically loaded plugins, this means retrieving
      * the resource from the plugin's private classloader.
+     * @deprecated since 0.21 this method is not used use
+     * {@link #getPlugin(String)}.{@link Plugin#getClassLoader() getClassLoader()}.{@link ClassLoader#getResourceAsStream(String) getResourceAsStream(String)}
      */
     InputStream getPluginResourceAsStream(String pluginKey, String resourcePath);
 
@@ -153,7 +155,13 @@ public interface PluginAccessor
      * @throws ClassNotFoundException thrown if no classes by that name could be found in any of the enabled dynamic plugins
      */
     Class getDynamicPluginClass(String className) throws ClassNotFoundException;
-    
+
+    /**
+     * Retrieve the class loader responsible for loading classes and resources from plugins.
+     * @return the class loader
+     */
+    ClassLoader getClassLoader();
+
     /**
      * @return true if the plugin is a system plugin.
      */

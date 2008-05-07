@@ -50,7 +50,7 @@ public class TestJarClassLoader extends AbstractTestClassLoader
 
     public void testLoadingNestedClasses() throws Exception
     {
-        String jarFileName = "atlassian-plugins-innertest-1.0.jar";
+        String jarFileName = "atlassian-plugins-simpletest-1.0.jar";
         // hacky way of getting to the paddington-test-plugin.jar (assume it's two levels below src/test/etc/test-disabled-plugin.xml)
         JarClassLoader loader = makeClassLoaderForTestJarFile(jarFileName);
 
@@ -72,9 +72,7 @@ public class TestJarClassLoader extends AbstractTestClassLoader
         URL url = ClassLoaderUtils.getResource("testjars", TestClassPathPluginLoader.class);
         String path = url.toExternalForm().substring(5);
     	path = path.replace('/', File.separatorChar);
-        pluginsDirectory = new File(path);
-        System.out.println("path = " + path);
-        return pluginsDirectory;
+        return pluginsDirectory = new File(path);
     }
 
     private JarClassLoader makeClassLoaderForTestJarFile(String jarFileName)

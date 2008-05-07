@@ -163,7 +163,7 @@ public class JarClassLoader extends PluginsClassLoader
         }
     }
 
-    public synchronized byte[] getFile(String path)
+    protected synchronized byte[] getFile(String path)
     {
         // Check the cache
         FileBytes cacheLookup = (FileBytes) cachedFiles.get(path);

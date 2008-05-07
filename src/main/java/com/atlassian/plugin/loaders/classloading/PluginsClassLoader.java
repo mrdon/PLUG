@@ -128,6 +128,13 @@ public abstract class PluginsClassLoader extends SecureClassLoader implements Cl
         return data;
     }
 
+    /**
+     * Load the named resource from this plugin.  This implementation checks the plugin's contents first
+     * then delegates to the system loaders.
+     * 
+     * @param name
+     * @return
+     */
     public URL getResource(String name)
     {
         URL url = findResource(name);
