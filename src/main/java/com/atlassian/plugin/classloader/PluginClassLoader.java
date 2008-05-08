@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URLStreamHandler;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -16,19 +17,48 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 
+import com.atlassian.cache.Cache;
+import com.atlassian.cache.memory.MemoryCache;
+import com.atlassian.plugin.url.InnerJarURLStreamHandler;
+
 /**
- * A class loader used to load classes and resources from one plugin.
+ * A class loader used to load classes and resources from a given plugin.
  */
 public class PluginClassLoader extends AbstractClassLoader
 {
     private static final Log log = LogFactory.getLog(PluginClassLoader.class);
     private static final String JAR_RESOURCE_SEPARATOR = "!/";
 
+    /**
+     * The {@link URLStreamHandler} to use for resource {@link URL URLs}.
+     */
+    private static final URLStreamHandler URL_STREAM_HANDLER = new InnerJarURLStreamHandler();
+
+    /**
+     * The plugin file.
+     */
     private final File file;
+
+    /**
+     * The jar file representing the plugin
+     */
     private final JarFile jarFile;
+
+    /**
+     * The list of inner jars entry names
+     */
     private final List/*<String>*/ innerJars;
 
-    public PluginClassLoader(File file)
+    /**
+     * A cache for classes
+     */
+    private Cache/*<String,Class>*/ classCache = new MemoryCache(this.getClass().getName() + "#ClassCache");
+    /**
+     * A resource index
+     */
+    private Cache /*<String,String>*/ resourceIndex = new MemoryCache(this.getClass().getName() + "#ResourceIndex");
+
+    public PluginClassLoader(final File file)
     {
         this(file, null);
     }
@@ -44,92 +74,124 @@ public class PluginClassLoader extends AbstractClassLoader
         try
         {
             this.jarFile = new JarFile(file);
-            innerJars = loadInnerLibraries(this.jarFile);
+            this.innerJars = listInnerLibraries(this.jarFile);
         }
         catch (IOException e)
         {
-            throw new IllegalArgumentException("Plugin jar file could not be open for reading.", e);
+            throw new IllegalArgumentException("Plugin jar file could not be open for reading." + e.getMessage());
         }
     }
 
-    private static List loadInnerLibraries(JarFile jarFile) throws IOException
+    /**
+     * Lists the inner jar contained in the given jar file, inner jars should be located whithin the
+     * <code>META-INF/lib</code> folder
+     *
+     * @param jarFile the jar file to inspect.
+     * @return a list of jar entry names
+     * @throws IOException if any exception occurs reading the jar file
+     */
+    private static List/*<String>*/ listInnerLibraries(JarFile jarFile) throws IOException
     {
-        List innerJars = new ArrayList();
-        Enumeration entries = jarFile.entries();
-        while (entries.hasMoreElements())
+        final List innerJars = new ArrayList();
+        for (Enumeration entries = jarFile.entries(); entries.hasMoreElements();)
         {
-            JarEntry entry = (JarEntry) entries.nextElement();
-            String name = entry.getName();
-            if (name.startsWith("META-INF/lib/") && name.endsWith(".jar"))
+            final String entryName = ((JarEntry) entries.nextElement()).getName();
+            if (entryName.startsWith("META-INF/lib/") && entryName.endsWith(".jar"))
             {
-                innerJars.add(name);
+                innerJars.add(entryName);
             }
         }
         return innerJars;
     }
 
-    public List getInnerJars()
+    /*
+     * Enables testing, keep package protected.
+     */
+    List getInnerJars()
     {
-        return innerJars;
+        return new ArrayList(innerJars);
     }
 
     /**
-     * Load the named resource from this plugin.  This implementation checks the plugin's contents first
+     * Load the named resource from this plugin. This implementation checks the plugin's contents first
      * then delegates to the system loaders.
      *
-     * @param name
-     * @return
+     * @param name the name of the resource.
+     * @return the URL to the resource, <code>null</code> if the resource was not found.
      */
     public URL getResource(String name)
     {
         final URL url = findResource(name);
-        if (url != null) return url;
-
-        return super.getResource(name);
+        return url != null ? url : super.getResource(name);
     }
 
     protected URL findResource(String name)
     {
         try
         {
-            // try the outer jar
-            if (jarFile.getJarEntry(name) != null)
+            // check if the resource has been indexed
+            String urlPath = (String) resourceIndex.get(name);
+
+            // try to find the resource in the plugin jar itself
+            if (urlPath == null && jarFile.getJarEntry(name) != null)
             {
-                return new URL(null, createUrlPath(name), new InnerJarURLStreamHandler());
+                urlPath = createUrlPath(name);
             }
 
-            // scan each inner jar for the resource
-            for (Iterator i = innerJars.iterator(); i.hasNext();)
+            // try to find the resource in the innner jars
+            if (urlPath == null)
             {
-                String innerJarName = (String) i.next();
-                final String urlPath = createUrlPath(innerJarName);
-
-                // scan the inner jar for the desired resource
-                try
+                for (Iterator innerJarNames = innerJars.iterator(); innerJarNames.hasNext();)
                 {
-                    JarEntry innerJarEntry = jarFile.getJarEntry(innerJarName);
-                    JarInputStream jin = new JarInputStream(jarFile.getInputStream(innerJarEntry));
+                    final String innerJarName = (String) innerJarNames.next();
+                    final String innerJarUrlPath = createUrlPath(innerJarName);
 
-                    for (JarEntry entry; (entry = jin.getNextJarEntry()) != null;)
+                    // scan the inner jar for the resource
+                    try
                     {
-                        if (entry.getName().equals(name))
+                        final JarInputStream jin = new JarInputStream(jarFile.getInputStream(jarFile.getJarEntry(innerJarName)));
+                        JarEntry entry;
+                        while (urlPath == null && (entry = jin.getNextJarEntry()) != null)
                         {
-                            final String innerUrlPath = urlPath + JAR_RESOURCE_SEPARATOR + name;
-                            return new URL(null, innerUrlPath, new InnerJarURLStreamHandler());
+                            if (entry.getName().equals(name))
+                            {
+                                urlPath = innerJarUrlPath + JAR_RESOURCE_SEPARATOR + name;
+                            }
                         }
                     }
-                }
-                catch (IOException e)
-                {
-                    log.error("Could not load inner jar", e);
+                    catch (IOException e)
+                    {
+                        log.error("Could not load inner jar", e);
+                    }
+
                 }
             }
+
+            if (urlPath != null)
+            {
+                // add it to the cache
+                resourceIndex.put(name, urlPath);
+                return getResourceUrl(urlPath);
+            }
+
+            return null; // resource not found
         }
         catch (MalformedURLException e)
         {
-            throw new IllegalStateException("Malformed url constructed", e);
+            throw new IllegalStateException("Malformed url constructed: " + e.getMessage());
         }
-        return null; // resource not found
+    }
+
+    /**
+     * Get the URL to the resource
+     *
+     * @param urlPath the String representation of the URL
+     * @return the URL
+     * @throws MalformedURLException if the urlPath cannot be translated into a valid URL
+     */
+    private static URL getResourceUrl(String urlPath) throws MalformedURLException
+    {
+        return new URL(null, urlPath, URL_STREAM_HANDLER);
     }
 
     private String createUrlPath(String innerJarName) throws MalformedURLException
@@ -139,8 +201,8 @@ public class PluginClassLoader extends AbstractClassLoader
 
     protected Class findClass(String className) throws ClassNotFoundException
     {
-        String resourceName = className.replace('.', '/').concat(".class");
-        URL url = findResource(resourceName);
+        final String resourceName = className.replace('.', '/').concat(".class");
+        final URL url = findResource(resourceName);
         if (url != null)
         {
             createPackage(className);
@@ -154,7 +216,9 @@ public class PluginClassLoader extends AbstractClassLoader
 
     protected synchronized Class loadClass(String name, boolean resolve) throws ClassNotFoundException
     {
-        Class c;
+        Class c = (Class) classCache.get(name);
+        if (c != null) return c;
+
         try
         {
             c = findClass(name);
@@ -163,6 +227,7 @@ public class PluginClassLoader extends AbstractClassLoader
         {
             return super.loadClass(name, resolve);
         }
+        classCache.put(name, c);
         return c;
     }
 
@@ -170,12 +235,12 @@ public class PluginClassLoader extends AbstractClassLoader
     {
         byte[] bytes;
         try
-            {
-                bytes = IOUtils.toByteArray(url.openStream());
+        {
+            bytes = IOUtils.toByteArray(url.openStream());
         }
         catch (IOException e)
         {
-            throw new IllegalStateException("Can't read plugin class resource", e);
+            throw new IllegalStateException("Can't read plugin class resource: " + e.getMessage());
         }
         return defineClass(null, bytes, 0, bytes.length);
     }
@@ -203,7 +268,7 @@ public class PluginClassLoader extends AbstractClassLoader
         }
         catch (IOException e)
         {
-            log.warn("Could not close the plugin jar ["+file+"]: "+e.getMessage());
+            log.warn("Could not close the plugin jar [" + file + "]: " + e.getMessage());
             // doesn't matter if we can't close the jar - we are done with it
         }
     }

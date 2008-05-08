@@ -1,4 +1,4 @@
-package com.atlassian.plugin.classloader;
+package com.atlassian.plugin.url;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,7 +62,6 @@ class InnerJarURLConnection extends JarURLConnection
         }
 
         this.segments = (String[]) segments.toArray( new String[segments.size()] );
-
         this.baseResource = new URL( baseResourceText );
     }
 

@@ -27,7 +27,7 @@ public class TestDelegatingPluginServlet extends TestCase
     public void setUp() throws Exception
     {
         URL resource = getClass().getClassLoader().getResource("testjars/atlassian-plugins-simpletest-1.0.jar");
-        classLoader = new PluginClassLoader(new File(resource.toURI()));
+        classLoader = new PluginClassLoader(new File(resource.getFile()));
         plugin = new DynamicPlugin(null, classLoader);
         
         mockRequest = new Mock(HttpServletRequest.class);

@@ -1,4 +1,4 @@
-package com.atlassian.plugin.classloader;
+package com.atlassian.plugin.url;
 
 import java.io.IOException;
 import java.net.URL;
@@ -7,7 +7,7 @@ import java.net.URLStreamHandler;
 
 /**
  */
-class InnerJarURLStreamHandler extends URLStreamHandler
+public class InnerJarURLStreamHandler extends URLStreamHandler
 {
     public InnerJarURLStreamHandler()
     {
