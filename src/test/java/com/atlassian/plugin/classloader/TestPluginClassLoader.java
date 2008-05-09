@@ -19,10 +19,8 @@ public class TestPluginClassLoader extends TestCase
         URL url = getClass().getClassLoader().getResource(TEST_JAR);
         assertNotNull("Can't find test resource", url);
         PluginClassLoader pluginClassLoader = new PluginClassLoader(new File(url.getFile()));
-        List innerJars = pluginClassLoader.getInnerJars();
+        List innerJars = pluginClassLoader.getPluginInnerJars();
         assertEquals(2,innerJars.size());
-        assertTrue(innerJars.contains("META-INF/lib/atlassian-plugins-innerjarone-1.0.jar"));
-        assertTrue(innerJars.contains("META-INF/lib/atlassian-plugins-innerjartwo-1.0.jar"));
     }
 
     public void testPluginClassLoaderLoadsResourceFromOuterJarFirst() throws Exception
@@ -51,10 +49,10 @@ public class TestPluginClassLoader extends TestCase
 
     public void testPluginClassLoaderLoadsResourceFromInnerJarIfNotInOuterJar() throws Exception
     {
-        URL url = getClass().getClassLoader().getResource(TEST_JAR);
+        final URL url = getClass().getClassLoader().getResource(TEST_JAR);
         assertNotNull("Can't find test resource", url);
-        PluginClassLoader pluginClassLoader = new PluginClassLoader(new File(url.getFile()));
-        URL resourceUrl = pluginClassLoader.findResource("innerresource.txt");
+        final PluginClassLoader pluginClassLoader = new PluginClassLoader(new File(url.getFile()));
+        final URL resourceUrl = pluginClassLoader.getResource("innerresource.txt");
         assertNotNull(resourceUrl);
         assertEquals("innerresource",IOUtils.toString(resourceUrl.openStream()));
     }
