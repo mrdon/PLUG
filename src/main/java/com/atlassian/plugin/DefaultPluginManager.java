@@ -612,6 +612,7 @@ public class DefaultPluginManager implements PluginManager
      */
     protected void notifyPluginEnabled(Plugin plugin)
     {
+        classLoader.notifyPluginOrModuleEnabled();
         enablePluginModules(plugin);
     }
 
@@ -652,6 +653,7 @@ public class DefaultPluginManager implements PluginManager
                 replacePluginWithUnloadablePlugin(plugin, descriptor, exception);
             }
         }
+        classLoader.notifyPluginOrModuleEnabled();
     }
 
     public void disablePlugin(String key)
@@ -786,6 +788,7 @@ public class DefaultPluginManager implements PluginManager
 
     protected void notifyModuleEnabled(ModuleDescriptor module)
     {
+        classLoader.notifyPluginOrModuleEnabled();
         if (module instanceof StateAware)
             ((StateAware) module).enabled();
     }
