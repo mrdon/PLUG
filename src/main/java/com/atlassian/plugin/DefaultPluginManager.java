@@ -57,7 +57,7 @@ public class DefaultPluginManager implements PluginManager
     /**
      * Factory for retrieving descriptor parsers. Typically overridden for testing.
      */
-    private final DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
+    private DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
 
     /**
      * Installer used for storing plugins. Used by {@link #installPlugin(PluginJar)}.
