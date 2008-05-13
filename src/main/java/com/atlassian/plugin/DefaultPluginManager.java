@@ -50,14 +50,14 @@ public class DefaultPluginManager implements PluginManager
     private static final Log log = LogFactory.getLog(DefaultPluginManager.class);
     private final List pluginLoaders;
     private final PluginStateStore store;
-    private ModuleDescriptorFactory moduleDescriptorFactory;
-    private HashMap plugins = new HashMap();
-    private HashMap resourceToPluginCache = new HashMap();
+    private final ModuleDescriptorFactory moduleDescriptorFactory;
+    private final Map plugins = new HashMap();
+    private final Map resourceToPluginCache = new HashMap();
 
     /**
      * Factory for retrieving descriptor parsers. Typically overridden for testing.
      */
-    private DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
+    private final DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
 
     /**
      * Installer used for storing plugins. Used by {@link #installPlugin(PluginJar)}.
@@ -67,7 +67,7 @@ public class DefaultPluginManager implements PluginManager
     /**
      * Stores {@link Plugin}s as a key and {@link PluginLoader} as a value.
      */
-    private HashMap pluginToPluginLoader = new HashMap();
+    private final Map pluginToPluginLoader = new HashMap();
 
     public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory)
     {
