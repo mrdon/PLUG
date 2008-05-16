@@ -3,6 +3,7 @@ package com.atlassian.plugin.webresource;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.servlet.BaseFileServerServlet;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,8 +38,8 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     private static final IncludeMode DEFAULT_INCLUDE_MODE = WebResourceManager.DELAYED_INCLUDE_MODE;
     private static final WebResourceFormatter[] WEB_RESOURCE_FORMATTERS = new WebResourceFormatter[] {
-        new CssWebResourceFormatter(),
-        new JavascriptWebResourceFormatter(),
+            new CssWebResourceFormatter(),
+            new JavascriptWebResourceFormatter(),
     };
 
     private final WebResourceIntegration webResourceIntegration;
@@ -98,77 +99,173 @@ public class WebResourceManagerImpl implements WebResourceManager
         {
             if (WebResourceManager.DELAYED_INCLUDE_MODE.equals(getIncludeMode()))
             {
-                includeDelayedResources(writer);
+                final Predicate includePredicate = new Predicate()
+                {
+                    public boolean evaluate(final Object webModuleDescriptor)
+                    {
+                        return (webModuleDescriptor != null);
+                    }
+                };
+                includeDelayedResources(writer, includePredicate);
             }
         }
         catch (IOException e)
         {
             log.error(e);
         }
-
     }
 
-    private void includeDelayedResources(Writer writer) throws IOException
+    public void includeHeaderResources(final Writer writer)
     {
-        Collection webResourceNames = (Collection) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_RESOURCE_KEY);
-        if (webResourceNames == null || webResourceNames.isEmpty())
+        try
         {
-            return;
+            if (WebResourceManager.DELAYED_INCLUDE_MODE.equals(getIncludeMode()))
+            {
+                final Predicate includePredicate = new Predicate()
+                {
+                    public boolean evaluate(final Object webModuleDescriptor)
+                    {
+                        return !isFooterWebModuleDescriptor(webModuleDescriptor);
+                    }
+                };
+                includeDelayedResources(writer, includePredicate);
+            }
         }
+        catch (IOException e)
+        {
+            log.error(e);
+        }
+    }
 
+    public void includeFooterResources(final Writer writer)
+    {
+        try
+        {
+            if (WebResourceManager.DELAYED_INCLUDE_MODE.equals(getIncludeMode()))
+            {
+                final Predicate includePredicate = new Predicate()
+                {
+                    public boolean evaluate(final Object webModuleDescriptor)
+                    {
+                        return isFooterWebModuleDescriptor(webModuleDescriptor);
+                    }
+                };
+                includeDelayedResources(writer, includePredicate);
+            }
+        }
+        catch (IOException e)
+        {
+            log.error(e);
+        }
+    }
+
+    private boolean isFooterWebModuleDescriptor(final Object webModuleDescriptor)
+    {
+        boolean ok = false;
+        if (webModuleDescriptor instanceof WebResourceModuleDescriptor)
+        {
+            WebResourceModuleDescriptor wrmd = (WebResourceModuleDescriptor) webModuleDescriptor;
+            ok = wrmd.isFooter();
+        }
+        return ok;
+    }
+
+    private void includeDelayedResources(Writer writer, Predicate includePredicate) throws IOException
+    {
+        Collection webResourceNames = getAllWebResourceNames();
+        Set urisWeHaveSeenBefore = new HashSet();
         for (Iterator iterator = webResourceNames.iterator(); iterator.hasNext();)
         {
             String resourceName = (String) iterator.next();
-            includeResource(resourceName, writer);
+            WebResourceModuleDescriptor resourceModuleDescriptor = getWebModuleDescriptor(resourceName, writer);
+            if (includePredicate.evaluate(resourceModuleDescriptor))
+            {
+                includeResource(resourceModuleDescriptor, writer, urisWeHaveSeenBefore);
+            }
         }
     }
 
-    private void includeResource(String resourceName, Writer writer) throws IOException
+
+    private Collection getAllWebResourceNames()
+    {
+        Collection webResourceNames = (Collection) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_RESOURCE_KEY);
+        if (webResourceNames == null)
+        {
+            webResourceNames = Collections.EMPTY_LIST;
+        }
+        return webResourceNames;
+    }
+
+    private WebResourceModuleDescriptor getWebModuleDescriptor(String resourceName, Writer writer) throws IOException
     {
         ModuleDescriptor descriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resourceName);
         if (descriptor == null)
         {
             writer.write("<!-- Error loading resource \"" + resourceName + "\".  Resource not found -->\n");
-            return;
+            return null;
         }
         else if (!(descriptor instanceof WebResourceModuleDescriptor))
         {
             writer.write("<!-- Error loading resource \"" + descriptor + "\". Resource is not a WebResourceModule -->\n");
-            return;
+            return null;
         }
+        return (WebResourceModuleDescriptor) descriptor;
+    }
 
-        for (Iterator iterator1 = descriptor.getResourceDescriptors().iterator(); iterator1.hasNext();)
+    private void includeResource(String resourceName, Writer writer) throws IOException
+    {
+        WebResourceModuleDescriptor resourceModuleDescriptor = getWebModuleDescriptor(resourceName, writer);
+        if (resourceModuleDescriptor != null)
+        {
+            includeResource(resourceModuleDescriptor, writer, Collections.EMPTY_SET);
+        }
+    }
+
+    private void includeResource(WebResourceModuleDescriptor webResourceModuleDescriptor, Writer writer, Set urisWeHaveSeenBefore)
+            throws IOException
+    {
+        for (Iterator iterator1 = webResourceModuleDescriptor.getResourceDescriptors().iterator(); iterator1.hasNext();)
         {
             ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator1.next();
             String name = resourceDescriptor.getName();
-            final String linkToResource;
+            String linkToResource;
             if ("false".equalsIgnoreCase(resourceDescriptor.getParameter("cache")))
             {
-                linkToResource = webResourceIntegration.getBaseUrl() + getResourceUrl(descriptor, name);
+                linkToResource = webResourceIntegration.getBaseUrl() + getResourceUrl(webResourceModuleDescriptor, name);
             }
             else
             {
-                linkToResource = getStaticPluginResource(descriptor, name);
+                linkToResource = getStaticPluginResource(webResourceModuleDescriptor, name);
             }
-
             WebResourceFormatter webResourceFormatter = getWebResourceFormatter(name);
-            if(webResourceFormatter != null)
+            //
+            // its possible to include resources twice in fact because while the URL generated will be unique, the content served
+            // could still be the same.
+            //
+            // This could happen if the web resource groups are not granular enough.
+            //
+            // So check it here based on raw location.
+            final String location = resourceDescriptor.getLocation();
+            if (!urisWeHaveSeenBefore.contains(location))
             {
-                writer.write(webResourceFormatter.formatResource(name, linkToResource, resourceDescriptor.getParameters()));
-            }
-            else
-            {
-                writer.write("<!-- Error loading resource \"" + descriptor + "\". Type " + resourceDescriptor.getType() + " is not handled -->\n");
+                if (webResourceFormatter != null)
+                {
+                    writer.write(webResourceFormatter.formatResource(name, linkToResource, resourceDescriptor.getParameters()));
+                }
+                else
+                {
+                    writer.write("<!-- Error loading resource \"" + webResourceModuleDescriptor + "\". Type " + resourceDescriptor.getType() + " is not handled -->\n");
+                }
             }
         }
     }
 
-    private WebResourceFormatter getWebResourceFormatter(String name)
+    public static WebResourceFormatter getWebResourceFormatter(String name)
     {
         for (int i = 0; i < WEB_RESOURCE_FORMATTERS.length; i++)
         {
             WebResourceFormatter webResourceFormatter = WEB_RESOURCE_FORMATTERS[i];
-            if(webResourceFormatter.matches(name))
+            if (webResourceFormatter.matches(name))
             {
                 return webResourceFormatter;
             }
@@ -180,21 +277,21 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         // "{base url}/s/{build num}/{system counter}/_"
         return webResourceIntegration.getBaseUrl() + "/" +
-                STATIC_RESOURCE_PREFIX + "/" +
-                webResourceIntegration.getSystemBuildNumber() + "/" +
-                webResourceIntegration.getSystemCounter() + "/" +
-                STATIC_RESOURCE_SUFFIX;
+               STATIC_RESOURCE_PREFIX + "/" +
+               webResourceIntegration.getSystemBuildNumber() + "/" +
+               webResourceIntegration.getSystemCounter() + "/" +
+               STATIC_RESOURCE_SUFFIX;
     }
 
     public String getStaticResourcePrefix(String resourceCounter)
     {
         // "{base url}/s/{build num}/{system counter}/{resource counter}/_"
         return webResourceIntegration.getBaseUrl() + "/" +
-                STATIC_RESOURCE_PREFIX + "/" +
-                webResourceIntegration.getSystemBuildNumber() + "/" +
-                webResourceIntegration.getSystemCounter() + "/" +
-                resourceCounter + "/" +
-                STATIC_RESOURCE_SUFFIX;
+               STATIC_RESOURCE_PREFIX + "/" +
+               webResourceIntegration.getSystemBuildNumber() + "/" +
+               webResourceIntegration.getSystemCounter() + "/" +
+               resourceCounter + "/" +
+               STATIC_RESOURCE_SUFFIX;
     }
 
     /**

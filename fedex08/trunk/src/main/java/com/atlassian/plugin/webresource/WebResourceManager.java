@@ -42,9 +42,27 @@ public interface WebResourceManager
      * </code></pre>
      * Similarly for other supported resources
      *
+     * This will include both header and footer resources in the page.  You must use the new {@link WebResourceManager#includeHeaderResources(java.io.Writer)}
+     * and {@link WebResourceManager#includeFooterResources(java.io.Writer)} if you want to have precise control over the placement of reosurces
+     *
      * @param writer The writer to write the links to
      */
     public void includeResources(Writer writer);
+
+    /**
+     * This will include resources that ARE NOT marked as "footer" resources. In other words all resources are considered
+     * header resources unless specified specifically via footer="true"
+     * 
+     * @param writer The writer to write the links to
+     */
+    public void includeHeaderResources(Writer writer);
+
+    /**
+     * This will include resources that ARE marked as "footer" resources.
+     *
+     * @param writer The writer to write the links to
+     */
+    public void includeFooterResources(Writer writer);
 
     /**
      * A helper method to return a prefix for 'system' static resources.  Generally the implementation will return

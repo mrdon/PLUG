@@ -40,4 +40,12 @@ abstract class AbstractWebResourceFormatter implements WebResourceFormatter
         }
         return attributes;
     }
+
+    /**
+     * By default we dont do anything in the base class
+     */
+    public String minifyResourceLink(final String url)
+    {
+        return url;
+    }
 }
