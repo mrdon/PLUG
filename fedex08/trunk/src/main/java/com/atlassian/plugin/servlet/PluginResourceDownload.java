@@ -46,7 +46,7 @@ public class PluginResourceDownload implements DownloadStrategy
     }
 
     public void serveFile(BaseFileServerServlet servlet, HttpServletRequest httpServletRequest,
-        HttpServletResponse httpServletResponse) throws IOException
+                          HttpServletResponse httpServletResponse) throws IOException
     {
         String requestUri = servlet.urlDecode(httpServletRequest.getRequestURI());
         PluginResource resource = urlParser.parse(requestUri);
@@ -54,9 +54,8 @@ public class PluginResourceDownload implements DownloadStrategy
         if (resource != null)
         {
             servePluginResource(servlet, httpServletRequest, httpServletResponse, resource.getModuleCompleteKey(),
-                resource.getResourceName());
-        }
-        else
+                    resource.getResourceName());
+        } else
         {
             log.info("Invalid resource path spec: " + httpServletRequest.getRequestURI());
             httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -64,8 +63,8 @@ public class PluginResourceDownload implements DownloadStrategy
     }
 
     protected void servePluginResource(BaseFileServerServlet servlet, HttpServletRequest httpServletRequest,
-        HttpServletResponse httpServletResponse, String moduleCompleteKey, String resourceName)
-        throws IOException
+                                       HttpServletResponse httpServletResponse, String moduleCompleteKey, String resourceName)
+            throws IOException
     {
         DownloadableResource resource = null;
 
@@ -75,15 +74,22 @@ public class PluginResourceDownload implements DownloadStrategy
             ModuleDescriptor moduleDescriptor = pluginAccessor.getPluginModule(moduleCompleteKey);
             if (moduleDescriptor != null && pluginAccessor.isPluginModuleEnabled(moduleCompleteKey))
             {
-                resource = getResourceFromModule(moduleDescriptor, resourceName, servlet);
+                // allow the module to have a go at it first
+                if (moduleDescriptor instanceof SelectiveSelfServingModuleDescriptor)
+                {
+                    resource = ((SelectiveSelfServingModuleDescriptor) moduleDescriptor).getDownloadableResource(servlet, resourceName);
+                }
+                if (resource == null)
+                {
+                    resource = getResourceFromModule(moduleDescriptor, resourceName, servlet);
+                }
             }
             else
             {
                 log.info("Module not found: " + moduleCompleteKey);
                 httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
-        }
-        else // resource from plugin
+        } else // resource from plugin
         {
             Plugin plugin = pluginAccessor.getPlugin(moduleCompleteKey);
             resource = getResourceFromPlugin(plugin, resourceName, "", servlet);
@@ -97,15 +103,14 @@ public class PluginResourceDownload implements DownloadStrategy
         if (resource != null)
         {
             resource.serveResource(httpServletRequest, httpServletResponse);
-        }
-        else
+        } else
         {
             log.info("Unable to find resource for plugin: " + moduleCompleteKey + " and path: " + resourceName);
         }
     }
 
     private DownloadableResource getResourceFromPlugin(String moduleKey, String resourcePath,
-        BaseFileServerServlet servlet)
+                                                       BaseFileServerServlet servlet)
     {
         if (moduleKey.indexOf(':') < 0 || moduleKey.indexOf(':') == moduleKey.length() - 1)
         {
@@ -122,22 +127,20 @@ public class PluginResourceDownload implements DownloadStrategy
     }
 
     private DownloadableResource getResourceFromPlugin(Plugin plugin, String resourcePath, String filePath,
-        BaseFileServerServlet servlet)
+                                                       BaseFileServerServlet servlet)
     {
         ResourceLocation resourceLocation = plugin.getResourceLocation(DOWNLOAD_RESOURCE, resourcePath);
 
         if (resourceLocation != null)
         {
             return getDownloadablePluginResource(servlet, plugin, resourceLocation, filePath);
-        }
-        else
+        } else
         {
             String[] nextParts = splitLastPathPart(resourcePath);
             if (nextParts == null)
             {
                 return null;
-            }
-            else
+            } else
             {
                 return getResourceFromPlugin(plugin, nextParts[0], nextParts[1] + filePath, servlet);
             }
@@ -145,13 +148,13 @@ public class PluginResourceDownload implements DownloadStrategy
     }
 
     private DownloadableResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String filePath,
-        BaseFileServerServlet servlet)
+                                                       BaseFileServerServlet servlet)
     {
         return getResourceFromModule(moduleDescriptor, filePath, "", servlet);
     }
 
     DownloadableResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String resourcePath, String filePath,
-        BaseFileServerServlet servlet)
+                                               BaseFileServerServlet servlet)
     {
         Plugin plugin = pluginAccessor.getPlugin(moduleDescriptor.getPluginKey());
         ResourceLocation resourceLocation = moduleDescriptor.getResourceLocation(DOWNLOAD_RESOURCE, resourcePath);
@@ -159,15 +162,13 @@ public class PluginResourceDownload implements DownloadStrategy
         if (resourceLocation != null)
         {
             return getDownloadablePluginResource(servlet, plugin, resourceLocation, filePath);
-        }
-        else
+        } else
         {
             String[] nextParts = splitLastPathPart(resourcePath);
             if (nextParts == null)
             {
                 return null;
-            }
-            else
+            } else
             {
                 return getResourceFromModule(moduleDescriptor, nextParts[0], nextParts[1] + filePath, servlet);
             }
@@ -175,10 +176,10 @@ public class PluginResourceDownload implements DownloadStrategy
     }
 
     private DownloadableResource getDownloadablePluginResource(BaseFileServerServlet servlet, Plugin plugin,
-        ResourceLocation resourceLocation, String filePath)
+                                                               ResourceLocation resourceLocation, String filePath)
     {
         if ("webContext".equalsIgnoreCase(resourceLocation.getParameter(
-            "source")))    // this allows plugins that are loaded from the web to be served
+                "source")))    // this allows plugins that are loaded from the web to be served
             return new DownloadableWebResource(servlet, plugin, resourceLocation, filePath);
         else
             return new DownloadableClasspathResource(servlet, plugin, resourceLocation, filePath);
@@ -195,8 +196,8 @@ public class PluginResourceDownload implements DownloadStrategy
         if (indexOfSlash < 0) return null;
 
         return new String[]{
-            resourcePath.substring(0, indexOfSlash + 1),
-            resourcePath.substring(indexOfSlash + 1)
+                resourcePath.substring(0, indexOfSlash + 1),
+                resourcePath.substring(indexOfSlash + 1)
         };
     }
 }

@@ -37,7 +37,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     private static final String REQUEST_CACHE_MODE_KEY = "plugin.webresource.mode";
 
     private static final IncludeMode DEFAULT_INCLUDE_MODE = WebResourceManager.DELAYED_INCLUDE_MODE;
-    private static final WebResourceFormatter[] WEB_RESOURCE_FORMATTERS = new WebResourceFormatter[] {
+    private static final WebResourceFormatter[] WEB_RESOURCE_FORMATTERS = new WebResourceFormatter[]{
             new CssWebResourceFormatter(),
             new JavascriptWebResourceFormatter(),
     };
@@ -54,8 +54,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         if (WebResourceManager.DELAYED_INCLUDE_MODE.equals(getIncludeMode()))
         {
             requireDelayedResource(resourceName);
-        }
-        else
+        } else
         {
             throw new IllegalStateException("Require Writer for Inline mode.");
         }
@@ -66,8 +65,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         if (WebResourceManager.DELAYED_INCLUDE_MODE.equals(getIncludeMode()))
         {
             requireDelayedResource(resourceName);
-        }
-        else
+        } else
         {
             try
             {
@@ -177,10 +175,16 @@ public class WebResourceManagerImpl implements WebResourceManager
         for (Iterator iterator = webResourceNames.iterator(); iterator.hasNext();)
         {
             String resourceName = (String) iterator.next();
-            WebResourceModuleDescriptor resourceModuleDescriptor = getWebModuleDescriptor(resourceName, writer);
-            if (includePredicate.evaluate(resourceModuleDescriptor))
+            WebResourceModuleDescriptor webResourceModuleDescriptor = getWebModuleDescriptor(resourceName, writer);
+            if (includePredicate.evaluate(webResourceModuleDescriptor))
             {
-                includeResource(resourceModuleDescriptor, writer, urisWeHaveSeenBefore);
+                if (webResourceModuleDescriptor.isCombined())
+                {
+                    includeCombinedResources(webResourceModuleDescriptor, writer, urisWeHaveSeenBefore);
+                } else
+                {
+                    includeResource(webResourceModuleDescriptor, writer, urisWeHaveSeenBefore);
+                }
             }
         }
     }
@@ -203,8 +207,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         {
             writer.write("<!-- Error loading resource \"" + resourceName + "\".  Resource not found -->\n");
             return null;
-        }
-        else if (!(descriptor instanceof WebResourceModuleDescriptor))
+        } else if (!(descriptor instanceof WebResourceModuleDescriptor))
         {
             writer.write("<!-- Error loading resource \"" + descriptor + "\". Resource is not a WebResourceModule -->\n");
             return null;
@@ -228,36 +231,47 @@ public class WebResourceManagerImpl implements WebResourceManager
         {
             ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator1.next();
             String name = resourceDescriptor.getName();
-            String linkToResource;
-            if ("false".equalsIgnoreCase(resourceDescriptor.getParameter("cache")))
-            {
-                linkToResource = webResourceIntegration.getBaseUrl() + getResourceUrl(webResourceModuleDescriptor, name);
-            }
-            else
-            {
-                linkToResource = getStaticPluginResource(webResourceModuleDescriptor, name);
-            }
+            String linkToResource = getLinkToResource(webResourceModuleDescriptor, resourceDescriptor, name);
             WebResourceFormatter webResourceFormatter = getWebResourceFormatter(name);
-            //
-            // its possible to include resources twice in fact because while the URL generated will be unique, the content served
-            // could still be the same.
-            //
-            // This could happen if the web resource groups are not granular enough.
-            //
-            // So check it here based on raw location.
-            final String location = resourceDescriptor.getLocation();
-            if (!urisWeHaveSeenBefore.contains(location))
+            if (preventDoubleResourceInclusion(resourceDescriptor, urisWeHaveSeenBefore))
             {
                 if (webResourceFormatter != null)
                 {
                     writer.write(webResourceFormatter.formatResource(name, linkToResource, resourceDescriptor.getParameters()));
-                }
-                else
+                } else
                 {
                     writer.write("<!-- Error loading resource \"" + webResourceModuleDescriptor + "\". Type " + resourceDescriptor.getType() + " is not handled -->\n");
                 }
             }
         }
+    }
+
+    private boolean preventDoubleResourceInclusion(ResourceDescriptor resourceDescriptor, Set urisWeHaveSeenBefore)
+    {
+        //
+        // its possible to include resources twice in fact because while the URL generated will be unique, the content served
+        // could still be the same.
+        //
+        // This could happen if the web resource groups are not granular enough.
+        //
+        // So check it here based on raw location.
+        final String location = resourceDescriptor.getLocation();
+        boolean noInThere = !urisWeHaveSeenBefore.contains(location);
+        urisWeHaveSeenBefore.add(location);
+        return noInThere;
+    }
+
+    private String getLinkToResource(WebResourceModuleDescriptor webResourceModuleDescriptor, ResourceDescriptor resourceDescriptor, String name)
+    {
+        String linkToResource;
+        if ("false".equalsIgnoreCase(resourceDescriptor.getParameter("cache")))
+        {
+            linkToResource = webResourceIntegration.getBaseUrl() + getResourceUrl(webResourceModuleDescriptor, name);
+        } else
+        {
+            linkToResource = getStaticPluginResource(webResourceModuleDescriptor, name);
+        }
+        return linkToResource;
     }
 
     public static WebResourceFormatter getWebResourceFormatter(String name)
@@ -277,21 +291,21 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         // "{base url}/s/{build num}/{system counter}/_"
         return webResourceIntegration.getBaseUrl() + "/" +
-               STATIC_RESOURCE_PREFIX + "/" +
-               webResourceIntegration.getSystemBuildNumber() + "/" +
-               webResourceIntegration.getSystemCounter() + "/" +
-               STATIC_RESOURCE_SUFFIX;
+                STATIC_RESOURCE_PREFIX + "/" +
+                webResourceIntegration.getSystemBuildNumber() + "/" +
+                webResourceIntegration.getSystemCounter() + "/" +
+                STATIC_RESOURCE_SUFFIX;
     }
 
     public String getStaticResourcePrefix(String resourceCounter)
     {
         // "{base url}/s/{build num}/{system counter}/{resource counter}/_"
         return webResourceIntegration.getBaseUrl() + "/" +
-               STATIC_RESOURCE_PREFIX + "/" +
-               webResourceIntegration.getSystemBuildNumber() + "/" +
-               webResourceIntegration.getSystemCounter() + "/" +
-               resourceCounter + "/" +
-               STATIC_RESOURCE_SUFFIX;
+                STATIC_RESOURCE_PREFIX + "/" +
+                webResourceIntegration.getSystemBuildNumber() + "/" +
+                webResourceIntegration.getSystemCounter() + "/" +
+                resourceCounter + "/" +
+                STATIC_RESOURCE_SUFFIX;
     }
 
     /**
@@ -341,5 +355,66 @@ public class WebResourceManagerImpl implements WebResourceManager
         return includeMode;
     }
 
+    /**
+     * This is called to implement the combined=true behaviour of WebResourceModuleDescriptor's
+     *
+     * @param webResourceModuleDescriptor the WebResourceModuleDescriptor to be output
+     * @param writer                      the Writer for output
+     * @param urisWeHaveSeenBefore        a set of locations we have seen before
+     * @throws IOException if something goes wrong writing to the Writer
+     */
+    void includeCombinedResources(WebResourceModuleDescriptor webResourceModuleDescriptor, Writer writer, Set urisWeHaveSeenBefore) throws IOException
+    {
+        // ok group the resources into a map of lists, grouped by file extension *eg .js
+        Set extResources = groupByExtension(webResourceModuleDescriptor, urisWeHaveSeenBefore);
+        for (Iterator iterator = extResources.iterator(); iterator.hasNext();)
+        {
+            String fileExt = (String) iterator.next();
+            writeOutCombinedLinkToResource(webResourceModuleDescriptor, writer, fileExt);
+        }
+    }
 
+    void writeOutCombinedLinkToResource(WebResourceModuleDescriptor webResourceModuleDescriptor, Writer writer, String fileExt) throws IOException
+    {
+        String urlSuffix = webResourceModuleDescriptor.getName() + "-combined" + fileExt;
+        String linkToResource = getStaticPluginResource(webResourceModuleDescriptor, urlSuffix);
+        WebResourceFormatter webResourceFormatter = getWebResourceFormatter(linkToResource);
+        if (webResourceFormatter != null)
+        {
+            writer.write(webResourceFormatter.formatResource("", linkToResource, Collections.EMPTY_MAP));
+        } else
+        {
+            writer.write("<!-- Error loading resource \"" + webResourceModuleDescriptor + "\". Type " + fileExt + " is not handled -->\n");
+        }
+    }
+
+    Set groupByExtension(WebResourceModuleDescriptor webResourceModuleDescriptor, Set urisWeHaveSeenBefore)
+    {
+        Set groupedByExtension = new ListOrderedSet();
+        for (Iterator iterator1 = webResourceModuleDescriptor.getResourceDescriptors().iterator(); iterator1.hasNext();)
+        {
+            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator1.next();
+            String name = resourceDescriptor.getName();
+            String linkToResource = getLinkToResource(webResourceModuleDescriptor, resourceDescriptor, name);
+            if (preventDoubleResourceInclusion(resourceDescriptor, urisWeHaveSeenBefore))
+            {
+                String fileExt = getFileExtension(linkToResource);
+                groupedByExtension.add(fileExt);
+            }
+        }
+        return groupedByExtension;
+    }
+
+    String getFileExtension(String uri)
+    {
+        String ext = "";
+        int lastDot = uri.lastIndexOf('.');
+        if (lastDot != -1)
+        {
+            ext = uri.substring(lastDot);
+        }
+        return ext;
+    }
 }
+
+
