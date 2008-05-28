@@ -213,6 +213,16 @@ public class XmlDescriptorParser implements DescriptorParser
         return getPluginElement().attributeValue("key");
     }
 
+    public int getPluginsVersion()
+    {
+        String val = getPluginElement().attributeValue("pluginsVersion");
+        if (val != null) {
+            return Integer.parseInt(val);
+        } else {
+            return 1;
+        }
+    }
+
     public boolean isSystemPlugin()
     {
         return "true".equalsIgnoreCase(getPluginElement().attributeValue("system"));

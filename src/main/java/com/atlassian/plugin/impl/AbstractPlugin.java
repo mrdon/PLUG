@@ -27,6 +27,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable
     private boolean enabled;
     private boolean system;
     private Resourced resources;
+    private int pluginsVersion;
     private Date dateLoaded = new Date();
 
     public String getName()
@@ -100,6 +101,16 @@ public abstract class AbstractPlugin implements Plugin, Comparable
     public void setEnabledByDefault(boolean enabledByDefault)
     {
         this.enabledByDefault = enabledByDefault;
+    }
+
+    public int getPluginsVersion()
+    {
+        return pluginsVersion;
+    }
+
+    public void setPluginsVersion(int pluginsVersion)
+    {
+        this.pluginsVersion = pluginsVersion;
     }
 
     public PluginInformation getPluginInformation()

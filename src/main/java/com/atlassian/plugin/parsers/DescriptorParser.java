@@ -34,4 +34,9 @@ public interface DescriptorParser
      * loader).
      */
     boolean isSystemPlugin();
+
+    /**
+     * @return The version of the plugin system expected by this plugin.  If unknown, it is assumed to be 1.
+     */
+    int getPluginsVersion();
 }

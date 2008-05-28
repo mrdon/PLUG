@@ -11,6 +11,10 @@ public interface Plugin extends Resourced, Comparable
 {
     public static final Comparator NAME_COMPARATOR = new PluginNameComparator();
 
+    int getPluginsVersion();
+
+    void setPluginsVersion(int version);
+
     String getName();
 
     void setName(String name);
