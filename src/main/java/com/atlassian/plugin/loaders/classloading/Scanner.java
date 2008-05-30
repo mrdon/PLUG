@@ -93,7 +93,7 @@ public class Scanner
         for (Iterator iterator = scannedDeploymentUnits.values().iterator(); iterator.hasNext();)
         {
             DeploymentUnit unit = (DeploymentUnit) iterator.next();
-            if (!unit.path.exists() || !unit.path.canRead())
+            if (!unit.getPath().exists() || !unit.getPath().canRead())
             {
                 removedFiles.add(unit.getPath());
             }

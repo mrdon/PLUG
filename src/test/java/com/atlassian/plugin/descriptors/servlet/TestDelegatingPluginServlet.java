@@ -1,41 +1,33 @@
 package com.atlassian.plugin.descriptors.servlet;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.classloader.PluginClassLoader;
+import com.atlassian.plugin.impl.DynamicPlugin;
+import com.mockobjects.dynamic.Mock;
+import junit.framework.TestCase;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import junit.framework.TestCase;
-
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.impl.DynamicPlugin;
-import com.atlassian.plugin.loaders.classloading.PluginsClassLoader;
-import com.mockobjects.dynamic.Mock;
-
 public class TestDelegatingPluginServlet extends TestCase
 {
-    PluginsClassLoader classLoader;
+    PluginClassLoader classLoader;
     Plugin plugin;
     Mock mockRequest;
     Mock mockResponse;
     
     List paths;
     
-    public void setUp()
+    public void setUp() throws Exception
     {
-        classLoader = new PluginsClassLoader(getClass().getClassLoader())
-        {
-            public Object clone() { return null; }
-            protected URL getDataURL(String name, byte[] data) throws MalformedURLException { return null; }
-            protected byte[] getFile(String path) { return null; }
-        };
+        URL resource = getClass().getClassLoader().getResource("testjars/atlassian-plugins-simpletest-1.0.jar");
+        classLoader = new PluginClassLoader(new File(resource.getFile()));
         plugin = new DynamicPlugin(null, classLoader);
         
         mockRequest = new Mock(HttpServletRequest.class);
@@ -48,8 +40,9 @@ public class TestDelegatingPluginServlet extends TestCase
     
     /**
      * Test to make sure the plugin class loader is set for the thread context class loader when init is called.
+     * @throws Exception on test error
      */
-    public void testInitCalledWithPluginClassLoaderAsThreadClassLoader() throws ServletException
+    public void testInitCalledWithPluginClassLoaderAsThreadClassLoader() throws Exception
     {
         HttpServlet wrappedServlet = new HttpServlet()
         {
@@ -64,8 +57,9 @@ public class TestDelegatingPluginServlet extends TestCase
     
     /**
      * Test to make sure the plugin class loader is set for the thread context class loader when service is called.
+     * @throws Exception on test error
      */
-    public void testServiceCalledWithPluginClassLoaderAsThreadClassLoader() throws ServletException, IOException
+    public void testServiceCalledWithPluginClassLoaderAsThreadClassLoader() throws Exception
     {
         HttpServlet wrappedServlet = new HttpServlet()
         {
@@ -80,8 +74,9 @@ public class TestDelegatingPluginServlet extends TestCase
     
     /**
      * Test to make sure the servlet is called with our request wrapper.
+     * @throws Exception on test error
      */
-    public void testServiceCalledWithWrappedRequest() throws ServletException, IOException
+    public void testServiceCalledWithWrappedRequest() throws Exception
     {
         HttpServlet wrappedServlet = new HttpServlet()
         {

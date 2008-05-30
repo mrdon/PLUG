@@ -1,7 +1,7 @@
-package com.atlassian.plugin.loaders.osgi;
+package com.atlassian.plugin.loaders.classloading.osgi;
 
 import com.atlassian.plugin.impl.AbstractPlugin;
-import java.util.Enumeration;
+
 import java.net.URL;
 import java.io.InputStream;
 import java.io.IOException;
@@ -34,7 +34,7 @@ public class OsgiPlugin extends AbstractPlugin
 
     public Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException
     {
-        return bundle.loadClass(clazz);
+        return BundleClassLoaderAccessor.loadClass(bundle, clazz, callingClass);
     }
 
     public boolean isUninstallable()
@@ -44,46 +44,17 @@ public class OsgiPlugin extends AbstractPlugin
 
     public URL getResource(String name)
     {
-        return bundle.getResource(name);
+        return BundleClassLoaderAccessor.getResource(bundle, name);
     }
 
     public InputStream getResourceAsStream(String name)
     {
-        URL url = getResource(name);
-        if (url != null) {
-            try
-            {
-                return url.openStream();
-            } catch (IOException e)
-            {
-                log.debug("Unable to load resource from plugin: "+getKey());
-            }
-        }
-
-        return null;
+        return BundleClassLoaderAccessor.getResourceAsStream(bundle, name);
     }
 
-    @Override
     public ClassLoader getClassLoader()
     {
-        return new ClassLoader() {
-            @Override
-            public Class findClass(String name) {
-                return bundle.getClass();
-            }
-
-            @Override
-            public Enumeration<URL> findResources(String name) throws IOException
-            {
-                return bundle.getResources(name);
-            }
-
-            @Override
-            public URL findResource(String name)
-            {
-                return bundle.getResource(name);
-            }
-        };
+        return BundleClassLoaderAccessor.getClassLoader(bundle);
     }
 
     /**
@@ -96,7 +67,6 @@ public class OsgiPlugin extends AbstractPlugin
     }
 
 
-    @Override
     public boolean isDeleteable()
     {
         return deletable;
@@ -117,9 +87,9 @@ public class OsgiPlugin extends AbstractPlugin
         this.bundled = bundled;
     }
 
-    @Override
     public void close()
     {
         // Do nothing
     }
+
 }

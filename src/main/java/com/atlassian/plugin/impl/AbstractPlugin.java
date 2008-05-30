@@ -8,10 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginInformation;
-import com.atlassian.plugin.Resourced;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.util.VersionStringComparator;
@@ -26,7 +23,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable
     private PluginInformation pluginInformation;
     private boolean enabled;
     private boolean system;
-    private Resourced resources;
+    private Resourced resources = Resources.EMPTY_RESOURCES;
     private int pluginsVersion;
     private Date dateLoaded = new Date();
 
@@ -125,7 +122,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable
 
     public void setResources(Resourced resources)
     {
-        this.resources = resources;
+        this.resources = resources != null ? resources : Resources.EMPTY_RESOURCES;
     }
 
     public List getResourceDescriptors()
@@ -160,9 +157,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable
     }
 
     /**
-     * Setter for the enabled state of a plugin. If this is set to
-     * false then the plugin will not execute.
-     * @param enabled
+     * Setter for the enabled state of a plugin. If this is set to false then the plugin will not execute.
      */
     public void setEnabled(boolean enabled)
     {

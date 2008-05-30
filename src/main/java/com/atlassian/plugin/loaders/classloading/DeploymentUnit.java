@@ -4,18 +4,20 @@ import java.io.File;
 
 public class DeploymentUnit implements Comparable
 {
-	File path;
-	long lastModified;
+	private final File path;
 
 	public DeploymentUnit(File path)
 	{
-		this.path = path;
-		this.lastModified = path.lastModified();
+        if (path == null)
+        {
+            throw new IllegalArgumentException("File should not be null!");
+        }
+        this.path = path;
 	}
 
 	public long lastModified()
 	{
-		return lastModified;
+		return path.lastModified();
 	}
 
 	public File getPath()
@@ -50,6 +52,6 @@ public class DeploymentUnit implements Comparable
 
     public String toString()
     {
-        return "Unit: " + path.toString() + " (" + lastModified + ")";
+        return "Unit: " + path.toString() + " (" + path.lastModified() + ")";
     }
 }

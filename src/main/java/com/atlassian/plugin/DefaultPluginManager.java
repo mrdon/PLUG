@@ -1,23 +1,6 @@
 package com.atlassian.plugin;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.collections.Closure;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import com.atlassian.plugin.classloader.PluginsClassLoader;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -33,6 +16,26 @@ import com.atlassian.plugin.predicate.ModuleDescriptorOfTypePredicate;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.predicate.ModuleOfClassPredicate;
 import com.atlassian.plugin.predicate.PluginPredicate;
+import org.apache.commons.collections.Closure;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.InputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -51,8 +54,8 @@ public class DefaultPluginManager implements PluginManager
     private final List pluginLoaders;
     private final PluginStateStore store;
     private final ModuleDescriptorFactory moduleDescriptorFactory;
-    private final Map plugins = new HashMap();
-    private final Map resourceToPluginCache = new HashMap();
+    private final PluginsClassLoader classLoader;
+    private final Map/*<String,Plugin>*/ plugins = new HashMap();
 
     /**
      * Factory for retrieving descriptor parsers. Typically overridden for testing.
@@ -67,13 +70,26 @@ public class DefaultPluginManager implements PluginManager
     /**
      * Stores {@link Plugin}s as a key and {@link PluginLoader} as a value.
      */
-    private final Map pluginToPluginLoader = new HashMap();
+    private final Map/*<Plugin,PluginLoader>*/ pluginToPluginLoader = new HashMap();
 
     public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory)
     {
+        if (store == null)
+        {
+            throw new IllegalArgumentException("PluginStateStore must not be null.");
+        }
+        if (pluginLoaders == null)
+        {
+            throw new IllegalArgumentException("Plugin Loaders list must not be null.");
+        }
+        if (moduleDescriptorFactory == null)
+        {
+            throw new IllegalArgumentException("ModuleDescriptorFactory must not be null.");
+        }
         this.pluginLoaders = pluginLoaders;
         this.store = store;
         this.moduleDescriptorFactory = moduleDescriptorFactory;
+        classLoader = new PluginsClassLoader(this);
     }
 
     /**
@@ -97,8 +113,9 @@ public class DefaultPluginManager implements PluginManager
 
     /**
      * Set the plugin installation strategy for this manager
+     *
+     * @param pluginInstaller the plugin installation strategy to use
      * @see PluginInstaller
-     * @param pluginInstaller
      */
     public void setPluginInstaller(PluginInstaller pluginInstaller)
     {
@@ -112,12 +129,8 @@ public class DefaultPluginManager implements PluginManager
 
     public String installPlugin(PluginJar pluginJar) throws PluginParseException
     {
-        validatePlugin(pluginJar);
 
-        DescriptorParser descriptorParser = descriptorParserFactory.getInstance(
-            pluginJar.getFile(PluginManager.PLUGIN_DESCRIPTOR_FILENAME));
-        String key = descriptorParser.getKey();
-
+        String key = validatePlugin(pluginJar);
         pluginInstaller.installPlugin(key, pluginJar);
         scanForNewPlugins();
 
@@ -126,18 +139,36 @@ public class DefaultPluginManager implements PluginManager
 
     /**
      * Validate a plugin jar
-     * @param pluginJar
-     * @throws PluginParseException
+     *
+     * @param pluginJar the jar file representing the plugin
+     * @return The plugin key
+     * @throws PluginParseException if the plugin cannot be parsed
      * @throws NullPointerException if <code>pluginJar</code> is null.
      */
-    private void validatePlugin(PluginJar pluginJar) throws PluginParseException
+    private String validatePlugin(PluginJar pluginJar) throws PluginParseException
     {
-        final InputStream descriptorStream = pluginJar.getFile(PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
-        final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
-        if (descriptorParser.getKey() == null)
-        {
-            throw new PluginParseException("Plugin key could not be found in " + PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
+        String key = null;
+
+        // First, let's try to find the plugin descriptor file
+        try {
+            final InputStream descriptorStream = pluginJar.getFile(PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
+            final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
+            key = descriptorParser.getKey();
+        } catch (PluginParseException ex) {
+            // Ok, no atlassian-plugin.xml, let's look for an OSGi manifest
+            try
+            {
+                Manifest mf = new Manifest(pluginJar.getFile("META-INF/MANIFEST.MF"));
+                key = mf.getMainAttributes().getValue("Bundle-SymbolicName");
+            } catch (IOException e)
+            {
+                throw new PluginParseException("Unable to find manifest in " + PluginManager.PLUGIN_DESCRIPTOR_FILENAME, e);
+            }
         }
+        if (key == null)
+            throw new PluginParseException("Plugin key could not be found in " + PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
+        else
+            return key;
     }
 
     public int scanForNewPlugins() throws PluginParseException
@@ -148,7 +179,8 @@ public class DefaultPluginManager implements PluginManager
         {
             PluginLoader loader = (PluginLoader) iterator.next();
 
-            if(loader != null){
+            if (loader != null)
+            {
                 if (loader.supportsAddition())
                 {
                     Collection addedPlugins = loader.addFoundPlugins(moduleDescriptorFactory);
@@ -165,11 +197,6 @@ public class DefaultPluginManager implements PluginManager
         return numberFound;
     }
 
-    /**
-     * Uninstall (delete) a plugin if possible.
-     * <p/>
-     * Be very careful when using this method, the plugin cannot be brought back.
-     */
     public void uninstall(Plugin plugin) throws PluginException
     {
         unloadPlugin(plugin);
@@ -188,9 +215,11 @@ public class DefaultPluginManager implements PluginManager
     /**
      * Unload a plugin. Called when plugins are added locally,
      * or remotely in a clustered application.
+     *
+     * @param plugin the plugin to remove
+     * @throws PluginException if th eplugin cannot be uninstalled
      */
-    protected void unloadPlugin(Plugin plugin)
-        throws PluginException
+    protected void unloadPlugin(Plugin plugin) throws PluginException
     {
         if (!plugin.isUninstallable())
             throw new PluginException("Plugin is not uninstallable: " + plugin.getKey());
@@ -211,12 +240,10 @@ public class DefaultPluginManager implements PluginManager
             removePluginFromLoader(plugin);
         }
 
-        removeResourcePluginCacheEntries(plugin);
         plugins.remove(plugin.getKey());
     }
 
-    private void removePluginFromLoader(Plugin plugin)
-        throws PluginException
+    private void removePluginFromLoader(Plugin plugin) throws PluginException
     {
         if (plugin.isDeleteable())
         {
@@ -226,21 +253,11 @@ public class DefaultPluginManager implements PluginManager
 
         pluginToPluginLoader.remove(plugin);
     }
-    
-    private void removeResourcePluginCacheEntries(Plugin plugin)
-    {
-        for (Iterator it = resourceToPluginCache.entrySet().iterator(); it.hasNext(); )
-        {
-            Map.Entry entry = (Map.Entry) it.next();
-            if (plugin.compareTo(entry.getValue()) == 0)
-            {
-                it.remove();
-            }
-        }
-    }
 
     protected void notifyUninstallPlugin(Plugin plugin)
     {
+        classLoader.notifyUninstallPlugin(plugin);
+
         for (Iterator it = plugin.getModuleDescriptors().iterator(); it.hasNext();)
         {
             ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
@@ -255,35 +272,41 @@ public class DefaultPluginManager implements PluginManager
 
     /**
      * Update the local plugin state and enable state aware modules
-     * @param loader
-     * @param plugin
-     * @throws PluginParseException
+     *
+     * @param loader the loader used to load this plugin
+     * @param plugin the plugin to add
+     * @throws PluginParseException if the plugin cannot be parsed
      */
     protected void addPlugin(PluginLoader loader, Plugin plugin) throws PluginParseException
     {
         // testing to make sure plugin keys are unique
-
-        if (plugins.containsKey(plugin.getKey())) {
-          Plugin existingPlugin = (Plugin) plugins.get(plugin.getKey());
-          if(plugin.compareTo(existingPlugin) > 0 ) {
-              if (log.isDebugEnabled())
-                  log.debug("We found a newer '" + plugin.getKey() + "'");
-              try
-              {
-                  log.info("Unloading " + existingPlugin.getName() + " to upgrade.");
-                  updatePlugin(existingPlugin, plugin);
-                  if (log.isDebugEnabled())
-                      log.debug("Older '" + plugin.getKey() + "' unloaded.");
-              } catch (PluginException e) {
-                  throw new PluginParseException("Duplicate plugin found (installed version is older) and could not be unloaded: '" + plugin.getKey() + "'");
-              }
-          } else {
-              // If we find an older plugin, don't error, just ignore it. PLUG-12.
-              if (log.isDebugEnabled())
-                  log.debug("Duplicate plugin found (installed version is the same or newer): '" + plugin.getKey() + "'");
-              // and don't install the older plugin
-              return;
-          }
+        if (plugins.containsKey(plugin.getKey()))
+        {
+            Plugin existingPlugin = (Plugin) plugins.get(plugin.getKey());
+            if (plugin.compareTo(existingPlugin) > 0)
+            {
+                if (log.isDebugEnabled())
+                    log.debug("We found a newer '" + plugin.getKey() + "'");
+                try
+                {
+                    log.info("Unloading " + existingPlugin.getName() + " to upgrade.");
+                    updatePlugin(existingPlugin, plugin);
+                    if (log.isDebugEnabled())
+                        log.debug("Older '" + plugin.getKey() + "' unloaded.");
+                }
+                catch (PluginException e)
+                {
+                    throw new PluginParseException("Duplicate plugin found (installed version is older) and could not be unloaded: '" + plugin.getKey() + "'");
+                }
+            }
+            else
+            {
+                // If we find an older plugin, don't error, just ignore it. PLUG-12.
+                if (log.isDebugEnabled())
+                    log.debug("Duplicate plugin found (installed version is the same or newer): '" + plugin.getKey() + "'");
+                // and don't install the older plugin
+                return;
+            }
         }
 
         plugins.put(plugin.getKey(), plugin);
@@ -296,9 +319,10 @@ public class DefaultPluginManager implements PluginManager
     /**
      * Replace an already loaded plugin with another version. Relevant stored configuration for the plugin will be
      * preserved.
+     *
      * @param oldPlugin Plugin to replace
      * @param newPlugin New plugin to install
-     * @throws PluginException
+     * @throws PluginException if the plugin cannot be updated
      */
     protected void updatePlugin(final Plugin oldPlugin, final Plugin newPlugin) throws PluginException
     {
@@ -315,14 +339,15 @@ public class DefaultPluginManager implements PluginManager
         final Set newModuleKeys = new HashSet();
         newModuleKeys.add(newPlugin.getKey());
 
-        for (Iterator moduleIter = newPlugin.getModuleDescriptors().iterator(); moduleIter.hasNext(); )
+        for (Iterator moduleIter = newPlugin.getModuleDescriptors().iterator(); moduleIter.hasNext();)
         {
             ModuleDescriptor moduleDescriptor = (ModuleDescriptor) moduleIter.next();
             newModuleKeys.add(moduleDescriptor.getKey());
         }
 
         // Remove any keys from the old plugin state that do not exist in the new version
-        CollectionUtils.filter(oldPluginState.keySet(), new Predicate() {
+        CollectionUtils.filter(oldPluginState.keySet(), new Predicate()
+        {
             public boolean evaluate(Object o)
             {
                 return newModuleKeys.contains(o);
@@ -341,8 +366,8 @@ public class DefaultPluginManager implements PluginManager
     }
 
     /**
-     * @since 0.17
      * @see PluginAccessor#getPlugins(PluginPredicate)
+     * @since 0.17
      */
     public Collection getPlugins(final PluginPredicate pluginPredicate)
     {
@@ -364,8 +389,8 @@ public class DefaultPluginManager implements PluginManager
     }
 
     /**
-     * @since 0.17
      * @see PluginAccessor#getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)
+     * @since 0.17
      */
     public Collection getModules(final ModuleDescriptorPredicate moduleDescriptorPredicate)
     {
@@ -373,8 +398,8 @@ public class DefaultPluginManager implements PluginManager
     }
 
     /**
-     * @since 0.17
      * @see PluginAccessor#getModuleDescriptors(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)
+     * @since 0.17
      */
     public Collection getModuleDescriptors(final ModuleDescriptorPredicate moduleDescriptorPredicate)
     {
@@ -391,6 +416,7 @@ public class DefaultPluginManager implements PluginManager
 
     /**
      * Get the all the module descriptors from the given collection of plugins
+     *
      * @param plugins a collection of {@link Plugin}s
      * @return a collection of {@link ModuleDescriptor}s
      */
@@ -406,9 +432,10 @@ public class DefaultPluginManager implements PluginManager
 
     /**
      * Get the modules of all the given descriptor.
+     *
      * @param moduleDescriptors the collection of module descriptors to get the modules from.
      * @return a {@link Collection} modules that can be any type of object.
-     * This collection will not contain any null value.
+     *         This collection will not contain any null value.
      */
     private Collection getModules(final Collection moduleDescriptors)
     {
@@ -493,13 +520,14 @@ public class DefaultPluginManager implements PluginManager
 
     /**
      * Get all module descriptor that are enabled and for which the module is an instance of the given class.
+     *
      * @param moduleClass the class of the module within the module descriptor.
      * @return a collection of {@link ModuleDescriptor}s
      */
     private Collection getEnabledModuleDescriptorsByModuleClass(final Class moduleClass)
     {
         final Collection moduleDescriptors = getModuleDescriptors(getEnabledPlugins());
-		filterModuleDescriptors(moduleDescriptors, new ModuleOfClassPredicate(moduleClass));
+        filterModuleDescriptors(moduleDescriptors, new ModuleOfClassPredicate(moduleClass));
         filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate(this));
         return moduleDescriptors;
     }
@@ -508,6 +536,7 @@ public class DefaultPluginManager implements PluginManager
      * This method has been reverted to pre PLUG-40 to fix performance issues that were encountered during
      * load testing. This should be reverted to the state it was in at 54639 when the fundamental issue leading
      * to this slowdown has been corrected (that is, slowness of PluginClassLoader).
+     *
      * @see PluginAccessor#getEnabledModuleDescriptorsByClass(Class)
      */
     public List getEnabledModuleDescriptorsByClass(Class moduleDescriptorClass)
@@ -543,14 +572,15 @@ public class DefaultPluginManager implements PluginManager
     public List getEnabledModuleDescriptorsByType(String type) throws PluginParseException, IllegalArgumentException
     {
         final Collection moduleDescriptors = getModuleDescriptors(getEnabledPlugins());
-		filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfTypePredicate(moduleDescriptorFactory, type));
+        filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfTypePredicate(moduleDescriptorFactory, type));
         filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate(this));
         return (List) moduleDescriptors;
     }
 
     /**
      * Filters out a collection of {@link ModuleDescriptor}s given a predicate.
-     * @param moduleDescriptors the collection of {@link ModuleDescriptor}s to filter.
+     *
+     * @param moduleDescriptors         the collection of {@link ModuleDescriptor}s to filter.
      * @param moduleDescriptorPredicate the predicate to use for filtering.
      */
     private static void filterModuleDescriptors(final Collection moduleDescriptors, final ModuleDescriptorPredicate moduleDescriptorPredicate)
@@ -604,15 +634,22 @@ public class DefaultPluginManager implements PluginManager
      * Called on all clustered application nodes, rather than {@link #enablePlugin(String)}
      * to just update the local state, state aware modules and loaders, but not affect the
      * global plugin state.
+     *
+     * @param plugin the plugin being enabled
      */
     protected void notifyPluginEnabled(Plugin plugin)
     {
+        classLoader.notifyPluginOrModuleEnabled();
         enablePluginModules(plugin);
+        if (plugin instanceof StateAware) {
+            ((StateAware)plugin).enabled();
+        }
     }
 
     /**
      * For each module in the plugin, call the module descriptor's enabled() method if the module is StateAware and enabled.
-     * @param plugin
+     *
+     * @param plugin the plugin to enable
      */
     private void enablePluginModules(Plugin plugin)
     {
@@ -646,6 +683,7 @@ public class DefaultPluginManager implements PluginManager
                 replacePluginWithUnloadablePlugin(plugin, descriptor, exception);
             }
         }
+        classLoader.notifyPluginOrModuleEnabled();
     }
 
     public void disablePlugin(String key)
@@ -665,7 +703,6 @@ public class DefaultPluginManager implements PluginManager
 
         notifyPluginDisabled(plugin);
         disablePluginState(plugin, getStore());
-        removeResourcePluginCacheEntries(plugin);
     }
 
     protected void disablePluginState(Plugin plugin, PluginStateStore stateStore)
@@ -703,9 +740,12 @@ public class DefaultPluginManager implements PluginManager
         List keysToDisable = getEnabledStateAwareModuleKeys(plugin);
         for (Iterator it = keysToDisable.iterator(); it.hasNext();)
         {
-            String key = (String)it.next();
-            StateAware descriptor = (StateAware)getPluginModule(key);
+            String key = (String) it.next();
+            StateAware descriptor = (StateAware) getPluginModule(key);
             descriptor.disabled();
+        }
+        if (plugin instanceof StateAware) {
+            ((StateAware)plugin).disabled();
         }
     }
 
@@ -781,6 +821,7 @@ public class DefaultPluginManager implements PluginManager
 
     protected void notifyModuleEnabled(ModuleDescriptor module)
     {
+        classLoader.notifyPluginOrModuleEnabled();
         if (module instanceof StateAware)
             ((StateAware) module).enabled();
     }
@@ -800,80 +841,22 @@ public class DefaultPluginManager implements PluginManager
 
     public InputStream getDynamicResourceAsStream(String name)
     {
-        Plugin plugin = (Plugin) resourceToPluginCache.get(name);
-        if (plugin == null)
-        {
-            plugin = findDynamicPluginWithResource(name);
-            if (plugin == null)
-            {
-                return null;
-            }
-            resourceToPluginCache.put(name, plugin);
-        }
-        return plugin.getResourceAsStream(name);
+        return getClassLoader().getResourceAsStream(name);
     }
 
     public Class getDynamicPluginClass(String className) throws ClassNotFoundException
     {
-        Plugin plugin = (Plugin) resourceToPluginCache.get(className);
-        if (plugin == null)
-        {
-            plugin = findDynamicPluginWithClass(className);
-            if (plugin == null)
-            {
-                // class was not in the cache and no plugins could load it, so it must not exist
-                throw new ClassNotFoundException(className);
-            }
-            resourceToPluginCache.put(className, plugin);
-        }
-        return plugin.loadClass(className, getClass());
+        return getClassLoader().loadClass(className);
     }
 
-    private Plugin findDynamicPluginWithClass(final String className)
+    public ClassLoader getClassLoader()
     {
-        return (Plugin) CollectionUtils.find(getPlugins(), new Predicate()
-        {
-            public boolean evaluate(Object object)
-            {
-                Plugin plugin = (Plugin) object;
-                if (!isPluginEnabled(plugin.getKey()) || !plugin.isDynamicallyLoaded())
-                {
-                    return false;
-                }
-                try 
-                {
-                    plugin.loadClass(className, getClass());
-                    // if there was no exception thrown, we've found the plugin that can loada the class
-                    return true;
-                }
-                catch (ClassNotFoundException e)
-                {
-                    return false;
-                }
-            }
-        });
-    }
-    
-    private Plugin findDynamicPluginWithResource(final String name)
-    {
-        return (Plugin) CollectionUtils.find(getPlugins(), new Predicate()
-        {
-            public boolean evaluate(Object object)
-            {
-                Plugin plugin = (Plugin) object;
-                if (!isPluginEnabled(plugin.getKey()) || !plugin.isDynamicallyLoaded())
-                {
-                    return false;
-                }
-                return plugin.getResourceAsStream(name) != null;
-            }
-        });
+        return classLoader;
     }
 
     public InputStream getPluginResourceAsStream(String pluginKey, String resourcePath)
     {
         Plugin plugin = getEnabledPlugin(pluginKey);
-
         if (plugin == null)
         {
             log.error("Attempted to retreive resource " + resourcePath + " for non-existent or inactive plugin " + pluginKey);
@@ -882,19 +865,19 @@ public class DefaultPluginManager implements PluginManager
 
         return plugin.getResourceAsStream(resourcePath);
     }
-    
+
     /**
      * Disables and replaces a plugin currently loaded with an UnloadablePlugin.
      *
-     * @param plugin the plugin to be replaced
+     * @param plugin     the plugin to be replaced
      * @param descriptor the descriptor which caused the problem
-     * @param throwable the problem caught when enabling the descriptor
+     * @param throwable  the problem caught when enabling the descriptor
      * @return the UnloadablePlugin which replaced the broken plugin
      */
     private UnloadablePlugin replacePluginWithUnloadablePlugin(Plugin plugin, ModuleDescriptor descriptor, Throwable throwable)
     {
         UnloadableModuleDescriptor unloadableDescriptor =
-            UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin, descriptor, throwable);
+                UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin, descriptor, throwable);
         UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin, unloadableDescriptor);
 
         unloadablePlugin.setUninstallable(plugin.isUninstallable());
@@ -915,5 +898,5 @@ public class DefaultPluginManager implements PluginManager
     public void setDescriptorParserFactory(DescriptorParserFactory descriptorParserFactory)
     {
         this.descriptorParserFactory = descriptorParserFactory;
-    }    
+    }
 }
