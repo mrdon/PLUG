@@ -17,6 +17,10 @@
         (it's late - that makes sense in my head).
     </description>
     <url>http://docs.atlassian.com/${project.artifactId}/${project.version}</url>
+    <properties>
+        <jdkLevel>1.5</jdkLevel>
+    </properties>
+
 
     <licenses>
         <license>
@@ -56,6 +60,11 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+            <version>0.0.255</version>
+        </dependency>
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>

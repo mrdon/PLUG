@@ -3,8 +3,8 @@ package com.atlassian.plugin.loaders.classloading.osgi;
 import com.atlassian.plugin.loaders.ClassLoadingPluginLoader;
 import com.atlassian.plugin.loaders.PluginFactory;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
+import com.atlassian.plugin.loaders.classloading.osgi.componentresolution.HostComponentResolver;
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -12,6 +12,7 @@ import com.atlassian.plugin.parsers.DescriptorParser;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.FilenameFilter;
 import java.util.*;
 import java.util.jar.JarFile;
 import java.util.jar.Attributes;
@@ -23,6 +24,7 @@ import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.FelixConstants;
+import org.apache.felix.main.AutoActivator;
 import org.osgi.framework.*;
 import org.twdata.pkgscanner.ExportPackage;
 import org.twdata.pkgscanner.PackageScanner;
@@ -40,40 +42,19 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
 
     private List<String> jarIncludes = Arrays.asList("*.jar");
     private List<String> jarExcludes = Collections.EMPTY_LIST;
-    private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "org.apache.*");
+    private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "org.apache.*", "org.xml.*", "javax.*", "org.w3c.*");
     private List<String> packageExcludes = Collections.EMPTY_LIST;
 
-    public OsgiPluginLoader(File path, PluginFactory pluginFactory)
+    public OsgiPluginLoader(File pluginPath, File startBundlesPath, PluginFactory pluginFactory, HostComponentResolver resolver)
     {
-        super(path, pluginFactory);
-        startOsgi();
+        super(pluginPath, pluginFactory);
+        startOsgi(startBundlesPath, resolver);
     }
 
-    public OsgiPluginLoader(File path, String pluginDescriptorFileName, PluginFactory pluginFactory)
+    public OsgiPluginLoader(File pluginPath, File startBundlesPath, String pluginDescriptorFileName, PluginFactory pluginFactory, HostComponentResolver resolver)
     {
-        super(path, pluginDescriptorFileName, pluginFactory);
-        startOsgi();
-    }
-
-    /**
-     * @param plugin - the plugin to remove
-     * @throws com.atlassian.plugin.PluginException representing the reason for failure.
-     */
-    @Override
-    public void removePlugin(Plugin plugin) throws PluginException
-    {
-        if (plugin instanceof OsgiPlugin) {
-            try
-            {
-                registration.uninstall(((OsgiPlugin)plugin).getBundle());
-            } catch (BundleException e)
-            {
-                throw new PluginException("Unable to uninstall", e);
-            }
-        } else {
-            super.removePlugin(plugin);
-        }
-
+        super(pluginPath, pluginDescriptorFileName, pluginFactory);
+        startOsgi(startBundlesPath, resolver);
     }
 
     @Override
@@ -98,6 +79,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
             default : plugin = super.createPlugin(parser, unit, loader);
         }
         return plugin;
+        //return createOsgiPlugin(unit.getPath(), false);
     }
 
     @Override
@@ -119,11 +101,14 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);
     }
 
-    synchronized void startOsgi()
+    synchronized void startOsgi(File startBundlesPath, HostComponentResolver resolver)
     {
         try
         {
             cacheDirectory = new File(File.createTempFile("foo", "bar").getParentFile(), "felix");
+            if (cacheDirectory.exists())
+                deleteDirectory(cacheDirectory);
+
             cacheDirectory.mkdir();
             cacheDirectory.deleteOnExit();
         } catch (IOException e)
@@ -132,7 +117,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         }
 
         // Create a case-insensitive configuration property map.
-        Map configMap = new StringMap(false);
+        final Map configMap = new StringMap(false);
         // Configure the Felix instance to be embedded.
         configMap.put(FelixConstants.EMBEDDED_EXECUTION_PROP, "true");
         // Add the bundle provided service interface package and the core OSGi
@@ -142,24 +127,54 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
             "org.osgi.service.packageadmin; version=1.2.0," +
             "org.osgi.service.startlevel; version=1.0.0," +
             "org.osgi.service.url; version=1.0.0," +
+            "org.osgi.util; version=1.3.0," +
+            "org.osgi.util.tracker; version=1.3.0," +
             "host.service.command; version=1.0.0," +
+
             constructAutoExports());
+        configMap.put(AutoActivator.AUTO_START_PROP + ".1", constructStartBundles(startBundlesPath));
+
+        // Ensure bundles start at level 2 so that our system bundles have already been loaded
+        //configMap.put(FelixConstants.FRAMEWORK_STARTLEVEL_PROP, "2");
+        //configMap.put(FelixConstants.BUNDLE_STARTLEVEL_PROP, "2");
+
+        configMap.put(FelixConstants.LOG_LEVEL_PROP, "4");
         // Explicitly specify the directory to use for caching bundles.
         configMap.put(BundleCache.CACHE_PROFILE_DIR_PROP, cacheDirectory.getAbsolutePath());
 
         try
         {
             // Create host activator;
-            registration = new BundleRegistration();
-            List list = new ArrayList();
+            registration = new BundleRegistration(startBundlesPath, resolver);
+            final List list = new ArrayList();
             list.add(registration);
 
             // Now create an instance of the framework with
             // our configuration properties and activator.
             felix = new Felix(configMap, list);
 
-            // Now start Felix instance.
-            felix.start();
+            // Now start Felix instance.  Starting in a different thread to explicity set daemon status
+            Thread t = new Thread() {
+                @Override
+                public void run() {
+                    try
+                    {
+
+                        felix.start();
+                    } catch (BundleException e)
+                    {
+                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    }
+                }
+            };
+            t.setDaemon(true);
+            t.start();
+
+            // Give it 10 seconds
+            t.join(10 * 60 * 1000);
+
+
+
         }
         catch (Exception ex)
         {
@@ -208,6 +223,40 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         return sb.toString();
     }
 
+    private String constructStartBundles(File parent) {
+        StringBuilder startBundles = new StringBuilder();
+        try
+            {
+            for (File bundleFile : parent.listFiles(new FilenameFilter() {
+                public boolean accept(File file, String s) {return s.endsWith(".jar");}}))
+            {
+                startBundles.append(bundleFile.toURL().toString()).append(" ");
+            }
+        } catch (MalformedURLException e)
+        {
+            // Should never happen
+            throw new RuntimeException("Invalid started bundle URL", e);
+        }
+        if (startBundles.length() > 0) {
+            startBundles.deleteCharAt(startBundles.length() - 1);
+        }
+        return startBundles.toString();
+    }
+
+    static private boolean deleteDirectory(File path) {
+        if( path.exists() ) {
+            File[] files = path.listFiles();
+            for(int i=0; i<files.length; i++) {
+                if(files[i].isDirectory()) {
+                    deleteDirectory(files[i]);
+                }
+                else {
+                    files[i].delete();
+                }
+            }
+        }
+    return( path.delete() );
+    }
 
 
     private Plugin createOsgiPlugin(File file, boolean bundle)
@@ -231,10 +280,36 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
     private static class BundleRegistration implements BundleActivator, BundleListener
     {
         private BundleContext bundleContext;
+        private HostComponentResolver hostResolver;
+        private File startBundlesPath;
+
+        public BundleRegistration(File startBundlesPath, HostComponentResolver resolver)
+        {
+            this.startBundlesPath = startBundlesPath;
+            this.hostResolver = resolver;
+        }
 
         public void start(BundleContext context) throws Exception {
             context.addBundleListener(this);
+            context.registerService(HostComponentResolver.class.getName(), hostResolver, null);
+                             
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/aopalliance.osgi-1.0-SNAPSHOT.jar").start();
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/slf4j-api-1.4.3.jar").start();
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/log4j.osgi-1.2.15-SNAPSHOT.jar").start();
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/slf4j-log4j12-1.4.3.jar").start();
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/jcl104-over-slf4j-1.4.3.jar").start();
+
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-core-2.5.1.jar").start();
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-beans-2.5.1.jar").start();
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-aop-2.5.1.jar").start();
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-context-2.5.1.jar").start();
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-osgi-io-1.0.2.jar").start();
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-osgi-core-1.0.2.jar").start();
+
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-osgi-extender-1.0.2.jar").start();
+            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-context-connector-1.0-SNAPSHOT.jar").start();
             this.bundleContext = context;
+
         }
 
         public void stop(BundleContext ctx) throws Exception {
@@ -243,16 +318,16 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         public void bundleChanged(BundleEvent evt) {
             switch (evt.getType()) {
                 case BundleEvent.INSTALLED:
-                    log.info("Installed bundle " + evt.getBundle().getSymbolicName());
+                    log.warn("Installed bundle " + evt.getBundle().getSymbolicName());
                     break;
                 case BundleEvent.STARTED:
-                    log.info("Started bundle " + evt.getBundle().getSymbolicName());
+                    log.warn("Started bundle " + evt.getBundle().getSymbolicName());
                     break;
                 case BundleEvent.STOPPED:
-                    log.info("Stopped bundle " + evt.getBundle().getSymbolicName());
+                    log.warn("Stopped bundle " + evt.getBundle().getSymbolicName());
                     break;
                 case BundleEvent.UNINSTALLED:
-                    log.info("Uninstalled bundle " + evt.getBundle().getSymbolicName());
+                    log.warn("Uninstalled bundle " + evt.getBundle().getSymbolicName());
                     break;
             }
             if (evt.getType() == BundleEvent.STARTED && evt.getBundle().getSymbolicName() != null) {
@@ -264,6 +339,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
             Bundle bundle = null;
             try
             {
+                
                 bundle = bundleContext.installBundle(path.toURL().toString());
             } catch (MalformedURLException e)
             {
@@ -277,6 +353,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         {
             bundle.uninstall();
         }
+
     }
 
 }
