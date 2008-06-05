@@ -3,9 +3,10 @@ package com.atlassian.plugin.loaders.classloading.osgi;
 import com.atlassian.plugin.loaders.ClassLoadingPluginLoader;
 import com.atlassian.plugin.loaders.PluginFactory;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
-import com.atlassian.plugin.loaders.classloading.osgi.componentresolution.HostComponentResolver;
+import com.atlassian.plugin.loaders.classloading.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.parsers.DescriptorParser;
@@ -44,17 +45,21 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
     private List<String> jarExcludes = Collections.EMPTY_LIST;
     private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "org.apache.*", "org.xml.*", "javax.*", "org.w3c.*");
     private List<String> packageExcludes = Collections.EMPTY_LIST;
+    private HostComponentProvider hostComponentProvider;
+    private File startBundlesPath;
 
-    public OsgiPluginLoader(File pluginPath, File startBundlesPath, PluginFactory pluginFactory, HostComponentResolver resolver)
+    public OsgiPluginLoader(File pluginPath, File startBundlesPath, PluginFactory pluginFactory, HostComponentProvider provider)
     {
         super(pluginPath, pluginFactory);
-        startOsgi(startBundlesPath, resolver);
+        this.hostComponentProvider = provider;
+        this.startBundlesPath = startBundlesPath;
     }
 
-    public OsgiPluginLoader(File pluginPath, File startBundlesPath, String pluginDescriptorFileName, PluginFactory pluginFactory, HostComponentResolver resolver)
+    public OsgiPluginLoader(File pluginPath, File startBundlesPath, String pluginDescriptorFileName, PluginFactory pluginFactory, HostComponentProvider provider)
     {
         super(pluginPath, pluginDescriptorFileName, pluginFactory);
-        startOsgi(startBundlesPath, resolver);
+        this.hostComponentProvider = provider;
+        this.startBundlesPath = startBundlesPath;
     }
 
     @Override
@@ -68,6 +73,16 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         {
             throw new RuntimeException("Unable to stop OSGi container", e);
         }
+    }
+
+    @Override
+    public synchronized Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
+    {
+        if (felix == null)
+        {
+            startOsgi(startBundlesPath, hostComponentProvider);
+        }
+        return super.loadAllPlugins(moduleDescriptorFactory);
     }
 
     @Override
@@ -101,7 +116,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);
     }
 
-    synchronized void startOsgi(File startBundlesPath, HostComponentResolver resolver)
+    synchronized void startOsgi(File startBundlesPath, HostComponentProvider provider)
     {
         try
         {
@@ -145,7 +160,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         try
         {
             // Create host activator;
-            registration = new BundleRegistration(startBundlesPath, resolver);
+            registration = new BundleRegistration(startBundlesPath, provider);
             final List list = new ArrayList();
             list.add(registration);
 
@@ -280,19 +295,19 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
     private static class BundleRegistration implements BundleActivator, BundleListener
     {
         private BundleContext bundleContext;
-        private HostComponentResolver hostResolver;
+        private HostComponentProvider hostProvider;
         private File startBundlesPath;
 
-        public BundleRegistration(File startBundlesPath, HostComponentResolver resolver)
+        public BundleRegistration(File startBundlesPath, HostComponentProvider provider)
         {
             this.startBundlesPath = startBundlesPath;
-            this.hostResolver = resolver;
+            this.hostProvider = provider;
         }
 
         public void start(BundleContext context) throws Exception {
             context.addBundleListener(this);
-            context.registerService(HostComponentResolver.class.getName(), hostResolver, null);
-                             
+            hostProvider.writeRegistry(context);
+
             context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/aopalliance.osgi-1.0-SNAPSHOT.jar").start();
             context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/slf4j-api-1.4.3.jar").start();
             context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/log4j.osgi-1.2.15-SNAPSHOT.jar").start();
@@ -307,7 +322,6 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
             context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-osgi-core-1.0.2.jar").start();
 
             context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-osgi-extender-1.0.2.jar").start();
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-context-connector-1.0-SNAPSHOT.jar").start();
             this.bundleContext = context;
 
         }
