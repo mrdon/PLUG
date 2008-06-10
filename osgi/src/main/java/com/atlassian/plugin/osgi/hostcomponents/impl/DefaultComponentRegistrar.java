@@ -3,10 +3,9 @@ package com.atlassian.plugin.osgi.hostcomponents.impl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Arrays;
+import java.util.*;
 
 import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
@@ -28,8 +27,9 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
         return new DefaultInstanceBuilder<T>(reg);
     }
 
-    public void writeRegistry(BundleContext ctx)
+    public List<ServiceRegistration> writeRegistry(BundleContext ctx)
     {
+        ArrayList<ServiceRegistration> services = new ArrayList();
         for (Registration reg : registry.values())
         {
             String[] names = new String[reg.getMainInterface().length];
@@ -39,7 +39,10 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
             reg.getProperties().put(HOST_COMPONENT_FLAG, Boolean.TRUE.toString());
 
             log.info("Registering: "+ Arrays.asList(names)+" instance "+reg.getInstance() + "with properties: "+reg.getProperties());
-            ctx.registerService(names, reg.getInstance(), reg.getProperties());
+            ServiceRegistration sreg = ctx.registerService(names, reg.getInstance(), reg.getProperties());
+            if (sreg != null)
+                services.add(sreg);
         }
+        return services;
     }
 }

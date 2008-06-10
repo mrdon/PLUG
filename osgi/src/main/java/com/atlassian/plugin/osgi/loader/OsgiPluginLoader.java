@@ -63,6 +63,15 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         this.startBundlesPath = startBundlesPath;
     }
 
+    /**
+     * Forces all registered host components to be unregistered and the HostComponentProvider to be called to get a
+     * new list of host components
+     */
+    public void reloadHostComponents()
+    {
+        registration.reloadHostComponents();
+    }
+
     @Override
     public void shutDown()
     {
@@ -297,6 +306,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         private BundleContext bundleContext;
         private HostComponentProvider hostProvider;
         private File startBundlesPath;
+        private List<ServiceRegistration> hostServices;
 
         public BundleRegistration(File startBundlesPath, HostComponentProvider provider)
         {
@@ -305,12 +315,10 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         }
 
         public void start(BundleContext context) throws Exception {
+            this.bundleContext = context;
             context.addBundleListener(this);
 
-            // Retrieve and register host components as OSGi services
-            DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
-            hostProvider.provide(registrar);
-            registrar.writeRegistry(context);
+            reloadHostComponents();
 
             context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/aopalliance.osgi-1.0-SNAPSHOT.jar").start();
             context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/slf4j-api-1.4.3.jar").start();
@@ -326,8 +334,20 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
             context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-osgi-core-1.0.2.jar").start();
 
             context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-osgi-extender-1.0.2.jar").start();
-            this.bundleContext = context;
+        }
 
+        public void reloadHostComponents()
+        {
+            // Unregister any existing host components
+            if (hostServices != null) {
+                for (ServiceRegistration reg : hostServices)
+                    reg.unregister();
+            }
+
+            // Retrieve and register host components as OSGi services
+            DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+            hostProvider.provide(registrar);
+            hostServices = registrar.writeRegistry(bundleContext);
         }
 
         public void stop(BundleContext ctx) throws Exception {
