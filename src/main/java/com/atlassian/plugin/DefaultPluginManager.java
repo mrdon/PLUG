@@ -138,7 +138,7 @@ public class DefaultPluginManager implements PluginManager
     }
 
     /**
-     * Validate a plugin jar
+     * Validate a plugin jar.  Checks for an atlassian-plugin.xml file or OSGi manifest.
      *
      * @param pluginJar the jar file representing the plugin
      * @return The plugin key
@@ -283,7 +283,7 @@ public class DefaultPluginManager implements PluginManager
         if (plugins.containsKey(plugin.getKey()))
         {
             Plugin existingPlugin = (Plugin) plugins.get(plugin.getKey());
-            if (plugin.compareTo(existingPlugin) > 0)
+            if (plugin.compareTo(existingPlugin) >= 0)
             {
                 if (log.isDebugEnabled())
                     log.debug("We found a newer '" + plugin.getKey() + "'");
@@ -296,14 +296,14 @@ public class DefaultPluginManager implements PluginManager
                 }
                 catch (PluginException e)
                 {
-                    throw new PluginParseException("Duplicate plugin found (installed version is older) and could not be unloaded: '" + plugin.getKey() + "'");
+                    throw new PluginParseException("Duplicate plugin found (installed version is the same or older) and could not be unloaded: '" + plugin.getKey() + "'");
                 }
             }
             else
             {
                 // If we find an older plugin, don't error, just ignore it. PLUG-12.
                 if (log.isDebugEnabled())
-                    log.debug("Duplicate plugin found (installed version is the same or newer): '" + plugin.getKey() + "'");
+                    log.debug("Duplicate plugin found (installed version is newer): '" + plugin.getKey() + "'");
                 // and don't install the older plugin
                 return;
             }
@@ -640,10 +640,13 @@ public class DefaultPluginManager implements PluginManager
     protected void notifyPluginEnabled(Plugin plugin)
     {
         classLoader.notifyPluginOrModuleEnabled();
-        enablePluginModules(plugin);
+
         if (plugin instanceof StateAware) {
             ((StateAware)plugin).enabled();
         }
+
+        enablePluginModules(plugin);
+
     }
 
     /**
@@ -738,14 +741,16 @@ public class DefaultPluginManager implements PluginManager
     protected void notifyPluginDisabled(Plugin plugin)
     {
         List keysToDisable = getEnabledStateAwareModuleKeys(plugin);
+
+        if (plugin instanceof StateAware) {
+            ((StateAware)plugin).disabled();
+        }
+
         for (Iterator it = keysToDisable.iterator(); it.hasNext();)
         {
             String key = (String) it.next();
             StateAware descriptor = (StateAware) getPluginModule(key);
             descriptor.disabled();
-        }
-        if (plugin instanceof StateAware) {
-            ((StateAware)plugin).disabled();
         }
     }
 

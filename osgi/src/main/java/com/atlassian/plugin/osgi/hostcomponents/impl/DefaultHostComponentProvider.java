@@ -35,7 +35,9 @@ public class DefaultHostComponentProvider implements HostComponentProvider
             for (int x=0; x<names.length; x++)
                 names[x] = reg.getMainInterface()[x].getName();
 
-            log.warn("Registering: "+ Arrays.asList(names)+" instance "+reg.getInstance() + "with properties: "+reg.getProperties());
+            reg.getProperties().put(HOST_COMPONENT_FLAG, Boolean.TRUE.toString());
+
+            log.info("Registering: "+ Arrays.asList(names)+" instance "+reg.getInstance() + "with properties: "+reg.getProperties());
             ctx.registerService(names, reg.getInstance(), reg.getProperties());
         }
     }
