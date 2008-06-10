@@ -1,4 +1,4 @@
-package com.atlassian.plugin.loaders.osgi;
+package com.atlassian.plugin.osgi.loader;
 
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.impl.AbstractPlugin;
