@@ -4,6 +4,7 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
+import com.atlassian.plugin.AutowireCapablePlugin;
 import org.dom4j.Element;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -63,8 +64,14 @@ public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor i
         Object obj = null;
         try
         {
-            obj = getModuleClass().newInstance();
-            autowireObject(obj);
+            // Give the plugin a go first
+            if (plugin instanceof AutowireCapablePlugin)
+                obj = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
+            else
+            {
+                obj = getModuleClass().newInstance();
+                autowireObject(obj);
+            }
         }
         catch (InstantiationException e)
         {
