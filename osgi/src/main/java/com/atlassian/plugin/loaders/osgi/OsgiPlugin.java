@@ -1,4 +1,4 @@
-package com.atlassian.plugin.loaders.classloading.osgi;
+package com.atlassian.plugin.loaders.osgi;
 
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.StateAware;

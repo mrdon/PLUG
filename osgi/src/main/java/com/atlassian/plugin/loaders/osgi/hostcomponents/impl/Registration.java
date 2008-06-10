@@ -1,4 +1,4 @@
-package com.atlassian.plugin.loaders.classloading.osgi.hostcomponents.impl;
+package com.atlassian.plugin.loaders.osgi.hostcomponents.impl;
 
 import java.util.Map;
 import java.util.Dictionary;

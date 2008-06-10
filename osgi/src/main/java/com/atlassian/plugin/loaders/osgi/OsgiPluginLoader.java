@@ -1,9 +1,9 @@
-package com.atlassian.plugin.loaders.classloading.osgi;
+package com.atlassian.plugin.loaders.osgi;
 
 import com.atlassian.plugin.loaders.ClassLoadingPluginLoader;
 import com.atlassian.plugin.loaders.PluginFactory;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
-import com.atlassian.plugin.loaders.classloading.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.loaders.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.ModuleDescriptorFactory;

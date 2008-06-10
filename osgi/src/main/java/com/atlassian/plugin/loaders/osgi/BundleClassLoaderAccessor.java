@@ -1,4 +1,4 @@
-package com.atlassian.plugin.loaders.classloading.osgi;
+package com.atlassian.plugin.loaders.osgi;
 
 import org.osgi.framework.Bundle;
 import org.apache.log4j.Logger;
