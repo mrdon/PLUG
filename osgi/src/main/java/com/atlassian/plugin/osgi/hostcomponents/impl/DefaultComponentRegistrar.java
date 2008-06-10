@@ -1,22 +1,23 @@
 package com.atlassian.plugin.osgi.hostcomponents.impl;
 
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.osgi.framework.BundleContext;
 
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
 
-import org.osgi.framework.BundleContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
+import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 
-public class DefaultHostComponentProvider implements HostComponentProvider
+public class DefaultComponentRegistrar implements ComponentRegistrar
 {
     private Map<Class<?>[], Registration<?>> registry = new HashMap();
-    private Log log = LogFactory.getLog(DefaultHostComponentProvider.class);
 
-    public DefaultHostComponentProvider()
+    private Log log = LogFactory.getLog(DefaultComponentRegistrar.class);
+
+    public DefaultComponentRegistrar()
     {
     }
 
@@ -41,5 +42,4 @@ public class DefaultHostComponentProvider implements HostComponentProvider
             ctx.registerService(names, reg.getInstance(), reg.getProperties());
         }
     }
-
 }

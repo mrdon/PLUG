@@ -4,6 +4,7 @@ import com.atlassian.plugin.loaders.ClassLoadingPluginLoader;
 import com.atlassian.plugin.loaders.PluginFactory;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.ModuleDescriptorFactory;
@@ -94,7 +95,6 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
             default : plugin = super.createPlugin(parser, unit, loader);
         }
         return plugin;
-        //return createOsgiPlugin(unit.getPath(), false);
     }
 
     @Override
@@ -306,7 +306,11 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
 
         public void start(BundleContext context) throws Exception {
             context.addBundleListener(this);
-            hostProvider.writeRegistry(context);
+
+            // Retrieve and register host components as OSGi services
+            DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+            hostProvider.provide(registrar);
+            registrar.writeRegistry(context);
 
             context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/aopalliance.osgi-1.0-SNAPSHOT.jar").start();
             context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/slf4j-api-1.4.3.jar").start();
