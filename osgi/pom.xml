@@ -8,18 +8,18 @@
     </parent>
 
     <groupId>com.atlassian.plugins</groupId>
-    <artifactId>atlassian-plugins</artifactId>
+    <artifactId>atlassian-plugins-osgi</artifactId>
     <version>0.21-SNAPSHOT</version>
 
-    <name>Atlassian Plugins</name>
+    <name>Atlassian Plugins OSGi Loader</name>
     <description>
-        A library to give systems the ability to have plugins, make them more pluggable and hence add pluggability
-        (it's late - that makes sense in my head).
+        An extension to Atlassian Plugins that provides a loader that loads plugins into OSGi
     </description>
     <url>http://docs.atlassian.com/${project.artifactId}/${project.version}</url>
     <properties>
         <jdkLevel>1.5</jdkLevel>
     </properties>
+
 
     <licenses>
         <license>
@@ -49,76 +49,20 @@
             <testResource>
                 <directory>src/test/resources</directory>
             </testResource>
-            <testResource>
-                <directory>src/test/classLoadingTestFiles</directory>
-            </testResource>
-            <testResource>
-                <directory>src/test/badPluginTestFiles</directory>
-            </testResource>
         </testResources>
     </build>
 
     <dependencies>
         <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.1</version>
+            <groupId>com.atlassian.plugins</groupId>
+            <artifactId>atlassian-plugins</artifactId>
+            <version>${project.version}</version>
         </dependency>
+
         <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>1.0.4</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>dom4j</groupId>
-            <artifactId>dom4j</artifactId>
-            <version>1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>xerces</groupId>
-            <artifactId>xercesImpl</artifactId>
-            <version>2.6.2</version>
-        </dependency>
-        <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-            <version>1.0.b2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.seraph</groupId>
-            <artifactId>atlassian-seraph</artifactId>
-            <version>0.10</version>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.cache</groupId>
-            <artifactId>atlassian-cache-api</artifactId>
-            <version>0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.cache</groupId>
-            <artifactId>atlassian-cache-memory</artifactId>
-            <version>0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>backport-util-concurrent</groupId>
-            <artifactId>backport-util-concurrent</artifactId>
-            <version>3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.3</version>
-            <scope>provided</scope>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+            <version>0.0.255</version>
         </dependency>
 
         <!-- OSGi dependencies -->
