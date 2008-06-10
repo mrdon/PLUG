@@ -3,7 +3,7 @@ package com.atlassian.plugin.osgi.loader;
 import com.atlassian.plugin.loaders.ClassLoadingPluginLoader;
 import com.atlassian.plugin.loaders.PluginFactory;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
-import com.atlassian.plugin.osgi.loader.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.ModuleDescriptorFactory;

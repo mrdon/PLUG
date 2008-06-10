@@ -1,4 +1,4 @@
-package com.atlassian.plugin.osgi.loader.hostcomponents;
+package com.atlassian.plugin.osgi.hostcomponents;
 
 import org.osgi.framework.BundleContext;
 

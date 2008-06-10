@@ -1,7 +1,7 @@
-package com.atlassian.plugin.osgi.loader.hostcomponents.impl;
+package com.atlassian.plugin.osgi.hostcomponents.impl;
 
-import com.atlassian.plugin.osgi.loader.hostcomponents.InstanceBuilder;
-import com.atlassian.plugin.osgi.loader.hostcomponents.PropertyBuilder;
+import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
+import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
 
 class DefaultInstanceBuilder<T> implements InstanceBuilder<T>
 {

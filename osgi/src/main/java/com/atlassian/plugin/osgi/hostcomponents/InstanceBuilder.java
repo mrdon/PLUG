@@ -1,4 +1,4 @@
-package com.atlassian.plugin.osgi.loader.hostcomponents;
+package com.atlassian.plugin.osgi.hostcomponents;
 
 public interface InstanceBuilder<T>
 {

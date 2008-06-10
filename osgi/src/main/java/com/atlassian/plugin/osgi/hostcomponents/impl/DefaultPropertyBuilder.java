@@ -1,6 +1,6 @@
-package com.atlassian.plugin.osgi.loader.hostcomponents.impl;
+package com.atlassian.plugin.osgi.hostcomponents.impl;
 
-import com.atlassian.plugin.osgi.loader.hostcomponents.PropertyBuilder;
+import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
 
 class DefaultPropertyBuilder<T> implements PropertyBuilder<T>
 {
