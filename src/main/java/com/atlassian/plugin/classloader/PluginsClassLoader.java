@@ -29,6 +29,12 @@ public class PluginsClassLoader extends AbstractClassLoader
 
     public PluginsClassLoader(PluginAccessor pluginAccessor)
     {
+        this(null,pluginAccessor);
+    }
+
+    public PluginsClassLoader(ClassLoader parent, PluginAccessor pluginAccessor)
+    {
+        super(parent);
         if (pluginAccessor == null)
         {
             throw new IllegalArgumentException("The plugin accessor should not be null.");

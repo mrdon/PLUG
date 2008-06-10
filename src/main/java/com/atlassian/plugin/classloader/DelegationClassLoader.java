@@ -1,10 +1,10 @@
 package com.atlassian.plugin.classloader;
 
-import java.io.InputStream;
-import java.net.URL;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.InputStream;
+import java.net.URL;
 
 /**
  * A class loader that delegates to another class loader.
@@ -34,7 +34,7 @@ public class DelegationClassLoader extends ClassLoader
     {
         return delegateClassLoader != null ? delegateClassLoader.getResource(name) : null;
     }
-    
+
     public InputStream getResourceAsStream(String name)
     {
         return delegateClassLoader != null ? delegateClassLoader.getResourceAsStream(name) : null;

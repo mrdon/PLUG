@@ -24,7 +24,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable
     private boolean enabled;
     private boolean system;
     private Resourced resources = Resources.EMPTY_RESOURCES;
-    private int pluginsVersion;
+    private int pluginsVersion = 1;
     private Date dateLoaded = new Date();
 
     public String getName()

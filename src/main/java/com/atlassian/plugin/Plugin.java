@@ -11,8 +11,16 @@ public interface Plugin extends Resourced, Comparable
 {
     public static final Comparator NAME_COMPARATOR = new PluginNameComparator();
 
+    /**
+     * Gets the version of the plugins system to handle this plugin
+     * @return The plugins version.  If undefined, assumed to be 1.
+     */
     int getPluginsVersion();
 
+    /**
+     * Sets the version of the plugins system
+     * @param version The version
+     */
     void setPluginsVersion(int version);
 
     String getName();

@@ -123,10 +123,24 @@ public class ClassLoadingPluginLoader implements PluginLoader
         return plugin;
     }
 
+    /**
+     * Handles plugins with no descriptor.  Extension point for those that want to load plugins without the traditional
+     * XML descriptor file
+     * @param deploymentUnit the unit to deploy
+     * @return The plugin created
+     * @throws PluginParseException if the plugin could not be parsed
+     */
     protected Plugin handleNoDescriptor(DeploymentUnit deploymentUnit) throws PluginParseException {
         throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);
     }
 
+    /**
+     * Creates the plugin.  Extension point for subclasses that want to create their own plugin
+     * @param parser The descriptor parser
+     * @param unit The unit to deploy
+     * @param loader The classloader for the plugin
+     * @return The created plugin
+     */
     protected Plugin createPlugin(DescriptorParser parser, DeploymentUnit unit, PluginClassLoader loader) {
         return pluginFactory.createPlugin(unit, loader);
     }

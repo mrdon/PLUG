@@ -117,10 +117,17 @@ public class PluginClassLoader extends URLClassLoader
         return url != null ? url : super.getResource(name);
     }
 
+    /**
+     * Gets the resource from this classloader only
+     *
+     * @param name the name of the resource
+     * @return the URL to the resource, <code>null</code> if the resource was not found
+     */
     public URL getLocalResource(String name)
     {
         return findResource(name);
     }
+
 //  Caching
 //
 //    protected Class findClass(String name) throws ClassNotFoundException
