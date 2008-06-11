@@ -5,7 +5,6 @@ import com.atlassian.plugin.StateAware;
 
 import java.net.URL;
 import java.io.InputStream;
-import java.io.IOException;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -13,11 +12,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Created by IntelliJ IDEA.
- * User: tomd
- * Date: May 21, 2008
- * Time: 4:02:18 PM
- * This isn't the template you are looking for. It can go about its business.
+ * Plugin that wraps an OSGi bundle that does contain a plugin descriptor.
  */
 public class OsgiPlugin extends AbstractPlugin implements StateAware
 {
@@ -87,6 +82,21 @@ public class OsgiPlugin extends AbstractPlugin implements StateAware
     public void setBundled(boolean bundled)
     {
         this.bundled = bundled;
+    }
+
+    public boolean isEnabled()
+    {
+        return Bundle.ACTIVE == bundle.getState();
+    }
+
+    public void setEnabled(boolean enabled)
+    {
+        if (enabled) {
+            enabled();
+        }
+        else {
+            disabled();
+        }
     }
 
     public void enabled()

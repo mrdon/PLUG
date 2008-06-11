@@ -8,25 +8,28 @@ import java.util.Enumeration;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class BundleClassLoaderAccessor
+/**
+ * Utility methods for accessing a bundle as if it was a classloader.
+ */
+class BundleClassLoaderAccessor
 {
     private static final Logger log = Logger.getLogger(BundleClassLoaderAccessor.class);
 
-    public static ClassLoader getClassLoader(Bundle bundle) {
+    static ClassLoader getClassLoader(Bundle bundle) {
         return new BundleClassLoader(bundle);
     }
 
-    public static Class loadClass(Bundle bundle, String name, Class callingClass) throws ClassNotFoundException
+    static Class loadClass(Bundle bundle, String name, Class callingClass) throws ClassNotFoundException
     {
         return bundle.loadClass(name);
     }
 
-    public static URL getResource(Bundle bundle, String name)
+    static URL getResource(Bundle bundle, String name)
     {
         return bundle.getResource(name);
     }
 
-    public static InputStream getResourceAsStream(Bundle bundle, String name)
+    static InputStream getResourceAsStream(Bundle bundle, String name)
     {
         URL url = getResource(bundle, name);
         if (url != null) {
@@ -42,6 +45,9 @@ public class BundleClassLoaderAccessor
         return null;
     }
 
+    /**
+     * Fake classloader that delegates to a bundle
+     */
     private static class BundleClassLoader extends ClassLoader
     {
         private Bundle bundle;
@@ -58,13 +64,13 @@ public class BundleClassLoaderAccessor
         }
 
         @Override
-            public Enumeration<URL> findResources(String name) throws IOException
+        public Enumeration<URL> findResources(String name) throws IOException
         {
             return bundle.getResources(name);
         }
 
         @Override
-            public URL findResource(String name)
+        public URL findResource(String name)
         {
             return bundle.getResource(name);
         }

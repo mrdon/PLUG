@@ -35,6 +35,9 @@ import static org.twdata.pkgscanner.PackageScanner.include;
 import static org.twdata.pkgscanner.PackageScanner.exclude;
 import static org.twdata.pkgscanner.PackageScanner.packages;
 
+/**
+ * Plugin loader that starts an OSGi container and loads plugins into it, wrapped as OSGi bundles.
+ */
 public class OsgiPluginLoader extends ClassLoadingPluginLoader
 {
     private static final Log log = LogFactory.getLog(OsgiPluginLoader.class);
@@ -301,6 +304,10 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         }
     }
 
+    /**
+     * Manages framwork-level framework bundles and host components registration, and individual plugin bundle
+     * installation and removal.
+     */
     private static class BundleRegistration implements BundleActivator, BundleListener
     {
         private BundleContext bundleContext;
@@ -320,20 +327,11 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
 
             reloadHostComponents();
 
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/aopalliance.osgi-1.0-SNAPSHOT.jar").start();
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/slf4j-api-1.4.3.jar").start();
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/log4j.osgi-1.2.15-SNAPSHOT.jar").start();
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/slf4j-log4j12-1.4.3.jar").start();
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/jcl104-over-slf4j-1.4.3.jar").start();
-
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-core-2.5.1.jar").start();
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-beans-2.5.1.jar").start();
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-aop-2.5.1.jar").start();
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-context-2.5.1.jar").start();
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-osgi-io-1.0.2.jar").start();
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-osgi-core-1.0.2.jar").start();
-
-            context.installBundle("file:/Users/dbrown/dev/confluence/conf-webapp/src/main/webapp/WEB-INF/framework-bundles/spring-osgi-extender-1.0.2.jar").start();
+            for (File bundleFile : startBundlesPath.listFiles(new FilenameFilter() {
+                public boolean accept(File file, String s) {return s.endsWith(".jar");}}))
+            {
+                install(bundleFile);
+            }
         }
 
         public void reloadHostComponents()
@@ -367,8 +365,6 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
                 case BundleEvent.UNINSTALLED:
                     log.warn("Uninstalled bundle " + evt.getBundle().getSymbolicName());
                     break;
-            }
-            if (evt.getType() == BundleEvent.STARTED && evt.getBundle().getSymbolicName() != null) {
             }
         }
 

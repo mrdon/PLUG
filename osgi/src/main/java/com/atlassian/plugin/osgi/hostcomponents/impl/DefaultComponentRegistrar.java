@@ -10,9 +10,12 @@ import java.util.*;
 import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 
+/**
+ * Default component registrar that also can write registered host components into the OSGi service registry
+ */
 public class DefaultComponentRegistrar implements ComponentRegistrar
 {
-    private Map<Class<?>[], Registration<?>> registry = new HashMap();
+    private Map<Class<?>[], Registration> registry = new HashMap();
 
     private Log log = LogFactory.getLog(DefaultComponentRegistrar.class);
 
@@ -20,11 +23,11 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
     {
     }
 
-    public <T> InstanceBuilder<T> register(Class<T>... mainInterface)
+    public InstanceBuilder register(Class<?>... mainInterface)
     {
-        Registration<T> reg = new Registration(mainInterface);
+        Registration reg = new Registration(mainInterface);
         registry.put(mainInterface, reg);
-        return new DefaultInstanceBuilder<T>(reg);
+        return new DefaultInstanceBuilder(reg);
     }
 
     public List<ServiceRegistration> writeRegistry(BundleContext ctx)

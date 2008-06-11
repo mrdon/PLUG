@@ -2,21 +2,24 @@ package com.atlassian.plugin.osgi.hostcomponents.impl;
 
 import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
 
-class DefaultPropertyBuilder<T> implements PropertyBuilder<T>
+/**
+ * Default property builder for host components
+ */
+class DefaultPropertyBuilder implements PropertyBuilder
 {
-    private Registration<T> registration;
+    private Registration registration;
 
-    public DefaultPropertyBuilder(Registration<T> registration)
+    public DefaultPropertyBuilder(Registration registration)
     {
         this.registration = registration;
     }
 
-    public PropertyBuilder<T> withName(String name)
+    public PropertyBuilder withName(String name)
     {
         return withProperty("bean-name", name);
     }
 
-    public PropertyBuilder<T> withProperty(String name, String value)
+    public PropertyBuilder withProperty(String name, String value)
     {
         registration.getProperties().put(name, value);
         return this;

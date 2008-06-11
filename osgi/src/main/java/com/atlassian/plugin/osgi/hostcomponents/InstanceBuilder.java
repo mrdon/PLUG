@@ -1,6 +1,14 @@
 package com.atlassian.plugin.osgi.hostcomponents;
 
-public interface InstanceBuilder<T>
+/**
+ * Ties a host component registration with a host component instance
+ */
+public interface InstanceBuilder
 {
-    PropertyBuilder<T> forInstance(T instance);
+    /**
+     * Declares the host component instance for the registration.
+     * @param instance The object to tie to the registration
+     * @return The property builder for assigning properties to the registration
+     */
+    PropertyBuilder forInstance(Object instance);
 }

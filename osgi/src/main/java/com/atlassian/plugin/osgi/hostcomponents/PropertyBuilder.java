@@ -1,7 +1,22 @@
 package com.atlassian.plugin.osgi.hostcomponents;
 
-public interface PropertyBuilder<T>
+/**
+ * Ties properties to the host component registration
+ */
+public interface PropertyBuilder
 {
-    PropertyBuilder<T> withName(String name);
-    PropertyBuilder<T> withProperty(String name, String value);
+    /**
+     * Sets the bean name of the host component
+     * @param name The name
+     * @return The property builder
+     */
+    PropertyBuilder withName(String name);
+
+    /**
+     * Sets an arbitrary property to register with the host component
+     * @param name The property name
+     * @param value The property value
+     * @return The property builder
+     */
+    PropertyBuilder withProperty(String name, String value);
 }

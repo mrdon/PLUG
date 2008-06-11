@@ -3,16 +3,19 @@ package com.atlassian.plugin.osgi.hostcomponents.impl;
 import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
 
-class DefaultInstanceBuilder<T> implements InstanceBuilder<T>
+/**
+ * Default instance builder for host components
+ */
+class DefaultInstanceBuilder implements InstanceBuilder
 {
-    private Registration<T> registration;
+    private Registration registration;
 
-    public DefaultInstanceBuilder(Registration<T> registration)
+    public DefaultInstanceBuilder(Registration registration)
     {
         this.registration = registration;
     }
 
-    public PropertyBuilder<T> forInstance(T instance)
+    public PropertyBuilder forInstance(Object instance)
     {
         registration.setInstance(instance);
         return new DefaultPropertyBuilder(registration);

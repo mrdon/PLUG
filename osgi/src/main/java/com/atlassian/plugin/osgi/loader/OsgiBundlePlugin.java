@@ -12,6 +12,9 @@ import java.io.InputStream;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 
+/**
+ * Plugin that wraps an OSGi bundle that has no plugin descriptor.
+ */
 public class OsgiBundlePlugin extends AbstractPlugin implements StateAware
 {
 

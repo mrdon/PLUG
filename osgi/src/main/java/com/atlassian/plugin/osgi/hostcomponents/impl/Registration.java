@@ -1,27 +1,29 @@
 package com.atlassian.plugin.osgi.hostcomponents.impl;
 
-import java.util.Map;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Hashtable;
 
-class Registration<T>
+
+/**
+ * A registration of a host component
+ */
+class Registration
 {
-    private Class<T>[] mainInterface;
-    private T instance;
+    private Class[] mainInterface;
+    private Object instance;
     private Dictionary<String,String> properties = new Hashtable<String,String>();
 
-    public Registration(Class<T>[] mainInterface)
+    public Registration(Class[] mainInterface)
     {
         this.mainInterface = mainInterface;
     }
 
-    public T getInstance()
+    public Object getInstance()
     {
         return instance;
     }
 
-    public void setInstance(T instance)
+    public void setInstance(Object instance)
     {
         this.instance = instance;
     }
@@ -36,7 +38,7 @@ class Registration<T>
         this.properties = properties;
     }
 
-    public Class<T>[] getMainInterface()
+    public Class[] getMainInterface()
     {
         return mainInterface;
     }
