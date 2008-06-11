@@ -330,6 +330,7 @@
         </SOURCES>
       </library>
     </orderEntry>
+    <orderEntry type="library" name="Clover IDEA Plugin" level="application" />
     <orderEntryProperties />
   </component>
 </module>

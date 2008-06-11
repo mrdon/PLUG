@@ -107,6 +107,8 @@ public class TestFelixOsgiContainerManager extends TestCase
         assertEquals(2, felix.getRegisteredServices().length);
         felix.reloadHostComponents(prov);
         assertEquals(3, felix.getRegisteredServices().length);
+        felix.reloadHostComponents(prov);
+        assertEquals(3, felix.getRegisteredServices().length);
         felix.stop();
         assertTrue(!felix.isRunning());
     }

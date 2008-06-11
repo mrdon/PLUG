@@ -45,6 +45,7 @@ class BundleClassLoaderAccessor
         return null;
     }
 
+    ///CLOVER:OFF
     /**
      * Fake classloader that delegates to a bundle
      */
