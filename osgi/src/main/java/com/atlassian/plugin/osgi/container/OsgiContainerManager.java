@@ -1,0 +1,50 @@
+package com.atlassian.plugin.osgi.container;
+
+import org.osgi.framework.Bundle;
+import org.twdata.pkgscanner.ExportPackage;
+
+import java.io.File;
+import java.util.Collection;
+
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+
+/**
+ * Manages the OSGi container and handles any interactions with it
+ */
+public interface OsgiContainerManager
+{
+    /**
+     * Starts the OSGi container
+     *
+     * @param exports The packages to export
+     * @param provider The host component provider to use when registering host services
+     * @throws OsgiContainerException If the container cannot be started
+     */
+    void start(Collection<ExportPackage> exports, HostComponentProvider provider) throws OsgiContainerException;
+
+    /**
+     * Stops the OSGi container
+     *
+     * @throws OsgiContainerException If the container cannot be stopped
+     */
+    void stop() throws OsgiContainerException;
+
+    /**
+     * Installs a bundle into a running OSGI container
+     * @param file The bundle file to install
+     * @return The created bundle
+     * @throws OsgiContainerException If the bundle cannot be loaded
+     */
+    Bundle installBundle(File file) throws OsgiContainerException;
+
+    /**
+     * Reloads all host components used
+     * @param provider The host component provider to use when registering host services
+     */
+    void reloadHostComponents(HostComponentProvider provider);
+
+    /**
+     * @return If the container is running or not
+     */
+    boolean isRunning();
+}
