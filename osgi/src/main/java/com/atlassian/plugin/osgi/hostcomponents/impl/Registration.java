@@ -9,13 +9,13 @@ import java.util.Hashtable;
  */
 class Registration
 {
-    private Class[] mainInterface;
+    private Class[] mainInterfaces;
     private Object instance;
     private Dictionary<String,String> properties = new Hashtable<String,String>();
 
-    public Registration(Class[] mainInterface)
+    public Registration(Class[] mainInterfaces)
     {
-        this.mainInterface = mainInterface;
+        this.mainInterfaces = mainInterfaces;
     }
 
     public Object getInstance()
@@ -33,13 +33,8 @@ class Registration
         return properties;
     }
 
-    public void setProperties(Dictionary<String, String> properties)
+    public Class[] getMainInterfaces()
     {
-        this.properties = properties;
-    }
-
-    public Class[] getMainInterface()
-    {
-        return mainInterface;
+        return mainInterfaces;
     }
 }

@@ -38,7 +38,7 @@ class BundleClassLoaderAccessor
                 return url.openStream();
             } catch (IOException e)
             {
-                log.debug("Unable to load resource from bundle: "+bundle.getSymbolicName());
+                log.debug("Unable to load resource from bundle: "+bundle.getSymbolicName(), e);
             }
         }
 

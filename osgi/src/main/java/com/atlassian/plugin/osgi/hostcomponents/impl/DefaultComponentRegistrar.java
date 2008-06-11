@@ -15,29 +15,26 @@ import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
  */
 public class DefaultComponentRegistrar implements ComponentRegistrar
 {
-    private Map<Class<?>[], Registration> registry = new HashMap();
+    private List<Registration> registry = new ArrayList<Registration>();
 
     private Log log = LogFactory.getLog(DefaultComponentRegistrar.class);
 
-    public DefaultComponentRegistrar()
+    public InstanceBuilder register(Class<?>... mainInterfaces)
     {
-    }
-
-    public InstanceBuilder register(Class<?>... mainInterface)
-    {
-        Registration reg = new Registration(mainInterface);
-        registry.put(mainInterface, reg);
+        Registration reg = new Registration(mainInterfaces);
+        registry.add(reg);
         return new DefaultInstanceBuilder(reg);
     }
 
     public List<ServiceRegistration> writeRegistry(BundleContext ctx)
     {
-        ArrayList<ServiceRegistration> services = new ArrayList();
-        for (Registration reg : registry.values())
+        ArrayList<ServiceRegistration> services = new ArrayList<ServiceRegistration>();
+
+        for (Registration reg : registry)
         {
-            String[] names = new String[reg.getMainInterface().length];
+            String[] names = new String[reg.getMainInterfaces().length];
             for (int x=0; x<names.length; x++)
-                names[x] = reg.getMainInterface()[x].getName();
+                names[x] = reg.getMainInterfaces()[x].getName();
 
             reg.getProperties().put(HOST_COMPONENT_FLAG, Boolean.TRUE.toString());
 
@@ -47,5 +44,10 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
                 services.add(sreg);
         }
         return services;
+    }
+
+    List<Registration> getRegistry()
+    {
+        return registry;
     }
 }

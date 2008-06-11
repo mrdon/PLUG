@@ -8,6 +8,7 @@ import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
 class DefaultPropertyBuilder implements PropertyBuilder
 {
     private Registration registration;
+    static final String BEAN_NAME = "bean-name";
 
     public DefaultPropertyBuilder(Registration registration)
     {
@@ -16,7 +17,7 @@ class DefaultPropertyBuilder implements PropertyBuilder
 
     public PropertyBuilder withName(String name)
     {
-        return withProperty("bean-name", name);
+        return withProperty(BEAN_NAME, name);
     }
 
     public PropertyBuilder withProperty(String name, String value)

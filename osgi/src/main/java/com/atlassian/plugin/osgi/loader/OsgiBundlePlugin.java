@@ -11,11 +11,12 @@ import java.io.InputStream;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 
 /**
  * Plugin that wraps an OSGi bundle that has no plugin descriptor.
  */
-public class OsgiBundlePlugin extends AbstractPlugin implements StateAware
+public class OsgiBundlePlugin extends OsgiPlugin implements StateAware
 {
 
     private Bundle bundle;
@@ -24,10 +25,11 @@ public class OsgiBundlePlugin extends AbstractPlugin implements StateAware
 
     public OsgiBundlePlugin(Bundle bundle)
     {
+        super(bundle);
         this.bundle = bundle;
         this.pluginInformation = new PluginInformation();
-        pluginInformation.setDescription((String) bundle.getHeaders().get("Bundle-Description"));
-        pluginInformation.setVersion((String) bundle.getHeaders().get("Bundle-Version"));
+        pluginInformation.setDescription((String) bundle.getHeaders().get(Constants.BUNDLE_DESCRIPTION));
+        pluginInformation.setVersion((String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
         this.dateLoaded = new Date();
     }
     
@@ -117,33 +119,6 @@ public class OsgiBundlePlugin extends AbstractPlugin implements StateAware
         throw new UnsupportedOperationException("Not available");
     }
 
-    public boolean isEnabled()
-    {
-        return Bundle.ACTIVE == bundle.getState();
-    }
-
-    public void setEnabled(boolean enabled)
-    {
-        if (isEnabled() && !enabled)
-        {
-            try
-            {
-                bundle.stop();
-            } catch (BundleException e)
-            {
-                throw new RuntimeException("Cannot stop plugin: "+getKey());
-            }
-        } else if (!isEnabled() && enabled) {
-            try
-            {
-                bundle.start();
-            } catch (BundleException e)
-            {
-                throw new RuntimeException("Cannot start plugin: "+getKey());
-            }
-        }
-    }
-
     public boolean isSystemPlugin()
     {
         return false;
@@ -184,38 +159,6 @@ public class OsgiBundlePlugin extends AbstractPlugin implements StateAware
         return true;
     }
 
-    public Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException
-    {
-        return BundleClassLoaderAccessor.loadClass(bundle, clazz, callingClass);
-    }
-
-
-    public URL getResource(String name)
-    {
-        return BundleClassLoaderAccessor.getResource(bundle, name);
-    }
-
-    public InputStream getResourceAsStream(String name)
-    {
-        return BundleClassLoaderAccessor.getResourceAsStream(bundle, name);
-    }
-
-    public ClassLoader getClassLoader()
-    {
-        return BundleClassLoaderAccessor.getClassLoader(bundle);
-    }
-
-
-    public void close()
-    {
-        try
-        {
-            bundle.uninstall();
-        } catch (BundleException e)
-        {
-            throw new RuntimeException("Cannot uninstall bundle " + bundle.getSymbolicName());
-        }
-    }
 
     public List getResourceDescriptors()
     {
@@ -237,25 +180,4 @@ public class OsgiBundlePlugin extends AbstractPlugin implements StateAware
         return null;
     }
 
-    public void enabled()
-    {
-        try
-        {
-            bundle.start();
-        } catch (BundleException e)
-        {
-            throw new RuntimeException("Cannot start plugin: "+getKey());
-        }
-    }
-
-    public void disabled()
-    {
-        try
-        {
-            bundle.stop();
-        } catch (BundleException e)
-        {
-            throw new RuntimeException("Cannot stop plugin: "+getKey());
-        }
-    }
 }

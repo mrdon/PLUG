@@ -26,7 +26,6 @@ import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.main.AutoActivator;
 import org.osgi.framework.*;
 import org.twdata.pkgscanner.ExportPackage;
 import org.twdata.pkgscanner.PackageScanner;
@@ -122,7 +121,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
             }
         } catch (IOException e)
         {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            throw new PluginParseException("Unable to load jar", e);
         }
 
         throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);
@@ -130,18 +129,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
 
     synchronized void startOsgi(File startBundlesPath, HostComponentProvider provider)
     {
-        try
-        {
-            cacheDirectory = new File(File.createTempFile("foo", "bar").getParentFile(), "felix");
-            if (cacheDirectory.exists())
-                deleteDirectory(cacheDirectory);
-
-            cacheDirectory.mkdir();
-            cacheDirectory.deleteOnExit();
-        } catch (IOException e)
-        {
-            throw new RuntimeException("Cannot create cache directory", e);
-        }
+        initialiseCacheDirectory();
 
         // Create a case-insensitive configuration property map.
         final Map configMap = new StringMap(false);
@@ -159,11 +147,6 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
             "host.service.command; version=1.0.0," +
 
             constructAutoExports());
-        configMap.put(AutoActivator.AUTO_START_PROP + ".1", constructStartBundles(startBundlesPath));
-
-        // Ensure bundles start at level 2 so that our system bundles have already been loaded
-        //configMap.put(FelixConstants.FRAMEWORK_STARTLEVEL_PROP, "2");
-        //configMap.put(FelixConstants.BUNDLE_STARTLEVEL_PROP, "2");
 
         configMap.put(FelixConstants.LOG_LEVEL_PROP, "4");
         // Explicitly specify the directory to use for caching bundles.
@@ -210,6 +193,22 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         }
     }
 
+    private void initialiseCacheDirectory()
+    {
+        try
+        {
+            cacheDirectory = new File(File.createTempFile("foo", "bar").getParentFile(), "felix");
+            if (cacheDirectory.exists())
+                deleteDirectory(cacheDirectory);
+
+            cacheDirectory.mkdir();
+            cacheDirectory.deleteOnExit();
+        } catch (IOException e)
+        {
+            throw new RuntimeException("Cannot create cache directory", e);
+        }
+    }
+
     public void setJarPatterns(List<String> includes, List<String> excludes) {
         this.jarIncludes = includes;
         this.jarExcludes = excludes;
@@ -250,26 +249,6 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         return sb.toString();
     }
 
-    private String constructStartBundles(File parent) {
-        StringBuilder startBundles = new StringBuilder();
-        try
-            {
-            for (File bundleFile : parent.listFiles(new FilenameFilter() {
-                public boolean accept(File file, String s) {return s.endsWith(".jar");}}))
-            {
-                startBundles.append(bundleFile.toURL().toString()).append(" ");
-            }
-        } catch (MalformedURLException e)
-        {
-            // Should never happen
-            throw new RuntimeException("Invalid started bundle URL", e);
-        }
-        if (startBundles.length() > 0) {
-            startBundles.deleteCharAt(startBundles.length() - 1);
-        }
-        return startBundles.toString();
-    }
-
     static private boolean deleteDirectory(File path) {
         if( path.exists() ) {
             File[] files = path.listFiles();
@@ -282,7 +261,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
                 }
             }
         }
-    return( path.delete() );
+        return path.delete();
     }
 
 
@@ -308,7 +287,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
      * Manages framwork-level framework bundles and host components registration, and individual plugin bundle
      * installation and removal.
      */
-    private static class BundleRegistration implements BundleActivator, BundleListener
+    static class BundleRegistration implements BundleActivator, BundleListener
     {
         private BundleContext bundleContext;
         private HostComponentProvider hostProvider;
