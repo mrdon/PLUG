@@ -117,6 +117,16 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         }
     }
 
+    public Bundle[] getBundles()
+    {
+        return registration.getBundles();
+    }
+
+    public ServiceReference[] getRegisteredServices()
+    {
+        return felix.getRegisteredServices();
+    }
+
     public Bundle installBundle(File file) throws OsgiContainerException
     {
         try
@@ -133,13 +143,13 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         registration.reloadHostComponents(provider);
     }
 
-    private String constructAutoExports(Collection<ExportPackage> packageExports) {
+    String constructAutoExports(Collection<ExportPackage> packageExports) {
 
         StringBuilder sb = new StringBuilder();
         for (Iterator<ExportPackage> i = packageExports.iterator(); i.hasNext(); ) {
             ExportPackage pkg = i.next();
             sb.append(pkg.getPackageName());
-            if (pkg.getVersion() != null && !pkg.getVersion().contains("SNAPSHOT")) {
+            if (pkg.getVersion() != null) {
                 try {
                     Version.parseVersion(pkg.getVersion());
                     sb.append(";version=").append(pkg.getVersion());
@@ -154,7 +164,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         return sb.toString();
     }
 
-    static private boolean deleteDirectory(File path) {
+    static boolean deleteDirectory(File path) {
         if( path.exists() ) {
             File[] files = path.listFiles();
             for(int i=0; i<files.length; i++) {
@@ -169,7 +179,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         return path.delete();
     }
 
-    private void initialiseCacheDirectory() throws OsgiContainerException
+    void initialiseCacheDirectory() throws OsgiContainerException
     {
         try
         {
@@ -227,11 +237,15 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 for (ServiceRegistration reg : hostServices)
                     reg.unregister();
             }
+            
+            if (provider != null)
+            {
+                // Retrieve and register host components as OSGi services
+                DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+                provider.provide(registrar);
+                hostServices = registrar.writeRegistry(bundleContext);
+            }
 
-            // Retrieve and register host components as OSGi services
-            DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
-            provider.provide(registrar);
-            hostServices = registrar.writeRegistry(bundleContext);
         }
 
         public void stop(BundleContext ctx) throws Exception {
@@ -269,9 +283,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             return bundle;
         }
 
-        public void uninstall(Bundle bundle) throws BundleException
+        public Bundle[] getBundles()
         {
-            bundle.uninstall();
+            return bundleContext.getBundles();
         }
 
     }

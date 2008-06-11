@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.container;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
 import org.twdata.pkgscanner.ExportPackage;
 
 import java.io.File;
@@ -47,4 +48,17 @@ public interface OsgiContainerManager
      * @return If the container is running or not
      */
     boolean isRunning();
+
+    /**
+     * Gets a list of installed bundles
+     *
+     * @return An array of bundles
+     */
+    Bundle[] getBundles();
+
+    /**
+     * Gets a list of service references
+     * @return An array of service references
+     */
+    ServiceReference[] getRegisteredServices();
 }

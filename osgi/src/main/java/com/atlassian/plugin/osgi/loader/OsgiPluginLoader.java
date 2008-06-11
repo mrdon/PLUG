@@ -44,13 +44,6 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
     private OsgiContainerManager osgi;
     private HostComponentProvider hostComponentProvider;
 
-    public OsgiPluginLoader(File pluginPath, File startBundlesPath, PluginFactory pluginFactory, HostComponentProvider provider)
-    {
-        super(pluginPath, pluginFactory);
-        osgi = new FelixOsgiContainerManager(startBundlesPath);
-        this.hostComponentProvider = provider;
-    }
-
     public OsgiPluginLoader(File pluginPath, File startBundlesPath, String pluginDescriptorFileName, PluginFactory pluginFactory, HostComponentProvider provider)
     {
         super(pluginPath, pluginDescriptorFileName, pluginFactory);
@@ -61,6 +54,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
     /**
      * Forces all registered host components to be unregistered and the HostComponentProvider to be called to get a
      * new list of host components
+     * @param provider The host component provider to reload from
      */
     public void reloadHostComponents(HostComponentProvider provider)
     {
@@ -79,18 +73,24 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
     {
         if (!osgi.isRunning())
         {
-            Collection<ExportPackage> exports = new PackageScanner()
-               .select(
-                   jars(
-                           include((String[]) jarIncludes.toArray(new String[0])),
-                           exclude((String[]) jarExcludes.toArray(new String[0]))),
-                   packages(
-                           include((String[]) packageIncludes.toArray(new String[0])),
-                           exclude((String[]) packageExcludes.toArray(new String[0]))))
-               .scan();
+            Collection<ExportPackage> exports = generateExports();
             osgi.start(exports, hostComponentProvider);
         }
         return super.loadAllPlugins(moduleDescriptorFactory);
+    }
+    
+    Collection<ExportPackage> generateExports()
+    {
+        Collection<ExportPackage> exports = new PackageScanner()
+           .select(
+               jars(
+                       include((String[]) jarIncludes.toArray(new String[jarIncludes.size()])),
+                       exclude((String[]) jarExcludes.toArray(new String[jarExcludes.size()]))),
+               packages(
+                       include((String[]) packageIncludes.toArray(new String[packageIncludes.size()])),
+                       exclude((String[]) packageExcludes.toArray(new String[packageExcludes.size()]))))
+           .scan();
+        return exports;
     }
 
     @Override
@@ -133,7 +133,13 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         this.packageExcludes = excludes;
     }
 
-    private Plugin createOsgiPlugin(File file, boolean bundle)
+    void setOsgiContainerManager(OsgiContainerManager mgr)
+    {
+        this.osgi = mgr;
+    }
+
+
+    Plugin createOsgiPlugin(File file, boolean bundle)
     {
         try
         {
