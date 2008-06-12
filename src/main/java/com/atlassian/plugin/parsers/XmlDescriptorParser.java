@@ -41,7 +41,7 @@ public class XmlDescriptorParser implements DescriptorParser
         document = createDocument(source);
     }
 
-    Document createDocument(InputStream source) throws PluginParseException
+    protected Document createDocument(InputStream source) throws PluginParseException
     {
         SAXReader reader = new SAXReader();
         try
@@ -52,6 +52,11 @@ public class XmlDescriptorParser implements DescriptorParser
         {
             throw new PluginParseException("Cannot parse XML plugin descriptor", e);
         }
+    }
+
+    protected Document getDocument()
+    {
+        return document;
     }
 
     public Plugin configurePlugin(ModuleDescriptorFactory moduleDescriptorFactory, Plugin plugin) throws PluginParseException

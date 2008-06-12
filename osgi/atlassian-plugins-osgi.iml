@@ -36,15 +36,6 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library" exported="">
-      <library name="atlassian-plugins">
-        <CLASSES>
-          <root url="jar:///Users/dbrown/.m2/repository/com/atlassian/plugins/atlassian-plugins/0.21-SNAPSHOT/atlassian-plugins-0.21-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
       <library name="bndlib">
         <CLASSES>
           <root url="jar:///Users/dbrown/.m2/repository/biz/aQute/bndlib/0.0.255/bndlib-0.0.255.jar!/" />
@@ -331,6 +322,7 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="Clover IDEA Plugin" level="application" />
+    <orderEntry type="module" module-name="atlassian-plugins" />
     <orderEntryProperties />
   </component>
 </module>
