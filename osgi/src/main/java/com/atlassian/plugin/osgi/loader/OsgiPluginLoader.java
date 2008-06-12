@@ -7,6 +7,9 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
+import com.atlassian.plugin.osgi.loader.transform.PluginTransformer;
+import com.atlassian.plugin.osgi.loader.transform.DefaultPluginTransformer;
+import com.atlassian.plugin.osgi.loader.transform.PluginTransformationException;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.ModuleDescriptorFactory;
@@ -39,16 +42,18 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
 
     private List<String> jarIncludes = Arrays.asList("*.jar");
     private List<String> jarExcludes = Collections.EMPTY_LIST;
-    private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "org.apache.*", "org.xml.*", "javax.*", "org.w3c.*");
+    private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "org.quartz", "org.quartz.*", "bucket.*", "net.sf.cglib", "net.sf.cglib.*", "net.sf.hibernate", "net.sf.hibernate.*", "com.octo.captcha.*", "com.opensymphony.*", "org.apache.*", "org.xml.*", "javax.*", "org.w3c.*");
     private List<String> packageExcludes = Collections.EMPTY_LIST;
     private OsgiContainerManager osgi;
     private HostComponentProvider hostComponentProvider;
+    private PluginTransformer pluginTransformer;
 
     public OsgiPluginLoader(File pluginPath, File startBundlesPath, String pluginDescriptorFileName, PluginFactory pluginFactory, HostComponentProvider provider)
     {
         super(pluginPath, pluginDescriptorFileName, pluginFactory);
         osgi = new FelixOsgiContainerManager(startBundlesPath);
         this.hostComponentProvider = provider;
+        pluginTransformer = new DefaultPluginTransformer();
     }
 
     /**
@@ -146,15 +151,27 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
             if (bundle)
                 return new OsgiBundlePlugin(osgi.installBundle(file));
             else
-                return new OsgiPlugin(osgi.installBundle(file));
+            {
+                File transformedFile = pluginTransformer.transform(file, osgi.getHostComponentRegistrations());
+                return new OsgiPlugin(osgi.installBundle(transformedFile));
+            }
         } catch (OsgiContainerException e)
         {
-            log.error("Unable to load plugin: "+file, e);
-            
-            UnloadablePlugin plugin = new UnloadablePlugin();
-            plugin.setErrorText("Unable to load plugin: "+e.getMessage());
-            return plugin;
+            return reportUnloadablePlugin(file, e);
+        } catch (PluginTransformationException ex)
+        {
+            return reportUnloadablePlugin(file, ex);
         }
     }
+
+    private Plugin reportUnloadablePlugin(File file, Exception e)
+    {
+        log.error("Unable to load plugin: "+file, e);
+
+        UnloadablePlugin plugin = new UnloadablePlugin();
+        plugin.setErrorText("Unable to load plugin: "+e.getMessage());
+        return plugin;
+    }
+
 
 }

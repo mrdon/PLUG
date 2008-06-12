@@ -6,8 +6,10 @@ import org.twdata.pkgscanner.ExportPackage;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 
 /**
  * Manages the OSGi container and handles any interactions with it
@@ -61,4 +63,6 @@ public interface OsgiContainerManager
      * @return An array of service references
      */
     ServiceReference[] getRegisteredServices();
+
+    List<HostComponentRegistration> getHostComponentRegistrations();
 }

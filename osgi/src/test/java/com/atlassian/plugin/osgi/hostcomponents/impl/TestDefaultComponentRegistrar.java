@@ -10,6 +10,7 @@ import org.osgi.framework.BundleContext;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.constraint.Constraint;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 
 public class TestDefaultComponentRegistrar extends TestCase
 {
@@ -18,7 +19,7 @@ public class TestDefaultComponentRegistrar extends TestCase
         DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
         Class[] ifs = new Class[]{Serializable.class};
         registrar.register(ifs).forInstance("Foo").withName("foo").withProperty("jim", "bar");
-        Registration reg =registrar.getRegistry().get(0);
+        HostComponentRegistration reg =registrar.getRegistry().get(0);
 
         assertNotNull(reg);
         assertEquals("Foo", reg.getInstance());

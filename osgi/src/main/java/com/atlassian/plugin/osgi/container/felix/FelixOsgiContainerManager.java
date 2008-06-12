@@ -16,6 +16,7 @@ import java.util.*;
 import java.net.MalformedURLException;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
@@ -200,6 +201,11 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         return felixRunning;
     }
 
+    public List<HostComponentRegistration> getHostComponentRegistrations()
+    {
+        return registration.hostComponentRegistrations;
+    }
+
     /**
      * Manages framwork-level framework bundles and host components registration, and individual plugin bundle
      * installation and removal.
@@ -209,7 +215,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         private BundleContext bundleContext;
         private HostComponentProvider hostProvider;
         private File startBundlesPath;
-        private List<ServiceRegistration> hostServices;
+        private List<ServiceRegistration> hostServicesReferences;
+        private List<HostComponentRegistration> hostComponentRegistrations;
 
         public BundleRegistration(File startBundlesPath, HostComponentProvider provider)
         {
@@ -233,8 +240,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         public void reloadHostComponents(HostComponentProvider provider)
         {
             // Unregister any existing host components
-            if (hostServices != null) {
-                for (ServiceRegistration reg : hostServices)
+            if (hostServicesReferences != null) {
+                for (ServiceRegistration reg : hostServicesReferences)
                     reg.unregister();
             }
             
@@ -243,7 +250,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 // Retrieve and register host components as OSGi services
                 DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
                 provider.provide(registrar);
-                hostServices = registrar.writeRegistry(bundleContext);
+                hostServicesReferences = registrar.writeRegistry(bundleContext);
+                hostComponentRegistrations = registrar.getRegistry();
             }
 
         }
@@ -254,16 +262,16 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         public void bundleChanged(BundleEvent evt) {
             switch (evt.getType()) {
                 case BundleEvent.INSTALLED:
-                    log.warn("Installed bundle " + evt.getBundle().getSymbolicName());
+                    log.warn("Installed bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
                     break;
                 case BundleEvent.STARTED:
-                    log.warn("Started bundle " + evt.getBundle().getSymbolicName());
+                    log.warn("Started bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
                     break;
                 case BundleEvent.STOPPED:
-                    log.warn("Stopped bundle " + evt.getBundle().getSymbolicName());
+                    log.warn("Stopped bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
                     break;
                 case BundleEvent.UNINSTALLED:
-                    log.warn("Uninstalled bundle " + evt.getBundle().getSymbolicName());
+                    log.warn("Uninstalled bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
                     break;
             }
         }
@@ -288,6 +296,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             return bundleContext.getBundles();
         }
 
+        public List<HostComponentRegistration> getHostComponentRegistrations()
+        {
+            return hostComponentRegistrations;
+        }
     }
 
 }

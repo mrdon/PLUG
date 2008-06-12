@@ -1,21 +1,27 @@
 package com.atlassian.plugin.osgi.hostcomponents.impl;
 
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+
 import java.util.Dictionary;
 import java.util.Hashtable;
+
+import org.osgi.framework.ServiceRegistration;
 
 
 /**
  * A registration of a host component
  */
-class Registration
+class Registration implements HostComponentRegistration
 {
-    private Class[] mainInterfaces;
+    private String[] mainInterfaces;
     private Object instance;
     private Dictionary<String,String> properties = new Hashtable<String,String>();
 
-    public Registration(Class[] mainInterfaces)
+    public Registration(Class[] ifs)
     {
-        this.mainInterfaces = mainInterfaces;
+        mainInterfaces = new String[ifs.length];
+        for (int x=0; x<ifs.length; x++)
+            mainInterfaces[x] = ifs[x].getName();
     }
 
     public Object getInstance()
@@ -33,8 +39,9 @@ class Registration
         return properties;
     }
 
-    public Class[] getMainInterfaces()
+    public String[] getMainInterfaces()
     {
         return mainInterfaces;
     }
+
 }

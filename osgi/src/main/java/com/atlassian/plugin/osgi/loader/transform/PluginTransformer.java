@@ -1,12 +1,12 @@
 package com.atlassian.plugin.osgi.loader.transform;
 
 import com.atlassian.plugin.classloader.PluginClassLoader;
-import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.List;
 
 public interface PluginTransformer
 {
-    File transform(PluginClassLoader loader, File pluginJar) throws IOException, PluginParseException;
+    File transform(File pluginJar, List<HostComponentRegistration> regs) throws PluginTransformationException;
 }

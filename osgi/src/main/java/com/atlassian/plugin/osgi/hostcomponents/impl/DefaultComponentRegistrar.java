@@ -9,13 +9,14 @@ import java.util.*;
 
 import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 
 /**
  * Default component registrar that also can write registered host components into the OSGi service registry
  */
 public class DefaultComponentRegistrar implements ComponentRegistrar
 {
-    private List<Registration> registry = new ArrayList<Registration>();
+    private List<HostComponentRegistration> registry = new ArrayList<HostComponentRegistration>();
 
     private Log log = LogFactory.getLog(DefaultComponentRegistrar.class);
 
@@ -30,23 +31,23 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
     {
         ArrayList<ServiceRegistration> services = new ArrayList<ServiceRegistration>();
 
-        for (Registration reg : registry)
+        for (HostComponentRegistration reg : registry)
         {
-            String[] names = new String[reg.getMainInterfaces().length];
-            for (int x=0; x<names.length; x++)
-                names[x] = reg.getMainInterfaces()[x].getName();
+            String[] names = reg.getMainInterfaces();
 
             reg.getProperties().put(HOST_COMPONENT_FLAG, Boolean.TRUE.toString());
 
             log.info("Registering: "+ Arrays.asList(names)+" instance "+reg.getInstance() + "with properties: "+reg.getProperties());
             ServiceRegistration sreg = ctx.registerService(names, reg.getInstance(), reg.getProperties());
             if (sreg != null)
+            {
                 services.add(sreg);
+            }
         }
         return services;
     }
 
-    List<Registration> getRegistry()
+    public List<HostComponentRegistration> getRegistry()
     {
         return registry;
     }
