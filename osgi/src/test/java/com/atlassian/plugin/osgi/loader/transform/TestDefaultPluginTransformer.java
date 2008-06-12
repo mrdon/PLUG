@@ -8,6 +8,10 @@ import java.io.ByteArrayInputStream;
 import java.net.URISyntaxException;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipEntry;
 
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.PluginParseException;
@@ -31,5 +35,21 @@ public class TestDefaultPluginTransformer extends TestCase
         assertEquals("http://www.atlassian.com", attrs.getValue(Constants.BUNDLE_DOCURL));
         assertEquals("com.mycompany.myapp", attrs.getValue(Constants.EXPORT_PACKAGE));
         
+    }
+
+    public void testAddFilesToZip() throws URISyntaxException, IOException
+    {
+        File file = new File(getClass().getResource("/myapp-1.0-plugin.jar").toURI());
+        Map<String,byte[]> files = new HashMap<String, byte[]>() {{
+            put("foo", "bar".getBytes());
+        }};
+        File copy = DefaultPluginTransformer.addFilesToExistingZip(file, files);
+        assertNotNull(copy);
+        assertTrue(!copy.getName().equals(file.getName()));
+        assertTrue(copy.length() != file.length());
+
+        ZipFile zip = new ZipFile(copy);
+        ZipEntry entry = zip.getEntry("foo");
+        assertNotNull(entry);
     }
 }

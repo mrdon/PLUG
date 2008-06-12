@@ -144,18 +144,6 @@ public class DefaultPluginTransformer implements PluginTransformer
         properties.put(key, value.toString().replaceAll("[\r\n]", ""));
     }
 
-    Document createDocument(InputStream source) throws PluginParseException
-    {
-        SAXReader reader = new SAXReader();
-        try
-        {
-            return reader.read(source);
-        }
-        catch (DocumentException e)
-        {
-            throw new PluginParseException("Cannot parse XML plugin descriptor", e);
-        }
-    }
 
     static class PluginInformationDescriptorParser extends XmlDescriptorParser
     {
