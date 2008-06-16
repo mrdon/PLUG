@@ -162,8 +162,15 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
         pluginLoaders.add(new SinglePluginLoader("test-disabled-plugin.xml"));
-        manager.init();
-        assertEquals(1, manager.getPlugins().size());
+        try
+        {
+            manager.init();
+            fail("Should have died with duplicate key exception.");
+        }
+        catch (PluginParseException e)
+        {
+            assertEquals("Duplicate plugin found (installed version is the same or older) and could not be unloaded: 'test.disabled.plugin'", e.getMessage());
+        }
     }
 
     public void testLoadOlderDuplicatePlugin() throws PluginParseException
@@ -189,7 +196,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         }
         catch (PluginParseException e)
         {
-            assertEquals("Duplicate plugin found (installed version is older) and could not be unloaded: 'test.atlassian.plugin'", e.getMessage());
+            assertEquals("Duplicate plugin found (installed version is the same or older) and could not be unloaded: 'test.atlassian.plugin'", e.getMessage());
         }
     }
 
@@ -230,6 +237,20 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals("1.1", plugin.getPluginInformation().getVersion());
         assertFalse(manager.isPluginModuleEnabled("test.atlassian.plugin:bear"));
         assertTrue(manager.isPluginModuleEnabled("test.atlassian.plugin:gold"));
+    }
+
+    public void testLoadChangedDynamicPluginWithSameVersionNumberReplacesExisting() throws PluginParseException
+    {
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+
+        pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin.xml"));
+        pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-changed-same-version.xml"));
+
+        manager.init();
+
+        Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        assertEquals("Test Plugin (Changed)", plugin.getName());
     }
 
     public void testGetPluginsWithPluginMatchingPluginPredicate() throws Exception
@@ -868,13 +889,4 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         }
     }
 
-    private static final class EmptyInputStream extends InputStream
-    {
-        public static final InputStream INSTANCE = new EmptyInputStream();
-
-        public int read() throws IOException
-        {
-            return 0;
-        }
-    }
 }

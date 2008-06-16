@@ -3,12 +3,12 @@
     <parent>
         <artifactId>atlassian-public-pom</artifactId>
         <groupId>com.atlassian.pom</groupId>
-        <version>9</version>
+        <version>15</version>
     </parent>
 
     <groupId>com.atlassian.plugins</groupId>
     <artifactId>atlassian-plugins</artifactId>
-    <version>0.21-SNAPSHOT</version>
+    <version>0.22</version>
 
     <name>Atlassian Plugins</name>
     <description>
@@ -35,9 +35,9 @@
     </ciManagement>
 
     <scm>
-        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/</connection>
-        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/</developerConnection>
-        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</url>
+        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/tags/atlassian-plugins-0.22</connection>
+        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/tags/atlassian-plugins-0.22</developerConnection>
+        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/tags/atlassian-plugins-0.22</url>
     </scm>
 
     <build>
@@ -71,6 +71,11 @@
             <version>3.2</version>
         </dependency>
         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+        </dependency>
+        <dependency>
             <groupId>dom4j</groupId>
             <artifactId>dom4j</artifactId>
             <version>1.4</version>
@@ -89,6 +94,16 @@
             <groupId>com.atlassian.seraph</groupId>
             <artifactId>atlassian-seraph</artifactId>
             <version>0.10</version>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.cache</groupId>
+            <artifactId>atlassian-cache-api</artifactId>
+            <version>0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.cache</groupId>
+            <artifactId>atlassian-cache-memory</artifactId>
+            <version>0.1</version>
         </dependency>
         <dependency>
             <groupId>backport-util-concurrent</groupId>
