@@ -1,5 +1,8 @@
 package com.atlassian.plugin.osgi.loader.transform;
 
+/**
+ * Generic wrapper exception for all exceptions thrown during plugin transformation
+ */
 public class PluginTransformationException extends RuntimeException
 {
     public PluginTransformationException()

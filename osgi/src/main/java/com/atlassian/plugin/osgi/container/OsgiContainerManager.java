@@ -64,5 +64,10 @@ public interface OsgiContainerManager
      */
     ServiceReference[] getRegisteredServices();
 
+    /**
+     * Gets a list of host component registrations
+     *
+     * @return A list of host component registrations
+     */
     List<HostComponentRegistration> getHostComponentRegistrations();
 }

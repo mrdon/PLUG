@@ -25,11 +25,24 @@ import java.util.zip.ZipOutputStream;
 import java.net.URLClassLoader;
 import java.net.URL;
 
+/**
+ * Default implementation of plugin transformation that uses BND to generate the manifest and manually creates the
+ * spring configuration file.
+ */
 public class DefaultPluginTransformer implements PluginTransformer
 {
+    // The spring configuration containing exported components and imported host components
     static final String ATLASSIAN_PLUGIN_SPRING_XML = "META-INF/spring/atlassian-plugins-spring.xml";
+
     private static final Logger log = Logger.getLogger(DefaultPluginTransformer.class);
 
+    /**
+     * Transforms the file into an OSGi bundle
+     * @param pluginJar The plugin jar
+     * @param regs The list of registered host components
+     * @return The new OSGi-enabled plugin jar
+     * @throws PluginTransformationException If anything goes wrong
+     */
     public File transform(File pluginJar, List<HostComponentRegistration> regs) throws PluginTransformationException
     {
         JarFile jar = null;
@@ -41,10 +54,11 @@ public class DefaultPluginTransformer implements PluginTransformer
             throw new PluginTransformationException("Plugin is not a valid jar file", e);
         }
 
+        // List of all files to add/override in the new jar
         Map<String,byte[]> filesToAdd = new HashMap<String, byte[]>();
 
+        // Try to generate a manifest if none available
         URL atlassianPluginsXmlUrl = null;
-
         try
         {
             URLClassLoader cl = new URLClassLoader(new URL[]{pluginJar.toURL()});
@@ -62,6 +76,7 @@ public class DefaultPluginTransformer implements PluginTransformer
             throw new PluginTransformationException("Unable to read existing plugin jar manifest", e);
         }
 
+        // Try to generate the spring config that pulls in host components and exports plugin components
         if (jar.getEntry(ATLASSIAN_PLUGIN_SPRING_XML) == null) {
             try
             {
@@ -75,6 +90,7 @@ public class DefaultPluginTransformer implements PluginTransformer
             }
         }
 
+        // Create a new jar by overriding the specified files
         try
         {
             return addFilesToExistingZip(pluginJar, filesToAdd);
@@ -85,6 +101,13 @@ public class DefaultPluginTransformer implements PluginTransformer
 
     }
 
+    /**
+     * Generate the spring xml by processing the atlassian-plugins.xml file
+     * @param in The stream of the atlassian-plugins.xml file
+     * @param regs The list of registered host components
+     * @return The new spring xml in bytes
+     * @throws DocumentException If there are any errors processing the atlassian-plugins.xml document
+     */
     byte[] generateSpringXml(InputStream in, List<HostComponentRegistration> regs) throws DocumentException
     {
         log.warn("Generating "+ATLASSIAN_PLUGIN_SPRING_XML);
@@ -172,6 +195,14 @@ public class DefaultPluginTransformer implements PluginTransformer
         return bout.toByteArray();
     }
 
+    /**
+     * Generates a new manifest file
+     *
+     * @param descriptorStream The existing manifest
+     * @param file The jar
+     * @return The new manifest file in bytes
+     * @throws PluginParseException If there is any problems parsing atlassian-plugin.xml
+     */
     byte[] generateManifest(InputStream descriptorStream, File file) throws PluginParseException
     {
         log.warn("Generating the manifest");
@@ -215,8 +246,15 @@ public class DefaultPluginTransformer implements PluginTransformer
         }
     }
 
-
-    public static File addFilesToExistingZip(File zipFile,
+    /**
+     * Creates a new jar by overriding the specified files in the existing one
+     *
+     * @param zipFile The existing zip file
+     * @param files The files to override
+     * @return The new zip
+     * @throws IOException If there are any problems processing the streams
+     */
+    static File addFilesToExistingZip(File zipFile,
 			 Map<String,byte[]> files) throws IOException {
                 // get a temp file
 		File tempFile = File.createTempFile(zipFile.getName(), null);
@@ -275,7 +313,9 @@ public class DefaultPluginTransformer implements PluginTransformer
         properties.put(key, value.toString().replaceAll("[\r\n]", ""));
     }
 
-
+    /**
+     * Descriptor parser that exposes the PluginInformation object directly
+     */
     static class PluginInformationDescriptorParser extends XmlDescriptorParser
     {
         /**
