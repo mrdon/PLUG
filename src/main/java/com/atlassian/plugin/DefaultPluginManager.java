@@ -96,7 +96,7 @@ public class DefaultPluginManager implements PluginManager
      *
      * @throws PluginParseException
      */
-    public void init() throws PluginParseException
+        public void init() throws PluginParseException
     {
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
         {
@@ -270,7 +270,13 @@ public class DefaultPluginManager implements PluginManager
     }
 
     /**
-     * Update the local plugin state and enable state aware modules
+     * Update the local plugin state and enable state aware modules.
+     * <p>
+     * If there is an existing plugin with the same key, the version strings of the existing plugin and the plugin
+     * provided to this method will be parsed and compared.  If the installed version is newer than the provided
+     * version, it will not be changed.  If the specified plugin's version is the same or newer, the existing plugin
+     * state will be saved and the plugin will be unloaded before the provided plugin is installed.  If the existing
+     * plugin cannot be unloaded a {@link PluginException} will be thrown.
      *
      * @param loader the loader used to load this plugin
      * @param plugin the plugin to add
@@ -285,17 +291,21 @@ public class DefaultPluginManager implements PluginManager
             if (plugin.compareTo(existingPlugin) >= 0)
             {
                 if (log.isDebugEnabled())
-                    log.debug("We found a newer '" + plugin.getKey() + "'");
+                {
+                    log.debug("Reinstalling plugin '" + plugin.getKey() + "' version " +
+                        existingPlugin.getPluginInformation().getVersion() + " with version " +
+                        plugin.getPluginInformation().getVersion());
+                }
                 try
                 {
                     log.info("Unloading " + existingPlugin.getName() + " to upgrade.");
                     updatePlugin(existingPlugin, plugin);
                     if (log.isDebugEnabled())
-                        log.debug("Older '" + plugin.getKey() + "' unloaded.");
+                        log.debug("Plugin '" + plugin.getKey() + "' unloaded.");
                 }
                 catch (PluginException e)
                 {
-                    throw new PluginParseException("Duplicate plugin found (installed version is the same or older) and could not be unloaded: '" + plugin.getKey() + "'");
+                    throw new PluginParseException("Duplicate plugin found (installed version is the same or older) and could not be unloaded: '" + plugin.getKey() + "'", e);
                 }
             }
             else

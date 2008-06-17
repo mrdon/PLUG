@@ -3,12 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.atlassian.plugins.test</groupId>
-    <artifactId>atlassian-plugins-innerjartwo</artifactId>
+    <artifactId>atlassian-plugins-testjars</artifactId>
     <version>1.0</version>
+    <packaging>pom</packaging>
 
-    <parent>
-        <groupId>com.atlassian.plugins.test</groupId>
-        <artifactId>atlassian-plugins-testjars</artifactId>
-        <version>1.0</version>
-    </parent>
+    <modules>
+        <module>innerjarone</module>
+        <module>innerjartwo</module>
+        <module>simpletest</module>
+    </modules>
 </project>

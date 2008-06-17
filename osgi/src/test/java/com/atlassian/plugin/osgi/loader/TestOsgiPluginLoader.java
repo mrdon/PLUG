@@ -8,6 +8,7 @@ import java.net.URISyntaxException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Collection;
+import java.util.ArrayList;
 
 import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.Plugin;
@@ -17,6 +18,7 @@ import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
+import com.atlassian.plugin.osgi.loader.transform.PluginTransformer;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 import org.osgi.framework.Bundle;
@@ -101,15 +103,22 @@ public class TestOsgiPluginLoader extends TestCase
 
     public void testCreatePlugin()
     {
+        Mock mockPluginTrans = new Mock(PluginTransformer.class);
+        loader.setPluginTransformer((PluginTransformer) mockPluginTrans.proxy());
+        mockPluginTrans.expectAndReturn("transform", C.ANY_ARGS, jar);
+        mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
         mockOsgi.expectAndReturn("installBundle", C.args(C.eq(jar)), mockBundle.proxy());
         Mock mockParser = new Mock(DescriptorParser.class);
         mockParser.expectAndReturn("getPluginsVersion", 2);
+        mockBundle.expect("start");
         DeploymentUnit unit = new DeploymentUnit(jar);
 
         Plugin plugin = loader.createPlugin((DescriptorParser) mockParser.proxy(), unit, null);
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiPlugin);
         mockParser.verify();
+        mockPluginTrans.verify();
+        mockBundle.verify();
     }
 
     public void testGenerateExports()

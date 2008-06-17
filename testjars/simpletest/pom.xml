@@ -6,6 +6,12 @@
     <artifactId>atlassian-plugins-simpletest</artifactId>
     <version>1.0</version>
 
+    <parent>
+        <groupId>com.atlassian.plugins.test</groupId>
+        <artifactId>atlassian-plugins-testjars</artifactId>
+        <version>1.0</version>
+    </parent>
+
     <dependencies>
         <dependency>
             <groupId>com.atlassian.plugins.test</groupId>

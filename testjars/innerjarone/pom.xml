@@ -5,4 +5,10 @@
     <groupId>com.atlassian.plugins.test</groupId>
     <artifactId>atlassian-plugins-innerjarone</artifactId>
     <version>1.0</version>
+
+    <parent>
+        <groupId>com.atlassian.plugins.test</groupId>
+        <artifactId>atlassian-plugins-testjars</artifactId>        
+        <version>1.0</version>
+    </parent>
 </project>

@@ -1,15 +1,13 @@
 package com.atlassian.plugin.classloader;
 
-import com.atlassian.cache.Cache;
-import com.atlassian.cache.memory.MemoryCache;
-import com.atlassian.plugin.classloader.url.BytesUrlStreamHandler;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
-import java.net.MalformedURLException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -103,6 +101,25 @@ public class PluginClassLoader extends URLClassLoader
         pluginInnerJars.add(innerJarTmpFile);
         addURL(innerJarTmpFile.toURL());
     }
+
+    protected Class loadClass(String name, boolean resolve) throws ClassNotFoundException
+    {
+        // First check if it's already been loaded
+        Class c = findLoadedClass(name);
+        if (c != null)
+            return c;
+
+        // If not, look inside the plugin before searching the parent.
+        try
+        {
+            return findClass(name);
+        }
+        catch (ClassNotFoundException ex)
+        {
+            return super.loadClass(name, resolve);
+        }
+    }
+
 
     /**
      * Load the named resource from this plugin. This implementation checks the plugin's contents first

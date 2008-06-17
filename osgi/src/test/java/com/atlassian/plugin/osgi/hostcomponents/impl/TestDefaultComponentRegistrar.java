@@ -23,7 +23,7 @@ public class TestDefaultComponentRegistrar extends TestCase
 
         assertNotNull(reg);
         assertEquals("Foo", reg.getInstance());
-        assertEquals(ifs, reg.getMainInterfaces());
+        assertEquals(Serializable.class.getName(), reg.getMainInterfaces()[0]);
         assertEquals("foo", reg.getProperties().get(DefaultPropertyBuilder.BEAN_NAME));
         assertEquals("bar", reg.getProperties().get("jim"));
     }

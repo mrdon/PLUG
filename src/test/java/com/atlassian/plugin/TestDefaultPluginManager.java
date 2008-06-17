@@ -239,7 +239,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertTrue(manager.isPluginModuleEnabled("test.atlassian.plugin:gold"));
     }
 
-    public void testLoadChangedDynamicPluginWithSameVersionNumberKeepsOld() throws PluginParseException
+    public void testLoadChangedDynamicPluginWithSameVersionNumberReplacesExisting() throws PluginParseException
     {
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
@@ -784,9 +784,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         Object descriptorParser = mockDescriptorParser.proxy();
 
         mockPluginJar.expectAndReturn("getFile", "atlassian-plugin.xml", inputStream);
-        mockPluginJar.expectAndReturn("getFile", "atlassian-plugin.xml", inputStream);
         mockPluginStateStore.expectAndReturn("loadPluginState", new PluginManagerState());
-        mockDescriptorParserFactory.expectAndReturn("getInstance", inputStream, descriptorParser);
         mockDescriptorParserFactory.expectAndReturn("getInstance", inputStream, descriptorParser);
         mockDescriptorParser.matchAndReturn("getKey", "test");
         mockRepository.expect("installPlugin", C.args(C.eq("test"), C.eq(pluginJar)));
