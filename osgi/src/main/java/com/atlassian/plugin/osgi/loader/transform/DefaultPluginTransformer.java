@@ -67,7 +67,10 @@ public class DefaultPluginTransformer implements PluginTransformer
                 throw new IllegalStateException("Cannot find atlassian-plugins.xml in jar");
 
             if (jar.getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) == null)
-                    filesToAdd.put("META-INF/MANIFEST.MF", generateManifest(atlassianPluginsXmlUrl.openStream(), pluginJar));
+            {
+                log.info("Generating the manifest for plugin "+pluginJar.getName());
+                filesToAdd.put("META-INF/MANIFEST.MF", generateManifest(atlassianPluginsXmlUrl.openStream(), pluginJar));
+            }
         } catch (PluginParseException e)
         {
             throw new PluginTransformationException("Unable to generate manifest", e);
@@ -80,6 +83,7 @@ public class DefaultPluginTransformer implements PluginTransformer
         if (jar.getEntry(ATLASSIAN_PLUGIN_SPRING_XML) == null) {
             try
             {
+                log.info("Generating "+ATLASSIAN_PLUGIN_SPRING_XML + " for plugin "+pluginJar.getName());
                 filesToAdd.put(ATLASSIAN_PLUGIN_SPRING_XML, generateSpringXml(atlassianPluginsXmlUrl.openStream(), regs));
             } catch (DocumentException e)
             {
@@ -93,6 +97,17 @@ public class DefaultPluginTransformer implements PluginTransformer
         // Create a new jar by overriding the specified files
         try
         {
+            if (log.isDebugEnabled())
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Overriding files in ").append(pluginJar.getName()).append(":\n");
+                for (Map.Entry<String,byte[]> entry : filesToAdd.entrySet())
+                {
+                    sb.append("==").append(entry.getKey()).append("==\n");
+                    sb.append(new String(entry.getValue()));
+                }
+                log.debug(sb.toString());
+            }
             return addFilesToExistingZip(pluginJar, filesToAdd);
         } catch (IOException e)
         {
@@ -110,7 +125,6 @@ public class DefaultPluginTransformer implements PluginTransformer
      */
     byte[] generateSpringXml(InputStream in, List<HostComponentRegistration> regs) throws DocumentException
     {
-        log.warn("Generating "+ATLASSIAN_PLUGIN_SPRING_XML);
         Document springDoc = DocumentHelper.createDocument();
         Element root = springDoc.addElement("beans");
 
@@ -191,7 +205,6 @@ public class DefaultPluginTransformer implements PluginTransformer
             throw new PluginTransformationException("Unable to print generated Spring XML", e);
         }
 
-        System.out.println("Created spring config:"+new String(bout.toByteArray()));
         return bout.toByteArray();
     }
 
@@ -205,7 +218,6 @@ public class DefaultPluginTransformer implements PluginTransformer
      */
     byte[] generateManifest(InputStream descriptorStream, File file) throws PluginParseException
     {
-        log.warn("Generating the manifest");
         Builder builder = new Builder();
         try
         {
@@ -237,7 +249,6 @@ public class DefaultPluginTransformer implements PluginTransformer
             Jar jar = builder.build();
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             jar.writeManifest(bout);
-            System.out.println("Created manifest:"+new String(bout.toByteArray()));
             return bout.toByteArray();
 
         } catch (Exception t)
