@@ -741,15 +741,16 @@ public class DefaultPluginManager implements PluginManager
     {
         List keysToDisable = getEnabledStateAwareModuleKeys(plugin);
 
-        if (plugin instanceof StateAware) {
-            ((StateAware)plugin).disabled();
-        }
-
         for (Iterator it = keysToDisable.iterator(); it.hasNext();)
         {
             String key = (String) it.next();
             StateAware descriptor = (StateAware) getPluginModule(key);
             descriptor.disabled();
+        }
+
+        // This needs to happen after modules are disabled to prevent errors 
+        if (plugin instanceof StateAware) {
+            ((StateAware)plugin).disabled();
         }
     }
 

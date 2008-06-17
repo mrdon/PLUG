@@ -31,7 +31,7 @@ public interface AutowireCapablePlugin
     }
 
     /**
-     * Creates and autowires a class.  The stategy defaults to AUTOWIRE_AUTODETECT.
+     * Creates and autowires a class using the default strategy.
      * @param clazz The class to create
      * @return The created and wired bean
      */

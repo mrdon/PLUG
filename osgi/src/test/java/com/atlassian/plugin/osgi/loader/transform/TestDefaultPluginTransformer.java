@@ -40,6 +40,7 @@ public class TestDefaultPluginTransformer extends TestCase
         assertEquals("Atlassian Software Systems Pty Ltd", attrs.getValue(Constants.BUNDLE_VENDOR));
         assertEquals("http://www.atlassian.com", attrs.getValue(Constants.BUNDLE_DOCURL));
         assertEquals("com.mycompany.myapp", attrs.getValue(Constants.EXPORT_PACKAGE));
+        assertEquals("*;create-asynchronously:=false", attrs.getValue("Spring-Context"));
         
     }
 

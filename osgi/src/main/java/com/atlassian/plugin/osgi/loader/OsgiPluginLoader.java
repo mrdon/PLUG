@@ -103,6 +103,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         Plugin plugin;
         switch (parser.getPluginsVersion()) {
             case 2  : plugin = createOsgiPlugin(unit.getPath(), false);
+                      plugin.setEnabled(true);
                       break;
             default : plugin = super.createPlugin(parser, unit, loader);
         }

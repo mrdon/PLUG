@@ -185,7 +185,7 @@ public class DefaultPluginTransformer implements PluginTransformer
             Properties properties = new Properties();
 
             // Setup defaults
-            properties.put("Spring-Context", "*;create-asynchronously=false");
+            properties.put("Spring-Context", "*;create-asynchronously:=false");
             properties.put(Analyzer.BUNDLE_SYMBOLICNAME, parser.getKey());
             properties.put(Analyzer.IMPORT_PACKAGE, "*");
             properties.put(Analyzer.EXPORT_PACKAGE, "*");
