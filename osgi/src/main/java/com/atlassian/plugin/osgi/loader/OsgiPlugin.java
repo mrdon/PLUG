@@ -198,10 +198,15 @@ public class OsgiPlugin extends AbstractPlugin implements StateAware, AutowireCa
             return (T) nativeCreateBeanMethod.invoke(nativeBeanFactory, clazz, autowireStrategy.ordinal(), false);
         } catch (IllegalAccessException e)
         {
-            throw new RuntimeException("Unable to access bean", e);
-        } catch (InvocationTargetException e)
-        {
-            throw new RuntimeException("Unable to call beanfactory method", e);
+            throw new RuntimeException("Unable to access bean:" + getExceptionMessage(e), e);
         }
+        catch (InvocationTargetException e)
+        {
+            throw new RuntimeException("Unable to call beanfactory method:" + getExceptionMessage(e), e);
+        }
+    }
+
+    private String getExceptionMessage(Exception e) {
+        return e.getMessage() == null ? e.getCause().getMessage() : e.getMessage();
     }
 }
