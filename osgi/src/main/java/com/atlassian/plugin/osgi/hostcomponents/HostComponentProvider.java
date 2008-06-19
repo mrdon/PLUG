@@ -10,9 +10,9 @@ package com.atlassian.plugin.osgi.hostcomponents;
  * <pre>
  * public class MyHostComponentProvider implements HostComponentProvider {
  *      public void provide(ComponentRegistrar registrar) {
- *          registrar.register(SomeInterface.class).withInstance(someInstance).withName("some-bean");
+ *          registrar.register(SomeInterface.class).forInstance(someInstance).withName("some-bean");
  *          registrar.register(InterfaceA.class, InterfaceB.class)
- *                   .withInstance(MyBean.class)
+ *                   .forInstance(MyBean.class)
  *                   .withProperty("propertyA", "valueA")
  *                   .withProperty("propertyB", "valueB");
  *      }

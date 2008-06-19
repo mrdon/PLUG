@@ -140,7 +140,11 @@ public class PluginServletContextWrapper implements ServletContext
     }
 
     //---- All methods below simply delegate to the wrapped servlet context ----
-    
+
+    public String getContextPath() {
+        return context.getContextPath();
+    }
+
     public int getMajorVersion()
     {
         return context.getMajorVersion();

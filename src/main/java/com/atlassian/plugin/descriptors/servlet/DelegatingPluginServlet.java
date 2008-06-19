@@ -15,7 +15,7 @@ import com.atlassian.plugin.impl.DynamicPlugin;
 
 /**
  * We are wrapping the plugins servlet in another servlet so that we can set some things up before
- * the plugins servlet is called. Currently we do the following: 
+ * the plugins servlet is called. Currently we do the following:
  *      <ul>
  *        <li>the Threads classloader to the plugins classloader)</li>
  *        <li>wrap the request so that path info is right for the servlets</li>
@@ -25,7 +25,7 @@ public class DelegatingPluginServlet extends HttpServlet
 {
     private final ServletModuleDescriptor descriptor;
     private final HttpServlet servlet;
-    
+
     public DelegatingPluginServlet(ServletModuleDescriptor descriptor)
     {
         this.descriptor = descriptor;
@@ -35,13 +35,13 @@ public class DelegatingPluginServlet extends HttpServlet
     private ClassLoader replaceThreadClassLoaderWithPluginClassLoader(Plugin plugin)
     {
         ClassLoader startingClassLoader = Thread.currentThread().getContextClassLoader();
-        if (descriptor.getPlugin().isDynamicallyLoaded())
+        if (plugin.isDynamicallyLoaded())
         {
-            Thread.currentThread().setContextClassLoader(((DynamicPlugin) descriptor.getPlugin()).getClassLoader());
+            Thread.currentThread().setContextClassLoader(plugin.getClassLoader());
         }
         return startingClassLoader;
     }
-    
+
     public void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {
         ClassLoader startingClassLoader = replaceThreadClassLoaderWithPluginClassLoader(descriptor.getPlugin());
@@ -120,5 +120,4 @@ public class DelegatingPluginServlet extends HttpServlet
     {
         return servlet.toString();
     }
-
 }
