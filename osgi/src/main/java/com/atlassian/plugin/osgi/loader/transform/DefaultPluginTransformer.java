@@ -15,6 +15,7 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import org.osgi.framework.Constants;
 import org.apache.log4j.Logger;
+import org.apache.log4j.Level;
 
 import java.io.*;
 import java.util.*;
@@ -45,6 +46,7 @@ public class DefaultPluginTransformer implements PluginTransformer
      */
     public File transform(File pluginJar, List<HostComponentRegistration> regs) throws PluginTransformationException
     {
+        log.setLevel(Level.DEBUG);
         JarFile jar = null;
         try
         {
