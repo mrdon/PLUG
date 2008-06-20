@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
@@ -26,12 +28,24 @@ public class PluginServletContextWrapper implements ServletContext
     private final ServletModuleDescriptor descriptor;
     private final ServletContext context;
     private final ConcurrentMap attributes;
+    private final Method methodGetContextPath;
     
     public PluginServletContextWrapper(ServletModuleDescriptor descriptor, ServletContext context)
     {
+        Method tmpMethod = null;
         this.descriptor = descriptor;
         this.context = context;
         this.attributes = new ConcurrentHashMap();
+
+        Class cls = context.getClass();
+        try
+        {
+            tmpMethod = cls.getMethod("getContextPath");
+        } catch (NoSuchMethodException e)
+        {
+            // no problem, Servlet 2.4 or earlier found
+        }
+        methodGetContextPath = tmpMethod;
     }
 
     /**
@@ -142,7 +156,25 @@ public class PluginServletContextWrapper implements ServletContext
     //---- All methods below simply delegate to the wrapped servlet context ----
 
     public String getContextPath() {
-        return context.getContextPath();
+
+        // all this crap to deal with Servlet 2.4 containers better
+        if (methodGetContextPath != null)
+        {
+            try
+            {
+                return (String) methodGetContextPath.invoke(context);
+            } catch (IllegalAccessException e)
+            {
+                throw new RuntimeException("Cannot access this method", e);
+            } catch (InvocationTargetException e)
+            {
+                throw new RuntimeException("Unable to execute getContextPath()", e.getCause());
+            }
+        } else
+        {
+            throw new UnsupportedOperationException("This servlet context doesn't support 2.5 methods");
+        }
+
     }
 
     public int getMajorVersion()
