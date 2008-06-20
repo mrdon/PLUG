@@ -22,8 +22,6 @@ import java.util.jar.JarFile;
  */
 public class PluginClassLoader extends URLClassLoader
 {
-    private static final Log log = LogFactory.getLog(PluginClassLoader.class);
-
     private static final String PLUGIN_INNER_JAR_PREFIX = "atlassian-plugins-innerjar";
 
     /**
@@ -35,12 +33,6 @@ public class PluginClassLoader extends URLClassLoader
      * the list of inner jars
      */
     private final List/*<File>*/ pluginInnerJars;
-
-//  Caching
-//
-//    private final Cache classCache = new MemoryCache(this.getClass().getName() + "#Class");
-//
-//    private final Cache resourceCache = new MemoryCache(this.getClass().getName() + "#Resource");
 
     public PluginClassLoader(final File pluginFile)
     {
@@ -89,7 +81,7 @@ public class PluginClassLoader extends URLClassLoader
         }
         finally
         {
-            if (jarFile != null) jarFile.close();
+            jarFile.close();
         }
     }
 
@@ -102,7 +94,7 @@ public class PluginClassLoader extends URLClassLoader
         addURL(innerJarTmpFile.toURL());
     }
 
-    protected Class loadClass(String name, boolean resolve) throws ClassNotFoundException
+    protected synchronized Class loadClass(String name, boolean resolve) throws ClassNotFoundException
     {
         // First check if it's already been loaded
         Class c = findLoadedClass(name);
@@ -119,7 +111,6 @@ public class PluginClassLoader extends URLClassLoader
             return super.loadClass(name, resolve);
         }
     }
-
 
     /**
      * Load the named resource from this plugin. This implementation checks the plugin's contents first
@@ -145,49 +136,6 @@ public class PluginClassLoader extends URLClassLoader
         return findResource(name);
     }
 
-//  Caching
-//
-//    protected Class findClass(String name) throws ClassNotFoundException
-//    {
-//        Class c = (Class) classCache.get(name);
-//        if (c == null)
-//        {
-//            c = super.findClass(name);
-//            classCache.put(name, c);
-//        }
-//        return c;
-//    }
-//
-//    public URL findResource(String name)
-//    {
-//        Resource resource = (Resource) resourceCache.get(name);
-//        if (resource == null)
-//        {
-//            try
-//            {
-//                final URL url = super.findResource(name);
-//                if (url != null)
-//                {
-//                    resource = new Resource(url);
-//                    resourceCache.put(name, resource);
-//                }
-//            }
-//            catch (IOException e)
-//            {
-//                // ignore
-//            }
-//        }
-//
-//        try
-//        {
-//            return resource != null ? new URL(null, resource.getUrl(), new BytesUrlStreamHandler(resource.getContent())) : null;
-//        }
-//        catch (MalformedURLException e)
-//        {
-//            return null;
-//        }
-//    }
-
     public void close()
     {
         for (final Iterator innerJars = pluginInnerJars.iterator(); innerJars.hasNext();)
@@ -200,36 +148,4 @@ public class PluginClassLoader extends URLClassLoader
     {
         return new ArrayList(pluginInnerJars);
     }
-
-//  Caching
-//
-//    public InputStream getResourceAsStream(String name)
-//    {
-//        return super.getResourceAsStream(name);    //To change body of overridden methods use File | Settings | File Templates.
-//    }
-//
-//    private static class Resource
-//    {
-//        private final String url;
-//
-//        private final byte[] content;
-//
-//        public Resource(URL url) throws IOException
-//        {
-//            this.url = url.toExternalForm();
-//            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//            IOUtils.copy(url.openStream(), bos);
-//            content = bos.toByteArray();
-//        }
-//
-//        public String getUrl()
-//        {
-//            return url;
-//        }
-//
-//        public byte[] getContent()
-//        {
-//            return content;
-//        }
-//    }
 }

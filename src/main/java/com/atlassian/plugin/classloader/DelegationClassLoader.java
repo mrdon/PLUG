@@ -20,14 +20,21 @@ public class DelegationClassLoader extends ClassLoader
         if (log.isDebugEnabled())
         {
             log.debug("Update class loader delegation from [" + this.delegateClassLoader +
-                    "] to [" + delegateClassLoader + "]");
+                "] to [" + delegateClassLoader + "]");
         }
         this.delegateClassLoader = delegateClassLoader;
     }
 
     public Class loadClass(String name) throws ClassNotFoundException
     {
-        return delegateClassLoader != null ? delegateClassLoader.loadClass(name) : null;
+        if (delegateClassLoader != null)
+        {
+            return delegateClassLoader.loadClass(name);
+        }
+        else
+        {
+            throw new ClassNotFoundException("Couldn't find class [" + name + "], no delegateClassLoader to delegate to.");
+        }
     }
 
     public URL getResource(String name)

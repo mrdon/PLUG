@@ -97,17 +97,7 @@
         <dependency>
             <groupId>com.atlassian.seraph</groupId>
             <artifactId>atlassian-seraph</artifactId>
-            <version>0.10</version>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.cache</groupId>
-            <artifactId>atlassian-cache-api</artifactId>
-            <version>0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.cache</groupId>
-            <artifactId>atlassian-cache-memory</artifactId>
-            <version>0.1</version>
+            <version>1.0</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

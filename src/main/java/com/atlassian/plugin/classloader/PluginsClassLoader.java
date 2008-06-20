@@ -2,14 +2,14 @@ package com.atlassian.plugin.classloader;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.cache.Cache;
-import com.atlassian.cache.memory.MemoryCache;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.net.URL;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  *
@@ -19,13 +19,13 @@ public class PluginsClassLoader extends AbstractClassLoader
     private static final Log log = LogFactory.getLog(PluginsClassLoader.class);
     private final PluginAccessor pluginAccessor;
 
-    private final Cache/*<String,Plugin>*/ pluginResourceIndex = new MemoryCache(this.getClass().getName() + "#ResourceIndex");
-    private final Cache/*<String,Plugin>*/ pluginClassIndex = new MemoryCache(this.getClass().getName() + "#ClassIndex");
+    private final Map/*<String,Plugin>*/ pluginResourceIndex = new HashMap();
+    private final Map/*<String,Plugin>*/ pluginClassIndex = new HashMap();
 
     private static final Object MARKER_OBJECT = new Object();
 
-    private final Cache/*<String,Plugin>*/ missedPluginResourceIndex = new MemoryCache(this.getClass().getName() + "#MissedResourceIndex");
-    private final Cache/*<String,Plugin>*/ missedPluginClassIndex = new MemoryCache(this.getClass().getName() + "#MissedClassIndex");
+    private final Map/*<String,Plugin>*/ missedPluginResourceIndex = new HashMap();
+    private final Map/*<String,Plugin>*/ missedPluginClassIndex = new HashMap();
 
     public PluginsClassLoader(PluginAccessor pluginAccessor)
     {
@@ -45,7 +45,7 @@ public class PluginsClassLoader extends AbstractClassLoader
     protected URL findResource(final String name)
     {
         final Plugin indexedPlugin = (Plugin) pluginResourceIndex.get(name);
-        URL result = null;
+        final URL result;
         if (isPluginEnabled(indexedPlugin))
         {
             result = indexedPlugin.getClassLoader().getResource(name);
@@ -64,7 +64,7 @@ public class PluginsClassLoader extends AbstractClassLoader
     protected Class findClass(String className) throws ClassNotFoundException
     {
         final Plugin indexedPlugin = (Plugin) pluginClassIndex.get(className);
-        Class result = null;
+        final Class result;
         if (isPluginEnabled(indexedPlugin))
         {
             result = indexedPlugin.getClassLoader().loadClass(className);
@@ -142,24 +142,22 @@ public class PluginsClassLoader extends AbstractClassLoader
     public void notifyUninstallPlugin(Plugin plugin)
     {
         flushMissesCaches();
-        Collection resourceKeys = pluginResourceIndex.getKeys();
-        for (Iterator i = resourceKeys.iterator(); i.hasNext();)
+        for (Iterator it = pluginResourceIndex.entrySet().iterator(); it.hasNext();)
         {
-            String resourceName = (String) i.next();
-            Plugin pluginForResource = (Plugin) pluginResourceIndex.get(resourceName);
+            final Map.Entry resourceEntry = (Map.Entry) it.next();
+            final Plugin pluginForResource = (Plugin) resourceEntry.getValue();
             if (plugin.getKey().equals(pluginForResource.getKey()))
             {
-                pluginResourceIndex.remove(resourceName);
+                it.remove();
             }
         }
-        Collection classKeys = pluginClassIndex.getKeys();
-        for (Iterator i = classKeys.iterator(); i.hasNext();)
+        for (Iterator it = pluginClassIndex.entrySet().iterator(); it.hasNext();)
         {
-            String className = (String) i.next();
-            Plugin pluginForClass = (Plugin) pluginClassIndex.get(className);
+            final Map.Entry pluginClassEntry = (Map.Entry) it.next();
+            final Plugin pluginForClass = (Plugin) pluginClassEntry.getValue();
             if (plugin.getKey().equals(pluginForClass.getKey()))
             {
-                pluginClassIndex.remove(className);
+                it.remove();
             }
         }
     }
@@ -171,7 +169,7 @@ public class PluginsClassLoader extends AbstractClassLoader
 
     private void flushMissesCaches()
     {
-        missedPluginClassIndex.removeAll();
-        missedPluginResourceIndex.removeAll();
+        missedPluginClassIndex.clear();
+        missedPluginResourceIndex.clear();
     }
 }
