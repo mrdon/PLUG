@@ -40,7 +40,7 @@ public class TestOsgiPluginLoader extends TestCase
     {
         mockOsgi = new Mock(OsgiContainerManager.class);
         tmpdir = File.createTempFile("foo", "bar").getParentFile();
-        loader = new OsgiPluginLoader(tmpdir, tmpdir, PluginManager.PLUGIN_DESCRIPTOR_FILENAME, null, null);
+        loader = new OsgiPluginLoader(tmpdir, PluginManager.PLUGIN_DESCRIPTOR_FILENAME, null, null);
         loader.setOsgiContainerManager((OsgiContainerManager) mockOsgi.proxy());
         this.jar = new File(getClass().getResource("/myapp-1.0.jar").toURI());
 

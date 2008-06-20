@@ -72,6 +72,85 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-framework-bundles</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                          <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                          <artifactItems>
+                                <artifactItem>
+                                  <groupId>org.springframework</groupId>
+                                  <artifactId>spring</artifactId>
+                                  <version>2.5.2</version>
+                                </artifactItem>
+                                <artifactItem>
+                                  <groupId>org.slf4j</groupId>
+                                  <artifactId>com.springsource.slf4j.org.apache.commons.logging</artifactId>
+                                  <version>1.5.0</version> 
+                                </artifactItem>
+
+                                <artifactItem>
+                                  <groupId>org.slf4j</groupId>
+                                  <artifactId>com.springsource.slf4j.api</artifactId>
+                                  <version>1.5.0</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                  <groupId>org.slf4j</groupId>
+                                  <artifactId>com.springsource.slf4j.log4j</artifactId>
+                                  <version>1.5.0</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                  <groupId>org.springframework.osgi</groupId>
+                                  <artifactId>spring-osgi-annotation</artifactId>
+                                  <version>1.0.2</version>
+                                </artifactItem>
+
+                              <artifactItem>
+                                  <groupId>org.springframework.osgi</groupId>
+                                  <artifactId>spring-osgi-core</artifactId>
+                                  <version>1.0.2</version>
+                                </artifactItem>
+
+                              <artifactItem>
+                                  <groupId>org.springframework.osgi</groupId>
+                                  <artifactId>spring-osgi-extender</artifactId>
+                                  <version>1.0.2</version>
+                                </artifactItem>
+
+                              <artifactItem>
+                                  <groupId>org.springframework.osgi</groupId>
+                                  <artifactId>spring-osgi-io</artifactId>
+                                  <version>1.0.2</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                  <groupId>org.aopalliance</groupId>
+                                  <artifactId>com.springsource.org.aopalliance</artifactId>
+                                  <version>1.0.0</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                  <groupId>org.apache.log4j</groupId>
+                                  <artifactId>com.springsource.org.apache.log4j</artifactId>
+                                  <version>1.2.15</version>
+                                </artifactItem>
+                          </artifactItems>
+                          <outputDirectory>${project.build.directory}/classes/framework-bundles</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+
     </build>
 
     <dependencies>
@@ -136,6 +215,11 @@
             <id>pkgscanner-repository</id>
             <name>pkgscanner Repository for Maven</name>
             <url>http://pkgscanner.googlecode.com/svn/repo/</url>
+        </repository>
+        <repository>  
+            <id>com.springsource.repository.bundles.external</id>
+            <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+            <url>http://repository.springsource.com/maven/bundles/external</url>
         </repository>
     </repositories>
 

@@ -13,6 +13,7 @@ import java.net.URISyntaxException;
 import org.twdata.pkgscanner.ExportPackage;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
+import com.atlassian.plugin.osgi.loader.OsgiPluginLoader;
 
 public class TestFelixOsgiContainerManager extends TestCase
 {
@@ -27,7 +28,7 @@ public class TestFelixOsgiContainerManager extends TestCase
         startBundlesDir = new File(tmpdir, "startBundles");
         startBundlesDir.mkdir();
 
-        felix = new FelixOsgiContainerManager(startBundlesDir);
+        felix = new FelixOsgiContainerManager(OsgiPluginLoader.FRAMEWORK_BUNDLES_BASE_PATH);
     }
 
     @Override
