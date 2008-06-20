@@ -47,12 +47,11 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
     private OsgiContainerManager osgi;
     private HostComponentProvider hostComponentProvider;
     private PluginTransformer pluginTransformer;
-    public static final String FRAMEWORK_BUNDLES_BASE_PATH = "framework-bundles/";
 
-    public OsgiPluginLoader(File pluginPath, String pluginDescriptorFileName, PluginFactory pluginFactory, HostComponentProvider provider)
+    public OsgiPluginLoader(File pluginPath, File startBundlesPath, String pluginDescriptorFileName, PluginFactory pluginFactory, HostComponentProvider provider)
     {
         super(pluginPath, pluginDescriptorFileName, pluginFactory);
-        osgi = new FelixOsgiContainerManager(FRAMEWORK_BUNDLES_BASE_PATH);
+        osgi = new FelixOsgiContainerManager(startBundlesPath);
         this.hostComponentProvider = provider;
         pluginTransformer = new DefaultPluginTransformer();
     }

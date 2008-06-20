@@ -14,7 +14,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.*;
 import java.net.MalformedURLException;
-import java.net.URL;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
@@ -33,9 +32,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private boolean felixRunning = false;
     private File cacheDirectory;
 
-    private String startBundlesPath;
+    private File startBundlesPath;
 
-    public FelixOsgiContainerManager(String startBundlesPath)
+    public FelixOsgiContainerManager(File startBundlesPath)
     {
         this.startBundlesPath = startBundlesPath;
     }
@@ -133,13 +132,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     {
         try
         {
-            return registration.install(file.toURL().toString());
+            return registration.install(file);
         } catch (BundleException e)
         {
             throw new OsgiContainerException("Unable to install bundle", e);
-        } catch (MalformedURLException e)
-        {
-            throw new OsgiContainerException("Invalid file path: "+file, e);
         }
     }
 
@@ -218,11 +214,11 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     {
         private BundleContext bundleContext;
         private HostComponentProvider hostProvider;
-        private String startBundlesPath;
+        private File startBundlesPath;
         private List<ServiceRegistration> hostServicesReferences;
         private List<HostComponentRegistration> hostComponentRegistrations;
 
-        public BundleRegistration(String startBundlesPath, HostComponentProvider provider)
+        public BundleRegistration(File startBundlesPath, HostComponentProvider provider)
         {
             this.startBundlesPath = startBundlesPath;
             this.hostProvider = provider;
@@ -234,12 +230,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
             reloadHostComponents(hostProvider);
 
-            Enumeration<URL> bundleUrls = getClass().getClassLoader().getResources(startBundlesPath);
-            if (!bundleUrls.hasMoreElements())
-                throw new OsgiContainerException("No framework bundles found");
-            for (URL bundleFile = bundleUrls.nextElement(); bundleUrls.hasMoreElements(); )
+            for (File bundleFile : startBundlesPath.listFiles(new FilenameFilter() {
+                public boolean accept(File file, String s) {return s.endsWith(".jar");}}))
             {
-                install(bundleFile.toExternalForm());
+                install(bundleFile);
             }
         }
 
@@ -282,9 +276,17 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             }
         }
 
-        public Bundle install(String url) throws BundleException
+        public Bundle install(File path) throws BundleException
         {
-            Bundle bundle = bundleContext.installBundle(url);
+            Bundle bundle = null;
+            try
+            {
+
+                bundle = bundleContext.installBundle(path.toURL().toString());
+            } catch (MalformedURLException e)
+            {
+                throw new BundleException("Invalid path: "+path);
+            }
             bundle.start();
             return bundle;
         }
