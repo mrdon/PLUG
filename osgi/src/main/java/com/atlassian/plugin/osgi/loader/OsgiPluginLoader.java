@@ -47,6 +47,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
     private OsgiContainerManager osgi;
     private HostComponentProvider hostComponentProvider;
     private PluginTransformer pluginTransformer;
+    private Map<String, String> packageVersions;
 
     public OsgiPluginLoader(File pluginPath, File startBundlesPath, String pluginDescriptorFileName, PluginFactory pluginFactory, HostComponentProvider provider)
     {
@@ -98,7 +99,9 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
                        exclude((String[]) jarExcludes.toArray(new String[jarExcludes.size()]))),
                packages(
                        include((String[]) packageIncludes.toArray(new String[packageIncludes.size()])),
-                       exclude((String[]) packageExcludes.toArray(new String[packageExcludes.size()]))))
+                       exclude((String[]) packageExcludes.toArray(new String[packageExcludes.size()])))
+           )
+           .withMappings(packageVersions)
            .scan();
         return exports;
     }
@@ -134,14 +137,33 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);
     }
 
+    /**
+     * Sets the jars to include and exclude from scanning
+     * @param includes A list of jar patterns to include
+     * @param excludes A list of jar patterns to exclude
+     */
     public void setJarPatterns(List<String> includes, List<String> excludes) {
         this.jarIncludes = includes;
         this.jarExcludes = excludes;
     }
 
+    /**
+     * Sets the packages to include and exclude
+     * @param includes A list of patterns to include
+     * @param excludes A list of patterns to exclude
+     */
     public void setPackagePatterns(List<String> includes, List<String> excludes) {
         this.packageIncludes = includes;
         this.packageExcludes = excludes;
+    }
+
+    /**
+     * Maps discovered packages to specific versions by overriding autodiscovered versions
+     * @param packageToVersions A map of package patterns to version strings
+     */
+    public void setPackageVersions(Map<String,String> packageToVersions)
+    {
+        this.packageVersions = packageToVersions;
     }
 
     void setOsgiContainerManager(OsgiContainerManager mgr)

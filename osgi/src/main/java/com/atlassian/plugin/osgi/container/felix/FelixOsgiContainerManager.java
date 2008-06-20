@@ -162,6 +162,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 sb.append(",");
             }
         }
+        System.out.println("exports:"+sb);
         return sb.toString();
     }
 

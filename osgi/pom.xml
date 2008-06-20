@@ -73,7 +73,6 @@
             </plugins>
         </pluginManagement>
         <plugins>
-            <!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -150,7 +149,6 @@
                     </execution>
                 </executions>
             </plugin>
-            -->
         </plugins>
     </build>
 
@@ -192,7 +190,7 @@
         <dependency>
             <groupId>org.twdata.pkgscanner</groupId>
             <artifactId>package-scanner</artifactId>
-            <version>0.5.1</version>
+            <version>0.5.2</version>
         </dependency>
 
 

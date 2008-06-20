@@ -310,19 +310,9 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library name="package-scanner">
-        <CLASSES>
-          <root url="jar:///Users/dbrown/.m2/repository/org/twdata/pkgscanner/package-scanner/0.5.1/package-scanner-0.5.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar:///Users/dbrown/.m2/repository/org/twdata/pkgscanner/package-scanner/0.5.1/package-scanner-0.5.1-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
     <orderEntry type="library" name="Clover IDEA Plugin" level="application" />
     <orderEntry type="module" module-name="atlassian-plugins" />
+    <orderEntry type="module" module-name="package-scanner" exported="" />
     <orderEntryProperties />
   </component>
 </module>
