@@ -118,7 +118,7 @@ public interface PluginAccessor
      *
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
      */
-    List getEnabledModuleDescriptorsByClass(Class descriptorClazz);
+    <T extends ModuleDescriptor> List<T> getEnabledModuleDescriptorsByClass(Class<T> descriptorClazz);
 
     /**
      * Get all enabled module descriptors that have a specific descriptor type.
