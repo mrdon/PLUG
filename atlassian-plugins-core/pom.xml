@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.atlassian.plugins</groupId>
-        <artifactId>atlassian-plugins-parent</artifactId>
+        <artifactId>atlassian-plugins</artifactId>
         <version>2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>atlassian-plugins-core</artifactId>
-    <name>Atlassian Plugins</name>
+    <name>Atlassian Plugins Core</name>
     <description>
         A library to give systems the ability to have plugins, make them more pluggable and hence add pluggability
         (it's late - that makes sense in my head).
