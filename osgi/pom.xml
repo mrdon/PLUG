@@ -137,12 +137,6 @@
                                   <artifactId>com.springsource.org.aopalliance</artifactId>
                                   <version>1.0.0</version>
                                 </artifactItem>
-
-                                <artifactItem>
-                                  <groupId>org.apache.log4j</groupId>
-                                  <artifactId>com.springsource.org.apache.log4j</artifactId>
-                                  <version>1.2.15</version>
-                                </artifactItem>
                           </artifactItems>
                           <outputDirectory>${project.build.directory}/framework-bundles</outputDirectory>
                         </configuration>
@@ -190,7 +184,7 @@
         <dependency>
             <groupId>org.twdata.pkgscanner</groupId>
             <artifactId>package-scanner</artifactId>
-            <version>0.5.2</version>
+            <version>0.5.3</version>
         </dependency>
 
 
