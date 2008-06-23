@@ -8,7 +8,7 @@
 
     <groupId>com.atlassian.plugins</groupId>
     <artifactId>atlassian-plugins</artifactId>
-    <version>2.0.0.beta1</version>
+    <version>2.0.0.beta2-SNAPSHOT</version>
     <packaging>pom</packaging> 
 
     <name>Atlassian Plugins POM</name>
@@ -35,9 +35,9 @@
     </ciManagement>
 
     <scm>
-        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/tags/atlassian-plugins-2.0.0.beta1</connection>
-        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/tags/atlassian-plugins-2.0.0.beta1</developerConnection>
-        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/tags/atlassian-plugins-2.0.0.beta1</url>
+        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/branches/atlassian-plugins-2/</connection>
+        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/branches/atlassian-plugins-2/</developerConnection>
+        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/branches/atlassian-plugins-2</url>
     </scm>
 
     <modules>
