@@ -74,19 +74,5 @@
             <version>2.3</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- test dependencies -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>mockobjects</groupId>
-            <artifactId>mockobjects-core</artifactId>
-            <version>0.09</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 </project>

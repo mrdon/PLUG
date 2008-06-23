@@ -37,7 +37,9 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
 
             reg.getProperties().put(HOST_COMPONENT_FLAG, Boolean.TRUE.toString());
 
-            log.info("Registering: "+ Arrays.asList(names)+" instance "+reg.getInstance() + "with properties: "+reg.getProperties());
+            if (log.isDebugEnabled())
+                log.debug("Registering: "+ Arrays.asList(names)+" instance "+reg.getInstance() + "with properties: "+reg.getProperties());
+            
             ServiceRegistration sreg = ctx.registerService(names, reg.getInstance(), reg.getProperties());
             if (sreg != null)
             {
