@@ -2,47 +2,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>atlassian-public-pom</artifactId>
-        <groupId>com.atlassian.pom</groupId>
-        <version>15</version>
+        <groupId>com.atlassian.plugins</groupId>
+        <artifactId>atlassian-plugins-parent</artifactId>
+        <version>2.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.atlassian.plugins</groupId>
     <artifactId>atlassian-plugins-osgi</artifactId>
-    <version>2.0-SNAPSHOT</version>
 
     <name>Atlassian Plugins OSGi Loader</name>
     <description>
         An extension to Atlassian Plugins that provides a loader that loads plugins into OSGi
     </description>
-    <url>http://docs.atlassian.com/${project.artifactId}/${project.version}</url>
-    <properties>
-        <jdkLevel>1.5</jdkLevel>
-    </properties>
-
-
-    <licenses>
-        <license>
-            <name>BSD</name>
-            <url>LICENSE.txt</url>
-        </license>
-    </licenses>
-
-    <issueManagement>
-        <system>Jira</system>
-        <url>http://jira.atlassian.com/secure/BrowseProject.jspa?id=10610</url>
-    </issueManagement>
-
-    <ciManagement>
-        <system>Bamboo</system>
-        <url>https://bamboo.developer.atlassian.com/browse/ATLASSIANPLUGINS</url>
-    </ciManagement>
-
-    <scm>
-        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/</connection>
-        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/</developerConnection>
-        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</url>
-    </scm>
 
     <build>
         <testResources>
@@ -209,19 +179,10 @@
             <name>pkgscanner Repository for Maven</name>
             <url>http://pkgscanner.googlecode.com/svn/repo/</url>
         </repository>
-        <!--
         <repository>  
             <id>com.springsource.repository.bundles.external</id>
             <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
             <url>http://repository.springsource.com/maven/bundles/external</url>
         </repository>
-        -->
     </repositories>
-
-    <distributionManagement>
-        <site>
-            <id>atlassian-documentation</id>
-            <url>dav:https://docs.atlassian.com/${project.artifactId}/${project.version}</url>
-        </site>
-    </distributionManagement>
 </project>
