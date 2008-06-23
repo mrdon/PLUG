@@ -68,7 +68,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         {
             // Create host activator;
             registration = new BundleRegistration(startBundlesPath, provider);
-            final List list = new ArrayList();
+            final List<BundleActivator> list = new ArrayList<BundleActivator>();
             list.add(registration);
 
             // Now create an instance of the framework with
@@ -162,7 +162,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 sb.append(",");
             }
         }
-        System.out.println("exports:"+sb);
+        if (log.isDebugEnabled()) {
+            log.debug("Exports:\n"+sb.toString().replaceAll(",", "\r\n"));
+        }
+
         return sb.toString();
     }
 

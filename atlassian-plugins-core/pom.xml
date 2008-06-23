@@ -1,14 +1,13 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.atlassian.plugins</groupId>
-        <artifactId>atlassian-plugins-parent</artifactId>
-        <version>2.0-SNAPSHOT</version>
+        <artifactId>atlassian-plugins</artifactId>
+        <version>2.0.0.beta1</version>
     </parent>
 
     <artifactId>atlassian-plugins-core</artifactId>
-    <name>Atlassian Plugins</name>
+    <name>Atlassian Plugins Core</name>
     <description>
         A library to give systems the ability to have plugins, make them more pluggable and hence add pluggability
         (it's late - that makes sense in my head).
@@ -73,20 +72,6 @@
             <artifactId>servlet-api</artifactId>
             <version>2.3</version>
             <scope>provided</scope>
-        </dependency>
-
-        <!-- test dependencies -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>mockobjects</groupId>
-            <artifactId>mockobjects-core</artifactId>
-            <version>0.09</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

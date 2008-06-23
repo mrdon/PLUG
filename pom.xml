@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>atlassian-public-pom</artifactId>
@@ -8,11 +7,11 @@
     </parent>
 
     <groupId>com.atlassian.plugins</groupId>
-    <artifactId>atlassian-plugins-parent</artifactId>
-    <version>2.0-SNAPSHOT</version>
+    <artifactId>atlassian-plugins</artifactId>
+    <version>2.0.0.beta1</version>
     <packaging>pom</packaging> 
 
-    <name>Atlassian Plugins Parent POM</name>
+    <name>Atlassian Plugins POM</name>
     <url>http://docs.atlassian.com/${project.artifactId}/${project.version}</url>
     <properties>
         <jdkLevel>1.5</jdkLevel>
@@ -36,15 +35,31 @@
     </ciManagement>
 
     <scm>
-        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/</connection>
-        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/</developerConnection>
-        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</url>
+        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/tags/atlassian-plugins-2.0.0.beta1</connection>
+        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/tags/atlassian-plugins-2.0.0.beta1</developerConnection>
+        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/tags/atlassian-plugins-2.0.0.beta1</url>
     </scm>
 
     <modules>
         <module>atlassian-plugins-core</module>
         <module>atlassian-plugins-osgi</module>
     </modules>
+
+    <dependencies>
+        <!-- test dependencies -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>mockobjects</groupId>
+            <artifactId>mockobjects-core</artifactId>
+            <version>0.09</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <distributionManagement>
         <site>
