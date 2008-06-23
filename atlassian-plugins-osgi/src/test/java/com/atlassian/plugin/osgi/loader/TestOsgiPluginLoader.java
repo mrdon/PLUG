@@ -45,7 +45,7 @@ public class TestOsgiPluginLoader extends TestCase
         this.jar = new File(getClass().getResource("/myapp-1.0.jar").toURI());
 
         mockBundle = new Mock(Bundle.class);
-        Dictionary dict = new Hashtable();
+        Dictionary<String, String> dict = new Hashtable<String, String>();
         dict.put(Constants.BUNDLE_DESCRIPTION, "desc");
         dict.put(Constants.BUNDLE_VERSION, "1.0");
         mockBundle.matchAndReturn("getHeaders", dict);
@@ -69,6 +69,7 @@ public class TestOsgiPluginLoader extends TestCase
 
     public void testCreateOsgiPluginFail()
     {
+        //noinspection ThrowableInstanceNeverThrown
         mockOsgi.expectAndThrow("installBundle", C.args(C.eq(jar)), new OsgiContainerException("Bad install"));
         Plugin plugin = loader.createOsgiPlugin(jar, true);
         assertNotNull(plugin);

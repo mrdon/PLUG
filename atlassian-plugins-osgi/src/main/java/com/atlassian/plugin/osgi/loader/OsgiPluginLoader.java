@@ -41,9 +41,9 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
     private static final Log log = LogFactory.getLog(OsgiPluginLoader.class);
 
     private List<String> jarIncludes = Arrays.asList("*.jar");
-    private List<String> jarExcludes = Collections.EMPTY_LIST;
+    private List<String> jarExcludes = Collections.emptyList();
     private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "org.quartz", "org.quartz.*", "bucket.*", "net.sf.cglib", "net.sf.cglib.*", "net.sf.hibernate", "net.sf.hibernate.*", "com.octo.captcha.*", "com.opensymphony.*", "org.apache.*", "org.xml.*", "javax.*", "org.w3c.*");
-    private List<String> packageExcludes = Collections.EMPTY_LIST;
+    private List<String> packageExcludes = Collections.emptyList();
     private OsgiContainerManager osgi;
     private HostComponentProvider hostComponentProvider;
     private PluginTransformer pluginTransformer;
@@ -55,6 +55,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         osgi = new FelixOsgiContainerManager(startBundlesPath);
         this.hostComponentProvider = provider;
         pluginTransformer = new DefaultPluginTransformer();
+        setDescriptorParserFactory(new ComponentFilteringXmlDescriptorParserFactory());
     }
 
     public void setPluginTransformer(PluginTransformer trans)

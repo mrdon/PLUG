@@ -37,7 +37,7 @@ public class ClassLoadingPluginLoader implements PluginLoader
     private final Scanner scanner;
     /** Maps {@link DeploymentUnit}s to {@link Plugin}s. */
     private final Map plugins;
-    private final DescriptorParserFactory descriptorParserFactory;
+    private DescriptorParserFactory descriptorParserFactory;
     
     public ClassLoadingPluginLoader(File path, PluginFactory pluginFactory)
     {
@@ -121,6 +121,11 @@ public class ClassLoadingPluginLoader implements PluginLoader
             FileUtils.shutdownStream(pluginDescriptor);
         }
         return plugin;
+    }
+
+    protected void setDescriptorParserFactory(DescriptorParserFactory factory)
+    {
+        this.descriptorParserFactory = factory;
     }
 
     /**
