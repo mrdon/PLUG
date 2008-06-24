@@ -12,18 +12,18 @@ import org.apache.commons.logging.LogFactory;
 import javax.servlet.http.HttpServlet;
 import java.util.*;
 
-public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor implements StateAware
+public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor<HttpServlet> implements StateAware
 {
     private static final Log log = LogFactory.getLog(ServletModuleDescriptor.class);
-    List paths;
-    private Map initParams;
+    List<String> paths;
+    private Map<String,String> initParams;
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);
 
         List urlPatterns = element.elements("url-pattern");
-        paths = new ArrayList(urlPatterns.size());
+        paths = new ArrayList<String>(urlPatterns.size());
 
         for (Iterator iterator = urlPatterns.iterator(); iterator.hasNext();)
         {
@@ -31,19 +31,14 @@ public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor i
             paths.add(urlPattern.getTextTrim());
         }
 
-        initParams = new HashMap();
-        List paramsList = element.elements("init-param");
-        for (Iterator iterator = paramsList.iterator(); iterator.hasNext();)
-        {
-            Element initParamEl = (Element) iterator.next();
+        initParams = new HashMap<String,String>();
+        List<Element> paramsList = element.elements("init-param");
+        for (Element initParamEl : paramsList) {
             Element paramNameEl = initParamEl.element("param-name");
             Element paramValueEl = initParamEl.element("param-value");
-            if (paramNameEl != null && paramValueEl != null)
-            {
+            if (paramNameEl != null && paramValueEl != null) {
                 initParams.put(paramNameEl.getTextTrim(), paramValueEl.getTextTrim());
-            }
-            else
-            {
+            } else {
                 log.warn("Invalid init-param XML for servlet module: " + getCompleteKey());
             }
         }
@@ -59,9 +54,9 @@ public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor i
         getServletModuleManager().removeModule(this);
     }
 
-    public Object getModule()
+    public HttpServlet getModule()
     {
-        Object obj = null;
+        HttpServlet obj = null;
         try
         {
             // Give the plugin a go first
@@ -86,15 +81,15 @@ public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor i
 
     public HttpServlet getServlet()
     {
-        return (HttpServlet)getModule();
+        return getModule();
     }
 
-    public List getPaths()
+    public List<String> getPaths()
     {
         return paths;
     }
 
-    public Map getInitParams()
+    public Map<String,String> getInitParams()
     {
         return initParams;
     }

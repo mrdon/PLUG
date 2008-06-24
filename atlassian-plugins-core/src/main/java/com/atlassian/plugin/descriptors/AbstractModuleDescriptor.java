@@ -196,7 +196,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor
         return name;
     }
 
-    public Class getModuleClass()
+    public Class<T> getModuleClass()
     {
         return moduleClass;
     }

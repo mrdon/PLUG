@@ -9,12 +9,12 @@ import java.util.Enumeration;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 
-final class PluginServetConfig implements ServletConfig
+public final class PluginServletConfig implements ServletConfig
 {
     private final ServletModuleDescriptor descriptor;
     private final ServletContext context;
 
-    PluginServetConfig(ServletModuleDescriptor descriptor, ServletConfig servletConfig)
+    public PluginServletConfig(ServletModuleDescriptor descriptor, ServletConfig servletConfig)
     {
         this.descriptor = descriptor;
         context = new PluginServletContextWrapper(descriptor, servletConfig.getServletContext());

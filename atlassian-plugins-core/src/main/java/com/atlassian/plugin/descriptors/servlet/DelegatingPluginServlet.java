@@ -24,6 +24,7 @@ import com.atlassian.plugin.impl.DynamicPlugin;
 public class DelegatingPluginServlet extends HttpServlet
 {
     private final ServletModuleDescriptor descriptor;
+
     private final HttpServlet servlet;
 
     public DelegatingPluginServlet(ServletModuleDescriptor descriptor)
@@ -119,5 +120,9 @@ public class DelegatingPluginServlet extends HttpServlet
     public String toString()
     {
         return servlet.toString();
+    }
+
+    public ServletModuleDescriptor getDescriptor() {
+        return descriptor;
     }
 }

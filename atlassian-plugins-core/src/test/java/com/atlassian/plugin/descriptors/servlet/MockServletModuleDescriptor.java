@@ -27,7 +27,7 @@ public class MockServletModuleDescriptor extends ServletModuleDescriptor
         return plugin;
     }
 
-    public Object getModule()
+    public HttpServlet getModule()
     {
         return servlet;
     }

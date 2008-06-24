@@ -13,26 +13,26 @@ import com.atlassian.seraph.util.PathMapper;
 public class ServletModuleManager
 {
     PathMapper mapper = new PathMapper();
-    Map descriptors = new HashMap();
-    Map inittedServlets = new HashMap();
+    Map<String,ServletModuleDescriptor> descriptors = new HashMap<String,ServletModuleDescriptor>();
+    Map<String,DelegatingPluginServlet> inittedServlets = new HashMap<String,DelegatingPluginServlet>();
 
-    public HttpServlet getServlet(String path, final ServletConfig servletConfig) throws ServletException
+    public DelegatingPluginServlet getServlet(String path, final ServletConfig servletConfig) throws ServletException
     {
         String completeKey = mapper.get(path);
-        HttpServlet servlet = null;
+        DelegatingPluginServlet servlet = null;
 
         if (completeKey != null)
         {
-            servlet = (HttpServlet) inittedServlets.get(completeKey);
+            servlet = inittedServlets.get(completeKey);
 
             if (servlet == null)
             {
-                final ServletModuleDescriptor descriptor = (ServletModuleDescriptor) descriptors.get(completeKey);
+                final ServletModuleDescriptor descriptor = descriptors.get(completeKey);
 
                 if (descriptor != null)
                 {
                     servlet = new DelegatingPluginServlet(descriptor);
-                    servlet.init(new PluginServetConfig(descriptor, servletConfig));
+                    servlet.init(new PluginServletConfig(descriptor, servletConfig));
                     inittedServlets.put(completeKey, servlet);
                 }
             }
@@ -45,9 +45,7 @@ public class ServletModuleManager
     {
         descriptors.put(descriptor.getCompleteKey(), descriptor);
 
-        for (Iterator iterator = descriptor.getPaths().iterator(); iterator.hasNext();)
-        {
-            String path = (String) iterator.next();
+        for (String path : descriptor.getPaths()) {
             mapper.put(descriptor.getCompleteKey(), path);
         }
     }
