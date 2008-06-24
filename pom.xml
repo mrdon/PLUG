@@ -43,6 +43,7 @@
     <modules>
         <module>atlassian-plugins-core</module>
         <module>atlassian-plugins-osgi</module>
+        <module>atlassian-plugins-spring</module>
     </modules>
 
     <dependencies>
@@ -60,6 +61,26 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>com.atlassian.maven.plugins</groupId>
+                    <artifactId>maven-clover2-plugin</artifactId>
+                    <version>2.3.1</version>
+                    <configuration>
+                        <resolveReportDescriptor>false</resolveReportDescriptor>
+                        <generateXml>true</generateXml>
+                        <generateHtml>true</generateHtml>
+                        <historyDir>${user.home}/.clover-studio-history/${pom.artifactId}</historyDir>
+                        <cloverMergeDatabase>${project.build.directory}/clover/cloverMerge.db</cloverMergeDatabase>
+                        <contextFilters>property</contextFilters>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
 
     <distributionManagement>
         <site>
