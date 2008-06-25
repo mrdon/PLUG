@@ -1,4 +1,4 @@
-<atlassian-plugin name="Test Plugin" i18n-name-key="test.atlassian.plugin.i18n" key="test.atlassian.plugin">
+<atlassian-plugin name="Test Plugin" i18n-name-key="test.atlassian.plugin.i18n" key="test.atlassian.plugin" pluginsVersion="2">
     <plugin-info>
         <description key="test.atlassian.plugin.desc.i18n">This plugin descriptor is just used for test purposes!</description>
         <version>1.0</version>
