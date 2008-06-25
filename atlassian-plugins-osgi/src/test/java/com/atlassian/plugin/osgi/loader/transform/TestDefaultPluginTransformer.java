@@ -82,6 +82,18 @@ public class TestDefaultPluginTransformer extends TestCase
 
     }
 
+    public void testGenerateSpringXml_imports() throws Exception
+    {
+        // private component
+        assertSpringTransformContains("<foo><component-import key='foo' interface='my.Foo'/></foo>",
+                                      "<osgi:reference id='foo' interface='my.Foo'/>");
+
+        // public component with interface
+        assertSpringTransformContains("<foo><component-import key='foo'><interface>my.IFoo</interface></component-import></foo>",
+                                      "<osgi:reference id='foo'><osgi:interfaces><beans:value>my.IFoo</beans:value></osgi:interfaces></osgi:reference>");
+
+    }
+
     public void testGenerateSpringXml_hostComponents() throws Exception
     {
         // host componen with name
@@ -149,7 +161,7 @@ public class TestDefaultPluginTransformer extends TestCase
         String generated = new String(trans.generateSpringXml(stringToStream(input), regs)).replace('\"', '\'');
         for (String output : outputs)
         {
-            boolean passed = generated.contains(output);
+            boolean passed = generated.replaceAll("[ \\r\\n]", "").contains(output.replaceAll("[ \\r\\n]", ""));
             if (!passed)
                 fail("Output "+generated+" does not contain "+output);
         }

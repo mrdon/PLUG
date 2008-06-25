@@ -19,6 +19,6 @@ public class ComponentFilteringXmlDescriptorParserFactory implements DescriptorP
      */
     public DescriptorParser getInstance(InputStream source) throws PluginParseException
     {
-        return new FilteringXmlDescriptorParser(source, "component", "bean", "spring");
+        return new FilteringXmlDescriptorParser(source, "component", "component-import", "bean", "spring");
     }
 }

@@ -169,6 +169,33 @@ public class DefaultPluginTransformer implements PluginTransformer
             }
         }
 
+        // Write plugin component imports
+        elements = pluginDoc.getRootElement().elements("component-import");
+        for (Element component : elements)
+        {
+            Element osgiReference = root.addElement("osgi:reference");
+            osgiReference.addAttribute("id", component.attributeValue("key"));
+            String infName = component.attributeValue("interface");
+            if (infName != null)
+                osgiReference.addAttribute("interface", infName);
+
+
+            List<Element> compInterfaces = component.elements("interface");
+            if (compInterfaces.size() > 0)
+            {
+                List<String> interfaceNames = new ArrayList<String>();
+                for (Element inf : compInterfaces)
+                    interfaceNames.add(inf.getTextTrim());
+
+                Element interfaces = osgiReference.addElement("osgi:interfaces");
+                for (String name : interfaceNames)
+                {
+                    Element e = interfaces.addElement("beans:value");
+                    e.setText(name);
+                }
+            }
+        }
+
         // write host components
         if (regs != null)
         {
