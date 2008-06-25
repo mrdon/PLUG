@@ -10,6 +10,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  *
@@ -22,10 +24,8 @@ public class PluginsClassLoader extends AbstractClassLoader
     private final Map/*<String,Plugin>*/ pluginResourceIndex = new HashMap();
     private final Map/*<String,Plugin>*/ pluginClassIndex = new HashMap();
 
-    private static final Object MARKER_OBJECT = new Object();
-
-    private final Map/*<String,Plugin>*/ missedPluginResourceIndex = new HashMap();
-    private final Map/*<String,Plugin>*/ missedPluginClassIndex = new HashMap();
+    private final Set/*<String>*/ missedPluginResource = new HashSet();
+    private final Set/*<String>*/ missedPluginClass = new HashSet();
 
     public PluginsClassLoader(PluginAccessor pluginAccessor)
     {
@@ -44,7 +44,11 @@ public class PluginsClassLoader extends AbstractClassLoader
 
     protected URL findResource(final String name)
     {
-        final Plugin indexedPlugin = (Plugin) pluginResourceIndex.get(name);
+        final Plugin indexedPlugin;
+        synchronized (this)
+        {
+             indexedPlugin = (Plugin) pluginResourceIndex.get(name);
+        }
         final URL result;
         if (isPluginEnabled(indexedPlugin))
         {
@@ -52,7 +56,7 @@ public class PluginsClassLoader extends AbstractClassLoader
         }
         else
         {
-            result = getUncachedResource(name);
+            result = getResourceFromPlugins(name);
         }
         if (log.isDebugEnabled())
         {
@@ -63,7 +67,12 @@ public class PluginsClassLoader extends AbstractClassLoader
 
     protected Class findClass(String className) throws ClassNotFoundException
     {
-        final Plugin indexedPlugin = (Plugin) pluginClassIndex.get(className);
+        final Plugin indexedPlugin;
+        synchronized (this)
+        {
+            indexedPlugin = (Plugin) pluginClassIndex.get(className);
+        }
+
         final Class result;
         if (isPluginEnabled(indexedPlugin))
         {
@@ -71,7 +80,7 @@ public class PluginsClassLoader extends AbstractClassLoader
         }
         else
         {
-            result = getUncachedClass(className);
+            result = loadClassFromPlugins(className);
         }
         if (log.isDebugEnabled())
         {
@@ -87,9 +96,14 @@ public class PluginsClassLoader extends AbstractClassLoader
         }
     }
 
-    private Class getUncachedClass(String className)
+    private Class loadClassFromPlugins(String className)
     {
-        if (missedPluginClassIndex.get(className) == MARKER_OBJECT)
+        final boolean isMissedClassName;
+        synchronized (this)
+        {
+            isMissedClassName = missedPluginClass.contains(className);
+        }
+        if (isMissedClassName)
         {
             return null;
         }
@@ -101,7 +115,10 @@ public class PluginsClassLoader extends AbstractClassLoader
             {
                 Class result = plugin.getClassLoader().loadClass(className);
                 //loadClass should never return null
-                pluginClassIndex.put(className, plugin);
+                synchronized (this)
+                {
+                    pluginClassIndex.put(className, plugin);
+                }
                 return result;
             }
             catch (ClassNotFoundException e)
@@ -109,13 +126,21 @@ public class PluginsClassLoader extends AbstractClassLoader
                 // continue searching the other plugins
             }
         }
-        missedPluginClassIndex.put(className, MARKER_OBJECT);
+        synchronized (this)
+        {
+            missedPluginClass.add(className);
+        }
         return null;
     }
 
-    private URL getUncachedResource(String name)
+    private URL getResourceFromPlugins(String name)
     {
-        if (missedPluginResourceIndex.get(name) == MARKER_OBJECT)
+        final boolean isMissedResource;
+        synchronized (this)
+        {
+            isMissedResource = missedPluginResource.contains(name);
+        }
+        if (isMissedResource)
         {
             return null;
         }
@@ -126,11 +151,17 @@ public class PluginsClassLoader extends AbstractClassLoader
             final URL resource = plugin.getClassLoader().getResource(name);
             if (resource != null)
             {
-                pluginResourceIndex.put(name, plugin);
+                synchronized (this)
+                {
+                    pluginResourceIndex.put(name, plugin);
+                }
                 return resource;
             }
         }
-        missedPluginResourceIndex.put(name, MARKER_OBJECT);
+        synchronized (this)
+        {
+            missedPluginResource.add(name);
+        }
         return null;
     }
 
@@ -139,7 +170,7 @@ public class PluginsClassLoader extends AbstractClassLoader
         return plugin != null && pluginAccessor.isPluginEnabled(plugin.getKey());
     }
 
-    public void notifyUninstallPlugin(Plugin plugin)
+    public synchronized void notifyUninstallPlugin(Plugin plugin)
     {
         flushMissesCaches();
         for (Iterator it = pluginResourceIndex.entrySet().iterator(); it.hasNext();)
@@ -162,14 +193,14 @@ public class PluginsClassLoader extends AbstractClassLoader
         }
     }
 
-    public void notifyPluginOrModuleEnabled()
+    public synchronized void notifyPluginOrModuleEnabled()
     {
         flushMissesCaches();
     }
 
     private void flushMissesCaches()
     {
-        missedPluginClassIndex.clear();
-        missedPluginResourceIndex.clear();
+        missedPluginClass.clear();
+        missedPluginResource.clear();
     }
 }
