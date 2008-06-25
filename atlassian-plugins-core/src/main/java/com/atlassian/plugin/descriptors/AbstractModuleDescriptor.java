@@ -14,7 +14,7 @@ import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
 
-public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor
+public abstract class AbstractModuleDescriptor implements ModuleDescriptor
 {
     protected Plugin plugin;
     String key;
@@ -196,12 +196,12 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor
         return name;
     }
 
-    public Class<T> getModuleClass()
+    public Class getModuleClass()
     {
         return moduleClass;
     }
 
-    public abstract T getModule();
+    public abstract Object getModule();
 
     public String getDescription()
     {

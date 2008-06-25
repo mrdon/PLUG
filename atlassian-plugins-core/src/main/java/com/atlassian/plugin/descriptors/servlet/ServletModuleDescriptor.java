@@ -12,18 +12,18 @@ import org.apache.commons.logging.LogFactory;
 import javax.servlet.http.HttpServlet;
 import java.util.*;
 
-public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor<HttpServlet> implements StateAware
+public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor implements StateAware
 {
     private static final Log log = LogFactory.getLog(ServletModuleDescriptor.class);
-    List<String> paths;
-    private Map<String,String> initParams;
+    List paths;
+    private Map initParams;
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);
 
         List urlPatterns = element.elements("url-pattern");
-        paths = new ArrayList<String>(urlPatterns.size());
+        paths = new ArrayList(urlPatterns.size());
 
         for (Iterator iterator = urlPatterns.iterator(); iterator.hasNext();)
         {
@@ -31,9 +31,10 @@ public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor<H
             paths.add(urlPattern.getTextTrim());
         }
 
-        initParams = new HashMap<String,String>();
-        List<Element> paramsList = element.elements("init-param");
-        for (Element initParamEl : paramsList) {
+        initParams = new HashMap();
+        List paramsList = element.elements("init-param");
+        for (Iterator i = paramsList.iterator(); i.hasNext();) {
+            Element initParamEl = (Element) i.next();
             Element paramNameEl = initParamEl.element("param-name");
             Element paramValueEl = initParamEl.element("param-value");
             if (paramNameEl != null && paramValueEl != null) {
@@ -54,17 +55,17 @@ public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor<H
         getServletModuleManager().removeModule(this);
     }
 
-    public HttpServlet getModule()
+    public Object getModule()
     {
         HttpServlet obj = null;
         try
         {
             // Give the plugin a go first
             if (plugin instanceof AutowireCapablePlugin)
-                obj = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
+                obj = (HttpServlet) ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
             else
             {
-                obj = getModuleClass().newInstance();
+                obj = (HttpServlet) getModuleClass().newInstance();
                 autowireObject(obj);
             }
         }
@@ -81,15 +82,15 @@ public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor<H
 
     public HttpServlet getServlet()
     {
-        return getModule();
+        return (HttpServlet) getModule();
     }
 
-    public List<String> getPaths()
+    public List getPaths()
     {
         return paths;
     }
 
-    public Map<String,String> getInitParams()
+    public Map getInitParams()
     {
         return initParams;
     }

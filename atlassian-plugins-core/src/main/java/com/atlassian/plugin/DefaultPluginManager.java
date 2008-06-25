@@ -843,6 +843,10 @@ public class DefaultPluginManager implements PluginManager
 
     public boolean isPluginModuleEnabled(String completeKey)
     {
+        // completeKey may be null 
+        if (completeKey == null) {
+            return false;
+        }
         ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
 
         final ModuleDescriptor pluginModule = getPluginModule(completeKey);

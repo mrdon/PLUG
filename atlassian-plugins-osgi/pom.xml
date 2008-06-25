@@ -165,4 +165,8 @@
             <url>http://repository.springsource.com/maven/bundles/external</url>
         </repository>
     </repositories>
+
+    <properties>
+        <jdkLevel>1.5</jdkLevel>
+    </properties>
 </project>

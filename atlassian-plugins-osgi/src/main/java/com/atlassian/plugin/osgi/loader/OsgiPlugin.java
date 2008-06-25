@@ -136,7 +136,7 @@ public class OsgiPlugin extends AbstractPlugin implements StateAware, AutowireCa
         }
     }
 
-    public <T> T autowire(Class<T> clazz)
+    public <T> T autowireGeneric(Class<T> clazz)
     {
         return autowire(clazz, AutowireStrategy.AUTOWIRE_AUTODETECT);
     }
@@ -208,5 +208,13 @@ public class OsgiPlugin extends AbstractPlugin implements StateAware, AutowireCa
 
     private String getExceptionMessage(Exception e) {
         return e.getMessage() == null ? e.getCause().getMessage() : e.getMessage();
+    }
+
+    public Object autowire(Class clazz) {
+        return autowireGeneric(clazz);
+    }
+
+    public Object autowire(Class clazz, int autowireStrategy) {
+        return autowire(clazz, AutowireStrategy.fromIndex(autowireStrategy));
     }
 }

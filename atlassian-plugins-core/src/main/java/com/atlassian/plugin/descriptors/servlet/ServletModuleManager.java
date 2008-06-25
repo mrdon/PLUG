@@ -13,8 +13,8 @@ import com.atlassian.seraph.util.PathMapper;
 public class ServletModuleManager
 {
     PathMapper mapper = new PathMapper();
-    Map<String,ServletModuleDescriptor> descriptors = new HashMap<String,ServletModuleDescriptor>();
-    Map<String,DelegatingPluginServlet> inittedServlets = new HashMap<String,DelegatingPluginServlet>();
+    Map descriptors = new HashMap();
+    Map inittedServlets = new HashMap();
 
     public DelegatingPluginServlet getServlet(String path, final ServletConfig servletConfig) throws ServletException
     {
@@ -23,11 +23,11 @@ public class ServletModuleManager
 
         if (completeKey != null)
         {
-            servlet = inittedServlets.get(completeKey);
+            servlet = (DelegatingPluginServlet) inittedServlets.get(completeKey);
 
             if (servlet == null)
             {
-                final ServletModuleDescriptor descriptor = descriptors.get(completeKey);
+                final ServletModuleDescriptor descriptor = (ServletModuleDescriptor) descriptors.get(completeKey);
 
                 if (descriptor != null)
                 {
@@ -45,7 +45,8 @@ public class ServletModuleManager
     {
         descriptors.put(descriptor.getCompleteKey(), descriptor);
 
-        for (String path : descriptor.getPaths()) {
+        for (Iterator i = descriptor.getPaths().iterator(); i.hasNext();) {
+            String path = (String) i.next();
             mapper.put(descriptor.getCompleteKey(), path);
         }
     }

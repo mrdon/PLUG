@@ -16,7 +16,7 @@ public interface PluginAccessor
      * Gets all of the currently installed plugins.
      * @return a collection of installed {@link Plugin}s.
      */
-    Collection<Plugin> getPlugins();
+    Collection getPlugins();
 
     /**
      * Gets all installed plugins that match the given predicate.
@@ -24,13 +24,13 @@ public interface PluginAccessor
      * @return a collection of {@link Plugin}s that match the given predicate.
      * @since 0.17
      */
-    Collection<Plugin> getPlugins(final PluginPredicate pluginPredicate);
+    Collection getPlugins(final PluginPredicate pluginPredicate);
 
     /**
      * Get all of the currently enabled plugins.
      * @return a collection of installed and enabled {@link Plugin}s.
      */
-    Collection<Plugin> getEnabledPlugins();
+    Collection getEnabledPlugins();
 
     /**
      * Gets all installed modules that match the given predicate.
@@ -118,7 +118,7 @@ public interface PluginAccessor
      *
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
      */
-    <T extends ModuleDescriptor> List<T> getEnabledModuleDescriptorsByClass(Class<T> descriptorClazz);
+    List getEnabledModuleDescriptorsByClass(Class descriptorClazz);
 
     /**
      * Get all enabled module descriptors that have a specific descriptor type.

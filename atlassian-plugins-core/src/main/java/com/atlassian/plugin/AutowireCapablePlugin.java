@@ -10,32 +10,30 @@ public interface AutowireCapablePlugin
     /**
      * The autowire strategy to use when creating and wiring a bean
      */
-    enum AutowireStrategy {
         /** Performs no autowiring */
-        AUTOWIRE_NO,
+        public static final int AUTOWIRE_NO = 1;
 
         /** Performs setter-based injection by name */
-        AUTOWIRE_BY_NAME,
+        public static final int AUTOWIRE_BY_NAME = 2;
 
         /** Performs setter-based injection by type */
-        AUTOWIRE_BY_TYPE,
+        public static final int AUTOWIRE_BY_TYPE = 3;
 
         /** Performs construction-based injection by type */
-        AUTOWIRE_BY_CONSTRUCTOR,
+        public static final int AUTOWIRE_BY_CONSTRUCTOR = 4;
 
         /**
          * Autodetects appropriate injection by first seeing if any no-arg constructors exist.  If not, performs constructor
          * injection, and if so, autowires by type then name
          */
-        AUTOWIRE_AUTODETECT
-    }
+        public static final int AUTOWIRE_AUTODETECT = 5;
 
     /**
      * Creates and autowires a class using the default strategy.
      * @param clazz The class to create
      * @return The created and wired bean
      */
-    <T> T autowire(Class<T> clazz);
+    Object autowire(Class clazz);
 
     /**
      * Creates and autowires a class with a specific autowire strategy
@@ -44,5 +42,5 @@ public interface AutowireCapablePlugin
      * @param autowireStrategy The autowire strategy
      * @return The created and wired bean
      */
-    <T> T autowire(Class<T> clazz, AutowireStrategy autowireStrategy);
+    Object autowire(Class clazz, int autowireStrategy);
 }

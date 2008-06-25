@@ -39,7 +39,7 @@ public class PluginServletContextWrapper implements ServletContext
         Class cls = context.getClass();
         try
         {
-            tmpMethod = cls.getMethod("getContextPath");
+            tmpMethod = cls.getMethod("getContextPath", new Class[0]);
         } catch (NoSuchMethodException e)
         {
             // no problem, Servlet 2.4 or earlier found
@@ -161,7 +161,7 @@ public class PluginServletContextWrapper implements ServletContext
         {
             try
             {
-                return (String) methodGetContextPath.invoke(context);
+                return (String) methodGetContextPath.invoke(context, new Object[0]);
             } catch (IllegalAccessException e)
             {
                 throw new RuntimeException("Cannot access this method", e);
