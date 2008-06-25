@@ -1,9 +1,6 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.*;
 
 import java.util.Collection;
 import java.util.Map;
@@ -32,4 +29,5 @@ public interface PluginLoader
      * Remove a specific plugin
      */
     void removePlugin(Plugin plugin) throws PluginException;
+
 }

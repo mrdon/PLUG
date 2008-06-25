@@ -10,9 +10,7 @@ import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.loader.transform.PluginTransformer;
 import com.atlassian.plugin.osgi.loader.transform.DefaultPluginTransformer;
 import com.atlassian.plugin.osgi.loader.transform.PluginTransformationException;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.parsers.DescriptorParser;
@@ -22,6 +20,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.jar.JarFile;
 import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,6 +47,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
     private HostComponentProvider hostComponentProvider;
     private PluginTransformer pluginTransformer;
     private Map<String, String> packageVersions;
+    private final String pluginDescriptorFileName;
 
     public OsgiPluginLoader(File pluginPath, File startBundlesPath, String pluginDescriptorFileName, PluginFactory pluginFactory, HostComponentProvider provider)
     {
@@ -55,6 +55,7 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         osgi = new FelixOsgiContainerManager(startBundlesPath);
         this.hostComponentProvider = provider;
         pluginTransformer = new DefaultPluginTransformer();
+        this.pluginDescriptorFileName = pluginDescriptorFileName;
         setDescriptorParserFactory(new ComponentFilteringXmlDescriptorParserFactory());
     }
 
@@ -172,6 +173,27 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         this.osgi = mgr;
     }
 
+    @Override
+    public String canLoad(PluginJar pluginJar) throws PluginParseException
+    {
+        String key = super.canLoad(pluginJar);
+
+        if (key != null)
+        {
+            return key;
+        }
+
+        // no traditional atlassian-plugins.xml found
+        try
+        {
+            Manifest mf = new Manifest(pluginJar.getFile("META-INF/MANIFEST.MF"));
+            return mf.getMainAttributes().getValue("Bundle-SymbolicName");
+        }
+        catch (IOException e)
+        {
+            throw new PluginParseException("Unable to parse manifest in " + pluginDescriptorFileName, e);
+        }
+    }
 
     Plugin createOsgiPlugin(File file, boolean bundle)
     {

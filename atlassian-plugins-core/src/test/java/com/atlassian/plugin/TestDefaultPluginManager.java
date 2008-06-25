@@ -3,10 +3,7 @@ package com.atlassian.plugin;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.impl.StaticPlugin;
-import com.atlassian.plugin.loaders.ClassLoadingPluginLoader;
-import com.atlassian.plugin.loaders.DefaultPluginFactory;
-import com.atlassian.plugin.loaders.PluginLoader;
-import com.atlassian.plugin.loaders.SinglePluginLoader;
+import com.atlassian.plugin.loaders.*;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.*;
 import com.atlassian.plugin.parsers.DescriptorParser;
@@ -740,6 +737,39 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         //checkResources(manager, true, false);
     }
 
+    public void testValidatePlugin() throws PluginParseException
+    {
+        DefaultPluginManager manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory);
+        Mock mockLoader = new Mock(DynamicPluginLoader.class);
+        pluginLoaders.add(mockLoader.proxy());
+
+        Mock mockPluginJar = new Mock(PluginJar.class);
+        PluginJar pluginJar = (PluginJar) mockPluginJar.proxy();
+        mockLoader.expectAndReturn("canLoad", C.args(C.eq(pluginJar)), "foo");
+
+        String key = manager.validatePlugin(pluginJar);
+        assertEquals("foo", key);
+        mockLoader.verify();
+
+    }
+
+    public void testValidatePluginWithNoDynamicLoaders() throws PluginParseException
+    {
+        DefaultPluginManager manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory);
+        Mock mockLoader = new Mock(PluginLoader.class);
+        pluginLoaders.add(mockLoader.proxy());
+
+        Mock mockPluginJar = new Mock(PluginJar.class);
+        PluginJar pluginJar = (PluginJar) mockPluginJar.proxy();
+        try
+        {
+            manager.validatePlugin(pluginJar);
+            fail("Should have thrown exception");
+        } catch (IllegalStateException ex) {
+            // test passed
+        }
+    }
+
     public void testInvalidationOfDynamicClassCache() throws IOException, PluginException
     {
         createFillAndCleanTempPluginDirectory();
@@ -763,7 +793,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         Mock mockPluginStateStore = new Mock(PluginStateStore.class);
         Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
-        Mock mockPluginLoader = new Mock(PluginLoader.class);
+        Mock mockPluginLoader = new Mock(DynamicPluginLoader.class);
         Mock mockDescriptorParserFactory = new Mock(DescriptorParserFactory.class);
         Mock mockDescriptorParser = new Mock(DescriptorParser.class);
         Mock mockPluginJar = new Mock(PluginJar.class);
@@ -779,24 +809,20 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         );
 
         Plugin plugin = (Plugin) mockPlugin.proxy();
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(new byte[0]);
         PluginJar pluginJar = (PluginJar) mockPluginJar.proxy();
-        Object descriptorParser = mockDescriptorParser.proxy();
 
-        mockPluginJar.expectAndReturn("getFile", "atlassian-plugin.xml", inputStream);
         mockPluginStateStore.expectAndReturn("loadPluginState", new PluginManagerState());
-        mockDescriptorParserFactory.expectAndReturn("getInstance", inputStream, descriptorParser);
         mockDescriptorParser.matchAndReturn("getKey", "test");
         mockRepository.expect("installPlugin", C.args(C.eq("test"), C.eq(pluginJar)));
         mockPluginLoader.expectAndReturn("loadAllPlugins", C.eq(moduleDescriptorFactory), Collections.EMPTY_LIST);
         mockPluginLoader.expectAndReturn("supportsAddition", true);
         mockPluginLoader.expectAndReturn("addFoundPlugins", moduleDescriptorFactory, Collections.singletonList(plugin));
+        mockPluginLoader.expectAndReturn("canLoad", C.args(C.eq(pluginJar)), "test");
         mockPlugin.matchAndReturn("getKey", "test");
         mockPlugin.matchAndReturn("hashCode", mockPlugin.hashCode());
         mockPlugin.expectAndReturn("getModuleDescriptors", new ArrayList());
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
 
-        pluginManager.setDescriptorParserFactory((DescriptorParserFactory) mockDescriptorParserFactory.proxy());
         pluginManager.setPluginInstaller((PluginInstaller) mockRepository.proxy());
         pluginManager.init();
         pluginManager.installPlugin(pluginJar);

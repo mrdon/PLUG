@@ -1,10 +1,6 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginException;
-import com.atlassian.plugin.PluginManager;
-import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.loaders.classloading.Scanner;
@@ -29,7 +25,7 @@ import java.util.Map;
  * <p>
  * This creates a classloader for that classloading and loads plugins from all JARs from within it.
  */
-public class ClassLoadingPluginLoader implements PluginLoader
+public class ClassLoadingPluginLoader implements DynamicPluginLoader
 {
     private static Log log = LogFactory.getLog(ClassLoadingPluginLoader.class);
     private final String pluginDescriptorFileName;
@@ -242,5 +238,17 @@ public class ClassLoadingPluginLoader implements PluginLoader
             Plugin plugin  = (Plugin) it.next();
             plugin.close();
         }
+    }
+
+    public String canLoad(PluginJar pluginJar) throws PluginParseException
+    {
+        String pluginKey = null;
+        final InputStream descriptorStream = pluginJar.getFile(pluginDescriptorFileName);
+        if (descriptorStream != null)
+        {
+            final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
+            pluginKey = descriptorParser.getKey();
+        }
+        return pluginKey;
     }
 }

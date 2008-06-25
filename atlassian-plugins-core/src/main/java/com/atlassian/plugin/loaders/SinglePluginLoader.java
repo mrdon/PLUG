@@ -1,9 +1,6 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginException;
-import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;

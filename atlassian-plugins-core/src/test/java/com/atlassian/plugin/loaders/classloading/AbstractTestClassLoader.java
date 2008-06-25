@@ -20,7 +20,7 @@ public abstract class AbstractTestClassLoader extends TestCase
 
     protected File getPluginsDirectory()
     {
-        final URL url = ClassLoaderUtils.getResource("plugins", this.getClass());
+        final URL url = ClassLoaderUtils.getResource("ap-plugins", this.getClass());
         pluginsDirectory = new File(url.getFile());
         return pluginsDirectory;
     }

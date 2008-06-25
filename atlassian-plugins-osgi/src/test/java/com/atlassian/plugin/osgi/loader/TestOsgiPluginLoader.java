@@ -4,15 +4,14 @@ import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.net.URISyntaxException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Collection;
 import java.util.ArrayList;
 
-import com.atlassian.plugin.PluginManager;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -85,6 +84,31 @@ public class TestOsgiPluginLoader extends TestCase
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiBundlePlugin);
         mockOsgi.verify();
+    }
+
+    public void testCanLoadWithXml() throws PluginParseException
+    {
+        Mock mockPluginJar = new Mock(PluginJar.class);
+        PluginJar pluginJar = (PluginJar) mockPluginJar.proxy();
+
+        mockPluginJar.expectAndReturn("getFile", C.args(C.eq(DefaultPluginManager.PLUGIN_DESCRIPTOR_FILENAME)),
+                new ByteArrayInputStream("<atlassian-plugin key=\"foo.bar\" />".getBytes()));
+        String key = loader.canLoad(pluginJar);
+        assertEquals("foo.bar", key);
+        mockPluginJar.verify();
+    }
+
+    public void testCanLoadWithManifest() throws PluginParseException
+    {
+        Mock mockPluginJar = new Mock(PluginJar.class);
+        PluginJar pluginJar = (PluginJar) mockPluginJar.proxy();
+
+        mockPluginJar.expectAndReturn("getFile", C.args(C.eq(DefaultPluginManager.PLUGIN_DESCRIPTOR_FILENAME)), null);
+        mockPluginJar.expectAndReturn("getFile", C.args(C.eq("META-INF/MANIFEST.MF")),
+                new ByteArrayInputStream("Manifest-Version: 1.0\nBundle-SymbolicName: foo.bar\n".getBytes()));
+        String key = loader.canLoad(pluginJar);
+        assertEquals("foo.bar", key);
+        mockPluginJar.verify();
     }
 
     public void testHandleNoDescriptor_NoOsgiOrDescriptor() throws PluginParseException, URISyntaxException

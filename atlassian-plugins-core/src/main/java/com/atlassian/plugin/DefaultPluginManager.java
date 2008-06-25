@@ -6,7 +6,7 @@ import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.loaders.PluginLoader;
-import com.atlassian.plugin.parsers.DescriptorParser;
+import com.atlassian.plugin.loaders.DynamicPluginLoader;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
 import com.atlassian.plugin.predicate.EnabledModulePredicate;
@@ -23,7 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.InputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,7 +33,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.jar.Manifest;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -55,11 +53,6 @@ public class DefaultPluginManager implements PluginManager
     private final ModuleDescriptorFactory moduleDescriptorFactory;
     private final PluginsClassLoader classLoader;
     private final Map/*<String,Plugin>*/ plugins = new HashMap();
-
-    /**
-     * Factory for retrieving descriptor parsers. Typically overridden for testing.
-     */
-    private DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
 
     /**
      * Installer used for storing plugins. Used by {@link #installPlugin(PluginJar)}.
@@ -137,37 +130,36 @@ public class DefaultPluginManager implements PluginManager
     }
 
     /**
-     * Validate a plugin jar.  Checks for an atlassian-plugin.xml file or OSGi manifest.
+     * Validate a plugin jar.  Looks through all plugin loaders for ones that can load the plugin and
+     * extract the plugin key as proof.
      *
      * @param pluginJar the jar file representing the plugin
      * @return The plugin key
      * @throws PluginParseException if the plugin cannot be parsed
      * @throws NullPointerException if <code>pluginJar</code> is null.
      */
-    private String validatePlugin(PluginJar pluginJar) throws PluginParseException
+    String validatePlugin(PluginJar pluginJar) throws PluginParseException
     {
-        String key = null;
+        String key;
 
-        // First, let's try to find the plugin descriptor file
-        try {
-            final InputStream descriptorStream = pluginJar.getFile(PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
-            final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
-            key = descriptorParser.getKey();
-        } catch (PluginParseException ex) {
-            // Ok, no atlassian-plugin.xml, let's look for an OSGi manifest
-            try
+        boolean foundADynamicPluginLoader = false;
+        for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
+        {
+            PluginLoader loader = (PluginLoader) iterator.next();
+            if (loader instanceof DynamicPluginLoader)
             {
-                Manifest mf = new Manifest(pluginJar.getFile("META-INF/MANIFEST.MF"));
-                key = mf.getMainAttributes().getValue("Bundle-SymbolicName");
-            } catch (IOException e)
-            {
-                throw new PluginParseException("Unable to find manifest in " + PluginManager.PLUGIN_DESCRIPTOR_FILENAME, e);
+                foundADynamicPluginLoader = true;
+                key = ((DynamicPluginLoader) loader).canLoad(pluginJar);
+                if (key != null)
+                    return key;
             }
         }
-        if (key == null)
-            throw new PluginParseException("Plugin key could not be found in " + PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
-        else
-            return key;
+
+        if (!foundADynamicPluginLoader)
+        {
+            throw new IllegalStateException("Should be at least one DynamicPluginLoader in the plugin loader list");
+        }
+        throw new PluginParseException("Jar " + pluginJar.getFileName() + " is not a valid plugin");
     }
 
     public int scanForNewPlugins() throws PluginParseException
@@ -912,10 +904,5 @@ public class DefaultPluginManager implements PluginManager
     {
         Plugin plugin = getPlugin(key);
         return plugin != null && plugin.isSystemPlugin();
-    }
-
-    public void setDescriptorParserFactory(DescriptorParserFactory descriptorParserFactory)
-    {
-        this.descriptorParserFactory = descriptorParserFactory;
     }
 }
