@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.net.URL;
+import java.net.MalformedURLException;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.jar.JarFile;
@@ -40,8 +41,25 @@ public class TestDefaultPluginTransformer extends TestCase
         assertEquals("Atlassian Software Systems Pty Ltd", attrs.getValue(Constants.BUNDLE_VENDOR));
         assertEquals("http://www.atlassian.com", attrs.getValue(Constants.BUNDLE_DOCURL));
         assertEquals("com.mycompany.myapp", attrs.getValue(Constants.EXPORT_PACKAGE));
+        assertEquals(".", attrs.getValue(Constants.BUNDLE_CLASSPATH));
         assertEquals("*;create-asynchronously:=false", attrs.getValue("Spring-Context"));
         
+    }
+
+    public void testGenerateManifest_innerjars() throws URISyntaxException, PluginParseException, IOException
+    {
+        File file = new File(getClass().getResource("/testjars/atlassian-plugins-osgi-simpletest-1.0.jar").toURI());
+        DefaultPluginTransformer transformer = new DefaultPluginTransformer();
+        URLClassLoader cl = new URLClassLoader(new URL[]{file.toURL()});
+        byte[] manifest = transformer.generateManifest(cl.getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file);
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Attributes attrs = mf.getMainAttributes();
+
+        assertEquals("1.0", attrs.getValue(Constants.BUNDLE_VERSION));
+        assertEquals("test.atlassian.plugin", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
+        assertEquals(".,META-INF/lib/atlassian-plugins-osgi-innerjarone-1.0.jar,META-INF/lib/atlassian-plugins-osgi-innerjartwo-1.0.jar",
+                attrs.getValue(Constants.BUNDLE_CLASSPATH));
+
     }
 
     public void testAddFilesToZip() throws URISyntaxException, IOException

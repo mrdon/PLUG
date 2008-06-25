@@ -20,6 +20,7 @@ import org.apache.log4j.Level;
 import java.io.*;
 import java.util.*;
 import java.util.jar.JarFile;
+import java.util.jar.JarEntry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -270,6 +271,18 @@ public class DefaultPluginTransformer implements PluginTransformer
             header(properties, Analyzer.BUNDLE_NAME, parser.getKey());
             header(properties, Analyzer.BUNDLE_VENDOR, info.getVendorName());
             header(properties, Analyzer.BUNDLE_DOCURL, info.getVendorUrl());
+
+            // Scan for embedded jars
+            StringBuilder classpath = new StringBuilder();
+            classpath.append(".");
+            JarFile jarfile = new JarFile(file);
+            for (Enumeration<JarEntry> e = jarfile.entries(); e.hasMoreElements(); )
+            {
+                JarEntry entry = e.nextElement();
+                if (entry.getName().startsWith("META-INF/lib/") && entry.getName().endsWith(".jar"))
+                    classpath.append(",").append(entry.getName());
+            }
+            header(properties, Analyzer.BUNDLE_CLASSPATH, classpath.toString());
 
             builder.setProperties(properties);
 
