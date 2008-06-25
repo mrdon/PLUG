@@ -69,10 +69,30 @@ public class TestResources extends TestCase
             Resources.fromXml(document.getRootElement());
             fail("Should have thrown exception about duplicate resources.");
         }
-        catch (Exception e)
+        catch (PluginParseException e)
         {
             assertEquals("Duplicate resource with type 'velocity' and name 'view' found", e.getMessage());
         }
+    }
+
+    public void testParsingNullElementThrowsException() throws Exception
+    {
+        try
+        {
+            Resources.fromXml(null);
+            fail("Expected exception when parsing null element");
+        }
+        catch (IllegalArgumentException expected)
+        {
+        }
+    }
+
+    public void testEmptyResources() throws Exception
+    {
+        Resources resources = Resources.EMPTY_RESOURCES;
+        assertTrue("Empty resources should be empty", resources.getResourceDescriptors().isEmpty());
+        assertTrue("Empty resources should be empty by type", resources.getResourceDescriptors("i18n").isEmpty());
+        assertNull("Empty resources should return null for any resource", resources.getResourceLocation("i18n", "i18n.properties"));
     }
 
     private void assertLocationMatches(ResourceLocation first, String type, String name)
@@ -87,12 +107,9 @@ public class TestResources extends TestCase
         assertEquals(name, first.getName());
     }
 
-    private Resources makeTestResources()
-            throws DocumentException, PluginParseException
+    private Resources makeTestResources() throws DocumentException, PluginParseException
     {
         Document document = DocumentHelper.parseText(RESOURCE_DOC);
-
-        Resources resources = Resources.fromXml(document.getRootElement());
-        return resources;
+        return Resources.fromXml(document.getRootElement());
     }
 }

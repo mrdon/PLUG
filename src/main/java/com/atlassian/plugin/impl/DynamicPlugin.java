@@ -1,20 +1,27 @@
 package com.atlassian.plugin.impl;
 
+import com.atlassian.plugin.classloader.PluginClassLoader;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
+
 import java.io.InputStream;
 import java.net.URL;
 
-import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
-import com.atlassian.plugin.loaders.classloading.PluginsClassLoader;
-
+/**
+ * A dynamically loaded plugin is loaded through the plugin class loader.
+ */
 public class DynamicPlugin extends AbstractPlugin
 {
     private final DeploymentUnit deploymentUnit;
-    private final PluginsClassLoader loader;
+    private final PluginClassLoader loader;
     private boolean deletable = true;
     private boolean bundled = false;
 
-    public DynamicPlugin(DeploymentUnit deploymentUnit, PluginsClassLoader loader)
+    public DynamicPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
     {
+        if (loader == null)
+        {
+            throw new IllegalArgumentException("PluginClassLoader must not be null");
+        }
         this.deploymentUnit = deploymentUnit;
         this.loader = loader;
     }
@@ -33,7 +40,7 @@ public class DynamicPlugin extends AbstractPlugin
     {
         return loader.getResource(name);
     }
-    
+
     public InputStream getResourceAsStream(String name)
     {
         return loader.getResourceAsStream(name);
@@ -46,6 +53,7 @@ public class DynamicPlugin extends AbstractPlugin
 
     /**
      * This plugin is dynamically loaded, so returns true.
+     *
      * @return true
      */
     public boolean isDynamicallyLoaded()
@@ -77,7 +85,6 @@ public class DynamicPlugin extends AbstractPlugin
     {
         this.bundled = bundled;
     }
-
 
     public void close()
     {

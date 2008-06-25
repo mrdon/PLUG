@@ -25,7 +25,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     boolean systemModule = false;
     protected boolean singleton = true;
     Map params;
-    protected Resources resources;
+    protected Resources resources = Resources.EMPTY_RESOURCES;
     private Float minJavaVersion;
     private String i18nNameKey;
     private String descriptionKey;
@@ -134,7 +134,6 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
 
     /**
      * Override this if your plugin needs to clean up when it's been removed.
-     * @param plugin
      */
     public void destroy(Plugin plugin)
     {}
@@ -263,8 +262,6 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
 
     /**
      * Sets the plugin for the ModuleDescriptor
-     *
-     * @param plugin
      */
     public void setPlugin(Plugin plugin)
     {

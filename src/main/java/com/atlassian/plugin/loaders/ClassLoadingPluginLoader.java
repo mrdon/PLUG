@@ -1,5 +1,20 @@
 package com.atlassian.plugin.loaders;
 
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.classloader.PluginClassLoader;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
+import com.atlassian.plugin.loaders.classloading.Scanner;
+import com.atlassian.plugin.parsers.DescriptorParser;
+import com.atlassian.plugin.parsers.DescriptorParserFactory;
+import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
+import com.atlassian.plugin.util.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -8,23 +23,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginException;
-import com.atlassian.plugin.PluginManager;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
-import com.atlassian.plugin.loaders.classloading.JarClassLoader;
-import com.atlassian.plugin.loaders.classloading.PluginsClassLoader;
-import com.atlassian.plugin.loaders.classloading.Scanner;
-import com.atlassian.plugin.parsers.DescriptorParser;
-import com.atlassian.plugin.parsers.DescriptorParserFactory;
-import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
-import com.atlassian.plugin.util.FileUtils;
 
 /**
  * A plugin loader to load plugins from a classloading on disk.
@@ -81,13 +79,16 @@ public class ClassLoadingPluginLoader implements PluginLoader
     }
 
     /**
+     * @param deploymentUnit the unit to deploy
+     * @param moduleDescriptorFactory the factory for the module descriptors
      * @return the plugin loaded from the deployment unit, or an UnloadablePlugin instance if loading fails.
+     * @throws com.atlassian.plugin.PluginParseException if the plugin could not be parsed
      */
     protected Plugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         Plugin plugin = null;
         InputStream pluginDescriptor = null;
-        PluginsClassLoader loader = new JarClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader());
+        PluginClassLoader loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader());
         try
         {
             if (loader.getResource(pluginDescriptorFileName) == null)
