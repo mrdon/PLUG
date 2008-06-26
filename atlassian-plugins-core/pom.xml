@@ -12,6 +12,7 @@
         A library to give systems the ability to have plugins, make them more pluggable and hence add pluggability
         (it's late - that makes sense in my head).
     </description>
+
     <build>
         <testResources>
             <testResource>
@@ -71,10 +72,9 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.3</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
     <properties>
-        <jdkLevel>1.4</jdkLevel>
+        <jdkLevel>1.4</jdkLevel><!-- this module is jdk 1.4 compatible -->
     </properties>
 </project>

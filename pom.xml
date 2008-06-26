@@ -13,9 +13,6 @@
 
     <name>Atlassian Plugins POM</name>
     <url>http://docs.atlassian.com/${project.artifactId}/${project.version}</url>
-    <properties>
-        <jdkLevel>1.5</jdkLevel>
-    </properties>
 
     <licenses>
         <license>
@@ -35,9 +32,9 @@
     </ciManagement>
 
     <scm>
-        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/branches/atlassian-plugins-2/</connection>
-        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/branches/atlassian-plugins-2/</developerConnection>
-        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/branches/atlassian-plugins-2</url>
+        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</connection>
+        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</developerConnection>
+        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</url>
     </scm>
 
     <modules>
@@ -47,7 +44,6 @@
     </modules>
 
     <dependencies>
-        <!-- test dependencies -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -61,26 +57,10 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>com.atlassian.maven.plugins</groupId>
-                    <artifactId>maven-clover2-plugin</artifactId>
-                    <version>2.3.1</version>
-                    <configuration>
-                        <resolveReportDescriptor>false</resolveReportDescriptor>
-                        <generateXml>true</generateXml>
-                        <generateHtml>true</generateHtml>
-                        <historyDir>${user.home}/.clover-studio-history/${pom.artifactId}</historyDir>
-                        <cloverMergeDatabase>${project.build.directory}/clover/cloverMerge.db</cloverMergeDatabase>
-                        <contextFilters>property</contextFilters>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
 
+    <properties>
+        <jdkLevel>1.5</jdkLevel>
+    </properties>
 
     <distributionManagement>
         <site>

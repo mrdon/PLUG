@@ -14,28 +14,6 @@
     </description>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.codehaus.cargo</groupId>
-                    <artifactId>cargo-maven2-plugin</artifactId>
-                    <version>0.3.1-atlassian</version>
-                </plugin>
-                <plugin>
-                    <groupId>com.atlassian.maven.plugins</groupId>
-                    <artifactId>maven-clover2-plugin</artifactId>
-                    <version>2.3.1</version>
-                    <configuration>
-                        <resolveReportDescriptor>false</resolveReportDescriptor>
-                        <generateXml>true</generateXml>
-                        <generateHtml>true</generateHtml>
-                        <historyDir>${user.home}/.clover-studio-history/${pom.artifactId}</historyDir>
-                        <cloverMergeDatabase>${project.build.directory}/clover/cloverMerge.db</cloverMergeDatabase>
-                        <contextFilters>property</contextFilters>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -45,64 +23,64 @@
                         <id>copy-framework-bundles</id>
                         <phase>generate-sources</phase>
                         <goals>
-                          <goal>copy</goal>
+                            <goal>copy</goal>
                         </goals>
                         <configuration>
-                          <artifactItems>
+                            <artifactItems>
                                 <artifactItem>
-                                  <groupId>org.springframework</groupId>
-                                  <artifactId>spring</artifactId>
-                                  <version>2.5.2</version>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring</artifactId>
+                                    <version>2.5.2</version>
                                 </artifactItem>
                                 <artifactItem>
-                                  <groupId>org.slf4j</groupId>
-                                  <artifactId>com.springsource.slf4j.org.apache.commons.logging</artifactId>
-                                  <version>1.5.0</version> 
-                                </artifactItem>
-
-                                <artifactItem>
-                                  <groupId>org.slf4j</groupId>
-                                  <artifactId>com.springsource.slf4j.api</artifactId>
-                                  <version>1.5.0</version>
+                                    <groupId>org.slf4j</groupId>
+                                    <artifactId>com.springsource.slf4j.org.apache.commons.logging</artifactId>
+                                    <version>1.5.0</version>
                                 </artifactItem>
 
                                 <artifactItem>
-                                  <groupId>org.slf4j</groupId>
-                                  <artifactId>com.springsource.slf4j.log4j</artifactId>
-                                  <version>1.5.0</version>
+                                    <groupId>org.slf4j</groupId>
+                                    <artifactId>com.springsource.slf4j.api</artifactId>
+                                    <version>1.5.0</version>
                                 </artifactItem>
 
                                 <artifactItem>
-                                  <groupId>org.springframework.osgi</groupId>
-                                  <artifactId>spring-osgi-annotation</artifactId>
-                                  <version>1.0.2</version>
-                                </artifactItem>
-
-                              <artifactItem>
-                                  <groupId>org.springframework.osgi</groupId>
-                                  <artifactId>spring-osgi-core</artifactId>
-                                  <version>1.0.2</version>
-                                </artifactItem>
-
-                              <artifactItem>
-                                  <groupId>org.springframework.osgi</groupId>
-                                  <artifactId>spring-osgi-extender</artifactId>
-                                  <version>1.0.2</version>
-                                </artifactItem>
-
-                              <artifactItem>
-                                  <groupId>org.springframework.osgi</groupId>
-                                  <artifactId>spring-osgi-io</artifactId>
-                                  <version>1.0.2</version>
+                                    <groupId>org.slf4j</groupId>
+                                    <artifactId>com.springsource.slf4j.log4j</artifactId>
+                                    <version>1.5.0</version>
                                 </artifactItem>
 
                                 <artifactItem>
-                                  <groupId>org.aopalliance</groupId>
-                                  <artifactId>com.springsource.org.aopalliance</artifactId>
-                                  <version>1.0.0</version>
+                                    <groupId>org.springframework.osgi</groupId>
+                                    <artifactId>spring-osgi-annotation</artifactId>
+                                    <version>1.0.2</version>
                                 </artifactItem>
-                          </artifactItems>
-                          <outputDirectory>${project.build.directory}/framework-bundles</outputDirectory>
+
+                                <artifactItem>
+                                    <groupId>org.springframework.osgi</groupId>
+                                    <artifactId>spring-osgi-core</artifactId>
+                                    <version>1.0.2</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework.osgi</groupId>
+                                    <artifactId>spring-osgi-extender</artifactId>
+                                    <version>1.0.2</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework.osgi</groupId>
+                                    <artifactId>spring-osgi-io</artifactId>
+                                    <version>1.0.2</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.aopalliance</groupId>
+                                    <artifactId>com.springsource.org.aopalliance</artifactId>
+                                    <version>1.0.0</version>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.directory}/framework-bundles</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -116,7 +94,6 @@
             <artifactId>atlassian-plugins</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>biz.aQute</groupId>
             <artifactId>bndlib</artifactId>
@@ -144,29 +121,10 @@
             </exclusions>
         </dependency>
 
-    
         <dependency>
             <groupId>org.twdata.pkgscanner</groupId>
             <artifactId>package-scanner</artifactId>
             <version>0.5.3</version>
         </dependency>
-
     </dependencies>
-
-    <repositories>
-        <repository>
-            <id>pkgscanner-repository</id>
-            <name>pkgscanner Repository for Maven</name>
-            <url>http://pkgscanner.googlecode.com/svn/repo/</url>
-        </repository>
-        <repository>  
-            <id>com.springsource.repository.bundles.external</id>
-            <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
-            <url>http://repository.springsource.com/maven/bundles/external</url>
-        </repository>
-    </repositories>
-
-    <properties>
-        <jdkLevel>1.5</jdkLevel>
-    </properties>
 </project>
