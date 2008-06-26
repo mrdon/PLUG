@@ -65,7 +65,7 @@
     <distributionManagement>
         <site>
             <id>atlassian-documentation</id>
-            <url>dav:https://docs.atlassian.com/atlassian-plugins/${project.version}</url>
+            <url>dav:https://docs.atlassian.com/${project.artifactId}/${project.version}</url>
         </site>
     </distributionManagement>
 </project>
