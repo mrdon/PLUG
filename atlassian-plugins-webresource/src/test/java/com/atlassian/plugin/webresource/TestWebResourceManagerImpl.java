@@ -3,9 +3,10 @@ package com.atlassian.plugin.webresource;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.impl.StaticPlugin;
-import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.servlet.BaseFileServerServlet;
+import com.atlassian.plugin.webresource.stub.StubModuleDescriptor;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 
@@ -61,7 +62,7 @@ public class TestWebResourceManagerImpl extends TestCase
         animalPlugin.setKey("confluence.extra.animal:animal");
         animalPlugin.setPluginInformation(pluginInfo);
 
-        MockAnimalModuleDescriptor animalModuleDescriptor = new MockAnimalModuleDescriptor();
+        final AbstractModuleDescriptor animalModuleDescriptor = new StubModuleDescriptor();
         animalModuleDescriptor.setPlugin(animalPlugin);
 
         String resourceName = "foo.js";

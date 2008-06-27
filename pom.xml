@@ -41,6 +41,7 @@
         <module>atlassian-plugins-core</module>
         <module>atlassian-plugins-osgi</module>
         <module>atlassian-plugins-spring</module>
+        <module>atlassian-plugins-webresource</module>
     </modules>
 
     <dependencies>

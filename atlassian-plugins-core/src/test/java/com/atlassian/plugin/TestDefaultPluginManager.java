@@ -569,9 +569,9 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         DefaultPluginManager manager = makeClassLoadingPluginManager();
         assertEquals(2, manager.getPlugins().size());
         MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
-        assertFalse(moduleDescriptor.disabled);
+        assertTrue(moduleDescriptor.isEnabled());
         manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded"));
-        assertTrue("Module must have had disable() called before being removed", moduleDescriptor.disabled);
+        assertFalse("Module must have had disable() called before being removed", moduleDescriptor.isEnabled());
 
         // uninstalling a plugin should remove it's state completely from the state store - PLUG-13
         assertNull(pluginStateStore.loadPluginState().getState("test.atlassian.plugin.classloaded"));
@@ -617,11 +617,11 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         // Disable plugin module before uninstall
         MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
-        assertFalse(moduleDescriptor.disabled);
+        assertTrue(moduleDescriptor.isEnabled());
 
         manager.uninstall(pluginToRemove);
 
-        assertTrue("Module must have had disable() called before being removed", moduleDescriptor.disabled);
+        assertFalse("Module must have had disable() called before being removed", moduleDescriptor.isEnabled());
         assertEquals(1, manager.getPlugins().size());
         assertNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
         assertEquals(2, pluginsTestDir.listFiles().length);
