@@ -905,4 +905,11 @@ public class DefaultPluginManager implements PluginManager
         Plugin plugin = getPlugin(key);
         return plugin != null && plugin.isSystemPlugin();
     }
+
+    /**
+     * @deprecated Since 2.0.0.beta2
+     */
+    public void setDescriptorParserFactory(DescriptorParserFactory descriptorParserFactory)
+    {
+    }
 }
