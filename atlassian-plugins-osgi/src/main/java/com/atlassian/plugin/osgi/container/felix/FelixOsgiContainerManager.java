@@ -60,7 +60,11 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
             constructAutoExports(packageExports));
 
-        configMap.put(FelixConstants.LOG_LEVEL_PROP, "4");
+        configMap.put(FelixConstants.LOG_LEVEL_PROP,
+                (log.isDebugEnabled() ? "4" :
+                 log.isInfoEnabled() ? "3" :
+                 log.isWarnEnabled() ? "2" :
+                 log.isErrorEnabled() ? "1" : "1"));
         // Explicitly specify the directory to use for caching bundles.
         configMap.put(BundleCache.CACHE_PROFILE_DIR_PROP, cacheDirectory.getAbsolutePath());
 
