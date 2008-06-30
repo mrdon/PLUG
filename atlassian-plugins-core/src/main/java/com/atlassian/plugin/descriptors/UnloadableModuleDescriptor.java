@@ -5,12 +5,9 @@ import com.atlassian.plugin.PluginParseException;
 import org.dom4j.Element;
 
 /**
- * Created by IntelliJ IDEA.
- * User: Jeremy Higgs
- * Date: 6/02/2006
- * Time: 14:36:55
+ * Instances of this class represent a module which <i>could not be loaded</i>, not a module
+ * which <i>can be unloaded</i>.
  */
-
 public class UnloadableModuleDescriptor extends AbstractModuleDescriptor
 {
     private String errorText;
@@ -20,13 +17,8 @@ public class UnloadableModuleDescriptor extends AbstractModuleDescriptor
         return null;
     }
 
-    public void init(Plugin plugin, Element element) throws PluginParseException
-    {
-        this.key = element.attributeValue("key");
-        this.name = element.attributeValue("name");
-        this.description = element.elementTextTrim("description");
-
-        this.plugin = plugin;
+    protected void loadClass(Plugin plugin, Element element) throws PluginParseException {
+        // don't try to load the class -- we are possibly here because it doesn't exist
     }
 
     public boolean isEnabledByDefault()

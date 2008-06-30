@@ -38,7 +38,49 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         this.name = element.attributeValue("name");
         this.i18nNameKey = element.attributeValue("i18n-name-key");
         this.completeKey = buildCompleteKey(plugin, key);
+        loadClass(plugin, element);
+        this.description = element.elementTextTrim("description");
+        Element descriptionElement = element.element("description");
+        this.descriptionKey = (descriptionElement != null) ? descriptionElement.attributeValue("key") : null;
+        params = LoaderUtils.getParams(element);
 
+        if ("disabled".equalsIgnoreCase(element.attributeValue("state")))
+        {
+            enabledByDefault = false;
+        }
+
+        if ("true".equalsIgnoreCase(element.attributeValue("system")))
+        {
+            systemModule = true;
+        }
+
+        if (element.element("java-version") != null)
+        {
+            minJavaVersion = Float.valueOf(element.element("java-version").attributeValue("min"));
+        }
+
+        if ("false".equalsIgnoreCase(element.attributeValue("singleton")))
+        {
+            singleton = false;
+        }
+        else if ("true".equalsIgnoreCase(element.attributeValue("singleton")))
+        {
+            singleton = true;
+        }
+        else
+        {
+            singleton = isSingletonByDefault();
+        }
+
+        resources = Resources.fromXml(element);
+    }
+
+    /**
+     * Override this for module descriptors which don't expect to be able to load a class successfully
+     * @param plugin
+     * @param element
+     */
+    protected void loadClass(Plugin plugin, Element element) throws PluginParseException {
         String clazz = element.attributeValue("class");
         try
         {
@@ -78,41 +120,6 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         {
             throw new PluginParseException(t);
         }
-
-        this.description = element.elementTextTrim("description");
-        Element descriptionElement = element.element("description");
-        this.descriptionKey = (descriptionElement != null) ? descriptionElement.attributeValue("key") : null;
-        params = LoaderUtils.getParams(element);
-
-        if ("disabled".equalsIgnoreCase(element.attributeValue("state")))
-        {
-            enabledByDefault = false;
-        }
-
-        if ("true".equalsIgnoreCase(element.attributeValue("system")))
-        {
-            systemModule = true;
-        }
-
-        if (element.element("java-version") != null)
-        {
-            minJavaVersion = Float.valueOf(element.element("java-version").attributeValue("min"));
-        }
-
-        if ("false".equalsIgnoreCase(element.attributeValue("singleton")))
-        {
-            singleton = false;
-        }
-        else if ("true".equalsIgnoreCase(element.attributeValue("singleton")))
-        {
-            singleton = true;
-        }
-        else
-        {
-            singleton = isSingletonByDefault();
-        }
-
-        resources = Resources.fromXml(element);
     }
 
     /**
