@@ -12,7 +12,7 @@
     <version>2.0.0.beta3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Atlassian Plugins POM</name>
+    <name>Atlassian Plugins - Parent POM</name>
     <url>http://docs.atlassian.com/${project.artifactId}/${project.version}</url>
 
     <licenses>
@@ -43,9 +43,26 @@
         <module>atlassian-plugins-osgi</module>
         <module>atlassian-plugins-spring</module>
         <module>atlassian-plugins-webresource</module>
-        <!--<module>atlassian-plugins-webfragments</module>
-        <module>atlassian-plugins-servlet</module>-->
+        <!--<module>atlassian-plugins-webfragments</module>-->
+        <module>atlassian-plugins-servlet</module>
+        <module>atlassian-plugins-test</module>
     </modules>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemProperties>
+                        <property>
+                            <name>project.version</name>
+                            <value>${project.version}</value>
+                        </property>
+                    </systemProperties>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
         <dependency>

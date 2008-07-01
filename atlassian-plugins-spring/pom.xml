@@ -7,8 +7,7 @@
     </parent>
 
     <artifactId>atlassian-plugins-spring</artifactId>
-
-    <name>Atlassian Plugins Spring Integration</name>
+    <name>Atlassian Plugins - Spring Integration</name>
     <description>
         Integration classes that tie Atlassian Plugins and Spring together
     </description>

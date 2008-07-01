@@ -1,5 +1,6 @@
 package com.atlassian.plugin.classloader;
 
+import com.atlassian.plugin.test.PluginTestUtils;
 import com.opensymphony.util.BeanUtils;
 import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
@@ -12,13 +13,11 @@ import java.util.List;
  */
 public class TestPluginClassLoader extends TestCase
 {
-    private static final String TEST_JAR = "testjars/atlassian-plugins-simpletest-1.0.jar";
-
     private PluginClassLoader pluginClassLoader;
 
     protected void setUp() throws Exception
     {
-        URL url = getClass().getClassLoader().getResource(TEST_JAR);
+        URL url = getClass().getClassLoader().getResource(PluginTestUtils.SIMPLE_TEST_JAR);
         assertNotNull("Can't find test resource", url);
         pluginClassLoader = new PluginClassLoader(new File(url.getFile()), getClass().getClassLoader());
     }

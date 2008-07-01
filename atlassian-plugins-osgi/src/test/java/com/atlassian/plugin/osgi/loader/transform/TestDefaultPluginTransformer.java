@@ -17,9 +17,9 @@ import java.util.*;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
 
-import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.test.PluginTestUtils;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import org.osgi.framework.Constants;
 import org.dom4j.DocumentException;
@@ -28,10 +28,10 @@ public class TestDefaultPluginTransformer extends TestCase
 {
     public void testGenerateManifest() throws URISyntaxException, IOException, PluginParseException
     {
-        File file = new File(getClass().getResource("/myapp-1.0-plugin.jar").toURI());
+        final File file = PluginTestUtils.getFileForResource("myapp-1.0-plugin.jar");
+
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        URLClassLoader cl = new URLClassLoader(new URL[]{file.toURL()});
-        byte[] manifest = transformer.generateManifest(cl.getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file);
+        byte[] manifest = transformer.generateManifest(getClassLoader(file).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file);
         Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
         Attributes attrs = mf.getMainAttributes();
 
@@ -48,23 +48,23 @@ public class TestDefaultPluginTransformer extends TestCase
 
     public void testGenerateManifest_innerjars() throws URISyntaxException, PluginParseException, IOException
     {
-        File file = new File(getClass().getResource("/testjars/atlassian-plugins-osgi-simpletest-1.0.jar").toURI());
+        final File file = PluginTestUtils.getFileForResource(PluginTestUtils.SIMPLE_TEST_JAR);
+
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        URLClassLoader cl = new URLClassLoader(new URL[]{file.toURL()});
-        byte[] manifest = transformer.generateManifest(cl.getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file);
+        byte[] manifest = transformer.generateManifest(getClassLoader(file).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file);
         Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
         Attributes attrs = mf.getMainAttributes();
 
-        assertEquals("1.0", attrs.getValue(Constants.BUNDLE_VERSION));
+        assertEquals(PluginTestUtils.PROJECT_VERSION, attrs.getValue(Constants.BUNDLE_VERSION));
         assertEquals("test.atlassian.plugin", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
-        assertEquals(".,META-INF/lib/atlassian-plugins-osgi-innerjarone-1.0.jar,META-INF/lib/atlassian-plugins-osgi-innerjartwo-1.0.jar",
-                attrs.getValue(Constants.BUNDLE_CLASSPATH));
-
+        assertEquals(".,META-INF/lib/" + PluginTestUtils.INNER1_TEST_JAR + ",META-INF/lib/" + PluginTestUtils.INNER2_TEST_JAR,
+            attrs.getValue(Constants.BUNDLE_CLASSPATH));
     }
 
     public void testAddFilesToZip() throws URISyntaxException, IOException
     {
-        File file = new File(getClass().getResource("/myapp-1.0-plugin.jar").toURI());
+        final File file = PluginTestUtils.getFileForResource("myapp-1.0-plugin.jar");
+
         Map<String,byte[]> files = new HashMap<String, byte[]>() {{
             put("foo", "bar".getBytes());
         }};
@@ -77,7 +77,6 @@ public class TestDefaultPluginTransformer extends TestCase
         ZipEntry entry = zip.getEntry("foo");
         assertNotNull(entry);
     }
-
 
     public void testGenerateSpringXml() throws Exception
     {
@@ -97,7 +96,6 @@ public class TestDefaultPluginTransformer extends TestCase
         assertSpringTransformContains("<foo><component key='foo' class='my.Foo' public='true'><interface>my.IFoo</interface></component></foo>",
                                       "<osgi:interfaces>",
                                       "<beans:value>my.IFoo</beans:value>");
-
     }
 
     public void testGenerateSpringXml_imports() throws Exception
@@ -147,15 +145,16 @@ public class TestDefaultPluginTransformer extends TestCase
 
     public void testTransform() throws URISyntaxException, IOException, PluginParseException, DocumentException
     {
-        File file = new File(getClass().getResource("/myapp-1.0-plugin2.jar").toURI());
+        final File file = PluginTestUtils.getFileForResource("myapp-1.0-plugin2.jar");
+
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
         File copy = transformer.transform(file, new ArrayList<HostComponentRegistration>() {{
             add(new StubHostComponentRegistration(String.class));
         }});
 
         assertNotNull(copy);
-        JarFile jar = new JarFile(copy);
-        Attributes attrs = jar.getManifest().getMainAttributes();
+        final JarFile jar = new JarFile(copy);
+        final Attributes attrs = jar.getManifest().getMainAttributes();
 
         assertEquals("1.1", attrs.getValue(Constants.BUNDLE_VERSION));
         assertEquals("com.atlassian.plugin.sample", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
@@ -185,15 +184,18 @@ public class TestDefaultPluginTransformer extends TestCase
         }
     }
 
-
     private InputStream stringToStream(String value)
     {
         return new ByteArrayInputStream(value.getBytes());
     }
 
+    private ClassLoader getClassLoader(File file) throws MalformedURLException
+    {
+        return new URLClassLoader(new URL[]{file.toURL()}, null);
+    }
+
     static class StubHostComponentRegistration implements HostComponentRegistration
     {
-
         private String[] mainInterfaces;
         private Dictionary<String,String> properties;
 

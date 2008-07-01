@@ -48,11 +48,12 @@ public class DefaultPluginTransformer implements PluginTransformer
     public File transform(File pluginJar, List<HostComponentRegistration> regs) throws PluginTransformationException
     {
         log.setLevel(Level.DEBUG);
-        JarFile jar = null;
+        final JarFile jar;
         try
         {
             jar = new JarFile(pluginJar);
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             throw new PluginTransformationException("Plugin is not a valid jar file", e);
         }
@@ -64,7 +65,7 @@ public class DefaultPluginTransformer implements PluginTransformer
         URL atlassianPluginsXmlUrl = null;
         try
         {
-            URLClassLoader cl = new URLClassLoader(new URL[]{pluginJar.toURL()});
+            final ClassLoader cl = new URLClassLoader(new URL[]{pluginJar.toURL()}, null);
             atlassianPluginsXmlUrl = cl.getResource(PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
             if (atlassianPluginsXmlUrl == null)
                 throw new IllegalStateException("Cannot find atlassian-plugins.xml in jar");
