@@ -4,6 +4,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.test.PluginTestUtils;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.DynamicPlugin;
+import com.atlassian.plugin.impl.DefaultDynamicPlugin;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 
@@ -27,7 +28,7 @@ public class TestDelegatingPluginServlet extends TestCase
     public void setUp() throws Exception
     {
         classLoader = new PluginClassLoader(PluginTestUtils.getFileForResource(PluginTestUtils.SIMPLE_TEST_JAR));
-        plugin = new DynamicPlugin(null, classLoader);
+        plugin = new DefaultDynamicPlugin(null, classLoader);
         
         mockRequest = new Mock(HttpServletRequest.class);
         mockRequest.matchAndReturn("getPathInfo", "/plugin/servlet/*");

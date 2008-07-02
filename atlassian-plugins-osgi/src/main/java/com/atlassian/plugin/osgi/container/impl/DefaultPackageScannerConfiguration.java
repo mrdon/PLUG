@@ -12,11 +12,33 @@ import java.util.Map;
  */
 public class DefaultPackageScannerConfiguration implements PackageScannerConfiguration
 {
+
     private List<String> jarIncludes = Arrays.asList("*.jar");
     private List<String> jarExcludes = Collections.emptyList();
     private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "org.quartz", "org.quartz.*", "bucket.*", "net.sf.cglib", "net.sf.cglib.*", "net.sf.hibernate", "net.sf.hibernate.*", "com.octo.captcha.*", "com.opensymphony.*", "org.apache.*", "org.xml.*", "javax.*", "org.w3c.*");
     private List<String> packageExcludes = Collections.emptyList();
     private Map<String, String> packageVersions;
+
+
+    public void setJarIncludes(List<String> jarIncludes)
+    {
+        this.jarIncludes = jarIncludes;
+    }
+
+    public void setJarExcludes(List<String> jarExcludes)
+    {
+        this.jarExcludes = jarExcludes;
+    }
+
+    public void setPackageIncludes(List<String> packageIncludes)
+    {
+        this.packageIncludes = packageIncludes;
+    }
+
+    public void setPackageExcludes(List<String> packageExcludes)
+    {
+        this.packageExcludes = packageExcludes;
+    }
 
     /**
      * Sets the jars to include and exclude from scanning
