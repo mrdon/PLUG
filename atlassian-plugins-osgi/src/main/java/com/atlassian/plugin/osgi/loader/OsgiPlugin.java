@@ -172,10 +172,10 @@ public class OsgiPlugin extends AbstractPlugin implements StateAware, AutowireCa
                     throw new RuntimeException("Cannot find createBean method on registered bean factory: "+nativeBeanFactory, e);
                 } catch (IllegalAccessException e)
                 {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    throw new RuntimeException("Cannot access createBean method", e);
                 } catch (InvocationTargetException e)
                 {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    throw new RuntimeException("Cannot invoke createBean method", e.getCause());
                 }
             } catch (InvalidSyntaxException e)
             {
