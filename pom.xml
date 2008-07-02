@@ -43,7 +43,7 @@
         <module>atlassian-plugins-osgi</module>
         <module>atlassian-plugins-spring</module>
         <module>atlassian-plugins-webresource</module>
-        <!--<module>atlassian-plugins-webfragments</module>-->
+        <module>atlassian-plugins-webfragments</module>
         <module>atlassian-plugins-servlet</module>
         <module>atlassian-plugins-test</module>
     </modules>
