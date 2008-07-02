@@ -2,10 +2,12 @@ package com.atlassian.plugin.osgi.container.felix;
 
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
 import com.atlassian.plugin.util.FileUtils;
+import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.felix.framework.Felix;
@@ -14,6 +16,11 @@ import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.StringMap;
 import org.osgi.framework.*;
 import org.twdata.pkgscanner.ExportPackage;
+import org.twdata.pkgscanner.PackageScanner;
+import static org.twdata.pkgscanner.PackageScanner.jars;
+import static org.twdata.pkgscanner.PackageScanner.include;
+import static org.twdata.pkgscanner.PackageScanner.exclude;
+import static org.twdata.pkgscanner.PackageScanner.packages;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,15 +40,29 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private boolean felixRunning = false;
     private File cacheDirectory;
 
-    private URL frameworkBundlesUrl;
+    private final URL frameworkBundlesUrl;
+    private PackageScannerConfiguration packageScannerConfig;
+    public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "/osgi-framework-bundles.zip";
 
-    public FelixOsgiContainerManager(URL frameworkBundlesZip)
+
+    public FelixOsgiContainerManager(PackageScannerConfiguration packageScannerConfig)
     {
+        this(ClassLoaderUtils.getResource(OSGI_FRAMEWORK_BUNDLES_ZIP, FelixOsgiContainerManager.class), packageScannerConfig);
+    }
+    public FelixOsgiContainerManager(URL frameworkBundlesZip, PackageScannerConfiguration packageScannerConfig)
+    {
+        if (frameworkBundlesZip == null)
+            throw new IllegalArgumentException("The framework bundles zip is required");
+
         this.frameworkBundlesUrl = frameworkBundlesZip;
+        this.packageScannerConfig = packageScannerConfig;
     }
 
-    public void start(Collection<ExportPackage> packageExports, HostComponentProvider provider) throws OsgiContainerException
+
+
+    public void start(HostComponentProvider provider) throws OsgiContainerException
     {
+        Collection<ExportPackage> exports = generateExports();
         initialiseCacheDirectory();
 
         // Create a case-insensitive configuration property map.
@@ -59,7 +80,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             "org.osgi.util.tracker; version=1.3.0," +
             "host.service.command; version=1.0.0," +
 
-            constructAutoExports(packageExports));
+            constructAutoExports(exports));
 
         configMap.put(FelixConstants.LOG_LEVEL_PROP,
                 (log.isDebugEnabled() ? "4" :
@@ -172,6 +193,23 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         }
 
         return sb.toString();
+    }
+
+    Collection<ExportPackage> generateExports()
+    {
+        String[] arrType = new String[0];
+        Collection<ExportPackage> exports = new PackageScanner()
+           .select(
+               jars(
+                       include(packageScannerConfig.getJarIncludes().toArray(arrType)),
+                       exclude(packageScannerConfig.getJarExcludes().toArray(arrType))),
+               packages(
+                       include(packageScannerConfig.getPackageIncludes().toArray(arrType)),
+                       exclude(packageScannerConfig.getPackageExcludes().toArray(arrType)))
+           )
+           .withMappings(packageScannerConfig.getPackageVersions())
+           .scan();
+        return exports;
     }
 
     void initialiseCacheDirectory() throws OsgiContainerException

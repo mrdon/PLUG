@@ -1,93 +1,37 @@
 package com.atlassian.plugin.impl;
 
-import com.atlassian.plugin.classloader.PluginClassLoader;
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 
-import java.io.InputStream;
 import java.net.URL;
+import java.io.InputStream;
 
-/**
- * A dynamically loaded plugin is loaded through the plugin class loader.
- */
-public class DynamicPlugin extends AbstractPlugin
+public interface DynamicPlugin extends Plugin
 {
-    private final DeploymentUnit deploymentUnit;
-    private final PluginClassLoader loader;
-    private boolean deletable = true;
-    private boolean bundled = false;
+    Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException;
 
-    public DynamicPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
-    {
-        if (loader == null)
-        {
-            throw new IllegalArgumentException("PluginClassLoader must not be null");
-        }
-        this.deploymentUnit = deploymentUnit;
-        this.loader = loader;
-    }
+    boolean isUninstallable();
 
-    public Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException
-    {
-        return loader.loadClass(clazz);
-    }
+    URL getResource(String name);
 
-    public boolean isUninstallable()
-    {
-        return true;
-    }
+    InputStream getResourceAsStream(String name);
 
-    public URL getResource(String name)
-    {
-        return loader.getResource(name);
-    }
-
-    public InputStream getResourceAsStream(String name)
-    {
-        return loader.getResourceAsStream(name);
-    }
-
-    public ClassLoader getClassLoader()
-    {
-        return loader;
-    }
+    ClassLoader getClassLoader();
 
     /**
      * This plugin is dynamically loaded, so returns true.
      *
      * @return true
      */
-    public boolean isDynamicallyLoaded()
-    {
-        return true;
-    }
+    boolean isDynamicallyLoaded();
 
-    public DeploymentUnit getDeploymentUnit()
-    {
-        return deploymentUnit;
-    }
+    boolean isDeleteable();
 
-    public boolean isDeleteable()
-    {
-        return deletable;
-    }
+    void setDeletable(boolean deletable);
 
-    public void setDeletable(boolean deletable)
-    {
-        this.deletable = deletable;
-    }
+    boolean isBundledPlugin();
 
-    public boolean isBundledPlugin()
-    {
-        return bundled;
-    }
+    void setBundled(boolean bundled);
 
-    public void setBundled(boolean bundled)
-    {
-        this.bundled = bundled;
-    }
-
-    public void close()
-    {
-        loader.close();
-    }
+    void close();
 }

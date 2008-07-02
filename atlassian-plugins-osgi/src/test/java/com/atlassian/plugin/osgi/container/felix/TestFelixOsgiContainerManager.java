@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.container.felix;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.loader.OsgiPluginLoader;
+import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.util.FileUtils;
 import junit.framework.TestCase;
 import org.twdata.pkgscanner.ExportPackage;
@@ -27,7 +28,7 @@ public class TestFelixOsgiContainerManager extends TestCase
     {
         tmpdir = File.createTempFile("foo", "bar").getParentFile();
 
-        felix = new FelixOsgiContainerManager(frameworkBundlesUrl);
+        felix = new FelixOsgiContainerManager(frameworkBundlesUrl, new DefaultPackageScannerConfiguration());
     }
 
     @Override
@@ -73,7 +74,7 @@ public class TestFelixOsgiContainerManager extends TestCase
 
     public void testStartStop()
     {
-        felix.start(Collections.EMPTY_LIST, null);
+        felix.start(null);
         assertTrue(felix.isRunning());
         assertEquals(1, felix.getBundles().length);
         felix.stop();
@@ -82,7 +83,7 @@ public class TestFelixOsgiContainerManager extends TestCase
 
     public void testInstallBundle() throws URISyntaxException
     {
-        felix.start(Collections.EMPTY_LIST, null);
+        felix.start(null);
         assertEquals(1, felix.getBundles().length);
         File jar = new File(getClass().getResource("/myapp-1.0.jar").toURI());
         felix.installBundle(jar);
@@ -100,7 +101,7 @@ public class TestFelixOsgiContainerManager extends TestCase
                 registrar.register(Serializable.class).forInstance("Some String");
             }
         };
-        felix.start(Collections.EMPTY_LIST, null);
+        felix.start(null);
         assertTrue(felix.isRunning());
         assertEquals(1, felix.getBundles().length);
         assertEquals(2, felix.getRegisteredServices().length);

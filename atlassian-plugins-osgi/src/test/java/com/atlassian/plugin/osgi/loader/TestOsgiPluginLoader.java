@@ -39,8 +39,7 @@ public class TestOsgiPluginLoader extends TestCase
     {
         mockOsgi = new Mock(OsgiContainerManager.class);
         tmpdir = File.createTempFile("foo", "bar").getParentFile();
-        loader = new OsgiPluginLoader(tmpdir, PluginManager.PLUGIN_DESCRIPTOR_FILENAME, null, null);
-        loader.setOsgiContainerManager((OsgiContainerManager) mockOsgi.proxy());
+        loader = new OsgiPluginLoader(tmpdir, PluginManager.PLUGIN_DESCRIPTOR_FILENAME, null, (OsgiContainerManager) mockOsgi.proxy(), null);
         this.jar = new File(getClass().getResource("/myapp-1.0.jar").toURI());
 
         mockBundle = new Mock(Bundle.class);
@@ -145,13 +144,5 @@ public class TestOsgiPluginLoader extends TestCase
         mockPluginTrans.verify();
         mockBundle.verify();
     }
-
-    public void testGenerateExports()
-    {
-        Collection<ExportPackage> exports = loader.generateExports();
-        assertNotNull(exports);
-        assertTrue(exports.size() > 50);
-    }
-
 
 }

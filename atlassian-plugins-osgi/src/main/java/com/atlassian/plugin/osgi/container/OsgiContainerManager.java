@@ -19,11 +19,10 @@ public interface OsgiContainerManager
     /**
      * Starts the OSGi container
      *
-     * @param exports The packages to export
      * @param provider The host component provider to use when registering host services
      * @throws OsgiContainerException If the container cannot be started
      */
-    void start(Collection<ExportPackage> exports, HostComponentProvider provider) throws OsgiContainerException;
+    void start(HostComponentProvider provider) throws OsgiContainerException;
 
     /**
      * Stops the OSGi container
