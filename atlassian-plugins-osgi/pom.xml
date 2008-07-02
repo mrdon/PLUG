@@ -136,6 +136,11 @@
             <artifactId>package-scanner</artifactId>
             <version>0.5.3</version>
         </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.8</version>
+        </dependency>
 
         <dependency>
             <groupId>com.atlassian.plugins.test</groupId>

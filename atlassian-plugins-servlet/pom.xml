@@ -36,6 +36,16 @@
             <artifactId>atlassian-plugins</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.atlassian.seraph</groupId>
+            <artifactId>atlassian-seraph</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>backport-util-concurrent</groupId>
+            <artifactId>backport-util-concurrent</artifactId>
+            <version>3.1</version>
+        </dependency>
         <!-- test dependencies -->
         <dependency>
             <groupId>com.atlassian.plugins.test</groupId>
