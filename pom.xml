@@ -43,7 +43,7 @@
         <module>atlassian-plugins-webresource</module>
         <module>atlassian-plugins-webfragments</module>
         <module>atlassian-plugins-servlet</module>
-        <module>atlassian-plugins-test</module>
+        <module>atlassian-plugins-test-resources</module>
     </modules>
 
     <profiles>
