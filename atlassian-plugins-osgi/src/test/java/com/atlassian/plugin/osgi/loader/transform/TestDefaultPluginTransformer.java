@@ -57,8 +57,12 @@ public class TestDefaultPluginTransformer extends TestCase
 
         assertEquals(PluginTestUtils.PROJECT_VERSION, attrs.getValue(Constants.BUNDLE_VERSION));
         assertEquals("test.atlassian.plugin", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
-        assertEquals(".,META-INF/lib/" + PluginTestUtils.INNER1_TEST_JAR + ",META-INF/lib/" + PluginTestUtils.INNER2_TEST_JAR,
-            attrs.getValue(Constants.BUNDLE_CLASSPATH));
+
+        final Collection classpathEntries = Arrays.asList(attrs.getValue(Constants.BUNDLE_CLASSPATH).split(","));
+        assertEquals(3, classpathEntries.size());
+        assertTrue(classpathEntries.contains("."));
+        assertTrue(classpathEntries.contains("META-INF/lib/" + PluginTestUtils.INNER1_TEST_JAR));
+        assertTrue(classpathEntries.contains("META-INF/lib/" + PluginTestUtils.INNER2_TEST_JAR));
     }
 
     public void testAddFilesToZip() throws URISyntaxException, IOException
