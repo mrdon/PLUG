@@ -2,6 +2,7 @@ package com.atlassian.plugin.test;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.net.URI;
 
 /**
  *
@@ -23,6 +24,6 @@ public class PluginTestUtils
 
     public static File getFileForResource(final String resourceName) throws URISyntaxException
     {
-        return new File(PluginTestUtils.class.getClassLoader().getResource(resourceName).toURI());
+        return new File(new URI(PluginTestUtils.class.getClassLoader().getResource(resourceName).toString()));
     }
 }
