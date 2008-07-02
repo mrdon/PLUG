@@ -11,19 +11,25 @@ import com.atlassian.plugin.osgi.loader.transform.PluginTransformer;
 import com.atlassian.plugin.osgi.loader.transform.DefaultPluginTransformer;
 import com.atlassian.plugin.osgi.loader.transform.PluginTransformationException;
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.parsers.DescriptorParser;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import java.net.URL;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.IOUtils;
 import org.osgi.framework.*;
 import static org.twdata.pkgscanner.PackageScanner.jars;
 import static org.twdata.pkgscanner.PackageScanner.packages;
@@ -48,11 +54,12 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
     private PluginTransformer pluginTransformer;
     private Map<String, String> packageVersions;
     private final String pluginDescriptorFileName;
+    public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "/osgi-framework-bundles.zip";
 
-    public OsgiPluginLoader(File pluginPath, File startBundlesPath, String pluginDescriptorFileName, PluginFactory pluginFactory, HostComponentProvider provider)
+    public OsgiPluginLoader(File pluginPath, String pluginDescriptorFileName, PluginFactory pluginFactory, HostComponentProvider provider)
     {
         super(pluginPath, pluginDescriptorFileName, pluginFactory);
-        osgi = new FelixOsgiContainerManager(startBundlesPath);
+        osgi = new FelixOsgiContainerManager(ClassLoaderUtils.getResource(OSGI_FRAMEWORK_BUNDLES_ZIP, getClass()));
         this.hostComponentProvider = provider;
         pluginTransformer = new DefaultPluginTransformer();
         this.pluginDescriptorFileName = pluginDescriptorFileName;

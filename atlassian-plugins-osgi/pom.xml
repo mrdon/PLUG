@@ -80,7 +80,7 @@
                                     <version>1.0.0</version>
                                 </artifactItem>
                             </artifactItems>
-                            <outputDirectory>${project.build.directory}/framework-bundles</outputDirectory>
+                            <outputDirectory>${frameworkBundleDirectory}</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
@@ -95,6 +95,31 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2-beta-1</version>
+                <configuration>
+                    <finalName>osgi</finalName>
+                    <descriptors>
+                        <descriptor>src/main/assembly/framework-bundles.xml</descriptor>
+                    </descriptors>
+                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>create-framework-bundles</id>
+                        <!--
+                            so that it happens just after the unit tests ran successfuly
+                            it should be changes to pre-package when maven 2.1 is out
+                        -->
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>attached</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
@@ -155,4 +180,9 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <properties>
+        <!-- This should use ${project.build.directory} instead of target, but Maven < 2.0.9 fails to interpolate. -->
+        <frameworkBundleDirectory>target/framework-bundles</frameworkBundleDirectory>
+    </properties>
 </project>

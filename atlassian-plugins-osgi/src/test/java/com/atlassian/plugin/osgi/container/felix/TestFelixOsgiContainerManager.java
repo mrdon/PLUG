@@ -1,39 +1,38 @@
 package com.atlassian.plugin.osgi.container.felix;
 
+import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.osgi.loader.OsgiPluginLoader;
+import com.atlassian.plugin.util.FileUtils;
 import junit.framework.TestCase;
+import org.twdata.pkgscanner.ExportPackage;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.List;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.net.URISyntaxException;
-
-import org.twdata.pkgscanner.ExportPackage;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
+import java.util.List;
 
 public class TestFelixOsgiContainerManager extends TestCase
 {
     File tmpdir;
-    File startBundlesDir;
     private FelixOsgiContainerManager felix;
-
+    private URL frameworkBundlesUrl = getClass().getResource("/nothing.zip");
+    
     @Override
     public void setUp() throws IOException
     {
         tmpdir = File.createTempFile("foo", "bar").getParentFile();
-        startBundlesDir = new File(tmpdir, "startBundles");
-        startBundlesDir.mkdir();
 
-        felix = new FelixOsgiContainerManager(startBundlesDir);
+        felix = new FelixOsgiContainerManager(frameworkBundlesUrl);
     }
 
     @Override
     public void tearDown()
     {
-        FelixOsgiContainerManager.deleteDirectory(startBundlesDir);
         felix = null;
         tmpdir = null;
     }
@@ -47,7 +46,7 @@ public class TestFelixOsgiContainerManager extends TestCase
         subdir.mkdir();
         File kid = File.createTempFile("foo", "bar", subdir);
 
-        FelixOsgiContainerManager.deleteDirectory(dir);
+        FileUtils.deleteDir(dir);
         assertTrue(!kid.exists());
         assertTrue(!subdir.exists());
         assertTrue(!dir.exists());

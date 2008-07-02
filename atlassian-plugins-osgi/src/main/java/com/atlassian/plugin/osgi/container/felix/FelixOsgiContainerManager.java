@@ -1,25 +1,26 @@
 package com.atlassian.plugin.osgi.container.felix;
 
+import com.atlassian.plugin.osgi.container.OsgiContainerException;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
+import com.atlassian.plugin.util.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.cache.BundleCache;
-import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.FelixConstants;
+import org.apache.felix.framework.util.StringMap;
 import org.osgi.framework.*;
 import org.twdata.pkgscanner.ExportPackage;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.*;
+import java.io.FilenameFilter;
 import java.net.MalformedURLException;
-
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
-import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
-import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.container.OsgiContainerException;
+import java.net.URL;
+import java.util.*;
 
 /**
  * Felix implementation of the OSGi container manager
@@ -32,11 +33,11 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private boolean felixRunning = false;
     private File cacheDirectory;
 
-    private File startBundlesPath;
+    private URL frameworkBundlesUrl;
 
-    public FelixOsgiContainerManager(File startBundlesPath)
+    public FelixOsgiContainerManager(URL frameworkBundlesZip)
     {
-        this.startBundlesPath = startBundlesPath;
+        this.frameworkBundlesUrl = frameworkBundlesZip;
     }
 
     public void start(Collection<ExportPackage> packageExports, HostComponentProvider provider) throws OsgiContainerException
@@ -71,7 +72,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         try
         {
             // Create host activator;
-            registration = new BundleRegistration(startBundlesPath, provider);
+            registration = new BundleRegistration(frameworkBundlesUrl, provider);
             final List<BundleActivator> list = new ArrayList<BundleActivator>();
             list.add(registration);
 
@@ -173,28 +174,13 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         return sb.toString();
     }
 
-    static boolean deleteDirectory(File path) {
-        if (path.exists()) {
-            File[] files = path.listFiles();
-            for(int i=0; i<files.length; i++) {
-                if(files[i].isDirectory()) {
-                    deleteDirectory(files[i]);
-                }
-                else {
-                    files[i].delete();
-                }
-            }
-        }
-        return path.delete();
-    }
-
     void initialiseCacheDirectory() throws OsgiContainerException
     {
         try
         {
             cacheDirectory = new File(File.createTempFile("foo", "bar").getParentFile(), "felix");
             if (cacheDirectory.exists())
-                deleteDirectory(cacheDirectory);
+                FileUtils.deleteDir(cacheDirectory);
 
             cacheDirectory.mkdir();
             cacheDirectory.deleteOnExit();
@@ -222,14 +208,14 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     {
         private BundleContext bundleContext;
         private HostComponentProvider hostProvider;
-        private File startBundlesPath;
         private List<ServiceRegistration> hostServicesReferences;
         private List<HostComponentRegistration> hostComponentRegistrations;
+        private URL frameworkBundlesUrl;
 
-        public BundleRegistration(File startBundlesPath, HostComponentProvider provider)
+        public BundleRegistration(URL frameworkBundlesUrl, HostComponentProvider provider)
         {
-            this.startBundlesPath = startBundlesPath;
             this.hostProvider = provider;
+            this.frameworkBundlesUrl = frameworkBundlesUrl;
         }
 
         public void start(BundleContext context) throws Exception {
@@ -237,12 +223,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             context.addBundleListener(this);
 
             reloadHostComponents(hostProvider);
-
-            for (File bundleFile : startBundlesPath.listFiles(new FilenameFilter() {
-                public boolean accept(File file, String s) {return s.endsWith(".jar");}}))
-            {
-                install(bundleFile);
-            }
+            extractAndInstallFrameworkBundles();
         }
 
         public void reloadHostComponents(HostComponentProvider provider)
@@ -286,7 +267,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
         public Bundle install(File path) throws BundleException
         {
-            Bundle bundle = null;
+            Bundle bundle;
             try
             {
 
@@ -307,6 +288,18 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         public List<HostComponentRegistration> getHostComponentRegistrations()
         {
             return hostComponentRegistrations;
+        }
+
+        private void extractAndInstallFrameworkBundles() throws IOException, BundleException
+        {
+            File startBundlesDir = FileUtils.extractZipFilesToTemp(frameworkBundlesUrl);
+            for (File bundleFile : startBundlesDir.listFiles(new FilenameFilter() {
+                    public boolean accept(File file, String s) { return file.getName().endsWith(".jar"); }
+                }))
+            {
+                install(bundleFile);
+            }
+            FileUtils.deleteDir(startBundlesDir);
         }
     }
 

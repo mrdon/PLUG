@@ -6,6 +6,7 @@ import org.apache.commons.logging.Log;
 import java.io.*;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipEntry;
+import java.net.URL;
 
 public class FileUtils
 {
@@ -231,27 +232,70 @@ public class FileUtils
         return dir.delete();
     }
 
+    /**
+     * Extracts a zip file to a temporary directory
+     * @param zipUrl
+     * @return The created temp directory containing the contents
+     * @throws IOException
+     */
+    public static File extractZipFilesToTemp(URL zipUrl) throws IOException
+    {
+        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+        File zipDir = new File(tmpDir, String.valueOf(zipUrl.hashCode()));
+        if (zipDir.exists())
+            deleteDir(zipDir);
+        zipDir.mkdir();
+        extractZipFiles(zipUrl, zipDir);
+        return zipDir;
+    }
+
+
+
+    /**
+     * Extract all the contents of a zip file into a target directory.
+     * @param zipUrl
+     * @param destinationDirectory
+     */
+    public static void extractZipFiles(URL zipUrl, File destinationDirectory) throws IOException
+    {
+        extractZipFiles(zipUrl.openStream(), destinationDirectory);
+    }
 
     /**
      * Extract all the contents of a zip file into a target directory.
      * @param zipFileName
-     * @param destintationDirectory
+     * @param destinationDirectory
      */
-    public static void extractZipFiles(String zipFileName, File destintationDirectory)
+    public static void extractZipFiles(String zipFileName, File destinationDirectory)
+    {
+        try
+        {
+            extractZipFiles(new FileInputStream(zipFileName), destinationDirectory);
+        } catch (FileNotFoundException e)
+        {
+            log.error("Failed to find zip file: "+zipFileName, e);
+        }
+    }
+
+    /**
+     * Extract all the contents of a zip file into a target directory.
+     * @param inputStream
+     * @param destinationDirectory
+     */
+    public static void extractZipFiles(InputStream inputStream, File destinationDirectory)
     {
         try
         {
             byte[] buf = new byte[1024];
-            ZipInputStream zipinputstream = null;
+            ZipInputStream zipinputstream = new ZipInputStream(inputStream);
             ZipEntry zipentry;
-            zipinputstream = new ZipInputStream(new FileInputStream(zipFileName));
 
             zipentry = zipinputstream.getNextEntry();
             while (zipentry != null)
             {
                 //for each entry to be extracted
                 String entryName = zipentry.getName();
-                String destinationName = destintationDirectory + File.separator + entryName;
+                String destinationName = destinationDirectory + File.separator + entryName;
 
                 int n;
                 FileOutputStream fileoutputstream;
