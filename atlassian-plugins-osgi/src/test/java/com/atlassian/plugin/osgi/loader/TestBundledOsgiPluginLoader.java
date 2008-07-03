@@ -1,19 +1,14 @@
 package com.atlassian.plugin.osgi.loader;
 
+import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Dictionary;
-import java.util.Hashtable;
-
-import com.mockobjects.dynamic.Mock;
-import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.PluginManager;
-import com.atlassian.plugin.util.FileUtils;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
 
 public class TestBundledOsgiPluginLoader extends TestCase
 {
@@ -32,9 +27,9 @@ public class TestBundledOsgiPluginLoader extends TestCase
     }
 
     @Override
-    public void tearDown()
+    public void tearDown() throws Exception
     {
-        FileUtils.deleteDir(pluginDir);
+        FileUtils.deleteDirectory(pluginDir);
         tmpdir = null;
     }
 

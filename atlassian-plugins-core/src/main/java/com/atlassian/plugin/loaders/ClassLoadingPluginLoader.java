@@ -7,9 +7,9 @@ import com.atlassian.plugin.loaders.classloading.Scanner;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
-import com.atlassian.plugin.util.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.InputStream;
@@ -114,7 +114,7 @@ public class ClassLoadingPluginLoader implements DynamicPluginLoader
         }
         finally
         {
-            FileUtils.shutdownStream(pluginDescriptor);
+            IOUtils.closeQuietly(pluginDescriptor);
         }
         return plugin;
     }

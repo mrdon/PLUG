@@ -1,6 +1,7 @@
 package com.atlassian.plugin.util.zip;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -10,8 +11,6 @@ import java.util.zip.ZipInputStream;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
-
-import com.atlassian.plugin.util.FileUtils;
 
 public abstract class AbstractUnzipper implements Unzipper
 {
@@ -88,7 +87,7 @@ public abstract class AbstractUnzipper implements Unzipper
         List targetDirContents = getContentsOfTargetDir(destDir);
         if (!targetDirContents.equals(zipContents))
         {
-            FileUtils.deleteDir(destDir);
+            FileUtils.deleteDirectory(destDir);
             unzip();
         }
         else

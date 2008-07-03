@@ -1,13 +1,13 @@
 package com.atlassian.plugin.loaders.classloading;
 
 import com.atlassian.plugin.util.ClassLoaderUtils;
-import com.atlassian.plugin.util.FileUtils;
-import com.atlassian.plugin.loaders.TestClassPathPluginLoader;
 import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+
+import org.apache.commons.io.FileUtils;
 
 public abstract class AbstractTestClassLoader extends TestCase
 {
@@ -67,7 +67,7 @@ public abstract class AbstractTestClassLoader extends TestCase
         pluginsTestDir = new File(pluginsDir, randomString(6));
 
         if (pluginsDir.exists() && pluginsDir.isDirectory())
-            assertTrue(FileUtils.deleteDir(pluginsDir));
+            FileUtils.deleteDirectory(pluginsDir);
 
         pluginsTestDir.mkdirs();
 
@@ -80,10 +80,9 @@ public abstract class AbstractTestClassLoader extends TestCase
         removeSourceControlMetadata(".svn");
     }
 
-    private void removeSourceControlMetadata(String directoryName)
+    private void removeSourceControlMetadata(String directoryName) throws IOException
     {
         File dir = new File(pluginsTestDir, directoryName);
-        if (dir.exists())
-            assertTrue(FileUtils.deleteDir(dir));
+        if (dir.exists()) FileUtils.deleteDirectory(dir);
     }
 }

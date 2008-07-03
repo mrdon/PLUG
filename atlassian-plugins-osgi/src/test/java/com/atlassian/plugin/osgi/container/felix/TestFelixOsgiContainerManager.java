@@ -2,11 +2,10 @@ package com.atlassian.plugin.osgi.container.felix;
 
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.osgi.loader.OsgiPluginLoader;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
-import com.atlassian.plugin.util.FileUtils;
 import junit.framework.TestCase;
 import org.twdata.pkgscanner.ExportPackage;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,12 +13,11 @@ import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class TestFelixOsgiContainerManager extends TestCase
 {
-    File tmpdir;
+    private File tmpdir;
     private FelixOsgiContainerManager felix;
     private URL frameworkBundlesUrl = getClass().getResource("/nothing.zip");
     private File frameworkBundlesDir;
@@ -34,11 +32,11 @@ public class TestFelixOsgiContainerManager extends TestCase
     }
 
     @Override
-    public void tearDown()
+    public void tearDown() throws Exception
     {
         felix = null;
         tmpdir = null;
-        FileUtils.deleteDir(frameworkBundlesDir);
+        FileUtils.deleteDirectory(frameworkBundlesDir);
     }
 
     public void testDeleteDirectory() throws IOException
@@ -50,7 +48,7 @@ public class TestFelixOsgiContainerManager extends TestCase
         subdir.mkdir();
         File kid = File.createTempFile("foo", "bar", subdir);
 
-        FileUtils.deleteDir(dir);
+        FileUtils.deleteDirectory(dir);
         assertTrue(!kid.exists());
         assertTrue(!subdir.exists());
         assertTrue(!dir.exists());

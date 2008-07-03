@@ -11,16 +11,16 @@ import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.PluginPredicate;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
-import com.atlassian.plugin.util.FileUtils;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+
+import org.apache.commons.io.FileUtils;
 
 /**
  * Testing {@link DefaultPluginManager}
@@ -912,5 +912,4 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             };
         }
     }
-
 }

@@ -6,10 +6,10 @@ import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
-import com.atlassian.plugin.util.FileUtils;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.FileUtils;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.framework.util.FelixConstants;
@@ -220,7 +220,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         {
             cacheDirectory = new File(File.createTempFile("foo", "bar").getParentFile(), "felix");
             if (cacheDirectory.exists())
-                FileUtils.deleteDir(cacheDirectory);
+                FileUtils.deleteDirectory(cacheDirectory);
 
             cacheDirectory.mkdir();
             cacheDirectory.deleteOnExit();
@@ -334,7 +334,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
         private void extractAndInstallFrameworkBundles() throws IOException, BundleException
         {
-            FileUtils.conditionallyExtractZipFile(frameworkBundlesUrl, frameworkBundlesDir);
+            com.atlassian.plugin.util.FileUtils.conditionallyExtractZipFile(frameworkBundlesUrl, frameworkBundlesDir);
             for (File bundleFile : frameworkBundlesDir.listFiles(new FilenameFilter() {
                     public boolean accept(File file, String s) { return file.getName().endsWith(".jar"); }
                 }))

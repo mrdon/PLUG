@@ -2,9 +2,13 @@ package com.atlassian.plugin.repositories;
 
 import com.atlassian.plugin.PluginInstaller;
 import com.atlassian.plugin.PluginJar;
-import com.atlassian.plugin.util.FileUtils;
 
-import java.io.*;
+import org.apache.commons.io.IOUtils;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Simple implementation of a PluginInstaller which writes plugin JARs
@@ -39,7 +43,7 @@ public class FilePluginInstaller implements PluginInstaller
         try
         {
             os= new FileOutputStream(newPluginFile);
-            FileUtils.copy(pluginJar.getInputStream(), os);
+            IOUtils.copy(pluginJar.getInputStream(), os);
         }
         catch (IOException e)
         {
@@ -47,7 +51,7 @@ public class FilePluginInstaller implements PluginInstaller
         }
         finally
         {
-            FileUtils.shutdownStream(os);
+            IOUtils.closeQuietly(os);
         }
     }
 }

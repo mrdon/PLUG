@@ -1,6 +1,6 @@
 package com.atlassian.plugin.loaders.classloading;
 
-import com.atlassian.plugin.util.FileUtils;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.util.Collection;

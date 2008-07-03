@@ -7,10 +7,10 @@ import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
-import com.atlassian.plugin.util.FileUtils;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.util.Collection;
@@ -21,9 +21,8 @@ import java.net.URL;
 
 public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
 {
-    private static final Log log = LogFactory.getLog(TestClassLoadingPluginLoader.class);
-    ClassLoadingPluginLoader loader;
-    DefaultModuleDescriptorFactory moduleDescriptorFactory;
+    private ClassLoadingPluginLoader loader;
+    private DefaultModuleDescriptorFactory moduleDescriptorFactory;
 
     public static final String BAD_PLUGIN_JAR = "bad-plugins/crap-plugin.jar";
 
@@ -42,7 +41,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
             loader.shutDown();
         }
 
-        assertTrue(FileUtils.deleteDir(pluginsTestDir));
+        FileUtils.deleteDirectory(pluginsTestDir);
         super.tearDown();
     }
 

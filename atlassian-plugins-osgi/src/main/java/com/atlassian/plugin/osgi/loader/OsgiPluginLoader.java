@@ -1,43 +1,31 @@
 package com.atlassian.plugin.osgi.loader;
 
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginJar;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.classloader.PluginClassLoader;
+import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.ClassLoadingPluginLoader;
 import com.atlassian.plugin.loaders.PluginFactory;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
-import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
-import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
-import com.atlassian.plugin.osgi.loader.transform.PluginTransformer;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.loader.transform.DefaultPluginTransformer;
 import com.atlassian.plugin.osgi.loader.transform.PluginTransformationException;
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.util.ClassLoaderUtils;
-import com.atlassian.plugin.classloader.PluginClassLoader;
-import com.atlassian.plugin.impl.UnloadablePlugin;
+import com.atlassian.plugin.osgi.loader.transform.PluginTransformer;
 import com.atlassian.plugin.parsers.DescriptorParser;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.osgi.framework.Constants;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipEntry;
-import java.util.jar.JarFile;
+import java.util.Collection;
 import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import java.net.URL;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.io.IOUtils;
-import org.osgi.framework.*;
-import static org.twdata.pkgscanner.PackageScanner.jars;
-import static org.twdata.pkgscanner.PackageScanner.packages;
-import static org.twdata.pkgscanner.PackageScanner.include;
-import static org.twdata.pkgscanner.PackageScanner.exclude;
-import org.twdata.pkgscanner.ExportPackage;
-import org.twdata.pkgscanner.PackageScanner;
 
 /**
  * Plugin loader that starts an OSGi container and loads plugins into it, wrapped as OSGi bundles.
