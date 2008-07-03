@@ -11,7 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.*;
 import java.util.zip.ZipEntry;
 
-public class FileUnzipper implements Unzipper
+public class FileUnzipper extends AbstractUnzipper
 {
     private static final Log log = LogFactory.getLog(FileUnzipper.class);
 

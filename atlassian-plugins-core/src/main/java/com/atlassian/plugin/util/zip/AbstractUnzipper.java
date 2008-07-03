@@ -9,6 +9,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+
+import com.atlassian.plugin.util.FileUtils;
 
 public abstract class AbstractUnzipper implements Unzipper
 {
@@ -68,5 +71,64 @@ public abstract class AbstractUnzipper implements Unzipper
         }
 
         return (ZipEntry[]) entries.toArray(new ZipEntry[entries.size()]);
+    }
+
+    public void conditionalUnzip() throws IOException
+    {
+        List zipContents = new ArrayList();
+
+        ZipEntry[] zipEntries = entries();
+        for (int i = 0; i < zipEntries.length; i++)
+        {
+            zipContents.add(zipEntries[i].getName());
+        }
+
+        // If the jar contents of the directory does not match the contents of the zip
+        // The we will nuke the bundled plugins directory and re-extract.
+        List targetDirContents = getContentsOfTargetDir(destDir);
+        if (!targetDirContents.equals(zipContents))
+        {
+            FileUtils.deleteDir(destDir);
+            unzip();
+        }
+        else
+        {
+            if (log.isDebugEnabled())
+                log.debug("Target directory contents match zip contents. Do nothing.");
+        }
+    }
+
+    protected List getContentsOfTargetDir(File dir)
+    {
+        // Create filter that lists only jars
+        FilenameFilter filter = new FilenameFilter()
+        {
+            public boolean accept(File dir, String name)
+            {
+                return name.endsWith(".jar");
+            }
+        };
+
+        String[] children = dir.list(filter);
+
+        if (children == null)
+        {
+            // No files, return empty array
+            return Collections.EMPTY_LIST;
+        }
+
+        ArrayList targetDirContents = new ArrayList();
+
+        if (log.isDebugEnabled() && children.length > 0)
+            log.debug("Listing JAR files in " + dir.getAbsolutePath());
+
+        for (int i = 0; i < children.length; i++)
+        {
+            if (log.isDebugEnabled())
+                log.debug(children[i]);
+            targetDirContents.add(children[i]);
+
+        }
+        return targetDirContents;
     }
 }

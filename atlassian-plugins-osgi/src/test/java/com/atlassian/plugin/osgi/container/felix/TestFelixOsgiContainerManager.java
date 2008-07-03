@@ -22,13 +22,15 @@ public class TestFelixOsgiContainerManager extends TestCase
     File tmpdir;
     private FelixOsgiContainerManager felix;
     private URL frameworkBundlesUrl = getClass().getResource("/nothing.zip");
-    
+    private File frameworkBundlesDir;
+
     @Override
     public void setUp() throws IOException
     {
-        tmpdir = File.createTempFile("foo", "bar").getParentFile();
+        tmpdir = new File(System.getProperty("java.io.tmpdir"));
+        frameworkBundlesDir = new File(tmpdir, "framework-bundles-test");
 
-        felix = new FelixOsgiContainerManager(frameworkBundlesUrl, new DefaultPackageScannerConfiguration());
+        felix = new FelixOsgiContainerManager(frameworkBundlesUrl, frameworkBundlesDir, new DefaultPackageScannerConfiguration());
     }
 
     @Override
@@ -36,6 +38,7 @@ public class TestFelixOsgiContainerManager extends TestCase
     {
         felix = null;
         tmpdir = null;
+        FileUtils.deleteDir(frameworkBundlesDir);
     }
 
     public void testDeleteDirectory() throws IOException

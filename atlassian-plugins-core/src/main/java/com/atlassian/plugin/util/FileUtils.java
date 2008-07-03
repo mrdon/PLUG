@@ -8,6 +8,8 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipEntry;
 import java.net.URL;
 
+import com.atlassian.plugin.util.zip.UrlUnzipper;
+
 public class FileUtils
 {
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
@@ -233,97 +235,24 @@ public class FileUtils
     }
 
     /**
-     * Extracts a zip file to a temporary directory
-     * @param zipUrl
-     * @return The created temp directory containing the contents
-     * @throws IOException
+     * Extract the zip from the URL into the destination directory, but only if the contents haven't already been
+     * unzipped.  If the directory contains different contents than the zip, the directory is cleaned out
+     * and the files are unzipped.
+     *
+     * @param zipUrl The zip url
+     * @param destDir The destination directory for the zip contents
      */
-    public static File extractZipFilesToTemp(URL zipUrl) throws IOException
-    {
-        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
-        File zipDir = new File(tmpDir, String.valueOf(zipUrl.hashCode()));
-        if (zipDir.exists())
-            deleteDir(zipDir);
-        zipDir.mkdir();
-        extractZipFiles(zipUrl, zipDir);
-        return zipDir;
-    }
-
-
-
-    /**
-     * Extract all the contents of a zip file into a target directory.
-     * @param zipUrl
-     * @param destinationDirectory
-     */
-    public static void extractZipFiles(URL zipUrl, File destinationDirectory) throws IOException
-    {
-        extractZipFiles(zipUrl.openStream(), destinationDirectory);
-    }
-
-    /**
-     * Extract all the contents of a zip file into a target directory.
-     * @param zipFileName
-     * @param destinationDirectory
-     */
-    public static void extractZipFiles(String zipFileName, File destinationDirectory)
+    public static void conditionallyExtractZipFile(URL zipUrl, File destDir)
     {
         try
         {
-            extractZipFiles(new FileInputStream(zipFileName), destinationDirectory);
-        } catch (FileNotFoundException e)
+            UrlUnzipper unzipper = new UrlUnzipper(zipUrl, destDir);
+            unzipper.conditionalUnzip();
+        }
+        catch (IOException e)
         {
-            log.error("Failed to find zip file: "+zipFileName, e);
+            log.error("Found " + zipUrl + ", but failed to read file", e);
         }
     }
 
-    /**
-     * Extract all the contents of a zip file into a target directory.
-     * @param inputStream
-     * @param destinationDirectory
-     */
-    public static void extractZipFiles(InputStream inputStream, File destinationDirectory)
-    {
-        try
-        {
-            byte[] buf = new byte[1024];
-            ZipInputStream zipinputstream = new ZipInputStream(inputStream);
-            ZipEntry zipentry;
-
-            zipentry = zipinputstream.getNextEntry();
-            while (zipentry != null)
-            {
-                //for each entry to be extracted
-                String entryName = zipentry.getName();
-                String destinationName = destinationDirectory + File.separator + entryName;
-
-                int n;
-                FileOutputStream fileoutputstream;
-                File newFile = new File(entryName);
-                String directory = newFile.getParent();
-
-                if (directory == null)
-                {
-                    if (newFile.isDirectory())
-                        break;
-                }
-
-                fileoutputstream = new FileOutputStream(destinationName);
-
-                while ((n = zipinputstream.read(buf, 0, 1024)) > -1)
-                    fileoutputstream.write(buf, 0, n);
-
-                fileoutputstream.close();
-                zipinputstream.closeEntry();
-                zipentry = zipinputstream.getNextEntry();
-
-            }//while
-
-            zipinputstream.close();
-        }
-        catch (Exception e)
-        {
-            log.error("Failed to extract zipfile", e);
-        }
-    }
 }

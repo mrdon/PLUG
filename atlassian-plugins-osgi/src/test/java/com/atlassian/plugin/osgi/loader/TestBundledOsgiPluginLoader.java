@@ -20,7 +20,6 @@ public class TestBundledOsgiPluginLoader extends TestCase
     File tmpdir;
     File startBundlesDir;
     Mock mockOsgi;
-    private Mock mockBundle;
     private File pluginDir;
 
     @Override
@@ -30,12 +29,6 @@ public class TestBundledOsgiPluginLoader extends TestCase
         tmpdir = new File(System.getProperty("java.io.tmpdir"));
         pluginDir = new File(tmpdir, "test-plugin-dir");
         pluginDir.mkdir();
-
-        mockBundle = new Mock(Bundle.class);
-        Dictionary<String, String> dict = new Hashtable<String, String>();
-        dict.put(Constants.BUNDLE_DESCRIPTION, "desc");
-        dict.put(Constants.BUNDLE_VERSION, "1.0");
-        mockBundle.matchAndReturn("getHeaders", dict);
     }
 
     @Override
@@ -47,7 +40,7 @@ public class TestBundledOsgiPluginLoader extends TestCase
 
     public void testCreateWithUnzip()
     {
-        new BundledOsgiPluginLoader("bundled-plugins-test.zip", pluginDir,
+        new BundledOsgiPluginLoader(getClass().getResource("/bundled-plugins-test.zip"), pluginDir,
                 PluginManager.PLUGIN_DESCRIPTOR_FILENAME, null, (OsgiContainerManager) mockOsgi.proxy(), null);
         String[] files = pluginDir.list();
         assertEquals(1, files.length);

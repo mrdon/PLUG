@@ -43,19 +43,21 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private final URL frameworkBundlesUrl;
     private PackageScannerConfiguration packageScannerConfig;
     public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "/osgi-framework-bundles.zip";
+    private File frameworkBundlesDir;
 
 
-    public FelixOsgiContainerManager(PackageScannerConfiguration packageScannerConfig)
+    public FelixOsgiContainerManager(File frameworkBundlesDir, PackageScannerConfiguration packageScannerConfig)
     {
-        this(ClassLoaderUtils.getResource(OSGI_FRAMEWORK_BUNDLES_ZIP, FelixOsgiContainerManager.class), packageScannerConfig);
+        this(ClassLoaderUtils.getResource(OSGI_FRAMEWORK_BUNDLES_ZIP, FelixOsgiContainerManager.class), frameworkBundlesDir, packageScannerConfig);
     }
-    public FelixOsgiContainerManager(URL frameworkBundlesZip, PackageScannerConfiguration packageScannerConfig)
+    public FelixOsgiContainerManager(URL frameworkBundlesZip, File frameworkBundlesDir, PackageScannerConfiguration packageScannerConfig)
     {
         if (frameworkBundlesZip == null)
             throw new IllegalArgumentException("The framework bundles zip is required");
 
         this.frameworkBundlesUrl = frameworkBundlesZip;
         this.packageScannerConfig = packageScannerConfig;
+        this.frameworkBundlesDir = frameworkBundlesDir;
     }
 
 
@@ -93,7 +95,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         try
         {
             // Create host activator;
-            registration = new BundleRegistration(frameworkBundlesUrl, provider);
+            registration = new BundleRegistration(frameworkBundlesUrl, frameworkBundlesDir, provider);
             final List<BundleActivator> list = new ArrayList<BundleActivator>();
             list.add(registration);
 
@@ -249,11 +251,13 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         private List<ServiceRegistration> hostServicesReferences;
         private List<HostComponentRegistration> hostComponentRegistrations;
         private URL frameworkBundlesUrl;
+        private File frameworkBundlesDir;
 
-        public BundleRegistration(URL frameworkBundlesUrl, HostComponentProvider provider)
+        public BundleRegistration(URL frameworkBundlesUrl, File frameworkBundlesDir, HostComponentProvider provider)
         {
             this.hostProvider = provider;
             this.frameworkBundlesUrl = frameworkBundlesUrl;
+            this.frameworkBundlesDir = frameworkBundlesDir;
         }
 
         public void start(BundleContext context) throws Exception {
@@ -330,14 +334,13 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
         private void extractAndInstallFrameworkBundles() throws IOException, BundleException
         {
-            File startBundlesDir = FileUtils.extractZipFilesToTemp(frameworkBundlesUrl);
-            for (File bundleFile : startBundlesDir.listFiles(new FilenameFilter() {
+            FileUtils.conditionallyExtractZipFile(frameworkBundlesUrl, frameworkBundlesDir);
+            for (File bundleFile : frameworkBundlesDir.listFiles(new FilenameFilter() {
                     public boolean accept(File file, String s) { return file.getName().endsWith(".jar"); }
                 }))
             {
                 install(bundleFile);
             }
-            FileUtils.deleteDir(startBundlesDir);
         }
     }
 
