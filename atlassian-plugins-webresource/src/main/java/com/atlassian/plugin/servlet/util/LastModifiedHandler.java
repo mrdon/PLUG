@@ -1,4 +1,4 @@
-package com.atlassian.plugin.util;
+package com.atlassian.plugin.servlet.util;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

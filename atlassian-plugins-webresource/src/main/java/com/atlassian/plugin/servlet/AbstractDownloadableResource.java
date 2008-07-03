@@ -1,8 +1,8 @@
 package com.atlassian.plugin.servlet;
 
-import com.atlassian.plugin.util.LastModifiedHandler;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.servlet.util.LastModifiedHandler;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
