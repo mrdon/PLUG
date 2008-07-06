@@ -81,7 +81,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             "org.osgi.util; version=1.3.0," +
             "org.osgi.util.tracker; version=1.3.0," +
             "host.service.command; version=1.0.0," +
-
+            "javax.swing.tree,javax.swing,org.xml.sax,org.xml.sax.helpers," +
+            "javax.xml,javax.xml.parsers,javax.xml.transform,javax.xml.transform.sax," +
+            "javax.xml.transform.stream,javax.xml.transform.dom,org.w3c.dom," +
             constructAutoExports(exports));
 
         configMap.put(FelixConstants.LOG_LEVEL_PROP,
@@ -336,7 +338,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         {
             com.atlassian.plugin.util.FileUtils.conditionallyExtractZipFile(frameworkBundlesUrl, frameworkBundlesDir);
             for (File bundleFile : frameworkBundlesDir.listFiles(new FilenameFilter() {
-                    public boolean accept(File file, String s) { return file.getName().endsWith(".jar"); }
+                    public boolean accept(File file, String s) {
+                        return s.endsWith(".jar"); 
+                    }
                 }))
             {
                 install(bundleFile);
