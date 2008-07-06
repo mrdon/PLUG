@@ -42,7 +42,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
     private final URL frameworkBundlesUrl;
     private PackageScannerConfiguration packageScannerConfig;
-    public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "/osgi-framework-bundles.zip";
+    public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "osgi-framework-bundles.zip";
     private File frameworkBundlesDir;
 
 
