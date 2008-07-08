@@ -8,6 +8,12 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.BeanIsAbstractException;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.aop.SpringProxy;
+import org.springframework.aop.support.AopUtils;
+import org.springframework.core.annotation.AnnotationUtils;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Proxy;
 
 /**
  * Host component provider that scans the bean factory for all beans that implement @AvailableToPlugins and registers
@@ -32,12 +38,15 @@ public class SpringHostComponentProvider implements HostComponentProvider, BeanF
 
             for (String name : names)
             {
-                if (lbf.isSingleton(name))
+                try
                 {
-                    try
+                    if (lbf.isSingleton(name))
                     {
+
                         Object bean = lbf.getBean(name);
-                        AvailableToPlugins annotation = bean.getClass().getAnnotation(AvailableToPlugins.class);
+                        Class cls = AopUtils.getTargetClass(bean);
+
+                        AvailableToPlugins annotation = AnnotationUtils.findAnnotation(cls, AvailableToPlugins.class);
                         Class[] ifs;
                         if (annotation != null) {
                             if (annotation.value() != Void.class) {
@@ -47,10 +56,10 @@ public class SpringHostComponentProvider implements HostComponentProvider, BeanF
                             }
                             registrar.register(ifs).forInstance(bean).withName(name);
                         }
-                    } catch (BeanIsAbstractException ex)
-                    {
-                        // skipping abstract beans (is there a better way to check for this?)
                     }
+                } catch (BeanIsAbstractException ex)
+                {
+                    // skipping abstract beans (is there a better way to check for this?)
                 }
             }
         }
