@@ -517,6 +517,11 @@ public class DefaultPluginManager implements PluginManager
         return moduleDescriptors;
     }
 
+    public List getEnabledModuleDescriptorsByClass(Class moduleDescriptorClass)
+    {
+        return getEnabledModuleDescriptorsByClass(moduleDescriptorClass, false);
+    }
+
     /**
      * This method has been reverted to pre PLUG-40 to fix performance issues that were encountered during
      * load testing. This should be reverted to the state it was in at 54639 when the fundamental issue leading
@@ -524,7 +529,7 @@ public class DefaultPluginManager implements PluginManager
      *
      * @see PluginAccessor#getEnabledModuleDescriptorsByClass(Class)
      */
-    public List getEnabledModuleDescriptorsByClass(Class moduleDescriptorClass)
+    public List getEnabledModuleDescriptorsByClass(Class moduleDescriptorClass, boolean verbose)
     {
         final List result = new LinkedList();
         for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
@@ -534,7 +539,7 @@ public class DefaultPluginManager implements PluginManager
             // Skip disabled plugins
             if (!isPluginEnabled(plugin.getKey()))
             {
-                if (log.isInfoEnabled())
+                if (verbose && log.isInfoEnabled())
                 {
                     log.info("Plugin [" + plugin.getKey() + "] is disabled.");
                 }
@@ -550,7 +555,7 @@ public class DefaultPluginManager implements PluginManager
                 }
                 else
                 {
-                    if (log.isInfoEnabled())
+                    if (verbose && log.isInfoEnabled())
                     {
                         log.info("Module [" + module.getCompleteKey() + "] is disabled.");
                     }

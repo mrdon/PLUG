@@ -116,9 +116,19 @@ public interface PluginAccessor
     /**
      * Get all enabled module descriptors that have a specific descriptor class.
      *
+     * @param descriptorClazz module descriptor class
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
      */
     List getEnabledModuleDescriptorsByClass(Class descriptorClazz);
+
+    /**
+     * Get all enabled module descriptors that have a specific descriptor class.
+     *
+     * @param descriptorClazz module descriptor class
+     * @param verbose         log verbose messages flag
+     * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
+     */
+    List getEnabledModuleDescriptorsByClass(Class descriptorClazz, boolean verbose);
 
     /**
      * Get all enabled module descriptors that have a specific descriptor type.
