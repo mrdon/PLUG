@@ -56,16 +56,6 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         this.pluginTransformer = trans;
     }
 
-    /**
-     * Forces all registered host components to be unregistered and the HostComponentProvider to be called to get a
-     * new list of host components
-     * @param provider The host component provider to reload from
-     */
-    public void reloadHostComponents(HostComponentProvider provider)
-    {
-        osgi.reloadHostComponents(provider);
-    }
-
     @Override
     public void shutDown()
     {
