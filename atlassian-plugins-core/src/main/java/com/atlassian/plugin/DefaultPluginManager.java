@@ -5,17 +5,10 @@ import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
-import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.loaders.DynamicPluginLoader;
+import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
-import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
-import com.atlassian.plugin.predicate.EnabledModulePredicate;
-import com.atlassian.plugin.predicate.EnabledPluginPredicate;
-import com.atlassian.plugin.predicate.ModuleDescriptorOfClassPredicate;
-import com.atlassian.plugin.predicate.ModuleDescriptorOfTypePredicate;
-import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
-import com.atlassian.plugin.predicate.ModuleOfClassPredicate;
-import com.atlassian.plugin.predicate.PluginPredicate;
+import com.atlassian.plugin.predicate.*;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
@@ -23,16 +16,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -542,23 +526,34 @@ public class DefaultPluginManager implements PluginManager
      */
     public List getEnabledModuleDescriptorsByClass(Class moduleDescriptorClass)
     {
-        List result = new LinkedList();
-
+        final List result = new LinkedList();
         for (Iterator iterator = plugins.values().iterator(); iterator.hasNext();)
         {
-            Plugin plugin = (Plugin) iterator.next();
+            final Plugin plugin = (Plugin) iterator.next();
 
             // Skip disabled plugins
             if (!isPluginEnabled(plugin.getKey()))
+            {
+                if (log.isInfoEnabled())
+                {
+                    log.info("Plugin [" + plugin.getKey() + "] is disabled.");
+                }
                 continue;
+            }
 
             for (Iterator iterator1 = plugin.getModuleDescriptors().iterator(); iterator1.hasNext();)
             {
-                ModuleDescriptor module = (ModuleDescriptor) iterator1.next();
-
+                final ModuleDescriptor module = (ModuleDescriptor) iterator1.next();
                 if (moduleDescriptorClass.isInstance(module) && isPluginModuleEnabled(module.getCompleteKey()))
                 {
                     result.add(module);
+                }
+                else
+                {
+                    if (log.isInfoEnabled())
+                    {
+                        log.info("Module [" + module.getCompleteKey() + "] is disabled.");
+                    }
                 }
             }
         }
