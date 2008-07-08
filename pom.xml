@@ -44,7 +44,6 @@
         <module>atlassian-plugins-webfragments</module>
         <module>atlassian-plugins-servlet</module>
         <module>atlassian-plugins-test-resources</module>
-        <module>atlassian-plugins-refimpl</module>
     </modules>
 
     <profiles>
@@ -57,6 +56,7 @@
             <modules>
                 <module>atlassian-plugins-osgi</module>
                 <module>atlassian-plugins-spring</module>
+                <module>atlassian-plugins-refimpl</module>
             </modules>
         </profile>
     </profiles>
