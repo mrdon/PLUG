@@ -21,7 +21,7 @@ public class TestSpringHostComponentProvider extends TestCase
                 return true;
             }
         };
-        factory.addBean("bean", new Bean());
+        factory.addBean("bean", new FooableBean());
         factory.addBean("string", "hello");
 
         SpringHostComponentProvider provider = new SpringHostComponentProvider();
@@ -49,7 +49,7 @@ public class TestSpringHostComponentProvider extends TestCase
             }
         };
 
-        ProxyFactory pfactory = new ProxyFactory(new Bean());
+        ProxyFactory pfactory = new ProxyFactory(new FooableBean());
         pfactory.addInterface(Fooable.class);
         pfactory.addAdvice(new Advice() {});
 
@@ -70,11 +70,6 @@ public class TestSpringHostComponentProvider extends TestCase
 
 
     }
-
-    @AvailableToPlugins
-    static class Bean implements Fooable {}
-
-    static interface Fooable {}
 
 
 }
