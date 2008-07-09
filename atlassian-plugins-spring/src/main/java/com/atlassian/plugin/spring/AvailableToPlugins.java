@@ -14,5 +14,8 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AvailableToPlugins
 {
+    /**
+     * @return The interface the bean is exposed as
+     */
     Class value() default Void.class;
 }

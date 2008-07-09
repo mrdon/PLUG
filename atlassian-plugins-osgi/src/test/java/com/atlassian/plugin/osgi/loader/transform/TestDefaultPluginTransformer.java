@@ -121,7 +121,7 @@ public class TestDefaultPluginTransformer extends TestCase
             add(new StubHostComponentRegistration("foo", String.class));
         }},
                 "<foo/>",
-                "<osgi:reference id='foo'",
+                "<osgi:reference id='foo' context-class-loader='service-provider'",
                 "<osgi:interfaces>",
                 "<beans:value>java.lang.String</beans:value>",
                 "filter='(bean-name=foo)");

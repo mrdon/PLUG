@@ -212,6 +212,7 @@ public class DefaultPluginTransformer implements PluginTransformer
                 id = id.replaceAll("#", "LB");
                 Element osgiService = root.addElement("osgi:reference");
                 osgiService.addAttribute("id", id);
+                osgiService.addAttribute("context-class-loader", "service-provider");
                 if (beanName != null)
                     osgiService.addAttribute("filter", "(bean-name="+beanName+")");
 
