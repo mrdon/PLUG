@@ -9,4 +9,21 @@
 
     <artifactId>atlassian-plugins-test</artifactId>
     <name>Atlassian Plugins - Test Utilities</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>2.5.10</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+        </dependency>
+    </dependencies>
+    <properties>
+        <jdkLevel>1.5</jdkLevel>
+    </properties>
+
 </project>
