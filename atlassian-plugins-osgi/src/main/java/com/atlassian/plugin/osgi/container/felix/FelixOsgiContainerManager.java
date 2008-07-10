@@ -83,7 +83,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             "host.service.command; version=1.0.0," +
             "javax.swing.tree,javax.swing,org.xml.sax,org.xml.sax.helpers," +
             "javax.xml,javax.xml.parsers,javax.xml.transform,javax.xml.transform.sax," +
-            "javax.xml.transform.stream,javax.xml.transform.dom,org.w3c.dom," +
+            "javax.xml.transform.stream,javax.xml.transform.dom,org.w3c.dom,javax.naming.spi," +
+            "javax.swing.border,javax.swing.event,javax.swing.text," +
             constructAutoExports(exports));
 
         configMap.put(FelixConstants.LOG_LEVEL_PROP,

@@ -2,9 +2,11 @@ package com.atlassian.plugin.osgi.loader;
 
 import org.osgi.framework.Bundle;
 import org.apache.log4j.Logger;
+import org.apache.commons.collections.iterators.IteratorEnumeration;
 
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.Arrays;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -67,7 +69,16 @@ class BundleClassLoaderAccessor
         @Override
         public Enumeration<URL> findResources(String name) throws IOException
         {
-            return bundle.getResources(name);
+            Enumeration<URL> e = bundle.getResources(name);
+
+            // For some reason, getResources() sometimes returns nothing, yet getResource() will return one.  This code
+            // handles that strange case
+            if (!e.hasMoreElements()) {
+                URL resource = findResource(name);
+                if (resource != null)
+                    e = new IteratorEnumeration(Arrays.asList(resource).iterator());
+            }
+            return e;
         }
 
         @Override

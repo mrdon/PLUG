@@ -16,7 +16,7 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
     private List<String> jarIncludes = Arrays.asList("*.jar");
     private List<String> jarExcludes = Collections.emptyList();
     private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "javax.swing.tree", "org.quartz", "org.quartz.*", "bucket.*", "net.sf.cglib", "net.sf.cglib.*", "net.sf.hibernate", "net.sf.hibernate.*", "com.octo.captcha.*", "com.opensymphony.*", "org.apache.*", "org.xml.*", "javax.*", "org.w3c.*");
-    private List<String> packageExcludes = Arrays.asList("com.springframework*");
+    private List<String> packageExcludes = Arrays.asList("com.springframework*", "org.apache.commons.logging*");
     private Map<String, String> packageVersions;
 
 
