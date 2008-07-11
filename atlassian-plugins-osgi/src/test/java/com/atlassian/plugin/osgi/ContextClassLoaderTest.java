@@ -1,7 +1,5 @@
 package com.atlassian.plugin.osgi;
 
-import com.atlassian.plugin.test.PluginBuilder;
-import com.atlassian.plugin.PluginJar;
 import com.atlassian.plugin.FilePluginJar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;

@@ -16,20 +16,8 @@
         <module>innerjarone</module>
         <module>innerjartwo</module>
         <module>simpletest</module>
+        <module>atlassian-plugins-test</module>
     </modules>
-    <profiles>
-        <!-- this profile exists so that we can easily compile/test the other modules with a JDK 1.4,
-             once we can use JDK 1.5 we must remove it -->
-        <profile>
-            <activation>
-                <jdk>!1.4</jdk>
-            </activation>
-            <modules>
-                <module>atlassian-plugins-test</module>
-            </modules>
-        </profile>
-    </profiles>
-
 
     <properties>
         <jdkLevel>1.4</jdkLevel>

@@ -1,4 +1,4 @@
-package com.atlassian.plugin.test;
+package com.atlassian.plugin.osgi;
 
 import org.codehaus.janino.*;
 import org.apache.commons.io.IOUtils;
