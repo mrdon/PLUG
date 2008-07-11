@@ -48,7 +48,7 @@ public abstract class PluginInContainerTestBase extends TestCase {
         pluginManager = null;
     }
 
-    protected void initPluginManager(HostComponentProvider hostComponentProvider, HostActivator) throws Exception {
+    protected void initPluginManager(HostComponentProvider hostComponentProvider) throws Exception {
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
         osgiContainerManager = new FelixOsgiContainerManager(frameworkBundlesDir,
                                                              scannerConfig);
