@@ -8,43 +8,55 @@ import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 
 import java.io.File;
 
-/**
- * Created by IntelliJ IDEA.
- * User: mrdon
- * Date: 10/07/2008
- * Time: 10:50:44 PM
- * To change this template use File | Settings | File Templates.
- */
+import junit.framework.TestCase;
+
 public class ContextClassLoaderTest extends PluginInContainerTestBase {
 
     public void testCorrectContextClassLoaderForHostComponents() throws Exception
     {
-        final HostComp comp = new HostComp();
+        final HostCompImpl comp = new HostCompImpl();
         File plugin = new PluginBuilder("ccltest")
-                .addPluginInformation("ccltest.key", "CCLTest", "1.0")
-                .addJava("my.Foo", "package my;import com.atlassian.plugin.osgi.ContextClassLoaderTest.HostComp;public class Foo {public Foo(HostComp comp) { comp.run(); } }")
+                .addResource("atlassian-plugin.xml",
+                        "<atlassian-plugin key=\"ccltest\" pluginsVersion=\"2\">\n" +
+                        "    <plugin-info>\n" +
+                        "        <version>1.0</version>\n" +
+                        "    </plugin-info>\n" +
+                        "    <component key=\"foo\" class=\"my.FooImpl\" />\n" +
+                        "</atlassian-plugin>")
+                .addJava("my.Foo", "package my;public interface Foo {}")
+                .addJava("my.FooImpl", "package my;import com.atlassian.plugin.osgi.ContextClassLoaderTest.HostComp;" +
+                        "public class FooImpl implements Foo {public FooImpl(HostComp comp) throws Exception { comp.run(); } }")
                 .build();
         HostComponentProvider prov = new HostComponentProvider()
         {
             public void provide(ComponentRegistrar registrar)
             {
-                registrar.register(HostComp.class).forInstance(comp);
+                registrar.register(HostComp.class).forInstance(comp).withName("hostComp");
             }
         };
 
         initPluginManager(prov);
-        //pluginManager.installPlugin(new FilePluginJar(plugin));
+        pluginManager.installPlugin(new FilePluginJar(plugin));
 
-        //assertNotNull(comp.cl);
+        assertNotNull(comp.cl);
+        assertNotNull(comp.testClass);
+        assertTrue(comp.testClass == TestCase.class);
 
     }
 
-    public static class HostComp
+    public static interface HostComp
+    {
+        void run() throws ClassNotFoundException;
+    }
+
+    public static class HostCompImpl implements HostComp
     {
         public ClassLoader cl;
-        public void run()
+        public Class testClass;
+        public void run() throws ClassNotFoundException
         {
             cl = Thread.currentThread().getContextClassLoader();
+            testClass = cl.loadClass("junit.framework.TestCase");
         }
     }
 }

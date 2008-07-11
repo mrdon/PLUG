@@ -6,6 +6,10 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import java.util.*;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 
 import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
@@ -39,14 +43,44 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
 
             if (log.isDebugEnabled())
                 log.debug("Registering: "+ Arrays.asList(names)+" instance "+reg.getInstance() + "with properties: "+reg.getProperties());
-            
-            ServiceRegistration sreg = ctx.registerService(names, reg.getInstance(), reg.getProperties());
+
+            ServiceRegistration sreg = ctx.registerService(names, wrapService(reg.getMainInterfaceClasses(), reg.getInstance()), reg.getProperties());
             if (sreg != null)
             {
                 services.add(sreg);
             }
         }
         return services;
+    }
+
+    /**
+     * Wraps the service in a dynamic proxy that ensures all methods are executed with the object class's class loader
+     * as the context class loader
+     * @param interfaces The interfaces to proxy
+     * @param service The instance to proxy
+     * @return A proxy that wraps the service
+     */
+    protected Object wrapService(Class[] interfaces, final Object service)
+    {
+        final Object wrappedService = Proxy.newProxyInstance(
+            getClass().getClassLoader(),
+            interfaces,
+            new InvocationHandler() {
+                public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
+                    final Thread thread = Thread.currentThread();
+                    final ClassLoader ccl = thread.getContextClassLoader();
+                    try {
+                        thread.setContextClassLoader(service.getClass().getClassLoader());
+                        return method.invoke(service, objects);
+                    } catch (InvocationTargetException e) {
+                        throw e.getTargetException();
+                    } finally {
+                        thread.setContextClassLoader(ccl);
+                    }
+                }
+            }
+        );
+        return wrappedService;
     }
 
     public List<HostComponentRegistration> getRegistry()

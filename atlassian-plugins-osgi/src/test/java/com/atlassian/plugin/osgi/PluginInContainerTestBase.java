@@ -8,6 +8,7 @@ import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfigurati
 import com.atlassian.plugin.osgi.loader.OsgiPluginLoader;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.loaders.DefaultPluginFactory;
 
@@ -32,7 +33,9 @@ public abstract class PluginInContainerTestBase extends TestCase {
     {
         tmpDir = new File(System.getProperty("java.io.tmpdir"));
         frameworkBundlesDir = new File(tmpDir, "framework-bundles");
+        frameworkBundlesDir.mkdir();
         pluginsDir = new File(tmpDir, "plugins");
+        pluginsDir.mkdir();
     }
 
     @Override
@@ -62,6 +65,7 @@ public abstract class PluginInContainerTestBase extends TestCase {
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.asList(osgiPluginLoader),
                 moduleDescriptorFactory);
+        pluginManager.setPluginInstaller(new FilePluginInstaller(pluginsDir));
         pluginManager.init();
     }
 }

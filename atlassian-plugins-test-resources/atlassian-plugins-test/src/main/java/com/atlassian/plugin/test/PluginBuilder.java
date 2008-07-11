@@ -16,6 +16,7 @@ import java.lang.reflect.Field;
 public class PluginBuilder {
     private final Map<String,byte[]> jarContents;
     private final String name;
+    private ClassLoader classLoader;
 
     /**
      * Creates the builder
@@ -24,6 +25,7 @@ public class PluginBuilder {
     public PluginBuilder(String name) {
         jarContents = new HashMap<String,byte[]>();
         this.name = name;
+        classLoader = getClass().getClassLoader();
     }
 
     /**
@@ -36,8 +38,9 @@ public class PluginBuilder {
     public PluginBuilder addJava(String className, String code) throws Exception
     {
         SimpleCompiler compiler = new SimpleCompiler();
-        compiler.setParentClassLoader(getClass().getClassLoader());
+        compiler.setParentClassLoader(classLoader);
         compiler.cook(new StringReader(code));
+        classLoader = compiler.getClassLoader();
 
         // Silly hack because I'm too lazy to do it the "proper" janino way
         ByteArrayClassLoader cl = (ByteArrayClassLoader) compiler.getClassLoader();
@@ -99,6 +102,13 @@ public class PluginBuilder {
      * @throws IOException
      */
     public File build() throws IOException {
+
+        // Ensure there is a manifest
+        if (!jarContents.containsKey("META-INF/MANIFEST.MF"))
+        {
+            jarContents.put("META-INF/MANIFEST.MF", "Manifest-Version: 1.0".getBytes());
+        }
+
         File jarFile = File.createTempFile(name, ".jar");
         ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(jarFile));
         for (Map.Entry<String,byte[]> entry : jarContents.entrySet())

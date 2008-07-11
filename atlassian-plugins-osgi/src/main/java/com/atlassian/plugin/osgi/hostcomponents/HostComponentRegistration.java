@@ -21,4 +21,9 @@ public interface HostComponentRegistration
      * @return The component instance
      */
     Object getInstance();
+
+    /**
+     * @return The list of interface classes
+     */
+    Class[] getMainInterfaceClasses();
 }

@@ -139,8 +139,8 @@ public class DefaultPluginTransformer implements PluginTransformer
                 "http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd\n" +
                 "http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd");
         root.setName("beans:beans");
-
-
+        root.addAttribute("default-autowire", "autodetect");
+        
         // Write plugin components
         SAXReader reader = new SAXReader();
         Document pluginDoc = reader.read(in);

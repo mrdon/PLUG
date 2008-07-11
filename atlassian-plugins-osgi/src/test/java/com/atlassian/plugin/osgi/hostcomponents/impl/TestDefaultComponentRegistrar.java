@@ -37,6 +37,21 @@ public class TestDefaultComponentRegistrar extends TestCase
         assertEquals(2, registrar.getRegistry().size());
     }
 
+    public void testRegisterOnlyInterfaces()
+    {
+        DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+        Class[] ifs = new Class[]{Object.class};
+        try
+        {
+            registrar.register(ifs).forInstance("Foo").withName("foo").withProperty("jim", "bar");
+            fail("Should have failed");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            // very good...
+        }
+    }
+
     public void testWriteRegistry()
     {
         Class[] ifs = new Class[]{Serializable.class};
