@@ -18,7 +18,7 @@ public class PluginBuilderTest extends TestCase {
                 .build();
         assertNotNull(jar);
 
-        URLClassLoader cl = new URLClassLoader(new URL[]{jar.toURL()});
+        URLClassLoader cl = new URLClassLoader(new URL[]{jar.toURL()}, null);
         Class cls = cl.loadClass("my.Foo");
         assertNotNull(cls);
         Object foo = cls.newInstance();
@@ -27,7 +27,7 @@ public class PluginBuilderTest extends TestCase {
         assertEquals("Some text", IOUtils.toString(cl.getResourceAsStream("foo.txt")));
         assertNotNull(cl.getResource("META-INF/MANIFEST.MF"));
 
-        String xml = IOUtils.toString(cl.getResourceAsStream("atlassian-plugins.xml"));
+        String xml = IOUtils.toString(cl.getResourceAsStream("atlassian-plugin.xml"));
         assertTrue(xml.contains("someKey"));
         assertTrue(xml.contains("someName"));
         assertTrue(xml.contains("1.33"));

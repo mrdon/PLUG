@@ -7,6 +7,7 @@ import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.loader.OsgiPluginLoader;
+import com.atlassian.plugin.osgi.loader.BundledOsgiPluginLoader;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.*;
@@ -50,9 +51,17 @@ public class ContainerManager {
                 new DefaultPluginFactory(),
                 osgiContainerManager,
                 hostComponentProvider);
+
+        BundledOsgiPluginLoader bundledPluginLoader = new BundledOsgiPluginLoader(
+                getClass().getResource("/atlassian-bundled-plugins.zip"),
+                new File(servletContext.getRealPath("/WEB-INF/bundled-plugins")),
+                PluginManager.PLUGIN_DESCRIPTOR_FILENAME,
+                new DefaultPluginFactory(),
+                osgiContainerManager,
+                hostComponentProvider);
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("servlet", SimpleServletModuleDescriptor.class);
-        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.asList(osgiPluginLoader),
+        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.asList(osgiPluginLoader, bundledPluginLoader),
                 moduleDescriptorFactory);
         try {
             pluginManager.init();

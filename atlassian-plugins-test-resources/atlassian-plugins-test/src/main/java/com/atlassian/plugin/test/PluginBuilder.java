@@ -69,14 +69,14 @@ public class PluginBuilder {
     public PluginBuilder addPluginInformation(String key, String name, String version)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append("<atlassian-plugin name=\"").append(name).append("\" key=\"").append(key).append("\">\n");
+        sb.append("<atlassian-plugin name=\"").append(name).append("\" key=\"").append(key).append("\" pluginsVersion=\"2\">\n");
         sb.append("    <plugin-info>\n");
         sb.append("        <description>This plugin descriptor is used for testing plugins!</description>\n");
         sb.append("        <version>").append(version).append("</version>\n");
         sb.append("        <vendor name=\"Atlassian Software Systems Pty Ltd\" url=\"http://www.atlassian.com\" />\n");
         sb.append("    </plugin-info>");
         sb.append("</atlassian-plugin>");
-        jarContents.put("atlassian-plugins.xml", sb.toString().getBytes());
+        jarContents.put("atlassian-plugin.xml", sb.toString().getBytes());
         return this;
     }
 

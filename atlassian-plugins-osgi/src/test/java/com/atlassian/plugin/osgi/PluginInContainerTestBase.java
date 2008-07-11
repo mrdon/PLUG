@@ -20,12 +20,12 @@ import org.apache.commons.io.FileUtils;
  * Base for in-container unit tests
  */
 public abstract class PluginInContainerTestBase extends TestCase {
-    private OsgiContainerManager osgiContainerManager;
-    private File tmpDir;
-    private File frameworkBundlesDir;
-    private File pluginsDir;
-    private ModuleDescriptorFactory moduleDescriptorFactory;
-    private DefaultPluginManager pluginManager;
+    protected OsgiContainerManager osgiContainerManager;
+    protected File tmpDir;
+    protected File frameworkBundlesDir;
+    protected File pluginsDir;
+    protected ModuleDescriptorFactory moduleDescriptorFactory;
+    protected DefaultPluginManager pluginManager;
 
     @Override
     public void setUp() throws Exception

@@ -111,8 +111,64 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>download-bundled-plugins</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${pluginBundleDirectory}</outputDirectory>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.atlassian.sal</groupId>
+                                    <artifactId>sal-api</artifactId>
+                                    <version>${sal.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.atlassian.sal</groupId>
+                                    <artifactId>sal-refimpl-plugin</artifactId>
+                                    <version>${sal.version}</version>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2-beta-1</version>
+                <configuration>
+                    <finalName>atlassian</finalName>
+                    <descriptors>
+                        <descriptor>src/main/assembly/bundled-plugins.xml</descriptor>
+                    </descriptors>
+                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>create-bundled-plugins</id>
+                        <!--
+                            so that it happens just after the unit tests ran successfuly
+                            it should be changes to pre-package when maven 2.1 is out
+                        -->
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>attached</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <properties>
+        <sal.version>0.8-SNAPSHOT</sal.version>
+        <pluginBundleDirectory>target/bundled-plugins</pluginBundleDirectory>
+    </properties>
 
 
 </project>
