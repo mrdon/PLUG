@@ -14,6 +14,13 @@
         (it's late - that makes sense in my head).
     </description>
 
+    <!-- SCM information as the directory for this sub module doesn't follow our standrard conventions -->
+    <scm>
+        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/atlassian-plugins-core</connection>
+        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/atlassian-plugins-core</developerConnection>
+        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/atlassian-plugins-core</url>
+    </scm>
+
     <build>
         <testResources>
             <testResource>
