@@ -9,6 +9,9 @@ import com.atlassian.plugin.loaders.DynamicPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.*;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
+import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
@@ -37,6 +40,7 @@ public class DefaultPluginManager implements PluginManager
     private final ModuleDescriptorFactory moduleDescriptorFactory;
     private final PluginsClassLoader classLoader;
     private final Map/*<String,Plugin>*/ plugins = new HashMap();
+    private final PluginEventManager pluginEventManager;
 
     /**
      * Installer used for storing plugins. Used by {@link #installPlugin(PluginJar)}.
@@ -50,6 +54,11 @@ public class DefaultPluginManager implements PluginManager
 
     public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory)
     {
+        this(store, pluginLoaders, moduleDescriptorFactory, new PluginEventManagerImpl());
+    }
+
+    public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory, PluginEventManager pluginEventManager)
+    {
         if (store == null)
         {
             throw new IllegalArgumentException("PluginStateStore must not be null.");
@@ -62,9 +71,14 @@ public class DefaultPluginManager implements PluginManager
         {
             throw new IllegalArgumentException("ModuleDescriptorFactory must not be null.");
         }
+        if (pluginEventManager == null)
+        {
+            throw new IllegalArgumentException("PluginEventManager must not be null.");
+        }
         this.pluginLoaders = pluginLoaders;
         this.store = store;
         this.moduleDescriptorFactory = moduleDescriptorFactory;
+        this.pluginEventManager = pluginEventManager;
         classLoader = new PluginsClassLoader(this);
     }
 
@@ -73,7 +87,7 @@ public class DefaultPluginManager implements PluginManager
      *
      * @throws PluginParseException
      */
-        public void init() throws PluginParseException
+    public void init() throws PluginParseException
     {
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
         {
@@ -85,6 +99,7 @@ public class DefaultPluginManager implements PluginManager
                 addPlugin(loader, (Plugin) pluginIterator.next());
             }
         }
+        pluginEventManager.broadcast(new PluginFrameworkStartedEvent(this, this));
     }
 
     /**
