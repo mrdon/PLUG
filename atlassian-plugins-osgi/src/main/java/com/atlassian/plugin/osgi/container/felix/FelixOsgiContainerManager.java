@@ -321,7 +321,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             {
                 throw new BundleException("Invalid path: "+path);
             }
-            bundle.start();
             return bundle;
         }
 
@@ -337,6 +336,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
         private void extractAndInstallFrameworkBundles() throws IOException, BundleException
         {
+            List<Bundle> bundles = new ArrayList<Bundle>();
             com.atlassian.plugin.util.FileUtils.conditionallyExtractZipFile(frameworkBundlesUrl, frameworkBundlesDir);
             for (File bundleFile : frameworkBundlesDir.listFiles(new FilenameFilter() {
                     public boolean accept(File file, String s) {
@@ -344,7 +344,12 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                     }
                 }))
             {
-                install(bundleFile);
+                bundles.add(install(bundleFile));
+            }
+
+            for (Bundle bundle : bundles)
+            {
+                bundle.start();
             }
         }
     }

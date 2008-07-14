@@ -53,6 +53,7 @@ public abstract class PluginInContainerTestBase extends TestCase {
 
     protected void initPluginManager(HostComponentProvider hostComponentProvider) throws Exception {
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
+        scannerConfig.getPackageIncludes().add("com.atlassian.plugin*");
         osgiContainerManager = new FelixOsgiContainerManager(frameworkBundlesDir,
                                                              scannerConfig);
 

@@ -2,10 +2,7 @@ package com.atlassian.plugin.osgi.container.impl;
 
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 
-import java.util.List;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Default package scanner configuration.  Probably mostly useful for Spring XML configuration.
@@ -18,6 +15,14 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
     private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "javax.swing.tree", "org.quartz", "org.quartz.*", "bucket.*", "net.sf.cglib", "net.sf.cglib.*", "net.sf.hibernate", "net.sf.hibernate.*", "com.octo.captcha.*", "com.opensymphony.*", "org.apache.*", "org.xml.*", "javax.*", "org.w3c.*");
     private List<String> packageExcludes = Arrays.asList("com.springframework*", "org.apache.commons.logging*");
     private Map<String, String> packageVersions;
+
+    public DefaultPackageScannerConfiguration()
+    {
+        jarIncludes = new ArrayList<String>(jarIncludes);
+        jarExcludes = new ArrayList<String>(jarExcludes);
+        packageIncludes = new ArrayList<String>(packageIncludes);
+        packageExcludes = new ArrayList<String>(packageExcludes);
+    }
 
 
     public void setJarIncludes(List<String> jarIncludes)

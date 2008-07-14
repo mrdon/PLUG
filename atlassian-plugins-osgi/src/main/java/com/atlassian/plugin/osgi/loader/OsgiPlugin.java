@@ -111,7 +111,7 @@ public class OsgiPlugin extends AbstractPlugin implements StateAware, AutowireCa
             bundle.start();
         } catch (BundleException e)
         {
-            throw new RuntimeException("Cannot start plugin: "+getKey());
+            throw new RuntimeException("Cannot start plugin: "+getKey(), e);
         }
     }
 
@@ -122,7 +122,7 @@ public class OsgiPlugin extends AbstractPlugin implements StateAware, AutowireCa
             bundle.stop();
         } catch (BundleException e)
         {
-            throw new RuntimeException("Cannot stop plugin: "+getKey());
+            throw new RuntimeException("Cannot stop plugin: "+getKey(), e);
         }
     }
 

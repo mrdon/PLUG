@@ -61,7 +61,7 @@ public class ContainerManager {
                 hostComponentProvider);
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("servlet", SimpleServletModuleDescriptor.class);
-        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.asList(osgiPluginLoader, bundledPluginLoader),
+        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.asList(bundledPluginLoader, osgiPluginLoader),
                 moduleDescriptorFactory);
         try {
             pluginManager.init();

@@ -21,8 +21,13 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.test.PluginTestUtils;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.PluginBuilder;
 import org.osgi.framework.Constants;
 import org.dom4j.DocumentException;
+import org.apache.commons.logging.Log;
+import org.apache.log4j.Logger;
+import org.apache.log4j.Category;
+import org.apache.log4j.spi.Filter;
 
 public class TestDefaultPluginTransformer extends TestCase
 {
@@ -65,6 +70,38 @@ public class TestDefaultPluginTransformer extends TestCase
         assertTrue(classpathEntries.contains("META-INF/lib/" + PluginTestUtils.INNER2_TEST_JAR));
     }
 
+    public void testGenerateManifest_innerjarsInImports() throws Exception, PluginParseException, IOException
+    {
+        File innerJar = new PluginBuilder("innerjar")
+                .addJava("my.Foo", "package my;import org.apache.log4j.Logger; public class Foo{Logger log;}")
+                .build();
+        assertNotNull(innerJar);
+        File plugin = new PluginBuilder("plugin")
+                .addJava("my.Bar", "package my;import org.apache.log4j.spi.Filter; public class Bar{Filter log;}")
+                .addFile("META-INF/lib/innerjar.jar", innerJar)
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
+
+        URLClassLoader cl = new URLClassLoader(new URL[]{plugin.toURI().toURL()}, null);
+        DefaultPluginTransformer transformer = new DefaultPluginTransformer();
+        byte[] manifest = transformer.generateManifest(cl.getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin);
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Attributes attrs = mf.getMainAttributes();
+
+        assertEquals("1.0", attrs.getValue(Constants.BUNDLE_VERSION));
+        assertEquals("innerjarcp", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
+
+        final Collection classpathEntries = Arrays.asList(attrs.getValue(Constants.BUNDLE_CLASSPATH).split(","));
+        assertEquals(2, classpathEntries.size());
+        assertTrue(classpathEntries.contains("."));
+        assertTrue(classpathEntries.contains("META-INF/lib/innerjar.jar"));
+
+        final Collection imports = Arrays.asList(attrs.getValue("Import-Package").split(","));
+        assertEquals(3, imports.size());
+        assertTrue(imports.contains(Logger.class.getPackage().getName()));
+        assertTrue(imports.contains(Filter.class.getPackage().getName()));
+    }
+
     public void testAddFilesToZip() throws URISyntaxException, IOException
     {
         final File file = PluginTestUtils.getFileForResource("myapp-1.0-plugin.jar");
@@ -94,7 +131,7 @@ public class TestDefaultPluginTransformer extends TestCase
         // public component without interface
         assertSpringTransformContains("<foo><component key='foo' class='my.Foo' public='true'/></foo>",
                                       "<beans:bean id='foo' class='my.Foo'",
-                                      "<osgi:service id='foo' ref='foo'");
+                                      "<osgi:service id='foo_osgiService' ref='foo'");
 
         // public component with interface
         assertSpringTransformContains("<foo><component key='foo' class='my.Foo' public='true'><interface>my.IFoo</interface></component></foo>",

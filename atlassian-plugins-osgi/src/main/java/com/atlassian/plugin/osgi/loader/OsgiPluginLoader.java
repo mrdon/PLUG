@@ -70,15 +70,30 @@ public class OsgiPluginLoader extends ClassLoadingPluginLoader
         {
             osgi.start(hostComponentProvider);
         }
-        return super.loadAllPlugins(moduleDescriptorFactory);
+        Collection<Plugin> plugins = super.loadAllPlugins(moduleDescriptorFactory);
+        for (Plugin plugin : plugins)
+        {
+            plugin.setEnabled(true);
+        }
+        return plugins;
     }
-    
+
+    @Override
+    public Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    {
+        Collection<Plugin> plugins = super.addFoundPlugins(moduleDescriptorFactory);
+        for (Plugin plugin : plugins)
+        {
+            plugin.setEnabled(true);
+        }
+        return plugins;
+    }
+
     @Override
     protected Plugin createPlugin(DescriptorParser parser, DeploymentUnit unit, PluginClassLoader loader) {
         Plugin plugin;
         switch (parser.getPluginsVersion()) {
             case 2  : plugin = createOsgiPlugin(unit.getPath(), false);
-                      plugin.setEnabled(true);
                       break;
             default : plugin = super.createPlugin(parser, unit, loader);
         }

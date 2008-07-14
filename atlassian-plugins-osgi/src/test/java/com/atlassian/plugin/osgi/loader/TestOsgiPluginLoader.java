@@ -134,7 +134,6 @@ public class TestOsgiPluginLoader extends TestCase
         mockOsgi.expectAndReturn("installBundle", C.args(C.eq(jar)), mockBundle.proxy());
         Mock mockParser = new Mock(DescriptorParser.class);
         mockParser.expectAndReturn("getPluginsVersion", 2);
-        mockBundle.expect("start");
         DeploymentUnit unit = new DeploymentUnit(jar);
 
         Plugin plugin = loader.createPlugin((DescriptorParser) mockParser.proxy(), unit, null);

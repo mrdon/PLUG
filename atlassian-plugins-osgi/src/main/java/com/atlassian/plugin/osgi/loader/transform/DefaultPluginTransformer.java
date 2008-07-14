@@ -154,7 +154,7 @@ public class DefaultPluginTransformer implements PluginTransformer
             if ("true".equalsIgnoreCase(component.attributeValue("public")))
             {
                 Element osgiService = root.addElement("osgi:service");
-                osgiService.addAttribute("id", component.attributeValue("key"));
+                osgiService.addAttribute("id", component.attributeValue("key")+"_osgiService");
                 osgiService.addAttribute("ref", component.attributeValue("key"));
 
                 List<String> interfaceNames = new ArrayList<String>();
