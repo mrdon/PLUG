@@ -7,7 +7,7 @@
         <version>2.0.0.beta4-SNAPSHOT</version>
     </parent>
 
-    <artifactId>atlassian-plugins</artifactId>
+    <artifactId>atlassian-plugins-core</artifactId>
     <name>Atlassian Plugins - Core</name>
     <description>
         A library to give systems the ability to have plugins, make them more pluggable and hence add pluggability

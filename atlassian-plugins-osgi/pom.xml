@@ -126,7 +126,7 @@
     <dependencies>
         <dependency>
             <groupId>com.atlassian.plugins</groupId>
-            <artifactId>atlassian-plugins</artifactId>
+            <artifactId>atlassian-plugins-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
