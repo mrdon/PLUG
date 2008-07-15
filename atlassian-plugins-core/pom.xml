@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.atlassian.plugins</groupId>
         <artifactId>atlassian-plugins-parent</artifactId>
-        <version>2.0.0.beta3</version>
+        <version>2.0.0.beta3.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>atlassian-plugins</artifactId>
@@ -77,4 +77,10 @@
     <properties>
         <jdkLevel>1.4</jdkLevel><!-- this module is jdk 1.4 compatible -->
     </properties>
+    <scm>
+        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/branches/atlassian-plugins-2.0.0.beta3/atlassian-plugins-core</connection>
+        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/branches/atlassian-plugins-2.0.0.beta3/atlassian-plugins-core</developerConnection>
+        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/branches/atlassian-plugins-2.0.0.beta3/atlassian-plugins-core</url>
+    </scm>
+
 </project>
