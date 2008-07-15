@@ -33,4 +33,18 @@ public class FileUtils
         }
     }
 
+    /**
+     * @deprecated Since 2.0.0
+     */
+    public static void deleteDir(File directory)
+    {
+        try
+        {
+            org.apache.commons.io.FileUtils.deleteDirectory(directory);
+        } catch (IOException e)
+        {
+            log.error("Unable to delete directory: "+directory.getAbsolutePath(), e);
+        }
+    }
+
 }
