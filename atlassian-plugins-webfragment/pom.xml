@@ -7,7 +7,7 @@
         <version>2.0.0.beta4-SNAPSHOT</version>
     </parent>
 
-    <artifactId>atlassian-plugins-webfragments</artifactId>
+    <artifactId>atlassian-plugins-webfragment</artifactId>
     <name>Atlassian Plugins - Web Fragments</name>
 
     <dependencies>
