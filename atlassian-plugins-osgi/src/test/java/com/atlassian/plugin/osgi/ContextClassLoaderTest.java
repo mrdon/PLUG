@@ -26,7 +26,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
                         "    <component key=\"foo\" class=\"my.FooImpl\" />\n" +
                         "</atlassian-plugin>")
                 .addJava("my.Foo", "package my;public interface Foo {}")
-                .addJava("my.FooImpl", "package my;import com.atlassian.plugin.osgi.ContextClassLoaderTest.HostComp;" +
+                .addJava("my.FooImpl", "package my;import com.atlassian.plugin.osgi.HostComp;" +
                         "public class FooImpl implements Foo {public FooImpl(HostComp comp) throws Exception { comp.run(); }}")
                 .build();
         HostComponentProvider prov = new HostComponentProvider()
@@ -44,11 +44,6 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
         assertNotNull(comp.testClass);
         assertTrue(comp.testClass == TestCase.class);
 
-    }
-
-    public static interface HostComp
-    {
-        void run() throws ClassNotFoundException;
     }
 
     public static class HostCompImpl implements HostComp
