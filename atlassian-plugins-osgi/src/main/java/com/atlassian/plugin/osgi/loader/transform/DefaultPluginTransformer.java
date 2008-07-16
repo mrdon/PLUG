@@ -3,9 +3,11 @@ package com.atlassian.plugin.osgi.loader.transform;
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;
 import aQute.lib.osgi.Jar;
+import aQute.lib.osgi.Clazz;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
@@ -21,11 +23,13 @@ import java.io.*;
 import java.util.*;
 import java.util.jar.JarFile;
 import java.util.jar.JarEntry;
+import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import java.net.URLClassLoader;
 import java.net.URL;
+import java.net.MalformedURLException;
 
 /**
  * Default implementation of plugin transformation that uses BND to generate the manifest and manually creates the
@@ -70,11 +74,8 @@ public class DefaultPluginTransformer implements PluginTransformer
             if (atlassianPluginsXmlUrl == null)
                 throw new IllegalStateException("Cannot find atlassian-plugins.xml in jar");
 
-            if (jar.getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) == null)
-            {
-                log.info("Generating the manifest for plugin "+pluginJar.getName());
-                filesToAdd.put("META-INF/MANIFEST.MF", generateManifest(atlassianPluginsXmlUrl.openStream(), pluginJar));
-            }
+            log.info("Generating the manifest for plugin "+pluginJar.getName());
+            filesToAdd.put("META-INF/MANIFEST.MF", generateManifest(atlassianPluginsXmlUrl.openStream(), pluginJar, regs));
         } catch (PluginParseException e)
         {
             throw new PluginTransformationException("Unable to generate manifest", e);
@@ -140,7 +141,7 @@ public class DefaultPluginTransformer implements PluginTransformer
                 "http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd");
         root.setName("beans:beans");
         root.addAttribute("default-autowire", "autodetect");
-        
+
         // Write plugin components
         SAXReader reader = new SAXReader();
         Document pluginDoc = reader.read(in);
@@ -248,45 +249,60 @@ public class DefaultPluginTransformer implements PluginTransformer
      * @return The new manifest file in bytes
      * @throws PluginParseException If there is any problems parsing atlassian-plugin.xml
      */
-    byte[] generateManifest(InputStream descriptorStream, File file) throws PluginParseException
+    byte[] generateManifest(InputStream descriptorStream, File file, List<HostComponentRegistration> regs) throws PluginParseException, IOException
     {
+
         Builder builder = new Builder();
         try
         {
-            PluginInformationDescriptorParser parser = new PluginInformationDescriptorParser(descriptorStream);
-            PluginInformation info = parser.getPluginInformation();
-
             builder.setJar(file);
-            Properties properties = new Properties();
-
-            // Setup defaults
-            properties.put("Spring-Context", "*;create-asynchronously:=false");
-            properties.put(Analyzer.BUNDLE_SYMBOLICNAME, parser.getKey());
-            properties.put(Analyzer.IMPORT_PACKAGE, "*");
-            properties.put(Analyzer.EXPORT_PACKAGE, "*");
-            properties.put(Analyzer.BUNDLE_VERSION, info.getVersion());
-
-            // remove the verbose Include-Resource entry from generated manifest
-            properties.put(Analyzer.REMOVE_HEADERS, Analyzer.INCLUDE_RESOURCE);
-
-            header(properties, Analyzer.BUNDLE_DESCRIPTION, info.getDescription());
-            header(properties, Analyzer.BUNDLE_NAME, parser.getKey());
-            header(properties, Analyzer.BUNDLE_VENDOR, info.getVendorName());
-            header(properties, Analyzer.BUNDLE_DOCURL, info.getVendorUrl());
-
-            // Scan for embedded jars
-            StringBuilder classpath = new StringBuilder();
-            classpath.append(".");
-            JarFile jarfile = new JarFile(file);
-            for (Enumeration<JarEntry> e = jarfile.entries(); e.hasMoreElements(); )
+            String referrers = findReferredPackages(file, regs);
+            if (builder.getJar().getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null)
             {
-                JarEntry entry = e.nextElement();
-                if (entry.getName().startsWith("META-INF/lib/") && entry.getName().endsWith(".jar"))
-                    classpath.append(",").append(entry.getName());
-            }
-            header(properties, Analyzer.BUNDLE_CLASSPATH, classpath.toString());
+                builder.setJar(file);
+                String imports = builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
+                if (imports != null && imports.length() > 0)
+                    imports = referrers + imports;
+                else
+                    imports = referrers.substring(0, referrers.length() - 2);
+                builder.setProperty(Constants.IMPORT_PACKAGE, imports);
+            } else
+            {
+                PluginInformationDescriptorParser parser = new PluginInformationDescriptorParser(descriptorStream);
+                PluginInformation info = parser.getPluginInformation();
 
-            builder.setProperties(properties);
+                builder.setJar(file);
+                Properties properties = new Properties();
+
+                // Setup defaults
+                properties.put("Spring-Context", "*;create-asynchronously:=false");
+                properties.put(Analyzer.BUNDLE_SYMBOLICNAME, parser.getKey());
+                properties.put(Analyzer.IMPORT_PACKAGE, referrers+"*");
+                properties.put(Analyzer.EXPORT_PACKAGE, "*");
+                properties.put(Analyzer.BUNDLE_VERSION, info.getVersion());
+
+                // remove the verbose Include-Resource entry from generated manifest
+                properties.put(Analyzer.REMOVE_HEADERS, Analyzer.INCLUDE_RESOURCE);
+
+                header(properties, Analyzer.BUNDLE_DESCRIPTION, info.getDescription());
+                header(properties, Analyzer.BUNDLE_NAME, parser.getKey());
+                header(properties, Analyzer.BUNDLE_VENDOR, info.getVendorName());
+                header(properties, Analyzer.BUNDLE_DOCURL, info.getVendorUrl());
+
+                // Scan for embedded jars
+                StringBuilder classpath = new StringBuilder();
+                classpath.append(".");
+                JarFile jarfile = new JarFile(file);
+                for (Enumeration<JarEntry> e = jarfile.entries(); e.hasMoreElements(); )
+                {
+                    JarEntry entry = e.nextElement();
+                    if (entry.getName().startsWith("META-INF/lib/") && entry.getName().endsWith(".jar"))
+                        classpath.append(",").append(entry.getName());
+                }
+                header(properties, Analyzer.BUNDLE_CLASSPATH, classpath.toString());
+
+                builder.setProperties(properties);
+            }
 
             // Not sure if this is the best incantation of bnd, but as I don't have the source, it'll have to do
             builder.calcManifest();
@@ -299,6 +315,62 @@ public class DefaultPluginTransformer implements PluginTransformer
         {
             throw new PluginParseException("Unable to process plugin to generate OSGi manifest", t);
         }
+    }
+
+    String findReferredPackages(File jar, List<HostComponentRegistration> registrations) throws IOException
+    {
+        StringBuffer sb = new StringBuffer();
+        Set<String> referredPackages = new HashSet<String>();
+        Set<String> referredClasses = new HashSet<String>();
+        URLClassLoader cl = new URLClassLoader(new URL[]{jar.toURL()});
+        if (registrations == null)
+        {
+            sb.append(",");
+        }
+        else
+        {
+            for (HostComponentRegistration reg : registrations)
+            {
+                for (String inf : reg.getMainInterfaces())
+                {
+                    String clsName = inf.replace('.','/')+".class";
+                    crawlReferenceTree(clsName, referredClasses, referredPackages);
+                }
+            }
+            for (String pkg : referredPackages)
+            {
+                sb.append(pkg).append(",");
+            }
+        }
+        return sb.toString();
+    }
+
+    void crawlReferenceTree(String className, Set<String> scannedClasses, Set<String> packageImports) throws IOException
+    {
+        if (className.startsWith("java/")) 
+            return;
+
+        if (scannedClasses.contains(className))
+            return;
+        else
+            scannedClasses.add(className);
+
+        if (log.isDebugEnabled())
+            log.debug("Crawling "+className);
+
+        InputStream in = ClassLoaderUtils.getResourceAsStream(className, getClass());
+        if (in == null)
+        {
+            log.error("Cannot find interface "+className);
+            return;
+        }
+        Clazz clz = new Clazz(className, in);
+        packageImports.addAll(clz.getReferred().keySet());
+
+        Set<String> referredClasses = clz.getReferredClasses();
+        for (String ref : referredClasses)
+            crawlReferenceTree(ref, scannedClasses, packageImports);            
+
     }
 
     /**

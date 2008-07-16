@@ -132,7 +132,7 @@
         <dependency>
             <groupId>biz.aQute</groupId>
             <artifactId>bndlib</artifactId>
-            <version>0.0.255</version>
+            <version>0.0.255-db1</version>
         </dependency>
 
         <!-- OSGi dependencies -->

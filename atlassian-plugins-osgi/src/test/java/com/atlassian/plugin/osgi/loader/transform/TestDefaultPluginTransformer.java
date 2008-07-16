@@ -21,6 +21,7 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.test.PluginTestUtils;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
 import com.atlassian.plugin.osgi.PluginBuilder;
 import org.osgi.framework.Constants;
 import org.dom4j.DocumentException;
@@ -29,6 +30,10 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.Category;
 import org.apache.log4j.spi.Filter;
 
+import javax.accessibility.AccessibleResourceBundle;
+import javax.print.attribute.HashAttributeSet;
+import javax.print.attribute.AttributeSet;
+
 public class TestDefaultPluginTransformer extends TestCase
 {
     public void testGenerateManifest() throws URISyntaxException, IOException, PluginParseException
@@ -36,7 +41,7 @@ public class TestDefaultPluginTransformer extends TestCase
         final File file = PluginTestUtils.getFileForResource("myapp-1.0-plugin.jar");
 
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        byte[] manifest = transformer.generateManifest(getClassLoader(file).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file);
+        byte[] manifest = transformer.generateManifest(getClassLoader(file).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file, null);
         Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
         Attributes attrs = mf.getMainAttributes();
 
@@ -51,23 +56,90 @@ public class TestDefaultPluginTransformer extends TestCase
         
     }
 
-    public void testGenerateManifest_innerjars() throws URISyntaxException, PluginParseException, IOException
+    public void testGenerateManifestWithProperInferredImports() throws URISyntaxException, IOException, PluginParseException
     {
-        final File file = PluginTestUtils.getFileForResource(PluginTestUtils.SIMPLE_TEST_JAR);
+        List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>() {{
+            add(new MockRegistration(new HashAttributeSet(), AttributeSet.class));
+        }};
+        final File file = PluginTestUtils.getFileForResource("myapp-1.0-plugin.jar");
 
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        byte[] manifest = transformer.generateManifest(getClassLoader(file).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file);
+        byte[] manifest = transformer.generateManifest(getClassLoader(file).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file, regs);
         Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
         Attributes attrs = mf.getMainAttributes();
 
-        assertEquals(PluginTestUtils.PROJECT_VERSION, attrs.getValue(Constants.BUNDLE_VERSION));
-        assertEquals("test.atlassian.plugin", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
+        assertTrue(attrs.getValue(Constants.IMPORT_PACKAGE).contains(AttributeSet.class.getPackage().getName()));
+
+    }
+
+    public void testGenerateManifestWithProperNestedInferredImports() throws Exception
+    {
+        File plugin = new PluginBuilder("plugin")
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
+
+        List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>() {{
+            add(new MockRegistration(new String[]{"javax.swing.table.TableModel"}));
+        }};
+
+        DefaultPluginTransformer transformer = new DefaultPluginTransformer();
+        byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Attributes attrs = mf.getMainAttributes();
+
+        String importPackage = attrs.getValue(Constants.IMPORT_PACKAGE);
+        System.out.println("imports:"+importPackage);
+        assertTrue(attrs.getValue(Constants.IMPORT_PACKAGE).contains("javax.swing.event,"));
+
+    }
+
+    public void testGenerateManifestMergeHostComponentImportsWithExisting() throws Exception
+    {
+        File plugin = new PluginBuilder("plugin")
+                .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
+                        "Import-Package: javax.swing\n" +
+                        "Bundle-SymbolicName: my.foo.symbolicName\n")
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
+
+        List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>() {{
+            add(new MockRegistration(new String[]{"javax.print.attribute.AttributeSet"}));
+        }};
+
+        DefaultPluginTransformer transformer = new DefaultPluginTransformer();
+        byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Attributes attrs = mf.getMainAttributes();
+
+        String importPackage = attrs.getValue(Constants.IMPORT_PACKAGE);
+        System.out.println("imports:"+importPackage);
+        assertTrue(importPackage.contains("javax.print.attribute,"));
+        assertTrue(importPackage.contains("javax.swing"));
+
+    }
+
+    public void testGenerateManifest_innerjars() throws URISyntaxException, PluginParseException, IOException
+    {
+        File innerJar = new PluginBuilder("innerjar1")
+                .build();
+        File innerJar2 = new PluginBuilder("innerjar2")
+                .build();
+        File plugin = new PluginBuilder("plugin")
+                .addFile("META-INF/lib/innerjar.jar", innerJar)
+                .addFile("META-INF/lib/innerjar2.jar", innerJar2)
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
+
+        DefaultPluginTransformer transformer = new DefaultPluginTransformer();
+        byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, null);
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Attributes attrs = mf.getMainAttributes();
 
         final Collection classpathEntries = Arrays.asList(attrs.getValue(Constants.BUNDLE_CLASSPATH).split(","));
         assertEquals(3, classpathEntries.size());
         assertTrue(classpathEntries.contains("."));
-        assertTrue(classpathEntries.contains("META-INF/lib/" + PluginTestUtils.INNER1_TEST_JAR));
-        assertTrue(classpathEntries.contains("META-INF/lib/" + PluginTestUtils.INNER2_TEST_JAR));
+        assertTrue(classpathEntries.contains("META-INF/lib/innerjar.jar"));
+        assertTrue(classpathEntries.contains("META-INF/lib/innerjar2.jar"));
     }
 
     public void testGenerateManifest_innerjarsInImports() throws Exception, PluginParseException, IOException
@@ -84,7 +156,7 @@ public class TestDefaultPluginTransformer extends TestCase
 
         URLClassLoader cl = new URLClassLoader(new URL[]{plugin.toURI().toURL()}, null);
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        byte[] manifest = transformer.generateManifest(cl.getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin);
+        byte[] manifest = transformer.generateManifest(cl.getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, null);
         Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
         Attributes attrs = mf.getMainAttributes();
 
