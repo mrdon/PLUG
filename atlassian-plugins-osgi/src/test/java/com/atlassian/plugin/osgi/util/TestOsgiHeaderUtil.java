@@ -23,7 +23,7 @@ public class TestOsgiHeaderUtil extends TestCase {
         StringBuilder sb = new StringBuilder();
         OsgiHeaderUtil.constructAutoExports(sb, exports);
 
-        assertEquals("foo.bar;version=1.0,foo.bar", sb.toString());
+        assertEquals("foo.bar;version=1.0,foo.bar,", sb.toString());
     }
 
     public void testDetermineExportsIncludeServiceInterfaces()
