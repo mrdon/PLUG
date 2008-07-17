@@ -6,6 +6,7 @@ import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
+import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -15,11 +16,7 @@ import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.StringMap;
 import org.osgi.framework.*;
-import org.twdata.pkgscanner.ExportPackage;
-import org.twdata.pkgscanner.PackageScanner;
 import static org.twdata.pkgscanner.PackageScanner.jars;
-import static org.twdata.pkgscanner.PackageScanner.include;
-import static org.twdata.pkgscanner.PackageScanner.exclude;
 import static org.twdata.pkgscanner.PackageScanner.packages;
 
 import java.io.File;
@@ -64,47 +61,34 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
     public void start(HostComponentProvider provider) throws OsgiContainerException
     {
-        Collection<ExportPackage> exports = generateExports();
+
         initialiseCacheDirectory();
 
+        DefaultComponentRegistrar registrar = collectHostComponents(provider);
         // Create a case-insensitive configuration property map.
         final Map configMap = new StringMap(false);
         // Configure the Felix instance to be embedded.
         configMap.put(FelixConstants.EMBEDDED_EXECUTION_PROP, "true");
         // Add the bundle provided service interface package and the core OSGi
         // packages to be exported from the class path via the system bundle.
-        configMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
-            "org.osgi.framework; version=1.3.0," +
-            "org.osgi.service.packageadmin; version=1.2.0," +
-            "org.osgi.service.startlevel; version=1.0.0," +
-            "org.osgi.service.url; version=1.0.0," +
-            "org.osgi.util; version=1.3.0," +
-            "org.osgi.util.tracker; version=1.3.0," +
-            "host.service.command; version=1.0.0," +
-            "javax.swing.tree,javax.swing,org.xml.sax,org.xml.sax.helpers," +
-            "javax.xml,javax.xml.parsers,javax.xml.transform,javax.xml.transform.sax," +
-            "javax.xml.transform.stream,javax.xml.transform.dom,org.w3c.dom,javax.naming.spi," +
-            "javax.swing.border,javax.swing.event,javax.swing.text," +
-            constructAutoExports(exports));
+        configMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES, OsgiHeaderUtil.determineExports(registrar.getRegistry(), packageScannerConfig));
 
-        configMap.put(FelixConstants.LOG_LEVEL_PROP,
-                (log.isDebugEnabled() ? "4" :
-                 log.isInfoEnabled() ? "3" :
-                 log.isWarnEnabled() ? "2" :
-                 log.isErrorEnabled() ? "1" : "1"));
         // Explicitly specify the directory to use for caching bundles.
         configMap.put(BundleCache.CACHE_PROFILE_DIR_PROP, cacheDirectory.getAbsolutePath());
+
+        FelixLoggerBridge bridge = new FelixLoggerBridge(log);
+        configMap.put(FelixConstants.LOG_LEVEL_PROP, String.valueOf(bridge.getLogLevel()));
 
         try
         {
             // Create host activator;
-            registration = new BundleRegistration(frameworkBundlesUrl, frameworkBundlesDir, provider);
+            registration = new BundleRegistration(frameworkBundlesUrl, frameworkBundlesDir, registrar);
             final List<BundleActivator> list = new ArrayList<BundleActivator>();
             list.add(registration);
 
             // Now create an instance of the framework with
             // our configuration properties and activator.
-            felix = new Felix(configMap, list);
+            felix = new Felix(bridge, configMap, list);
 
             // Now start Felix instance.  Starting in a different thread to explicity set daemon status
             Thread t = new Thread() {
@@ -172,49 +156,15 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
     public void reloadHostComponents(HostComponentProvider provider)
     {
-        registration.reloadHostComponents(provider);
+        registration.reloadHostComponents(collectHostComponents(provider));
     }
 
-    String constructAutoExports(Collection<ExportPackage> packageExports) {
-
-        StringBuilder sb = new StringBuilder();
-        for (Iterator<ExportPackage> i = packageExports.iterator(); i.hasNext(); ) {
-            ExportPackage pkg = i.next();
-            sb.append(pkg.getPackageName());
-            if (pkg.getVersion() != null) {
-                try {
-                    Version.parseVersion(pkg.getVersion());
-                    sb.append(";version=").append(pkg.getVersion());
-                } catch (IllegalArgumentException ex) {
-                    log.info("Unable to parse version: "+pkg.getVersion());
-                }
-            }
-            if (i.hasNext()) {
-                sb.append(",");
-            }
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("Exports:\n"+sb.toString().replaceAll(",", "\r\n"));
-        }
-
-        return sb.toString();
-    }
-
-    Collection<ExportPackage> generateExports()
+    DefaultComponentRegistrar collectHostComponents(HostComponentProvider provider)
     {
-        String[] arrType = new String[0];
-        Collection<ExportPackage> exports = new PackageScanner()
-           .select(
-               jars(
-                       include(packageScannerConfig.getJarIncludes().toArray(arrType)),
-                       exclude(packageScannerConfig.getJarExcludes().toArray(arrType))),
-               packages(
-                       include(packageScannerConfig.getPackageIncludes().toArray(arrType)),
-                       exclude(packageScannerConfig.getPackageExcludes().toArray(arrType)))
-           )
-           .withMappings(packageScannerConfig.getPackageVersions())
-           .scan();
-        return exports;
+        DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+        if (provider != null)
+            provider.provide(registrar);
+        return registrar;
     }
 
     void initialiseCacheDirectory() throws OsgiContainerException
@@ -250,15 +200,15 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     static class BundleRegistration implements BundleActivator, BundleListener
     {
         private BundleContext bundleContext;
-        private HostComponentProvider hostProvider;
+        private DefaultComponentRegistrar registrar;
         private List<ServiceRegistration> hostServicesReferences;
         private List<HostComponentRegistration> hostComponentRegistrations;
         private URL frameworkBundlesUrl;
         private File frameworkBundlesDir;
 
-        public BundleRegistration(URL frameworkBundlesUrl, File frameworkBundlesDir, HostComponentProvider provider)
+        public BundleRegistration(URL frameworkBundlesUrl, File frameworkBundlesDir, DefaultComponentRegistrar registrar)
         {
-            this.hostProvider = provider;
+            this.registrar = registrar;
             this.frameworkBundlesUrl = frameworkBundlesUrl;
             this.frameworkBundlesDir = frameworkBundlesDir;
         }
@@ -267,11 +217,11 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             this.bundleContext = context;
             context.addBundleListener(this);
 
-            reloadHostComponents(hostProvider);
+            reloadHostComponents(registrar);
             extractAndInstallFrameworkBundles();
         }
 
-        public void reloadHostComponents(HostComponentProvider provider)
+        public void reloadHostComponents(DefaultComponentRegistrar registrar)
         {
             // Unregister any existing host components
             if (hostServicesReferences != null) {
@@ -279,15 +229,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                     reg.unregister();
             }
             
-            if (provider != null)
-            {
-                // Retrieve and register host components as OSGi services
-                DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
-                provider.provide(registrar);
-                hostServicesReferences = registrar.writeRegistry(bundleContext);
-                hostComponentRegistrations = registrar.getRegistry();
-            }
-
+            // Register host components as OSGi services
+            hostServicesReferences = registrar.writeRegistry(bundleContext);
+            hostComponentRegistrations = registrar.getRegistry();
         }
 
         public void stop(BundleContext ctx) throws Exception {

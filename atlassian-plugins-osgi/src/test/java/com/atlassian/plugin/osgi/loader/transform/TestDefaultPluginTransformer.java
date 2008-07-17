@@ -110,7 +110,7 @@ public class TestDefaultPluginTransformer extends TestCase
         byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
         Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
         Attributes attrs = mf.getMainAttributes();
-
+        assertEquals("my.foo.symbolicName", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
         String importPackage = attrs.getValue(Constants.IMPORT_PACKAGE);
         System.out.println("imports:"+importPackage);
         assertTrue(importPackage.contains("javax.print.attribute,"));

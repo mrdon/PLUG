@@ -9,6 +9,7 @@ import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 import org.dom4j.*;
@@ -256,22 +257,21 @@ public class DefaultPluginTransformer implements PluginTransformer
         try
         {
             builder.setJar(file);
-            String referrers = findReferredPackages(file, regs);
+            String referrers = OsgiHeaderUtil.findReferredPackages(regs);
             if (builder.getJar().getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null)
             {
-                builder.setJar(file);
                 String imports = builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
                 if (imports != null && imports.length() > 0)
                     imports = referrers + imports;
                 else
                     imports = referrers.substring(0, referrers.length() - 2);
                 builder.setProperty(Constants.IMPORT_PACKAGE, imports);
+                builder.mergeManifest(builder.getJar().getManifest());
             } else
             {
                 PluginInformationDescriptorParser parser = new PluginInformationDescriptorParser(descriptorStream);
                 PluginInformation info = parser.getPluginInformation();
 
-                builder.setJar(file);
                 Properties properties = new Properties();
 
                 // Setup defaults
@@ -315,62 +315,6 @@ public class DefaultPluginTransformer implements PluginTransformer
         {
             throw new PluginParseException("Unable to process plugin to generate OSGi manifest", t);
         }
-    }
-
-    String findReferredPackages(File jar, List<HostComponentRegistration> registrations) throws IOException
-    {
-        StringBuffer sb = new StringBuffer();
-        Set<String> referredPackages = new HashSet<String>();
-        Set<String> referredClasses = new HashSet<String>();
-        URLClassLoader cl = new URLClassLoader(new URL[]{jar.toURL()});
-        if (registrations == null)
-        {
-            sb.append(",");
-        }
-        else
-        {
-            for (HostComponentRegistration reg : registrations)
-            {
-                for (String inf : reg.getMainInterfaces())
-                {
-                    String clsName = inf.replace('.','/')+".class";
-                    crawlReferenceTree(clsName, referredClasses, referredPackages);
-                }
-            }
-            for (String pkg : referredPackages)
-            {
-                sb.append(pkg).append(",");
-            }
-        }
-        return sb.toString();
-    }
-
-    void crawlReferenceTree(String className, Set<String> scannedClasses, Set<String> packageImports) throws IOException
-    {
-        if (className.startsWith("java/")) 
-            return;
-
-        if (scannedClasses.contains(className))
-            return;
-        else
-            scannedClasses.add(className);
-
-        if (log.isDebugEnabled())
-            log.debug("Crawling "+className);
-
-        InputStream in = ClassLoaderUtils.getResourceAsStream(className, getClass());
-        if (in == null)
-        {
-            log.error("Cannot find interface "+className);
-            return;
-        }
-        Clazz clz = new Clazz(className, in);
-        packageImports.addAll(clz.getReferred().keySet());
-
-        Set<String> referredClasses = clz.getReferredClasses();
-        for (String ref : referredClasses)
-            crawlReferenceTree(ref, scannedClasses, packageImports);            
-
     }
 
     /**

@@ -65,14 +65,6 @@ public class TestFelixOsgiContainerManager extends TestCase
         assertTrue(dir.listFiles().length == 0);
     }
 
-    public void testConstructAutoExports()
-    {
-        List<ExportPackage> exports = new ArrayList<ExportPackage>();
-        exports.add(new ExportPackage("foo.bar", "1.0"));
-        exports.add(new ExportPackage("foo.bar", "1.0-asdf-asdf"));
-        assertEquals("foo.bar;version=1.0,foo.bar", felix.constructAutoExports(exports));
-    }
-
     public void testStartStop()
     {
         felix.start(null);

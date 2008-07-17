@@ -44,6 +44,8 @@ public class BundledOsgiPluginLoader extends OsgiPluginLoader
     public BundledOsgiPluginLoader(URL zipUrl, File pluginPath, String pluginDescriptorFileName, PluginFactory pluginFactory, OsgiContainerManager osgi, HostComponentProvider provider)
     {
         super(pluginPath, pluginDescriptorFileName, pluginFactory, osgi, provider);
+        if (zipUrl == null) 
+            throw new IllegalArgumentException("Bundled zip url cannot be null");
         FileUtils.conditionallyExtractZipFile(zipUrl, pluginPath);
     }
 
@@ -63,9 +65,13 @@ public class BundledOsgiPluginLoader extends OsgiPluginLoader
      */
     protected Plugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        DynamicPlugin plugin = (DynamicPlugin) super.deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
-        plugin.setDeletable(false);
-        plugin.setBundled(true);
+        Plugin plugin = super.deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
+        if (plugin instanceof DynamicPlugin)
+        {
+            DynamicPlugin dplugin = (DynamicPlugin) plugin; 
+            dplugin.setDeletable(false);
+            dplugin.setBundled(true);
+        }
 
         log.debug("Deploy bundled plugin: "+plugin.getName());
 
