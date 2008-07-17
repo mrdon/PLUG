@@ -1,28 +1,18 @@
 package com.atlassian.plugin.osgi.util;
 
+import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
 import junit.framework.TestCase;
 import org.twdata.pkgscanner.ExportPackage;
 
-import java.util.List;
-import java.util.ArrayList;
-
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
-import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
-import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
-import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
-
 import javax.print.attribute.AttributeSet;
 import javax.print.attribute.HashAttributeSet;
-import javax.swing.table.TableModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- * Created by IntelliJ IDEA.
- * User: mrdon
- * Date: 17/07/2008
- * Time: 2:11:32 PM
- * To change this template use File | Settings | File Templates.
- */
 public class TestOsgiHeaderUtil extends TestCase {
 
     public void testConstructAutoExports()
@@ -30,7 +20,10 @@ public class TestOsgiHeaderUtil extends TestCase {
         List<ExportPackage> exports = new ArrayList<ExportPackage>();
         exports.add(new ExportPackage("foo.bar", "1.0"));
         exports.add(new ExportPackage("foo.bar", "1.0-asdf-asdf"));
-        assertEquals("foo.bar;version=1.0,foo.bar", OsgiHeaderUtil.constructAutoExports(exports));
+        StringBuilder sb = new StringBuilder();
+        OsgiHeaderUtil.constructAutoExports(sb, exports);
+
+        assertEquals("foo.bar;version=1.0,foo.bar", sb.toString());
     }
 
     public void testDetermineExportsIncludeServiceInterfaces()

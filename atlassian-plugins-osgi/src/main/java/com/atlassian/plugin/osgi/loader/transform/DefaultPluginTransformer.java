@@ -3,34 +3,29 @@ package com.atlassian.plugin.osgi.loader.transform;
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;
 import aQute.lib.osgi.Jar;
-import aQute.lib.osgi.Clazz;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
-import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.dom4j.*;
-import org.dom4j.io.SAXReader;
 import org.dom4j.io.OutputFormat;
+import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.osgi.framework.Constants;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
 
 import java.io.*;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.*;
-import java.util.jar.JarFile;
 import java.util.jar.JarEntry;
-import java.util.jar.Manifest;
+import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-import java.net.URLClassLoader;
-import java.net.URL;
-import java.net.MalformedURLException;
 
 /**
  * Default implementation of plugin transformation that uses BND to generate the manifest and manually creates the

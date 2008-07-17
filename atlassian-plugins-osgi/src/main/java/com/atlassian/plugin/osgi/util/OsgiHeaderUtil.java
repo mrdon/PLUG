@@ -100,43 +100,52 @@ public class OsgiHeaderUtil
      * @return A list of exports, in a format compatible with OSGi headers
      */
     public static String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig){
-        Collection<ExportPackage> exports = generateExports(packageScannerConfig);
+        String exports = null;
 
-        String baseExports = "org.osgi.framework; version=1.3.0," +
-            "org.osgi.service.packageadmin; version=1.2.0," +
-            "org.osgi.service.startlevel; version=1.0.0," +
-            "org.osgi.service.url; version=1.0.0," +
-            "org.osgi.util; version=1.3.0," +
-            "org.osgi.util.tracker; version=1.3.0," +
-            "host.service.command; version=1.0.0," +
-            "javax.swing.tree,javax.swing,org.xml.sax,org.xml.sax.helpers," +
-            "javax.xml,javax.xml.parsers,javax.xml.transform,javax.xml.transform.sax," +
-            "javax.xml.transform.stream,javax.xml.transform.dom,org.w3c.dom,javax.naming.spi," +
-            "javax.swing.border,javax.swing.event,javax.swing.text," +
-            constructAutoExports(exports);
+        StringBuilder origExports = new StringBuilder();
+        origExports.append("org.osgi.framework; version=1.3.0,");
+        origExports.append("org.osgi.service.packageadmin; version=1.2.0," );
+        origExports.append("org.osgi.service.startlevel; version=1.0.0,");
+        origExports.append("org.osgi.service.url; version=1.0.0,");
+        origExports.append("org.osgi.util; version=1.3.0,");
+        origExports.append("org.osgi.util.tracker; version=1.3.0,");
+        origExports.append("host.service.command; version=1.0.0,");
+        origExports.append("javax.swing.tree,javax.swing,org.xml.sax,org.xml.sax.helpers,");
+        origExports.append("javax.xml,javax.xml.parsers,javax.xml.transform,javax.xml.transform.sax,");
+        origExports.append("javax.xml.transform.stream,javax.xml.transform.dom,org.w3c.dom,javax.naming.spi,");
+        origExports.append("javax.swing.border,javax.swing.event,javax.swing.text,");
+
+        Collection<ExportPackage> exportList = generateExports(packageScannerConfig);
+        constructAutoExports(origExports, exportList);
+
 
         try
         {
-            String referredPackages = findReferredPackages(regs);
+            origExports.append(findReferredPackages(regs));
 
             Analyzer analyzer = new Analyzer();
             analyzer.setJar(new Jar("somename.jar"));
             
             // we pretend the exports are imports for the sake of the bnd tool, which would otherwise cut out
             // exports that weren't actually in the jar
-            analyzer.setProperty(Constants.IMPORT_PACKAGE, baseExports + "," + referredPackages);
+            analyzer.setProperty(Constants.IMPORT_PACKAGE, origExports.toString());
             Manifest mf = analyzer.calcManifest();
-            return mf.getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
+
+            exports = mf.getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
         } catch (IOException ex)
         {
             log.error("Unable to calculate necessary exports based on host components", ex);
-            return baseExports;
+            exports = origExports.toString();
         }
+
+        if (log.isDebugEnabled()) {
+            log.debug("Exports:\n"+exports.replaceAll(",", "\r\n"));
+        }
+        return exports;
     }
 
-    static String constructAutoExports(Collection<ExportPackage> packageExports) {
+    static void constructAutoExports(StringBuilder sb, Collection<ExportPackage> packageExports) {
 
-        StringBuilder sb = new StringBuilder();
         for (Iterator<ExportPackage> i = packageExports.iterator(); i.hasNext(); ) {
             ExportPackage pkg = i.next();
             sb.append(pkg.getPackageName());
@@ -148,15 +157,8 @@ public class OsgiHeaderUtil
                     log.info("Unable to parse version: "+pkg.getVersion());
                 }
             }
-            if (i.hasNext()) {
-                sb.append(",");
-            }
+            sb.append(",");
         }
-        if (log.isDebugEnabled()) {
-            log.debug("Exports:\n"+sb.toString().replaceAll(",", "\r\n"));
-        }
-
-        return sb.toString();
     }
 
     static Collection<ExportPackage> generateExports(PackageScannerConfiguration packageScannerConfig)
