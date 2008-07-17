@@ -11,6 +11,8 @@ import com.atlassian.plugin.osgi.loader.BundledOsgiPluginLoader;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
 import com.atlassian.plugin.refimpl.servlet.SimpleServletModuleDescriptor;
 import com.atlassian.plugin.loaders.DefaultPluginFactory;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
@@ -31,6 +33,7 @@ public class ContainerManager {
     private final ServletModuleManager servletModuleManager;
     private final OsgiContainerManager osgiContainerManager;
     private final DefaultPluginManager pluginManager;
+    private final PluginEventManager pluginEventManager;
     private final HostComponentProvider hostComponentProvider;
     private final DefaultModuleDescriptorFactory moduleDescriptorFactory;
 
@@ -61,8 +64,9 @@ public class ContainerManager {
                 hostComponentProvider);
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("servlet", SimpleServletModuleDescriptor.class);
+        pluginEventManager = new PluginEventManagerImpl();
         pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.asList(bundledPluginLoader, osgiPluginLoader),
-                moduleDescriptorFactory);
+                moduleDescriptorFactory, pluginEventManager);
         try {
             pluginManager.init();
         } catch (PluginParseException e) {
@@ -102,7 +106,8 @@ public class ContainerManager {
     private class SimpleHostComponentProvider implements HostComponentProvider {
 
         public void provide(ComponentRegistrar componentRegistrar) {
-            componentRegistrar.register(PluginManager.class).forInstance(pluginManager).withName("pluginManager");
+            componentRegistrar.register(PluginManager.class, PluginAccessor.class, PluginController.class).forInstance(pluginManager).withName("pluginManager");
+            componentRegistrar.register(PluginEventManager.class).forInstance(pluginEventManager).withName("pluginEventManager");
         }
     }
 }
