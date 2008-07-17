@@ -30,6 +30,7 @@ public class TestSpringXmlHostComponentProvider extends TestCase
         assertNotNull(list);
         assertEquals(1, list.size());
         assertEquals("foo", list.get(0).getProperties().get("bean-name"));
+        assertEquals(1, list.get(0).getMainInterfaces().length);
         assertEquals(Fooable.class.getName(), list.get(0).getMainInterfaces()[0]);
     }
 

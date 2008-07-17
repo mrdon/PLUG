@@ -4,6 +4,7 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.BeanFactory;
@@ -27,7 +28,7 @@ public class SpringXmlHostComponentProvider implements HostComponentProvider, Be
         for (String name : beans)
         {
             Object bean = beanFactory.getBean(name);
-            registrar.register(bean.getClass().getInterfaces()).forInstance(bean)
+            registrar.register(findInterfaces(bean.getClass())).forInstance(bean)
                     .withName(name);
         }
     }
@@ -35,5 +36,17 @@ public class SpringXmlHostComponentProvider implements HostComponentProvider, Be
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException
     {
         this.beanFactory = beanFactory;
+    }
+
+    Class[] findInterfaces(Class cls)
+    {
+        List<Class> validInterfaces = new ArrayList<Class>();
+        Class[] allInterfaces = cls.getInterfaces();
+        for (Class inf : allInterfaces)
+        {
+            if (!inf.getName().startsWith("org.springframework") && !inf.getName().startsWith("java."))
+                validInterfaces.add(inf);
+        }
+        return validInterfaces.toArray(new Class[0]);
     }
 }
