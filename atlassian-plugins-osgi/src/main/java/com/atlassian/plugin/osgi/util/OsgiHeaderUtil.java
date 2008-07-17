@@ -112,7 +112,7 @@ public class OsgiHeaderUtil
         origExports.append("host.service.command; version=1.0.0,");
         origExports.append("javax.swing.tree,javax.swing,org.xml.sax,org.xml.sax.helpers,");
         origExports.append("javax.xml,javax.xml.parsers,javax.xml.transform,javax.xml.transform.sax,");
-        origExports.append("javax.xml.transform.stream,javax.xml.transform.dom,org.w3c.dom,javax.naming.spi,");
+        origExports.append("javax.xml.transform.stream,javax.xml.transform.dom,org.w3c.dom,javax.naming,javax.naming.spi,");
         origExports.append("javax.swing.border,javax.swing.event,javax.swing.text,");
 
         Collection<ExportPackage> exportList = generateExports(packageScannerConfig);
