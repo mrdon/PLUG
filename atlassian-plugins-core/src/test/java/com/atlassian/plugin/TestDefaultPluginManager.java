@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.util.*;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Testing {@link DefaultPluginManager}
@@ -508,6 +509,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         InputStream is = manager.getPluginResourceAsStream("test.atlassian.plugin.classloaded", "atlassian-plugin.xml");
         assertNotNull(is);
+        IOUtils.closeQuietly(is);
     }
     
     public void testGetDynamicPluginClass() throws IOException, PluginParseException
@@ -839,12 +841,13 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPluginStateStore.verify();
     }
 
-    private void checkResources(PluginAccessor manager, boolean canGetGlobal, boolean canGetModule)
-    {
+    private void checkResources(PluginAccessor manager, boolean canGetGlobal, boolean canGetModule) throws IOException {
         InputStream is = manager.getDynamicResourceAsStream("icon.gif");
         assertEquals(canGetGlobal, is != null);
+        IOUtils.closeQuietly(is);
         is = manager.getDynamicResourceAsStream("bear/paddington.vm");
         assertEquals(canGetModule, is != null);
+        IOUtils.closeQuietly(is);
     }
     
     private void checkClasses(PluginAccessor manager, boolean canGet)

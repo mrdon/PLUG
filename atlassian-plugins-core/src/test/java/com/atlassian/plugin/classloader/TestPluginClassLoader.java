@@ -4,6 +4,7 @@ import com.atlassian.plugin.test.PluginTestUtils;
 import com.opensymphony.util.BeanUtils;
 import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.net.URL;
@@ -61,5 +62,20 @@ public class TestPluginClassLoader extends TestCase
 
         assertEquals("PluginClassLoader is searching the parent classloader for classes before inner JARs",
                      new Integer(2), BeanUtils.getValue(instance, "version"));
+    }
+
+    public void testPluginClassLoaderDoesNotLockTheJarsPermanently() throws Exception
+    {
+        //N.B This will probably never fail on a non Windows machine
+        String fileLoc = getClass().getClassLoader().getResource(PluginTestUtils.SIMPLE_TEST_JAR).getFile();
+        File original = new File(fileLoc);
+        File tmpFile = new File(fileLoc + ".tmp");
+        FileUtils.copyFile(original, tmpFile);
+
+        PluginClassLoader pluginClassLoaderThatHasNotLockedFileYet = new
+                PluginClassLoader(tmpFile, getClass().getClassLoader());
+        Class mockVersionedClass =
+                Class.forName("com.atlassian.plugin.mock.MockVersionedClass", true, pluginClassLoader);
+        assertTrue(tmpFile.delete());
     }
 }
