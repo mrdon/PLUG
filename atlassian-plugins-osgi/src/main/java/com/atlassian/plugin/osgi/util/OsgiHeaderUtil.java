@@ -53,7 +53,7 @@ public class OsgiHeaderUtil
                 for (String inf : reg.getMainInterfaces())
                 {
                     String clsName = inf.replace('.','/')+".class";
-                    crawlReferenceTree(clsName, referredClasses, referredPackages);
+                    crawlReferenceTree(clsName, referredClasses, referredPackages, 1);
                 }
             }
             for (String pkg : referredPackages)
@@ -64,8 +64,22 @@ public class OsgiHeaderUtil
         return sb.toString();
     }
 
-    static void crawlReferenceTree(String className, Set<String> scannedClasses, Set<String> packageImports) throws IOException
+    /**
+     * This will crawl the class interfaces to the desired level.
+     *
+     * @param className name of the class.
+     * @param scannedClasses set of classes that have been scanned.
+     * @param packageImports set of imports that have been found.
+     * @param level depth of scan (recursion).
+     * @throws IOException error loading a class.
+     */
+    static void crawlReferenceTree(String className, Set<String> scannedClasses, Set<String> packageImports, int level) throws IOException
     {
+        if (level <= 0)
+        {
+            return;
+        }
+
         if (className.startsWith("java/"))
             return;
 
@@ -88,7 +102,7 @@ public class OsgiHeaderUtil
 
         Set<String> referredClasses = clz.getReferredClasses();
         for (String ref : referredClasses)
-            crawlReferenceTree(ref, scannedClasses, packageImports);
+            crawlReferenceTree(ref, scannedClasses, packageImports, level-1);
 
     }
 
