@@ -63,7 +63,7 @@ public class PluginClassLoader extends ClassLoader {
      * @throws IOException
      * @param pluginFile the file to scan
      */
-    private void initializeFromJar(File pluginFile, boolean isOuterJar) throws IOException
+    private void initializeFromJar(File pluginFile, boolean isInnerJar) throws IOException
     {
         final JarFile jarFile = new JarFile(pluginFile);
         try
@@ -71,10 +71,10 @@ public class PluginClassLoader extends ClassLoader {
             for (Enumeration entries = jarFile.entries(); entries.hasMoreElements();)
             {
                 final JarEntry jarEntry = (JarEntry) entries.nextElement();
-                if(isOuterJar && jarEntry.getName().startsWith("META-INF/lib/") && jarEntry.getName().endsWith(".jar"))
+                if(isInnerJar && jarEntry.getName().startsWith("META-INF/lib/") && jarEntry.getName().endsWith(".jar"))
                     initialiseInnerJar(jarFile, jarEntry);
                 else
-                    addEntryMapping(jarEntry, pluginFile, isOuterJar);
+                    addEntryMapping(jarEntry, pluginFile, isInnerJar);
             }
         }
         finally
