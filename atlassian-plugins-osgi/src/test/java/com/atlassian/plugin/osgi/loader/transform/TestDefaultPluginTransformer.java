@@ -1,38 +1,33 @@
 package com.atlassian.plugin.osgi.loader.transform;
 
-import junit.framework.TestCase;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URLClassLoader;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
-import java.util.jar.JarFile;
-import java.util.*;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipEntry;
-
-import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.PluginManager;
-import com.atlassian.plugin.test.PluginTestUtils;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.osgi.PluginBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
-import com.atlassian.plugin.osgi.PluginBuilder;
-import org.osgi.framework.Constants;
-import org.dom4j.DocumentException;
-import org.apache.commons.logging.Log;
+import com.atlassian.plugin.test.PluginTestUtils;
+import junit.framework.TestCase;
 import org.apache.log4j.Logger;
-import org.apache.log4j.Category;
 import org.apache.log4j.spi.Filter;
+import org.dom4j.DocumentException;
+import org.osgi.framework.Constants;
 
-import javax.accessibility.AccessibleResourceBundle;
-import javax.print.attribute.HashAttributeSet;
 import javax.print.attribute.AttributeSet;
+import javax.print.attribute.HashAttributeSet;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.*;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class TestDefaultPluginTransformer extends TestCase
 {
