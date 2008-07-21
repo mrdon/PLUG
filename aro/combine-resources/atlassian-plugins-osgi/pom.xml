@@ -1,0 +1,222 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.atlassian.plugins</groupId>
+        <artifactId>atlassian-plugins-parent</artifactId>
+        <version>2.0.0.beta5-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>atlassian-plugins-osgi</artifactId>
+
+    <name>Atlassian Plugins - OSGi Loader</name>
+    <description>
+        An extension to Atlassian Plugins that provides a loader that loads plugins into OSGi
+    </description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-framework-bundles</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring</artifactId>
+                                    <version>2.5.5</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.slf4j</groupId>
+                                    <artifactId>com.springsource.slf4j.org.apache.commons.logging</artifactId>
+                                    <version>1.5.0</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.slf4j</groupId>
+                                    <artifactId>com.springsource.slf4j.api</artifactId>
+                                    <version>1.5.0</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.slf4j</groupId>
+                                    <artifactId>com.springsource.slf4j.log4j</artifactId>
+                                    <version>1.5.0</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework.osgi</groupId>
+                                    <artifactId>spring-osgi-annotation</artifactId>
+                                    <version>1.1.0</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework.osgi</groupId>
+                                    <artifactId>spring-osgi-core</artifactId>
+                                    <version>1.1.0</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework.osgi</groupId>
+                                    <artifactId>spring-osgi-extender</artifactId>
+                                    <version>1.1.0</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework.osgi</groupId>
+                                    <artifactId>spring-osgi-io</artifactId>
+                                    <version>1.1.0</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.aopalliance</groupId>
+                                    <artifactId>com.springsource.org.aopalliance</artifactId>
+                                    <version>1.0.0</version>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${frameworkBundleDirectory}</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                            <includeArtifactIds>atlassian-plugins-simpletest</includeArtifactIds>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2-beta-1</version>
+                <configuration>
+                    <finalName>osgi</finalName>
+                    <descriptors>
+                        <descriptor>src/main/assembly/framework-bundles.xml</descriptor>
+                    </descriptors>
+                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>create-framework-bundles</id>
+                        <!--
+                            so that it happens just after the unit tests ran successfuly
+                            it should be changes to pre-package when maven 2.1 is out
+                        -->
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>attached</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.atlassian.plugins</groupId>
+            <artifactId>atlassian-plugins-core</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+            <version>0.0.255-db1</version>
+        </dependency>
+
+        <!-- OSGi dependencies -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.main</artifactId>
+            <version>1.0.4</version>
+            <exclusions>
+               <exclusion>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.shell</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.shell.tui</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.bundlerepository</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.twdata.pkgscanner</groupId>
+            <artifactId>package-scanner</artifactId>
+            <version>0.6</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+        </dependency>
+        <dependency>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+          <version>1.2.15</version>
+          <exclusions>
+            <exclusion>
+              <groupId>com.sun.jdmk</groupId>
+              <artifactId>jmxtools</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jmx</groupId>
+              <artifactId>jmxri</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>javax.jms</groupId>
+              <artifactId>jms</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>javax.mail</groupId>
+              <artifactId>mail</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>javax.activation</groupId>
+              <artifactId>activation</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.plugins.test</groupId>
+            <artifactId>atlassian-plugins-test</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugins.test</groupId>
+            <artifactId>atlassian-plugins-simpletest</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>2.5.10</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <!-- This should use ${project.build.directory} instead of target, but Maven < 2.0.9 fails to interpolate. -->
+        <frameworkBundleDirectory>target/framework-bundles</frameworkBundleDirectory>
+    </properties>
+</project>
