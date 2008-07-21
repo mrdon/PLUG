@@ -30,8 +30,8 @@ public class PluginBuilderTest extends TestCase {
         assertNotNull(cl.getResource("META-INF/MANIFEST.MF"));
 
         String xml = IOUtils.toString(cl.getResourceAsStream("atlassian-plugin.xml"));
-        assertTrue(xml.contains("someKey"));
-        assertTrue(xml.contains("someName"));
-        assertTrue(xml.contains("1.33"));
+        assertTrue(xml.indexOf("someKey") > 0);
+        assertTrue(xml.indexOf("someName") > 0);
+        assertTrue(xml.indexOf("1.33") > 0);
     }
 }
