@@ -108,7 +108,8 @@ public class OsgiPlugin extends AbstractPlugin implements StateAware, AutowireCa
     {
         try
         {
-            bundle.start();
+            if (bundle.getState() == Bundle.RESOLVED || bundle.getState() == Bundle.INSTALLED)
+                bundle.start();
         } catch (BundleException e)
         {
             throw new RuntimeException("Cannot start plugin: "+getKey(), e);
@@ -119,7 +120,8 @@ public class OsgiPlugin extends AbstractPlugin implements StateAware, AutowireCa
     {
         try
         {
-            bundle.stop();
+            if (bundle.getState() == Bundle.ACTIVE)
+                bundle.stop();
         } catch (BundleException e)
         {
             throw new RuntimeException("Cannot stop plugin: "+getKey(), e);
@@ -130,7 +132,8 @@ public class OsgiPlugin extends AbstractPlugin implements StateAware, AutowireCa
     {
         try
         {
-            bundle.uninstall();
+            if (bundle.getState() != Bundle.UNINSTALLED)
+                bundle.uninstall();
         } catch (BundleException e)
         {
             throw new RuntimeException("Cannot uninstall bundle " + bundle.getSymbolicName());

@@ -25,6 +25,7 @@ import java.io.FilenameFilter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.jar.JarFile;
 
 /**
  * Felix implementation of the OSGi container manager
@@ -36,6 +37,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private Felix felix = null;
     private boolean felixRunning = false;
     private File cacheDirectory;
+    private boolean disableMultipleBundleVersions = true;
 
     private final URL frameworkBundlesUrl;
     private PackageScannerConfiguration packageScannerConfig;
@@ -57,7 +59,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         this.frameworkBundlesDir = frameworkBundlesDir;
     }
 
-
+    public void setDisableMultipleBundleVersions(boolean val)
+    {
+        this.disableMultipleBundleVersions = val;
+    }
 
     public void start(HostComponentProvider provider) throws OsgiContainerException
     {
@@ -124,7 +129,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     {
         try
         {
-            felix.stop();
+            if (felixRunning)
+                felix.stop();
+            
             felixRunning = false;
             felix = null;
         } catch (BundleException e)
@@ -147,7 +154,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     {
         try
         {
-            return registration.install(file);
+            return registration.install(file, disableMultipleBundleVersions);
         } catch (BundleException e)
         {
             throw new OsgiContainerException("Unable to install bundle", e);
@@ -254,12 +261,32 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             }
         }
 
-        public Bundle install(File path) throws BundleException
+        public Bundle install(File path, boolean uninstallOtherVersions) throws BundleException
         {
             Bundle bundle;
+
+            if (uninstallOtherVersions)
+            {
+                try
+                {
+                    JarFile jar = new JarFile(path);
+                    String name = jar.getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+                    for (Bundle oldBundle : bundleContext.getBundles())
+                    {
+                        if (name.equals(oldBundle.getSymbolicName()))
+                        {
+                            log.info("Uninstalling existing version "+oldBundle.getHeaders().get(Constants.BUNDLE_VERSION));
+                            oldBundle.uninstall();
+                        }
+                    }
+
+                } catch (IOException e)
+                {
+                    throw new BundleException("Invalid bundle format", e);
+                }
+            }
             try
             {
-
                 bundle = bundleContext.installBundle(path.toURL().toString());
             } catch (MalformedURLException e)
             {
@@ -288,7 +315,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                     }
                 }))
             {
-                bundles.add(install(bundleFile));
+                bundles.add(install(bundleFile, false));
             }
 
             for (Bundle bundle : bundles)

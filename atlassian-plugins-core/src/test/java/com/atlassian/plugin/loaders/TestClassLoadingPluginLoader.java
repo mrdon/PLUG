@@ -1,6 +1,7 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
@@ -18,6 +19,7 @@ import java.util.Iterator;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.net.URL;
+import java.net.URISyntaxException;
 
 public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
 {
@@ -217,6 +219,38 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
                 return fileName.endsWith(".jar");
             }
         }).length - 1, plugins.size());
+    }
+
+    public void testInstallPluginTwice() throws URISyntaxException, IOException, PluginParseException, InterruptedException
+    {
+        FileUtils.cleanDirectory(pluginsTestDir);
+        File plugin = new File(pluginsTestDir, "some-plugin.jar");
+        new PluginBuilder("plugin")
+                .addPluginInformation("some.key", "My name", "1.0")
+                .addResource("foo.txt", "foo")
+                .build()
+                .renameTo(plugin);
+
+        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
+
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        assertEquals(1, plugins.size());
+        assertNotNull(((Plugin)plugins.iterator().next()).getResource("foo.txt"));
+        assertNull(((Plugin)plugins.iterator().next()).getResource("bar.txt"));
+
+        // sleep to ensure the new plugin is picked up
+        Thread.currentThread().sleep(1000);
+        
+        new PluginBuilder("plugin")
+                .addPluginInformation("some.key", "My name", "1.0")
+                .addResource("bar.txt", "bar")
+                .build()
+                .renameTo(plugin);
+        plugins = loader.addFoundPlugins(moduleDescriptorFactory);
+        assertEquals(1, plugins.size());
+        assertNull(((Plugin)plugins.iterator().next()).getResource("foo.txt"));
+        assertNotNull(((Plugin)plugins.iterator().next()).getResource("bar.txt"));
+
     }
 
     private void createJarFile(String jarname, String jarEntry, String saveDir)

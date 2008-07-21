@@ -1,16 +1,12 @@
 package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.FilePluginJar;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
-import com.atlassian.plugin.osgi.loader.OsgiPlugin;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.test.PluginBuilder;
+import junit.framework.TestCase;
 
 import java.io.File;
-
-import junit.framework.TestCase;
-import org.apache.log4j.Logger;
-import org.apache.log4j.BasicConfigurator;
 
 public class ContextClassLoaderTest extends PluginInContainerTestBase {
 

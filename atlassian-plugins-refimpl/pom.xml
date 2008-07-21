@@ -72,6 +72,11 @@
             <version>3.0</version>
         </dependency>
         <dependency>
+            <groupId>com.atlassian.extras</groupId>
+            <artifactId>atlassian-extras</artifactId>
+            <version>1.20</version>
+        </dependency>
+        <dependency>
             <groupId>com.atlassian.seraph</groupId>
             <artifactId>atlassian-seraph</artifactId>
             <version>0.38</version>
@@ -184,7 +189,7 @@
     </build>
 
     <properties>
-        <sal.version>0.8-SNAPSHOT</sal.version>
+        <sal.version>1.1-SNAPSHOT</sal.version>
         <pluginBundleDirectory>target/bundled-plugins</pluginBundleDirectory>
     </properties>
 

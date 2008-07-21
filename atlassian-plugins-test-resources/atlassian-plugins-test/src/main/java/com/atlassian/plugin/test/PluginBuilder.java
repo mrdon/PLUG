@@ -1,10 +1,12 @@
-package com.atlassian.plugin.osgi;
+package com.atlassian.plugin.test;
 
-import org.codehaus.janino.*;
 import org.apache.commons.io.IOUtils;
+import org.codehaus.janino.ByteArrayClassLoader;
+import org.codehaus.janino.SimpleCompiler;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.zip.ZipOutputStream;
 import java.util.zip.ZipEntry;
 import java.io.*;
@@ -14,7 +16,7 @@ import java.lang.reflect.Field;
  * Builds a plugin jar, including optionally compiling simple Java code
  */
 public class PluginBuilder {
-    private final Map<String,byte[]> jarContents;
+    private final Map/*<String,byte[]>*/ jarContents;
     private final String name;
     private ClassLoader classLoader;
 
@@ -23,7 +25,7 @@ public class PluginBuilder {
      * @param name The plugin name
      */
     public PluginBuilder(String name) {
-        jarContents = new HashMap<String,byte[]>();
+        jarContents = new HashMap();
         this.name = name;
         classLoader = getClass().getClassLoader();
     }
@@ -44,12 +46,12 @@ public class PluginBuilder {
 
         // Silly hack because I'm too lazy to do it the "proper" janino way
         ByteArrayClassLoader cl = (ByteArrayClassLoader) compiler.getClassLoader();
-        Map<String,byte[]> classes = null;
+        Map classes = null;
         final Field fields[] = cl.getClass().getDeclaredFields();
         for (int i = 0; i < fields.length; ++i) {
             if ("classes".equals(fields[i].getName())) {
                 fields[i].setAccessible(true);
-                classes = (Map<String,byte[]>) fields[i].get(cl);
+                classes = (Map) fields[i].get(cl);
             }
         }
 
@@ -111,10 +113,11 @@ public class PluginBuilder {
 
         File jarFile = File.createTempFile(name, ".jar");
         ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(jarFile));
-        for (Map.Entry<String,byte[]> entry : jarContents.entrySet())
+        for (Iterator i = jarContents.entrySet().iterator(); i.hasNext(); )
         {
-            zout.putNextEntry(new ZipEntry(entry.getKey()));
-            zout.write(entry.getValue());
+            Map.Entry entry = (Map.Entry) i.next();
+            zout.putNextEntry(new ZipEntry((String) entry.getKey()));
+            zout.write((byte[]) entry.getValue());
         }
         zout.close();
         return jarFile;

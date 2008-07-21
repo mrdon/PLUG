@@ -5,19 +5,21 @@ import java.io.File;
 public class DeploymentUnit implements Comparable
 {
 	private final File path;
+    private long lastModifiedAtTimeOfDeployment;
 
-	public DeploymentUnit(File path)
+    public DeploymentUnit(File path)
 	{
         if (path == null)
         {
             throw new IllegalArgumentException("File should not be null!");
         }
         this.path = path;
-	}
+        this.lastModifiedAtTimeOfDeployment = path.lastModified();
+    }
 
 	public long lastModified()
 	{
-		return path.lastModified();
+		return lastModifiedAtTimeOfDeployment;
 	}
 
 	public File getPath()
@@ -41,17 +43,21 @@ public class DeploymentUnit implements Comparable
         final DeploymentUnit deploymentUnit = (DeploymentUnit) o;
 
         if (!path.equals(deploymentUnit.path)) return false;
+        if (lastModifiedAtTimeOfDeployment != deploymentUnit.lastModifiedAtTimeOfDeployment) return false;
 
         return true;
     }
 
     public int hashCode()
     {
-        return path.hashCode();
+        int result;
+        result = path.hashCode();
+        result = 31 * result + (int) (lastModifiedAtTimeOfDeployment ^ (lastModifiedAtTimeOfDeployment >>> 32));
+        return result;
     }
 
     public String toString()
     {
-        return "Unit: " + path.toString() + " (" + path.lastModified() + ")";
+        return "Unit: " + path.toString() + " (" + lastModifiedAtTimeOfDeployment + ")";
     }
 }

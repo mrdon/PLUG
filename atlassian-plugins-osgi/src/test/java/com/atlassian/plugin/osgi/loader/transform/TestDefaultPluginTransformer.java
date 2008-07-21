@@ -2,7 +2,7 @@ package com.atlassian.plugin.osgi.loader.transform;
 
 import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.osgi.PluginBuilder;
+import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
 import com.atlassian.plugin.test.PluginTestUtils;

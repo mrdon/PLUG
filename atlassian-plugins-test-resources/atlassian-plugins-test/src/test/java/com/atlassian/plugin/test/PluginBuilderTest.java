@@ -1,12 +1,14 @@
-package com.atlassian.plugin.osgi;
+package com.atlassian.plugin.test;
 
 import junit.framework.TestCase;
+import junit.framework.Assert;
 
 import java.io.File;
 import java.net.URLClassLoader;
 import java.net.URL;
 
 import org.apache.commons.io.IOUtils;
+import com.atlassian.plugin.test.PluginBuilder;
 
 public class PluginBuilderTest extends TestCase {
 
@@ -22,9 +24,9 @@ public class PluginBuilderTest extends TestCase {
         Class cls = cl.loadClass("my.Foo");
         assertNotNull(cls);
         Object foo = cls.newInstance();
-        String result = (String) cls.getMethod("hi").invoke(foo);
+        String result = (String) cls.getMethod("hi", new Class[0]).invoke(foo, new Object[0]);
         assertEquals("hi", result);
-        assertEquals("Some text", IOUtils.toString(cl.getResourceAsStream("foo.txt")));
+        Assert.assertEquals("Some text", IOUtils.toString(cl.getResourceAsStream("foo.txt")));
         assertNotNull(cl.getResource("META-INF/MANIFEST.MF"));
 
         String xml = IOUtils.toString(cl.getResourceAsStream("atlassian-plugin.xml"));

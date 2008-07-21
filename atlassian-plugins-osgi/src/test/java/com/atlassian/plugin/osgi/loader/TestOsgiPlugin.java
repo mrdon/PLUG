@@ -32,17 +32,20 @@ public class TestOsgiPlugin extends TestCase
         plugin = null;
     }
     public void testEnabled() {
+        mockBundle.expectAndReturn("getState", Bundle.RESOLVED);
         mockBundle.expect("start");
         plugin.enabled();
         mockBundle.verify();
     }
     public void testDisabled() {
+        mockBundle.expectAndReturn("getState", Bundle.ACTIVE);
         mockBundle.expect("stop");
         plugin.disabled();
         mockBundle.verify();
     }
 
     public void testClose() {
+        mockBundle.expectAndReturn("getState", Bundle.ACTIVE);
         mockBundle.expect("uninstall");
         plugin.close();
         mockBundle.verify();
