@@ -8,11 +8,24 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletException;
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class DownloadableWebResource extends AbstractDownloadableResource
 {
+    private static final Log log = LogFactory.getLog(DownloadableWebResource.class);
+
+    /**
+     * @deprecated Since 2.0. Use {@link #DownloadableWebResource(Plugin, ResourceLocation, String, ApplicationDownloadContext)} instead.
+     */
     public DownloadableWebResource(BaseFileServerServlet servlet, Plugin plugin, ResourceLocation resourceDescriptor, String extraPath)
     {
         super(servlet, plugin, resourceDescriptor, extraPath);
+    }
+
+    public DownloadableWebResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath, ApplicationDownloadContext context)
+    {
+        super(plugin, resourceLocation, extraPath, context);
     }
 
     public void serveResource(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException
@@ -24,7 +37,7 @@ public class DownloadableWebResource extends AbstractDownloadableResource
         }
         catch (ServletException e)
         {
-            e.printStackTrace();
+            log.error(e);
             throw new IOException(e.getMessage());
         }
     }

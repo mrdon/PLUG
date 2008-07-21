@@ -14,11 +14,18 @@ public class DownloadableClasspathResource extends AbstractDownloadableResource
 {
     private static final Log log = LogFactory.getLog(DownloadableClasspathResource.class);
 
+    /**
+     * @deprecated Since 2.0. Use {@link #DownloadableClasspathResource(Plugin, ResourceLocation, String, ApplicationDownloadContext)} instead.
+     */
     public DownloadableClasspathResource(BaseFileServerServlet servlet, Plugin plugin, ResourceLocation resourceDescriptor, String extraPath)
     {
         super(servlet, plugin, resourceDescriptor, extraPath);
     }
 
+    public DownloadableClasspathResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath, ApplicationDownloadContext context)
+    {
+        super(plugin, resourceLocation, extraPath, context);
+    }
 
     public void serveResource(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException
     {
@@ -47,6 +54,4 @@ public class DownloadableClasspathResource extends AbstractDownloadableResource
             log.info("Resource not found: " + this);
         }
     }
-
-
 }

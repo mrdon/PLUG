@@ -12,12 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.*;
 
-/**
- *
- */
 public abstract class BaseFileServerServlet extends HttpServlet
 {
-
     public static final String PATH_SEPARATOR = "/";
     public static final String RESOURCE_URL_PREFIX = "resources";
 
@@ -56,25 +52,37 @@ public abstract class BaseFileServerServlet extends HttpServlet
         ResourceDownloadUtils.serveFileImpl(httpServletResponse, in);
     }
 
-    public abstract String getDecodedPathInfo(HttpServletRequest httpServletRequest);
-
     protected abstract DownloadStrategy instantiateDownloadStrategy(Class downloadStrategyClass);
 
+    /**
+     * @deprecated Since 2.0
+     */
+    public abstract String getDecodedPathInfo(HttpServletRequest httpServletRequest);
+
+    /**
+     * @deprecated Since 2.0
+     */
     protected abstract String urlDecode(String url);
 
+    /**
+     * @deprecated Since 2.0
+     */
     protected abstract String getContentType(String location);
 
-    protected void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
-            throws ServletException, IOException
-    {
+    /**
+     * Returns the application's download context.
+     */
+    protected abstract ApplicationDownloadContext getApplicationDownloadContext();
 
+    protected void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException
+    {
         try
         {
             DownloadStrategy downloadStrategy = getDownloadStrategy(httpServletRequest);
 
             if (downloadStrategy != null)
             {
-                downloadStrategy.serveFile(this, httpServletRequest, httpServletResponse);
+                downloadStrategy.serveFile(httpServletRequest, httpServletResponse, getApplicationDownloadContext());
             }
             else
             {
@@ -108,5 +116,4 @@ public abstract class BaseFileServerServlet extends HttpServlet
 
         return null;
     }
-
 }

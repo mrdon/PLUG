@@ -1,9 +1,6 @@
 package com.atlassian.plugin.servlet;
 
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.elements.ResourceLocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -11,6 +8,7 @@ import org.apache.commons.logging.LogFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLDecoder;
 
 /**
  * A downloadable plugin resource, as described here: http://confluence.atlassian.com/display/JIRA/Downloadable+plugin+resource
@@ -45,28 +43,27 @@ public class PluginResourceDownload implements DownloadStrategy
         this.pluginAccessor = pluginManager;
     }
 
-    public void serveFile(BaseFileServerServlet servlet, HttpServletRequest httpServletRequest,
-        HttpServletResponse httpServletResponse) throws IOException
+    public void serveFile(HttpServletRequest request, HttpServletResponse response, ApplicationDownloadContext context) throws IOException
     {
-        String requestUri = servlet.urlDecode(httpServletRequest.getRequestURI());
+        String requestUri = URLDecoder.decode(request.getRequestURI(), context.getCharacterEncoding());
         PluginResource resource = urlParser.parse(requestUri);
 
         if (resource != null)
         {
-            servePluginResource(servlet, httpServletRequest, httpServletResponse, resource.getModuleCompleteKey(),
-                resource.getResourceName());
+            servePluginResource(resource, request, response, context);
         }
         else
         {
-            log.info("Invalid resource path spec: " + httpServletRequest.getRequestURI());
-            httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
+            log.info("Invalid resource path spec: " + request.getRequestURI());
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 
-    protected void servePluginResource(BaseFileServerServlet servlet, HttpServletRequest httpServletRequest,
-        HttpServletResponse httpServletResponse, String moduleCompleteKey, String resourceName)
-        throws IOException
+    protected void servePluginResource(PluginResource pluginResource, HttpServletRequest request,
+                                       HttpServletResponse response, ApplicationDownloadContext context) throws IOException
     {
+        String moduleCompleteKey = pluginResource.getModuleCompleteKey();
+        String resourceName = pluginResource.getResourceName();
         DownloadableResource resource = null;
 
         // resource from the module
@@ -75,113 +72,85 @@ public class PluginResourceDownload implements DownloadStrategy
             ModuleDescriptor moduleDescriptor = pluginAccessor.getPluginModule(moduleCompleteKey);
             if (moduleDescriptor != null && pluginAccessor.isPluginModuleEnabled(moduleCompleteKey))
             {
-                resource = getResourceFromModule(moduleDescriptor, resourceName, servlet);
+                resource = getResourceFromModule(moduleDescriptor, resourceName, "", context);
             }
             else
             {
                 log.info("Module not found: " + moduleCompleteKey);
-                httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         }
         else // resource from plugin
         {
             Plugin plugin = pluginAccessor.getPlugin(moduleCompleteKey);
-            resource = getResourceFromPlugin(plugin, resourceName, "", servlet);
+            resource = getResourceFromPlugin(plugin, resourceName, "", context);
         }
 
         if (resource == null)
-        {
-            resource = getResourceFromPlugin(moduleCompleteKey, resourceName, servlet);
-        }
+            resource = getResourceFromPlugin(getPlugin(moduleCompleteKey), resourceName, "", context);
 
-        if (resource != null)
-        {
-            resource.serveResource(httpServletRequest, httpServletResponse);
-        }
-        else
+        if (resource == null)
         {
             log.info("Unable to find resource for plugin: " + moduleCompleteKey + " and path: " + resourceName);
+            return;
         }
+
+        resource.serveResource(request, response);
     }
 
-    private DownloadableResource getResourceFromPlugin(String moduleKey, String resourcePath,
-        BaseFileServerServlet servlet)
+    private Plugin getPlugin(String moduleKey)
     {
         if (moduleKey.indexOf(':') < 0 || moduleKey.indexOf(':') == moduleKey.length() - 1)
-        {
             return null;
-        }
 
-        Plugin plugin = pluginAccessor.getPlugin(moduleKey.substring(0, moduleKey.indexOf(':')));
-        if (plugin == null)
-        {
-            return null;
-        }
-
-        return getResourceFromPlugin(plugin, resourcePath, "", servlet);
+        return pluginAccessor.getPlugin(moduleKey.substring(0, moduleKey.indexOf(':')));
     }
 
-    private DownloadableResource getResourceFromPlugin(Plugin plugin, String resourcePath, String filePath,
-        BaseFileServerServlet servlet)
-    {
-        ResourceLocation resourceLocation = plugin.getResourceLocation(DOWNLOAD_RESOURCE, resourcePath);
-
-        if (resourceLocation != null)
-        {
-            return getDownloadablePluginResource(servlet, plugin, resourceLocation, filePath);
-        }
-        else
-        {
-            String[] nextParts = splitLastPathPart(resourcePath);
-            if (nextParts == null)
-            {
-                return null;
-            }
-            else
-            {
-                return getResourceFromPlugin(plugin, nextParts[0], nextParts[1] + filePath, servlet);
-            }
-        }
-    }
-
-    private DownloadableResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String filePath,
-        BaseFileServerServlet servlet)
-    {
-        return getResourceFromModule(moduleDescriptor, filePath, "", servlet);
-    }
-
-    DownloadableResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String resourcePath, String filePath,
-        BaseFileServerServlet servlet)
+    private DownloadableResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String resourcePath,
+                                                       String filePath, ApplicationDownloadContext context)
     {
         Plugin plugin = pluginAccessor.getPlugin(moduleDescriptor.getPluginKey());
         ResourceLocation resourceLocation = moduleDescriptor.getResourceLocation(DOWNLOAD_RESOURCE, resourcePath);
 
         if (resourceLocation != null)
         {
-            return getDownloadablePluginResource(servlet, plugin, resourceLocation, filePath);
+            return getDownloadablePluginResource(plugin, resourceLocation, filePath, context);
         }
-        else
-        {
-            String[] nextParts = splitLastPathPart(resourcePath);
-            if (nextParts == null)
-            {
-                return null;
-            }
-            else
-            {
-                return getResourceFromModule(moduleDescriptor, nextParts[0], nextParts[1] + filePath, servlet);
-            }
-        }
+
+        String[] nextParts = splitLastPathPart(resourcePath);
+        if (nextParts == null)
+            return null;
+
+        return getResourceFromModule(moduleDescriptor, nextParts[0], nextParts[1] + filePath, context);
     }
 
-    private DownloadableResource getDownloadablePluginResource(BaseFileServerServlet servlet, Plugin plugin,
-        ResourceLocation resourceLocation, String filePath)
+    private DownloadableResource getResourceFromPlugin(Plugin plugin, String resourcePath,
+                                                       String filePath, ApplicationDownloadContext context)
     {
-        if ("webContext".equalsIgnoreCase(resourceLocation.getParameter(
-            "source")))    // this allows plugins that are loaded from the web to be served
-            return new DownloadableWebResource(servlet, plugin, resourceLocation, filePath);
-        else
-            return new DownloadableClasspathResource(servlet, plugin, resourceLocation, filePath);
+        if(plugin == null)
+            return null;
+
+        ResourceLocation resourceLocation = plugin.getResourceLocation(DOWNLOAD_RESOURCE, resourcePath);
+        if (resourceLocation != null)
+        {
+            return getDownloadablePluginResource(plugin, resourceLocation, filePath, context);
+        }
+
+        String[] nextParts = splitLastPathPart(resourcePath);
+        if (nextParts == null)
+            return null;
+
+        return getResourceFromPlugin(plugin, nextParts[0], nextParts[1] + filePath, context);
+    }
+
+    private DownloadableResource getDownloadablePluginResource(Plugin plugin, ResourceLocation resourceLocation,
+                                                               String filePath, ApplicationDownloadContext context)
+    {
+        // this allows plugins that are loaded from the web to be served
+        if ("webContext".equalsIgnoreCase(resourceLocation.getParameter("source")))
+            return new DownloadableWebResource(plugin, resourceLocation, filePath, context);
+
+        return new DownloadableClasspathResource(plugin, resourceLocation, filePath, context);
     }
 
     String[] splitLastPathPart(String resourcePath)
@@ -194,10 +163,29 @@ public class PluginResourceDownload implements DownloadStrategy
 
         if (indexOfSlash < 0) return null;
 
-        return new String[]{
+        return new String[] {
             resourcePath.substring(0, indexOfSlash + 1),
             resourcePath.substring(indexOfSlash + 1)
         };
+    }
+
+    /**
+     * @deprecated Since 2.0
+     */
+    public void serveFile(BaseFileServerServlet s, HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        String requestUri = s.urlDecode(request.getRequestURI());
+        PluginResource resource = urlParser.parse(requestUri);
+
+        if (resource != null)
+        {
+            servePluginResource(resource, request, response, new LegacyDownloadContext(s));
+        }
+        else
+        {
+            log.info("Invalid resource path spec: " + request.getRequestURI());
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        }
     }
 }
 

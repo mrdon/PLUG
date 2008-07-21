@@ -14,27 +14,34 @@ public abstract class AbstractDownloadableResource implements DownloadableResour
     protected ResourceLocation resourceLocation;
     protected String extraPath;
     protected Plugin plugin;
-    protected BaseFileServerServlet servlet;
+    protected final ApplicationDownloadContext context;
 
+    /**
+     * @deprecated Since 2.0. Use {@link #AbstractDownloadableResource(Plugin, ResourceLocation, String, ApplicationDownloadContext)} instead.
+     */
     public AbstractDownloadableResource(BaseFileServerServlet servlet, Plugin plugin, ResourceLocation resourceLocation, String extraPath)
+    {
+        this(plugin, resourceLocation, extraPath, new LegacyDownloadContext(servlet));
+    }
+
+    public AbstractDownloadableResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath, ApplicationDownloadContext context)
     {
         if (extraPath != null && !"".equals(extraPath.trim()) && !resourceLocation.getLocation().endsWith("/"))
         {
             extraPath = "/" + extraPath;
         }
 
+        this.plugin = plugin;
         this.resourceLocation = resourceLocation;
         this.extraPath = extraPath;
-        this.plugin = plugin;
-        this.servlet = servlet;
+        this.context = context;
     }
-
 
     protected String getContentType()
     {
         if (resourceLocation.getContentType() == null)
         {
-            return servlet.getContentType(getLocation());
+            return context.getContentType(getLocation());
         }
 
         return resourceLocation.getContentType();

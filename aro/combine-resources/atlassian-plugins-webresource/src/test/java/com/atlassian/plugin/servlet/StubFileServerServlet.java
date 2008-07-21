@@ -40,4 +40,9 @@ class StubFileServerServlet extends BaseFileServerServlet
     {
         return contentType;
     }
+
+    protected ApplicationDownloadContext getApplicationDownloadContext()
+    {
+        return new LegacyDownloadContext(this);
+    }
 }
