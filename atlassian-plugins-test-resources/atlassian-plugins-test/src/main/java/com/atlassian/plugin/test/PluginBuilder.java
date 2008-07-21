@@ -73,7 +73,7 @@ public class PluginBuilder {
 
     public PluginBuilder addPluginInformation(String key, String name, String version)
     {
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         sb.append("<atlassian-plugin name=\"").append(name).append("\" key=\"").append(key).append("\" pluginsVersion=\"2\">\n");
         sb.append("    <plugin-info>\n");
         sb.append("        <description>This plugin descriptor is used for testing plugins!</description>\n");
