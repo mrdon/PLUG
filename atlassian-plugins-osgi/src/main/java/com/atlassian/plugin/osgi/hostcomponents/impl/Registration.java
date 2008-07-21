@@ -4,6 +4,7 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Arrays;
 
 import org.osgi.framework.ServiceRegistration;
 
@@ -56,4 +57,26 @@ class Registration implements HostComponentRegistration
         return mainInterfaceClasses;
     }
 
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Registration that = (Registration) o;
+
+        if (!instance.equals(that.instance)) return false;
+        if (!Arrays.equals(mainInterfaces, that.mainInterfaces)) return false;
+        if (!properties.equals(that.properties)) return false;
+
+        return true;
+    }
+
+    public int hashCode()
+    {
+        int result;
+        result = Arrays.hashCode(mainInterfaces);
+        result = 31 * result + instance.hashCode();
+        result = 31 * result + properties.hashCode();
+        return result;
+    }
 }

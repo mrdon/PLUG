@@ -34,4 +34,23 @@ public class TestSpringXmlHostComponentProvider extends TestCase
         assertEquals(Fooable.class.getName(), list.get(0).getMainInterfaces()[0]);
     }
 
+    public void testProvideWithNestedContexts()
+    {
+        XmlBeanFactory parentFactory = new XmlBeanFactory(new ClassPathResource("com/atlassian/plugin/spring/pluginns/plugins-spring-test.xml"));
+        XmlBeanFactory childFactory = new XmlBeanFactory(new ClassPathResource("com/atlassian/plugin/spring/pluginns/plugins-spring-test-child.xml"), parentFactory);
+
+        SpringXmlHostComponentProvider provider = (SpringXmlHostComponentProvider) childFactory.getBean("hostComponentProvider");
+        assertNotNull(provider);
+        assertFalse(parentFactory.containsBeanDefinition("hostComponentProvider"));
+        assertTrue(childFactory.containsBeanDefinition("hostComponentProvider"));
+
+
+        DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+        provider.provide(registrar);
+
+        List<HostComponentRegistration> list = registrar.getRegistry();
+        assertNotNull(list);
+        assertEquals(2, list.size());
+    }
+
 }
