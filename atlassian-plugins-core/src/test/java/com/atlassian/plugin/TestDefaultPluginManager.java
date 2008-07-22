@@ -11,6 +11,8 @@ import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.PluginPredicate;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.atlassian.plugin.test.PluginBuilder;
+import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
@@ -19,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.net.URISyntaxException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -209,7 +212,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         PluginManagerState state = pluginStateStore.loadPluginState();
         state.setState("test.atlassian.plugin", Boolean.FALSE);
         pluginStateStore.savePluginState(state);
-        
+
         manager.init();
 
         Plugin plugin = manager.getPlugin("test.atlassian.plugin");
@@ -434,7 +437,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        Collection bearModules = manager.getEnabledModulesByClassAndDescriptor(new Class[] {MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class}, MockBear.class);
+        Collection bearModules = manager.getEnabledModulesByClassAndDescriptor(new Class[]{MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class}, MockBear.class);
         assertNotNull(bearModules);
         assertEquals(1, bearModules.size());
         assertTrue(bearModules.iterator().next() instanceof MockBear);
@@ -443,7 +446,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertNotNull(noModules);
         assertEquals(0, noModules.size());
 
-        Collection mockThings = manager.getEnabledModulesByClassAndDescriptor(new Class[] {MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class}, MockThing.class);
+        Collection mockThings = manager.getEnabledModulesByClassAndDescriptor(new Class[]{MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class}, MockThing.class);
         assertNotNull(mockThings);
         assertEquals(2, mockThings.size());
         assertTrue(mockThings.iterator().next() instanceof MockThing);
@@ -511,7 +514,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertNotNull(is);
         IOUtils.closeQuietly(is);
     }
-    
+
     public void testGetDynamicPluginClass() throws IOException, PluginParseException
     {
         createFillAndCleanTempPluginDirectory();
@@ -630,7 +633,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     }
 
     // These methods test the plugin compareTo() function, which compares plugins based on their version numbers.
-    public void testComparePluginNewer(){
+    public void testComparePluginNewer()
+    {
 
         Plugin p1 = createPluginWithVersion("1.1");
         Plugin p2 = createPluginWithVersion("1.0");
@@ -653,7 +657,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertTrue(p1.compareTo(p2) == 1);
     }
 
-    public void testComparePluginOlder(){
+    public void testComparePluginOlder()
+    {
 
         Plugin p1 = createPluginWithVersion("1.0");
         Plugin p2 = createPluginWithVersion("1.1");
@@ -676,7 +681,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertTrue(p1.compareTo(p2) == -1);
     }
 
-    public void testComparePluginEqual(){
+    public void testComparePluginEqual()
+    {
 
         Plugin p1 = createPluginWithVersion("1.0");
         Plugin p2 = createPluginWithVersion("1.0");
@@ -692,7 +698,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     }
 
     // If we can't understand the version of a plugin, then take the new one.
-    public void testComparePluginNoVersion(){
+    public void testComparePluginNoVersion()
+    {
 
         Plugin p1 = createPluginWithVersion("1.0");
         Plugin p2 = createPluginWithVersion("#$%");
@@ -704,7 +711,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     }
 
-    public void testComparePluginBadPlugin(){
+    public void testComparePluginBadPlugin()
+    {
 
         Plugin p1 = createPluginWithVersion("1.0");
         Plugin p2 = createPluginWithVersion("1.0");
@@ -767,7 +775,9 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         {
             manager.validatePlugin(pluginJar);
             fail("Should have thrown exception");
-        } catch (IllegalStateException ex) {
+        }
+        catch (IllegalStateException ex)
+        {
             // test passed
         }
     }
@@ -841,7 +851,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPluginStateStore.verify();
     }
 
-    private void checkResources(PluginAccessor manager, boolean canGetGlobal, boolean canGetModule) throws IOException {
+    private void checkResources(PluginAccessor manager, boolean canGetGlobal, boolean canGetModule) throws IOException
+    {
         InputStream is = manager.getDynamicResourceAsStream("icon.gif");
         assertEquals(canGetGlobal, is != null);
         IOUtils.closeQuietly(is);
@@ -849,7 +860,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(canGetModule, is != null);
         IOUtils.closeQuietly(is);
     }
-    
+
     private void checkClasses(PluginAccessor manager, boolean canGet)
     {
         try
@@ -869,8 +880,140 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         }
     }
 
+    public void testInstallPluginTwiceWithSameName() throws Exception
+    {
+        createFillAndCleanTempPluginDirectory();
 
-    public Plugin createPluginWithVersion(String version){
+        FileUtils.cleanDirectory(pluginsTestDir);
+        File plugin = File.createTempFile("plugin", ".jar");
+        new PluginBuilder("plugin")
+                .addPluginInformation("some.key", "My name", "1.0")
+                .addResource("foo.txt", "foo")
+                .addJava("my.MyClass", "package my; public class MyClass {}")
+                .build()
+                .renameTo(plugin);
+
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
+        manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
+
+        String pluginKey = manager.installPlugin(new FilePluginJar(plugin));
+
+        assertTrue(new File(pluginsTestDir,plugin.getName()).exists());
+
+        final Plugin installedPlugin = manager.getPlugin(pluginKey);
+        assertNotNull(installedPlugin);
+        assertNotNull(installedPlugin.getClassLoader().getResourceAsStream("foo.txt"));
+        assertNull(installedPlugin.getClassLoader().getResourceAsStream("bar.txt"));
+        assertNotNull(installedPlugin.getClassLoader().loadClass("my.MyClass"));
+        try
+        {
+            installedPlugin.getClassLoader().loadClass("my.MyNewClass");
+            fail("Expected ClassNotFoundException for unknown class");
+        }
+        catch (ClassNotFoundException e)
+        {
+            // expected
+        }
+
+        // sleep to ensure the new plugin is picked up
+        Thread.currentThread().sleep(1000);
+
+        new PluginBuilder("plugin")
+                .addPluginInformation("some.key", "My name", "1.0")
+                .addResource("bar.txt", "bar")
+                .addJava("my.MyNewClass", "package my; public class MyNewClass {}")
+                .build()
+                .renameTo(plugin);
+
+        // reinstall the plugin
+        String pluginKey2 = manager.installPlugin(new FilePluginJar(plugin));
+
+        assertTrue(new File(pluginsTestDir,plugin.getName()).exists());
+
+        final Plugin installedPlugin2 = manager.getPlugin(pluginKey2);
+        assertNotNull(installedPlugin2);
+        assertEquals(1, manager.getEnabledPlugins().size());
+        assertNull(installedPlugin2.getClassLoader().getResourceAsStream("foo.txt"));
+        assertNotNull(installedPlugin2.getClassLoader().getResourceAsStream("bar.txt"));
+        assertNotNull(installedPlugin2.getClassLoader().loadClass("my.MyNewClass"));
+        try
+        {
+            installedPlugin2.getClassLoader().loadClass("my.MyClass");
+            fail("Expected ClassNotFoundException for unknown class");
+        }
+        catch (ClassNotFoundException e)
+        {
+            // expected
+        }
+    }
+
+    public void testInstallPluginTwiceWithDifferentName() throws Exception
+    {
+        createFillAndCleanTempPluginDirectory();
+
+        FileUtils.cleanDirectory(pluginsTestDir);
+        File plugin1 = new PluginBuilder("plugin")
+                .addPluginInformation("some.key", "My name", "1.0")
+                .addResource("foo.txt", "foo")
+                .addJava("my.MyClass", "package my; public class MyClass {}")
+                .build();
+
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
+        manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
+
+        String pluginKey = manager.installPlugin(new FilePluginJar(plugin1));
+
+        assertTrue(new File(pluginsTestDir,plugin1.getName()).exists());
+
+        final Plugin installedPlugin = manager.getPlugin(pluginKey);
+        assertNotNull(installedPlugin);
+        assertNotNull(installedPlugin.getClassLoader().getResourceAsStream("foo.txt"));
+        assertNull(installedPlugin.getClassLoader().getResourceAsStream("bar.txt"));
+        assertNotNull(installedPlugin.getClassLoader().loadClass("my.MyClass"));
+        try
+        {
+            installedPlugin.getClassLoader().loadClass("my.MyNewClass");
+            fail("Expected ClassNotFoundException for unknown class");
+        }
+        catch (ClassNotFoundException e)
+        {
+            // expected
+        }
+
+        // sleep to ensure the new plugin is picked up
+        Thread.currentThread().sleep(1000);
+
+        File plugin2 = new PluginBuilder("plugin")
+                .addPluginInformation("some.key", "My name", "1.0")
+                .addResource("bar.txt", "bar")
+                .addJava("my.MyNewClass", "package my; public class MyNewClass {}")
+                .build();
+
+        // reinstall the plugin
+        String pluginKey2 = manager.installPlugin(new FilePluginJar(plugin2));
+
+        assertFalse(new File(pluginsTestDir,plugin1.getName()).exists());
+        assertTrue(new File(pluginsTestDir,plugin2.getName()).exists());
+
+        final Plugin installedPlugin2 = manager.getPlugin(pluginKey2);
+        assertNotNull(installedPlugin2);
+        assertEquals(1, manager.getEnabledPlugins().size());
+        assertNull(installedPlugin2.getClassLoader().getResourceAsStream("foo.txt"));
+        assertNotNull(installedPlugin2.getClassLoader().getResourceAsStream("bar.txt"));
+        assertNotNull(installedPlugin2.getClassLoader().loadClass("my.MyNewClass"));
+        try
+        {
+            installedPlugin2.getClassLoader().loadClass("my.MyClass");
+            fail("Expected ClassNotFoundException for unknown class");
+        }
+        catch (ClassNotFoundException e)
+        {
+            // expected
+        }
+    }
+
+    public Plugin createPluginWithVersion(String version)
+    {
         Plugin p = new StaticPlugin();
         p.setKey("test.default.plugin");
         p.setPluginInformation(new PluginInformation());
@@ -879,7 +1022,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         return p;
     }
 
-    /** Dummy plugin loader that reports that removal is supported and returns plugins that report that they can
+    /**
+     * Dummy plugin loader that reports that removal is supported and returns plugins that report that they can
      * be uninstalled.
      */
     private static class SinglePluginLoaderWithRemoval extends SinglePluginLoader
@@ -907,7 +1051,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         protected StaticPlugin getNewPlugin()
         {
-            return new StaticPlugin() {
+            return new StaticPlugin()
+            {
                 public boolean isUninstallable()
                 {
                     return true;

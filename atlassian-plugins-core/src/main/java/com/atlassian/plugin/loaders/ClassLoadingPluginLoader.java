@@ -197,12 +197,20 @@ public class ClassLoadingPluginLoader implements DynamicPluginLoader
 
         DeploymentUnit deploymentUnit = findMatchingDeploymentUnit(plugin);
         File pluginOnDisk = deploymentUnit.getPath();
+        plugin.close();
 
         try
         {
-            plugin.close();
+            boolean found = false;
+            for (Iterator i = plugins.keySet().iterator(); i.hasNext();)
+            {
+                DeploymentUnit unit = (DeploymentUnit) i.next();
+                if(unit.getPath().equals(deploymentUnit.getPath()) && !unit.equals(deploymentUnit)){
+                    found = true;
+                }
+            }
 
-            if (!pluginOnDisk.delete())
+            if (!found && !pluginOnDisk.delete())
                 throw new PluginException("Could not delete plugin [" + plugin.getName() + "].");
         }
         catch (SecurityException e)
