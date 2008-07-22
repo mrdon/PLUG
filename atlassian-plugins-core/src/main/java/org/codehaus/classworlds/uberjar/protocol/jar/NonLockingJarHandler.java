@@ -1,4 +1,4 @@
-package com.atlassian.plugin.classloader;
+package org.codehaus.classworlds.uberjar.protocol.jar;
 
 /*
  $Id: Handler.java 115 2005-07-03 15:23:59Z jvanzyl $
@@ -45,6 +45,8 @@ package com.atlassian.plugin.classloader;
  OF THE POSSIBILITY OF SUCH DAMAGE.
 
  */
+
+import org.codehaus.classworlds.uberjar.protocol.jar.NonLockingJarUrlConnection;
 
 import java.io.IOException;
 import java.net.URL;

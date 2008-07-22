@@ -54,6 +54,12 @@ public class TestPluginClassLoader extends TestCase
         assertEquals("innerresource",IOUtils.toString(resourceUrl.openStream()));
     }
 
+    public void testPluginClassLoaderDoesNotSwallowClassesFromADifferentClassLoader() throws Exception
+    {
+        final Class c = Class.forName(getClass().getName(), true, pluginClassLoader);
+        assertEquals(getClass().getClassLoader(), c.getClassLoader());
+    }
+
     public void testPluginClassLoaderOverridesContainerClassesWithInnerJarClasses() throws Exception
     {
         Class mockVersionedClass =

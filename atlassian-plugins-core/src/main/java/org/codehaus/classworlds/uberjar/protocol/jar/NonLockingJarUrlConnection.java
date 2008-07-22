@@ -1,4 +1,4 @@
-package com.atlassian.plugin.classloader;
+package org.codehaus.classworlds.uberjar.protocol.jar;
 
 /*
  $Id: JarUrlConnection.java 78 2004-07-01 13:59:13Z jvanzyl $
