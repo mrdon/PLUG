@@ -44,6 +44,24 @@
             <groupId>com.atlassian.seraph</groupId>
             <artifactId>atlassian-seraph</artifactId>
             <version>1.0</version>
+	    <exclusions>
+                <exclusion>
+                    <groupId>opensymphony</groupId>
+                    <artifactId>oscore</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>opensymphony</groupId>
+                    <artifactId>propertyset</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>opensymphony</groupId>
+                    <artifactId>osuser</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>bouncycastle</groupId>
+                    <artifactId>bcprov-jdk14</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>backport-util-concurrent</groupId>
