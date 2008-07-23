@@ -39,7 +39,7 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
      */
     public DirectoryPluginLoader(File path, String pluginDescriptorFileName, PluginFactory pluginFactory)
     {
-        this(path, Collections.singletonList(new LegacyDynamicPluginDeployer(pluginDescriptorFileName, pluginFactory)), null);
+        this(path, Collections.singletonList(new LegacyDynamicPluginDeployer(pluginDescriptorFileName)), null);
     }
 
     /**

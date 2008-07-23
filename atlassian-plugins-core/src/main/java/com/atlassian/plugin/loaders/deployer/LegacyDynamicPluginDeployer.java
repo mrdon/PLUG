@@ -1,6 +1,7 @@
 package com.atlassian.plugin.loaders.deployer;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.impl.DefaultDynamicPlugin;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.loaders.PluginFactory;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
@@ -20,13 +21,11 @@ public class LegacyDynamicPluginDeployer implements PluginDeployer
 {
     private DescriptorParserFactory descriptorParserFactory;
     private String pluginDescriptorFileName;
-    private PluginFactory pluginFactory;
 
-    public LegacyDynamicPluginDeployer(String pluginDescriptorFileName, PluginFactory pluginFactory)
+    public LegacyDynamicPluginDeployer(String pluginDescriptorFileName)
     {
         this.descriptorParserFactory = new XmlDescriptorParserFactory();
         this.pluginDescriptorFileName = pluginDescriptorFileName;
-        this.pluginFactory = pluginFactory;
     }
 
     /**
@@ -49,7 +48,7 @@ public class LegacyDynamicPluginDeployer implements PluginDeployer
             pluginDescriptor = loader.getResourceAsStream(pluginDescriptorFileName);
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
-            plugin = parser.configurePlugin(moduleDescriptorFactory, pluginFactory.createPlugin(deploymentUnit, loader));
+            plugin = parser.configurePlugin(moduleDescriptorFactory, createPlugin(deploymentUnit, loader));
         }
         // Under normal conditions, the deployer would be closed when the plugins are undeployed. However,
         // these are not normal conditions, so we need to make sure that we close them explicitly.
@@ -73,6 +72,17 @@ public class LegacyDynamicPluginDeployer implements PluginDeployer
             IOUtils.closeQuietly(pluginDescriptor);
         }
         return plugin;
+    }
+
+    /**
+     * Creates the plugin.  Override to use a different Plugin class
+     * @param deploymentUnit The deployment unit
+     * @param loader The plugin loader
+     * @return The plugin instance
+     */
+    protected Plugin createPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
+    {
+        return new DefaultDynamicPlugin(deploymentUnit, loader);
     }
 
     /**
