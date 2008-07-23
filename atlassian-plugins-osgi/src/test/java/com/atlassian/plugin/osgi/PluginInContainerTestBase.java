@@ -5,15 +5,19 @@ import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
-import com.atlassian.plugin.osgi.loader.OsgiPluginLoader;
+import com.atlassian.plugin.osgi.deployer.OsgiPluginDeployer;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
+import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.loaders.DefaultPluginFactory;
+import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.apache.commons.io.FileUtils;
 
@@ -27,6 +31,7 @@ public abstract class PluginInContainerTestBase extends TestCase {
     protected File pluginsDir;
     protected ModuleDescriptorFactory moduleDescriptorFactory;
     protected DefaultPluginManager pluginManager;
+    private PluginEventManager pluginEventManager;
 
     @Override
     public void setUp() throws Exception
@@ -49,23 +54,23 @@ public abstract class PluginInContainerTestBase extends TestCase {
         pluginsDir = null;
         moduleDescriptorFactory = null;
         pluginManager = null;
+        pluginEventManager = null;
     }
 
     protected void initPluginManager(HostComponentProvider hostComponentProvider) throws Exception {
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
         scannerConfig.getPackageIncludes().add("com.atlassian.plugin*");
+        pluginEventManager = new PluginEventManagerImpl();
         osgiContainerManager = new FelixOsgiContainerManager(frameworkBundlesDir,
-                                                             scannerConfig);
+                                                             scannerConfig, hostComponentProvider, pluginEventManager);
 
-        OsgiPluginLoader osgiPluginLoader = new OsgiPluginLoader(
-                pluginsDir,
-                PluginManager.PLUGIN_DESCRIPTOR_FILENAME,
-                new DefaultPluginFactory(),
-                osgiContainerManager,
-                hostComponentProvider);
+        OsgiPluginDeployer osgiPluginDeployer = new OsgiPluginDeployer(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, osgiContainerManager);
+
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
-        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.asList(osgiPluginLoader),
-                moduleDescriptorFactory);
+        DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Collections.singletonList(osgiPluginDeployer), null);
+
+        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.asList(loader),
+                moduleDescriptorFactory, pluginEventManager);
         pluginManager.setPluginInstaller(new FilePluginInstaller(pluginsDir));
         pluginManager.init();
     }

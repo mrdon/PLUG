@@ -4,6 +4,7 @@ import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.test.PluginBuilder;
+import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
 import junit.framework.TestCase;
 import org.twdata.pkgscanner.ExportPackage;
 import org.apache.commons.io.FileUtils;
@@ -33,7 +34,8 @@ public class TestFelixOsgiContainerManager extends TestCase
         tmpdir = new File(System.getProperty("java.io.tmpdir"));
         frameworkBundlesDir = new File(tmpdir, "framework-bundles-test");
 
-        felix = new FelixOsgiContainerManager(frameworkBundlesUrl, frameworkBundlesDir, new DefaultPackageScannerConfiguration());
+        felix = new FelixOsgiContainerManager(frameworkBundlesUrl, frameworkBundlesDir, new DefaultPackageScannerConfiguration(),
+                null, new PluginEventManagerImpl());
     }
 
     @Override
@@ -74,14 +76,14 @@ public class TestFelixOsgiContainerManager extends TestCase
 
     public void testStartStop()
     {
-        felix.start(null);
+        felix.start();
         assertTrue(felix.isRunning());
         assertEquals(1, felix.getBundles().length);
     }
 
     public void testInstallBundle() throws URISyntaxException
     {
-        felix.start(null);
+        felix.start();
         assertEquals(1, felix.getBundles().length);
         File jar = new File(getClass().getResource("/myapp-1.0.jar").toURI());
         felix.installBundle(jar);
@@ -108,7 +110,7 @@ public class TestFelixOsgiContainerManager extends TestCase
                 .addResource("bar.txt", "bar")
                 .build();
 
-        felix.start(null);
+        felix.start();
         assertEquals(1, felix.getBundles().length);
         Bundle bundle = felix.installBundle(plugin);
         assertEquals(2, felix.getBundles().length);
@@ -127,22 +129,4 @@ public class TestFelixOsgiContainerManager extends TestCase
         assertNotNull(bundleUpdate.getResource("bar.txt"));
     }
 
-    public void testReloadHostComponents()
-    {
-        HostComponentProvider prov = new HostComponentProvider() {
-
-            public void provide(ComponentRegistrar registrar)
-            {
-                registrar.register(Serializable.class).forInstance("Some String");
-            }
-        };
-        felix.start(null);
-        assertTrue(felix.isRunning());
-        assertEquals(1, felix.getBundles().length);
-        assertEquals(2, felix.getRegisteredServices().length);
-        felix.reloadHostComponents(prov);
-        assertEquals(3, felix.getRegisteredServices().length);
-        felix.reloadHostComponents(prov);
-        assertEquals(3, felix.getRegisteredServices().length);
-    }
 }

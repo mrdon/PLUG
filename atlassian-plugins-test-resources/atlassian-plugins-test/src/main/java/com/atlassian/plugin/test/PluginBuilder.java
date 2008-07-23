@@ -73,8 +73,13 @@ public class PluginBuilder {
 
     public PluginBuilder addPluginInformation(String key, String name, String version)
     {
+        return addPluginInformation(key, name, version, 2);
+    }
+
+    public PluginBuilder addPluginInformation(String key, String name, String version, int pluginsVersion)
+    {
         StringBuffer sb = new StringBuffer();
-        sb.append("<atlassian-plugin name=\"").append(name).append("\" key=\"").append(key).append("\" pluginsVersion=\"2\">\n");
+        sb.append("<atlassian-plugin name=\"").append(name).append("\" key=\"").append(key).append("\" pluginsVersion=\""+pluginsVersion+"\">\n");
         sb.append("    <plugin-info>\n");
         sb.append("        <description>This plugin descriptor is used for testing plugins!</description>\n");
         sb.append("        <version>").append(version).append("</version>\n");

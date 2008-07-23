@@ -141,7 +141,7 @@ public class TestStateAware extends TestCase
 
     private PluginLoader setupPluginLoader(final Plugin plugin1)
     {
-        PluginLoader pluginLoader = new PluginLoader() { //TODO: should this loader support removal and addition?
+        PluginLoader pluginLoader = new PluginLoader() { //TODO: should this deployer support removal and addition?
 
             public Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
             {

@@ -10,6 +10,9 @@ import java.io.IOException;
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 
+/**
+ * Loads plugins from the classpath
+ */
 public class ClassPathPluginLoader implements PluginLoader
 {
     private static Log log = LogFactory.getLog(ClassPathPluginLoader.class);

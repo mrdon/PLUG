@@ -1,7 +1,7 @@
 package com.atlassian.plugin.repositories;
 
 import com.atlassian.plugin.PluginInstaller;
-import com.atlassian.plugin.PluginJar;
+import com.atlassian.plugin.PluginArtifact;
 
 import org.apache.commons.io.IOUtils;
 
@@ -33,9 +33,9 @@ public class FilePluginInstaller implements PluginInstaller
      *
      * @throws RuntimeException if there was an exception reading or writing files.
      */
-    public void installPlugin(String key, PluginJar pluginJar)
+    public void installPlugin(String key, PluginArtifact pluginArtifact)
     {
-        File newPluginFile = new File(directory, pluginJar.getFileName());
+        File newPluginFile = new File(directory, pluginArtifact.getFileName());
         if (newPluginFile.exists())
             newPluginFile.delete();
 
@@ -43,11 +43,11 @@ public class FilePluginInstaller implements PluginInstaller
         try
         {
             os= new FileOutputStream(newPluginFile);
-            IOUtils.copy(pluginJar.getInputStream(), os);
+            IOUtils.copy(pluginArtifact.getInputStream(), os);
         }
         catch (IOException e)
         {
-            throw new RuntimeException("Could not install plugin: " + pluginJar, e);
+            throw new RuntimeException("Could not install plugin: " + pluginArtifact, e);
         }
         finally
         {

@@ -1,26 +1,15 @@
 package com.atlassian.plugin.refimpl;
 
-import com.atlassian.plugin.PluginManager;
-import com.atlassian.plugin.DefaultPluginManager;
-import com.atlassian.plugin.osgi.loader.OsgiPluginLoader;
-import com.atlassian.plugin.store.MemoryPluginStateStore;
-
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletContextEvent;
-import java.util.Arrays;
 import java.util.Properties;
-import java.io.FileInputStream;
 import java.io.IOException;
 
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.Logger;
 
 /**
- * Created by IntelliJ IDEA.
- * User: mrdon
- * Date: 06/07/2008
- * Time: 12:24:37 PM
- * To change this template use File | Settings | File Templates.
+ * Initializes app
  */
 public class InitListener implements ServletContextListener {
 

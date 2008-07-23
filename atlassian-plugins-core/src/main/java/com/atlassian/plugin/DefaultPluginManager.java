@@ -11,6 +11,8 @@ import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.*;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
@@ -28,7 +30,7 @@ import java.util.*;
  * This class is responsible for enabling and disabling plugins and plugin modules and reflecting these
  * state changes in the PluginStateStore.
  * <p/>
- * An interesting quirk in the design is that {@link #installPlugin(PluginJar)} explicitly stores
+ * An interesting quirk in the design is that {@link #installPlugin(PluginArtifact)} explicitly stores
  * the plugin via a {@link PluginInstaller}, whereas {@link #uninstall(Plugin)} relies on the
  * underlying {@link PluginLoader} to remove the plugin if necessary.
  */
@@ -43,7 +45,7 @@ public class DefaultPluginManager implements PluginManager
     private final PluginEventManager pluginEventManager;
 
     /**
-     * Installer used for storing plugins. Used by {@link #installPlugin(PluginJar)}.
+     * Installer used for storing plugins. Used by {@link #installPlugin(PluginArtifact)}.
      */
     private PluginInstaller pluginInstaller;
 
@@ -89,6 +91,7 @@ public class DefaultPluginManager implements PluginManager
      */
     public void init() throws PluginParseException
     {
+        pluginEventManager.broadcast(new PluginFrameworkStartingEvent(this, this));
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
         {
             PluginLoader loader = (PluginLoader) iterator.next();
@@ -100,6 +103,15 @@ public class DefaultPluginManager implements PluginManager
             }
         }
         pluginEventManager.broadcast(new PluginFrameworkStartedEvent(this, this));
+    }
+
+    /**
+     * Fires the shutdown event
+     * @since 2.0.0
+     */
+    public void shutdown()
+    {
+        pluginEventManager.broadcast(new PluginFrameworkShutdownEvent(this, this));
     }
 
     /**
@@ -118,11 +130,11 @@ public class DefaultPluginManager implements PluginManager
         return store;
     }
 
-    public String installPlugin(PluginJar pluginJar) throws PluginParseException
+    public String installPlugin(PluginArtifact pluginArtifact) throws PluginParseException
     {
 
-        String key = validatePlugin(pluginJar);
-        pluginInstaller.installPlugin(key, pluginJar);
+        String key = validatePlugin(pluginArtifact);
+        pluginInstaller.installPlugin(key, pluginArtifact);
         scanForNewPlugins();
 
         return key;
@@ -132,12 +144,12 @@ public class DefaultPluginManager implements PluginManager
      * Validate a plugin jar.  Looks through all plugin loaders for ones that can load the plugin and
      * extract the plugin key as proof.
      *
-     * @param pluginJar the jar file representing the plugin
+     * @param pluginArtifact the jar file representing the plugin
      * @return The plugin key
      * @throws PluginParseException if the plugin cannot be parsed
      * @throws NullPointerException if <code>pluginJar</code> is null.
      */
-    String validatePlugin(PluginJar pluginJar) throws PluginParseException
+    String validatePlugin(PluginArtifact pluginArtifact) throws PluginParseException
     {
         String key;
 
@@ -148,7 +160,7 @@ public class DefaultPluginManager implements PluginManager
             if (loader instanceof DynamicPluginLoader)
             {
                 foundADynamicPluginLoader = true;
-                key = ((DynamicPluginLoader) loader).canLoad(pluginJar);
+                key = ((DynamicPluginLoader) loader).canLoad(pluginArtifact);
                 if (key != null)
                     return key;
             }
@@ -158,7 +170,7 @@ public class DefaultPluginManager implements PluginManager
         {
             throw new IllegalStateException("Should be at least one DynamicPluginLoader in the plugin loader list");
         }
-        throw new PluginParseException("Jar " + pluginJar.getFileName() + " is not a valid plugin");
+        throw new PluginParseException("Jar " + pluginArtifact.getFileName() + " is not a valid plugin");
     }
 
     public int scanForNewPlugins() throws PluginParseException
@@ -310,6 +322,8 @@ public class DefaultPluginManager implements PluginManager
         }
 
         plugins.put(plugin.getKey(), plugin);
+        if (plugin.isEnabledByDefault())
+            plugin.setEnabled(true);
 
         enablePluginModules(plugin);
 
@@ -657,9 +671,7 @@ public class DefaultPluginManager implements PluginManager
     {
         classLoader.notifyPluginOrModuleEnabled();
 
-        if (plugin instanceof StateAware) {
-            ((StateAware)plugin).enabled();
-        }
+        plugin.setEnabled(true);
 
         enablePluginModules(plugin);
 
@@ -766,9 +778,7 @@ public class DefaultPluginManager implements PluginManager
         }
 
         // This needs to happen after modules are disabled to prevent errors 
-        if (plugin instanceof StateAware) {
-            ((StateAware)plugin).disabled();
-        }
+        plugin.setEnabled(false);
     }
 
     public void disablePluginModule(String completeKey)

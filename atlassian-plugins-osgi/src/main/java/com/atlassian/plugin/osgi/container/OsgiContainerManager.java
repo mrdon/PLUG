@@ -19,10 +19,9 @@ public interface OsgiContainerManager
     /**
      * Starts the OSGi container
      *
-     * @param provider The host component provider to use when registering host services
      * @throws OsgiContainerException If the container cannot be started
      */
-    void start(HostComponentProvider provider) throws OsgiContainerException;
+    void start() throws OsgiContainerException;
 
     /**
      * Stops the OSGi container
@@ -38,12 +37,6 @@ public interface OsgiContainerManager
      * @throws OsgiContainerException If the bundle cannot be loaded
      */
     Bundle installBundle(File file) throws OsgiContainerException;
-
-    /**
-     * Reloads all host components used
-     * @param provider The host component provider to use when registering host services
-     */
-    void reloadHostComponents(HostComponentProvider provider);
 
     /**
      * @return If the container is running or not

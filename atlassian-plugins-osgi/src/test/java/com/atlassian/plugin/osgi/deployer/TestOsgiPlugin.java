@@ -1,4 +1,4 @@
-package com.atlassian.plugin.osgi.loader;
+package com.atlassian.plugin.osgi.deployer;
 
 import junit.framework.TestCase;
 import com.mockobjects.dynamic.Mock;
@@ -34,13 +34,13 @@ public class TestOsgiPlugin extends TestCase
     public void testEnabled() {
         mockBundle.expectAndReturn("getState", Bundle.RESOLVED);
         mockBundle.expect("start");
-        plugin.enabled();
+        plugin.enable();
         mockBundle.verify();
     }
     public void testDisabled() {
         mockBundle.expectAndReturn("getState", Bundle.ACTIVE);
         mockBundle.expect("stop");
-        plugin.disabled();
+        plugin.disable();
         mockBundle.verify();
     }
 

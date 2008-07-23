@@ -1,8 +1,7 @@
-package com.atlassian.plugin.osgi.loader;
+package com.atlassian.plugin.osgi.deployer;
 
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
-import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.AutowireCapablePlugin;
 
 import java.net.URL;
@@ -17,7 +16,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * Plugin that wraps an OSGi bundle that does contain a plugin descriptor.
  */
-public class OsgiPlugin extends AbstractPlugin implements StateAware, AutowireCapablePlugin, DynamicPlugin
+public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin, DynamicPlugin
 {
     private Bundle bundle;
     private static final Log log = LogFactory.getLog(OsgiPlugin.class);
@@ -97,14 +96,14 @@ public class OsgiPlugin extends AbstractPlugin implements StateAware, AutowireCa
     public void setEnabled(boolean enabled)
     {
         if (enabled) {
-            enabled();
+            enable();
         }
         else {
-            disabled();
+            disable();
         }
     }
 
-    public void enabled()
+    void enable()
     {
         try
         {
@@ -116,7 +115,7 @@ public class OsgiPlugin extends AbstractPlugin implements StateAware, AutowireCa
         }
     }
 
-    public void disabled()
+    void disable()
     {
         try
         {

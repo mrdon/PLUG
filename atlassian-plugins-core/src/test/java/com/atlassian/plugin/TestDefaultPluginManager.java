@@ -260,6 +260,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.matchAndReturn("getKey", "some-plugin-key");
         mockPlugin.matchAndReturn("getModuleDescriptors", Collections.EMPTY_LIST);
         mockPlugin.matchAndReturn("hashCode", 12);
+        mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
+        mockPlugin.expectAndReturn("isEnabledByDefault", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -280,6 +282,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.matchAndReturn("getKey", "some-plugin-key");
         mockPlugin.matchAndReturn("getModuleDescriptors", Collections.EMPTY_LIST);
         mockPlugin.matchAndReturn("hashCode", 12);
+        mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
+        mockPlugin.expectAndReturn("isEnabledByDefault", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -304,6 +308,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.matchAndReturn("getKey", "some-plugin-key");
         mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(moduleDescriptor));
         mockPlugin.matchAndReturn("hashCode", 12);
+        mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
+        mockPlugin.expectAndReturn("isEnabledByDefault", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -328,6 +334,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.matchAndReturn("getKey", "some-plugin-key");
         mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(module));
         mockPlugin.matchAndReturn("hashCode", 12);
+        mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
+        mockPlugin.expectAndReturn("isEnabledByDefault", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -351,6 +359,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.matchAndReturn("getKey", "some-plugin-key");
         mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(moduleDescriptor));
         mockPlugin.matchAndReturn("hashCode", 12);
+        mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
+        mockPlugin.expectAndReturn("isEnabledByDefault", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -375,6 +385,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.matchAndReturn("getKey", "some-plugin-key");
         mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(module));
         mockPlugin.matchAndReturn("hashCode", 12);
+        mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
+        mockPlugin.expectAndReturn("isEnabledByDefault", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -753,11 +765,11 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         Mock mockLoader = new Mock(DynamicPluginLoader.class);
         pluginLoaders.add(mockLoader.proxy());
 
-        Mock mockPluginJar = new Mock(PluginJar.class);
-        PluginJar pluginJar = (PluginJar) mockPluginJar.proxy();
-        mockLoader.expectAndReturn("canLoad", C.args(C.eq(pluginJar)), "foo");
+        Mock mockPluginJar = new Mock(PluginArtifact.class);
+        PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
+        mockLoader.expectAndReturn("canLoad", C.args(C.eq(pluginArtifact)), "foo");
 
-        String key = manager.validatePlugin(pluginJar);
+        String key = manager.validatePlugin(pluginArtifact);
         assertEquals("foo", key);
         mockLoader.verify();
 
@@ -769,11 +781,11 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         Mock mockLoader = new Mock(PluginLoader.class);
         pluginLoaders.add(mockLoader.proxy());
 
-        Mock mockPluginJar = new Mock(PluginJar.class);
-        PluginJar pluginJar = (PluginJar) mockPluginJar.proxy();
+        Mock mockPluginJar = new Mock(PluginArtifact.class);
+        PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
         try
         {
-            manager.validatePlugin(pluginJar);
+            manager.validatePlugin(pluginArtifact);
             fail("Should have thrown exception");
         }
         catch (IllegalStateException ex)
@@ -808,7 +820,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         Mock mockPluginLoader = new Mock(DynamicPluginLoader.class);
         Mock mockDescriptorParserFactory = new Mock(DescriptorParserFactory.class);
         Mock mockDescriptorParser = new Mock(DescriptorParser.class);
-        Mock mockPluginJar = new Mock(PluginJar.class);
+        Mock mockPluginJar = new Mock(PluginArtifact.class);
         Mock mockRepository = new Mock(PluginInstaller.class);
         Mock mockPlugin = new Mock(Plugin.class);
 
@@ -821,23 +833,25 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         );
 
         Plugin plugin = (Plugin) mockPlugin.proxy();
-        PluginJar pluginJar = (PluginJar) mockPluginJar.proxy();
+        PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
 
         mockPluginStateStore.expectAndReturn("loadPluginState", new PluginManagerState());
         mockDescriptorParser.matchAndReturn("getKey", "test");
-        mockRepository.expect("installPlugin", C.args(C.eq("test"), C.eq(pluginJar)));
+        mockRepository.expect("installPlugin", C.args(C.eq("test"), C.eq(pluginArtifact)));
         mockPluginLoader.expectAndReturn("loadAllPlugins", C.eq(moduleDescriptorFactory), Collections.EMPTY_LIST);
         mockPluginLoader.expectAndReturn("supportsAddition", true);
         mockPluginLoader.expectAndReturn("addFoundPlugins", moduleDescriptorFactory, Collections.singletonList(plugin));
-        mockPluginLoader.expectAndReturn("canLoad", C.args(C.eq(pluginJar)), "test");
+        mockPluginLoader.expectAndReturn("canLoad", C.args(C.eq(pluginArtifact)), "test");
         mockPlugin.matchAndReturn("getKey", "test");
         mockPlugin.matchAndReturn("hashCode", mockPlugin.hashCode());
         mockPlugin.expectAndReturn("getModuleDescriptors", new ArrayList());
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
+        mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
+        mockPlugin.expectAndReturn("isEnabledByDefault", true);
 
         pluginManager.setPluginInstaller((PluginInstaller) mockRepository.proxy());
         pluginManager.init();
-        pluginManager.installPlugin(pluginJar);
+        pluginManager.installPlugin(pluginArtifact);
 
         assertEquals(plugin, pluginManager.getPlugin("test"));
         assertTrue(pluginManager.isPluginEnabled("test"));
@@ -887,7 +901,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         FileUtils.cleanDirectory(pluginsTestDir);
         File plugin = File.createTempFile("plugin", ".jar");
         new PluginBuilder("plugin")
-                .addPluginInformation("some.key", "My name", "1.0")
+                .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
                 .addJava("my.MyClass", "package my; public class MyClass {}")
                 .build()
@@ -919,7 +933,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         Thread.currentThread().sleep(1000);
 
         new PluginBuilder("plugin")
-                .addPluginInformation("some.key", "My name", "1.0")
+                .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("bar.txt", "bar")
                 .addJava("my.MyNewClass", "package my; public class MyNewClass {}")
                 .build()
@@ -953,7 +967,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         FileUtils.cleanDirectory(pluginsTestDir);
         File plugin1 = new PluginBuilder("plugin")
-                .addPluginInformation("some.key", "My name", "1.0")
+                .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
                 .addJava("my.MyClass", "package my; public class MyClass {}")
                 .build();
@@ -984,7 +998,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         Thread.currentThread().sleep(1000);
 
         File plugin2 = new PluginBuilder("plugin")
-                .addPluginInformation("some.key", "My name", "1.0")
+                .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("bar.txt", "bar")
                 .addJava("my.MyNewClass", "package my; public class MyNewClass {}")
                 .build();

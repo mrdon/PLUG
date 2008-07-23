@@ -17,4 +17,10 @@ public interface PluginManager extends PluginController, PluginAccessor
      */
     void init() throws PluginParseException;
 
+    /**
+     * Destroys the plugin manager. This <b>must</b> be called when getting rid of the manager instance and you
+     * plan to create another one.
+     * @since 2.0.0
+     */
+    void shutdown();
 }

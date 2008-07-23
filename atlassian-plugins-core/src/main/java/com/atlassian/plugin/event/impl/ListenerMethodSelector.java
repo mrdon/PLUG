@@ -8,7 +8,9 @@ import java.lang.reflect.Method;
 public interface ListenerMethodSelector
 {
     /**
-     * @param method The possible listener method
+     * Determines if the method is a listener method
+     *
+     * @param method The possible listener method.  Cannot be null.
      * @return True if this is a listener method
      */
     boolean isListenerMethod(Method method);

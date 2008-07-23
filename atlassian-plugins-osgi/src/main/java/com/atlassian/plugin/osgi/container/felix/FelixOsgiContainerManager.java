@@ -8,6 +8,10 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.ClassLoaderUtils;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.FileUtils;
@@ -43,13 +47,18 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private PackageScannerConfiguration packageScannerConfig;
     public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "osgi-framework-bundles.zip";
     private File frameworkBundlesDir;
+    private HostComponentProvider hostComponentProvider;
 
 
-    public FelixOsgiContainerManager(File frameworkBundlesDir, PackageScannerConfiguration packageScannerConfig)
+    public FelixOsgiContainerManager(File frameworkBundlesDir, PackageScannerConfiguration packageScannerConfig,
+                                     HostComponentProvider provider, PluginEventManager eventManager)
     {
-        this(ClassLoaderUtils.getResource(OSGI_FRAMEWORK_BUNDLES_ZIP, FelixOsgiContainerManager.class), frameworkBundlesDir, packageScannerConfig);
+        this(ClassLoaderUtils.getResource(OSGI_FRAMEWORK_BUNDLES_ZIP, FelixOsgiContainerManager.class), frameworkBundlesDir,
+                packageScannerConfig, provider, eventManager);
     }
-    public FelixOsgiContainerManager(URL frameworkBundlesZip, File frameworkBundlesDir, PackageScannerConfiguration packageScannerConfig)
+    public FelixOsgiContainerManager(URL frameworkBundlesZip, File frameworkBundlesDir,
+                                     PackageScannerConfiguration packageScannerConfig, HostComponentProvider provider,
+                                     PluginEventManager eventManager)
     {
         if (frameworkBundlesZip == null)
             throw new IllegalArgumentException("The framework bundles zip is required");
@@ -57,6 +66,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         this.frameworkBundlesUrl = frameworkBundlesZip;
         this.packageScannerConfig = packageScannerConfig;
         this.frameworkBundlesDir = frameworkBundlesDir;
+        this.hostComponentProvider = provider;
+        eventManager.register(this);
     }
 
     public void setDisableMultipleBundleVersions(boolean val)
@@ -64,12 +75,25 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         this.disableMultipleBundleVersions = val;
     }
 
-    public void start(HostComponentProvider provider) throws OsgiContainerException
+    public void channel(PluginFrameworkStartingEvent event)
     {
+        start();
+    }
+
+    public void channel(PluginFrameworkShutdownEvent event)
+    {
+        stop();
+    }
+
+
+    public void start() throws OsgiContainerException
+    {
+        if (isRunning())
+            return;
 
         initialiseCacheDirectory();
 
-        DefaultComponentRegistrar registrar = collectHostComponents(provider);
+        DefaultComponentRegistrar registrar = collectHostComponents(hostComponentProvider);
         // Create a case-insensitive configuration property map.
         final Map configMap = new StringMap(false);
         // Configure the Felix instance to be embedded.
@@ -161,11 +185,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         }
     }
 
-    public void reloadHostComponents(HostComponentProvider provider)
-    {
-        registration.reloadHostComponents(collectHostComponents(provider));
-    }
-
     DefaultComponentRegistrar collectHostComponents(HostComponentProvider provider)
     {
         DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
@@ -197,7 +216,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
     public List<HostComponentRegistration> getHostComponentRegistrations()
     {
-        return registration.hostComponentRegistrations;
+        return registration.getHostComponentRegistrations();
     }
 
     /**
@@ -224,21 +243,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             this.bundleContext = context;
             context.addBundleListener(this);
 
-            reloadHostComponents(registrar);
+            loadHostComponents(registrar);
             extractAndInstallFrameworkBundles();
-        }
-
-        public void reloadHostComponents(DefaultComponentRegistrar registrar)
-        {
-            // Unregister any existing host components
-            if (hostServicesReferences != null) {
-                for (ServiceRegistration reg : hostServicesReferences)
-                    reg.unregister();
-            }
-            
-            // Register host components as OSGi services
-            hostServicesReferences = registrar.writeRegistry(bundleContext);
-            hostComponentRegistrations = registrar.getRegistry();
         }
 
         public void stop(BundleContext ctx) throws Exception {
@@ -303,6 +309,19 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         public List<HostComponentRegistration> getHostComponentRegistrations()
         {
             return hostComponentRegistrations;
+        }
+
+        private void loadHostComponents(DefaultComponentRegistrar registrar)
+        {
+            // Unregister any existing host components
+            if (hostServicesReferences != null) {
+                for (ServiceRegistration reg : hostServicesReferences)
+                    reg.unregister();
+            }
+
+            // Register host components as OSGi services
+            hostServicesReferences = registrar.writeRegistry(bundleContext);
+            hostComponentRegistrations = registrar.getRegistry();
         }
 
         private void extractAndInstallFrameworkBundles() throws IOException, BundleException

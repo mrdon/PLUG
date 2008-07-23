@@ -1,11 +1,15 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.*;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.PluginParseException;
 
 import java.util.Collection;
-import java.util.Map;
-import java.util.List;
 
+/**
+ * Handles loading and unloading plugin artifacts from a location
+ */
 public interface PluginLoader
 {
     Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException;

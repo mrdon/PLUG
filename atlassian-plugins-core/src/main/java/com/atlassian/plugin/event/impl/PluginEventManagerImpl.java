@@ -17,7 +17,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class PluginEventManagerImpl implements PluginEventManager
 {
-    private final Map/*<Class,Set<ListenerRegistration>>*/ eventsToListener;
+    private final Map/*<Class,Set<Listener>>*/ eventsToListener;
     private static final Log log = LogFactory.getLog(PluginEventManagerImpl.class);
     private final ListenerMethodSelector[] listenerMethodSelectors;
 
@@ -31,6 +31,7 @@ public class PluginEventManagerImpl implements PluginEventManager
 
     /**
      * Constructor that looks for an arbitrary selectors
+     * @param selectors List of selectors that determine which are listener methods
      */
     public PluginEventManagerImpl(ListenerMethodSelector[] selectors)
     {
@@ -47,7 +48,7 @@ public class PluginEventManagerImpl implements PluginEventManager
      */
     public synchronized void broadcast(Object event)
     {
-        final Set/*<Method>*/ calledMethods = new HashSet/*<Method>*/();
+        final Set/*<Method>*/ calledListeners = new HashSet/*<Method>*/();
         Set/*<Class>*/ types = new HashSet/*<Class>*/();
         findAllTypes(event.getClass(), types);
         for (Iterator clsitr = types.iterator(); clsitr.hasNext(); )
@@ -56,20 +57,11 @@ public class PluginEventManagerImpl implements PluginEventManager
             Set registrations = (Set) eventsToListener.get(type);
             for (Iterator i = registrations.iterator(); i.hasNext(); )
             {
-                ListenerRegistration reg = (ListenerRegistration) i.next();
-                try
-                {
-                    if (calledMethods.contains(reg.method))
-                        continue;
-                    calledMethods.add(reg.method);
-                    reg.method.invoke(reg.listener, new Object[]{event});
-                } catch (IllegalAccessException e)
-                {
-                    log.error("Unable to access listener method: "+reg.method, e);
-                } catch (InvocationTargetException e)
-                {
-                    log.error("Exception calling listener method", e.getCause());
-                }
+                Listener reg = (Listener) i.next();
+                if (calledListeners.contains(reg))
+                    continue;
+                calledListeners.add(reg);
+                reg.notify(event);
             }
         }
     }
@@ -92,8 +84,8 @@ public class PluginEventManagerImpl implements PluginEventManager
             {
                 if (m.getParameterTypes().length != 1)
                         throw new IllegalArgumentException("Listener methods must only have one argument");
-                Set/*<ListenerRegistration>*/ listeners = (Set) eventsToListener.get(m.getParameterTypes()[0]);
-                listeners.add(new ListenerRegistration(listener, m));
+                Set/*<Listener>*/ listeners = (Set) eventsToListener.get(m.getParameterTypes()[0]);
+                listeners.add(new Listener(listener, m));
             }
         });
     }
@@ -108,18 +100,10 @@ public class PluginEventManagerImpl implements PluginEventManager
         {
             public void handle(Object listener, Method m)
             {
-                Set/*<ListenerRegistration>*/ listeners = (Set) eventsToListener.get(m.getParameterTypes()[0]);
-                listeners.remove(new ListenerRegistration(listener, m));
+                Set/*<Listener>*/ listeners = (Set) eventsToListener.get(m.getParameterTypes()[0]);
+                listeners.remove(new Listener(listener, m));
             }
         });
-    }
-
-    /**
-     * Simple fake closure for logic that needs to execute for every listener method on an object
-     */
-    private static interface ListenerMethodHandler
-    {
-        void handle(Object listener, Method m);
     }
 
     /**
@@ -164,15 +148,39 @@ public class PluginEventManagerImpl implements PluginEventManager
     /**
      * Records a registration of a listener method
      */
-    private static class ListenerRegistration
+    /**
+     * Simple fake closure for logic that needs to execute for every listener method on an object
+     */
+    private static interface ListenerMethodHandler
     {
+        void handle(Object listener, Method m);
+    }
+
+    private static class Listener
+    {
+
         public final Object listener;
+
         public final Method method;
 
-        public ListenerRegistration(Object listener, Method method)
+        public Listener(Object listener, Method method)
         {
             this.listener = listener;
             this.method = method;
+        }
+
+        public void notify(Object event)
+        {
+            try
+            {
+                method.invoke(listener, new Object[]{event});
+            } catch (IllegalAccessException e)
+            {
+                log.error("Unable to access listener method: "+method, e);
+            } catch (InvocationTargetException e)
+            {
+                log.error("Exception calling listener method", e.getCause());
+            }
         }
 
         public boolean equals(Object o)
@@ -180,7 +188,7 @@ public class PluginEventManagerImpl implements PluginEventManager
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            ListenerRegistration that = (ListenerRegistration) o;
+            Listener that = (Listener) o;
 
             if (!listener.equals(that.listener)) return false;
             if (!method.equals(that.method)) return false;

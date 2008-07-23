@@ -11,6 +11,19 @@ public class UnloadablePlugin extends StaticPlugin
     private boolean uninstallable;
     private boolean deletable;
 
+    public UnloadablePlugin()
+    {
+    }
+
+    /**
+     * @param text The error text
+     * @since 2.0.0
+     */
+    public UnloadablePlugin(String text)
+    {
+        this.errorText = text;
+    }
+
     public boolean isUninstallable()
     {
         return uninstallable;

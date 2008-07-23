@@ -1,22 +1,18 @@
-package com.atlassian.plugin.osgi.loader;
+package com.atlassian.plugin.osgi.deployer;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
 import java.util.*;
-import java.net.URL;
-import java.io.InputStream;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 
 /**
  * Plugin that wraps an OSGi bundle that has no plugin descriptor.
  */
-public class OsgiBundlePlugin extends OsgiPlugin implements StateAware
+public class OsgiBundlePlugin extends OsgiPlugin
 {
 
     private Bundle bundle;

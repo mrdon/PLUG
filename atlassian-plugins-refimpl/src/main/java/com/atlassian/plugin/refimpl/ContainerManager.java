@@ -1,13 +1,12 @@
 package com.atlassian.plugin.refimpl;
 
 import com.atlassian.plugin.descriptors.servlet.ServletModuleManager;
-import com.atlassian.plugin.descriptors.servlet.ServletModuleDescriptor;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
-import com.atlassian.plugin.osgi.loader.OsgiPluginLoader;
-import com.atlassian.plugin.osgi.loader.BundledOsgiPluginLoader;
+import com.atlassian.plugin.osgi.deployer.OsgiPluginDeployer;
+import com.atlassian.plugin.osgi.deployer.OsgiBundleDeployer;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.*;
@@ -15,6 +14,8 @@ import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
 import com.atlassian.plugin.refimpl.servlet.SimpleServletModuleDescriptor;
 import com.atlassian.plugin.loaders.DefaultPluginFactory;
+import com.atlassian.plugin.loaders.DirectoryPluginLoader;
+import com.atlassian.plugin.loaders.BundledPluginLoader;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 
 import javax.servlet.ServletContext;
@@ -44,28 +45,28 @@ public class ContainerManager {
         servletModuleManager = new ServletModuleManager();
 
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
-        osgiContainerManager = new FelixOsgiContainerManager(new File(servletContext.getRealPath("/WEB-INF/framework-bundles")),
-                                                             scannerConfig);
-
         hostComponentProvider = new SimpleHostComponentProvider();
-        OsgiPluginLoader osgiPluginLoader = new OsgiPluginLoader(
-                new File(servletContext.getRealPath("/WEB-INF/plugins")),
-                PluginManager.PLUGIN_DESCRIPTOR_FILENAME,
-                new DefaultPluginFactory(),
-                osgiContainerManager,
-                hostComponentProvider);
+        pluginEventManager = new PluginEventManagerImpl();
+        osgiContainerManager = new FelixOsgiContainerManager(new File(servletContext.getRealPath("/WEB-INF/framework-bundles")),
+                                                             scannerConfig, hostComponentProvider, pluginEventManager);
 
-        BundledOsgiPluginLoader bundledPluginLoader = new BundledOsgiPluginLoader(
+        OsgiPluginDeployer osgiPluginDeployer = new OsgiPluginDeployer(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, osgiContainerManager);
+        OsgiBundleDeployer osgiBundleDeployer = new OsgiBundleDeployer(osgiContainerManager);
+
+        DirectoryPluginLoader directoryPluginLoader = new DirectoryPluginLoader(
+                new File(servletContext.getRealPath("/WEB-INF/plugins")),
+                Arrays.asList(osgiPluginDeployer, osgiBundleDeployer),
+                pluginEventManager);
+
+        BundledPluginLoader bundledPluginLoader = new BundledPluginLoader(
                 getClass().getResource("/atlassian-bundled-plugins.zip"),
                 new File(servletContext.getRealPath("/WEB-INF/bundled-plugins")),
-                PluginManager.PLUGIN_DESCRIPTOR_FILENAME,
-                new DefaultPluginFactory(),
-                osgiContainerManager,
-                hostComponentProvider);
+                Arrays.asList(osgiPluginDeployer, osgiBundleDeployer),
+                pluginEventManager);
+
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("servlet", SimpleServletModuleDescriptor.class);
-        pluginEventManager = new PluginEventManagerImpl();
-        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.asList(bundledPluginLoader, osgiPluginLoader),
+        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.asList(bundledPluginLoader, directoryPluginLoader),
                 moduleDescriptorFactory, pluginEventManager);
         try {
             pluginManager.init();

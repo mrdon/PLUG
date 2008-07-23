@@ -21,9 +21,9 @@ import java.util.jar.JarOutputStream;
 import java.net.URL;
 import java.net.URISyntaxException;
 
-public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
+public class TestDirectoryPluginLoader extends AbstractTestClassLoader
 {
-    private ClassLoadingPluginLoader loader;
+    private DirectoryPluginLoader loader;
     private DefaultModuleDescriptorFactory moduleDescriptorFactory;
 
     public static final String BAD_PLUGIN_JAR = "bad-plugins/crap-plugin.jar";
@@ -50,7 +50,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
     public void testAtlassianPlugin() throws Exception
     {
         addTestModuleDecriptors();
-        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
+        loader = new DirectoryPluginLoader(pluginsTestDir, new DefaultPluginFactory());
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         assertEquals(2, plugins.size());
@@ -98,7 +98,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         path = path.replace('/', File.separatorChar);
         path = path.substring(5);
         File pluginFile = new File(path);
-        loader = new ClassLoadingPluginLoader(pluginFile.getParentFile(), new DefaultPluginFactory());
+        loader = new DirectoryPluginLoader(pluginFile.getParentFile(), new DefaultPluginFactory());
 
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
@@ -129,7 +129,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
 
     public void testSupportsAdditionAndRemoval()
     {
-        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
+        loader = new DirectoryPluginLoader(pluginsTestDir, new DefaultPluginFactory());
         assertTrue(loader.supportsAddition());
         assertTrue(loader.supportsRemoval());
     }
@@ -137,7 +137,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
     public void testNoFoundPlugins() throws PluginParseException
     {
         addTestModuleDecriptors();
-        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
+        loader = new DirectoryPluginLoader(pluginsTestDir, new DefaultPluginFactory());
         Collection col = loader.addFoundPlugins(moduleDescriptorFactory);
         assertFalse(col.isEmpty());
 
@@ -152,7 +152,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         paddington.delete();
 
         addTestModuleDecriptors();
-        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
+        loader = new DirectoryPluginLoader(pluginsTestDir, new DefaultPluginFactory());
         loader.loadAllPlugins(moduleDescriptorFactory);
 
         //restore paddington to test plugins dir
@@ -168,7 +168,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
     public void testRemovePlugin() throws PluginException, IOException
     {
         addTestModuleDecriptors();
-        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
+        loader = new DirectoryPluginLoader(pluginsTestDir, new DefaultPluginFactory());
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         //duplicate the paddington plugin before removing the original
@@ -208,7 +208,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
 
         createJarFile("evilplugin.jar", atlassianPluginXML.getName(), pluginsTestDir.getAbsolutePath());
 
-        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
+        loader = new DirectoryPluginLoader(pluginsTestDir, new DefaultPluginFactory());
 
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
@@ -226,12 +226,12 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         FileUtils.cleanDirectory(pluginsTestDir);
         File plugin = new File(pluginsTestDir, "some-plugin.jar");
         new PluginBuilder("plugin")
-                .addPluginInformation("some.key", "My name", "1.0")
+                .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
                 .build()
                 .renameTo(plugin);
 
-        loader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
+        loader = new DirectoryPluginLoader(pluginsTestDir, new DefaultPluginFactory());
 
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
         assertEquals(1, plugins.size());
@@ -242,7 +242,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         Thread.currentThread().sleep(1000);
         
         new PluginBuilder("plugin")
-                .addPluginInformation("some.key", "My name", "1.0")
+                .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("bar.txt", "bar")
                 .build()
                 .renameTo(plugin);

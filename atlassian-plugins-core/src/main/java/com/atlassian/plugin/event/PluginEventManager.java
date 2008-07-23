@@ -12,20 +12,20 @@ public interface PluginEventManager
     /**
      * Registers a listener object
      *
-     * @param listener The listener instance
+     * @param listener The listener instance.  Cannot be null.
      */
     void register(Object listener);
 
     /**
      * Unregisters a listener object
      *
-     * @param listener The listener
+     * @param listener The listener.  Cannot be null.
      */
     void unregister(Object listener);
 
     /**
      * Broadcasts an event to all applicable listeners
-     * @param event The event object
+     * @param event The event object. Cannot be null.
      */
     void broadcast(Object event);
 }

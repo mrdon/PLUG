@@ -1,6 +1,6 @@
 package com.atlassian.plugin.osgi;
 
-import com.atlassian.plugin.FilePluginJar;
+import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.test.PluginBuilder;
@@ -34,7 +34,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
         };
 
         initPluginManager(prov);
-        pluginManager.installPlugin(new FilePluginJar(plugin));
+        pluginManager.installPlugin(new JarPluginArtifact(plugin));
 
         assertNotNull(comp.cl);
         assertNotNull(comp.testClass);

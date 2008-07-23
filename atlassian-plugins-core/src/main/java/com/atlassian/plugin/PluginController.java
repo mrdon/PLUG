@@ -29,7 +29,7 @@ public interface PluginController
      * Installs a plugin and returns the plugin key
      * @throws com.atlassian.plugin.PluginParseException if the plugin is not a valid plugin
      */
-    String installPlugin(PluginJar pluginJar) throws PluginParseException;
+    String installPlugin(PluginArtifact pluginArtifact) throws PluginParseException;
 
     /**
      * Uninstall the plugin, disabling it first.

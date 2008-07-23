@@ -1,4 +1,4 @@
-package com.atlassian.plugin.osgi.loader.transform;
+package com.atlassian.plugin.osgi.deployer.transform;
 
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;

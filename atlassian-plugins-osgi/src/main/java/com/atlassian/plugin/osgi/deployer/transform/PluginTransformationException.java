@@ -1,4 +1,4 @@
-package com.atlassian.plugin.osgi.loader.transform;
+package com.atlassian.plugin.osgi.deployer.transform;
 
 /**
  * Generic wrapper exception for all exceptions thrown during plugin transformation

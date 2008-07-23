@@ -1,6 +1,5 @@
-package com.atlassian.plugin.osgi.loader.transform;
+package com.atlassian.plugin.osgi.deployer.transform;
 
-import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 
 import java.io.File;

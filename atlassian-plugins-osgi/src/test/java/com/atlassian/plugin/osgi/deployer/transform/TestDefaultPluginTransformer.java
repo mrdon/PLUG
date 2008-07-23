@@ -1,4 +1,4 @@
-package com.atlassian.plugin.osgi.loader.transform;
+package com.atlassian.plugin.osgi.deployer.transform;
 
 import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
