@@ -50,8 +50,7 @@ public class TestFelixOsgiContainerManager extends TestCase
 
     public void testDeleteDirectory() throws IOException
     {
-        File tmp = File.createTempFile("foo", "bar").getParentFile();
-        File dir = new File(tmp, "base");
+        File dir = new File(tmpdir, "base");
         dir.mkdir();
         File subdir = new File(dir, "subdir");
         subdir.mkdir();
@@ -65,7 +64,6 @@ public class TestFelixOsgiContainerManager extends TestCase
 
     public void testInitialiseCacheDirectory() throws IOException
     {
-        File tmpdir = File.createTempFile("foo", "bar").getParentFile();
         File dir = new File(tmpdir, "felix");
         File subdir = new File(dir, "subdir");
         subdir.mkdir();
