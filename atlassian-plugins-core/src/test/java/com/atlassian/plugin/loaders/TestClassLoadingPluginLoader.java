@@ -27,6 +27,7 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
     private DefaultModuleDescriptorFactory moduleDescriptorFactory;
 
     public static final String BAD_PLUGIN_JAR = "bad-plugins/crap-plugin.jar";
+    public static final String CORRUPT_PLUGIN_JAR = "corrupt-plugin/corrupt-plugin.jar";
 
     public void setUp() throws Exception
     {
@@ -86,6 +87,23 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
                 fail("What plugin name?!");
             }
         }
+    }
+
+    // Tests that an UnloadablePlugin is returned when there's a missing class dependency
+    public void testAtlassianPluginWithCorruptedJar() throws Exception
+    {
+        addTestModuleDecriptors();
+
+        URL url = ClassLoaderUtils.getResource(CORRUPT_PLUGIN_JAR, TestClassPathPluginLoader.class);
+        String path = url.toExternalForm();
+        path = path.replace('/', File.separatorChar);
+        path = path.substring(5);
+        File pluginFile = new File(path);
+        loader = new ClassLoadingPluginLoader(pluginFile.getParentFile(), new DefaultPluginFactory());
+
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+
+        assertEquals(0, plugins.size());
     }
 
     // Tests that an UnloadablePlugin is returned when there's a missing class dependency
