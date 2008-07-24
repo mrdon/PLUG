@@ -1,0 +1,7 @@
+<atlassian-plugin key="test.disabled.plugin" name="Disabled Plugin" state="disabled">
+    <plugin-info />
+
+    <mineral key="gold" name="Bar" class="com.atlassian.plugin.mock.MockGold" state="disabled">
+        <weight>20</weight>
+    </mineral>
+</atlassian-plugin>
