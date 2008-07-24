@@ -13,12 +13,14 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.net.URL;
 
 /**
  * A plugin loader to load plugins from a classloading on disk.
@@ -87,10 +89,11 @@ public class ClassLoadingPluginLoader implements DynamicPluginLoader
         PluginClassLoader loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader());
         try
         {
-            if (loader.getLocalResource(pluginDescriptorFileName) == null)
+            URL pluginResourceUrl = loader.getLocalResource(pluginDescriptorFileName);
+            if (pluginResourceUrl == null)
                 return handleNoDescriptor(deploymentUnit);
 
-            pluginDescriptor = loader.getResourceAsStream(pluginDescriptorFileName);
+            pluginDescriptor = pluginResourceUrl.openStream();
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
             plugin = parser.configurePlugin(moduleDescriptorFactory, createPlugin(parser, deploymentUnit, loader));
@@ -105,14 +108,18 @@ public class ClassLoadingPluginLoader implements DynamicPluginLoader
         catch (RuntimeException e)
         {
             loader.close();
-            throw e;
+            throw new PluginParseException(e);
         }
         catch (Error e)
         {
             loader.close();
             throw e;
         }
-        finally
+        catch (IOException e)
+        {
+            loader.close();
+            throw new PluginParseException(e);
+        } finally
         {
             IOUtils.closeQuietly(pluginDescriptor);
         }
