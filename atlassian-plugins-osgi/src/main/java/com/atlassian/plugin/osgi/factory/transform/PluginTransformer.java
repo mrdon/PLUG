@@ -1,4 +1,4 @@
-package com.atlassian.plugin.osgi.deployer.transform;
+package com.atlassian.plugin.osgi.factory.transform;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 

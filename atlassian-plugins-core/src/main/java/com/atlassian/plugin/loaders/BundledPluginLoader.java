@@ -23,9 +23,9 @@ import org.apache.commons.logging.LogFactory;
 public class BundledPluginLoader extends DirectoryPluginLoader {
 
     private static final Log log = LogFactory.getLog(BundledPluginLoader.class);
-    public BundledPluginLoader(URL zipUrl, File pluginPath, List pluginDeployers, PluginEventManager eventManager)
+    public BundledPluginLoader(URL zipUrl, File pluginPath, List pluginFactories, PluginEventManager eventManager)
     {
-        super(pluginPath, pluginDeployers, eventManager);
+        super(pluginPath, pluginFactories, eventManager);
         if (zipUrl == null)
             throw new IllegalArgumentException("Bundled zip url cannot be null");
         FileUtils.conditionallyExtractZipFile(zipUrl, pluginPath);
@@ -49,7 +49,8 @@ public class BundledPluginLoader extends DirectoryPluginLoader {
             dplugin.setBundled(true);
         }
 
-        log.debug("Deployed bundled plugin: "+plugin.getName());
+        if (log.isDebugEnabled())
+            log.debug("Deployed bundled plugin: "+plugin.getName());
         return plugin;
     }
 }

@@ -5,14 +5,13 @@ import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
-import com.atlassian.plugin.osgi.deployer.OsgiPluginDeployer;
+import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
-import com.atlassian.plugin.loaders.DefaultPluginFactory;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 
 import java.io.File;
@@ -64,10 +63,10 @@ public abstract class PluginInContainerTestBase extends TestCase {
         osgiContainerManager = new FelixOsgiContainerManager(frameworkBundlesDir,
                                                              scannerConfig, hostComponentProvider, pluginEventManager);
 
-        OsgiPluginDeployer osgiPluginDeployer = new OsgiPluginDeployer(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, osgiContainerManager);
+        OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, osgiContainerManager);
 
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
-        DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Collections.singletonList(osgiPluginDeployer), null);
+        DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Collections.singletonList(osgiPluginDeployer), new PluginEventManagerImpl());
 
         pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.asList(loader),
                 moduleDescriptorFactory, pluginEventManager);

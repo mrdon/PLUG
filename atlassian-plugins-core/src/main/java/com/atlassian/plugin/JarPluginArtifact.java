@@ -1,5 +1,7 @@
 package com.atlassian.plugin;
 
+import org.apache.commons.lang.Validate;
+
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.io.*;
@@ -16,14 +18,16 @@ public class JarPluginArtifact implements PluginArtifact
 
     public JarPluginArtifact(File jarFile)
     {
+        Validate.notNull(jarFile);
         this.jarFile = jarFile;
     }
 
     /**
      * @return an input stream for the this file in the jar. Closing this stream also closes the jar file this stream comes from.
      */
-    public InputStream getFile(String fileName) throws PluginParseException
+    public InputStream getResourceAsStream(String fileName) throws PluginParseException
     {
+        Validate.notNull(fileName, "The file name must not be null");
         final JarFile jar;
         try
         {
@@ -61,7 +65,7 @@ public class JarPluginArtifact implements PluginArtifact
         return descriptorStream;
     }
 
-    public String getFileName()
+    public String getName()
     {
         return jarFile.getName();
     }

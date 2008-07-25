@@ -19,7 +19,7 @@ public class MethodNameListenerMethodSelector implements ListenerMethodSelector
     public MethodNameListenerMethodSelector(String s)
     {
         if (StringUtils.isEmpty(s))
-            throw new IllegalArgumentException("Method name for the listener cannot be null");
+            throw new IllegalArgumentException("Method name for the listener must be a valid method name");
         this.methodName = s;
     }
 

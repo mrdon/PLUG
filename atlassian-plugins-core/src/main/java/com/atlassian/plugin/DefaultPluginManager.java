@@ -170,7 +170,7 @@ public class DefaultPluginManager implements PluginManager
         {
             throw new IllegalStateException("Should be at least one DynamicPluginLoader in the plugin loader list");
         }
-        throw new PluginParseException("Jar " + pluginArtifact.getFileName() + " is not a valid plugin");
+        throw new PluginParseException("Jar " + pluginArtifact.getName() + " is not a valid plugin");
     }
 
     public int scanForNewPlugins() throws PluginParseException

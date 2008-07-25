@@ -2,7 +2,7 @@ package com.atlassian.plugin.osgi.hostcomponents;
 
 /**
  * Defines an object that provides host components.  Host applications that wish to register their internal components
- * should implement this interface.  Classes like the {@link com.atlassian.plugin.osgi.deployer.OsgiPluginDeployer} use
+ * should implement this interface.  Classes like the {@link com.atlassian.plugin.osgi.factory.OsgiPluginFactory} use
  * this interface to retreive a list of host components to register into the OSGi service registry.  
  *
  * <p>Here is an example implementation that registers two host components:

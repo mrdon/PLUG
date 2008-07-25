@@ -1,4 +1,4 @@
-package com.atlassian.plugin.osgi.deployer;
+package com.atlassian.plugin.osgi.factory;
 
 import junit.framework.TestCase;
 

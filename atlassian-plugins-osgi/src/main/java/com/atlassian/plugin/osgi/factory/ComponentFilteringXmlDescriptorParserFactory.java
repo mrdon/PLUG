@@ -1,10 +1,12 @@
-package com.atlassian.plugin.osgi.deployer;
+package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.PluginParseException;
 
 import java.io.InputStream;
+
+import org.apache.commons.lang.Validate;
 
 /**
  * Descriptor parser factory that creates parsers that ignore all component-related modules
@@ -19,6 +21,7 @@ public class ComponentFilteringXmlDescriptorParserFactory implements DescriptorP
      */
     public DescriptorParser getInstance(InputStream source) throws PluginParseException
     {
+        Validate.notNull(source, "The descriptor source must not be null");
         return new FilteringXmlDescriptorParser(source, "component", "component-import", "bean", "spring");
     }
 }

@@ -5,15 +5,14 @@ import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
-import com.atlassian.plugin.osgi.deployer.OsgiPluginDeployer;
-import com.atlassian.plugin.osgi.deployer.OsgiBundleDeployer;
+import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
+import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
 import com.atlassian.plugin.refimpl.servlet.SimpleServletModuleDescriptor;
-import com.atlassian.plugin.loaders.DefaultPluginFactory;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.BundledPluginLoader;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
@@ -50,8 +49,8 @@ public class ContainerManager {
         osgiContainerManager = new FelixOsgiContainerManager(new File(servletContext.getRealPath("/WEB-INF/framework-bundles")),
                                                              scannerConfig, hostComponentProvider, pluginEventManager);
 
-        OsgiPluginDeployer osgiPluginDeployer = new OsgiPluginDeployer(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, osgiContainerManager);
-        OsgiBundleDeployer osgiBundleDeployer = new OsgiBundleDeployer(osgiContainerManager);
+        OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, osgiContainerManager);
+        OsgiBundleFactory osgiBundleDeployer = new OsgiBundleFactory(osgiContainerManager);
 
         DirectoryPluginLoader directoryPluginLoader = new DirectoryPluginLoader(
                 new File(servletContext.getRealPath("/WEB-INF/plugins")),

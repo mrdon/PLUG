@@ -1,4 +1,4 @@
-package com.atlassian.plugin.osgi.deployer.transform;
+package com.atlassian.plugin.osgi.factory.transform;
 
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;
@@ -11,6 +11,7 @@ import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.commons.lang.Validate;
 import org.dom4j.*;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
@@ -47,7 +48,8 @@ public class DefaultPluginTransformer implements PluginTransformer
      */
     public File transform(File pluginJar, List<HostComponentRegistration> regs) throws PluginTransformationException
     {
-        log.setLevel(Level.DEBUG);
+        Validate.notNull(pluginJar, "The plugin jar is required");
+        Validate.notNull(regs, "The host component registrations are required");
         final JarFile jar;
         try
         {
@@ -72,10 +74,12 @@ public class DefaultPluginTransformer implements PluginTransformer
 
             log.info("Generating the manifest for plugin "+pluginJar.getName());
             filesToAdd.put("META-INF/MANIFEST.MF", generateManifest(atlassianPluginsXmlUrl.openStream(), pluginJar, regs));
-        } catch (PluginParseException e)
+        }
+        catch (PluginParseException e)
         {
             throw new PluginTransformationException("Unable to generate manifest", e);
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             throw new PluginTransformationException("Unable to read existing plugin jar manifest", e);
         }
@@ -86,10 +90,12 @@ public class DefaultPluginTransformer implements PluginTransformer
             {
                 log.info("Generating "+ATLASSIAN_PLUGIN_SPRING_XML + " for plugin "+pluginJar.getName());
                 filesToAdd.put(ATLASSIAN_PLUGIN_SPRING_XML, generateSpringXml(atlassianPluginsXmlUrl.openStream(), regs));
-            } catch (DocumentException e)
+            }
+            catch (DocumentException e)
             {
                 throw new PluginTransformationException("Unable to generate host component spring XML", e);
-            } catch (IOException e)
+            }
+            catch (IOException e)
             {
                 throw new PluginTransformationException("Unable to open atlassian-plugins.xml", e);
             }
@@ -331,7 +337,8 @@ public class DefaultPluginTransformer implements PluginTransformer
 		ZipOutputStream out = new ZipOutputStream(new FileOutputStream(tempFile));
 
 		ZipEntry entry = zin.getNextEntry();
-		while (entry != null) {
+		while (entry != null)
+        {
 			String name = entry.getName();
 			if (!files.containsKey(name))
             {
@@ -339,9 +346,8 @@ public class DefaultPluginTransformer implements PluginTransformer
 				out.putNextEntry(new ZipEntry(name));
 				// Transfer bytes from the ZIP file to the output file
 				int len;
-				while ((len = zin.read(buf)) > 0) {
+				while ((len = zin.read(buf)) > 0)
 					out.write(buf, 0, len);
-				}
 			}
 			entry = zin.getNextEntry();
 		}

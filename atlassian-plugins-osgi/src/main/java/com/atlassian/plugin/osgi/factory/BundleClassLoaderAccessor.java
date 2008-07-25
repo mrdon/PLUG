@@ -1,8 +1,9 @@
-package com.atlassian.plugin.osgi.deployer;
+package com.atlassian.plugin.osgi.factory;
 
 import org.osgi.framework.Bundle;
 import org.apache.log4j.Logger;
 import org.apache.commons.collections.iterators.IteratorEnumeration;
+import org.apache.commons.lang.Validate;
 
 import java.net.URL;
 import java.util.Enumeration;
@@ -23,22 +24,26 @@ class BundleClassLoaderAccessor
 
     static Class loadClass(Bundle bundle, String name, Class callingClass) throws ClassNotFoundException
     {
+        Validate.notNull(bundle, "The bundle is required");
         return bundle.loadClass(name);
     }
 
     static URL getResource(Bundle bundle, String name)
     {
+        Validate.notNull(bundle, "The bundle is required");
         return bundle.getResource(name);
     }
 
     static InputStream getResourceAsStream(Bundle bundle, String name)
     {
+        Validate.notNull(bundle, "The bundle is required");
         URL url = getResource(bundle, name);
         if (url != null) {
             try
             {
                 return url.openStream();
-            } catch (IOException e)
+            }
+            catch (IOException e)
             {
                 log.debug("Unable to load resource from bundle: "+bundle.getSymbolicName(), e);
             }
@@ -57,6 +62,7 @@ class BundleClassLoaderAccessor
 
         public BundleClassLoader(Bundle bundle)
         {
+            Validate.notNull(bundle, "The bundle must not be null");
             this.bundle = bundle;
         }
 
@@ -73,7 +79,8 @@ class BundleClassLoaderAccessor
 
             // For some reason, getResources() sometimes returns nothing, yet getResource() will return one.  This code
             // handles that strange case
-            if (!e.hasMoreElements()) {
+            if (!e.hasMoreElements())
+            {
                 URL resource = findResource(name);
                 if (resource != null)
                     e = new IteratorEnumeration(Arrays.asList(resource).iterator());

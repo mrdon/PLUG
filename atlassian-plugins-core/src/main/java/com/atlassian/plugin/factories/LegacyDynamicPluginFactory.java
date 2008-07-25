@@ -1,14 +1,15 @@
-package com.atlassian.plugin.loaders.deployer;
+package com.atlassian.plugin.factories;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
 import com.atlassian.plugin.classloader.PluginClassLoader;
-import com.atlassian.plugin.loaders.PluginFactory;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.Validate;
 
 import java.io.InputStream;
 
@@ -17,13 +18,14 @@ import java.io.InputStream;
  *
  * @since 2.0.0
  */
-public class LegacyDynamicPluginDeployer implements PluginDeployer
+public class LegacyDynamicPluginFactory implements PluginFactory
 {
     private DescriptorParserFactory descriptorParserFactory;
     private String pluginDescriptorFileName;
 
-    public LegacyDynamicPluginDeployer(String pluginDescriptorFileName)
+    public LegacyDynamicPluginFactory(String pluginDescriptorFileName)
     {
+        Validate.notEmpty(pluginDescriptorFileName, "Plugin descriptor name cannot be null or blank");
         this.descriptorParserFactory = new XmlDescriptorParserFactory();
         this.pluginDescriptorFileName = pluginDescriptorFileName;
     }
@@ -35,8 +37,11 @@ public class LegacyDynamicPluginDeployer implements PluginDeployer
      * @return The instantiated and populated plugin
      * @throws PluginParseException If the descriptor cannot be parsed
      */
-    public Plugin deploy(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
+        Validate.notNull(deploymentUnit, "The deployment unit must not be null");
+        Validate.notNull(moduleDescriptorFactory, "The module descriptor factory must not be null");
+
         Plugin plugin = null;
         InputStream pluginDescriptor = null;
         PluginClassLoader loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader());
@@ -92,10 +97,11 @@ public class LegacyDynamicPluginDeployer implements PluginDeployer
      * @return The plugin key, null if it cannot load the plugin
      * @throws com.atlassian.plugin.PluginParseException If there are exceptions parsing the plugin configuration
      */
-    public String canDeploy(PluginArtifact pluginArtifact) throws PluginParseException
+    public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException
     {
+        Validate.notNull(pluginArtifact, "The plugin artifact must not be null");
         String pluginKey = null;
-        final InputStream descriptorStream = pluginArtifact.getFile(pluginDescriptorFileName);
+        final InputStream descriptorStream = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
         if (descriptorStream != null)
         {
             final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);

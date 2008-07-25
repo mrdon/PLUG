@@ -15,13 +15,13 @@ public interface PluginArtifact
      * @throws PluginParseException if the file was not found or could not be
      * read from the artifact.
      */
-    InputStream getFile(String fileName) throws PluginParseException;
+    InputStream getResourceAsStream(String fileName) throws PluginParseException;
 
     /**
      * @return the original name of the plugin artifact file. Typically used
      * for persisting it to disk with a meaningful name.
      */
-    String getFileName();
+    String getName();
 
     /**
      * Returns an InputStream for the entire plugin artifact. Calling this

@@ -13,6 +13,10 @@ import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
+import com.atlassian.plugin.factories.PluginFactory;
+import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
@@ -21,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.net.URISyntaxException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -40,12 +43,14 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     private List pluginLoaders;
     private DefaultModuleDescriptorFactory moduleDescriptorFactory; // we should be able to use the interface here?
 
-    private ClassLoadingPluginLoader classLoadingPluginLoader;
+    private DirectoryPluginLoader directoryPluginLoader;
+    private PluginEventManager pluginEventManager;
 
 
     protected void setUp() throws Exception
     {
         super.setUp();
+        pluginEventManager = new PluginEventManagerImpl();
 
         pluginStateStore = new MemoryPluginStateStore();
         pluginLoaders = new LinkedList();
@@ -61,10 +66,10 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders = null;
         pluginStateStore = null;
 
-        if (classLoadingPluginLoader != null)
+        if (directoryPluginLoader != null)
         {
-            classLoadingPluginLoader.shutDown();
-            classLoadingPluginLoader = null;
+            directoryPluginLoader.shutDown();
+            directoryPluginLoader = null;
         }
 
         super.tearDown();
@@ -571,8 +576,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     private DefaultPluginManager makeClassLoadingPluginManager() throws PluginParseException
     {
-        classLoadingPluginLoader = new ClassLoadingPluginLoader(pluginsTestDir, new DefaultPluginFactory());
-        pluginLoaders.add(classLoadingPluginLoader);
+        directoryPluginLoader = new DirectoryPluginLoader(pluginsTestDir, pluginEventManager);
+        pluginLoaders.add(directoryPluginLoader);
 
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         manager.init();

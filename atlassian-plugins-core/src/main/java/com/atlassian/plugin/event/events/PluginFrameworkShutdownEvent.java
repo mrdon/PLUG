@@ -2,6 +2,7 @@ package com.atlassian.plugin.event.events;
 
 import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginAccessor;
+import org.apache.commons.lang.Validate;
 
 /**
  * Event that signifies the plugin framework has been shutdown
@@ -13,6 +14,8 @@ public class PluginFrameworkShutdownEvent
 
     public PluginFrameworkShutdownEvent(PluginController pluginController, PluginAccessor pluginAccessor)
     {
+        Validate.notNull(pluginController);
+        Validate.notNull(pluginAccessor);
         this.pluginController = pluginController;
         this.pluginAccessor = pluginAccessor;
     }

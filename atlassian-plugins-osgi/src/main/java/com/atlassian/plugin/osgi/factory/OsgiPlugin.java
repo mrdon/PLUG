@@ -1,4 +1,4 @@
-package com.atlassian.plugin.osgi.deployer;
+package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
@@ -12,6 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import org.osgi.framework.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.Validate;
 
 /**
  * Plugin that wraps an OSGi bundle that does contain a plugin descriptor.
@@ -25,11 +26,14 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private Object nativeBeanFactory;
     private Method nativeCreateBeanMethod;
 
-    public OsgiPlugin(Bundle bundle) {
+    public OsgiPlugin(Bundle bundle)
+    {
+        Validate.notNull(bundle, "The bundle is required");
         this.bundle = bundle;
     }
 
-    public Bundle getBundle() {
+    public Bundle getBundle()
+    {
         return bundle;
     }
 

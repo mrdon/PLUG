@@ -1,15 +1,16 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.factories.PluginFactory;
+import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.loaders.classloading.Scanner;
-import com.atlassian.plugin.loaders.deployer.LegacyDynamicPluginDeployer;
-import com.atlassian.plugin.loaders.deployer.PluginDeployer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.Validate;
 
 import java.io.File;
 import java.util.*;
@@ -24,40 +25,40 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
     private final Scanner scanner;
     /** Maps {@link DeploymentUnit}s to {@link Plugin}s. */
     private final Map plugins;
-    private List/*PluginDeployer*/ pluginDeployers;
+    private final List/*PluginFactory*/ pluginFactories;
 
     /**
-     * @deprecated Since 2.0.0, use {@link #DirectoryPluginLoader(File,List,PluginEventManager)} instead
+     * Constructs a loader for a particular directory and the default set of deployers
+     * @param path The directory containing the plugins
+     * @param pluginEventManager The event manager, used for listening for shutdown events
+     * @since 2.0.0
      */
-    public DirectoryPluginLoader(File path, PluginFactory pluginFactory)
+    public DirectoryPluginLoader(File path, PluginEventManager pluginEventManager)
     {
-        this(path, PluginManager.PLUGIN_DESCRIPTOR_FILENAME, pluginFactory);
-    }
-
-    /**
-     * @deprecated Since 2.0.0, use {@link #DirectoryPluginLoader(File,List,PluginEventManager)} instead
-     */
-    public DirectoryPluginLoader(File path, String pluginDescriptorFileName, PluginFactory pluginFactory)
-    {
-        this(path, Collections.singletonList(new LegacyDynamicPluginDeployer(pluginDescriptorFileName)), null);
+        this(path, Collections.singletonList(new LegacyDynamicPluginFactory(PluginManager.PLUGIN_DESCRIPTOR_FILENAME)), pluginEventManager);
     }
 
     /**
      * Constructs a loader for a particular directory and set of deployers
      * @param path The directory containing the plugins
-     * @param pluginDeployers The deployers that will handle turning an artifact into a plugin
+     * @param pluginFactories The deployers that will handle turning an artifact into a plugin
      * @param pluginEventManager The event manager, used for listening for shutdown events
      * @since 2.0.0
      */
-    public DirectoryPluginLoader(File path, List pluginDeployers,
+    public DirectoryPluginLoader(File path, List pluginFactories,
                                  PluginEventManager pluginEventManager)
     {
-        log.debug("Creating plugin loader for url " + path);
+        if (log.isDebugEnabled())
+            log.debug("Creating plugin loader for url " + path);
+
+        Validate.notNull(path, "The directory file must be specified");
+        Validate.notNull(pluginFactories, "The list of plugin factories must be specified");
+        Validate.notNull(pluginEventManager, "The event manager must be specified");
+
         scanner = new Scanner(path);
         plugins = new HashMap();
-        this.pluginDeployers = pluginDeployers;
-        if (pluginEventManager != null)
-            pluginEventManager.register(this);
+        this.pluginFactories = new ArrayList(pluginFactories);
+        pluginEventManager.register(this);
     }
 
     public Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
@@ -88,12 +89,12 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
     protected Plugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         Plugin plugin = null;
-        for (Iterator i = pluginDeployers.iterator(); i.hasNext(); )
+        for (Iterator i = pluginFactories.iterator(); i.hasNext(); )
         {
-            PluginDeployer deployer = (PluginDeployer) i.next();
-            if (deployer.canDeploy(new JarPluginArtifact(deploymentUnit.getPath())) != null)
+            PluginFactory factory = (PluginFactory) i.next();
+            if (factory.canCreate(new JarPluginArtifact(deploymentUnit.getPath())) != null)
             {
-                plugin = deployer.deploy(deploymentUnit, moduleDescriptorFactory);
+                plugin = factory.create(deploymentUnit, moduleDescriptorFactory);
                 if (plugin != null)
                     break;
             }
@@ -162,9 +163,8 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
             for (Iterator i = plugins.keySet().iterator(); i.hasNext();)
             {
                 DeploymentUnit unit = (DeploymentUnit) i.next();
-                if(unit.getPath().equals(deploymentUnit.getPath()) && !unit.equals(deploymentUnit)){
+                if(unit.getPath().equals(deploymentUnit.getPath()) && !unit.equals(deploymentUnit))
                     found = true;
-                }
             }
 
             if (!found && !pluginOnDisk.delete())
@@ -228,10 +228,10 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
     public String canLoad(PluginArtifact pluginArtifact) throws PluginParseException
     {
         String pluginKey = null;
-        for (Iterator i = pluginDeployers.iterator(); i.hasNext(); )
+        for (Iterator i = pluginFactories.iterator(); i.hasNext(); )
         {
-            PluginDeployer deployer = (PluginDeployer) i.next();
-            pluginKey = deployer.canDeploy(pluginArtifact);
+            PluginFactory factory = (PluginFactory) i.next();
+            pluginKey = factory.canCreate(pluginArtifact);
             if (pluginKey != null)
                 break;
         }

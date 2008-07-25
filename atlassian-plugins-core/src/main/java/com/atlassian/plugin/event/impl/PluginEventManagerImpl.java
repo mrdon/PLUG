@@ -10,6 +10,7 @@ import org.apache.commons.collections.map.LazyMap;
 import org.apache.commons.collections.Factory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.Validate;
 
 /**
  * Simple, synchronous event manager that uses one or more method selectors to determine event listeners.  The default
@@ -48,6 +49,7 @@ public class PluginEventManagerImpl implements PluginEventManager
      */
     public synchronized void broadcast(Object event)
     {
+        Validate.notNull(event, "The event to broadcast must not be null");
         final Set/*<Method>*/ calledListeners = new HashSet/*<Method>*/();
         Set/*<Class>*/ types = new HashSet/*<Class>*/();
         findAllTypes(event.getClass(), types);
@@ -165,19 +167,24 @@ public class PluginEventManagerImpl implements PluginEventManager
 
         public Listener(Object listener, Method method)
         {
+            Validate.notNull(listener);
+            Validate.notNull(method);
             this.listener = listener;
             this.method = method;
         }
 
         public void notify(Object event)
         {
+            Validate.notNull(event);
             try
             {
                 method.invoke(listener, new Object[]{event});
-            } catch (IllegalAccessException e)
+            }
+            catch (IllegalAccessException e)
             {
                 log.error("Unable to access listener method: "+method, e);
-            } catch (InvocationTargetException e)
+            }
+            catch (InvocationTargetException e)
             {
                 log.error("Exception calling listener method", e.getCause());
             }

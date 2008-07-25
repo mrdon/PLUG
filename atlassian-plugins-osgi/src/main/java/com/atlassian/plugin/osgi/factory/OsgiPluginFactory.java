@@ -1,37 +1,26 @@
-package com.atlassian.plugin.osgi.deployer;
+package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
-import com.atlassian.plugin.classloader.PluginClassLoader;
+import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
-import com.atlassian.plugin.loaders.ClassLoadingPluginLoader;
-import com.atlassian.plugin.loaders.PluginFactory;
-import com.atlassian.plugin.loaders.deployer.PluginDeployer;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.osgi.deployer.transform.DefaultPluginTransformer;
-import com.atlassian.plugin.osgi.deployer.transform.PluginTransformationException;
-import com.atlassian.plugin.osgi.deployer.transform.PluginTransformer;
+import com.atlassian.plugin.osgi.factory.transform.DefaultPluginTransformer;
+import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
+import com.atlassian.plugin.osgi.factory.transform.PluginTransformer;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.IOUtils;
-import org.osgi.framework.Constants;
+import org.apache.commons.lang.Validate;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 import java.net.URLClassLoader;
 import java.net.URL;
 import java.net.MalformedURLException;
@@ -39,34 +28,34 @@ import java.net.MalformedURLException;
 /**
  * Plugin loader that starts an OSGi container and loads plugins into it, wrapped as OSGi bundles.
  */
-public class OsgiPluginDeployer implements PluginDeployer
+public class OsgiPluginFactory implements PluginFactory
 {
-    private static final Log log = LogFactory.getLog(OsgiPluginDeployer.class);
+    private static final Log log = LogFactory.getLog(OsgiPluginFactory.class);
 
-    private OsgiContainerManager osgi;
-    private PluginTransformer pluginTransformer;
+    private final OsgiContainerManager osgi;
+    private final PluginTransformer pluginTransformer;
     private final String pluginDescriptorFileName;
-    private DescriptorParserFactory descriptorParserFactory;
+    private final DescriptorParserFactory descriptorParserFactory;
 
-    public OsgiPluginDeployer(String pluginDescriptorFileName, OsgiContainerManager osgi)
+    public OsgiPluginFactory(String pluginDescriptorFileName, OsgiContainerManager osgi)
     {
+        Validate.notNull(pluginDescriptorFileName, "Plugin descriptor is required");
+        Validate.notNull(osgi, "The OSGi container is required");
+
         pluginTransformer = new DefaultPluginTransformer();
         this.osgi = osgi;
         this.pluginDescriptorFileName = pluginDescriptorFileName;
         this.descriptorParserFactory = new ComponentFilteringXmlDescriptorParserFactory();
     }
 
-    public void setPluginTransformer(PluginTransformer trans)
-    {
-        this.pluginTransformer = trans;
-    }
+    public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException {
+        Validate.notNull(pluginArtifact, "The plugin artifact is required");
 
-    public String canDeploy(PluginArtifact pluginArtifact) throws PluginParseException {
         String pluginKey = null;
         InputStream descriptorStream = null;
         try
         {
-            descriptorStream = pluginArtifact.getFile(pluginDescriptorFileName);
+            descriptorStream = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
         } catch (PluginParseException ex)
         {
             // no descriptor, no worries
@@ -81,7 +70,10 @@ public class OsgiPluginDeployer implements PluginDeployer
         return pluginKey;
     }
 
-    public Plugin deploy(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException {
+    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException {
+        Validate.notNull(deploymentUnit, "The plugin deployment unit is required");
+        Validate.notNull(moduleDescriptorFactory, "The module descriptor factory is required");
+
         Plugin plugin = null;
         InputStream pluginDescriptor = null;
         ClassLoader loader = null;

@@ -15,6 +15,7 @@ import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.Validate;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.framework.util.FelixConstants;
@@ -50,18 +51,36 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private HostComponentProvider hostComponentProvider;
 
 
+    /**
+     * Constructs the container manager using the framework bundles zip file located in this library
+     * @param frameworkBundlesDir The directory to unzip the framework bundles into.
+     * @param packageScannerConfig The configuration for package scanning
+     * @param provider The host component provider.  May be null.
+     * @param eventManager The plugin event manager to register for init and shutdown events
+     */
     public FelixOsgiContainerManager(File frameworkBundlesDir, PackageScannerConfiguration packageScannerConfig,
                                      HostComponentProvider provider, PluginEventManager eventManager)
     {
         this(ClassLoaderUtils.getResource(OSGI_FRAMEWORK_BUNDLES_ZIP, FelixOsgiContainerManager.class), frameworkBundlesDir,
                 packageScannerConfig, provider, eventManager);
     }
+
+    /**
+     * Constructs the container manager
+     * @param frameworkBundlesZip The location of the zip file containing framework bundles
+     * @param frameworkBundlesDir The directory to unzip the framework bundles into.
+     * @param packageScannerConfig The configuration for package scanning
+     * @param provider The host component provider.  May be null.
+     * @param eventManager The plugin event manager to register for init and shutdown events
+     */
     public FelixOsgiContainerManager(URL frameworkBundlesZip, File frameworkBundlesDir,
                                      PackageScannerConfiguration packageScannerConfig, HostComponentProvider provider,
                                      PluginEventManager eventManager)
     {
-        if (frameworkBundlesZip == null)
-            throw new IllegalArgumentException("The framework bundles zip is required");
+        Validate.notNull(frameworkBundlesZip, "The framework bundles zip is required");
+        Validate.notNull(frameworkBundlesDir, "The framework bundles directory must not be null");
+        Validate.notNull(packageScannerConfig, "The package scanner configuration must not be null");
+        Validate.notNull(eventManager, "The plugin event manager is required");
 
         this.frameworkBundlesUrl = frameworkBundlesZip;
         this.packageScannerConfig = packageScannerConfig;
