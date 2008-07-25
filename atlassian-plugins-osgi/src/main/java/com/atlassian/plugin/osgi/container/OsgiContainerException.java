@@ -1,10 +1,12 @@
 package com.atlassian.plugin.osgi.container;
 
+import com.atlassian.plugin.PluginException;
+
 /**
  * Generic wrapper exception for any OSGi-related exceptions
  */
 ///CLOVER:OFF
-public class OsgiContainerException extends RuntimeException
+public class OsgiContainerException extends PluginException
 {
     public OsgiContainerException()
     {

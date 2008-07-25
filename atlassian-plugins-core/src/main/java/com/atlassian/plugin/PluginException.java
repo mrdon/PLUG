@@ -3,11 +3,9 @@ package com.atlassian.plugin;
 /**
  * Generic plugin exception.
  */
-import org.apache.commons.lang.exception.NestableException;
-
-public class PluginException extends NestableException
+///CLOVER:OFF
+public class PluginException extends RuntimeException
 {
-    ///CLOVER:OFF
     public PluginException()
     {
         super();

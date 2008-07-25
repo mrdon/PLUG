@@ -11,11 +11,11 @@ import java.io.InputStream;
 public interface PluginArtifact
 {
     /**
-     * @return an input stream of the file specified inside the artifact.
-     * @throws PluginParseException if the file was not found or could not be
+     * @return an input stream of the resource specified inside the artifact.
+     * @throws PluginParseException if the resource was not found or could not be
      * read from the artifact.
      */
-    InputStream getResourceAsStream(String fileName) throws PluginParseException;
+    InputStream getResourceAsStream(String name) throws PluginParseException;
 
     /**
      * @return the original name of the plugin artifact file. Typically used

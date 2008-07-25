@@ -12,6 +12,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
 
 import java.io.InputStream;
+import java.io.IOException;
+import java.net.URL;
 
 /**
  * Deploys version 1.0 plugins into the legacy custom classloader structure that gives each plugin its own classloader.
@@ -47,10 +49,11 @@ public class LegacyDynamicPluginFactory implements PluginFactory
         PluginClassLoader loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader());
         try
         {
-            if (loader.getLocalResource(pluginDescriptorFileName) == null)
+            URL pluginDescriptorUrl = loader.getLocalResource(pluginDescriptorFileName);
+            if (pluginDescriptorUrl == null)
                 throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);
 
-            pluginDescriptor = loader.getResourceAsStream(pluginDescriptorFileName);
+            pluginDescriptor = pluginDescriptorUrl.openStream();
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
             plugin = parser.configurePlugin(moduleDescriptorFactory, createPlugin(deploymentUnit, loader));
@@ -72,7 +75,11 @@ public class LegacyDynamicPluginFactory implements PluginFactory
             loader.close();
             throw e;
         }
-        finally
+        catch (IOException e)
+        {
+            loader.close();
+            throw new PluginParseException();
+        } finally
         {
             IOUtils.closeQuietly(pluginDescriptor);
         }

@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.factory;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.AutowireCapablePlugin;
+import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 
 import java.net.URL;
@@ -100,12 +101,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
 
     public void setEnabled(boolean enabled) throws OsgiContainerException
     {
-        if (enabled) {
-            enable();
-        }
-        else {
-            disable();
-        }
+        if (enabled) enable(); else disable();
     }
 
     void enable() throws OsgiContainerException
@@ -114,7 +110,8 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         {
             if (bundle.getState() == Bundle.RESOLVED || bundle.getState() == Bundle.INSTALLED)
                 bundle.start();
-        } catch (BundleException e)
+        }
+        catch (BundleException e)
         {
             throw new OsgiContainerException("Cannot start plugin: "+getKey(), e);
         }
@@ -132,7 +129,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
     }
 
-    public void close()
+    public void close() throws OsgiContainerException
     {
         try
         {
@@ -140,7 +137,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 bundle.uninstall();
         } catch (BundleException e)
         {
-            throw new RuntimeException("Cannot uninstall bundle " + bundle.getSymbolicName());
+            throw new OsgiContainerException("Cannot uninstall bundle " + bundle.getSymbolicName());
         }
     }
 
@@ -177,11 +174,11 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 } catch (NoSuchMethodException e)
                 {
                     // Should never happen
-                    throw new RuntimeException("Cannot find createBean method on registered bean factory: "+nativeBeanFactory, e);
+                    throw new PluginException("Cannot find createBean method on registered bean factory: "+nativeBeanFactory, e);
                 } catch (IllegalAccessException e)
                 {
                     // Should never happen
-                    throw new RuntimeException("Cannot access createBean method", e);
+                    throw new PluginException("Cannot access createBean method", e);
                 } catch (InvocationTargetException e)
                 {
                     handleSpringMethodInvocationError(e);
@@ -199,7 +196,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             } catch (NoSuchMethodException e)
             {
                 // Should never happen
-                throw new RuntimeException("Cannot find createBean method on registered bean factory: "+nativeBeanFactory, e);
+                throw new PluginException("Cannot find createBean method on registered bean factory: "+nativeBeanFactory, e);
             }
         }
         try
@@ -209,7 +206,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         catch (IllegalAccessException e)
         {
             // Should never happen
-            throw new RuntimeException("Unable to access createBean method", e);
+            throw new PluginException("Unable to access createBean method", e);
         }
         catch (InvocationTargetException e)
         {
@@ -227,7 +224,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         else
         {
             // Should never happen as Spring methods only throw runtime exceptions
-            throw new RuntimeException("Unable to invoke createBean", e.getCause());
+            throw new PluginException("Unable to invoke createBean", e.getCause());
         }
     }
 
