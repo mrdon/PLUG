@@ -8,6 +8,8 @@ import java.util.*;
 import java.util.jar.Manifest;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 import org.twdata.pkgscanner.ExportPackage;
 import org.twdata.pkgscanner.PackageScanner;
@@ -19,6 +21,7 @@ import org.osgi.framework.Version;
 import org.osgi.framework.Constants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.IOUtils;
 import aQute.lib.osgi.Clazz;
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Jar;
@@ -28,6 +31,7 @@ import aQute.lib.osgi.Jar;
  */
 public class OsgiHeaderUtil
 {
+    static final String JDK_PACKAGES_PATH = "jdk-packages.txt";
     static Log log = LogFactory.getLog(OsgiHeaderUtil.class);
 
     /**
@@ -124,10 +128,9 @@ public class OsgiHeaderUtil
         origExports.append("org.osgi.util; version=1.3.0,");
         origExports.append("org.osgi.util.tracker; version=1.3.0,");
         origExports.append("host.service.command; version=1.0.0,");
-        origExports.append("javax.swing.tree,javax.swing,org.xml.sax,org.xml.sax.helpers,");
-        origExports.append("javax.xml,javax.xml.parsers,javax.xml.transform,javax.xml.transform.sax,");
-        origExports.append("javax.xml.transform.stream,javax.xml.transform.dom,org.w3c.dom,javax.naming,javax.naming.spi,");
-        origExports.append("javax.swing.border,javax.swing.event,javax.swing.text,");
+
+        constructJdkExports(origExports, JDK_PACKAGES_PATH);
+        origExports.append(",");
 
         Collection<ExportPackage> exportList = generateExports(packageScannerConfig);
         constructAutoExports(origExports, exportList);
@@ -159,7 +162,6 @@ public class OsgiHeaderUtil
     }
 
     static void constructAutoExports(StringBuilder sb, Collection<ExportPackage> packageExports) {
-
         for (Iterator<ExportPackage> i = packageExports.iterator(); i.hasNext(); ) {
             ExportPackage pkg = i.next();
             sb.append(pkg.getPackageName());
@@ -191,4 +193,32 @@ public class OsgiHeaderUtil
            .scan();
         return exports;
     }
+
+    static void constructJdkExports(StringBuilder sb, String packageListPath)
+    {
+        InputStream in = null;
+        try
+        {
+            in = ClassLoaderUtils.getResourceAsStream(packageListPath, OsgiHeaderUtil.class);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            String line;
+            while ((line = reader.readLine()) != null)
+            {
+                line = line.trim();
+                if (line.length() > 0)
+                {
+                    if (line.charAt(0) != '#')
+                    {
+                        if (sb.length() > 0)
+                            sb.append(',');
+                        sb.append(line);
+                    }
+                }
+            }
+        } catch (IOException e)
+        {
+            IOUtils.closeQuietly(in);
+        }
+    }
+
 }

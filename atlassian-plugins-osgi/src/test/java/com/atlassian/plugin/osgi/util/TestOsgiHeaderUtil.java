@@ -15,6 +15,12 @@ import java.util.List;
 
 public class TestOsgiHeaderUtil extends TestCase {
 
+    public void testDetermineExports()
+    {
+        String exports = OsgiHeaderUtil.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
+        assertFalse(exports.contains(",,"));
+    }
+
     public void testConstructAutoExports()
     {
         List<ExportPackage> exports = new ArrayList<ExportPackage>();
@@ -37,5 +43,15 @@ public class TestOsgiHeaderUtil extends TestCase {
         System.out.println(imports.replace(',','\n'));
         assertTrue(imports.contains(AttributeSet.class.getPackage().getName()));
         assertTrue(imports.contains("javax.swing.event"));
+    }
+
+    public void testConstructJdkExports()
+    {
+        StringBuilder sb = new StringBuilder();
+        OsgiHeaderUtil.constructJdkExports(sb,"jdk-packages.test.txt");
+        assertEquals("foo.bar,foo.baz", sb.toString());
+        sb = new StringBuilder();
+        OsgiHeaderUtil.constructJdkExports(sb, OsgiHeaderUtil.JDK_PACKAGES_PATH);
+        assertTrue(sb.toString().contains("org.xml.sax"));
     }
 }
