@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.factory;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.AutowireCapablePlugin;
+import com.atlassian.plugin.osgi.container.OsgiContainerException;
 
 import java.net.URL;
 import java.io.InputStream;
@@ -97,7 +98,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return Bundle.ACTIVE == bundle.getState();
     }
 
-    public void setEnabled(boolean enabled)
+    public void setEnabled(boolean enabled) throws OsgiContainerException
     {
         if (enabled) {
             enable();
@@ -107,7 +108,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
     }
 
-    void enable()
+    void enable() throws OsgiContainerException
     {
         try
         {
@@ -115,11 +116,11 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 bundle.start();
         } catch (BundleException e)
         {
-            throw new RuntimeException("Cannot start plugin: "+getKey(), e);
+            throw new OsgiContainerException("Cannot start plugin: "+getKey(), e);
         }
     }
 
-    void disable()
+    void disable() throws OsgiContainerException
     {
         try
         {
@@ -127,7 +128,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 bundle.stop();
         } catch (BundleException e)
         {
-            throw new RuntimeException("Cannot stop plugin: "+getKey(), e);
+            throw new OsgiContainerException("Cannot stop plugin: "+getKey(), e);
         }
     }
 
@@ -179,15 +180,16 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                     throw new RuntimeException("Cannot find createBean method on registered bean factory: "+nativeBeanFactory, e);
                 } catch (IllegalAccessException e)
                 {
+                    // Should never happen
                     throw new RuntimeException("Cannot access createBean method", e);
                 } catch (InvocationTargetException e)
                 {
-                    throw new RuntimeException("Cannot invoke createBean method", e.getCause());
+                    handleSpringMethodInvocationError(e);
+                    return null;
                 }
             } catch (InvalidSyntaxException e)
             {
-                // should never happen
-                throw new RuntimeException("Invalid LDAP filter", e);
+                throw new OsgiContainerException("Invalid LDAP filter", e);
             }
 
 
@@ -203,25 +205,38 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         try
         {
             return (T) nativeCreateBeanMethod.invoke(nativeBeanFactory, clazz, autowireStrategy.ordinal(), false);
-        } catch (IllegalAccessException e)
+        }
+        catch (IllegalAccessException e)
         {
-            throw new RuntimeException("Unable to access bean:" + getExceptionMessage(e), e);
+            // Should never happen
+            throw new RuntimeException("Unable to access createBean method", e);
         }
         catch (InvocationTargetException e)
         {
-            throw new RuntimeException("Unable to call beanfactory method:" + getExceptionMessage(e), e);
+            handleSpringMethodInvocationError(e);
+            return null;
         }
     }
 
-    private String getExceptionMessage(Exception e) {
-        return e.getMessage() == null ? e.getCause().getMessage() : e.getMessage();
+    private void handleSpringMethodInvocationError(InvocationTargetException e)
+    {
+        if (e.getCause() instanceof Error)
+            throw (Error) e.getCause();
+        else if (e.getCause() instanceof RuntimeException)
+            throw (RuntimeException) e.getCause();
+        else
+        {
+            // Should never happen as Spring methods only throw runtime exceptions
+            throw new RuntimeException("Unable to invoke createBean", e.getCause());
+        }
     }
 
     public Object autowire(Class clazz) {
         return autowireGeneric(clazz);
     }
 
-    public Object autowire(Class clazz, int autowireStrategy) {
+    public Object autowire(Class clazz, int autowireStrategy)
+    {
         return autowire(clazz, AutowireStrategy.fromIndex(autowireStrategy));
     }
 }
