@@ -1,12 +1,13 @@
 package com.atlassian.plugin.servlet;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import java.io.InputStream;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 public class ResourceDownloadUtils
@@ -14,53 +15,36 @@ public class ResourceDownloadUtils
     private static final Log log = LogFactory.getLog(ResourceDownloadUtils.class);
     private static final long TEN_YEARS = 1000L * 60L * 60L * 24L *365L * 10L;
 
+    /**
+     * @deprecated Since 2.0. Use {@link IOUtils#copy(InputStream, OutputStream)} instead. The method calling
+     * this should be responsible for closing streams and flushing if necessary.
+     */
     public static void serveFileImpl(HttpServletResponse httpServletResponse, InputStream in) throws IOException
     {
         OutputStream out = httpServletResponse.getOutputStream();
-
         try
         {
-            byte[] buffer = new byte[16 * 1024];
-            int read_count;
-
-            while ((read_count = in.read(buffer)) != -1)
-            {
-                out.write(buffer, 0, read_count);
-            }
-
-            log.info("Serving file done.");
+            IOUtils.copy(in, out);
         }
-        catch (Exception e)
+        catch (IOException e)
         {
-            log.info("I/O Error serving the requested file: " + e.toString());
+            log.error("Error serving the requested file: " + e.getMessage());
         }
         finally
         {
-            if (in != null)
+            IOUtils.closeQuietly(in);
+            try
             {
-                try
-                {
-                    in.close();
-                } catch (IOException e)
-                {
-                    // noop.
-                }
+                out.flush();
             }
-            if (out != null)
+            catch (IOException e)
             {
-                try
-                {
-                    out.flush();
-
-                    //out.close();
-                }
-                catch (Exception e)
-                {
-                    log.info("Error flushing output stream: " + e.toString());
-                }
+                log.warn("Error flushing output stream: " + e.getMessage());
             }
         }
+        log.info("Serving file done.");
     }
+
 
     /**
      * Set 'expire' headers to cache for ten years.

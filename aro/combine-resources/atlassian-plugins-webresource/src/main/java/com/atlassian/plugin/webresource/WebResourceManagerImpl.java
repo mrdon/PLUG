@@ -2,14 +2,16 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.servlet.BaseFileServerServlet;
+import com.atlassian.plugin.servlet.AbstractFileServerServlet;
 import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -221,7 +223,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     // "/download/resources/plugin.key:module.key/resource.name"
     private String getResourceUrl(ModuleDescriptor moduleDescriptor, String resourceName)
     {
-        return "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleDescriptor.getCompleteKey() + "/" + resourceName;
+        return "/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleDescriptor.getCompleteKey() + "/" + resourceName;
     }
 
     public String getStaticPluginResource(String pluginModuleKey, String resourceName)

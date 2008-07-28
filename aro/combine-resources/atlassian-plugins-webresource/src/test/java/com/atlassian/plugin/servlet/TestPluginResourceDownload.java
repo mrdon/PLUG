@@ -1,10 +1,10 @@
 package com.atlassian.plugin.servlet;
 
-import junit.framework.TestCase;
-import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.ModuleDescriptor;
-import com.mockobjects.dynamic.Mock;
+import com.atlassian.plugin.PluginManager;
 import com.mockobjects.dynamic.C;
+import com.mockobjects.dynamic.Mock;
+import junit.framework.TestCase;
 
 import java.io.IOException;
 
@@ -36,20 +36,6 @@ public class TestPluginResourceDownload extends TestCase
     public void testGetDownloadablePluginModule() throws IOException
     {
         PluginResource pluginResource = new PluginResource("test.plugin:test-resource", "foo/bar/baz/test.css");
-        ApplicationDownloadContext downloadContext = new ApplicationDownloadContext()
-        {
-
-            public String getContentType(String path)
-            {
-                return "text/css";
-            }
-
-            public String getCharacterEncoding()
-            {
-                return null;
-            }
-        };
-
         Mock pluginManager = new Mock(PluginManager.class);
         Mock moduleDescriptor = new Mock(ModuleDescriptor.class);
         resourceDownload.setPluginManager((PluginManager) pluginManager.proxy());
@@ -64,7 +50,7 @@ public class TestPluginResourceDownload extends TestCase
         moduleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq("foo/bar/")), null);
         moduleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq("foo/")), null);
 
-        resourceDownload.servePluginResource(pluginResource, null, null, downloadContext);
+        resourceDownload.servePluginResource(pluginResource, null, null);
 
         moduleDescriptor.verify();
         pluginManager.verify();

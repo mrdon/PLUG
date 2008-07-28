@@ -1,7 +1,7 @@
 package com.atlassian.plugin.servlet;
 
-import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.servlet.util.LastModifiedHandler;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,20 +11,13 @@ import java.util.Date;
 
 public abstract class AbstractDownloadableResource implements DownloadableResource
 {
-    protected ResourceLocation resourceLocation;
-    protected String extraPath;
     protected Plugin plugin;
-    protected final ApplicationDownloadContext context;
+    protected String extraPath;
+    protected ResourceLocation resourceLocation;
+    protected final ContentTypeResolver contentTypeResolver;
 
-    /**
-     * @deprecated Since 2.0. Use {@link #AbstractDownloadableResource(Plugin, ResourceLocation, String, ApplicationDownloadContext)} instead.
-     */
-    public AbstractDownloadableResource(BaseFileServerServlet servlet, Plugin plugin, ResourceLocation resourceLocation, String extraPath)
-    {
-        this(plugin, resourceLocation, extraPath, new LegacyDownloadContext(servlet));
-    }
-
-    public AbstractDownloadableResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath, ApplicationDownloadContext context)
+    public AbstractDownloadableResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath,
+        ContentTypeResolver contentTypeResolver)
     {
         if (extraPath != null && !"".equals(extraPath.trim()) && !resourceLocation.getLocation().endsWith("/"))
         {
@@ -32,16 +25,16 @@ public abstract class AbstractDownloadableResource implements DownloadableResour
         }
 
         this.plugin = plugin;
-        this.resourceLocation = resourceLocation;
         this.extraPath = extraPath;
-        this.context = context;
+        this.resourceLocation = resourceLocation;
+        this.contentTypeResolver = contentTypeResolver;
     }
 
     protected String getContentType()
     {
         if (resourceLocation.getContentType() == null)
         {
-            return context.getContentType(getLocation());
+            return contentTypeResolver.getContentType(getLocation());
         }
 
         return resourceLocation.getContentType();
