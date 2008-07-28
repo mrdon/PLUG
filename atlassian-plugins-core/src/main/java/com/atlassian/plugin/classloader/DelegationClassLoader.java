@@ -13,69 +13,54 @@ public class DelegationClassLoader extends ClassLoader
 {
     private static final Log log = LogFactory.getLog(DelegationClassLoader.class);
 
-    private ClassLoader delegateClassLoader;
+    private ClassLoader delegateClassLoader = DelegationClassLoader.class.getClassLoader();
 
     public void setDelegateClassLoader(ClassLoader delegateClassLoader)
     {
+        if (delegateClassLoader == null)
+        {
+            throw new IllegalArgumentException("Can't set the delegation target to null");
+        }
         if (log.isDebugEnabled())
         {
             log.debug("Update class loader delegation from [" + this.delegateClassLoader +
-                "] to [" + delegateClassLoader + "]");
+                    "] to [" + delegateClassLoader + "]");
         }
         this.delegateClassLoader = delegateClassLoader;
     }
 
     public Class loadClass(String name) throws ClassNotFoundException
     {
-        if (delegateClassLoader != null)
-        {
-            return delegateClassLoader.loadClass(name);
-        }
-        else
-        {
-            throw new ClassNotFoundException("Couldn't find class [" + name + "], no delegateClassLoader to delegate to.");
-        }
+        return delegateClassLoader.loadClass(name);
     }
 
     public URL getResource(String name)
     {
-        return delegateClassLoader != null ? delegateClassLoader.getResource(name) : null;
+        return delegateClassLoader.getResource(name);
     }
 
     public InputStream getResourceAsStream(String name)
     {
-        return delegateClassLoader != null ? delegateClassLoader.getResourceAsStream(name) : null;
+        return delegateClassLoader.getResourceAsStream(name);
     }
 
     public synchronized void setDefaultAssertionStatus(boolean enabled)
     {
-        if (delegateClassLoader != null)
-        {
-            delegateClassLoader.setDefaultAssertionStatus(enabled);
-        }
+        delegateClassLoader.setDefaultAssertionStatus(enabled);
     }
 
     public synchronized void setPackageAssertionStatus(String packageName, boolean enabled)
     {
-        if (delegateClassLoader != null)
-        {
-            delegateClassLoader.setPackageAssertionStatus(packageName, enabled);
-        }
+        delegateClassLoader.setPackageAssertionStatus(packageName, enabled);
     }
 
     public synchronized void setClassAssertionStatus(String className, boolean enabled)
     {
-        if (delegateClassLoader != null)
-        {
-            delegateClassLoader.setClassAssertionStatus(className, enabled);
-        }
+        delegateClassLoader.setClassAssertionStatus(className, enabled);
     }
 
     public synchronized void clearAssertionStatus()
     {
-        if (delegateClassLoader != null)
-        {
-            delegateClassLoader.clearAssertionStatus();
-        }
+        delegateClassLoader.clearAssertionStatus();
     }
 }
