@@ -1,11 +1,8 @@
-# Java package list pulled from Java SE 6
-# Copied from the packages frame in the Javadocs - https://java.sun.com/javase/6/docs/api/index.html
+# Java package list pulled from Java SE 5
+# Copied from the packages frame in the Javadocs - http://java.sun.com/j2se/1.5.0/docs/api/index.html
 
 javax.accessibility
-javax.activation
 javax.activity
-javax.annotation
-javax.annotation.processing
 javax.crypto
 javax.crypto.interfaces
 javax.crypto.spec
@@ -16,12 +13,6 @@ javax.imageio.plugins.bmp
 javax.imageio.plugins.jpeg
 javax.imageio.spi
 javax.imageio.stream
-javax.jws
-javax.jws.soap
-javax.lang.model
-javax.lang.model.element
-javax.lang.model.type
-javax.lang.model.util
 javax.management
 javax.management.loading
 javax.management.modelmbean
@@ -45,7 +36,6 @@ javax.print.event
 javax.rmi
 javax.rmi.CORBA
 javax.rmi.ssl
-javax.script
 javax.security.auth
 javax.security.auth.callback
 javax.security.auth.kerberos
@@ -79,41 +69,17 @@ javax.swing.text.html.parser
 javax.swing.text.rtf
 javax.swing.tree
 javax.swing.undo
-javax.tools
 javax.transaction
 javax.transaction.xa
 javax.xml
-javax.xml.bind
-javax.xml.bind.annotation
-javax.xml.bind.annotation.adapters
-javax.xml.bind.attachment
-javax.xml.bind.helpers
-javax.xml.bind.util
-javax.xml.crypto
-javax.xml.crypto.dom
-javax.xml.crypto.dsig
-javax.xml.crypto.dsig.dom
-javax.xml.crypto.dsig.keyinfo
-javax.xml.crypto.dsig.spec
 javax.xml.datatype
 javax.xml.namespace
 javax.xml.parsers
-javax.xml.soap
-javax.xml.stream
-javax.xml.stream.events
-javax.xml.stream.util
 javax.xml.transform
 javax.xml.transform.dom
 javax.xml.transform.sax
-javax.xml.transform.stax
 javax.xml.transform.stream
 javax.xml.validation
-javax.xml.ws
-javax.xml.ws.handler
-javax.xml.ws.handler.soap
-javax.xml.ws.http
-javax.xml.ws.soap
-javax.xml.ws.spi
 javax.xml.xpath
 org.ietf.jgss
 org.omg.CORBA
@@ -150,4 +116,4 @@ org.w3c.dom.events
 org.w3c.dom.ls
 org.xml.sax
 org.xml.sax.ext
-org.xml.sax.helpers 
+org.xml.sax.helpers
