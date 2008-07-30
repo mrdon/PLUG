@@ -8,22 +8,33 @@ import com.atlassian.plugin.loaders.DefaultPluginFactory;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.loaders.SinglePluginLoader;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
-import com.atlassian.plugin.mock.*;
+import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
+import com.atlassian.plugin.mock.MockBear;
+import com.atlassian.plugin.mock.MockMineral;
+import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
+import com.atlassian.plugin.mock.MockThing;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
-import com.atlassian.plugin.predicate.PluginPredicate;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
+import com.atlassian.plugin.predicate.PluginPredicate;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.util.FileUtils;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
-import junit.framework.TestCase;
+
+import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import junit.framework.TestCase;
 
 /**
  * Testing {@link DefaultPluginManager}
@@ -511,6 +522,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         InputStream is = manager.getPluginResourceAsStream("test.atlassian.plugin.classloaded", "atlassian-plugin.xml");
         assertNotNull(is);
+        IOUtils.closeQuietly(is);
     }
     
     public void testGetDynamicPluginClass() throws IOException, PluginParseException
@@ -815,12 +827,13 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPluginStateStore.verify();
     }
 
-    private void checkResources(PluginAccessor manager, boolean canGetGlobal, boolean canGetModule)
-    {
+    private void checkResources(PluginAccessor manager, boolean canGetGlobal, boolean canGetModule) throws IOException {
         InputStream is = manager.getDynamicResourceAsStream("icon.gif");
         assertEquals(canGetGlobal, is != null);
+        IOUtils.closeQuietly(is);
         is = manager.getDynamicResourceAsStream("bear/paddington.vm");
         assertEquals(canGetModule, is != null);
+        IOUtils.closeQuietly(is);
     }
     
     private void checkClasses(PluginAccessor manager, boolean canGet)
