@@ -1,22 +1,28 @@
 package com.atlassian.plugin.classloader;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
+import com.atlassian.core.util.FileUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.net.MalformedURLException;
-import java.util.*;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
  * A class loader used to load classes and resources from a given plugin.
  */
-public class PluginClassLoader extends ClassLoader {
+public class PluginClassLoader extends ClassLoader
+{
     private static final String PLUGIN_INNER_JAR_PREFIX = "atlassian-plugins-innerjar";
 
     /**
@@ -88,7 +94,7 @@ public class PluginClassLoader extends ClassLoader {
         final File innerJarTmpFile = File.createTempFile(PLUGIN_INNER_JAR_PREFIX, ".jar");
         InputStream inputStream = jarFile.getInputStream(jarEntry);
         FileOutputStream fileOutputStream = new FileOutputStream(innerJarTmpFile);
-        IOUtils.copy(inputStream, fileOutputStream);
+        FileUtils.copy(inputStream, fileOutputStream);
         initializeFromJar(innerJarTmpFile, false);
         pluginInnerJars.add(innerJarTmpFile);
         inputStream.close();
@@ -136,7 +142,8 @@ public class PluginClassLoader extends ClassLoader {
      * @param name the name of the resource.
      * @return the URL to the resource, <code>null</code> if the resource was not found.
      */
-    public URL getResource(String name) {
+    public URL getResource(String name)
+    {
         if (isEntryInPlugin(name))
         {
             return (URL) entryMappings.get(name);
@@ -151,7 +158,10 @@ public class PluginClassLoader extends ClassLoader {
     {
         for (final Iterator innerJars = pluginInnerJars.iterator(); innerJars.hasNext();)
         {
-            FileUtils.deleteQuietly((File) innerJars.next());
+            try
+            {
+                ((File) innerJars.next()).delete();
+            } catch (Exception ignored) {}
         }
     }
 
@@ -179,10 +189,18 @@ public class PluginClassLoader extends ClassLoader {
     {
         URL resourceURL = (URL) entryMappings.get(path);
         InputStream inputStream = resourceURL.openStream();
-        byte[] bytez = IOUtils.toByteArray(inputStream);
-        IOUtils.closeQuietly(inputStream);
+        byte[] bytez = toByteArray(inputStream);
+        FileUtils.shutdownStream(inputStream);
         initializePackage(className);
         return defineClass(className, bytez, 0, bytez.length);
+    }
+    
+    
+    private byte[] toByteArray(InputStream input) throws IOException
+    {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        FileUtils.copy(input, output);
+        return output.toByteArray();
     }
 
     private URL getUrlOfResourceInJar(String name, File jarFile)

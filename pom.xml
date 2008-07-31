@@ -71,9 +71,9 @@
             <version>3.2</version>
         </dependency>
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>1.4</version>
+            <groupId>com.atlassian.core</groupId>
+            <artifactId>atlassian-core</artifactId>
+            <version>3.10</version>
         </dependency>
         <dependency>
             <groupId>dom4j</groupId>
