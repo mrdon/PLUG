@@ -2,6 +2,7 @@ package com.atlassian.plugin.classloader;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.Validate;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -17,10 +18,7 @@ public class DelegationClassLoader extends ClassLoader
 
     public void setDelegateClassLoader(ClassLoader delegateClassLoader)
     {
-        if (delegateClassLoader == null)
-        {
-            throw new IllegalArgumentException("Can't set the delegation target to null");
-        }
+        Validate.notNull(delegateClassLoader, "Can't set the delegation target to null");
         if (log.isDebugEnabled())
         {
             log.debug("Update class loader delegation from [" + this.delegateClassLoader +

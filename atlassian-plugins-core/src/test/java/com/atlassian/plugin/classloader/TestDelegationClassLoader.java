@@ -53,5 +53,23 @@ public class TestDelegationClassLoader extends TestCase
             // expected case
         }
     }
+    
+    public void testCantSetNullDelegate() {
+        DelegationClassLoader dcl = new DelegationClassLoader();
+        try
+        {
+            dcl.setDelegateClassLoader(null);
+            fail("expected IllegalArgumentException with null delegate");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // expected
+        }
+    }
+
+    public void testCanSetDelegate() {
+        DelegationClassLoader dcl = new DelegationClassLoader();
+        dcl.setDelegateClassLoader(getClass().getClassLoader());
+    }
 
 }
