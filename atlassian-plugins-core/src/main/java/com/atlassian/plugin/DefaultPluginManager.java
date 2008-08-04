@@ -13,7 +13,6 @@ import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
-import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
@@ -53,11 +52,6 @@ public class DefaultPluginManager implements PluginManager
      * Stores {@link Plugin}s as a key and {@link PluginLoader} as a value.
      */
     private final Map/*<Plugin,PluginLoader>*/ pluginToPluginLoader = new HashMap();
-
-    public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory)
-    {
-        this(store, pluginLoaders, moduleDescriptorFactory, new PluginEventManagerImpl());
-    }
 
     public DefaultPluginManager(PluginStateStore store, List pluginLoaders, ModuleDescriptorFactory moduleDescriptorFactory, PluginEventManager pluginEventManager)
     {

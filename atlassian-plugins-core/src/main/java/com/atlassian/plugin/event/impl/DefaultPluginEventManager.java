@@ -16,16 +16,16 @@ import org.apache.commons.lang.Validate;
  * Simple, synchronous event manager that uses one or more method selectors to determine event listeners.  The default
  * method selector is {@link MethodNameListenerMethodSelector}.
  */
-public class PluginEventManagerImpl implements PluginEventManager
+public class DefaultPluginEventManager implements PluginEventManager
 {
     private final Map/*<Class,Set<Listener>>*/ eventsToListener;
-    private static final Log log = LogFactory.getLog(PluginEventManagerImpl.class);
+    private static final Log log = LogFactory.getLog(DefaultPluginEventManager.class);
     private final ListenerMethodSelector[] listenerMethodSelectors;
 
     /**
      * Default constructor that looks for methods named "channel"
      */
-    public PluginEventManagerImpl()
+    public DefaultPluginEventManager()
     {
         this(new ListenerMethodSelector[]{new MethodNameListenerMethodSelector()});
     }
@@ -34,7 +34,7 @@ public class PluginEventManagerImpl implements PluginEventManager
      * Constructor that looks for an arbitrary selectors
      * @param selectors List of selectors that determine which are listener methods
      */
-    public PluginEventManagerImpl(ListenerMethodSelector[] selectors)
+    public DefaultPluginEventManager(ListenerMethodSelector[] selectors)
     {
         this.listenerMethodSelectors = selectors;
         eventsToListener = LazyMap.decorate(new HashMap(), new Factory() {

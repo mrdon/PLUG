@@ -2,7 +2,7 @@ package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -11,7 +11,6 @@ import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 import com.atlassian.plugin.util.ClassLoaderUtils;
-import org.apache.commons.logging.Log;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
@@ -34,7 +33,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     {
         super.setUp();
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
-        pluginEventManager = new PluginEventManagerImpl();
+        pluginEventManager = new DefaultPluginEventManager();
         createFillAndCleanTempPluginDirectory();
     }
 

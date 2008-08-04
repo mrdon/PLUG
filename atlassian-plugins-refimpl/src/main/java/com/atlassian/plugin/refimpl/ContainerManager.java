@@ -11,7 +11,7 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.refimpl.servlet.SimpleServletModuleDescriptor;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.BundledPluginLoader;
@@ -45,7 +45,7 @@ public class ContainerManager {
 
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
         hostComponentProvider = new SimpleHostComponentProvider();
-        pluginEventManager = new PluginEventManagerImpl();
+        pluginEventManager = new DefaultPluginEventManager();
         osgiContainerManager = new FelixOsgiContainerManager(new File(servletContext.getRealPath("/WEB-INF/framework-bundles")),
                                                              scannerConfig, hostComponentProvider, pluginEventManager);
 

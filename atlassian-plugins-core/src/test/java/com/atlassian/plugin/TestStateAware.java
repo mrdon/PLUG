@@ -3,6 +3,7 @@ package com.atlassian.plugin;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 
@@ -47,7 +48,7 @@ public class TestStateAware extends TestCase
 
         Mock mockModuleDescriptor = new Mock(ModuleDescriptorFactory.class);
 
-        manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, (ModuleDescriptorFactory) mockModuleDescriptor.proxy());
+        manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, (ModuleDescriptorFactory) mockModuleDescriptor.proxy(), new DefaultPluginEventManager());
 
     }
 

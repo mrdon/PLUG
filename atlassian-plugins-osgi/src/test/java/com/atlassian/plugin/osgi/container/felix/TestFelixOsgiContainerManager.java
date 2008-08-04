@@ -1,12 +1,9 @@
 package com.atlassian.plugin.osgi.container.felix;
 
-import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.test.PluginBuilder;
-import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import junit.framework.TestCase;
-import org.twdata.pkgscanner.ExportPackage;
 import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -14,12 +11,8 @@ import org.osgi.framework.Constants;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Date;
 
 public class TestFelixOsgiContainerManager extends TestCase
 {
@@ -35,7 +28,7 @@ public class TestFelixOsgiContainerManager extends TestCase
         frameworkBundlesDir = new File(tmpdir, "framework-bundles-test");
 
         felix = new FelixOsgiContainerManager(frameworkBundlesUrl, frameworkBundlesDir, new DefaultPackageScannerConfiguration(),
-                null, new PluginEventManagerImpl());
+                null, new DefaultPluginEventManager());
     }
 
     @Override

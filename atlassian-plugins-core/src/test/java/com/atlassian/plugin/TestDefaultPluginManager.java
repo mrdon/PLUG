@@ -13,10 +13,8 @@ import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
-import com.atlassian.plugin.factories.PluginFactory;
-import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
@@ -50,13 +48,13 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     protected void setUp() throws Exception
     {
         super.setUp();
-        pluginEventManager = new PluginEventManagerImpl();
+        pluginEventManager = new DefaultPluginEventManager();
 
         pluginStateStore = new MemoryPluginStateStore();
         pluginLoaders = new LinkedList();
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
 
-        manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory);
+        manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
     }
 
     protected void tearDown() throws Exception
@@ -766,7 +764,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testValidatePlugin() throws PluginParseException
     {
-        DefaultPluginManager manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
         Mock mockLoader = new Mock(DynamicPluginLoader.class);
         pluginLoaders.add(mockLoader.proxy());
 
@@ -782,7 +780,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testValidatePluginWithNoDynamicLoaders() throws PluginParseException
     {
-        DefaultPluginManager manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory);
+        DefaultPluginManager manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
         Mock mockLoader = new Mock(PluginLoader.class);
         pluginLoaders.add(mockLoader.proxy());
 
@@ -834,7 +832,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         DefaultPluginManager pluginManager = new DefaultPluginManager(
                 (PluginStateStore) mockPluginStateStore.proxy(),
                 Collections.singletonList(mockPluginLoader.proxy()),
-                moduleDescriptorFactory
+                moduleDescriptorFactory, new DefaultPluginEventManager()
         );
 
         Plugin plugin = (Plugin) mockPlugin.proxy();

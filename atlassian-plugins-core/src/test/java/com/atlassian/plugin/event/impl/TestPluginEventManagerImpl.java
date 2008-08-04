@@ -1,7 +1,7 @@
 package com.atlassian.plugin.event.impl;
 
 import junit.framework.TestCase;
-import com.atlassian.plugin.event.impl.PluginEventManagerImpl;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.event.impl.ListenerMethodSelector;
 import com.atlassian.plugin.event.impl.MethodNameListenerMethodSelector;
 
@@ -9,11 +9,11 @@ import java.lang.reflect.Method;
 
 public class TestPluginEventManagerImpl extends TestCase
 {
-    private PluginEventManagerImpl eventManager;
+    private DefaultPluginEventManager eventManager;
 
     public void setUp()
     {
-        eventManager = new PluginEventManagerImpl();
+        eventManager = new DefaultPluginEventManager();
     }
 
     public void tearDown()
@@ -63,7 +63,7 @@ public class TestPluginEventManagerImpl extends TestCase
 
     public void testRegisterWithCustomSelector()
     {
-        eventManager = new PluginEventManagerImpl(new ListenerMethodSelector[]{
+        eventManager = new DefaultPluginEventManager(new ListenerMethodSelector[]{
                 new ListenerMethodSelector() {
                     public boolean isListenerMethod(Method method)
                     {
@@ -79,7 +79,7 @@ public class TestPluginEventManagerImpl extends TestCase
 
     public void testRegisterWithOverlappingSelectors()
     {
-        eventManager = new PluginEventManagerImpl(new ListenerMethodSelector[]{
+        eventManager = new DefaultPluginEventManager(new ListenerMethodSelector[]{
                 new MethodNameListenerMethodSelector(), new MethodNameListenerMethodSelector()});
         Foo foo = new Foo();
         eventManager.register(foo);
