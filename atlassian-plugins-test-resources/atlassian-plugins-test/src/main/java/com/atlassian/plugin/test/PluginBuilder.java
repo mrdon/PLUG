@@ -46,14 +46,9 @@ public class PluginBuilder {
 
         // Silly hack because I'm too lazy to do it the "proper" janino way
         ByteArrayClassLoader cl = (ByteArrayClassLoader) compiler.getClassLoader();
-        Map classes = null;
-        final Field fields[] = cl.getClass().getDeclaredFields();
-        for (int i = 0; i < fields.length; ++i) {
-            if ("classes".equals(fields[i].getName())) {
-                fields[i].setAccessible(true);
-                classes = (Map) fields[i].get(cl);
-            }
-        }
+        Field field = cl.getClass().getDeclaredField("classes");
+        field.setAccessible(true);
+        Map classes = (Map) field.get(cl);
 
         jarContents.put(className.replace('.',File.separatorChar)+".class", classes.get(className));
         return this;
