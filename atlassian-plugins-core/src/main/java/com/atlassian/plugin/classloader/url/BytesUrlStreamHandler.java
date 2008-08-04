@@ -5,11 +5,7 @@ import java.net.URL;
 import java.net.URLStreamHandler;
 
 /**
- * Created by IntelliJ IDEA.
- * User: sleberrigaud
- * Date: May 9, 2008
- * Time: 11:06:09 AM
- * To change this template use File | Settings | File Templates.
+ * URL stream handler of a byte array
  */
 public class BytesUrlStreamHandler extends URLStreamHandler
 {

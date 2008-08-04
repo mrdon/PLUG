@@ -33,7 +33,7 @@ abstract class AbstractClassLoader extends ClassLoader
      * @return an enumeration over all matching resources
      * @throws IOException This implementation will not throw this exception
      */
-    protected Enumeration findResources(String name) throws IOException
+    protected Enumeration<URL> findResources(String name) throws IOException
     {
         final URL url = this.findResource(name);
         return url != null ? Collections.enumeration(Collections.singleton(url)) : null;

@@ -26,7 +26,7 @@ import java.util.Collections;
  */
 public class SinglePluginLoader implements PluginLoader
 {
-    protected Collection plugins;
+    protected Collection<Plugin> plugins;
     protected String resource;
     protected InputStream is;
     private DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
@@ -41,7 +41,7 @@ public class SinglePluginLoader implements PluginLoader
         this.is = is;
     }
 
-    public Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public Collection<Plugin> loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         if (plugins == null)
             plugins = Collections.singleton(loadPlugin(moduleDescriptorFactory));
@@ -58,12 +58,7 @@ public class SinglePluginLoader implements PluginLoader
         return false;
     }
 
-    public Collection removeMissingPlugins()
-    {
-        throw new UnsupportedOperationException("This PluginLoader does not support removal.");
-    }
-
-    public Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
+    public Collection<Plugin> addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
     {
         throw new UnsupportedOperationException("This PluginLoader does not support addition.");
     }

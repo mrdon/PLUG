@@ -12,20 +12,19 @@ public class LoaderUtils
     /**
      * @deprecated use {@link com.atlassian.plugin.Resources#fromXml}
      */
-    public static List getResourceDescriptors(Element element) throws PluginParseException
+    public static List<ResourceDescriptor> getResourceDescriptors(Element element) throws PluginParseException
     {
         return Resources.fromXml(element).getResourceDescriptors();
     }
 
-    public static Map getParams(Element element)
+    public static Map<String,String> getParams(Element element)
     {
-        List elements = element.elements("param");
+        List<Element> elements = element.elements("param");
 
-        Map params = new HashMap(elements.size());
+        Map<String,String> params = new HashMap<String,String>(elements.size());
 
-        for (Iterator iterator = elements.iterator(); iterator.hasNext();)
+        for (Element paramEl : elements)
         {
-            Element paramEl = (Element) iterator.next();
             String name = paramEl.attributeValue("name");
             String value = paramEl.attributeValue("value");
 

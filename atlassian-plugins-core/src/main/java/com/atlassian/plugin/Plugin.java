@@ -7,7 +7,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-public interface Plugin extends Resourced, Comparable
+public interface Plugin extends Resourced, Comparable<Plugin>
 {
     public static final Comparator NAME_COMPARATOR = new PluginNameComparator();
 
@@ -35,13 +35,13 @@ public interface Plugin extends Resourced, Comparable
 
     void setKey(String aPackage);
 
-    void addModuleDescriptor(ModuleDescriptor moduleDescriptor);
+    void addModuleDescriptor(ModuleDescriptor<?> moduleDescriptor);
 
-    Collection getModuleDescriptors();
+    Collection<ModuleDescriptor<?>> getModuleDescriptors();
 
-    ModuleDescriptor getModuleDescriptor(String key);
+    ModuleDescriptor<?> getModuleDescriptor(String key);
 
-    List getModuleDescriptorsByModuleClass(Class aClass);
+    <T> List<ModuleDescriptor<T>> getModuleDescriptorsByModuleClass(Class<T> aClass);
 
     boolean isEnabledByDefault();
 
@@ -99,7 +99,7 @@ public interface Plugin extends Resourced, Comparable
      * @return The loaded class.
      * @throws ClassNotFoundException
      */
-    Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException;
+    Class<?> loadClass(String clazz, Class<?> callingClass) throws ClassNotFoundException;
 
     /**
      * Get the classloader for the plugin.

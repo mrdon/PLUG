@@ -16,7 +16,7 @@ public class ResourceDescriptor
 
     private Pattern pattern;
     private String content;
-    private Map params;
+    private Map<String,String> params;
     private ResourceLocation ourLocation;
 
     public ResourceDescriptor(Element element)

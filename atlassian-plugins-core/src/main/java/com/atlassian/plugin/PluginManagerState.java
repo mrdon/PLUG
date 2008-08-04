@@ -19,14 +19,14 @@ import java.util.Map;
  */
 public class PluginManagerState
 {
-    private Map map = new HashMap();
+    private Map<String,Boolean> map = new HashMap<String,Boolean>();
 
     public PluginManagerState()
     {
 
     }
 
-    public PluginManagerState(Map map)
+    public PluginManagerState(Map<String,Boolean> map)
     {
         this.map = map;
     }
@@ -36,13 +36,13 @@ public class PluginManagerState
      */
     public Boolean getState(String key)
     {
-        return (Boolean) map.get(key);
+        return map.get(key);
     }
 
     /**
      * Get the map of all states.
      */
-    public Map getMap()
+    public Map<String,Boolean> getMap()
     {
         return map;
     }
@@ -84,9 +84,9 @@ public class PluginManagerState
         map.remove(key);
     }
 
-    public Map getPluginStateMap(final Plugin plugin)
+    public Map<String,Boolean> getPluginStateMap(final Plugin plugin)
     {
-        Map state = new HashMap(getMap());
+        Map state = new HashMap<String,Boolean>(getMap());
         CollectionUtils.filter(state.keySet(), new StringStartsWith(plugin.getKey()));
         return state;
     }

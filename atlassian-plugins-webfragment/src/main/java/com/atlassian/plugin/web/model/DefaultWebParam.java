@@ -19,21 +19,21 @@ public class DefaultWebParam extends AbstractWebItem implements WebParam
     /**
      * parameters are sorted in order for the i18n arguments to be in order
      */
-    protected SortedMap params;
+    protected SortedMap<String,String> params;
 
     public DefaultWebParam(Element element, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider, WebFragmentModuleDescriptor descriptor)
     {
         super(webFragmentHelper, contextProvider, descriptor);
-        this.params =  new TreeMap(LoaderUtils.getParams(element));
+        this.params =  new TreeMap<String,String>(LoaderUtils.getParams(element));
     }
 
-    public DefaultWebParam(Map params, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider, WebFragmentModuleDescriptor descriptor)
+    public DefaultWebParam(Map<String,String> params, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider, WebFragmentModuleDescriptor descriptor)
     {
         super(webFragmentHelper, contextProvider, descriptor);
-        this.params = new TreeMap(params);
+        this.params = new TreeMap<String,String>(params);
     }
 
-    public SortedMap getParams()
+    public SortedMap<String,String> getParams()
     {
         return params;
     }
@@ -43,7 +43,7 @@ public class DefaultWebParam extends AbstractWebItem implements WebParam
         return params.get(key);
     }
 
-    public String getRenderedParam(String paramKey, Map context)
+    public String getRenderedParam(String paramKey, Map<String,Object> context)
     {
         context.putAll(getContextMap(context));
         return getWebFragmentHelper().renderVelocityFragment((String) params.get(paramKey), context);

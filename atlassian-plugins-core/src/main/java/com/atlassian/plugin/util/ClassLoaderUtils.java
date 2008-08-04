@@ -33,7 +33,7 @@ public class ClassLoaderUtils
      * @param callingClass The Class object of the calling object
      * @throws ClassNotFoundException If the class cannot be found anywhere.
      */
-    public static Class loadClass(String className, Class callingClass) throws ClassNotFoundException
+    public static Class<?> loadClass(String className, Class<?> callingClass) throws ClassNotFoundException
     {
         try
         {
@@ -73,7 +73,7 @@ public class ClassLoaderUtils
      * @param resourceName The name of the resource to load
      * @param callingClass The Class object of the calling object
      */
-    public static URL getResource(String resourceName, Class callingClass)
+    public static URL getResource(String resourceName, Class<?> callingClass)
     {
         URL url = null;
 
@@ -104,9 +104,9 @@ public class ClassLoaderUtils
      * @param resourceName The name of the resource to load
      * @param callingClass The Class object of the calling object
      */
-    public static Enumeration getResources(String resourceName, Class callingClass) throws IOException
+    public static Enumeration<URL> getResources(String resourceName, Class<?> callingClass) throws IOException
     {
-        Enumeration urls = Thread.currentThread().getContextClassLoader().getResources(resourceName);
+        Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(resourceName);
         if (urls == null)
         {
             urls = ClassLoaderUtils.class.getClassLoader().getResources(resourceName);
@@ -127,7 +127,7 @@ public class ClassLoaderUtils
      * @param resourceName The name of the resource to load
      * @param callingClass The Class object of the calling object
      */
-    public static InputStream getResourceAsStream(String resourceName, Class callingClass)
+    public static InputStream getResourceAsStream(String resourceName, Class<?> callingClass)
     {
         URL url = getResource(resourceName, callingClass);
         try

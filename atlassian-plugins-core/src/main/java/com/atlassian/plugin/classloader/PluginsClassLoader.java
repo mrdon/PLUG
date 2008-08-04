@@ -21,11 +21,11 @@ public class PluginsClassLoader extends AbstractClassLoader
     private static final Log log = LogFactory.getLog(PluginsClassLoader.class);
     private final PluginAccessor pluginAccessor;
 
-    private final Map/*<String,Plugin>*/ pluginResourceIndex = new HashMap();
-    private final Map/*<String,Plugin>*/ pluginClassIndex = new HashMap();
+    private final Map<String,Plugin> pluginResourceIndex = new HashMap<String,Plugin>();
+    private final Map<String,Plugin> pluginClassIndex = new HashMap<String,Plugin>();
 
-    private final Set/*<String>*/ missedPluginResource = new HashSet();
-    private final Set/*<String>*/ missedPluginClass = new HashSet();
+    private final Set<String> missedPluginResource = new HashSet<String>();
+    private final Set<String> missedPluginClass = new HashSet<String>();
 
     public PluginsClassLoader(PluginAccessor pluginAccessor)
     {
@@ -47,7 +47,7 @@ public class PluginsClassLoader extends AbstractClassLoader
         final Plugin indexedPlugin;
         synchronized (this)
         {
-             indexedPlugin = (Plugin) pluginResourceIndex.get(name);
+             indexedPlugin = pluginResourceIndex.get(name);
         }
         final URL result;
         if (isPluginEnabled(indexedPlugin))
@@ -70,7 +70,7 @@ public class PluginsClassLoader extends AbstractClassLoader
         final Plugin indexedPlugin;
         synchronized (this)
         {
-            indexedPlugin = (Plugin) pluginClassIndex.get(className);
+            indexedPlugin = pluginClassIndex.get(className);
         }
 
         final Class result;
@@ -107,10 +107,9 @@ public class PluginsClassLoader extends AbstractClassLoader
         {
             return null;
         }
-        final Collection plugins = pluginAccessor.getEnabledPlugins();
-        for (Iterator i = plugins.iterator(); i.hasNext();)
+        final Collection<Plugin> plugins = pluginAccessor.getEnabledPlugins();
+        for (Plugin plugin : plugins)
         {
-            final Plugin plugin = (Plugin) i.next();
             try
             {
                 Class result = plugin.getClassLoader().loadClass(className);
@@ -144,10 +143,9 @@ public class PluginsClassLoader extends AbstractClassLoader
         {
             return null;
         }
-        final Collection plugins = pluginAccessor.getEnabledPlugins();
-        for (Iterator i = plugins.iterator(); i.hasNext();)
+        final Collection<Plugin> plugins = pluginAccessor.getEnabledPlugins();
+        for (Plugin plugin : plugins)
         {
-            final Plugin plugin = (Plugin) i.next();
             final URL resource = plugin.getClassLoader().getResource(name);
             if (resource != null)
             {

@@ -7,7 +7,7 @@ public class JavaVersionUtils
 {
     public static boolean satisfiesMinVersion(float versionNumber)
     {
-        float specVersion = Float.valueOf(System.getProperty("java.specification.version")).floatValue();
+        float specVersion = Float.valueOf(System.getProperty("java.specification.version"));
         return specVersion >= versionNumber;
     }
 

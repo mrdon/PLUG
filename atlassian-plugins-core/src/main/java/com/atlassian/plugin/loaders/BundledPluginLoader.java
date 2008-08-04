@@ -4,6 +4,7 @@ import com.atlassian.plugin.util.FileUtils;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
@@ -23,7 +24,7 @@ import org.apache.commons.logging.LogFactory;
 public class BundledPluginLoader extends DirectoryPluginLoader {
 
     private static final Log log = LogFactory.getLog(BundledPluginLoader.class);
-    public BundledPluginLoader(URL zipUrl, File pluginPath, List pluginFactories, PluginEventManager eventManager)
+    public BundledPluginLoader(URL zipUrl, File pluginPath, List<PluginFactory> pluginFactories, PluginEventManager eventManager)
     {
         super(pluginPath, pluginFactories, eventManager);
         if (zipUrl == null)

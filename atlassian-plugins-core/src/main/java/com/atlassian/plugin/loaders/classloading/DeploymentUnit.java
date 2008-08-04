@@ -2,7 +2,7 @@ package com.atlassian.plugin.loaders.classloading;
 
 import java.io.File;
 
-public class DeploymentUnit implements Comparable
+public class DeploymentUnit implements Comparable<DeploymentUnit>
 {
 	private final File path;
     private long lastModifiedAtTimeOfDeployment;
@@ -27,13 +27,8 @@ public class DeploymentUnit implements Comparable
 		return path;
 	}
 
-    public int compareTo(Object o)
+    public int compareTo(DeploymentUnit target)
     {
-        if (!(o instanceof DeploymentUnit))
-            return 1;
-
-        DeploymentUnit target = (DeploymentUnit) o;
-
         int result = path.compareTo(target.getPath());
         if (result == 0)
             result = (lastModifiedAtTimeOfDeployment > target.lastModified() ? 1 :
@@ -43,13 +38,8 @@ public class DeploymentUnit implements Comparable
 
 
 
-    public boolean equals(Object o)
+    public boolean equals(DeploymentUnit deploymentUnit)
     {
-        if (this == o) return true;
-        if (!(o instanceof DeploymentUnit)) return false;
-
-        final DeploymentUnit deploymentUnit = (DeploymentUnit) o;
-
         if (!path.equals(deploymentUnit.path)) return false;
         if (lastModifiedAtTimeOfDeployment != deploymentUnit.lastModifiedAtTimeOfDeployment) return false;
 

@@ -10,11 +10,11 @@ import java.util.Map;
  */
 public interface WebParam
 {
-    SortedMap getParams();
+    SortedMap<String,String> getParams();
 
     Object get(String key);
 
-    String getRenderedParam(String paramKey, Map context);
+    String getRenderedParam(String paramKey, Map<String,Object> context);
 
     WebFragmentModuleDescriptor getDescriptor();
 }

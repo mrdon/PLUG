@@ -38,27 +38,15 @@
     </scm>
 
     <modules>
+        <module>atlassian-plugins-servlet</module>
+        <module>atlassian-plugins-osgi</module>
+        <module>atlassian-plugins-spring</module>
+        <module>atlassian-plugins-refimpl</module>
         <module>atlassian-plugins-core</module>
         <module>atlassian-plugins-webresource</module>
         <module>atlassian-plugins-webfragment</module>
         <module>atlassian-plugins-test-resources</module>
     </modules>
-
-    <profiles>
-        <!-- this profile exists so that we can easily compile/test the other modules with a JDK 1.4,
-             once we can use JDK 1.5 we must remove it -->
-        <profile>
-            <activation>
-                <jdk>!1.4</jdk>
-            </activation>
-            <modules>
-                <module>atlassian-plugins-servlet</module>
-                <module>atlassian-plugins-osgi</module>
-                <module>atlassian-plugins-spring</module>
-                <module>atlassian-plugins-refimpl</module>
-            </modules>
-        </profile>
-    </profiles>
 
     <build>
         <plugins>

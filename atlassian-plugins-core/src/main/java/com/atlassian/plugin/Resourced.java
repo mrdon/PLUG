@@ -7,9 +7,9 @@ import java.util.List;
 
 public interface Resourced
 {
-    List getResourceDescriptors();
+    List<ResourceDescriptor> getResourceDescriptors();
 
-    List getResourceDescriptors(String type);
+    List<ResourceDescriptor> getResourceDescriptors(String type);
 
     ResourceLocation getResourceLocation(String type, String name);
 

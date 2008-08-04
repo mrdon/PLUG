@@ -15,8 +15,8 @@ import java.util.Map;
 public class ServletModuleManager
 {
     PathMapper mapper = new DefaultPathMapper();
-    Map descriptors = new HashMap();
-    Map inittedServlets = new HashMap();
+    Map<String,ServletModuleDescriptor> descriptors = new HashMap<String,ServletModuleDescriptor>();
+    Map<String,DelegatingPluginServlet> inittedServlets = new HashMap<String,DelegatingPluginServlet>();
 
     public DelegatingPluginServlet getServlet(String path, final ServletConfig servletConfig) throws ServletException
     {
@@ -25,11 +25,11 @@ public class ServletModuleManager
 
         if (completeKey != null)
         {
-            servlet = (DelegatingPluginServlet) inittedServlets.get(completeKey);
+            servlet = inittedServlets.get(completeKey);
 
             if (servlet == null)
             {
-                final ServletModuleDescriptor descriptor = (ServletModuleDescriptor) descriptors.get(completeKey);
+                final ServletModuleDescriptor descriptor = descriptors.get(completeKey);
 
                 if (descriptor != null)
                 {
@@ -47,10 +47,8 @@ public class ServletModuleManager
     {
         descriptors.put(descriptor.getCompleteKey(), descriptor);
 
-        for (Iterator i = descriptor.getPaths().iterator(); i.hasNext();) {
-            String path = (String) i.next();
+        for (String path : descriptor.getPaths())
             mapper.put(descriptor.getCompleteKey(), path);
-        }
     }
 
     public void removeModule(ServletModuleDescriptor descriptor)

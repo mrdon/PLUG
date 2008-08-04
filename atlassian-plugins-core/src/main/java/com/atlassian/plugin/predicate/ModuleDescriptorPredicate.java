@@ -7,7 +7,7 @@ import com.atlassian.plugin.ModuleDescriptor;
  *
  * @since 0.17
  */
-public interface ModuleDescriptorPredicate
+public interface ModuleDescriptorPredicate<T>
 {
      /**
      * <p>Will match a plugin module according to implementation rules.<p>
@@ -16,5 +16,5 @@ public interface ModuleDescriptorPredicate
      * @param moduleDescriptor the {@link ModuleDescriptor} to test against.
      * @return <code>true</code> if the module matches the predicate, <code>false</code> otherwise.
      */
-    boolean matches(final ModuleDescriptor moduleDescriptor);
+    boolean matches(final ModuleDescriptor<T> moduleDescriptor);
 }

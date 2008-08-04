@@ -26,7 +26,7 @@ public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugi
         this.loader = loader;
     }
 
-    public Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException
+    public Class<?> loadClass(String clazz, Class<?> callingClass) throws ClassNotFoundException
     {
         return loader.loadClass(clazz);
     }

@@ -15,12 +15,12 @@ public interface ContextProvider
      *
      * @param params The optional map of parameters specified in XML.
      */
-    void init(Map params) throws PluginParseException;
+    void init(Map<String,String> params) throws PluginParseException;
 
     /**
      * Gets the additional context map to make available for the web fragment
      *
      * @return context map for velocity templates
      */
-    public Map getContextMap(Map context);
+    public Map<String,Object> getContextMap(Map<String,Object> context);
 }

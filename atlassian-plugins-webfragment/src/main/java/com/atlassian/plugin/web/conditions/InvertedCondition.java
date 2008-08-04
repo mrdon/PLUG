@@ -14,11 +14,11 @@ public class InvertedCondition implements Condition
         this.wrappedCondition = wrappedCondition;
     }
 
-    public void init(Map params) throws PluginParseException
+    public void init(Map<String,String> params) throws PluginParseException
     {
     }
 
-    public boolean shouldDisplay(Map context)
+    public boolean shouldDisplay(Map<String,Object> context)
     {
         return !wrappedCondition.shouldDisplay(context);
     }

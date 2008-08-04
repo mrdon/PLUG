@@ -92,7 +92,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
      * @param loader The plugin loader
      * @return The plugin instance
      */
-    protected Plugin createPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
+    protected DefaultDynamicPlugin createPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
     {
         return new DefaultDynamicPlugin(deploymentUnit, loader);
     }

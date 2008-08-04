@@ -14,12 +14,12 @@ public interface Condition
      *
      * @param params The optional map of parameters specified in XML.
      */
-    void init(Map params) throws PluginParseException;
+    void init(Map<String,String> params) throws PluginParseException;
 
     /**
      * Determine whether the web fragment should be displayed
      *
      * @return true if the user should see the fragment, false otherwise
      */
-    boolean shouldDisplay(Map context);
+    boolean shouldDisplay(Map<String,Object> context);
 }

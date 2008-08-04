@@ -125,8 +125,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <properties>
-        <jdkLevel>1.4</jdkLevel>
-        <!-- this module is jdk 1.4 compatible -->
-    </properties>
 </project>

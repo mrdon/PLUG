@@ -21,7 +21,7 @@ public class PluginInformation
     private float maxVersion;
     private float minVersion;
     private Float minJavaVersion;
-    private Map parameters = new HashMap();
+    private Map<Object,Object> parameters = new HashMap<Object,Object>();
 
     public String getDescription()
     {
@@ -106,11 +106,7 @@ public class PluginInformation
 
     public boolean satisfiesMinJavaVersion()
     {
-        if(minJavaVersion != null)
-        {
-            return JavaVersionUtils.satisfiesMinVersion(minJavaVersion.floatValue());
-        }
-        return true;
+        return minJavaVersion == null || JavaVersionUtils.satisfiesMinVersion(minJavaVersion);
     }
 
     public void setDescriptionKey(String descriptionKey)

@@ -28,7 +28,7 @@ public class Scanner
     /**
      * A Map of {@link String} absolute file paths to {@link DeploymentUnit}s.
      */
-    private Map scannedDeploymentUnits = new HashMap();
+    private Map<String,DeploymentUnit> scannedDeploymentUnits = new HashMap<String,DeploymentUnit>();
 
 
     /**
@@ -59,7 +59,7 @@ public class Scanner
      */
     public DeploymentUnit locateDeploymentUnit(File file)
     {
-        return (DeploymentUnit) scannedDeploymentUnits.get(file.getAbsolutePath());
+        return scannedDeploymentUnits.get(file.getAbsolutePath());
     }
 
     /**
@@ -86,13 +86,12 @@ public class Scanner
      *
      * @return Collection of {@link DeploymentUnit}s that describe newly added Jars.
      */
-    public Collection scan()
+    public Collection<DeploymentUnit> scan()
     {
         // Checks to see if we have deleted any of the deployment units.
-        List removedFiles = new ArrayList();
-        for (Iterator iterator = scannedDeploymentUnits.values().iterator(); iterator.hasNext();)
+        List<File> removedFiles = new ArrayList<File>();
+        for (DeploymentUnit unit : scannedDeploymentUnits.values())
         {
-            DeploymentUnit unit = (DeploymentUnit) iterator.next();
             if (!unit.getPath().exists() || !unit.getPath().canRead())
             {
                 removedFiles.add(unit.getPath());
@@ -101,7 +100,7 @@ public class Scanner
         clear(removedFiles);
 
         // Checks for new files.
-        Collection result = new ArrayList();
+        Collection<DeploymentUnit> result = new ArrayList();
         File files[] = libDir.listFiles(fileFilter);
         if (files == null)
         {
@@ -109,9 +108,8 @@ public class Scanner
         }
         else
         {
-            for (int i = 0; i < files.length; i++)
+            for (File file : files)
             {
-                File file = files[i];
                 try
                 {
                     if (isScanned(file) && isModified(file))
@@ -120,12 +118,11 @@ public class Scanner
                         DeploymentUnit unit = createAndStoreDeploymentUnit(file);
                         if (unit != null)
                             result.add(unit);
-                    }
-                    else if (!isScanned(file))
+                    } else if (!isScanned(file))
                     {
                         DeploymentUnit unit = createAndStoreDeploymentUnit(file);
                         if (unit != null)
-                            result.add(unit);                        
+                            result.add(unit);
                     }
                 }
                 catch (MalformedURLException e)
@@ -143,11 +140,11 @@ public class Scanner
         return file.lastModified() > unit.lastModified();
     }
 
-    private void clear(List toUndeploy)
+    private void clear(List<File> toUndeploy)
     {
-        for (Iterator iterator = toUndeploy.iterator(); iterator.hasNext();)
+        for (File aToUndeploy : toUndeploy)
         {
-            clear((File) iterator.next());
+            clear( aToUndeploy);
         }
     }
 
@@ -156,7 +153,7 @@ public class Scanner
      *
      * @return the complete unmodifiable list of scanned {@link DeploymentUnit}s.
      */
-    public Collection getDeploymentUnits()
+    public Collection<DeploymentUnit> getDeploymentUnits()
     {
         return Collections.unmodifiableCollection(scannedDeploymentUnits.values());
     }

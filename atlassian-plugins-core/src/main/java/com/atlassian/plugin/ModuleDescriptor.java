@@ -4,7 +4,7 @@ import org.dom4j.Element;
 
 import java.util.Map;
 
-public interface ModuleDescriptor extends Resourced
+public interface ModuleDescriptor<T> extends Resourced
 {
     /**
      * The complete key for this module, including the plugin key.
@@ -37,12 +37,12 @@ public interface ModuleDescriptor extends Resourced
     /**
      * The class of the module this descriptor creates.
      */
-    Class getModuleClass();
+    Class<T> getModuleClass();
 
     /**
      * The particular module object created by this plugin.
      */
-    Object getModule();
+    T getModule();
 
 
     /**

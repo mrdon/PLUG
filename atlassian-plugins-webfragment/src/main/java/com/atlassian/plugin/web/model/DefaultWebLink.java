@@ -25,7 +25,7 @@ public class DefaultWebLink extends AbstractWebItem implements WebLink
         this.id = linkEl.attributeValue("linkId");
     }
 
-    public String getRenderedUrl(Map context)
+    public String getRenderedUrl(Map<String,Object> context)
     {
         context.putAll(getContextMap(context));
         return getWebFragmentHelper().renderVelocityFragment(url, context);
@@ -36,7 +36,7 @@ public class DefaultWebLink extends AbstractWebItem implements WebLink
         return !(url.startsWith("http://") || url.startsWith("https://"));
     }
 
-    public String getDisplayableUrl(HttpServletRequest req, Map context)
+    public String getDisplayableUrl(HttpServletRequest req, Map<String,Object> context)
     {
         String renderedUrl = getRenderedUrl(context);
         if (isRelativeUrl(renderedUrl))
@@ -50,7 +50,7 @@ public class DefaultWebLink extends AbstractWebItem implements WebLink
         return accessKey != null && !"".equals(accessKey);
     }
 
-    public String getAccessKey(Map context)
+    public String getAccessKey(Map<String,Object> context)
     {
         context.putAll(getContextMap(context));
         return getWebFragmentHelper().renderVelocityFragment(accessKey, context);

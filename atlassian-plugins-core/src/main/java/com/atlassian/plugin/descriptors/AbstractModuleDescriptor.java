@@ -14,7 +14,7 @@ import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
 
-public abstract class AbstractModuleDescriptor implements ModuleDescriptor
+public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
 {
     protected Plugin plugin;
     String key;
@@ -24,7 +24,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     boolean enabledByDefault = true;
     boolean systemModule = false;
     protected boolean singleton = true;
-    Map params;
+    Map<String,String> params;
     protected Resources resources = Resources.EMPTY_RESOURCES;
     private Float minJavaVersion;
     private String i18nNameKey;
@@ -203,12 +203,12 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         return name;
     }
 
-    public Class getModuleClass()
+    public Class<T> getModuleClass()
     {
         return moduleClass;
     }
 
-    public abstract Object getModule();
+    public abstract T getModule();
 
     public String getDescription()
     {
@@ -230,12 +230,12 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
         return descriptionKey;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    public List getResourceDescriptors()
+    public List<ResourceDescriptor> getResourceDescriptors()
     {
         return resources.getResourceDescriptors();
     }
 
-    public List getResourceDescriptors(String type)
+    public List<ResourceDescriptor> getResourceDescriptors(String type)
     {
         return resources.getResourceDescriptors(type);
     }
@@ -262,7 +262,7 @@ public abstract class AbstractModuleDescriptor implements ModuleDescriptor
     {
         if(minJavaVersion != null)
         {
-            return JavaVersionUtils.satisfiesMinVersion(minJavaVersion.floatValue());
+            return JavaVersionUtils.satisfiesMinVersion(minJavaVersion);
         }
         return true;
     }

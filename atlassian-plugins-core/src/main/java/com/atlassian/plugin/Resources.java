@@ -15,7 +15,7 @@ import java.util.*;
 public class Resources implements Resourced
 {
     public static final Resources EMPTY_RESOURCES = new Resources(Collections.EMPTY_LIST);
-    private List resourceDescriptors;
+    private List<ResourceDescriptor> resourceDescriptors;
 
     /**
      * Parses the resource descriptors from the provided plugin XML element and creates a Resources object containing them.
@@ -34,13 +34,13 @@ public class Resources implements Resourced
         if (element == null)
             throw new IllegalArgumentException("Cannot parse resources from null XML element");
 
-        List elements = element.elements("resource");
+        List<Element> elements = element.elements("resource");
 
-        List templates = new ArrayList(elements.size());
+        List<ResourceDescriptor> templates = new ArrayList<ResourceDescriptor>(elements.size());
 
-        for (Iterator iterator = elements.iterator(); iterator.hasNext();)
+        for (Element e : elements)
         {
-            final ResourceDescriptor resourceDescriptor = new ResourceDescriptor((Element) iterator.next());
+            final ResourceDescriptor resourceDescriptor = new ResourceDescriptor(e);
 
             if (templates.contains(resourceDescriptor))
                 throw new PluginParseException("Duplicate resource with type '" + resourceDescriptor.getType() + "' and name '" + resourceDescriptor.getName() + "' found");
@@ -57,21 +57,21 @@ public class Resources implements Resourced
      * @param resourceDescriptors the descriptors which are part of this resources object
      * @throws IllegalArgumentException if the resourceDescriptors list is null
      */
-    public Resources(List resourceDescriptors) throws IllegalArgumentException
+    public Resources(List<ResourceDescriptor> resourceDescriptors) throws IllegalArgumentException
     {
         if (resourceDescriptors == null)
             throw new IllegalArgumentException("Resources cannot be created with a null resources list. Pass empty list instead");
         this.resourceDescriptors = resourceDescriptors;
     }
 
-   public List getResourceDescriptors()
+   public List<ResourceDescriptor> getResourceDescriptors()
     {
         return resourceDescriptors;
     }
 
-    public List getResourceDescriptors(String type)
+    public List<ResourceDescriptor> getResourceDescriptors(String type)
     {
-        List typedResourceDescriptors = new LinkedList();
+        List<ResourceDescriptor> typedResourceDescriptors = new LinkedList<ResourceDescriptor>();
 
         for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
         {

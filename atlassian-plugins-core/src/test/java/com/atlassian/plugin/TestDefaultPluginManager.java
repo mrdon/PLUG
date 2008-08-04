@@ -1,6 +1,7 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.loaders.*;
@@ -16,6 +17,7 @@ import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
+import com.atlassian.plugin.factories.PluginFactory;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
@@ -102,7 +104,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertNull(manager.getEnabledPlugin("bull:shit"));
         assertNull(manager.getPluginModule("bull:shit"));
         assertNull(manager.getEnabledPluginModule("bull:shit"));
-        assertTrue(manager.getEnabledModuleDescriptorsByClass(TestCase.class).isEmpty());
+        assertTrue(manager.getEnabledModuleDescriptorsByClass(NothingModuleDescriptor.class).isEmpty());
         assertTrue(manager.getEnabledModuleDescriptorsByType("bullshit").isEmpty());
         assertTrue(manager.getEnabledModulesByClass(TestCase.class).isEmpty());
 
@@ -576,7 +578,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     private DefaultPluginManager makeClassLoadingPluginManager() throws PluginParseException
     {
         directoryPluginLoader = new DirectoryPluginLoader(pluginsTestDir,
-                Collections.singletonList(new LegacyDynamicPluginFactory(DefaultPluginManager.PLUGIN_DESCRIPTOR_FILENAME)), 
+                Collections.<PluginFactory>singletonList(new LegacyDynamicPluginFactory(DefaultPluginManager.PLUGIN_DESCRIPTOR_FILENAME)),
                         pluginEventManager);
         pluginLoaders.add(directoryPluginLoader);
 
@@ -739,8 +741,6 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         p2.setKey("bad.key");
         assertTrue(p1.compareTo(p2) == 1);
 
-        // Compare against something that isn't a plugin
-        assertTrue(p1.compareTo("not a plugin") == 1);
     }
 
     public void testInvalidationOfDynamicResourceCache() throws IOException, PluginException
@@ -834,7 +834,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         DefaultPluginManager pluginManager = new DefaultPluginManager(
                 (PluginStateStore) mockPluginStateStore.proxy(),
-                Collections.singletonList(mockPluginLoader.proxy()),
+                Collections.<PluginLoader>singletonList((PluginLoader) mockPluginLoader.proxy()),
                 moduleDescriptorFactory, new DefaultPluginEventManager()
         );
 
@@ -916,7 +916,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         final DefaultPluginManager manager = makeClassLoadingPluginManager();
         manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
 
-        String pluginKey = manager.installPlugin(new FilePluginJar(plugin));
+        String pluginKey = manager.installPlugin(new JarPluginArtifact(plugin));
 
         assertTrue(new File(pluginsTestDir,plugin.getName()).exists());
 
@@ -946,7 +946,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
                 .renameTo(plugin);
 
         // reinstall the plugin
-        String pluginKey2 = manager.installPlugin(new FilePluginJar(plugin));
+        String pluginKey2 = manager.installPlugin(new JarPluginArtifact(plugin));
 
         assertTrue(new File(pluginsTestDir,plugin.getName()).exists());
 
@@ -981,7 +981,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         final DefaultPluginManager manager = makeClassLoadingPluginManager();
         manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
 
-        String pluginKey = manager.installPlugin(new FilePluginJar(plugin1));
+        String pluginKey = manager.installPlugin(new JarPluginArtifact(plugin1));
 
         assertTrue(new File(pluginsTestDir,plugin1.getName()).exists());
 
@@ -1010,7 +1010,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
                 .build();
 
         // reinstall the plugin
-        String pluginKey2 = manager.installPlugin(new FilePluginJar(plugin2));
+        String pluginKey2 = manager.installPlugin(new JarPluginArtifact(plugin2));
 
         assertFalse(new File(pluginsTestDir,plugin1.getName()).exists());
         assertTrue(new File(pluginsTestDir,plugin2.getName()).exists());
@@ -1080,4 +1080,6 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             };
         }
     }
+
+    class NothingModuleDescriptor extends MockUnusedModuleDescriptor {}
 }

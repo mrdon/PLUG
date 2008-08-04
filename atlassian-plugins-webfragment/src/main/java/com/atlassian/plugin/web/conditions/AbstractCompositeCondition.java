@@ -9,7 +9,7 @@ import java.util.Map;
 
 public abstract class AbstractCompositeCondition implements Condition
 {
-    protected List conditions = new ArrayList();
+    protected List<Condition> conditions = new ArrayList<Condition>();
 
     public AbstractCompositeCondition()
     {
@@ -20,9 +20,9 @@ public abstract class AbstractCompositeCondition implements Condition
         this.conditions.add(condition);
     }
 
-    public void init(Map params) throws PluginParseException
+    public void init(Map<String,String> params) throws PluginParseException
     {
     }
 
-    public abstract boolean shouldDisplay(Map context);
+    public abstract boolean shouldDisplay(Map<String,Object> context);
 }

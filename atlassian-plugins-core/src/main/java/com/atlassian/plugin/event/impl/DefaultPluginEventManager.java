@@ -14,20 +14,20 @@ import org.apache.commons.lang.Validate;
 
 /**
  * Simple, synchronous event manager that uses one or more method selectors to determine event listeners.  The default
- * method selector is {@link MethodNameListenerMethodSelector}.
+ * method selectors are {@link MethodNameListenerMethodSelector} and {@link AnnotationListenerMethodSelector}.
  */
 public class DefaultPluginEventManager implements PluginEventManager
 {
-    private final Map/*<Class,Set<Listener>>*/ eventsToListener;
+    private final Map<Class,Set<Listener>> eventsToListener;
     private static final Log log = LogFactory.getLog(DefaultPluginEventManager.class);
     private final ListenerMethodSelector[] listenerMethodSelectors;
 
     /**
-     * Default constructor that looks for methods named "channel"
+     * Default constructor that looks for methods named "channel" and the @PluginEventListener annotations
      */
     public DefaultPluginEventManager()
     {
-        this(new ListenerMethodSelector[]{new MethodNameListenerMethodSelector()});
+        this(new ListenerMethodSelector[]{new MethodNameListenerMethodSelector(), new AnnotationListenerMethodSelector()});
     }
 
     /**
@@ -37,8 +37,8 @@ public class DefaultPluginEventManager implements PluginEventManager
     public DefaultPluginEventManager(ListenerMethodSelector[] selectors)
     {
         this.listenerMethodSelectors = selectors;
-        eventsToListener = LazyMap.decorate(new HashMap(), new Factory() {
-            public Object create() { return new HashSet(); }
+        eventsToListener = LazyMap.decorate(new HashMap<Class,Set<Listener>>(), new Factory() {
+            public Set<Listener> create() { return new HashSet<Listener>(); }
         });
     }
 
@@ -50,16 +50,14 @@ public class DefaultPluginEventManager implements PluginEventManager
     public synchronized void broadcast(Object event)
     {
         Validate.notNull(event, "The event to broadcast must not be null");
-        final Set/*<Method>*/ calledListeners = new HashSet/*<Method>*/();
-        Set/*<Class>*/ types = new HashSet/*<Class>*/();
+        final Set<Listener> calledListeners = new HashSet<Listener>();
+        Set<Class> types = new HashSet<Class>();
         findAllTypes(event.getClass(), types);
-        for (Iterator clsitr = types.iterator(); clsitr.hasNext(); )
+        for (Class type : types)
         {
-            Class type = (Class) clsitr.next();
-            Set registrations = (Set) eventsToListener.get(type);
-            for (Iterator i = registrations.iterator(); i.hasNext(); )
+            Set<Listener> registrations = eventsToListener.get(type);
+            for (Listener reg : registrations)
             {
-                Listener reg = (Listener) i.next();
                 if (calledListeners.contains(reg))
                     continue;
                 calledListeners.add(reg);
@@ -86,7 +84,7 @@ public class DefaultPluginEventManager implements PluginEventManager
             {
                 if (m.getParameterTypes().length != 1)
                         throw new IllegalArgumentException("Listener methods must only have one argument");
-                Set/*<Listener>*/ listeners = (Set) eventsToListener.get(m.getParameterTypes()[0]);
+                Set<Listener> listeners = eventsToListener.get(m.getParameterTypes()[0]);
                 listeners.add(new Listener(listener, m));
             }
         });
@@ -102,7 +100,7 @@ public class DefaultPluginEventManager implements PluginEventManager
         {
             public void handle(Object listener, Method m)
             {
-                Set/*<Listener>*/ listeners = (Set) eventsToListener.get(m.getParameterTypes()[0]);
+                Set<Listener> listeners = eventsToListener.get(m.getParameterTypes()[0]);
                 listeners.remove(new Listener(listener, m));
             }
         });
@@ -135,7 +133,7 @@ public class DefaultPluginEventManager implements PluginEventManager
      * @param cls The class to scan
      * @param types The collected related classes found
      */
-    void findAllTypes(Class cls, Set/*<Class>*/ types)
+    void findAllTypes(Class cls, Set<Class> types)
     {
         if (cls == null)
             return;
@@ -178,7 +176,7 @@ public class DefaultPluginEventManager implements PluginEventManager
             Validate.notNull(event);
             try
             {
-                method.invoke(listener, new Object[]{event});
+                method.invoke(listener, event);
             }
             catch (IllegalAccessException e)
             {

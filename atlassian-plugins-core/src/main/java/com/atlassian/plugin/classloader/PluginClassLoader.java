@@ -23,11 +23,11 @@ public final class PluginClassLoader extends ClassLoader
     /**
      * the list of inner jars
      */
-    private final List/*<File>*/ pluginInnerJars;
+    private final List<File> pluginInnerJars;
     /**
      * Mapping of <String> names (resource, or class name) to the <URL>s where the resource or class can be found.
      */
-    private final Map entryMappings = new HashMap();
+    private final Map<String,URL> entryMappings = new HashMap<String,URL>();
 
     public PluginClassLoader(final File pluginFile)
     {
@@ -43,7 +43,7 @@ public final class PluginClassLoader extends ClassLoader
             {
                 throw new IllegalArgumentException("Plugin jar file must not be null and must exist.");
             }
-            this.pluginInnerJars = new ArrayList();
+            this.pluginInnerJars = new ArrayList<File>();
             initializeFromJar(pluginFile, true);
         }
         catch (IOException e)
@@ -113,7 +113,7 @@ public final class PluginClassLoader extends ClassLoader
      * @return Class for the provided name
      * @throws ClassNotFoundException if the class cannot be found in this class loader or its parent
      */
-    protected synchronized Class loadClass(String name, boolean resolve) throws ClassNotFoundException
+    protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
     {
         // First check if it's already been loaded
         Class c = findLoadedClass(name);
@@ -170,15 +170,15 @@ public final class PluginClassLoader extends ClassLoader
 
     public void close()
     {
-        for (final Iterator innerJars = pluginInnerJars.iterator(); innerJars.hasNext();)
+        for (File pluginInnerJar : pluginInnerJars)
         {
-            FileUtils.deleteQuietly((File) innerJars.next());
+            FileUtils.deleteQuietly(pluginInnerJar);
         }
     }
 
-    List getPluginInnerJars()
+    List<File> getPluginInnerJars()
     {
-        return new ArrayList(pluginInnerJars);
+        return new ArrayList<File>(pluginInnerJars);
     }
 
     /**
@@ -201,12 +201,12 @@ public final class PluginClassLoader extends ClassLoader
         }
     }
 
-    private Class loadClassFromPlugin(String className, String path) throws IOException
+    private Class<?> loadClassFromPlugin(String className, String path) throws IOException
     {
         InputStream inputStream = null;
         try
         {
-            URL resourceURL = (URL) entryMappings.get(path);
+            URL resourceURL = entryMappings.get(path);
             inputStream = resourceURL.openStream();
             byte[] bytez = IOUtils.toByteArray(inputStream);
             initializePackage(className);

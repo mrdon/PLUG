@@ -1,5 +1,8 @@
 package com.atlassian.plugin.web;
 
+import com.atlassian.plugin.web.descriptors.WebSectionModuleDescriptor;
+import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
+
 import java.util.List;
 import java.util.Map;
 
@@ -16,22 +19,22 @@ public interface WebInterfaceManager
     /**
      * @return A list of all WebSectionModuleDescriptors for the given location.
      */
-    List getSections(String location);
+    List<WebSectionModuleDescriptor> getSections(String location);
 
     /**
      * @return A list of all AbstractWebFragmentModuleDescriptor <i>viewable in a given context</i> in the given location.
      */
-    List getDisplayableSections(String location, Map context);
+    List<WebSectionModuleDescriptor> getDisplayableSections(String location, Map<String,Object> context);
 
     /**
      * @return A list of all WebItemModuleDescriptors for the given section.
      */
-    List getItems(String section);
+    List<WebItemModuleDescriptor> getItems(String section);
 
     /**
      * @return A list of all AbstractWebFragmentModuleDescriptor <i>viewable in a given context</i> in the given section.
      */
-    List getDisplayableItems(String section, Map context);
+    List<WebItemModuleDescriptor> getDisplayableItems(String section, Map<String,Object> context);
 
     /**
      * Refresh the contents of the web interface manager.

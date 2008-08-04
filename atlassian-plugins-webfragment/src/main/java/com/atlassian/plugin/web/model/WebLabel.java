@@ -12,5 +12,5 @@ public interface WebLabel extends WebParam
 
     String getNoKeyValue();
 
-    String getDisplayableLabel(HttpServletRequest req, Map context);
+    String getDisplayableLabel(HttpServletRequest req, Map<String,Object> context);
 }

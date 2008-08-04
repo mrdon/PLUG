@@ -15,6 +15,7 @@ import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.refimpl.servlet.SimpleServletModuleDescriptor;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.BundledPluginLoader;
+import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 
 import javax.servlet.ServletContext;
@@ -65,7 +66,7 @@ public class ContainerManager {
 
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("servlet", SimpleServletModuleDescriptor.class);
-        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.asList(bundledPluginLoader, directoryPluginLoader),
+        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader>asList(bundledPluginLoader, directoryPluginLoader),
                 moduleDescriptorFactory, pluginEventManager);
         try {
             pluginManager.init();

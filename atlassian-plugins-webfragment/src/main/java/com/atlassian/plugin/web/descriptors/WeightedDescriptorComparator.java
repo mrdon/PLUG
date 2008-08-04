@@ -5,12 +5,10 @@ import java.util.Comparator;
 /**
  * A simple comparator for any weighted descriptor - lowest weights first.
  */
-public class WeightedDescriptorComparator implements Comparator
+public class WeightedDescriptorComparator implements Comparator<WeightedDescriptor>
 {
-    public int compare(Object o1, Object o2)
+    public int compare(WeightedDescriptor w1, WeightedDescriptor w2)
     {
-        WeightedDescriptor w1 = (WeightedDescriptor)o1;
-        WeightedDescriptor w2 = (WeightedDescriptor)o2;
         if (w1.getWeight() < w2.getWeight())
             return -1;
         else if (w1.getWeight() > w2.getWeight())

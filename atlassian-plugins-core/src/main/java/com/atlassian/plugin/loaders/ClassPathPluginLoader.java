@@ -16,7 +16,7 @@ import com.atlassian.plugin.util.ClassLoaderUtils;
 public class ClassPathPluginLoader implements PluginLoader
 {
     private static Log log = LogFactory.getLog(ClassPathPluginLoader.class);
-    List plugins;
+    List<Plugin> plugins;
     String fileNameToLoad;
 
     public ClassPathPluginLoader()
@@ -32,7 +32,7 @@ public class ClassPathPluginLoader implements PluginLoader
     private void loadClassPathPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException {
         URL url = null;
         final Enumeration pluginDescriptorFiles;
-        plugins = new ArrayList();
+        plugins = new ArrayList<Plugin>();
         
         try
         {
@@ -63,7 +63,7 @@ public class ClassPathPluginLoader implements PluginLoader
         }
     }
 
-    public Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public Collection<Plugin> loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         if (plugins == null)
         {
@@ -83,12 +83,7 @@ public class ClassPathPluginLoader implements PluginLoader
         return false;
     }
 
-    public Collection removeMissingPlugins()
-    {
-        throw new UnsupportedOperationException("This PluginLoader does not support removal.");
-    }
-
-    public Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
+    public Collection<Plugin> addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
     {
         throw new UnsupportedOperationException("This PluginLoader does not support addition.");
     }

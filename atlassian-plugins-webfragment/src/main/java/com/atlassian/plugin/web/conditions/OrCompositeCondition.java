@@ -7,11 +7,10 @@ import java.util.Map;
 
 public class OrCompositeCondition extends AbstractCompositeCondition
 {
-    public boolean shouldDisplay(Map context)
+    public boolean shouldDisplay(Map<String,Object> context)
     {
-        for (Iterator it = conditions.iterator(); it.hasNext();)
+        for (Condition condition : conditions)
         {
-            Condition condition = (Condition) it.next();
             if (condition.shouldDisplay(context))
                 return true;
         }

@@ -22,8 +22,8 @@ public class DefaultPathMapper implements Serializable, PathMapper
 {
     private static final String[] DEFAULT_KEYS = { "/", "*", "/*" };
 
-    private final Map mappings = new HashMap();
-    private final List complexPaths = new ArrayList();
+    private final Map<String,String> mappings = new HashMap<String,String>();
+    private final List<String> complexPaths = new ArrayList();
 
     private final KeyMatcher matcher = new KeyMatcher();
 
@@ -101,7 +101,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
             {
                 path = "/";
             }
-            final List matches = new ArrayList();
+            final List<String> matches = new ArrayList();
             // find exact keys
             final String exactKey = matcher.findExactKey(path, mappings);
             if (exactKey != null)

@@ -21,8 +21,4 @@
             <version>2.3</version>
         </dependency>
     </dependencies>
-    <properties>
-        <!-- this module is jdk 1.4 compatible -->
-        <jdkLevel>1.4</jdkLevel>
-    </properties>
 </project>

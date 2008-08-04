@@ -9,11 +9,11 @@ import java.util.Map;
  */
 public class AlwaysDisplayCondition implements Condition
 {
-    public void init(Map params)
+    public void init(Map<String,String> params)
     {
     }
 
-    public boolean shouldDisplay(Map context)
+    public boolean shouldDisplay(Map<String,Object> context)
     {
         return true;
     }

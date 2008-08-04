@@ -141,7 +141,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
     }
 
-    public <T> T autowireGeneric(Class<T> clazz)
+    public <T> T autowire(Class<T> clazz)
     {
         return autowire(clazz, AutowireStrategy.AUTOWIRE_AUTODETECT);
     }
@@ -228,12 +228,4 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
     }
 
-    public Object autowire(Class clazz) {
-        return autowireGeneric(clazz);
-    }
-
-    public Object autowire(Class clazz, int autowireStrategy)
-    {
-        return autowire(clazz, AutowireStrategy.fromIndex(autowireStrategy));
-    }
 }

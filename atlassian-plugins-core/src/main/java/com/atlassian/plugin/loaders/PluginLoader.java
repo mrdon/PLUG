@@ -12,7 +12,7 @@ import java.util.Collection;
  */
 public interface PluginLoader
 {
-    Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException;
+    Collection<Plugin> loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException;
 
     /**
      * @return true if this PluginLoader tracks whether or not plugins are added to it.
@@ -27,7 +27,7 @@ public interface PluginLoader
     /**
      * @return a collection of discovered plugins which have now been loaded by this pluginloader
      */
-    Collection addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException;
+    Collection<Plugin> addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException;
 
     /**
      * Remove a specific plugin

@@ -13,12 +13,12 @@ import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.util.VersionStringComparator;
 
-public abstract class AbstractPlugin implements Plugin, Comparable
+public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 {
     private String name;
     private String i18nNameKey;
     private String key;
-    private Map modules = new LinkedHashMap();
+    private Map<String,ModuleDescriptor<?>> modules = new LinkedHashMap<String,ModuleDescriptor<?>>();
     private boolean enabledByDefault = true;
     private PluginInformation pluginInformation;
     private boolean enabled;
@@ -57,33 +57,31 @@ public abstract class AbstractPlugin implements Plugin, Comparable
         this.key = aPackage;
     }
 
-    public void addModuleDescriptor(ModuleDescriptor moduleDescriptor)
+    public void addModuleDescriptor(ModuleDescriptor<?> moduleDescriptor)
     {
         modules.put(moduleDescriptor.getKey(), moduleDescriptor);
     }
 
-    public Collection getModuleDescriptors()
+    public Collection<ModuleDescriptor<?>> getModuleDescriptors()
     {
         return modules.values();
     }
 
-    public ModuleDescriptor getModuleDescriptor(String key)
+    public ModuleDescriptor<?> getModuleDescriptor(String key)
     {
-        return (ModuleDescriptor) modules.get(key);
+        return modules.get(key);
     }
 
-    public List getModuleDescriptorsByModuleClass(Class aClass)
+    public <T> List<ModuleDescriptor<T>> getModuleDescriptorsByModuleClass(Class<T> aClass)
     {
-        List result = new ArrayList();
-    
-        for (Iterator iterator = modules.values().iterator(); iterator.hasNext();)
+        List<ModuleDescriptor<T>> result = new ArrayList<ModuleDescriptor<T>>();
+
+        for (ModuleDescriptor moduleDescriptor : modules.values())
         {
-            ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator.next();
-    
             Class moduleClass = moduleDescriptor.getModuleClass();
             if (aClass.isAssignableFrom(moduleClass))
             {
-                result.add(moduleDescriptor);
+                result.add((ModuleDescriptor<T>) moduleDescriptor);
             }
         }
     
@@ -199,12 +197,8 @@ public abstract class AbstractPlugin implements Plugin, Comparable
      * @return <tt>-1</tt> if the other plugin is newer, <tt>0</tt> if equal,
      * <tt>1</tt> if the other plugin is older or has a different plugin key.
      */
-    public int compareTo(Object other)
+    public int compareTo(Plugin otherPlugin)
     {
-        // If the compared object isn't a plugin, then the current object is greater
-        if (!(other instanceof Plugin)) return 1;
-        Plugin otherPlugin = (Plugin) other;
-    
         // If the compared plugin doesn't have the same key, the current object is greater
         if (!otherPlugin.getKey().equals(this.getKey())) return 1;
     

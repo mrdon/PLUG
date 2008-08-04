@@ -11,17 +11,17 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
 {
     private static Log log = LogFactory.getLog(DefaultModuleDescriptorFactory.class);
 
-    private Map moduleDescriptorClasses;
-    private List permittedModuleKeys = Collections.EMPTY_LIST;
+    private Map<String,Class<? extends ModuleDescriptor>> moduleDescriptorClasses;
+    private List<String> permittedModuleKeys = Collections.EMPTY_LIST;
 
     public DefaultModuleDescriptorFactory()
     {
-        this.moduleDescriptorClasses = new HashMap();
+        this.moduleDescriptorClasses = new HashMap<String, Class<? extends ModuleDescriptor>>();
     }
 
-    public Class getModuleDescriptorClass(String type)
+    public Class<? extends ModuleDescriptor> getModuleDescriptorClass(String type)
     {
-        return (Class) moduleDescriptorClasses.get(type);
+        return moduleDescriptorClasses.get(type);
     }
 
     public ModuleDescriptor getModuleDescriptor(String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
@@ -42,26 +42,26 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
         return permittedModuleKeys != null && !permittedModuleKeys.isEmpty() && !permittedModuleKeys.contains(type);
     }
 
-    public void setModuleDescriptors(Map moduleDescriptorClassNames)
+    public void setModuleDescriptors(Map<String, String> moduleDescriptorClassNames)
     {
-        for (Iterator it = moduleDescriptorClassNames.entrySet().iterator(); it.hasNext();)
+        for (Iterator<Map.Entry<String,String>> it = moduleDescriptorClassNames.entrySet().iterator(); it.hasNext();)
         {
-            Map.Entry entry = (Map.Entry) it.next();
-            Class descriptorClass = getClassFromEntry(entry);
+            Map.Entry<String,String> entry = it.next();
+            Class<? extends ModuleDescriptor> descriptorClass = getClassFromEntry(entry);
             if (descriptorClass != null)
-                addModuleDescriptor((String) entry.getKey(), descriptorClass);
+                addModuleDescriptor(entry.getKey(), descriptorClass);
         }
     }
 
-    private Class getClassFromEntry(Map.Entry entry)
+    private Class<? extends ModuleDescriptor> getClassFromEntry(Map.Entry<String,String> entry)
     {
-        if (shouldSkipModuleOfType((String) entry.getKey()))
+        if (shouldSkipModuleOfType(entry.getKey()))
             return null;
 
-        Class descriptorClass = null;
+        Class<? extends ModuleDescriptor> descriptorClass = null;
         try
         {
-            descriptorClass = ClassLoaderUtils.loadClass((String) entry.getValue(), getClass());
+            descriptorClass = (Class<? extends ModuleDescriptor>) ClassLoaderUtils.loadClass(entry.getValue(), getClass());
 
             if (!ModuleDescriptor.class.isAssignableFrom(descriptorClass))
             {
@@ -82,7 +82,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
         return moduleDescriptorClasses.containsKey(type);
     }
 
-    public void addModuleDescriptor(String type, Class moduleDescriptorClass)
+    public void addModuleDescriptor(String type, Class<? extends ModuleDescriptor> moduleDescriptorClass)
     {
         moduleDescriptorClasses.put(type, moduleDescriptorClass);
     }
@@ -92,7 +92,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
         moduleDescriptorClasses.remove(type);
     }
 
-    protected Map getDescriptorClassesMap()
+    protected Map<String, Class<? extends ModuleDescriptor>> getDescriptorClassesMap()
     {
         return moduleDescriptorClasses;
     }
@@ -103,7 +103,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
      *
      * @param permittedModuleKeys List of (String) keys
      */
-    public void setPermittedModuleKeys(List permittedModuleKeys)
+    public void setPermittedModuleKeys(List<String> permittedModuleKeys)
     {
         if (permittedModuleKeys == null)
             permittedModuleKeys = Collections.EMPTY_LIST;

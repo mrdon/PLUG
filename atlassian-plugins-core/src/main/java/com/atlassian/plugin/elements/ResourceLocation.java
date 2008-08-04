@@ -12,9 +12,9 @@ public class ResourceLocation
     private String type;
     private String contentType;
     private String content;
-    private Map params;
+    private Map<String,String> params;
 
-    public ResourceLocation(String location, String name, String type, String contentType, String content, Map params)
+    public ResourceLocation(String location, String name, String type, String contentType, String content, Map<String,String> params)
     {
         this.location = location;
         this.name = name;
@@ -51,6 +51,6 @@ public class ResourceLocation
 
     public String getParameter(String key)
     {
-        return (String) params.get(key);
+        return params.get(key);
     }
 }

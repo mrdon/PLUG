@@ -52,7 +52,7 @@ class InnerJarURLConnection extends JarURLConnection
         }
 
 
-        List segments = new ArrayList();
+        List<String> segments = new ArrayList<String>();
 
         StringTokenizer tokens = new StringTokenizer( extraText, "!" );
 
@@ -61,7 +61,7 @@ class InnerJarURLConnection extends JarURLConnection
             segments.add( tokens.nextToken() );
         }
 
-        this.segments = (String[]) segments.toArray( new String[segments.size()] );
+        this.segments = segments.toArray( new String[segments.size()] );
         this.baseResource = new URL( baseResourceText );
     }
 

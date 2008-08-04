@@ -12,18 +12,18 @@ import org.apache.commons.logging.LogFactory;
 import javax.servlet.http.HttpServlet;
 import java.util.*;
 
-public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor implements StateAware
+public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor<HttpServlet> implements StateAware
 {
     private static final Log log = LogFactory.getLog(ServletModuleDescriptor.class);
-    List paths;
-    private Map initParams;
+    List<String> paths;
+    private Map<String,String> initParams;
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);
 
         List urlPatterns = element.elements("url-pattern");
-        paths = new ArrayList(urlPatterns.size());
+        paths = new ArrayList<String>(urlPatterns.size());
 
         for (Iterator iterator = urlPatterns.iterator(); iterator.hasNext();)
         {
@@ -31,7 +31,7 @@ public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor i
             paths.add(urlPattern.getTextTrim());
         }
 
-        initParams = new HashMap();
+        initParams = new HashMap<String,String>();
         List paramsList = element.elements("init-param");
         for (Iterator i = paramsList.iterator(); i.hasNext();) {
             Element initParamEl = (Element) i.next();
@@ -55,17 +55,17 @@ public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor i
         getServletModuleManager().removeModule(this);
     }
 
-    public Object getModule()
+    public HttpServlet getModule()
     {
         HttpServlet obj = null;
         try
         {
             // Give the plugin a go first
             if (plugin instanceof AutowireCapablePlugin)
-                obj = (HttpServlet) ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
+                obj = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
             else
             {
-                obj = (HttpServlet) getModuleClass().newInstance();
+                obj = getModuleClass().newInstance();
                 autowireObject(obj);
             }
         }
@@ -80,17 +80,20 @@ public abstract class ServletModuleDescriptor extends AbstractModuleDescriptor i
         return obj;
     }
 
+    /**
+     * @deprecated Since 2.0.0, use {@link #getModuleClass}
+     */
     public HttpServlet getServlet()
     {
-        return (HttpServlet) getModule();
+        return getModule();
     }
 
-    public List getPaths()
+    public List<String> getPaths()
     {
         return paths;
     }
 
-    public Map getInitParams()
+    public Map<String,String> getInitParams()
     {
         return initParams;
     }

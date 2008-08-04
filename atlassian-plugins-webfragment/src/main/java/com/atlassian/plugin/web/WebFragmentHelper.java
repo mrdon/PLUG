@@ -15,7 +15,7 @@ public interface WebFragmentHelper
 
     ContextProvider loadContextProvider(String className, Plugin plugin) throws ConditionLoadingException;
 
-    String getI18nValue(String key, List arguments, Map context);
+    String getI18nValue(String key, List<?> arguments, Map<String,Object> context);
 
-    String renderVelocityFragment(String fragment, Map context);
+    String renderVelocityFragment(String fragment, Map<String,Object> context);
 }

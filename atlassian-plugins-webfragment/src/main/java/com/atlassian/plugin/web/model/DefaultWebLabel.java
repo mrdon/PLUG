@@ -45,7 +45,7 @@ public class DefaultWebLabel extends DefaultWebParam implements WebLabel
         return noKeyValue;
     }
 
-    public String getDisplayableLabel(HttpServletRequest req, Map context)
+    public String getDisplayableLabel(HttpServletRequest req, Map<String,Object> context)
     {
         context.putAll(getContextMap(context));
         if (key != null)

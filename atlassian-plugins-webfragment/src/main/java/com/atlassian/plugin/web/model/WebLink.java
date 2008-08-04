@@ -7,13 +7,13 @@ import java.util.Map;
 
 public interface WebLink
 {
-    String getRenderedUrl(Map context);
+    String getRenderedUrl(Map<String,Object> context);
 
-    String getDisplayableUrl(HttpServletRequest req, Map context);
+    String getDisplayableUrl(HttpServletRequest req, Map<String,Object> context);
 
     boolean hasAccessKey();
 
-    String getAccessKey(Map context);
+    String getAccessKey(Map<String,Object> context);
 
     String getId();
 

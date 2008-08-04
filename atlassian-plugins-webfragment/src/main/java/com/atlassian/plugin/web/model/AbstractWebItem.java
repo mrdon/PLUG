@@ -23,7 +23,7 @@ public abstract class AbstractWebItem
         this.descriptor = descriptor;
     }
 
-    public Map getContextMap(Map context)
+    public Map<String,Object> getContextMap(Map<String,Object> context)
     {
         if (contextProvider != null)
         {

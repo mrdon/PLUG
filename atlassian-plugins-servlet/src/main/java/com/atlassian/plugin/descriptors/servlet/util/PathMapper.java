@@ -31,7 +31,7 @@ public interface PathMapper
     /**
      * Retrieve all mappings which match a supplied path.
      */
-    Collection getAll(String path);
+    Collection<String> getAll(String path);
 
     /**
      * Add a key and appropriate matching pattern.
