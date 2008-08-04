@@ -85,6 +85,7 @@ public class DefaultPluginManager implements PluginManager
      */
     public void init() throws PluginParseException
     {
+        log.info("Initialising the plugin system");
         pluginEventManager.broadcast(new PluginFrameworkStartingEvent(this, this));
         for (Iterator iterator = pluginLoaders.iterator(); iterator.hasNext();)
         {
@@ -105,6 +106,7 @@ public class DefaultPluginManager implements PluginManager
      */
     public void shutdown()
     {
+        log.info("Shutting down the plugin system");
         pluginEventManager.broadcast(new PluginFrameworkShutdownEvent(this, this));
     }
 

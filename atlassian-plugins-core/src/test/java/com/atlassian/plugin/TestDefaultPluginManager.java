@@ -15,6 +15,7 @@ import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
+import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
@@ -574,7 +575,9 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     private DefaultPluginManager makeClassLoadingPluginManager() throws PluginParseException
     {
-        directoryPluginLoader = new DirectoryPluginLoader(pluginsTestDir, pluginEventManager);
+        directoryPluginLoader = new DirectoryPluginLoader(pluginsTestDir,
+                Collections.singletonList(new LegacyDynamicPluginFactory(DefaultPluginManager.PLUGIN_DESCRIPTOR_FILENAME)), 
+                        pluginEventManager);
         pluginLoaders.add(directoryPluginLoader);
 
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);

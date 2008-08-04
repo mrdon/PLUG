@@ -28,17 +28,6 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
     private final List/*PluginFactory*/ pluginFactories;
 
     /**
-     * Constructs a loader for a particular directory and the default set of deployers
-     * @param path The directory containing the plugins
-     * @param pluginEventManager The event manager, used for listening for shutdown events
-     * @since 2.0.0
-     */
-    public DirectoryPluginLoader(File path, PluginEventManager pluginEventManager)
-    {
-        this(path, Collections.singletonList(new LegacyDynamicPluginFactory(PluginManager.PLUGIN_DESCRIPTOR_FILENAME)), pluginEventManager);
-    }
-
-    /**
      * Constructs a loader for a particular directory and set of deployers
      * @param path The directory containing the plugins
      * @param pluginFactories The deployers that will handle turning an artifact into a plugin
@@ -82,6 +71,9 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
             }
         }
 
+        if (scanner.getDeploymentUnits().size() == 0)
+            log.info("No plugins found to be deployed");
+
         return plugins.values();
     }
 
@@ -100,7 +92,10 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
             }
         }
         if (plugin == null)
-            plugin = new UnloadablePlugin("No plugin deployers found for this plugin");
+            plugin = new UnloadablePlugin("No plugin factories found for plugin file "+deploymentUnit);
+        else
+            log.info("Plugin " + deploymentUnit + " created");
+
         return plugin;
     }
 
@@ -135,6 +130,8 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
                 foundPlugins.add(plugin);
             }
         }
+        if (foundPlugins.size() == 0)
+            log.info("No plugins found to be installed");
 
         return foundPlugins;
     }
@@ -177,6 +174,7 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
 
         scanner.clear(pluginOnDisk);
         plugins.remove(deploymentUnit);
+        log.info("Removed plugin " + plugin.getKey());
     }
 
     private DeploymentUnit findMatchingDeploymentUnit(Plugin plugin)

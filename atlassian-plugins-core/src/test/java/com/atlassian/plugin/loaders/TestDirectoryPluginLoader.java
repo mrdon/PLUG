@@ -1,6 +1,7 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.test.PluginBuilder;
@@ -16,6 +17,8 @@ import org.apache.commons.io.FileUtils;
 import java.io.*;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Collections;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.net.URL;
@@ -26,6 +29,8 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     private PluginEventManager pluginEventManager;
     private DirectoryPluginLoader loader;
     private DefaultModuleDescriptorFactory moduleDescriptorFactory;
+    private static final List DEFAULT_PLUGIN_FACTORIES =
+            Collections.singletonList(new LegacyDynamicPluginFactory(DefaultPluginManager.PLUGIN_DESCRIPTOR_FILENAME));
 
     public static final String BAD_PLUGIN_JAR = "bad-plugins/crap-plugin.jar";
 
@@ -50,7 +55,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     public void testAtlassianPlugin() throws Exception
     {
         addTestModuleDecriptors();
-        loader = new DirectoryPluginLoader(pluginsTestDir, pluginEventManager);
+        loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         assertEquals(2, plugins.size());
@@ -98,7 +103,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         path = path.replace('/', File.separatorChar);
         path = path.substring(5);
         File pluginFile = new File(path);
-        loader = new DirectoryPluginLoader(pluginFile.getParentFile(), pluginEventManager);
+        loader = new DirectoryPluginLoader(pluginFile.getParentFile(), DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
 
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
@@ -129,7 +134,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
 
     public void testSupportsAdditionAndRemoval()
     {
-        loader = new DirectoryPluginLoader(pluginsTestDir, pluginEventManager);
+        loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
         assertTrue(loader.supportsAddition());
         assertTrue(loader.supportsRemoval());
     }
@@ -137,7 +142,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     public void testNoFoundPlugins() throws PluginParseException
     {
         addTestModuleDecriptors();
-        loader = new DirectoryPluginLoader(pluginsTestDir, pluginEventManager);
+        loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
         Collection col = loader.addFoundPlugins(moduleDescriptorFactory);
         assertFalse(col.isEmpty());
 
@@ -152,7 +157,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         paddington.delete();
 
         addTestModuleDecriptors();
-        loader = new DirectoryPluginLoader(pluginsTestDir, pluginEventManager);
+        loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
         loader.loadAllPlugins(moduleDescriptorFactory);
 
         //restore paddington to test plugins dir
@@ -168,7 +173,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     public void testRemovePlugin() throws PluginException, IOException
     {
         addTestModuleDecriptors();
-        loader = new DirectoryPluginLoader(pluginsTestDir, pluginEventManager);
+        loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         //duplicate the paddington plugin before removing the original
@@ -208,7 +213,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
 
         createJarFile("evilplugin.jar", atlassianPluginXML.getName(), pluginsTestDir.getAbsolutePath());
 
-        loader = new DirectoryPluginLoader(pluginsTestDir, pluginEventManager);
+        loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
 
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
@@ -231,7 +236,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
                 .build()
                 .renameTo(plugin);
 
-        loader = new DirectoryPluginLoader(pluginsTestDir, pluginEventManager);
+        loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
 
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
         assertEquals(1, plugins.size());
