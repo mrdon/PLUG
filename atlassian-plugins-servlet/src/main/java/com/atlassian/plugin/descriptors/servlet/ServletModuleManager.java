@@ -1,18 +1,20 @@
 package com.atlassian.plugin.descriptors.servlet;
 
-import javax.servlet.http.HttpServlet;
+import com.atlassian.plugin.descriptors.servlet.util.DefaultPathMapper;
+import com.atlassian.plugin.descriptors.servlet.util.PathMapper;
+
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import java.util.*;
-
-import com.atlassian.seraph.util.PathMapper;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * A simple manager to track and retrieve the loaded servlet plugin modules.
  */
 public class ServletModuleManager
 {
-    PathMapper mapper = new PathMapper();
+    PathMapper mapper = new DefaultPathMapper();
     Map descriptors = new HashMap();
     Map inittedServlets = new HashMap();
 
