@@ -160,7 +160,7 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
         try
         {
             boolean found = false;
-            for (Iterator i = plugins.keySet().iterator(); i.hasNext();)
+            for (Iterator i = plugins.keySet().iterator(); i.hasNext() && !found;)
             {
                 DeploymentUnit unit = (DeploymentUnit) i.next();
                 if(unit.getPath().equals(deploymentUnit.getPath()) && !unit.equals(deploymentUnit))
