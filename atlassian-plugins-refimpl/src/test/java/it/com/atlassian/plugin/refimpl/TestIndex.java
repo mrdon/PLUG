@@ -10,7 +10,7 @@ public class TestIndex extends WebTestCase
     }
 
     public void setUp() throws Exception {
-        getTestContext().setBaseUrl("http://localhost:8480/atlassian-plugins-refimpl");
+        getTestContext().setBaseUrl(ParameterUtils.getBaseUrl());
     }
 
     public void testIndex()
@@ -19,6 +19,9 @@ public class TestIndex extends WebTestCase
         assertTextPresent("com.atlassian.sal.refimpl");
         assertTextPresent("com.atlassian.sal.api");
         assertTextPresent("com.atlassian.sal.sal-refimpl-plugin");
+
+        assertTextNotPresent("RESOLVED");
+        assertTextNotPresent("INSTALLED");
     }
 
 }

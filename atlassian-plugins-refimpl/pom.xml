@@ -214,141 +214,28 @@
 
                     </excludes>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>integration-test</id>
-                        <phase>integration-test</phase>
-                        <goals>
-                            <goal>test</goal>
-
-                        </goals>
-                        <configuration>
-                            <includes>
-                                <include>it/**</include>
-                            </includes>
-                            <excludes>
-                                <exclude>**/*$*</exclude>
-                            </excludes>
-
-                            <systemProperties>
-                                <property>
-                                    <name>http.port</name>
-                                    <value>${cargo.servlet.port}</value>
-                                </property>
-                            </systemProperties>
-                        </configuration>
-                    </execution>
-
-                </executions>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.cargo</groupId>
-                <artifactId>cargo-maven2-plugin</artifactId>
-                <version>1.0-alpha-5</version>
-                <configuration>
-
-                    <wait>${cargo.wait}</wait>
-                    <container>
-                        <containerId>${cargo.container.id}</containerId>
-                        <type>${cargo.container.type}</type>
-                        <zipUrlInstaller>
-                            <url>${cargo.url}</url>
-                        </zipUrlInstaller>
-
-                        <output>${project.build.directory}/output-${cargo.container.id}.log</output>
-                        <log>${project.build.directory}/cargo-log.log</log>
-                        <systemProperties>
-                            <!-- this is especially for jetty 6 -->
-                            <org.apache.commons.logging.Log>org.apache.commons.logging.impl.SimpleLog</org.apache.commons.logging.Log>
-                        </systemProperties>
-                    </container>
-                    <configuration>
-
-                        <home>${project.build.directory}/${cargo.container.id}</home>
-                        <properties>
-                            <cargo.servlet.port>${cargo.servlet.port}</cargo.servlet.port>
-                            <cargo.rmi.port>${cargo.rmi.port}</cargo.rmi.port>
-                        </properties>
-                    </configuration>
-                </configuration>
-
+                <groupId>org.twdata.maven</groupId>
+                <artifactId>maven-itblast-plugin</artifactId>
+                <version>0.3</version>
                 <executions>
                     <execution>
-                        <id>start-container</id>
-                        <phase>pre-integration-test</phase>
+                        <id>download-bundled-plugins</id>
+                        <phase>integration-test</phase>
                         <goals>
-                            <goal>start</goal>
+                            <goal>execute</goal>
                         </goals>
-
-                    </execution>
-                    <execution>
-                        <id>stop-container</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>stop</goal>
-                        </goals>
-
+                        <configuration>
+                            <containers>tomcat5x,jetty6x,jboss42x</containers>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>tomcat55</id>
-
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <cargo.container.id>tomcat5x</cargo.container.id>
-                <cargo.container.type>installed</cargo.container.type>
-                <cargo.url>https://m2proxy.atlassian.com/repository/public/org/apache/tomcat/apache-tomcat/5.5.25/apache-tomcat-5.5.25.zip</cargo.url>
-            </properties>
-        </profile>
-        <profile>
-            <id>jetty6</id>
-            <properties>
-                <cargo.container.id>jetty6x</cargo.container.id>
-                <cargo.container.type>embedded</cargo.container.type>
-
-            </properties>
-        </profile>
-        <profile>
-            <id>resin30</id>
-            <properties>
-                <cargo.container.id>resin3x</cargo.container.id>
-                <cargo.container.type>installed</cargo.container.type>
-
-                <cargo.url>http://www.caucho.com/download/resin-3.0.26.zip</cargo.url>
-            </properties>
-        </profile>
-<!--
-        <profile>
-            <id>resin31</id>
-            <properties>
-                <cargo.container.id>resin3x</cargo.container.id>
-                <cargo.container.type>installed</cargo.container.type>
-                <cargo.url>http://www.caucho.com/download/resin-3.1.6.zip</cargo.url>
-            </properties>
-        </profile>
--->
-        <profile>
-            <id>jboss42</id>
-            <properties>
-                <cargo.container.id>jboss42x</cargo.container.id>
-
-                <cargo.container.type>installed</cargo.container.type>
-                <cargo.url>http://internode.dl.sourceforge.net/sourceforge/jboss/jboss-4.2.3.GA.zip</cargo.url>
-            </properties>
-        </profile>
-    </profiles>
-
-
+    
     <properties>
-        <cargo.wait>false</cargo.wait>
-        <cargo.servlet.port>8480</cargo.servlet.port>
-        <cargo.rmi.port>18080</cargo.rmi.port>
         <sal.version>1.1-SNAPSHOT</sal.version>
         <pluginBundleDirectory>target/bundled-plugins</pluginBundleDirectory>
     </properties>
