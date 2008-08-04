@@ -32,8 +32,16 @@ public class DeploymentUnit implements Comparable
         if (!(o instanceof DeploymentUnit))
             return 1;
 
-        return path.compareTo(((DeploymentUnit) o).getPath());
+        DeploymentUnit target = (DeploymentUnit) o;
+
+        int result = path.compareTo(target.getPath());
+        if (result == 0)
+            result = (lastModifiedAtTimeOfDeployment > target.lastModified() ? 1 :
+                    lastModifiedAtTimeOfDeployment < target.lastModified() ? -1 : 0);
+        return result;
     }
+
+
 
     public boolean equals(Object o)
     {
