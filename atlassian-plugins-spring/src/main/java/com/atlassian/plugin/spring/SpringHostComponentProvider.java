@@ -8,12 +8,9 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.BeanIsAbstractException;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.aop.SpringProxy;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.core.annotation.AnnotationUtils;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Proxy;
+import org.springframework.util.ClassUtils;
 
 /**
  * Host component provider that scans the bean factory for all beans that implement @AvailableToPlugins and registers
@@ -52,7 +49,7 @@ public class SpringHostComponentProvider implements HostComponentProvider, BeanF
                             if (annotation.value() != Void.class) {
                                 ifs = new Class[] { annotation.value() };
                             } else {
-                                ifs = bean.getClass().getInterfaces();
+                                ifs = ClassUtils.getAllInterfacesForClass(bean.getClass());
                             }
                             registrar.register(ifs).forInstance(bean).withName(name).withContextClassLoaderStrategy(annotation.contextClassLoaderStrategy());
                         }

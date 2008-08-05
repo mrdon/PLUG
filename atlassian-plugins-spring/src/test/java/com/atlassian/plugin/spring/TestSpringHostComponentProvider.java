@@ -11,6 +11,7 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.aopalliance.aop.Advice;
 
 import java.util.List;
+import java.io.Serializable;
 
 public class TestSpringHostComponentProvider extends TestCase
 {
@@ -36,7 +37,7 @@ public class TestSpringHostComponentProvider extends TestCase
         assertNotNull(list);
         assertEquals(1, list.size());
         assertEquals("bean", list.get(0).getProperties().get("bean-name"));
-        assertEquals(Fooable.class.getName(), list.get(0).getMainInterfaces()[0]);
+        assertEquals(5, list.get(0).getMainInterfaces().length);
     }
 
     public void testProvideWithCCLStrategy()
@@ -62,7 +63,6 @@ public class TestSpringHostComponentProvider extends TestCase
         assertEquals(1, list.size());
         assertEquals("bean", list.get(0).getProperties().get(PropertyBuilder.BEAN_NAME));
         assertEquals(ContextClassLoaderStrategy.USE_PLUGIN.name(), list.get(0).getProperties().get(PropertyBuilder.CONTEXT_CLASS_LOADER_STRATEGY));
-        assertEquals(Fooable.class.getName(), list.get(0).getMainInterfaces()[0]);
 
 
     }

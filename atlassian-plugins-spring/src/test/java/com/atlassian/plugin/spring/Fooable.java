@@ -1,6 +1,8 @@
 package com.atlassian.plugin.spring;
 
-public interface Fooable
+import java.io.Serializable;
+
+public interface Fooable extends Serializable
 {
     void sayHi();
 }
