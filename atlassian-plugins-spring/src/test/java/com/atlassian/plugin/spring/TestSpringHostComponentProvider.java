@@ -1,6 +1,8 @@
 package com.atlassian.plugin.spring;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.hostcomponents.ContextClassLoaderStrategy;
+import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
 import junit.framework.TestCase;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
@@ -34,6 +36,32 @@ public class TestSpringHostComponentProvider extends TestCase
         assertNotNull(list);
         assertEquals(1, list.size());
         assertEquals("bean", list.get(0).getProperties().get("bean-name"));
+        assertEquals(Fooable.class.getName(), list.get(0).getMainInterfaces()[0]);
+    }
+
+    public void testProvideWithCCLStrategy()
+    {
+        StaticListableBeanFactory factory = new StaticListableBeanFactory() {
+            @Override
+            public boolean isSingleton(String name) throws NoSuchBeanDefinitionException
+            {
+                return true;
+            }
+        };
+        factory.addBean("bean", new FooablePluginService());
+        factory.addBean("string", "hello");
+
+        SpringHostComponentProvider provider = new SpringHostComponentProvider();
+        provider.setBeanFactory(factory);
+
+        DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+        provider.provide(registrar);
+
+        List<HostComponentRegistration> list = registrar.getRegistry();
+        assertNotNull(list);
+        assertEquals(1, list.size());
+        assertEquals("bean", list.get(0).getProperties().get(PropertyBuilder.BEAN_NAME));
+        assertEquals(ContextClassLoaderStrategy.USE_PLUGIN.name(), list.get(0).getProperties().get(PropertyBuilder.CONTEXT_CLASS_LOADER_STRATEGY));
         assertEquals(Fooable.class.getName(), list.get(0).getMainInterfaces()[0]);
 
 

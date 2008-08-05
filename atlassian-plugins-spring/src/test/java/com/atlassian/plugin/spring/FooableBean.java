@@ -14,6 +14,5 @@ public class FooableBean implements Fooable, BeanFactoryAware, Serializable
     }
 
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 }

@@ -15,5 +15,4 @@ public class PluginNamespaceHandler extends NamespaceHandlerSupport
         super.registerBeanDefinitionDecoratorForAttribute("available",
                 new PluginAvailableBeanDefinitionDecorator());
     }
-
 }

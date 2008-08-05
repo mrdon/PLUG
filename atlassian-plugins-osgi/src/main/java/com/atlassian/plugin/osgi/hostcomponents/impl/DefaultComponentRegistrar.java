@@ -11,9 +11,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 
-import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
-import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.hostcomponents.*;
 
 /**
  * Default component registrar that also can write registered host components into the OSGi service registry
@@ -44,7 +42,11 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
             if (log.isDebugEnabled())
                 log.debug("Registering: "+ Arrays.asList(names)+" instance "+reg.getInstance() + "with properties: "+reg.getProperties());
 
-            ServiceRegistration sreg = ctx.registerService(names, wrapService(reg.getMainInterfaceClasses(), reg.getInstance()), reg.getProperties());
+            Object service = reg.getInstance();
+            if (!ContextClassLoaderStrategy.USE_PLUGIN.name().equals(reg.getProperties().get(PropertyBuilder.CONTEXT_CLASS_LOADER_STRATEGY)))
+                service = wrapService(reg.getMainInterfaceClasses(), reg.getInstance());
+
+            ServiceRegistration sreg = ctx.registerService(names, service, reg.getProperties());
             if (sreg != null)
             {
                 services.add(sreg);
@@ -62,7 +64,7 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
      */
     protected Object wrapService(Class[] interfaces, final Object service)
     {
-        final Object wrappedService = Proxy.newProxyInstance(
+        return Proxy.newProxyInstance(
             getClass().getClassLoader(),
             interfaces,
             new InvocationHandler() {
@@ -80,7 +82,6 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
                 }
             }
         );
-        return wrappedService;
     }
 
     public List<HostComponentRegistration> getRegistry()

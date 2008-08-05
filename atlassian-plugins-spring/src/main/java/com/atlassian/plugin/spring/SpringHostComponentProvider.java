@@ -54,7 +54,7 @@ public class SpringHostComponentProvider implements HostComponentProvider, BeanF
                             } else {
                                 ifs = bean.getClass().getInterfaces();
                             }
-                            registrar.register(ifs).forInstance(bean).withName(name);
+                            registrar.register(ifs).forInstance(bean).withName(name).withContextClassLoaderStrategy(annotation.contextClassLoaderStrategy());
                         }
                     }
                 } catch (BeanIsAbstractException ex)
