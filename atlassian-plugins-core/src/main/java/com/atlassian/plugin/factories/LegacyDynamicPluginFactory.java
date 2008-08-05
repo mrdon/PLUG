@@ -3,6 +3,7 @@ package com.atlassian.plugin.factories;
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
+import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.parsers.DescriptorParser;
@@ -92,7 +93,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
      * @param loader The plugin loader
      * @return The plugin instance
      */
-    protected DefaultDynamicPlugin createPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
+    protected DynamicPlugin createPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
     {
         return new DefaultDynamicPlugin(deploymentUnit, loader);
     }

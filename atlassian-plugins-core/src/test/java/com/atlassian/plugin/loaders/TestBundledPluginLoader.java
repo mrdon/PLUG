@@ -2,6 +2,7 @@ package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.test.PluginBuilder;
+import com.atlassian.plugin.factories.PluginFactory;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 
@@ -31,7 +32,7 @@ public class TestBundledPluginLoader extends TestCase
             .addResource("foo.txt", "foo")
             .build();
 
-        new BundledPluginLoader(bundledZip.toURL(), pluginDir, Collections.EMPTY_LIST, new DefaultPluginEventManager());
+        new BundledPluginLoader(bundledZip.toURL(), pluginDir, Collections.<PluginFactory>emptyList(), new DefaultPluginEventManager());
         assertEquals(2, pluginDir.list().length);
         assertTrue(new File(pluginDir, "foo.txt").exists());
     }

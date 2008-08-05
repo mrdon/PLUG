@@ -264,7 +264,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         final Mock mockPlugin = new Mock(Plugin.class);
         mockPlugin.matchAndReturn("getKey", "some-plugin-key");
-        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.EMPTY_LIST);
+        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.emptyList());
         mockPlugin.matchAndReturn("hashCode", 12);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
@@ -286,7 +286,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         final Mock mockPlugin = new Mock(Plugin.class);
         mockPlugin.matchAndReturn("getKey", "some-plugin-key");
-        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.EMPTY_LIST);
+        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.emptyList());
         mockPlugin.matchAndReturn("hashCode", 12);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
@@ -845,7 +845,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPluginStateStore.expectAndReturn("loadPluginState", new PluginManagerState());
         mockDescriptorParser.matchAndReturn("getKey", "test");
         mockRepository.expect("installPlugin", C.args(C.eq("test"), C.eq(pluginArtifact)));
-        mockPluginLoader.expectAndReturn("loadAllPlugins", C.eq(moduleDescriptorFactory), Collections.EMPTY_LIST);
+        mockPluginLoader.expectAndReturn("loadAllPlugins", C.eq(moduleDescriptorFactory), Collections.emptyList());
         mockPluginLoader.expectAndReturn("supportsAddition", true);
         mockPluginLoader.expectAndReturn("addFoundPlugins", moduleDescriptorFactory, Collections.singletonList(plugin));
         mockPluginLoader.expectAndReturn("canLoad", C.args(C.eq(pluginArtifact)), "test");
@@ -1067,7 +1067,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         public void removePlugin(Plugin plugin) throws PluginException
         {
-            plugins = Collections.EMPTY_LIST;
+            plugins = Collections.emptyList();
         }
 
         protected StaticPlugin getNewPlugin()

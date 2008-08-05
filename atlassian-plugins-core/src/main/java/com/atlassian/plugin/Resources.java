@@ -14,7 +14,7 @@ import java.util.*;
  */
 public class Resources implements Resourced
 {
-    public static final Resources EMPTY_RESOURCES = new Resources(Collections.EMPTY_LIST);
+    public static final Resources EMPTY_RESOURCES = new Resources(Collections.<ResourceDescriptor>emptyList());
     private List<ResourceDescriptor> resourceDescriptors;
 
     /**

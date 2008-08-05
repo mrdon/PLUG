@@ -12,7 +12,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
     private static Log log = LogFactory.getLog(DefaultModuleDescriptorFactory.class);
 
     private Map<String,Class<? extends ModuleDescriptor>> moduleDescriptorClasses;
-    private List<String> permittedModuleKeys = Collections.EMPTY_LIST;
+    private List<String> permittedModuleKeys = Collections.emptyList();
 
     public DefaultModuleDescriptorFactory()
     {
@@ -106,7 +106,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
     public void setPermittedModuleKeys(List<String> permittedModuleKeys)
     {
         if (permittedModuleKeys == null)
-            permittedModuleKeys = Collections.EMPTY_LIST;
+            permittedModuleKeys = Collections.emptyList();
 
         this.permittedModuleKeys = permittedModuleKeys;
     }

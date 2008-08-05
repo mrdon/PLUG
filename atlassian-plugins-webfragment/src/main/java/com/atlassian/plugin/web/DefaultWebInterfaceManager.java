@@ -42,7 +42,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
     {
         if (location == null)
         {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         List<WebSectionModuleDescriptor> result = sections.get(location);
@@ -74,7 +74,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
     {
         if (section == null)
         {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         List<WebItemModuleDescriptor> result = items.get(section);

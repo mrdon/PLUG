@@ -3,6 +3,7 @@ package com.atlassian.plugin.descriptors;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Resources;
+import com.atlassian.plugin.elements.ResourceDescriptor;
 import org.dom4j.Element;
 
 import java.util.Collections;
@@ -23,7 +24,7 @@ public class UnrecognisedModuleDescriptor extends AbstractModuleDescriptor
         this.description = element.elementTextTrim("description");
 
         this.plugin = plugin;
-        this.resources = new Resources(Collections.EMPTY_LIST);
+        this.resources = new Resources(Collections.<ResourceDescriptor>emptyList());
     }
 
     public boolean isEnabledByDefault()

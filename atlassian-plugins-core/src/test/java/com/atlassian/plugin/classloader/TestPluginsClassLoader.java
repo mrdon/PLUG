@@ -72,7 +72,7 @@ public class TestPluginsClassLoader extends TestCase
         assertTrue(stubClassLoader.getFindResourceNames().contains(TEST_RESOURCE));
         stubClassLoader.clear();
 
-        mockPluginAccessor.expectAndReturn("getEnabledPlugins", Collections.EMPTY_LIST);
+        mockPluginAccessor.expectAndReturn("getEnabledPlugins", Collections.emptyList());
         mockPlugin.expectAndReturn("getKey", PLUGIN_KEY);
         mockPluginAccessor.matchAndReturn("isPluginEnabled", C.args(C.eq(PLUGIN_KEY)), Boolean.FALSE);
         pluginsClassLoader.findResource(TEST_RESOURCE);
@@ -110,7 +110,7 @@ public class TestPluginsClassLoader extends TestCase
         assertTrue(stubClassLoader.getFindClassNames().contains(TEST_CLASS));
         stubClassLoader.clear();
 
-        mockPluginAccessor.expectAndReturn("getEnabledPlugins", Collections.EMPTY_LIST);
+        mockPluginAccessor.expectAndReturn("getEnabledPlugins", Collections.emptyList());
         mockPlugin.expectAndReturn("getKey", PLUGIN_KEY);
         mockPluginAccessor.matchAndReturn("isPluginEnabled", C.args(C.eq(PLUGIN_KEY)), Boolean.FALSE);
         try

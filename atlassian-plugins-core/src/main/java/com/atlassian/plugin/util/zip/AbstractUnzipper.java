@@ -113,7 +113,7 @@ public abstract class AbstractUnzipper implements Unzipper
         if (children == null)
         {
             // No files, return empty array
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         ArrayList targetDirContents = new ArrayList();

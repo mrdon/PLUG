@@ -77,7 +77,7 @@ public class OsgiBundlePlugin extends OsgiPlugin
 
     public Collection getModuleDescriptors()
     {
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     public ModuleDescriptor getModuleDescriptor(String key)
@@ -158,12 +158,12 @@ public class OsgiBundlePlugin extends OsgiPlugin
 
     public List getResourceDescriptors()
     {
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     public List getResourceDescriptors(String type)
     {
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     public ResourceLocation getResourceLocation(String type, String name)

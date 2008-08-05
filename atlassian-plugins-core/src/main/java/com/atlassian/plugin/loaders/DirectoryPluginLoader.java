@@ -179,7 +179,7 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
         for (Iterator<Map.Entry<DeploymentUnit,Plugin>> iterator = plugins.entrySet().iterator(); iterator.hasNext();)
         {
             Map.Entry<DeploymentUnit,Plugin> entry = iterator.next();
-            if (entry.getValue() == plugin)
+            if (entry.getValue().equals(plugin))
                 deploymentUnit = entry.getKey();
         }
 
