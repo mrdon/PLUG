@@ -14,9 +14,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * Copied from Atlassian Seraph 1.0
- * @author <a href="mailto:joe@truemesh.com">Joe Walnes</a>
- * @author <a href="mailto:mike@atlassian.com">Mike Cannon-Brookes</a>
- * @author <a href="mailto:hani@formicary.net">Hani Suleiman</a>
  */
 public class DefaultPathMapper implements Serializable, PathMapper
 {
