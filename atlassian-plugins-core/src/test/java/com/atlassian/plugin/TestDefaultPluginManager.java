@@ -842,6 +842,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
 
         mockPluginStateStore.expectAndReturn("loadPluginState", new PluginManagerState());
+        mockPluginStateStore.expectAndReturn("loadPluginState", new PluginManagerState());
         mockDescriptorParser.matchAndReturn("getKey", "test");
         mockRepository.expect("installPlugin", C.args(C.eq("test"), C.eq(pluginArtifact)));
         mockPluginLoader.expectAndReturn("loadAllPlugins", C.eq(moduleDescriptorFactory), Collections.EMPTY_LIST);

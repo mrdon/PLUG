@@ -177,10 +177,9 @@ public class DefaultPluginManager implements PluginManager
             {
                 if (loader.supportsAddition())
                 {
-                    Collection addedPlugins = loader.addFoundPlugins(moduleDescriptorFactory);
-                    for (Iterator iterator1 = addedPlugins.iterator(); iterator1.hasNext();)
+                    Collection<Plugin> addedPlugins = loader.addFoundPlugins(moduleDescriptorFactory);
+                    for (Plugin newPlugin : addedPlugins)
                     {
-                        Plugin newPlugin = (Plugin) iterator1.next();
                         numberFound++;
                         addPlugin(loader, newPlugin);
                     }
@@ -218,7 +217,7 @@ public class DefaultPluginManager implements PluginManager
         if (!plugin.isUninstallable())
             throw new PluginException("Plugin is not uninstallable: " + plugin.getKey());
 
-        PluginLoader loader = (PluginLoader) pluginToPluginLoader.get(plugin);
+        PluginLoader loader = pluginToPluginLoader.get(plugin);
 
         if (loader != null && !loader.supportsRemoval())
         {
@@ -241,7 +240,7 @@ public class DefaultPluginManager implements PluginManager
     {
         if (plugin.isDeleteable())
         {
-            PluginLoader pluginLoader = (PluginLoader) pluginToPluginLoader.get(plugin);
+            PluginLoader pluginLoader = pluginToPluginLoader.get(plugin);
             pluginLoader.removePlugin(plugin);
         }
 
@@ -281,7 +280,7 @@ public class DefaultPluginManager implements PluginManager
         // testing to make sure plugin keys are unique
         if (plugins.containsKey(plugin.getKey()))
         {
-            Plugin existingPlugin = (Plugin) plugins.get(plugin.getKey());
+            Plugin existingPlugin = plugins.get(plugin.getKey());
             if (plugin.compareTo(existingPlugin) >= 0)
             {
                 if (log.isDebugEnabled())
@@ -313,7 +312,7 @@ public class DefaultPluginManager implements PluginManager
         }
 
         plugins.put(plugin.getKey(), plugin);
-        if (plugin.isEnabledByDefault())
+        if (isPluginEnabled(plugin.getKey()))
             plugin.setEnabled(true);
 
         enablePluginModules(plugin);
@@ -743,14 +742,13 @@ public class DefaultPluginManager implements PluginManager
         stateStore.savePluginState(currentState);
     }
 
-    protected List getEnabledStateAwareModuleKeys(Plugin plugin)
+    protected List<String> getEnabledStateAwareModuleKeys(Plugin plugin)
     {
-        List keys = new ArrayList();
-        List moduleDescriptors = new ArrayList(plugin.getModuleDescriptors());
+        List<String> keys = new ArrayList<String>();
+        List<ModuleDescriptor> moduleDescriptors = new ArrayList<ModuleDescriptor>(plugin.getModuleDescriptors());
         Collections.reverse(moduleDescriptors);
-        for (Iterator it = moduleDescriptors.iterator(); it.hasNext();)
+        for (ModuleDescriptor md : moduleDescriptors)
         {
-            ModuleDescriptor md = (ModuleDescriptor) it.next();
             if (md instanceof StateAware)
             {
                 if (isPluginModuleEnabled(md.getCompleteKey()))
@@ -764,11 +762,10 @@ public class DefaultPluginManager implements PluginManager
 
     protected void notifyPluginDisabled(Plugin plugin)
     {
-        List keysToDisable = getEnabledStateAwareModuleKeys(plugin);
+        List<String> keysToDisable = getEnabledStateAwareModuleKeys(plugin);
 
-        for (Iterator it = keysToDisable.iterator(); it.hasNext();)
+        for (String key : keysToDisable)
         {
-            String key = (String) it.next();
             StateAware descriptor = (StateAware) getPluginModule(key);
             descriptor.disabled();
         }
