@@ -10,7 +10,7 @@ import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.util.ClassUtils;
+import org.apache.commons.lang.ClassUtils;
 
 /**
  * Host component provider that scans the bean factory for all beans that implement @AvailableToPlugins and registers
@@ -49,7 +49,7 @@ public class SpringHostComponentProvider implements HostComponentProvider, BeanF
                             if (annotation.value() != Void.class) {
                                 ifs = new Class[] { annotation.value() };
                             } else {
-                                ifs = ClassUtils.getAllInterfacesForClass(bean.getClass());
+                                ifs = (Class[]) ClassUtils.getAllInterfaces(bean.getClass()).toArray(new Class[0]);
                             }
                             registrar.register(ifs).forInstance(bean).withName(name).withContextClassLoaderStrategy(annotation.contextClassLoaderStrategy());
                         }

@@ -11,6 +11,8 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.aopalliance.aop.Advice;
 
 import java.util.List;
+import java.util.Arrays;
+import java.util.Map;
 import java.io.Serializable;
 
 public class TestSpringHostComponentProvider extends TestCase
@@ -37,7 +39,17 @@ public class TestSpringHostComponentProvider extends TestCase
         assertNotNull(list);
         assertEquals(1, list.size());
         assertEquals("bean", list.get(0).getProperties().get("bean-name"));
-        assertEquals(5, list.get(0).getMainInterfaces().length);
+        List<Class> ifs = Arrays.asList(list.get(0).getMainInterfaceClasses());
+
+        // Test locally declared interface
+        assertTrue(ifs.contains(Fooable.class));
+
+        // Test super interface of locally declared interface
+        assertTrue(ifs.contains(Barable.class));
+
+        // Test interface of super class
+        assertTrue(ifs.contains(Map.class));
+
     }
 
     public void testProvideWithCCLStrategy()
