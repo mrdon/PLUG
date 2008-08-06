@@ -7,6 +7,8 @@ import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
+import com.atlassian.plugin.osgi.hostcomponents.ContextClassLoaderStrategy;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 import org.apache.log4j.Level;
@@ -207,7 +209,7 @@ public class DefaultPluginTransformer implements PluginTransformer
             for (int x=0; x<regs.size(); x++)
             {
                 HostComponentRegistration reg = regs.get(x);
-                String beanName = reg.getProperties().get("bean-name");
+                String beanName = reg.getProperties().get(PropertyBuilder.BEAN_NAME);
                 String id = beanName;
                 if (id == null)
                     id = "bean"+x;
@@ -215,7 +217,7 @@ public class DefaultPluginTransformer implements PluginTransformer
                 id = id.replaceAll("#", "LB");
                 Element osgiService = root.addElement("osgi:reference");
                 osgiService.addAttribute("id", id);
-                osgiService.addAttribute("context-class-loader", "service-provider");
+
                 if (beanName != null)
                     osgiService.addAttribute("filter", "(bean-name="+beanName+")");
 

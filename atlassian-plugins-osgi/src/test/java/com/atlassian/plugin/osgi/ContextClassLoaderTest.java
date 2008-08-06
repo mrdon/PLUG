@@ -13,7 +13,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
 
     public void testCorrectContextClassLoaderForHostComponents() throws Exception
     {
-        final HostCompImpl comp = new HostCompImpl();
+        final HostCompImpl comp = new HostCompImpl(TestCase.class.getName());
         File plugin = new PluginBuilder("ccltest")
                 .addResource("atlassian-plugin.xml",
                         "<atlassian-plugin key=\"ccltest\" pluginsVersion=\"2\">\n" +
@@ -45,7 +45,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
 
     public void testCorrectContextClassLoaderForHostComponentsUsePluginStrategy() throws Exception
     {
-        final HostCompImpl comp = new HostCompImpl();
+        final HostCompImpl comp = new HostCompImpl(TestCase.class.getName());
         File plugin = new PluginBuilder("ccltest")
                 .addResource("atlassian-plugin.xml",
                         "<atlassian-plugin key=\"ccltest\" pluginsVersion=\"2\">\n" +
@@ -73,9 +73,39 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
         assertNull(comp.testClass);
     }
 
+    public void testCorrectContextClassLoaderForHostComponentsUsePluginStrategyLoadingLocalClass() throws Exception
+    {
+        final HostCompImpl comp = new HostCompImpl("my.Foo");
+        File plugin = new PluginBuilder("ccltest")
+                .addResource("atlassian-plugin.xml",
+                        "<atlassian-plugin key=\"ccltest\" pluginsVersion=\"2\">\n" +
+                        "    <plugin-info>\n" +
+                        "        <version>1.0</version>\n" +
+                        "    </plugin-info>\n" +
+                        "    <component key=\"foo\" class=\"my.FooImpl\" />\n" +
+                        "</atlassian-plugin>")
+                .addJava("my.Foo", "package my;public interface Foo {}")
+                .addJava("my.FooImpl", "package my;import com.atlassian.plugin.osgi.HostComp;" +
+                        "public class FooImpl implements Foo {public FooImpl(HostComp comp) throws Exception { comp.run(); }}")
+                .build();
+        HostComponentProvider prov = new HostComponentProvider()
+        {
+            public void provide(ComponentRegistrar registrar)
+            {
+                registrar.register(HostComp.class).forInstance(comp).withName("hostComp").withContextClassLoaderStrategy(ContextClassLoaderStrategy.USE_PLUGIN);
+            }
+        };
+
+        initPluginManager(prov);
+        pluginManager.installPlugin(new JarPluginArtifact(plugin));
+
+        assertNotNull(comp.cl);
+        assertNotNull(comp.testClass);
+    }
+
     public void testCorrectContextClassLoaderForHostComponentsUseHostStrategy() throws Exception
     {
-        final HostCompImpl comp = new HostCompImpl();
+        final HostCompImpl comp = new HostCompImpl(TestCase.class.getName());
         File plugin = new PluginBuilder("ccltest")
                 .addResource("atlassian-plugin.xml",
                         "<atlassian-plugin key=\"ccltest\" pluginsVersion=\"2\">\n" +
@@ -108,12 +138,19 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
     {
         public ClassLoader cl;
         public Class testClass;
+        private String classToLoad;
+
+        public HostCompImpl(String classToLoad)
+        {
+            this.classToLoad = classToLoad;
+        }
+
         public void run()
         {
             cl = Thread.currentThread().getContextClassLoader();
             try
             {
-                testClass = cl.loadClass("junit.framework.TestCase");
+                testClass = cl.loadClass(classToLoad);
             } catch (ClassNotFoundException ex) {}
         }
     }
