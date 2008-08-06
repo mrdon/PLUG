@@ -5,6 +5,7 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
+import com.atlassian.plugin.osgi.factory.transform.test.SomeClass;
 import com.atlassian.plugin.test.PluginTestUtils;
 import junit.framework.TestCase;
 import org.apache.log4j.Logger;
@@ -14,6 +15,7 @@ import org.osgi.framework.Constants;
 
 import javax.print.attribute.AttributeSet;
 import javax.print.attribute.HashAttributeSet;
+import javax.swing.table.TableModel;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -74,7 +76,7 @@ public class TestDefaultPluginTransformer extends TestCase
                 .build();
 
         List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>() {{
-            add(new MockRegistration(new String[]{"javax.swing.table.TableModel"}));
+            add(new MockRegistration("foo", TableModel.class));
         }};
 
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
@@ -88,6 +90,27 @@ public class TestDefaultPluginTransformer extends TestCase
 
     }
 
+    public void testGenerateManifestWithInferredImportsOfSuperInterfaces() throws Exception
+    {
+        File plugin = new PluginBuilder("plugin")
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
+
+        List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>() {{
+            add(new MockRegistration("foo", FooChild.class));
+        }};
+
+        DefaultPluginTransformer transformer = new DefaultPluginTransformer();
+        byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Attributes attrs = mf.getMainAttributes();
+
+        String importPackage = attrs.getValue(Constants.IMPORT_PACKAGE);
+        System.out.println("imports:"+importPackage);
+        assertTrue(attrs.getValue(Constants.IMPORT_PACKAGE).contains(SomeClass.class.getPackage().getName()));
+
+    }
+
     public void testGenerateManifestMergeHostComponentImportsWithExisting() throws Exception
     {
         File plugin = new PluginBuilder("plugin")
@@ -98,7 +121,7 @@ public class TestDefaultPluginTransformer extends TestCase
                 .build();
 
         List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>() {{
-            add(new MockRegistration(new String[]{"javax.print.attribute.AttributeSet"}));
+            add(new MockRegistration("foo", AttributeSet.class));
         }};
 
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();

@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.util;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.util.ClassLoaderUtils;
+import com.atlassian.plugin.util.ClassUtils;
 
 import java.util.*;
 import java.util.jar.Manifest;
@@ -54,9 +55,15 @@ public class OsgiHeaderUtil
         {
             for (HostComponentRegistration reg : registrations)
             {
-                for (String inf : reg.getMainInterfaces())
+                Set<Class> classesToScan = new HashSet<Class>();
+
+                // Make sure we scan all extended interfaces as well
+                for (Class inf : reg.getMainInterfaceClasses())
+                    ClassUtils.findAllTypes(inf, classesToScan);
+
+                for (Class inf : classesToScan)
                 {
-                    String clsName = inf.replace('.','/')+".class";
+                    String clsName = inf.getName().replace('.','/')+".class";
                     crawlReferenceTree(clsName, referredClasses, referredPackages, 1);
                 }
             }

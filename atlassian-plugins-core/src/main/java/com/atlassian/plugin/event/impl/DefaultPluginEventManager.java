@@ -1,6 +1,7 @@
 package com.atlassian.plugin.event.impl;
 
 import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.util.ClassUtils;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
@@ -51,9 +52,7 @@ public class DefaultPluginEventManager implements PluginEventManager
     {
         Validate.notNull(event, "The event to broadcast must not be null");
         final Set<Listener> calledListeners = new HashSet<Listener>();
-        Set<Class> types = new HashSet<Class>();
-        findAllTypes(event.getClass(), types);
-        for (Class type : types)
+        for (Class type : ClassUtils.findAllTypes(event.getClass()))
         {
             Set<Listener> registrations = eventsToListener.get(type);
             for (Listener reg : registrations)
@@ -126,23 +125,6 @@ public class DefaultPluginEventManager implements PluginEventManager
                 }
             }
         }
-    }
-
-    /**
-     * Finds all super classes and interfaces for a given class
-     * @param cls The class to scan
-     * @param types The collected related classes found
-     */
-    void findAllTypes(Class cls, Set<Class> types)
-    {
-        if (cls == null)
-            return;
-
-        types.add(cls);
-
-        findAllTypes(cls.getSuperclass(), types);
-        for (int x = 0; x<cls.getInterfaces().length; x++)
-            findAllTypes(cls.getInterfaces()[x], types);
     }
 
     /**
