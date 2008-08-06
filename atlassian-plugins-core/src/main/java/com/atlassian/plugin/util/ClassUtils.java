@@ -3,10 +3,18 @@ package com.atlassian.plugin.util;
 import java.util.Set;
 import java.util.HashSet;
 
+/**
+ * Class utility methods
+ */
 public class ClassUtils
 {
     private ClassUtils() {}
 
+    /**
+     * Finds all super classes and interfaces for a given class
+     * @param cls The class to scan
+     * @return The collected related classes found
+     */
     public static Set<Class> findAllTypes(Class cls)
     {
         Set<Class> types = new HashSet<Class>();
