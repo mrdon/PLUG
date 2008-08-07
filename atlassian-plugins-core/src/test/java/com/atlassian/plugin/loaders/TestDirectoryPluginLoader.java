@@ -255,6 +255,8 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         assertEquals(1, plugins.size());
         assertNull(((Plugin)plugins.iterator().next()).getResource("foo.txt"));
         assertNotNull(((Plugin)plugins.iterator().next()).getResource("bar.txt"));
+        assertTrue(plugin.exists());
+
 
     }
 
