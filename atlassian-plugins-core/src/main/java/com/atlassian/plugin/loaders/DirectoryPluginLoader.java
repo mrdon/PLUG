@@ -179,6 +179,9 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
         for (Iterator<Map.Entry<DeploymentUnit,Plugin>> iterator = plugins.entrySet().iterator(); iterator.hasNext();)
         {
             Map.Entry<DeploymentUnit,Plugin> entry = iterator.next();
+            // no, you don't want to use entry.getValue().equals(plugin) here as it breaks upgrades where it is a new
+            // version of the plugin but the key and version number hasn't changed, and hence, equals() will always return
+            // true
             if (entry.getValue() == plugin)
                 deploymentUnit = entry.getKey();
         }
