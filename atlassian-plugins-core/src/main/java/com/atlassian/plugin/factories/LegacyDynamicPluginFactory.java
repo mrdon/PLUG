@@ -47,9 +47,10 @@ public class LegacyDynamicPluginFactory implements PluginFactory
 
         Plugin plugin = null;
         InputStream pluginDescriptor = null;
-        PluginClassLoader loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader());
+        PluginClassLoader loader = null;
         try
         {
+            loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader());
             URL pluginDescriptorUrl = loader.getLocalResource(pluginDescriptorFileName);
             if (pluginDescriptorUrl == null)
                 throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);
@@ -63,22 +64,22 @@ public class LegacyDynamicPluginFactory implements PluginFactory
         // these are not normal conditions, so we need to make sure that we close them explicitly.
         catch (PluginParseException e)
         {
-            loader.close();
+            if (loader != null) loader.close();
             throw e;
         }
         catch (RuntimeException e)
         {
-            loader.close();
+            if (loader != null) loader.close();
             throw e;
         }
         catch (Error e)
         {
-            loader.close();
+            if (loader != null) loader.close();
             throw e;
         }
         catch (IOException e)
         {
-            loader.close();
+            if (loader != null) loader.close();
             throw new PluginParseException();
         } finally
         {
