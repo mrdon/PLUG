@@ -126,7 +126,7 @@
 
     <properties>
         <jdkLevel>1.5</jdkLevel>
-        <clover.Version>2.3.2</clover.Version>
+        <clover.Version>3.7</clover.Version>
     </properties>
 
     <distributionManagement>
