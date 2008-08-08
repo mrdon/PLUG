@@ -86,9 +86,10 @@ public class ClassLoadingPluginLoader implements DynamicPluginLoader
     {
         Plugin plugin = null;
         InputStream pluginDescriptor = null;
-        PluginClassLoader loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader());
+        PluginClassLoader loader = null;
         try
         {
+            loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader());
             URL pluginResourceUrl = loader.getLocalResource(pluginDescriptorFileName);
             if (pluginResourceUrl == null)
                 return handleNoDescriptor(deploymentUnit);
@@ -102,22 +103,22 @@ public class ClassLoadingPluginLoader implements DynamicPluginLoader
         // these are not normal conditions, so we need to make sure that we close them explicitly.        
         catch (PluginParseException e)
         {
-            loader.close();
+            closeQuietly(loader);
             throw e;
         }
         catch (RuntimeException e)
         {
-            loader.close();
+            closeQuietly(loader);
             throw new PluginParseException(e);
         }
         catch (Error e)
         {
-            loader.close();
+            closeQuietly(loader);
             throw e;
         }
         catch (IOException e)
         {
-            loader.close();
+            closeQuietly(loader);
             throw new PluginParseException(e);
         } finally
         {
@@ -152,7 +153,7 @@ public class ClassLoadingPluginLoader implements DynamicPluginLoader
     protected Plugin createPlugin(DescriptorParser parser, DeploymentUnit unit, PluginClassLoader loader) {
         return pluginFactory.createPlugin(unit, loader);
     }
-    
+
     public boolean supportsRemoval()
     {
         return true;
@@ -265,5 +266,11 @@ public class ClassLoadingPluginLoader implements DynamicPluginLoader
             pluginKey = descriptorParser.getKey();
         }
         return pluginKey;
+    }
+
+    private void closeQuietly(PluginClassLoader loader)
+    {
+        if (loader != null)
+            loader.close();
     }
 }
