@@ -156,7 +156,10 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
             for (DeploymentUnit unit : plugins.keySet())
             {
                 if(unit.getPath().equals(deploymentUnit.getPath()) && !unit.equals(deploymentUnit))
+                {
                     found = true;
+                    break;
+                }
             }
 
             if (!found && !pluginOnDisk.delete())
@@ -183,7 +186,10 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
             // version of the plugin but the key and version number hasn't changed, and hence, equals() will always return
             // true
             if (entry.getValue() == plugin)
+            {
                 deploymentUnit = entry.getKey();
+                break;
+            }
         }
 
         if (deploymentUnit == null) //the pluginLoader has no memory of deploying this plugin

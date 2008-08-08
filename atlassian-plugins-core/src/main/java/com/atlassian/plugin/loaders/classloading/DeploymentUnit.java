@@ -36,7 +36,13 @@ public class DeploymentUnit implements Comparable<DeploymentUnit>
         return result;
     }
 
-
+    public boolean equals(Object deploymentUnit)
+    {
+        if (deploymentUnit instanceof DeploymentUnit)
+            return equals((DeploymentUnit) deploymentUnit);
+        else
+            return false;
+    }
 
     public boolean equals(DeploymentUnit deploymentUnit)
     {
