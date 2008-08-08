@@ -272,16 +272,16 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         public void bundleChanged(BundleEvent evt) {
             switch (evt.getType()) {
                 case BundleEvent.INSTALLED:
-                    log.warn("Installed bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
+                    log.info("Installed bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
                     break;
                 case BundleEvent.STARTED:
-                    log.warn("Started bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
+                    log.info("Started bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
                     break;
                 case BundleEvent.STOPPED:
-                    log.warn("Stopped bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
+                    log.info("Stopped bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
                     break;
                 case BundleEvent.UNINSTALLED:
-                    log.warn("Uninstalled bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
+                    log.info("Uninstalled bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
                     break;
             }
         }
