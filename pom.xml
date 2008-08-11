@@ -61,15 +61,6 @@
                     </systemProperties>
                 </configuration>
             </plugin>
-    	    <plugin>
-                <artifactId>maven-clover2-plugin</artifactId>
-                <groupId>com.atlassian.maven.plugins</groupId>
-                <version>${clover.Version}</version>
-                <configuration>
-                    <jdk>1.5</jdk>
-    		        <licenseLocation>${clover.licenseLocation}</licenseLocation>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
@@ -126,7 +117,6 @@
 
     <properties>
         <jdkLevel>1.5</jdkLevel>
-        <clover.Version>2.3.2</clover.Version>
     </properties>
 
     <distributionManagement>
