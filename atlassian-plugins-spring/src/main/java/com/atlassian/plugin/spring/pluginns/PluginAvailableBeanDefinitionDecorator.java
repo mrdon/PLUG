@@ -8,13 +8,13 @@ import org.springframework.beans.factory.xml.BeanDefinitionDecorator;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.HierarchicalBeanFactory;
-import org.springframework.jms.*;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Node;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.lang.IllegalStateException;
+import static com.atlassian.plugin.spring.pluginns.SpringXmlHostComponentProvider.HOST_COMPONENT_PROVIDER;
 
 /**
  * Processes an "available" attribute in the plugin namespace.  Also handles registering the {@link SpringXmlHostComponentProvider}.
@@ -24,8 +24,6 @@ import java.lang.IllegalStateException;
  */
 public class PluginAvailableBeanDefinitionDecorator implements BeanDefinitionDecorator
 {
-
-    private static final String HOST_COMPONENT_PROVIDER = "hostComponentProvider";
 
     /**
      * Called when the Spring parser encounters an "available" attribute.
@@ -58,9 +56,9 @@ public class PluginAvailableBeanDefinitionDecorator implements BeanDefinitionDec
     {
         BeanDefinition providerDef;
 
-        BeanDefinitionRegistry registry = findRegistryContainingComponentProvider(HOST_COMPONENT_PROVIDER, ctx.getRegistry());
+        BeanDefinitionRegistry registry = ctx.getRegistry();
 
-        if (registry == null)
+        if (!registry.containsBeanDefinition(HOST_COMPONENT_PROVIDER))
         {
             BeanDefinitionBuilder providerDefBuilder = BeanDefinitionBuilder.rootBeanDefinition(SpringXmlHostComponentProvider.class);
             providerDefBuilder.addPropertyValue("registrations", new ArrayList());
@@ -68,16 +66,8 @@ public class PluginAvailableBeanDefinitionDecorator implements BeanDefinitionDec
             ctx.getRegistry().registerBeanDefinition(HOST_COMPONENT_PROVIDER, providerDef);
         }
         else
-        {
             providerDef = registry.getBeanDefinition(HOST_COMPONENT_PROVIDER);
 
-            // try to pull component provider down to child ("current") bean factory
-            if (registry != ctx.getRegistry())
-            {
-                registry.removeBeanDefinition(HOST_COMPONENT_PROVIDER);
-                ctx.getRegistry().registerBeanDefinition(HOST_COMPONENT_PROVIDER, providerDef);
-            }
-        }
 
         if (providerDef == null)
         {
@@ -85,32 +75,5 @@ public class PluginAvailableBeanDefinitionDecorator implements BeanDefinitionDec
         }
         
         return providerDef;
-    }
-
-    /**
-     * Dodgey hack to recursively find the bean registry containing the bean definition (recurses up).
-     *
-     * Courtesy of The Don. Kill him. Not me.
-     *
-     * @param beanName
-     * @param registry
-     * @return
-     */
-    private BeanDefinitionRegistry findRegistryContainingComponentProvider(String beanName, BeanDefinitionRegistry registry)
-    {
-        if (registry.containsBeanDefinition(beanName))
-        {
-            return registry;
-        }
-        else if (registry instanceof HierarchicalBeanFactory)
-        {
-            HierarchicalBeanFactory hbf = (HierarchicalBeanFactory) registry;
-            if (hbf.getParentBeanFactory() != null && hbf.getParentBeanFactory() instanceof BeanDefinitionRegistry)
-            {
-                return findRegistryContainingComponentProvider(beanName, (BeanDefinitionRegistry) hbf.getParentBeanFactory());
-            }
-        }
-
-        return null;
     }
 }

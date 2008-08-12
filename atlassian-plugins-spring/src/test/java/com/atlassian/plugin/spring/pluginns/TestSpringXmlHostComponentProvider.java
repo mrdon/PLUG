@@ -19,7 +19,7 @@ public class TestSpringXmlHostComponentProvider extends TestCase
     {
         XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("com/atlassian/plugin/spring/pluginns/plugins-spring-test.xml"));
 
-        SpringXmlHostComponentProvider provider = (SpringXmlHostComponentProvider) factory.getBean("hostComponentProvider");
+        SpringXmlHostComponentProvider provider = (SpringXmlHostComponentProvider) factory.getBean(SpringXmlHostComponentProvider.HOST_COMPONENT_PROVIDER);
         assertNotNull(provider);
 
 
@@ -39,10 +39,10 @@ public class TestSpringXmlHostComponentProvider extends TestCase
         XmlBeanFactory parentFactory = new XmlBeanFactory(new ClassPathResource("com/atlassian/plugin/spring/pluginns/plugins-spring-test.xml"));
         XmlBeanFactory childFactory = new XmlBeanFactory(new ClassPathResource("com/atlassian/plugin/spring/pluginns/plugins-spring-test-child.xml"), parentFactory);
 
-        SpringXmlHostComponentProvider provider = (SpringXmlHostComponentProvider) childFactory.getBean("hostComponentProvider");
+        SpringXmlHostComponentProvider provider = (SpringXmlHostComponentProvider) childFactory.getBean(SpringXmlHostComponentProvider.HOST_COMPONENT_PROVIDER);
         assertNotNull(provider);
-        assertFalse(parentFactory.containsBeanDefinition("hostComponentProvider"));
-        assertTrue(childFactory.containsBeanDefinition("hostComponentProvider"));
+        assertTrue(parentFactory.containsBeanDefinition(SpringXmlHostComponentProvider.HOST_COMPONENT_PROVIDER));
+        assertTrue(childFactory.containsBeanDefinition(SpringXmlHostComponentProvider.HOST_COMPONENT_PROVIDER));
 
 
         DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();

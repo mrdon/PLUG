@@ -8,6 +8,8 @@ import java.util.ArrayList;
 
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.HierarchicalBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.BeansException;
 
 /**
@@ -16,6 +18,7 @@ import org.springframework.beans.BeansException;
  */
 public class SpringXmlHostComponentProvider implements HostComponentProvider, BeanFactoryAware
 {
+    public static final String HOST_COMPONENT_PROVIDER = "hostComponentProvider";
     private BeanFactory beanFactory;
     private List<String> beans;
 
@@ -23,6 +26,7 @@ public class SpringXmlHostComponentProvider implements HostComponentProvider, Be
     {
         this.beans = names;
     }
+
     public void provide(ComponentRegistrar registrar)
     {
         for (String name : beans)
@@ -30,6 +34,16 @@ public class SpringXmlHostComponentProvider implements HostComponentProvider, Be
             Object bean = beanFactory.getBean(name);
             registrar.register(findInterfaces(bean.getClass())).forInstance(bean)
                     .withName(name);
+        }
+        if (beanFactory instanceof HierarchicalBeanFactory)
+        {
+            HierarchicalBeanFactory hbf = (HierarchicalBeanFactory) beanFactory;
+            if (hbf.getParentBeanFactory() != null)
+            {
+                HostComponentProvider provider = (HostComponentProvider) hbf.getParentBeanFactory().getBean(HOST_COMPONENT_PROVIDER);
+                if (provider != null)
+                    provider.provide(registrar);
+            }
         }
     }
 
@@ -49,4 +63,5 @@ public class SpringXmlHostComponentProvider implements HostComponentProvider, Be
         }
         return validInterfaces.toArray(new Class[0]);
     }
+
 }
