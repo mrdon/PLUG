@@ -17,6 +17,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.felix.framework.Felix;
+import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.StringMap;
@@ -37,7 +38,7 @@ import java.util.jar.JarFile;
  */
 public class FelixOsgiContainerManager implements OsgiContainerManager
 {
-    private static final Log log = LogFactory.getLog(FelixOsgiContainerManager.class);
+    static Log log = LogFactory.getLog(FelixOsgiContainerManager.class);
     private BundleRegistration registration = null;
     private Felix felix = null;
     private boolean felixRunning = false;
@@ -49,6 +50,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "osgi-framework-bundles.zip";
     private File frameworkBundlesDir;
     private HostComponentProvider hostComponentProvider;
+    private Logger felixLogger;
 
 
     /**
@@ -87,6 +89,12 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         this.frameworkBundlesDir = frameworkBundlesDir;
         this.hostComponentProvider = provider;
         eventManager.register(this);
+        felixLogger = new FelixLoggerBridge(log);
+    }
+
+    public void setFelixLogger(Logger logger)
+    {
+        this.felixLogger = logger;
     }
 
     public void setDisableMultipleBundleVersions(boolean val)
@@ -124,8 +132,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         // Explicitly specify the directory to use for caching bundles.
         configMap.put(BundleCache.CACHE_PROFILE_DIR_PROP, cacheDirectory.getAbsolutePath());
 
-        FelixLoggerBridge bridge = new FelixLoggerBridge(log);
-        configMap.put(FelixConstants.LOG_LEVEL_PROP, String.valueOf(bridge.getLogLevel()));
+        configMap.put(FelixConstants.LOG_LEVEL_PROP, String.valueOf(felixLogger.getLogLevel()));
 
         try
         {
@@ -136,7 +143,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
             // Now create an instance of the framework with
             // our configuration properties and activator.
-            felix = new Felix(bridge, configMap, list);
+            felix = new Felix(felixLogger, configMap, list);
 
             // Now start Felix instance.  Starting in a different thread to explicity set daemon status
             Thread t = new Thread() {
@@ -264,6 +271,24 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
             loadHostComponents(registrar);
             extractAndInstallFrameworkBundles();
+            context.addFrameworkListener(new FrameworkListener()
+            {
+                public void frameworkEvent(FrameworkEvent event)
+                {
+                    String bundleBits = "";
+                    if (event.getBundle() != null)
+                        bundleBits = " in bundle "+event.getBundle().getSymbolicName();
+                    switch (event.getType())
+                    {
+                        case FrameworkEvent.ERROR   : log.error("Framework error"+bundleBits, event.getThrowable());
+                                                      break;
+                        case FrameworkEvent.WARNING : log.warn("Framework warning"+bundleBits, event.getThrowable());
+                                                      break;
+                        case FrameworkEvent.INFO    : log.info("Framework info"+bundleBits, event.getThrowable());
+                                                      break;
+                    }
+                }
+            });
         }
 
         public void stop(BundleContext ctx) throws Exception {

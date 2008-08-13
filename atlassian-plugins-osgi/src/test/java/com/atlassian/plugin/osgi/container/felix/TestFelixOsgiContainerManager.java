@@ -3,16 +3,24 @@ package com.atlassian.plugin.osgi.container.felix;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
+import com.mockobjects.dynamic.Mock;
+import com.mockobjects.dynamic.ConstraintMatcher;
+import com.mockobjects.dynamic.C;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.felix.framework.Logger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.List;
+import java.util.ArrayList;
 
 public class TestFelixOsgiContainerManager extends TestCase
 {
@@ -120,4 +128,29 @@ public class TestFelixOsgiContainerManager extends TestCase
         assertNotNull(bundleUpdate.getResource("bar.txt"));
     }
 
+    public void testInstallFailure() throws Exception, IOException, BundleException
+    {
+        Mock mockLog = new Mock(Log.class);
+        felix.log = (Log) mockLog.proxy();
+        mockLog.matchAndReturn("info", C.ANY_ARGS, null);
+        mockLog.expect("error", C.args(C.eq("Framework error in bundle my.foo.symbolicName"), C.isA(BundleException.class)));
+
+        File plugin = new PluginBuilder("plugin")
+                .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
+                        "Bundle-Version: 1.0\n" +
+                        "Import-Package: foo.missing.package\n" +
+                        "Bundle-SymbolicName: my.foo.symbolicName\n" +
+                        "Bundle-ManifestVersion: 2\n" )
+                .build();
+        felix.start();
+
+        Bundle bundle = felix.installBundle(plugin);
+        try {
+        bundle.loadClass("foo.bar");
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        }
+
+        mockLog.verify();
+    }
 }
