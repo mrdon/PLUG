@@ -85,7 +85,6 @@ public class TestDefaultPluginTransformer extends TestCase
         Attributes attrs = mf.getMainAttributes();
 
         String importPackage = attrs.getValue(Constants.IMPORT_PACKAGE);
-        System.out.println("imports:"+importPackage);
         assertTrue(attrs.getValue(Constants.IMPORT_PACKAGE).contains("javax.swing.event,"));
 
     }
@@ -116,8 +115,10 @@ public class TestDefaultPluginTransformer extends TestCase
         File plugin = new PluginBuilder("plugin")
                 .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
                         "Import-Package: javax.swing\n" +
-                        "Bundle-SymbolicName: my.foo.symbolicName\n")
+                        "Bundle-SymbolicName: my.foo.symbolicName\n" +
+                        "Bundle-ClassPath: .,foo\n")
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .addResource("foo/bar.txt", "Something")
                 .build();
 
         List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>() {{
@@ -129,6 +130,7 @@ public class TestDefaultPluginTransformer extends TestCase
         Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
         Attributes attrs = mf.getMainAttributes();
         assertEquals("my.foo.symbolicName", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
+        assertEquals(".,foo", attrs.getValue(Constants.BUNDLE_CLASSPATH));
         String importPackage = attrs.getValue(Constants.IMPORT_PACKAGE);
         System.out.println("imports:"+importPackage);
         assertTrue(importPackage.contains("javax.print.attribute,"));

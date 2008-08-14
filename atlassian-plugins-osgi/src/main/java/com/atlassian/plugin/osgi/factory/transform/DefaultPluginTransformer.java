@@ -65,7 +65,7 @@ public class DefaultPluginTransformer implements PluginTransformer
         // List of all files to add/override in the new jar
         Map<String,byte[]> filesToAdd = new HashMap<String, byte[]>();
 
-        // Try to generate a manifest if none available
+        // Try to generate a manifest if none available or merge with an existing one to add host component imports
         URL atlassianPluginsXmlUrl = null;
         try
         {
