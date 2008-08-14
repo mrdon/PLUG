@@ -739,7 +739,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         // Compare against something with a different key
         p2.setKey("bad.key");
-        assertTrue(p1.compareTo(p2) == 1);
+        assertTrue(p1.compareTo(p2) != 0);
 
     }
 

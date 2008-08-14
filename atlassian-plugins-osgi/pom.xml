@@ -159,7 +159,7 @@
         <dependency>
             <groupId>org.twdata.pkgscanner</groupId>
             <artifactId>package-scanner</artifactId>
-            <version>0.6</version>
+            <version>0.6.1</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
