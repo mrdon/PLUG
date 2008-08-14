@@ -188,8 +188,8 @@ public class TestDefaultPluginTransformer extends TestCase
 
         final Collection imports = Arrays.asList(attrs.getValue("Import-Package").split(","));
         assertEquals(3, imports.size());
-        assertTrue(imports.contains(Logger.class.getPackage().getName()));
-        assertTrue(imports.contains(Filter.class.getPackage().getName()));
+        assertTrue(imports.contains(Logger.class.getPackage().getName()+";resolution:=optional"));
+        assertTrue(imports.contains(Filter.class.getPackage().getName()+";resolution:=optional"));
     }
 
     public void testAddFilesToZip() throws URISyntaxException, IOException

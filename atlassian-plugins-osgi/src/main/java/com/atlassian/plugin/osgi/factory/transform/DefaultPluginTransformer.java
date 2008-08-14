@@ -280,7 +280,7 @@ public class DefaultPluginTransformer implements PluginTransformer
                 // Setup defaults
                 properties.put("Spring-Context", "*;create-asynchronously:=false");
                 properties.put(Analyzer.BUNDLE_SYMBOLICNAME, parser.getKey());
-                properties.put(Analyzer.IMPORT_PACKAGE, referrers+"*");
+                properties.put(Analyzer.IMPORT_PACKAGE, referrers+"*;resolution:=optional");
                 properties.put(Analyzer.EXPORT_PACKAGE, "*");
                 properties.put(Analyzer.BUNDLE_VERSION, info.getVersion());
 
