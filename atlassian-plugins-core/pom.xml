@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.atlassian.plugins</groupId>
         <artifactId>atlassian-plugins-parent</artifactId>
-        <version>2.0.2-SNAPSHOT</version>
+        <version>2.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>atlassian-plugins-core</artifactId>
@@ -15,9 +15,9 @@
 
     <!-- SCM information as the directory for this sub module doesn't follow our standrard conventions -->
     <scm>
-        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/branches/atlassian-plugins-2.0.x/atlassian-plugins-core</connection>
-        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/branches/atlassian-plugins-2.0.x/atlassian-plugins-core</developerConnection>
-        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/branches/atlassian-plugins-2.0.x/atlassian-plugins-core</url>
+        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/atlassian-plugins-core</connection>
+        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/atlassian-plugins-core</developerConnection>
+        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/trunk/atlassian-plugins-core</url>
     </scm>
 
     <build>
