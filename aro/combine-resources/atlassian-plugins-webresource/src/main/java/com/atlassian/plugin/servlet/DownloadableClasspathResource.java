@@ -42,7 +42,7 @@ public class DownloadableClasspathResource extends AbstractDownloadableResource
         }
         catch (IOException e)
         {
-            log.error("Error serving the requested file: " + e.getMessage());
+            log.error("Error serving the requested file", e);
         }
         finally
         {
@@ -53,7 +53,7 @@ public class DownloadableClasspathResource extends AbstractDownloadableResource
             }
             catch (IOException e)
             {
-                log.warn("Error flushing output stream: " + e.getMessage());
+                log.warn("Error flushing output stream", e);
             }
         }
         log.info("Serving file done.");
