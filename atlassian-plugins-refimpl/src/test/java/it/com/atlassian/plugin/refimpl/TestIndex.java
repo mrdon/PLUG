@@ -1,5 +1,7 @@
 package it.com.atlassian.plugin.refimpl;
 
+import com.atlassian.plugin.refimpl.ParameterUtils;
+
 import net.sourceforge.jwebunit.junit.WebTestCase;
 
 public class TestIndex extends WebTestCase

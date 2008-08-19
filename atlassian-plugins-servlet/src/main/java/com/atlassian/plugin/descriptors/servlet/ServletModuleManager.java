@@ -6,7 +6,6 @@ import com.atlassian.plugin.descriptors.servlet.util.PathMapper;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**

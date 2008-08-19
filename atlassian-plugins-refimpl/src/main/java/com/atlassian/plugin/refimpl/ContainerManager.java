@@ -13,10 +13,14 @@ import com.atlassian.plugin.*;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.refimpl.servlet.SimpleServletModuleDescriptor;
+import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.BundledPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.atlassian.plugin.webresource.WebResourceIntegration;
+import com.atlassian.plugin.webresource.WebResourceManager;
+import com.atlassian.plugin.webresource.WebResourceManagerImpl;
 import com.atlassian.sal.spi.HostContextAccessor;
 
 import javax.servlet.ServletContext;
@@ -33,6 +37,7 @@ import java.util.Arrays;
 public class ContainerManager {
 
     private final ServletModuleManager servletModuleManager;
+    private final WebResourceManager webResourceManager;
     private final OsgiContainerManager osgiContainerManager;
     private final DefaultPluginManager pluginManager;
     private final PluginEventManager pluginEventManager;
@@ -44,7 +49,8 @@ public class ContainerManager {
     public ContainerManager(ServletContext servletContext) {
         instance = this;
         servletModuleManager = new ServletModuleManager();
-
+        webResourceManager = new WebResourceManagerImpl(new SimpleWebResourceIntegration(servletContext));
+        
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
         hostComponentProvider = new SimpleHostComponentProvider();
         pluginEventManager = new DefaultPluginEventManager();
@@ -69,6 +75,7 @@ public class ContainerManager {
         moduleDescriptorFactory.addModuleDescriptor("servlet", SimpleServletModuleDescriptor.class);
         pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader>asList(bundledPluginLoader, directoryPluginLoader),
                 moduleDescriptorFactory, pluginEventManager);
+
         try {
             pluginManager.init();
         } catch (PluginParseException e) {
@@ -111,6 +118,7 @@ public class ContainerManager {
             componentRegistrar.register(PluginManager.class, PluginAccessor.class, PluginController.class).forInstance(pluginManager).withName("pluginManager");
             componentRegistrar.register(PluginEventManager.class).forInstance(pluginEventManager).withName("pluginEventManager");
             componentRegistrar.register(HostContextAccessor.class).forInstance(new RiHostContextAccessor()).withName("hostContextAccessor");
+            componentRegistrar.register(WebResourceManager.class).forInstance(webResourceManager).withName("webResourceManager");
         }
     }
 }

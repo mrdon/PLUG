@@ -3,10 +3,32 @@
 
     <display-name>Atlassian Plugins Reference Implementation</display-name>
 
+    <!-- this filter is used to rewrite through the /s/* filter to add caching headers. see: urlrewrite.xml -->
+    <filter>
+        <filter-name>UrlRewriteFilter</filter-name>
+        <filter-class>org.tuckey.web.filters.urlrewrite.UrlRewriteFilter</filter-class>
+    </filter>
+    
+    <filter-mapping>
+        <filter-name>UrlRewriteFilter</filter-name>
+        <url-pattern>/s/*</url-pattern>
+    </filter-mapping>
+
     <servlet>
         <servlet-name>plugins</servlet-name>
         <servlet-class>com.atlassian.plugin.refimpl.servlet.SimpleContainerServlet</servlet-class>
     </servlet>
+
+    <servlet>
+        <servlet-name>file-server</servlet-name>
+        <servlet-class>com.atlassian.plugin.refimpl.servlet.FileServerServlet</servlet-class>
+        <load-on-startup>4</load-on-startup>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>file-server</servlet-name>
+        <url-pattern>/download/*</url-pattern>
+    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>plugins</servlet-name>

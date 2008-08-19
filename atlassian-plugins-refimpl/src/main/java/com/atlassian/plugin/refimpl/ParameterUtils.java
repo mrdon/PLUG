@@ -1,4 +1,4 @@
-package it.com.atlassian.plugin.refimpl;
+package com.atlassian.plugin.refimpl;
 
 public class ParameterUtils {
 
