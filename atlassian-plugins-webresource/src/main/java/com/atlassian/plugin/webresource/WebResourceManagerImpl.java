@@ -2,14 +2,16 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.servlet.BaseFileServerServlet;
+import com.atlassian.plugin.servlet.AbstractFileServerServlet;
 import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -137,9 +139,8 @@ public class WebResourceManagerImpl implements WebResourceManager
             return;
         }
 
-        for (Iterator iterator1 = descriptor.getResourceDescriptors().iterator(); iterator1.hasNext();)
+        for (ResourceDescriptor resourceDescriptor : descriptor.getResourceDescriptors())
         {
-            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator1.next();
             String name = resourceDescriptor.getName();
             final String linkToResource;
             if ("false".equalsIgnoreCase(resourceDescriptor.getParameter("cache")))
@@ -152,7 +153,7 @@ public class WebResourceManagerImpl implements WebResourceManager
             }
 
             WebResourceFormatter webResourceFormatter = getWebResourceFormatter(name);
-            if(webResourceFormatter != null)
+            if (webResourceFormatter != null)
             {
                 writer.write(webResourceFormatter.formatResource(name, linkToResource, resourceDescriptor.getParameters()));
             }
@@ -165,10 +166,9 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     private WebResourceFormatter getWebResourceFormatter(String name)
     {
-        for (int i = 0; i < WEB_RESOURCE_FORMATTERS.length; i++)
+        for (WebResourceFormatter webResourceFormatter : WEB_RESOURCE_FORMATTERS)
         {
-            WebResourceFormatter webResourceFormatter = WEB_RESOURCE_FORMATTERS[i];
-            if(webResourceFormatter.matches(name))
+            if (webResourceFormatter.matches(name))
             {
                 return webResourceFormatter;
             }
@@ -221,7 +221,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     // "/download/resources/plugin.key:module.key/resource.name"
     private String getResourceUrl(ModuleDescriptor moduleDescriptor, String resourceName)
     {
-        return "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleDescriptor.getCompleteKey() + "/" + resourceName;
+        return "/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleDescriptor.getCompleteKey() + "/" + resourceName;
     }
 
     public String getStaticPluginResource(String pluginModuleKey, String resourceName)
@@ -243,6 +243,4 @@ public class WebResourceManagerImpl implements WebResourceManager
         }
         return includeMode;
     }
-
-
 }

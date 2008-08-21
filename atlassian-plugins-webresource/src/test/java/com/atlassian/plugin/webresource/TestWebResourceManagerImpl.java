@@ -3,9 +3,9 @@ package com.atlassian.plugin.webresource;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginInformation;
-import com.atlassian.plugin.webresource.mock.StubModuleDescriptor;
 import com.atlassian.plugin.impl.StaticPlugin;
-import com.atlassian.plugin.servlet.BaseFileServerServlet;
+import com.atlassian.plugin.servlet.AbstractFileServerServlet;
+import com.atlassian.plugin.webresource.mock.StubModuleDescriptor;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 
@@ -65,7 +65,8 @@ public class TestWebResourceManagerImpl extends TestCase
         animalModuleDescriptor.setPlugin(animalPlugin);
 
         String resourceName = "foo.js";
-        String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + ANIMAL_PLUGIN_VERSION + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + "/" + BaseFileServerServlet.SERVLET_PATH + "/" + BaseFileServerServlet.RESOURCE_URL_PREFIX + "/" + animalModuleDescriptor.getCompleteKey() + "/" + resourceName;
+        String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + ANIMAL_PLUGIN_VERSION + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + "/" + AbstractFileServerServlet
+            .SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" + animalModuleDescriptor.getCompleteKey() + "/" + resourceName;
         assertEquals(expectedPrefix, webResourceManager.getStaticPluginResource(animalModuleDescriptor, resourceName));
     }
 
@@ -86,7 +87,8 @@ public class TestWebResourceManagerImpl extends TestCase
         {
             manager.requireResource("resource1");
             fail();
-        } catch (IllegalStateException e)
+        }
+        catch (IllegalStateException e)
         {
             //expected exception.
         }

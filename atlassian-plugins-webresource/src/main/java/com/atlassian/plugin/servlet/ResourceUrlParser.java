@@ -5,7 +5,7 @@ package com.atlassian.plugin.servlet;
  * for that download strategy.
  * <p/>
  * The URLs are in the form "/servletPath/strategyPrefix/moduleCompleteKey/resourceName", where the 'servletPath' is
- * defined as {@link BaseFileServerServlet#SERVLET_PATH}, the 'strategyPrefix' is defined by a constructor parameter,
+ * defined as {@link AbstractFileServerServlet#SERVLET_PATH}, the 'strategyPrefix' is defined by a constructor parameter,
  * the remainder is parsed by this parser into a {@link PluginResource}.
  */
 public class ResourceUrlParser
@@ -16,7 +16,7 @@ public class ResourceUrlParser
      * Create a parser with the given strategy prefix for parsing URLs.
      * <p/>
      * For example, a strategy prefix of 'resources' means that this parser will match URLs which include
-     * 'download/resources'. (Where 'download' is defined as {@link BaseFileServerServlet#SERVLET_PATH}.)
+     * 'download/resources'. (Where 'download' is defined as {@link AbstractFileServerServlet#SERVLET_PATH}.)
      *
      * @param strategyPrefix a String which will be found following 'download' at the start of matching URLs.
      */
@@ -60,6 +60,6 @@ public class ResourceUrlParser
      */
     public boolean matches(String resourceUrl)
     {
-        return resourceUrl.indexOf(BaseFileServerServlet.SERVLET_PATH + "/" + strategyPrefix) != -1;
+        return resourceUrl.indexOf(AbstractFileServerServlet.SERVLET_PATH + "/" + strategyPrefix) != -1;
     }
 }

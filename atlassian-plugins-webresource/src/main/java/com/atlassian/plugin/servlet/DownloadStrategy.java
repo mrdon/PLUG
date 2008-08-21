@@ -1,11 +1,18 @@
 package com.atlassian.plugin.servlet;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
+import javax.servlet.http.HttpServletResponse;
 
 public interface DownloadStrategy
 {
+    /**
+     * Returns true if the DownloadStrategy is supported for the given url path.
+     */
     boolean matches(String urlPath);
-    void serveFile(BaseFileServerServlet servlet, HttpServletRequest req, HttpServletResponse resp) throws IOException;
+
+    /**
+     * Serves the file for the given request and response.
+     * @throws DownloadException if there was an error during serving of the file.
+     */
+    void serveFile(HttpServletRequest req, HttpServletResponse resp) throws DownloadException;
 }

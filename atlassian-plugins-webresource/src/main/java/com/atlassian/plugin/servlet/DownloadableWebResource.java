@@ -2,17 +2,21 @@ package com.atlassian.plugin.servlet;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.elements.ResourceLocation;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
 import java.io.IOException;
 
 public class DownloadableWebResource extends AbstractDownloadableResource
 {
-    public DownloadableWebResource(BaseFileServerServlet servlet, Plugin plugin, ResourceLocation resourceDescriptor, String extraPath)
+    private static final Log log = LogFactory.getLog(DownloadableWebResource.class);
+
+    public DownloadableWebResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath, ContentTypeResolver contentTypeResolver)
     {
-        super(servlet, plugin, resourceDescriptor, extraPath);
+        super(plugin, resourceLocation, extraPath, contentTypeResolver);
     }
 
     public void serveResource(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException
@@ -24,7 +28,7 @@ public class DownloadableWebResource extends AbstractDownloadableResource
         }
         catch (ServletException e)
         {
-            e.printStackTrace();
+            log.error(e);
             throw new IOException(e.getMessage());
         }
     }

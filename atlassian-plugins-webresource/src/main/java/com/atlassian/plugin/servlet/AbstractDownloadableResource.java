@@ -1,7 +1,7 @@
 package com.atlassian.plugin.servlet;
 
-import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.servlet.util.LastModifiedHandler;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,30 +11,30 @@ import java.util.Date;
 
 public abstract class AbstractDownloadableResource implements DownloadableResource
 {
-    protected ResourceLocation resourceLocation;
-    protected String extraPath;
     protected Plugin plugin;
-    protected BaseFileServerServlet servlet;
+    protected String extraPath;
+    protected ResourceLocation resourceLocation;
+    protected final ContentTypeResolver contentTypeResolver;
 
-    public AbstractDownloadableResource(BaseFileServerServlet servlet, Plugin plugin, ResourceLocation resourceLocation, String extraPath)
+    public AbstractDownloadableResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath,
+        ContentTypeResolver contentTypeResolver)
     {
         if (extraPath != null && !"".equals(extraPath.trim()) && !resourceLocation.getLocation().endsWith("/"))
         {
             extraPath = "/" + extraPath;
         }
 
-        this.resourceLocation = resourceLocation;
-        this.extraPath = extraPath;
         this.plugin = plugin;
-        this.servlet = servlet;
+        this.extraPath = extraPath;
+        this.resourceLocation = resourceLocation;
+        this.contentTypeResolver = contentTypeResolver;
     }
-
 
     protected String getContentType()
     {
         if (resourceLocation.getContentType() == null)
         {
-            return servlet.getContentType(getLocation());
+            return contentTypeResolver.getContentType(getLocation());
         }
 
         return resourceLocation.getContentType();

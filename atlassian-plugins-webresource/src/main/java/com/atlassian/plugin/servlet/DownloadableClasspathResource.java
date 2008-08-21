@@ -2,6 +2,7 @@ package com.atlassian.plugin.servlet;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.elements.ResourceLocation;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -9,16 +10,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 public class DownloadableClasspathResource extends AbstractDownloadableResource
 {
     private static final Log log = LogFactory.getLog(DownloadableClasspathResource.class);
 
-    public DownloadableClasspathResource(BaseFileServerServlet servlet, Plugin plugin, ResourceLocation resourceDescriptor, String extraPath)
+    public DownloadableClasspathResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath, ContentTypeResolver context)
     {
-        super(servlet, plugin, resourceDescriptor, extraPath);
+        super(plugin, resourceLocation, extraPath, context);
     }
-
 
     public void serveResource(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException
     {
@@ -27,26 +28,34 @@ public class DownloadableClasspathResource extends AbstractDownloadableResource
 
         log.debug("Serving: " + this);
         InputStream resourceStream = plugin.getResourceAsStream(getLocation());
-        if (resourceStream != null)
+        if (resourceStream == null)
         {
-            httpServletResponse.setContentType(getContentType());
-            ResourceDownloadUtils.serveFileImpl(httpServletResponse, resourceStream);
+            log.info("Resource not found: " + this);
+            return;
+        }
 
+        httpServletResponse.setContentType(getContentType());
+        OutputStream out = httpServletResponse.getOutputStream();
+        try
+        {
+            IOUtils.copy(resourceStream, out);
+        }
+        catch (IOException e)
+        {
+            log.error("Error serving the requested file", e);
+        }
+        finally
+        {
+            IOUtils.closeQuietly(resourceStream);
             try
             {
-                resourceStream.close();
+                out.flush();
             }
             catch (IOException e)
             {
-                log.error("Could not close input stream on resource:", e);
+                log.warn("Error flushing output stream", e);
             }
-
         }
-        else
-        {
-            log.info("Resource not found: " + this);
-        }
+        log.info("Serving file done.");
     }
-
-
 }
