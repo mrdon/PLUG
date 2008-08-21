@@ -81,10 +81,16 @@
             <artifactId>atlassian-seraph</artifactId>
             <version>0.38</version>
         </dependency>
+
         <dependency>
             <groupId>net.java.dev.urlrewrite</groupId>
             <artifactId>urlrewrite</artifactId>
             <version>2.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.sal</groupId>
+            <artifactId>sal-spi</artifactId>
+            <version>${sal.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
