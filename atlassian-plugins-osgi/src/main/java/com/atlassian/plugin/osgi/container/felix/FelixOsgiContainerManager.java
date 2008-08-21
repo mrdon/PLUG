@@ -38,7 +38,7 @@ import java.util.jar.JarFile;
  */
 public class FelixOsgiContainerManager implements OsgiContainerManager
 {
-    static Log log = LogFactory.getLog(FelixOsgiContainerManager.class);
+    final static Log log = LogFactory.getLog(FelixOsgiContainerManager.class);
     private BundleRegistration registration = null;
     private Felix felix = null;
     private boolean felixRunning = false;
