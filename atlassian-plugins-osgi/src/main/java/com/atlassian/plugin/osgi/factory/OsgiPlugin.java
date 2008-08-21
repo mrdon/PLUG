@@ -96,7 +96,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
 
     public boolean isEnabled()
     {
-        return Bundle.ACTIVE == bundle.getState();
+        return Bundle.ACTIVE == bundle.getState() && (!shouldHaveSpringContext() || ensureNativeBeanFactory());
     }
 
     public void setEnabled(boolean enabled) throws OsgiContainerException
@@ -141,12 +141,38 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
     }
 
+    private boolean shouldHaveSpringContext()
+    {
+        return bundle.getHeaders().get("Spring-Context") != null;
+    }
+
     public <T> T autowire(Class<T> clazz)
     {
         return autowire(clazz, AutowireStrategy.AUTOWIRE_AUTODETECT);
     }
 
     public <T> T autowire(Class<T> clazz, AutowireStrategy autowireStrategy)
+    {
+        if (!ensureNativeBeanFactory())
+            return null;
+        
+        try
+        {
+            return (T) nativeCreateBeanMethod.invoke(nativeBeanFactory, clazz, autowireStrategy.ordinal(), false);
+        }
+        catch (IllegalAccessException e)
+        {
+            // Should never happen
+            throw new PluginException("Unable to access createBean method", e);
+        }
+        catch (InvocationTargetException e)
+        {
+            handleSpringMethodInvocationError(e);
+            return null;
+        }
+    }
+
+    private boolean ensureNativeBeanFactory()
     {
         if (nativeBeanFactory == null)
         {
@@ -157,13 +183,13 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 if (ctx == null)
                 {
                     log.warn("no bundle context - we are screwed");
-                    return null;
+                    return false;
                 }
                 ServiceReference[] services = ctx.getServiceReferences("org.springframework.context.ApplicationContext", "(org.springframework.context.service.name="+bundle.getSymbolicName()+")");
                 if (services == null || services.length == 0)
                 {
-                    log.warn("No spring bean factory found");
-                    return null;
+                    log.debug("No spring bean factory found...yet");
+                    return false;
                 }
 
                 Object applicationContext = ctx.getService(services[0]);
@@ -182,7 +208,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 } catch (InvocationTargetException e)
                 {
                     handleSpringMethodInvocationError(e);
-                    return null;
+                    return false;
                 }
             } catch (InvalidSyntaxException e)
             {
@@ -199,20 +225,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 throw new PluginException("Cannot find createBean method on registered bean factory: "+nativeBeanFactory, e);
             }
         }
-        try
-        {
-            return (T) nativeCreateBeanMethod.invoke(nativeBeanFactory, clazz, autowireStrategy.ordinal(), false);
-        }
-        catch (IllegalAccessException e)
-        {
-            // Should never happen
-            throw new PluginException("Unable to access createBean method", e);
-        }
-        catch (InvocationTargetException e)
-        {
-            handleSpringMethodInvocationError(e);
-            return null;
-        }
+        return nativeBeanFactory != null && nativeCreateBeanMethod != null;
     }
 
     private void handleSpringMethodInvocationError(InvocationTargetException e)
@@ -226,6 +239,11 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             // Should never happen as Spring methods only throw runtime exceptions
             throw new PluginException("Unable to invoke createBean", e.getCause());
         }
+    }
+
+    public String toString()
+    {
+        return getKey();
     }
 
 }

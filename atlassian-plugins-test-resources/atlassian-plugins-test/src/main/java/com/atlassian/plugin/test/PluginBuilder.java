@@ -104,6 +104,26 @@ public class PluginBuilder {
      * @throws IOException
      */
     public File build() throws IOException {
+        File baseDir = new File("target");
+        if (!baseDir.exists())
+            baseDir = new File(System.getProperty("java.io.tmpdir"));
+        else
+        {
+            baseDir = new File(baseDir, "tmp");
+            if (!baseDir.exists())
+                baseDir.mkdir();
+        }
+        return build(baseDir);
+    }
+
+    /**
+     * Builds a jar file from the provided information.  The file name is not guarenteed to match the jar name, as it is
+     * created as a temporary file.
+     * @param baseDir The base directory for generated plugin files
+     * @return The created jar plugin
+     * @throws IOException
+     */
+    public File build(File baseDir) throws IOException {
 
         // Ensure there is a manifest
         if (!jarContents.containsKey("META-INF/MANIFEST.MF"))
@@ -111,7 +131,7 @@ public class PluginBuilder {
             jarContents.put("META-INF/MANIFEST.MF", "Manifest-Version: 1.0".getBytes());
         }
 
-        File jarFile = File.createTempFile(name, ".jar");
+        File jarFile = File.createTempFile(name, ".jar", baseDir);
         ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(jarFile));
         for (Iterator i = jarContents.entrySet().iterator(); i.hasNext(); )
         {

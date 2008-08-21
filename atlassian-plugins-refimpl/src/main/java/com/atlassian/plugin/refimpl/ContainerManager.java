@@ -17,6 +17,7 @@ import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.BundledPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.atlassian.sal.spi.HostContextAccessor;
 
 import javax.servlet.ServletContext;
 import java.io.File;
@@ -109,6 +110,7 @@ public class ContainerManager {
         public void provide(ComponentRegistrar componentRegistrar) {
             componentRegistrar.register(PluginManager.class, PluginAccessor.class, PluginController.class).forInstance(pluginManager).withName("pluginManager");
             componentRegistrar.register(PluginEventManager.class).forInstance(pluginEventManager).withName("pluginEventManager");
+            componentRegistrar.register(HostContextAccessor.class).forInstance(new RiHostContextAccessor()).withName("hostContextAccessor");
         }
     }
 }

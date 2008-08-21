@@ -268,13 +268,14 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.matchAndReturn("hashCode", 12);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
+        mockPlugin.matchAndReturn("isEnabled", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockPluginPredicate = new Mock(PluginPredicate.class);
         mockPluginPredicate.expectAndReturn("matches", C.eq(plugin), true);
 
-        manager.addPlugin(null, plugin);
+        manager.addPlugins(null, Collections.singletonList(plugin));
         final Collection plugins = manager.getPlugins((PluginPredicate) mockPluginPredicate.proxy());
 
         assertEquals(1, plugins.size());
@@ -290,13 +291,14 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.matchAndReturn("hashCode", 12);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
+        mockPlugin.matchAndReturn("isEnabled", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockPluginPredicate = new Mock(PluginPredicate.class);
         mockPluginPredicate.expectAndReturn("matches", C.eq(plugin), false);
 
-        manager.addPlugin(null, plugin);
+        manager.addPlugins(null, Collections.singletonList(plugin));
         final Collection plugins = manager.getPlugins((PluginPredicate) mockPluginPredicate.proxy());
 
         assertEquals(0, plugins.size());
@@ -316,13 +318,14 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.matchAndReturn("hashCode", 12);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
+        mockPlugin.matchAndReturn("isEnabled", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockModulePredicate = new Mock(ModuleDescriptorPredicate.class);
         mockModulePredicate.expectAndReturn("matches", C.eq(moduleDescriptor), true);
 
-        manager.addPlugin(null, plugin);
+        manager.addPlugins(null, Collections.singletonList(plugin));
         final Collection modules = manager.getModules((ModuleDescriptorPredicate) mockModulePredicate.proxy());
 
         assertEquals(1, modules.size());
@@ -342,13 +345,14 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.matchAndReturn("hashCode", 12);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
+        mockPlugin.matchAndReturn("isEnabled", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockModulePredicate = new Mock(ModuleDescriptorPredicate.class);
         mockModulePredicate.expectAndReturn("matches", C.eq(module), false);
 
-        manager.addPlugin(null, plugin);
+        manager.addPlugins(null, Collections.singletonList(plugin));
         final Collection modules = manager.getModules((ModuleDescriptorPredicate) mockModulePredicate.proxy());
 
         assertEquals(0, modules.size());
@@ -367,13 +371,14 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.matchAndReturn("hashCode", 12);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
+        mockPlugin.matchAndReturn("isEnabled", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockModulePredicate = new Mock(ModuleDescriptorPredicate.class);
         mockModulePredicate.expectAndReturn("matches", C.eq(moduleDescriptor), true);
 
-        manager.addPlugin(null, plugin);
+        manager.addPlugins(null, Collections.singletonList(plugin));
         final Collection modules = manager.getModuleDescriptors((ModuleDescriptorPredicate) mockModulePredicate.proxy());
 
         assertEquals(1, modules.size());
@@ -393,13 +398,14 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.matchAndReturn("hashCode", 12);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
+        mockPlugin.matchAndReturn("isEnabled", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockModulePredicate = new Mock(ModuleDescriptorPredicate.class);
         mockModulePredicate.expectAndReturn("matches", C.eq(module), false);
 
-        manager.addPlugin(null, plugin);
+        manager.addPlugins(null, Collections.singletonList(plugin));
         final Collection modules = manager.getModuleDescriptors((ModuleDescriptorPredicate) mockModulePredicate.proxy());
 
         assertEquals(0, modules.size());
@@ -855,6 +861,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
+        mockPlugin.matchAndReturn("isEnabled", true);
 
         pluginManager.setPluginInstaller((PluginInstaller) mockRepository.proxy());
         pluginManager.init();
@@ -1033,6 +1040,28 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         }
     }
 
+    public void testAddPluginsWithDependencyIssues() throws Exception
+    {
+        Plugin servicePlugin = new EnableInPassPlugin("service.plugin", 2);
+        Plugin clientPlugin = new EnableInPassPlugin("client.plugin", 1);
+
+        manager.addPlugins(null, Arrays.asList(servicePlugin, clientPlugin));
+
+        assertTrue(clientPlugin.isEnabled());
+        assertTrue(servicePlugin.isEnabled());
+    }
+
+    public void testAddPluginsWithDependencyIssuesNoResolution() throws Exception
+    {
+        Plugin servicePlugin = new EnableInPassPlugin("service.plugin", 4);
+        Plugin clientPlugin = new EnableInPassPlugin("client.plugin", 1);
+
+        manager.addPlugins(null, Arrays.asList(servicePlugin, clientPlugin));
+
+        assertTrue(clientPlugin.isEnabled());
+        assertFalse(servicePlugin.isEnabled());
+    }
+
     public Plugin createPluginWithVersion(String version)
     {
         Plugin p = new StaticPlugin();
@@ -1041,6 +1070,19 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         PluginInformation pInfo = p.getPluginInformation();
         pInfo.setVersion(version);
         return p;
+    }
+
+    private static class EnableInPassPlugin extends StaticPlugin
+    {
+        private int pass;
+
+        public EnableInPassPlugin(String key, int pass)
+        {
+            this.pass = pass;
+            setKey(key);
+        }
+        @Override
+        public void setEnabled(boolean val) { super.setEnabled((--pass) <= 0); }
     }
 
     /**

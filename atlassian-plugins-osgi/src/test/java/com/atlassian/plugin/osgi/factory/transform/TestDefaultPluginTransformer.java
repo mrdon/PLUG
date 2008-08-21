@@ -49,7 +49,7 @@ public class TestDefaultPluginTransformer extends TestCase
         assertEquals("http://www.atlassian.com", attrs.getValue(Constants.BUNDLE_DOCURL));
         assertEquals("com.mycompany.myapp", attrs.getValue(Constants.EXPORT_PACKAGE));
         assertEquals(".", attrs.getValue(Constants.BUNDLE_CLASSPATH));
-        assertEquals("*;create-asynchronously:=false", attrs.getValue("Spring-Context"));
+        assertEquals("*;timeout=60", attrs.getValue("Spring-Context"));
         
     }
 

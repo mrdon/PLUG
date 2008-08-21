@@ -4,6 +4,7 @@ import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
@@ -18,6 +19,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
+import org.codehaus.classworlds.uberjar.protocol.jar.NonLockingJarHandler;
 
 import java.io.File;
 import java.io.InputStream;
@@ -76,12 +78,7 @@ public class OsgiPluginFactory implements PluginFactory
 
         Plugin plugin = null;
         InputStream pluginDescriptor = null;
-        ClassLoader loader = null;
-        try {
-            loader = new URLClassLoader(new URL[]{deploymentUnit.getPath().toURL()}, null);
-        } catch (MalformedURLException e) {
-            throw new PluginParseException("Invalid plugin file", e);
-        }
+        PluginClassLoader loader = new PluginClassLoader(deploymentUnit.getPath());
 
         if (loader.getResource(pluginDescriptorFileName) == null)
             throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);

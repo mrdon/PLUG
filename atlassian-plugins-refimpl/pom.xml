@@ -81,6 +81,12 @@
             <artifactId>atlassian-seraph</artifactId>
             <version>0.38</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.sal</groupId>
+            <artifactId>sal-spi</artifactId>
+            <version>${sal.version}</version>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

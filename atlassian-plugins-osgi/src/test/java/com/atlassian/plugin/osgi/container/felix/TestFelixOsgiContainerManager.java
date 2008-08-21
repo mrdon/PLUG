@@ -128,13 +128,8 @@ public class TestFelixOsgiContainerManager extends TestCase
         assertNotNull(bundleUpdate.getResource("bar.txt"));
     }
 
-    public void testInstallFailure() throws Exception, IOException, BundleException
+    public void testInstallFailure() throws Exception
     {
-        Mock mockLog = new Mock(Log.class);
-        felix.log = (Log) mockLog.proxy();
-        mockLog.matchAndReturn("info", C.ANY_ARGS, null);
-        mockLog.expect("error", C.args(C.eq("Framework error in bundle my.foo.symbolicName"), C.isA(BundleException.class)));
-
         File plugin = new PluginBuilder("plugin")
                 .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
                         "Bundle-Version: 1.0\n" +
@@ -146,11 +141,10 @@ public class TestFelixOsgiContainerManager extends TestCase
 
         Bundle bundle = felix.installBundle(plugin);
         try {
-        bundle.loadClass("foo.bar");
+            bundle.loadClass("foo.bar");
+            fail("Should have thrown exception");
         } catch (ClassNotFoundException ex) {
-            ex.printStackTrace();
+            // no worries
         }
-
-        mockLog.verify();
     }
 }

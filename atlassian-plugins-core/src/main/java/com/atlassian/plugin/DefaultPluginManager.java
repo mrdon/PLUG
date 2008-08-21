@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.InputStream;
 import java.util.*;
+import static java.lang.Thread.*;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -91,10 +92,7 @@ public class DefaultPluginManager implements PluginManager
         {
             if (loader == null) continue;
 
-            for (Plugin plugin : loader.loadAllPlugins(moduleDescriptorFactory))
-            {
-                addPlugin(loader, plugin);
-            }
+            addPlugins(loader, loader.loadAllPlugins(moduleDescriptorFactory));
         }
         pluginEventManager.broadcast(new PluginFrameworkStartedEvent(this, this));
     }
@@ -178,11 +176,8 @@ public class DefaultPluginManager implements PluginManager
                 if (loader.supportsAddition())
                 {
                     Collection<Plugin> addedPlugins = loader.addFoundPlugins(moduleDescriptorFactory);
-                    for (Plugin newPlugin : addedPlugins)
-                    {
-                        numberFound++;
-                        addPlugin(loader, newPlugin);
-                    }
+                    addPlugins(loader, addedPlugins);
+                    numberFound = addedPlugins.size();
                 }
             }
         }
@@ -263,6 +258,14 @@ public class DefaultPluginManager implements PluginManager
     }
 
     /**
+     * @deprecated Since 2.0.2, use {@link #addPlugins(PluginLoader,Collection<Plugin>...)} instead
+     */
+    protected void addPlugin(PluginLoader loader, Plugin plugin) throws PluginParseException
+    {
+        addPlugins(loader, Collections.singletonList(plugin));
+    }
+
+    /**
      * Update the local plugin state and enable state aware modules.
      * <p>
      * If there is an existing plugin with the same key, the version strings of the existing plugin and the plugin
@@ -272,52 +275,100 @@ public class DefaultPluginManager implements PluginManager
      * plugin cannot be unloaded a {@link PluginException} will be thrown.
      *
      * @param loader the loader used to load this plugin
-     * @param plugin the plugin to add
+     * @param pluginsToAdd the plugins to add
      * @throws PluginParseException if the plugin cannot be parsed
+     * @since 2.0.2
      */
-    protected void addPlugin(PluginLoader loader, Plugin plugin) throws PluginParseException
+    protected void addPlugins(PluginLoader loader, Collection<Plugin> pluginsToAdd) throws PluginParseException
     {
-        // testing to make sure plugin keys are unique
-        if (plugins.containsKey(plugin.getKey()))
+        Set<Plugin> pluginsToEnable = new HashSet<Plugin>();
+        for (Plugin plugin : pluginsToAdd)
         {
-            Plugin existingPlugin = plugins.get(plugin.getKey());
-            if (plugin.compareTo(existingPlugin) >= 0)
+            // testing to make sure plugin keys are unique
+            if (plugins.containsKey(plugin.getKey()))
             {
-                if (log.isDebugEnabled())
+                Plugin existingPlugin = plugins.get(plugin.getKey());
+                if (plugin.compareTo(existingPlugin) >= 0)
                 {
-                    log.debug("Reinstalling plugin '" + plugin.getKey() + "' version " +
-                        existingPlugin.getPluginInformation().getVersion() + " with version " +
-                        plugin.getPluginInformation().getVersion());
-                }
-                try
-                {
-                    log.info("Unloading " + existingPlugin.getName() + " to upgrade.");
-                    updatePlugin(existingPlugin, plugin);
                     if (log.isDebugEnabled())
-                        log.debug("Plugin '" + plugin.getKey() + "' unloaded.");
+                    {
+                        log.debug("Reinstalling plugin '" + plugin.getKey() + "' version " +
+                            existingPlugin.getPluginInformation().getVersion() + " with version " +
+                            plugin.getPluginInformation().getVersion());
+                    }
+                    try
+                    {
+                        log.info("Unloading " + existingPlugin.getName() + " to upgrade.");
+                        updatePlugin(existingPlugin, plugin);
+                        if (log.isDebugEnabled())
+                            log.debug("Plugin '" + plugin.getKey() + "' unloaded.");
+                    }
+                    catch (PluginException e)
+                    {
+                        throw new PluginParseException("Duplicate plugin found (installed version is the same or older) and could not be unloaded: '" + plugin.getKey() + "'", e);
+                    }
                 }
-                catch (PluginException e)
+                else
                 {
-                    throw new PluginParseException("Duplicate plugin found (installed version is the same or older) and could not be unloaded: '" + plugin.getKey() + "'", e);
+                    // If we find an older plugin, don't error, just ignore it. PLUG-12.
+                    if (log.isDebugEnabled())
+                        log.debug("Duplicate plugin found (installed version is newer): '" + plugin.getKey() + "'");
+                    // and don't install the older plugin
+                    return;
                 }
             }
-            else
+
+            plugins.put(plugin.getKey(), plugin);
+            if (isPluginEnabled(plugin.getKey()))
             {
-                // If we find an older plugin, don't error, just ignore it. PLUG-12.
-                if (log.isDebugEnabled())
-                    log.debug("Duplicate plugin found (installed version is newer): '" + plugin.getKey() + "'");
-                // and don't install the older plugin
-                return;
+                plugin.setEnabled(true);
+                pluginsToEnable.add(plugin);
+            }
+
+            pluginToPluginLoader.put(plugin, loader);
+        }
+
+        if (plugins.size() > 0)
+        {
+            // Now try to enable plugins that weren't enabled before, probably due to dependency ordering issues
+
+            for (int tries = 5; tries > 0; tries--)
+            {
+                for (Iterator<Plugin> i = pluginsToEnable.iterator(); i.hasNext(); )
+                {
+                    Plugin plugin = i.next();
+                    if (plugin.isEnabled())
+                        i.remove();
+                }
+                if (pluginsToEnable.size() > 0)
+                    log.info("Plugins that have yet to start: "+pluginsToEnable+", "+tries+" tries remaining");
+                else
+                    break;
+                try
+                {
+                    sleep(1000);
+                } catch (InterruptedException e)
+                {
+                    break;
+                }
+            }
+            if (pluginsToEnable.size() > 0)
+            {
+                StringBuilder sb = new StringBuilder();
+                for (Plugin plugin : pluginsToEnable)
+                {
+                    sb.append(plugin.getKey()).append(',');
+                    disablePlugin(plugin.getKey());
+                }
+                sb.deleteCharAt(sb.length() - 1);
+                log.error("Unable to start the following plugins: " + sb.toString());
             }
         }
 
-        plugins.put(plugin.getKey(), plugin);
-        if (isPluginEnabled(plugin.getKey()))
-            plugin.setEnabled(true);
+        for (Plugin plugin : pluginsToAdd)
+            if (plugin.isEnabled())
+                enablePluginModules(plugin);
 
-        enablePluginModules(plugin);
-
-        pluginToPluginLoader.put(plugin, loader);
     }
 
     /**
