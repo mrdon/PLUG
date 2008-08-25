@@ -14,15 +14,18 @@ import java.io.IOException;
 import java.net.URLDecoder;
 
 /**
- * A downloadable plugin resource, as described here: http://confluence.atlassian.com/display/JIRA/Downloadable+plugin+resource
+ * Supports the download of a single downloadable plugin resource, as described here:
+ * http://confluence.atlassian.com/display/JIRA/Downloadable+plugin+resource
  * <p/>
  * The URL that it parses looks like this: <br> <code>{server root}/download/resources/{plugin key}:{module
  * key}/{resource name}</code>
+ * <p/>
+ * See {@link PluginResourcesDownload} classes for serving multiple plugin resource downloads.
  */
 public class PluginResourceDownload implements DownloadStrategy
 {
     private static final Log log = LogFactory.getLog(PluginResourceDownload.class);
-    private static final String DOWNLOAD_RESOURCE = "download";
+    static final String DOWNLOAD_RESOURCE = "download";
     private final ResourceUrlParser urlParser = new ResourceUrlParser(AbstractFileServerServlet.RESOURCE_URL_PREFIX);
     private PluginAccessor pluginAccessor;
     private String characterEncoding = "UTF-8"; // default to sensible encoding
@@ -33,7 +36,7 @@ public class PluginResourceDownload implements DownloadStrategy
     {
     }
 
-    public PluginResourceDownload(PluginAccessor pluginAccessor, ContentTypeResolver contentTypeResolver, String characterEncoding)
+    public PluginResourceDownload(String characterEncoding, PluginAccessor pluginAccessor, ContentTypeResolver contentTypeResolver)
     {
         this.pluginAccessor = pluginAccessor;
         this.contentTypeResolver = contentTypeResolver;

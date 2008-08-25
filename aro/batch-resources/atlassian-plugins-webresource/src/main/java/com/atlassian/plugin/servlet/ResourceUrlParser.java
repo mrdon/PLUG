@@ -40,16 +40,24 @@ public class ResourceUrlParser
      */
     public PluginResource parse(String resourceUrl)
     {
-        if (!matches(resourceUrl))
-            return null;
-
-        int indexOfStrategyPrefix = resourceUrl.indexOf(strategyPrefix);
-        String libraryAndResource = resourceUrl.substring(indexOfStrategyPrefix + strategyPrefix.length() + 1);
+        String libraryAndResource = getResourcePart(resourceUrl);
         String[] parts = libraryAndResource.split("/", 2);
 
         if (parts.length != 2)
             return null;
         return new PluginResource(parts[0], parts[1]);
+    }
+
+    /**
+     * Returns the resource part of the url, which follows the strategy prefix.
+     */
+    public String getResourcePart(String resourceUrl)
+    {
+        if (!matches(resourceUrl))
+            return null;
+
+        int indexOfStrategyPrefix = resourceUrl.indexOf(strategyPrefix);
+        return resourceUrl.substring(indexOfStrategyPrefix + strategyPrefix.length() + 1);
     }
 
     /**
