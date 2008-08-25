@@ -36,20 +36,32 @@ public class ClassLoadingPluginLoader implements DynamicPluginLoader
     /** Maps {@link DeploymentUnit}s to {@link Plugin}s. */
     private final Map plugins;
     private DescriptorParserFactory descriptorParserFactory;
+    private File pluginTemp;
     
     public ClassLoadingPluginLoader(File path, PluginFactory pluginFactory)
     {
-        this(path, PluginManager.PLUGIN_DESCRIPTOR_FILENAME, pluginFactory);
+        this(path,pluginFactory, new File(System.getProperty("java.io.tmpdir")));
+    }
+
+    public ClassLoadingPluginLoader(File path, PluginFactory pluginFactory, File pluginTemp)
+    {
+        this(path, PluginManager.PLUGIN_DESCRIPTOR_FILENAME, pluginFactory, pluginTemp);
     }
 
     public ClassLoadingPluginLoader(File path, String pluginDescriptorFileName, PluginFactory pluginFactory)
+    {
+        this(path, pluginDescriptorFileName, pluginFactory, new File(System.getProperty("java.io.tmpdir")));
+    }
+
+    public ClassLoadingPluginLoader(File path, String pluginDescriptorFileName, PluginFactory pluginFactory, File pluginTemp)
     {
         log.debug("Creating classloader for url " + path);
         scanner = new Scanner(path);
         this.pluginDescriptorFileName = pluginDescriptorFileName;
         this.pluginFactory = pluginFactory;
         this.descriptorParserFactory = new XmlDescriptorParserFactory();
-        plugins = new HashMap();
+        this.plugins = new HashMap();
+        this.pluginTemp = pluginTemp;
     }
 
     public Collection loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
@@ -89,7 +101,7 @@ public class ClassLoadingPluginLoader implements DynamicPluginLoader
         PluginClassLoader loader = null;
         try
         {
-            loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader());
+            loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader(), pluginTemp);
             URL pluginResourceUrl = loader.getLocalResource(pluginDescriptorFileName);
             if (pluginResourceUrl == null)
                 return handleNoDescriptor(deploymentUnit);

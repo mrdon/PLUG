@@ -2,15 +2,21 @@ package com.atlassian.plugin.classloader;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.Validate;
 import org.codehaus.classworlds.uberjar.protocol.jar.NonLockingJarHandler;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.net.MalformedURLException;
-import java.util.*;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Iterator;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -27,7 +33,8 @@ public final class PluginClassLoader extends ClassLoader
     /**
      * Mapping of <String> names (resource, or class name) to the <URL>s where the resource or class can be found.
      */
-    private final Map entryMappings = new HashMap();
+    private final Map/*<String, URL>*/ entryMappings = new HashMap();
+    private File tempDirectory;
 
     public PluginClassLoader(final File pluginFile)
     {
@@ -36,7 +43,15 @@ public final class PluginClassLoader extends ClassLoader
 
     public PluginClassLoader(final File pluginFile, ClassLoader parent)
     {
+        this(pluginFile, parent, new File(System.getProperty("java.io.tmpdir")));
+    }
+
+    public PluginClassLoader(final File pluginFile, ClassLoader parent, File tempDirectory)
+    {
         super(parent);
+        Validate.isTrue(tempDirectory.exists(), "Temp directory should exist");
+
+        this.tempDirectory = tempDirectory;
         try
         {
             if (pluginFile == null || !pluginFile.exists())
@@ -44,7 +59,7 @@ public final class PluginClassLoader extends ClassLoader
                 throw new IllegalArgumentException("Plugin jar file must not be null and must exist.");
             }
             this.pluginInnerJars = new ArrayList();
-            initializeFromJar(pluginFile, true);
+            initialiseOuterJar(pluginFile);
         }
         catch (IOException e)
         {
@@ -54,12 +69,12 @@ public final class PluginClassLoader extends ClassLoader
 
     /**
      * Go through all entries in the given JAR, and recursively populate entryMappings by providing
-     * resource or Class name to URL mappings. 
+     * resource or Class name to URL mappings.
      *
      * @param file the file to scan
-     * @throws IOException
+     * @throws IOException if the plugin jar can not be read
      */
-    private void initializeFromJar(File file, boolean isOuterJar) throws IOException
+    private void initialiseOuterJar(File file) throws IOException
     {
         final JarFile jarFile = new JarFile(file);
         try
@@ -67,10 +82,14 @@ public final class PluginClassLoader extends ClassLoader
             for (Enumeration entries = jarFile.entries(); entries.hasMoreElements();)
             {
                 final JarEntry jarEntry = (JarEntry) entries.nextElement();
-                if(isOuterJar && isInnerJarPath(jarEntry.getName()))
+                if (isInnerJarPath(jarEntry.getName()))
+                {
                     initialiseInnerJar(jarFile, jarEntry);
+                }
                 else
-                    addEntryMapping(jarEntry, file, isOuterJar);
+                {
+                    addEntryMapping(jarEntry, file, true);
+                }
             }
         }
         finally
@@ -79,8 +98,9 @@ public final class PluginClassLoader extends ClassLoader
         }
     }
 
-    private boolean isInnerJarPath(String name){
-         return name.startsWith("META-INF/lib/") && name.endsWith(".jar");
+    private boolean isInnerJarPath(String name)
+    {
+        return name.startsWith("META-INF/lib/") && name.endsWith(".jar");
     }
 
     private void initialiseInnerJar(JarFile jarFile, JarEntry jarEntry) throws IOException
@@ -89,12 +109,27 @@ public final class PluginClassLoader extends ClassLoader
         FileOutputStream fileOutputStream = null;
         try
         {
-            final File innerJarTmpFile = File.createTempFile(PLUGIN_INNER_JAR_PREFIX, ".jar");
+            final File innerJarFile = File.createTempFile(PLUGIN_INNER_JAR_PREFIX, ".jar", tempDirectory);
             inputStream = jarFile.getInputStream(jarEntry);
-            fileOutputStream = new FileOutputStream(innerJarTmpFile);
+            fileOutputStream = new FileOutputStream(innerJarFile);
             IOUtils.copy(inputStream, fileOutputStream);
-            initializeFromJar(innerJarTmpFile, false);
-            pluginInnerJars.add(innerJarTmpFile);
+            IOUtils.closeQuietly(fileOutputStream);
+
+            final JarFile innerJarJarFile = new JarFile(innerJarFile);
+            try
+            {
+                for (Enumeration entries = innerJarJarFile.entries(); entries.hasMoreElements();)
+                {
+                    final JarEntry innerJarEntry = (JarEntry) entries.nextElement();
+                    addEntryMapping(innerJarEntry, innerJarFile, false);
+                }
+            }
+            finally
+            {
+                innerJarJarFile.close();
+            }
+
+            pluginInnerJars.add(innerJarFile);
         }
         finally
         {
@@ -108,7 +143,7 @@ public final class PluginClassLoader extends ClassLoader
      * requested class cannot be found in this class loader, the parent class loader will be consulted via the standard
      * {@link ClassLoader#loadClass(String, boolean)} mechanism.
      *
-     * @param name Class to load
+     * @param name    Class to load
      * @param resolve true to resolve all class dependencies when loaded
      * @return Class for the provided name
      * @throws ClassNotFoundException if the class cannot be found in this class loader or its parent
@@ -143,7 +178,8 @@ public final class PluginClassLoader extends ClassLoader
      * @param name the name of the resource.
      * @return the URL to the resource, <code>null</code> if the resource was not found.
      */
-    public URL getResource(String name) {
+    public URL getResource(String name)
+    {
         if (isEntryInPlugin(name))
         {
             return (URL) entryMappings.get(name);
@@ -162,10 +198,7 @@ public final class PluginClassLoader extends ClassLoader
      */
     public URL getLocalResource(String name)
     {
-        if (isEntryInPlugin(name))
-            return getResource(name);
-         else
-            return null;
+        return isEntryInPlugin(name) ? getResource(name) : null;
     }
 
     public void close()
@@ -184,6 +217,7 @@ public final class PluginClassLoader extends ClassLoader
     /**
      * This is based on part of the defineClass method in URLClassLoader (minus the package security checks).
      * See java.lang.ClassLoader.packages.
+     *
      * @param className to derive the package from
      */
     private void initializePackage(String className)
@@ -222,8 +256,7 @@ public final class PluginClassLoader extends ClassLoader
     {
         try
         {
-            URL url = new URL(new URL("jar:file:" + jarFile.getAbsolutePath() + "!/"), name, NonLockingJarHandler.getInstance());
-            return url;
+            return new URL(new URL("jar:file:" + jarFile.getAbsolutePath() + "!/"), name, NonLockingJarHandler.getInstance());
         }
         catch (MalformedURLException e)
         {
@@ -238,16 +271,13 @@ public final class PluginClassLoader extends ClassLoader
 
     private void addEntryMapping(JarEntry jarEntry, File jarFile, boolean overrideExistingEntries)
     {
-        if(overrideExistingEntries)
+        if (overrideExistingEntries)
         {
             addEntryUrl(jarEntry, jarFile);
         }
-        else
+        else if (!entryMappings.containsKey(jarEntry.getName()))
         {
-            if(!entryMappings.containsKey(jarEntry.getName()))
-            {
-                addEntryUrl(jarEntry, jarFile);
-            }
+            addEntryUrl(jarEntry, jarFile);
         }
     }
 
