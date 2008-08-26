@@ -14,6 +14,7 @@ import org.apache.commons.lang.Validate;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.File;
 import java.net.URL;
 
 /**
@@ -25,9 +26,16 @@ public class LegacyDynamicPluginFactory implements PluginFactory
 {
     private DescriptorParserFactory descriptorParserFactory;
     private String pluginDescriptorFileName;
+    private final File tempDirectory;
 
     public LegacyDynamicPluginFactory(String pluginDescriptorFileName)
     {
+        this(pluginDescriptorFileName,new File(System.getProperty("java.io.tmpdir")));
+    }
+
+    public LegacyDynamicPluginFactory(String pluginDescriptorFileName, File tempDirectory)
+    {
+        this.tempDirectory = tempDirectory;
         Validate.notEmpty(pluginDescriptorFileName, "Plugin descriptor name cannot be null or blank");
         this.descriptorParserFactory = new XmlDescriptorParserFactory();
         this.pluginDescriptorFileName = pluginDescriptorFileName;
@@ -50,7 +58,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
         PluginClassLoader loader = null;
         try
         {
-            loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader());
+            loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader(), tempDirectory);
             URL pluginDescriptorUrl = loader.getLocalResource(pluginDescriptorFileName);
             if (pluginDescriptorUrl == null)
                 throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);
