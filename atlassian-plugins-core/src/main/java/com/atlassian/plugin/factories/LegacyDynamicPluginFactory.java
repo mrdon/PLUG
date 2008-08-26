@@ -70,7 +70,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
         catch (RuntimeException e)
         {
             if (loader != null) loader.close();
-            throw e;
+            throw new PluginParseException(e);
         }
         catch (Error e)
         {
