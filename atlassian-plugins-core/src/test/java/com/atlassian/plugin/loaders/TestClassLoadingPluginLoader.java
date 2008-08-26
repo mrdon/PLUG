@@ -5,10 +5,12 @@ import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 import com.atlassian.plugin.util.ClassLoaderUtils;
+import com.mockobjects.dynamic.Mock;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.FileUtils;
@@ -47,6 +49,26 @@ public class TestClassLoadingPluginLoader extends AbstractTestClassLoader
         FileUtils.deleteDirectory(pluginsTestDir);
         super.tearDown();
     }
+
+    public void testCreateCorruptJar()
+    {
+        final File file = new File("some crap file");
+        ClassLoadingPluginLoader loader = new ClassLoadingPluginLoader(file, null);
+        Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
+        DeploymentUnit unit = new DeploymentUnit(file);
+        try
+        {
+            loader.deployPluginFromUnit(unit, (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy());
+            fail("Should have thrown an exception");
+        } catch (PluginParseException ex)
+        {
+            // horray!
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            fail("No exceptions allowed");
+        }
+    }
+
 
     public void testAtlassianPlugin() throws Exception
     {
