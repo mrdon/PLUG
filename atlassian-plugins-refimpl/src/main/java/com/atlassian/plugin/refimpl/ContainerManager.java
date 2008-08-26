@@ -22,6 +22,8 @@ import com.atlassian.sal.spi.HostContextAccessor;
 import javax.servlet.ServletContext;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Created by IntelliJ IDEA.
@@ -46,7 +48,8 @@ public class ContainerManager {
         servletModuleManager = new ServletModuleManager();
 
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
-        hostComponentProvider = new SimpleHostComponentProvider();
+        Map<Class, Object> container = new HashMap<Class,Object>();
+        hostComponentProvider = new SimpleHostComponentProvider(container);
         pluginEventManager = new DefaultPluginEventManager();
         osgiContainerManager = new FelixOsgiContainerManager(new File(servletContext.getRealPath("/WEB-INF/framework-bundles")),
                                                              scannerConfig, hostComponentProvider, pluginEventManager);
@@ -69,6 +72,12 @@ public class ContainerManager {
         moduleDescriptorFactory.addModuleDescriptor("servlet", SimpleServletModuleDescriptor.class);
         pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader>asList(bundledPluginLoader, directoryPluginLoader),
                 moduleDescriptorFactory, pluginEventManager);
+
+        container.put(PluginController.class, pluginManager);
+        container.put(PluginAccessor.class, pluginManager);
+        container.put(PluginEventManager.class, pluginEventManager);
+        container.put(HostContextAccessor.class, new RiHostContextAccessor(container));
+
         try {
             pluginManager.init();
         } catch (PluginParseException e) {
@@ -106,11 +115,20 @@ public class ContainerManager {
     }
 
     private class SimpleHostComponentProvider implements HostComponentProvider {
+        private Map<Class, Object> container;
+
+        public SimpleHostComponentProvider(Map<Class, Object> container)
+        {
+            this.container = container;
+        }
 
         public void provide(ComponentRegistrar componentRegistrar) {
-            componentRegistrar.register(PluginManager.class, PluginAccessor.class, PluginController.class).forInstance(pluginManager).withName("pluginManager");
-            componentRegistrar.register(PluginEventManager.class).forInstance(pluginEventManager).withName("pluginEventManager");
-            componentRegistrar.register(HostContextAccessor.class).forInstance(new RiHostContextAccessor()).withName("hostContextAccessor");
+            for (Map.Entry<Class,Object> entry : container.entrySet())
+            {
+                String name = entry.getKey().getSimpleName();
+                name = Character.toLowerCase(name.charAt(0)) + name.substring(1);
+                componentRegistrar.register(entry.getKey()).forInstance(entry.getValue()).withName(name);
+            }
         }
     }
 }
