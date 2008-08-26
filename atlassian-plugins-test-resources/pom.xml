@@ -1,0 +1,24 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.atlassian.plugins</groupId>
+        <artifactId>atlassian-plugins-parent</artifactId>
+        <version>2.0.0.beta6.4</version>
+    </parent>
+
+    <groupId>com.atlassian.plugins.test</groupId>
+    <artifactId>atlassian-plugins-test-resources</artifactId>
+    <packaging>pom</packaging>
+    <name>Atlassian Plugins - Test Libraries</name>
+
+    <modules>
+        <module>innerjarone</module>
+        <module>innerjartwo</module>
+        <module>simpletest</module>
+        <module>atlassian-plugins-test</module>
+    </modules>
+
+    <properties>
+        <jdkLevel>1.4</jdkLevel>
+    </properties>
+</project>
