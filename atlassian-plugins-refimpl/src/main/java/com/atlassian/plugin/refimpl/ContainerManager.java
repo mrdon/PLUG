@@ -1,29 +1,28 @@
 package com.atlassian.plugin.refimpl;
 
-import com.atlassian.plugin.descriptors.servlet.ServletModuleManager;
-import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
-import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
-import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
-import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
-import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.descriptors.servlet.ServletModuleManager;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
-import com.atlassian.plugin.refimpl.servlet.SimpleServletModuleDescriptor;
-import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.BundledPluginLoader;
+import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
+import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
+import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
+import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
+import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
+import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.refimpl.servlet.SimpleServletModuleDescriptor;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
-import com.atlassian.sal.spi.HostContextAccessor;
 
 import javax.servlet.ServletContext;
 import java.io.File;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -32,7 +31,8 @@ import java.util.HashMap;
  * Time: 12:29:42 PM
  * To change this template use File | Settings | File Templates.
  */
-public class ContainerManager {
+public class ContainerManager 
+{
 
     private final ServletModuleManager servletModuleManager;
     private final OsgiContainerManager osgiContainerManager;
@@ -40,6 +40,7 @@ public class ContainerManager {
     private final PluginEventManager pluginEventManager;
     private final HostComponentProvider hostComponentProvider;
     private final DefaultModuleDescriptorFactory moduleDescriptorFactory;
+    private final Map<Class,Object> publicContainer;
 
     private static ContainerManager instance;
 
@@ -48,8 +49,8 @@ public class ContainerManager {
         servletModuleManager = new ServletModuleManager();
 
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
-        Map<Class, Object> container = new HashMap<Class,Object>();
-        hostComponentProvider = new SimpleHostComponentProvider(container);
+        publicContainer = new HashMap<Class,Object>();
+        hostComponentProvider = new SimpleHostComponentProvider(publicContainer);
         pluginEventManager = new DefaultPluginEventManager();
         osgiContainerManager = new FelixOsgiContainerManager(new File(servletContext.getRealPath("/WEB-INF/framework-bundles")),
                                                              scannerConfig, hostComponentProvider, pluginEventManager);
@@ -62,21 +63,23 @@ public class ContainerManager {
                 Arrays.asList(osgiPluginDeployer, osgiBundleDeployer),
                 pluginEventManager);
 
-        BundledPluginLoader bundledPluginLoader = new BundledPluginLoader(
+        /*BundledPluginLoader bundledPluginLoader = new BundledPluginLoader(
                 getClass().getResource("/atlassian-bundled-plugins.zip"),
                 new File(servletContext.getRealPath("/WEB-INF/bundled-plugins")),
                 Arrays.asList(osgiPluginDeployer, osgiBundleDeployer),
                 pluginEventManager);
+                */
 
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("servlet", SimpleServletModuleDescriptor.class);
-        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader>asList(bundledPluginLoader, directoryPluginLoader),
+        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader>asList(/*bundledPluginLoader, */directoryPluginLoader),
                 moduleDescriptorFactory, pluginEventManager);
 
-        container.put(PluginController.class, pluginManager);
-        container.put(PluginAccessor.class, pluginManager);
-        container.put(PluginEventManager.class, pluginEventManager);
-        container.put(HostContextAccessor.class, new RiHostContextAccessor(container));
+        publicContainer.put(PluginController.class, pluginManager);
+        publicContainer.put(PluginAccessor.class, pluginManager);
+        publicContainer.put(PluginEventManager.class, pluginEventManager);
+        publicContainer.put(Map.class, publicContainer);
+
 
         try {
             pluginManager.init();
@@ -85,6 +88,7 @@ public class ContainerManager {
         }
 
     }
+
 
     public static synchronized void setInstance(ContainerManager mgr) {
         instance = mgr;

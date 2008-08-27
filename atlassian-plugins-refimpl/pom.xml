@@ -81,12 +81,6 @@
             <artifactId>atlassian-seraph</artifactId>
             <version>0.38</version>
         </dependency>
-
-        <dependency>
-            <groupId>com.atlassian.sal</groupId>
-            <artifactId>sal-spi</artifactId>
-            <version>${sal.version}</version>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -159,6 +153,7 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <!-- Don't bundle sal as it causes circular dependency
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
@@ -199,10 +194,6 @@
                 <executions>
                     <execution>
                         <id>create-bundled-plugins</id>
-                        <!--
-                            so that it happens just after the unit tests ran successfuly
-                            it should be changes to pre-package when maven 2.1 is out
-                        -->
                         <phase>process-resources</phase>
                         <goals>
                             <goal>attached</goal>
@@ -210,6 +201,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
@@ -242,7 +234,6 @@
     </build>
     
     <properties>
-        <sal.version>1.1-SNAPSHOT</sal.version>
         <pluginBundleDirectory>target/bundled-plugins</pluginBundleDirectory>
     </properties>
 
