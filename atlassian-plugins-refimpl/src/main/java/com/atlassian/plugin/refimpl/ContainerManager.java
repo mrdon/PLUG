@@ -1,38 +1,31 @@
 package com.atlassian.plugin.refimpl;
 
-import com.atlassian.plugin.descriptors.servlet.ServletModuleManager;
-import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
-import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
-import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
-import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
-import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.servlet.PluginResourceDownload;
-import com.atlassian.plugin.servlet.ContentTypeResolver;
-import com.atlassian.plugin.servlet.DownloadStrategy;
+import com.atlassian.plugin.descriptors.servlet.ServletModuleManager;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
+import com.atlassian.plugin.loaders.DirectoryPluginLoader;
+import com.atlassian.plugin.loaders.PluginLoader;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
+import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
+import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
+import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
+import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
+import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.refimpl.servlet.SimpleServletModuleDescriptor;
 import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
-import com.atlassian.plugin.loaders.DirectoryPluginLoader;
-import com.atlassian.plugin.loaders.BundledPluginLoader;
-import com.atlassian.plugin.loaders.PluginLoader;
+import com.atlassian.plugin.servlet.ContentTypeResolver;
+import com.atlassian.plugin.servlet.DownloadStrategy;
+import com.atlassian.plugin.servlet.PluginResourceDownload;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
-import com.atlassian.sal.spi.HostContextAccessor;
 
 import javax.servlet.ServletContext;
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * A simple class that behaves like Spring's ContianerManager class.
@@ -46,6 +39,7 @@ public class ContainerManager
     private final PluginEventManager pluginEventManager;
     private final HostComponentProvider hostComponentProvider;
     private final DefaultModuleDescriptorFactory moduleDescriptorFactory;
+    private final Map<Class,Object> publicContainer;
 
     private static ContainerManager instance;
     private List<DownloadStrategy> downloadStrategies;
@@ -57,6 +51,7 @@ public class ContainerManager
         webResourceManager = new WebResourceManagerImpl(new SimpleWebResourceIntegration(servletContext));
 
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
+        publicContainer = new HashMap<Class,Object>();
         hostComponentProvider = new SimpleHostComponentProvider();
         pluginEventManager = new DefaultPluginEventManager();
         osgiContainerManager = new FelixOsgiContainerManager(new File(servletContext.getRealPath(
@@ -72,20 +67,25 @@ public class ContainerManager
             Arrays.asList(osgiPluginDeployer, osgiBundleDeployer),
             pluginEventManager);
 
-        BundledPluginLoader bundledPluginLoader = new BundledPluginLoader(
+        /*BundledPluginLoader bundledPluginLoader = new BundledPluginLoader(
             getClass().getResource("/atlassian-bundled-plugins.zip"),
             new File(servletContext.getRealPath("/WEB-INF/bundled-plugins")),
             Arrays.asList(osgiPluginDeployer, osgiBundleDeployer),
             pluginEventManager);
+                */
 
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("servlet", SimpleServletModuleDescriptor.class);
-        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader>asList(
-            bundledPluginLoader, directoryPluginLoader),
-            moduleDescriptorFactory, pluginEventManager);
+        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader>asList(/*bundledPluginLoader, */directoryPluginLoader),
+                moduleDescriptorFactory, pluginEventManager);
 
-        try
-        {
+        publicContainer.put(PluginController.class, pluginManager);
+        publicContainer.put(PluginAccessor.class, pluginManager);
+        publicContainer.put(PluginEventManager.class, pluginEventManager);
+        publicContainer.put(Map.class, publicContainer);
+
+
+        try {
             pluginManager.init();
         }
         catch (PluginParseException e)
@@ -165,11 +165,13 @@ public class ContainerManager
 
     private class SimpleHostComponentProvider implements HostComponentProvider
     {
-        public void provide(ComponentRegistrar componentRegistrar)
-        {
-            componentRegistrar.register(PluginManager.class, PluginAccessor.class, PluginController.class).forInstance(pluginManager).withName("pluginManager");
-            componentRegistrar.register(PluginEventManager.class).forInstance(pluginEventManager).withName("pluginEventManager");
-            componentRegistrar.register(HostContextAccessor.class).forInstance(new RiHostContextAccessor()).withName("hostContextAccessor");
+        public void provide(ComponentRegistrar componentRegistrar) {
+            for (Map.Entry<Class,Object> entry : publicContainer.entrySet())
+            {
+                String name = entry.getKey().getSimpleName();
+                name = Character.toLowerCase(name.charAt(0)) + name.substring(1);
+                componentRegistrar.register(entry.getKey()).forInstance(entry.getValue()).withName(name);
+            }
             componentRegistrar.register(WebResourceManager.class).forInstance(webResourceManager).withName("webResourceManager");
         }
     }
