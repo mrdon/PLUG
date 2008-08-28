@@ -15,6 +15,7 @@
         <module>innerjarone</module>
         <module>innerjartwo</module>
         <module>simpletest</module>
+        <module>filtertest</module>
         <module>atlassian-plugins-test</module>
     </modules>
 

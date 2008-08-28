@@ -10,6 +10,8 @@ import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.*;
 import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginDisabledEvent;
+import com.atlassian.plugin.event.events.PluginEnabledEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
@@ -125,7 +127,6 @@ public class DefaultPluginManager implements PluginManager
 
     public String installPlugin(PluginArtifact pluginArtifact) throws PluginParseException
     {
-
         String key = validatePlugin(pluginArtifact);
         pluginInstaller.installPlugin(key, pluginArtifact);
         scanForNewPlugins();
@@ -716,11 +717,9 @@ public class DefaultPluginManager implements PluginManager
     protected void notifyPluginEnabled(Plugin plugin)
     {
         classLoader.notifyPluginOrModuleEnabled();
-
         plugin.setEnabled(true);
-
         enablePluginModules(plugin);
-
+        pluginEventManager.broadcast(new PluginEnabledEvent(plugin));
     }
 
     /**
@@ -823,6 +822,7 @@ public class DefaultPluginManager implements PluginManager
 
         // This needs to happen after modules are disabled to prevent errors 
         plugin.setEnabled(false);
+        pluginEventManager.broadcast(new PluginDisabledEvent(plugin));
     }
 
     public void disablePluginModule(String completeKey)

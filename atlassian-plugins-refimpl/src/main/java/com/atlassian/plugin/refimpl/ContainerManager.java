@@ -1,7 +1,6 @@
 package com.atlassian.plugin.refimpl;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.descriptors.servlet.ServletModuleManager;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
@@ -14,11 +13,10 @@ import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.refimpl.servlet.SimpleServletModuleDescriptor;
+import com.atlassian.plugin.refimpl.servlet.*;
 import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
-import com.atlassian.plugin.servlet.ContentTypeResolver;
-import com.atlassian.plugin.servlet.DownloadStrategy;
-import com.atlassian.plugin.servlet.PluginResourceDownload;
+import com.atlassian.plugin.servlet.*;
+import com.atlassian.plugin.servlet.descriptors.ServletContextParamDescriptor;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
@@ -47,15 +45,15 @@ public class ContainerManager
     public ContainerManager(ServletContext servletContext)
     {
         instance = this;
-        servletModuleManager = new ServletModuleManager();
+        pluginEventManager = new DefaultPluginEventManager();
+        servletModuleManager = new DefaultServletModuleManager(pluginEventManager);
         webResourceManager = new WebResourceManagerImpl(new SimpleWebResourceIntegration(servletContext));
 
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
         publicContainer = new HashMap<Class,Object>();
         hostComponentProvider = new SimpleHostComponentProvider();
-        pluginEventManager = new DefaultPluginEventManager();
-        osgiContainerManager = new FelixOsgiContainerManager(new File(servletContext.getRealPath(
-            "/WEB-INF/framework-bundles")),
+        osgiContainerManager = new FelixOsgiContainerManager(
+            new File(servletContext.getRealPath("/WEB-INF/framework-bundles")),
             scannerConfig, hostComponentProvider, pluginEventManager);
 
         OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginManager.PLUGIN_DESCRIPTOR_FILENAME,
@@ -76,6 +74,9 @@ public class ContainerManager
 
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("servlet", SimpleServletModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("servlet-filter", SimpleFilterModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("servlet-context-param", ServletContextParamDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("servlet-context-listener", SimpleContextListenerModuleDescriptor.class);
         pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader>asList(/*bundledPluginLoader, */directoryPluginLoader),
                 moduleDescriptorFactory, pluginEventManager);
 
@@ -93,7 +94,7 @@ public class ContainerManager
             e.printStackTrace();
         }
 
-        downloadStrategies = new ArrayList();
+        downloadStrategies = new ArrayList<DownloadStrategy>();
         PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload();
         pluginDownloadStrategy.setPluginManager(pluginManager);
         pluginDownloadStrategy.setContentTypeResolver(new SimpleContentTypeResolver());

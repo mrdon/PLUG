@@ -1,0 +1,42 @@
+package com.atlassian.plugin.servlet.filter;
+
+import java.util.Collections;
+import java.util.Enumeration;
+
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
+
+import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
+
+public class PluginFilterConfig implements FilterConfig
+{
+    private final ServletFilterModuleDescriptor descriptor;
+    private final ServletContext servletContext;
+    
+    public PluginFilterConfig(ServletFilterModuleDescriptor descriptor, ServletContext servletContext)
+    {
+        this.descriptor = descriptor;
+        this.servletContext = servletContext;
+    }
+
+    public String getFilterName()
+    {
+        return descriptor.getName();
+    }
+
+    public String getInitParameter(String name)
+    {
+        return descriptor.getInitParams().get(name);
+    }
+
+    public Enumeration getInitParameterNames()
+    {
+        return Collections.enumeration(descriptor.getInitParams().keySet());
+    }
+
+    public ServletContext getServletContext()
+    {
+        return servletContext;
+    }
+
+}

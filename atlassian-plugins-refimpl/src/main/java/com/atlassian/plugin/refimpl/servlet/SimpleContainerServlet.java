@@ -1,8 +1,8 @@
 package com.atlassian.plugin.refimpl.servlet;
 
-import com.atlassian.plugin.descriptors.servlet.ServletModuleContainerServlet;
-import com.atlassian.plugin.descriptors.servlet.ServletModuleManager;
 import com.atlassian.plugin.refimpl.ContainerManager;
+import com.atlassian.plugin.servlet.ServletModuleContainerServlet;
+import com.atlassian.plugin.servlet.ServletModuleManager;
 
 /**
  * Created by IntelliJ IDEA.

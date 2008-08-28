@@ -8,10 +8,52 @@
         <filter-name>UrlRewriteFilter</filter-name>
         <filter-class>org.tuckey.web.filters.urlrewrite.UrlRewriteFilter</filter-class>
     </filter>
+
+    <filter>
+        <filter-name>filter-plugin-dispatcher-top</filter-name>
+        <filter-class>com.atlassian.plugin.refimpl.servlet.SimpleContainerFilter</filter-class>
+        <init-param>
+            <param-name>location</param-name>
+            <param-value>top</param-value>
+        </init-param>
+    </filter>
+    
+    <filter>
+        <filter-name>filter-plugin-dispatcher-middle</filter-name>
+        <filter-class>com.atlassian.plugin.refimpl.servlet.SimpleContainerFilter</filter-class>
+        <init-param>
+            <param-name>location</param-name>
+            <param-value>middle</param-value>
+        </init-param>
+    </filter>
+
+    <filter>
+        <filter-name>filter-plugin-dispatcher-bottom</filter-name>
+        <filter-class>com.atlassian.plugin.refimpl.servlet.SimpleContainerFilter</filter-class>
+        <init-param>
+            <param-name>location</param-name>
+            <param-value>bottom</param-value>
+        </init-param>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>filter-plugin-dispatcher-top</filter-name>
+        <url-pattern>/*</url-pattern>    
+    </filter-mapping>
     
     <filter-mapping>
         <filter-name>UrlRewriteFilter</filter-name>
         <url-pattern>/s/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>filter-plugin-dispatcher-middle</filter-name>
+        <url-pattern>/*</url-pattern>    
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>filter-plugin-dispatcher-bottom</filter-name>
+        <url-pattern>/*</url-pattern>    
     </filter-mapping>
 
     <servlet>
