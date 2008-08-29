@@ -282,7 +282,7 @@ public class DefaultPluginManager implements PluginManager
      */
     protected void addPlugins(PluginLoader loader, Collection<Plugin> pluginsToAdd) throws PluginParseException
     {
-        Set<Plugin> pluginsToEnable = new HashSet<Plugin>();
+        Set<Plugin> pluginsThatShouldBeEnabled = new HashSet<Plugin>();
         for (Plugin plugin : pluginsToAdd)
         {
             // testing to make sure plugin keys are unique
@@ -323,26 +323,26 @@ public class DefaultPluginManager implements PluginManager
             if (isPluginEnabled(plugin.getKey()))
             {
                 plugin.setEnabled(true);
-                pluginsToEnable.add(plugin);
+                pluginsThatShouldBeEnabled.add(plugin);
             }
 
             pluginToPluginLoader.put(plugin, loader);
         }
 
-        if (plugins.size() > 0)
+        if (!plugins.isEmpty())
         {
             // Now try to enable plugins that weren't enabled before, probably due to dependency ordering issues
 
             for (int tries = 5; tries > 0; tries--)
             {
-                for (Iterator<Plugin> i = pluginsToEnable.iterator(); i.hasNext(); )
+                for (Iterator<Plugin> i = pluginsThatShouldBeEnabled.iterator(); i.hasNext(); )
                 {
                     Plugin plugin = i.next();
                     if (plugin.isEnabled())
                         i.remove();
                 }
-                if (pluginsToEnable.size() > 0)
-                    log.info("Plugins that have yet to start: "+pluginsToEnable+", "+tries+" tries remaining");
+                if (!pluginsThatShouldBeEnabled.isEmpty())
+                    log.info("Plugins that have yet to start: "+pluginsThatShouldBeEnabled+", "+tries+" tries remaining");
                 else
                     break;
                 try
@@ -353,10 +353,12 @@ public class DefaultPluginManager implements PluginManager
                     break;
                 }
             }
-            if (pluginsToEnable.size() > 0)
+
+            // Disable any plugins that aren't enabled by now
+            if (!pluginsThatShouldBeEnabled.isEmpty())
             {
                 StringBuilder sb = new StringBuilder();
-                for (Plugin plugin : pluginsToEnable)
+                for (Plugin plugin : pluginsThatShouldBeEnabled)
                 {
                     sb.append(plugin.getKey()).append(',');
                     disablePlugin(plugin.getKey());
