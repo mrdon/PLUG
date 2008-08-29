@@ -3,11 +3,17 @@ package com.atlassian.plugin.servlet;
 import java.util.Collections;
 import java.util.Enumeration;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 
 import com.atlassian.plugin.servlet.descriptors.BaseServletModuleDescriptor;
 
+/**
+ * Instances of the PluginServletConfig are passed to plugins servlet {@link Servlet} init() method.  It provides
+ * access to the init parameters defined in the plugin xml as well as the ServletContext shared by other filters and
+ * servlets in the plugin.
+ */
 public final class PluginServletConfig implements ServletConfig
 {
     private final BaseServletModuleDescriptor<?> descriptor;

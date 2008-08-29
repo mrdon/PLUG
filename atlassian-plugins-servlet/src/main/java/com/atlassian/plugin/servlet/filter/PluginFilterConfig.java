@@ -3,11 +3,17 @@ package com.atlassian.plugin.servlet.filter;
 import java.util.Collections;
 import java.util.Enumeration;
 
+import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 
+/**
+ * Instances of the PluginFilterConfig are passed to plugins {@link Filter} init() method.  It provides
+ * access to the init parameters defined in the plugin xml as well as the ServletContext shared by other filters and
+ * servlets in the plugin.
+ */
 public class PluginFilterConfig implements FilterConfig
 {
     private final ServletFilterModuleDescriptor descriptor;

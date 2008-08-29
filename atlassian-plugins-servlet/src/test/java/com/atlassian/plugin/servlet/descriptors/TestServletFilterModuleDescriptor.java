@@ -17,7 +17,8 @@ public class TestServletFilterModuleDescriptor extends TestCase
     @Override
     public void setUp()
     {
-        descriptor = new ServletFilterModuleDescriptor(){
+        descriptor = new ServletFilterModuleDescriptor()
+        {
             protected void autowireObject(Object obj) {throw new UnsupportedOperationException(); }
             protected ServletModuleManager getServletModuleManager() { return null; }
         };
@@ -28,6 +29,7 @@ public class TestServletFilterModuleDescriptor extends TestCase
     {
         descriptor = null;
     }
+    
     public void testInit() 
     {
         Plugin plugin = new StaticPlugin();

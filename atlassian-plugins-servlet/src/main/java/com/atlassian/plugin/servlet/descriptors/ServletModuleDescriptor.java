@@ -6,6 +6,10 @@ import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 
+/**
+ * A module descriptor that allows plugin developers to define servlets. Developers can define what urls the 
+ * servlet should be serve by defining one or more &lt;url-pattern&gt; elements.
+ */
 public abstract class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpServlet> implements StateAware
 {
     public void enabled()

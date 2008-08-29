@@ -14,11 +14,15 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
+/**
+ * Acts as a base for other servlet type module descriptors to inherit.  It adds parsing and retrieval of any paths
+ * declared in the descriptor with &lt;url-pattern&gt; as well as &lt;init-param&gt;s. 
+ */
 public abstract class BaseServletModuleDescriptor<T> extends AbstractModuleDescriptor<T>
 {
     protected static final Log log = LogFactory.getLog(BaseServletModuleDescriptor.class);
 
-    List<String> paths;
+    private List<String> paths;
     private Map<String,String> initParams;
 
     public void init(Plugin plugin, Element element) throws PluginParseException

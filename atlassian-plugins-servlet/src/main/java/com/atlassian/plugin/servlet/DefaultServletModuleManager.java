@@ -2,7 +2,9 @@ package com.atlassian.plugin.servlet;
 
 import static com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor.byWeight;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,7 +12,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -39,7 +40,7 @@ import com.atlassian.plugin.servlet.util.LazyLoadedReference;
 import com.atlassian.plugin.servlet.util.PathMapper;
 
 /**
- * A simple manager to track and retrieve the loaded servlet plugin modules.
+ * A simple servletModuleManager to track and retrieve the loaded servlet plugin modules.
  */
 public class DefaultServletModuleManager implements ServletModuleManager
 {
@@ -119,15 +120,15 @@ public class DefaultServletModuleManager implements ServletModuleManager
     /* (non-Javadoc)
      * @see com.atlassian.plugin.servlet.ServletModuleManager#getFilters(com.atlassian.plugin.servlet.FilterLocation, java.lang.String, javax.servlet.FilterConfig)
      */
-    public List<Filter> getFilters(FilterLocation location, String path, final FilterConfig filterConfig) throws ServletException
+    public Iterable<Filter> getFilters(FilterLocation location, String path, final FilterConfig filterConfig) throws ServletException
     {
-        TreeSet<ServletFilterModuleDescriptor> matchingFilterDescriptors = new TreeSet<ServletFilterModuleDescriptor>(byWeight);
+        List<ServletFilterModuleDescriptor> matchingFilterDescriptors = new ArrayList<ServletFilterModuleDescriptor>();
         for (String completeKey : filterMapper.getAll(path))
         {
             final ServletFilterModuleDescriptor descriptor = filterDescriptors.get(completeKey);
             if (location.equals(descriptor.getLocation()))
             {
-                matchingFilterDescriptors.add(descriptor);
+                sortedInsert(matchingFilterDescriptors, descriptor, byWeight);
             }
         }
         List<Filter> filters = new LinkedList<Filter>();
@@ -136,6 +137,25 @@ public class DefaultServletModuleManager implements ServletModuleManager
             filters.add(getFilter(descriptor, filterConfig));
         }
         return filters;
+    }
+
+    static <T> void sortedInsert(List<T> list, final T e, Comparator<T> comparator)
+    {
+        int insertIndex = Collections.binarySearch(list, e, comparator);
+        if (insertIndex < 0)
+        {
+            // no entry already there, so the insertIndex is the negative value of where it should be inserted 
+            insertIndex = -insertIndex - 1;
+        }
+        else
+        {
+            // there is already a value at that position, so we need to find the next available spot for it
+            while (comparator.compare(list.get(insertIndex), e) == 0)
+            {
+                insertIndex++;
+            }
+        }
+        list.add(insertIndex, e);
     }
 
     public void removeFilterModule(ServletFilterModuleDescriptor descriptor)
@@ -260,7 +280,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         return pluginContextRef.get();
     }
 
-    private final class LazyLoadedFilterReference extends LazyLoadedReference<Filter>
+    private static final class LazyLoadedFilterReference extends LazyLoadedReference<Filter>
     {
         private final ServletFilterModuleDescriptor descriptor;
         private final ServletContext servletContext;
@@ -280,7 +300,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         }
     }
 
-    private final class LazyLoadedServletReference extends LazyLoadedReference<HttpServlet>
+    private static final class LazyLoadedServletReference extends LazyLoadedReference<HttpServlet>
     {
         private final ServletModuleDescriptor descriptor;
         private final ServletContext servletContext;
@@ -300,7 +320,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         }
     }
     
-    private final class LazyLoadedContextReference extends LazyLoadedReference<ServletContext>
+    private static final class LazyLoadedContextReference extends LazyLoadedReference<ServletContext>
     {
         private final Plugin plugin;
         private final ServletContext baseContext;

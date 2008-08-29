@@ -2,7 +2,6 @@ package com.atlassian.plugin.servlet.filter;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -18,6 +17,17 @@ import org.apache.commons.logging.LogFactory;
 
 import com.atlassian.plugin.servlet.ServletModuleManager;
 
+/**
+ * Applications need to create a concrete subclass of this for use in their filter stack.  This filters responsiblity
+ * is to retrieve the filters to be applied to the request from the {@link ServletModuleManager} and build a
+ * {@link FilterChain} from them.  Once all the filters in the chain have been applied to the request, this filter 
+ * returns control to the main chain.
+ * <p/>
+ * There is one init parameters that must be configured for this filter, the "location" parameter.  It can be one of
+ * "top", "middle" or "bottom".  A filter with a "top" location must appear before the filter with a "middle" location
+ * which must appear before a filter with a "bottom" location.  Where any other application filters lie in the filter
+ * stack is completely up to the application.        
+ */
 public abstract class ServletFilterModuleContainerFilter implements Filter
 {
     private static final Log log = LogFactory.getLog(ServletFilterModuleContainerFilter.class);
@@ -45,7 +55,7 @@ public abstract class ServletFilterModuleContainerFilter implements Filter
             return;
         }
         
-        final List<Filter> filters = getServletModuleManager().getFilters(location, request.getPathInfo(), filterConfig);
+        final Iterable<Filter> filters = getServletModuleManager().getFilters(location, request.getPathInfo(), filterConfig);
         
         FilterChain pluginFilterChain = new FilterChain()
         {

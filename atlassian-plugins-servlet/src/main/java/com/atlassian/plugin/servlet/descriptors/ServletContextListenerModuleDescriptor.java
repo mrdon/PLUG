@@ -8,6 +8,11 @@ import org.apache.commons.logging.LogFactory;
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
+/**
+ * Provides a way for plugins to declare {@link ServletContextListener}s so they can be notified when the 
+ * {@link ServletContext} is created for the plugin.  Implementors need to extend this class and implement the
+ * {#link autowireObject} method.
+ */
 public abstract class ServletContextListenerModuleDescriptor extends AbstractModuleDescriptor<ServletContextListener>
 {
     protected static final Log log = LogFactory.getLog(ServletContextListenerModuleDescriptor.class);

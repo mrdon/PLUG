@@ -1,17 +1,22 @@
 package com.atlassian.plugin.servlet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.IOException;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+/**
+ * Applications need to create a concrete subclass of this for use in their webapp.  This servlets responsiblity
+ * is to retrieve the servlet to be used to serve the request from the {@link ServletModuleManager}.  If no servlet
+ * can be found to serve the request, a 404 should be sent back to the client.
+ */
 public abstract class ServletModuleContainerServlet extends HttpServlet
 {
     private static final Log log = LogFactory.getLog(ServletModuleContainerServlet.class);
@@ -27,8 +32,8 @@ public abstract class ServletModuleContainerServlet extends HttpServlet
     {
         if (getServletModuleManager() == null)
         {
-            log.error("Could not get DefaultServletModuleManager?");
-            response.sendError(500, "Could not get DefaultServletModuleManager.");
+            log.error("Could not get ServletModuleManager?");
+            response.sendError(500, "Could not get ServletModuleManager.");
             return;
         }
 
