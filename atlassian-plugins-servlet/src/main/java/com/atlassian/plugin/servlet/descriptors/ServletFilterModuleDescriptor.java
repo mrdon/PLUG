@@ -15,8 +15,8 @@ import com.atlassian.plugin.servlet.filter.FilterLocation;
 
 public abstract class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<Filter> implements StateAware
 {
-    private FilterLocation location;
-    private int weight;
+    private FilterLocation location = FilterLocation.bottom;
+    private int weight = 100;
     
     public static final Comparator<ServletFilterModuleDescriptor> byWeight = new Comparator<ServletFilterModuleDescriptor>()
     {
@@ -29,8 +29,12 @@ public abstract class ServletFilterModuleDescriptor extends BaseServletModuleDes
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);
-        location = FilterLocation.valueOf(element.attributeValue("location"));
-        weight = Integer.valueOf(element.attributeValue("weight"));
+        String locValue = element.attributeValue("location");
+        if (locValue != null)
+            location = FilterLocation.valueOf(locValue);
+
+        if (element.attributeValue("weight") != null)
+            weight = Integer.valueOf(element.attributeValue("weight"));
     }
     
     public void enabled()
