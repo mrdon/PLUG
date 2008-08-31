@@ -26,7 +26,7 @@ import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
 import com.atlassian.plugin.servlet.ContentTypeResolver;
 import com.atlassian.plugin.servlet.DownloadStrategy;
 import com.atlassian.plugin.servlet.PluginResourceDownload;
-import com.atlassian.plugin.servlet.PluginResourcesDownload;
+import com.atlassian.plugin.servlet.BatchPluginResourceDownload;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
@@ -103,8 +103,8 @@ public class ContainerManager
         // configure some plugin resource download strategies 
         SimpleContentTypeResolver contentTypeResolver = new SimpleContentTypeResolver();
         downloadStrategies = new ArrayList();
-        downloadStrategies.add(new PluginResourcesDownload("css", "UTF-8", pluginManager, contentTypeResolver));
-        downloadStrategies.add(new PluginResourcesDownload("js", "UTF-8", pluginManager, contentTypeResolver));
+        downloadStrategies.add(new BatchPluginResourceDownload("css", "text/css", "UTF-8", pluginManager));
+        downloadStrategies.add(new BatchPluginResourceDownload("js", "text/javascript", "UTF-8", pluginManager));
         downloadStrategies.add(new PluginResourceDownload("UTF-8", pluginManager, contentTypeResolver));
     }
 

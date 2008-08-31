@@ -3,7 +3,6 @@ package com.atlassian.plugin.servlet;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.elements.ResourceLocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -20,7 +19,7 @@ import java.net.URLDecoder;
  * The URL that it parses looks like this: <br> <code>{server root}/download/resources/{plugin key}:{module
  * key}/{resource name}</code>
  * <p/>
- * See {@link PluginResourcesDownload} classes for serving multiple plugin resource downloads.
+ * See {@link BatchPluginResourceDownload} classes for serving multiple plugin resource downloads.
  */
 public class PluginResourceDownload implements DownloadStrategy
 {
@@ -30,11 +29,6 @@ public class PluginResourceDownload implements DownloadStrategy
     private PluginAccessor pluginAccessor;
     private String characterEncoding = "UTF-8"; // default to sensible encoding
     private ContentTypeResolver contentTypeResolver;
-
-    // no arg constructor for confluence
-    public PluginResourceDownload()
-    {
-    }
 
     public PluginResourceDownload(String characterEncoding, PluginAccessor pluginAccessor, ContentTypeResolver contentTypeResolver)
     {
@@ -175,24 +169,6 @@ public class PluginResourceDownload implements DownloadStrategy
             resourcePath.substring(0, indexOfSlash + 1),
             resourcePath.substring(indexOfSlash + 1)
         };
-    }
-
-    public void setPluginManager(PluginManager pluginManager)
-    {
-        this.pluginAccessor = pluginManager;
-    }
-
-    public void setContentTypeResolver(ContentTypeResolver contentTypeResolver)
-    {
-        this.contentTypeResolver = contentTypeResolver;
-    }
-
-    /**
-     * Sets the character enconding to use when decoding request urls.
-     */
-    public void setCharacterEncoding(String characterEncoding)
-    {
-        this.characterEncoding = characterEncoding;
     }
 }
 

@@ -23,31 +23,26 @@ import java.util.List;
  * <p/>
  * The URL that it parses looks like this: <br> <code>{server root}/download/resources/{file type}/{plugin key}:{module key}
  */
-public class PluginResourcesDownload implements DownloadStrategy
+public class BatchPluginResourceDownload implements DownloadStrategy
 {
-    private static final Log log = LogFactory.getLog(PluginResourcesDownload.class);
+    private static final Log log = LogFactory.getLog(BatchPluginResourceDownload.class);
 
     /**
      * The resource extension that is supported by this servlet. E.g. js, css etc.
      */
     private String supportedExtension;
     private String characterEncoding = "UTF-8"; // default to sensible encoding
+    private String contentType;
     private PluginAccessor pluginAccessor;
-    private ContentTypeResolver contentTypeResolver;
     private ResourceUrlParser resourceUrlParser;
 
-    // no arg constructor for confluence
-    public PluginResourcesDownload()
-    {
-    }
-
-    public PluginResourcesDownload(String supportedExtension, String characterEncoding,
-        PluginAccessor pluginAccessor, ContentTypeResolver contentTypeResolver)
+    public BatchPluginResourceDownload(String supportedExtension, String contentType, String characterEncoding,
+        PluginAccessor pluginAccessor)
     {
         this.supportedExtension = supportedExtension;
         this.characterEncoding = characterEncoding;
+        this.contentType = contentType;
         this.pluginAccessor = pluginAccessor;
-        this.contentTypeResolver = contentTypeResolver;
     }
 
     public boolean matches(String urlPath)
@@ -119,12 +114,13 @@ public class PluginResourcesDownload implements DownloadStrategy
 
     private void servePluginResources(String completeKey, List<ResourceDescriptor> resources, HttpServletRequest request, HttpServletResponse response) throws DownloadException
     {
+        response.setContentType(contentType);
+
         for(ResourceDescriptor resourceDescriptor : resources)
         {
             if(resourceDescriptor.getName().endsWith("." + supportedExtension))
             {
                 String resourceUrl = getResourceUrl(completeKey, resourceDescriptor);
-                response.setContentType(contentTypeResolver.getContentType(resourceUrl));
                 RequestDispatcher rd = request.getRequestDispatcher(resourceUrl);
                 try
                 {
@@ -147,25 +143,5 @@ public class PluginResourcesDownload implements DownloadStrategy
     {
         return "/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" +
             completeKey + "/" + resourceDescriptor.getName();
-    }
-
-    public void setSupportedExtension(String supportedExtension)
-    {
-        this.supportedExtension = supportedExtension;
-    }
-
-    public void setCharacterEncoding(String characterEncoding)
-    {
-        this.characterEncoding = characterEncoding;
-    }
-
-    public void setPluginAccessor(PluginAccessor pluginAccessor)
-    {
-        this.pluginAccessor = pluginAccessor;
-    }
-
-    public void setContentTypeResolver(ContentTypeResolver contentTypeResolver)
-    {
-        this.contentTypeResolver = contentTypeResolver;
     }
 }
