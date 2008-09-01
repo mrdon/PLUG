@@ -3,9 +3,11 @@ package com.atlassian.plugin.webresource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.collections.set.ListOrderedSet;
+import org.apache.commons.io.IOUtils;
 
 import java.io.Writer;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 import com.atlassian.plugin.ModuleDescriptor;
@@ -119,7 +121,27 @@ public class PluginWebResourceManagerImpl implements PluginWebResourceManager
 
     private void inlineResources(WebResourceModuleDescriptor descriptor, Writer writer)
     {
-        log.error("Not implemented yet");
+        for (ResourceDescriptor resourceDescriptor : (List<ResourceDescriptor>) descriptor.getResourceDescriptors())
+        {
+            // todo handle web resources
+            //if ("webContext".equalsIgnoreCase(resourceDescriptor.getParameter("source")))
+            InputStream is = descriptor.getPlugin().getResourceAsStream(resourceDescriptor.getLocation());
+
+            if (is == null)
+            {
+                log.error("Could not locate resource: " + resourceDescriptor.getLocation());
+                continue;
+            }
+
+            try
+            {
+                IOUtils.copy(is, writer);
+            }
+            catch (IOException e)
+            {
+                log.error(e);
+            }
+        }
     }
 
     private void singleResources(WebResourceModuleDescriptor descriptor, Writer writer)
