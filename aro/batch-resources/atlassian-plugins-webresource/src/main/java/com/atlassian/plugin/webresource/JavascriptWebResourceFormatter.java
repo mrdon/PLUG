@@ -6,17 +6,22 @@ import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 
-class JavascriptWebResourceFormatter extends AbstractWebResourceFormatter
+public class JavascriptWebResourceFormatter extends AbstractWebResourceFormatter
 {
-    private static final String JAVA_SCRIPT_EXTENSION = ".js";
-    private static final List/*<String>*/ HANDLED_PARAMETERS = Arrays.asList(new String[] {"charset"});
+    private static final String JAVA_SCRIPT_EXTENSION = "js";
+    private static final List<String> HANDLED_PARAMETERS = Arrays.asList("charset");
+
+    public String getExtension()
+    {
+        return JAVA_SCRIPT_EXTENSION;
+    }
 
     public boolean matches(String name)
     {
-        return name != null && name.endsWith(JAVA_SCRIPT_EXTENSION);
+        return name != null && name.endsWith("." + JAVA_SCRIPT_EXTENSION);
     }
 
-    public String formatResource(String name, String url, Map params)
+    public String formatResource(String url, Map params)
     {
         StringBuffer buffer = new StringBuffer("<script type=\"text/javascript\" ");
         buffer.append("src=\"").append(url).append("\" ");
@@ -25,7 +30,7 @@ class JavascriptWebResourceFormatter extends AbstractWebResourceFormatter
         return buffer.toString();
     }
 
-    protected List/*<String>*/ getAttributeParameters()
+    protected List<String> getAttributeParameters()
     {
         return HANDLED_PARAMETERS;
     }

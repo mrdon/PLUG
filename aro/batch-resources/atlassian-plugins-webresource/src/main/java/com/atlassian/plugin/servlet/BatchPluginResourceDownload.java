@@ -5,6 +5,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
+import com.atlassian.plugin.webresource.ResourceUrlFormatter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -120,7 +121,7 @@ public class BatchPluginResourceDownload implements DownloadStrategy
         {
             if(resourceDescriptor.getName().endsWith("." + supportedExtension))
             {
-                String resourceUrl = getResourceUrl(completeKey, resourceDescriptor);
+                String resourceUrl = ResourceUrlFormatter.getResourceUrl("/", completeKey, resourceDescriptor.getName());
                 RequestDispatcher rd = request.getRequestDispatcher(resourceUrl);
                 try
                 {
@@ -136,12 +137,5 @@ public class BatchPluginResourceDownload implements DownloadStrategy
                 }
             }
         }
-    }
-
-    // todo refactor out
-    private String getResourceUrl(String completeKey, ResourceDescriptor resourceDescriptor)
-    {
-        return "/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" +
-            completeKey + "/" + resourceDescriptor.getName();
     }
 }

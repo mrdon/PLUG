@@ -28,8 +28,7 @@ import com.atlassian.plugin.servlet.DownloadStrategy;
 import com.atlassian.plugin.servlet.PluginResourceDownload;
 import com.atlassian.plugin.servlet.BatchPluginResourceDownload;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
-import com.atlassian.plugin.webresource.WebResourceManager;
-import com.atlassian.plugin.webresource.WebResourceManagerImpl;
+import com.atlassian.plugin.webresource.*;
 import com.atlassian.sal.spi.HostContextAccessor;
 
 import javax.servlet.ServletContext;
@@ -47,7 +46,7 @@ import java.util.Map;
 public class ContainerManager
 {
     private final ServletModuleManager servletModuleManager;
-    private final WebResourceManager webResourceManager;
+    private final PluginWebResourceManager webResourceManager;
     private final OsgiContainerManager osgiContainerManager;
     private final DefaultPluginManager pluginManager;
     private final PluginEventManager pluginEventManager;
@@ -61,7 +60,7 @@ public class ContainerManager
     {
         instance = this;
         servletModuleManager = new ServletModuleManager();
-        webResourceManager = new WebResourceManagerImpl(new SimpleWebResourceIntegration(servletContext));
+        webResourceManager = new PluginWebResourceManagerImpl(new SimpleWebResourceIntegration(servletContext));
 
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
         hostComponentProvider = new SimpleHostComponentProvider();
@@ -175,9 +174,10 @@ public class ContainerManager
         public void provide(ComponentRegistrar componentRegistrar)
         {
             componentRegistrar.register(PluginManager.class, PluginAccessor.class, PluginController.class).forInstance(pluginManager).withName("pluginManager");
+            componentRegistrar.register(PluginAccessor.class).forInstance(pluginManager).withName("pluginAccessor");
             componentRegistrar.register(PluginEventManager.class).forInstance(pluginEventManager).withName("pluginEventManager");
             componentRegistrar.register(HostContextAccessor.class).forInstance(new RiHostContextAccessor()).withName("hostContextAccessor");
-            componentRegistrar.register(WebResourceManager.class).forInstance(webResourceManager).withName("webResourceManager");
+            componentRegistrar.register(PluginWebResourceManager.class).forInstance(webResourceManager).withName("webResourceManager");
         }
     }
 }

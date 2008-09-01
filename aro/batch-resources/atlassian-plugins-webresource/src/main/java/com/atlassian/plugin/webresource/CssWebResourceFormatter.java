@@ -7,17 +7,22 @@ import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 
-class CssWebResourceFormatter extends AbstractWebResourceFormatter
+public class CssWebResourceFormatter extends AbstractWebResourceFormatter
 {
-    private static final String CSS_EXTENSION = ".css";
-    private static final List/*<String>*/ HANDLED_PARAMETERS = Arrays.asList(new String[] {"title", "media", "charset"});
+    private static final String CSS_EXTENSION = "css";
+    private static final List<String> HANDLED_PARAMETERS = Arrays.asList("title", "media", "charset");
+
+    public String getExtension()
+    {
+        return CSS_EXTENSION;
+    }
 
     public boolean matches(String name)
     {
-        return name != null && name.endsWith(CSS_EXTENSION);
+        return name != null && name.endsWith("." + CSS_EXTENSION);
     }
     
-    public String formatResource(String name, String url, Map params)
+    public String formatResource(String url, Map params)
     {
         StringBuffer buffer = new StringBuffer();
         buffer.append("<link type=\"text/css\" rel=\"stylesheet\" href=\"").append(url).append("\"");
@@ -44,7 +49,7 @@ class CssWebResourceFormatter extends AbstractWebResourceFormatter
         return buffer.toString();
     }
 
-    protected List/*<String>*/ getAttributeParameters()
+    protected List<String> getAttributeParameters()
     {
         return HANDLED_PARAMETERS;
     }

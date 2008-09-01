@@ -222,12 +222,12 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
 
     public String getI18nNameKey()
     {
-        return i18nNameKey;  //To change body of implemented methods use File | Settings | File Templates.
+        return i18nNameKey;
     }
 
     public String getDescriptionKey()
     {
-        return descriptionKey;  //To change body of implemented methods use File | Settings | File Templates.
+        return descriptionKey;
     }
 
     public List<ResourceDescriptor> getResourceDescriptors()

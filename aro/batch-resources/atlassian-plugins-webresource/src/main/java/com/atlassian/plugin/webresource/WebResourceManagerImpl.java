@@ -155,7 +155,7 @@ public class WebResourceManagerImpl implements WebResourceManager
             WebResourceFormatter webResourceFormatter = getWebResourceFormatter(name);
             if (webResourceFormatter != null)
             {
-                writer.write(webResourceFormatter.formatResource(name, linkToResource, resourceDescriptor.getParameters()));
+                writer.write(webResourceFormatter.formatResource(linkToResource, resourceDescriptor.getParameters()));
             }
             else
             {

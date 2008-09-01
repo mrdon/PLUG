@@ -5,6 +5,8 @@ import com.atlassian.plugin.ModuleDescriptor;
 import java.io.Writer;
 
 /**
+ * @deprecated Since 2.1 Use {@link PluginWebResourceManager} instead.
+ *
  * Manage 'css', 'javascript' and other 'resources' that are usually linked at the top of pages using
  * <code>&lt;script&gt;</code> and <code>&lt;link&gt; tags.
  * <p/>
