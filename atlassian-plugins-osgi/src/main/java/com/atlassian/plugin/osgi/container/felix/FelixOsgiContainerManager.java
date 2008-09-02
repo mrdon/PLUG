@@ -1,5 +1,8 @@
 package com.atlassian.plugin.osgi.container.felix;
 
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
@@ -8,29 +11,23 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.ClassLoaderUtils;
-import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
-import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
-import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.Validate;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.StringMap;
 import org.osgi.framework.*;
-import static org.twdata.pkgscanner.PackageScanner.jars;
-import static org.twdata.pkgscanner.PackageScanner.packages;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.FilenameFilter;
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.jar.JarFile;
 
 /**
@@ -38,7 +35,9 @@ import java.util.jar.JarFile;
  */
 public class FelixOsgiContainerManager implements OsgiContainerManager
 {
-    final static Log log = LogFactory.getLog(FelixOsgiContainerManager.class);
+    private static final Log log = LogFactory.getLog(FelixOsgiContainerManager.class);
+    public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "osgi-framework-bundles.zip";
+    private static final String OSGI_BOOTDELEGATION = "org.osgi.framework.bootdelegation";
     private BundleRegistration registration = null;
     private Felix felix = null;
     private boolean felixRunning = false;
@@ -47,11 +46,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
     private final URL frameworkBundlesUrl;
     private PackageScannerConfiguration packageScannerConfig;
-    public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "osgi-framework-bundles.zip";
     private File frameworkBundlesDir;
     private HostComponentProvider hostComponentProvider;
     private Logger felixLogger;
-
 
     /**
      * Constructs the container manager using the framework bundles zip file located in this library
@@ -122,7 +119,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
         DefaultComponentRegistrar registrar = collectHostComponents(hostComponentProvider);
         // Create a case-insensitive configuration property map.
-        final Map configMap = new StringMap(false);
+        final StringMap configMap = new StringMap(false);
         // Configure the Felix instance to be embedded.
         configMap.put(FelixConstants.EMBEDDED_EXECUTION_PROP, "true");
         // Add the bundle provided service interface package and the core OSGi
@@ -133,6 +130,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         configMap.put(BundleCache.CACHE_PROFILE_DIR_PROP, cacheDirectory.getAbsolutePath());
 
         configMap.put(FelixConstants.LOG_LEVEL_PROP, String.valueOf(felixLogger.getLogLevel()));
+        if (System.getProperty(OSGI_BOOTDELEGATION) != null)
+            configMap.put(Constants.FRAMEWORK_BOOTDELEGATION, System.getProperty(OSGI_BOOTDELEGATION));
 
         try
         {
@@ -146,12 +145,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             felix = new Felix(felixLogger, configMap, list);
 
             // Now start Felix instance.  Starting in a different thread to explicity set daemon status
-            Thread t = new Thread() {
-                @Override
+            Runnable start = new Runnable() {
                 public void run() {
                     try
                     {
-
                         felix.start();
                         felixRunning = true;
                     } catch (BundleException e)
@@ -160,14 +157,12 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                     }
                 }
             };
+            Thread t = new Thread(start);
             t.setDaemon(true);
             t.start();
 
             // Give it 10 seconds
             t.join(10 * 60 * 1000);
-
-
-
         }
         catch (Exception ex)
         {
@@ -313,8 +308,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
         public Bundle install(File path, boolean uninstallOtherVersions) throws BundleException
         {
-            Bundle bundle;
-
             if (uninstallOtherVersions)
             {
                 try
@@ -335,14 +328,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                     throw new BundleException("Invalid bundle format", e);
                 }
             }
-            try
-            {
-                bundle = bundleContext.installBundle(path.toURL().toString());
-            } catch (MalformedURLException e)
-            {
-                throw new BundleException("Invalid path: "+path);
-            }
-            return bundle;
+            return bundleContext.installBundle(path.toURI().toString());
         }
 
         public Bundle[] getBundles()
@@ -368,7 +354,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             hostComponentRegistrations = registrar.getRegistry();
         }
 
-        private void extractAndInstallFrameworkBundles() throws IOException, BundleException
+        private void extractAndInstallFrameworkBundles() throws BundleException
         {
             List<Bundle> bundles = new ArrayList<Bundle>();
             com.atlassian.plugin.util.FileUtils.conditionallyExtractZipFile(frameworkBundlesUrl, frameworkBundlesDir);
