@@ -1,26 +1,18 @@
 package com.atlassian.plugin.osgi.container.felix;
 
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.test.PluginBuilder;
-import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
-import com.mockobjects.dynamic.Mock;
-import com.mockobjects.dynamic.ConstraintMatcher;
-import com.mockobjects.dynamic.C;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.felix.framework.Logger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
-import java.util.ArrayList;
 
 public class TestFelixOsgiContainerManager extends TestCase
 {
@@ -30,8 +22,9 @@ public class TestFelixOsgiContainerManager extends TestCase
     private File frameworkBundlesDir;
 
     @Override
-    public void setUp() throws IOException
+    public void setUp() throws Exception
     {
+        super.setUp();
         tmpdir = new File(System.getProperty("java.io.tmpdir"));
         frameworkBundlesDir = new File(tmpdir, "framework-bundles-test");
 
@@ -42,6 +35,7 @@ public class TestFelixOsgiContainerManager extends TestCase
     @Override
     public void tearDown() throws Exception
     {
+        super.tearDown();
         if (felix != null)
             felix.stop();
         felix = null;
@@ -70,7 +64,7 @@ public class TestFelixOsgiContainerManager extends TestCase
         subdir.mkdir();
         felix.initialiseCacheDirectory();
         assertTrue(dir.exists());
-        assertTrue(dir.listFiles().length == 0);
+        assertEquals(0, dir.listFiles().length);
     }
 
     public void testStartStop()
@@ -87,6 +81,66 @@ public class TestFelixOsgiContainerManager extends TestCase
         File jar = new File(getClass().getResource("/myapp-1.0.jar").toURI());
         felix.installBundle(jar);
         assertEquals(2, felix.getBundles().length);
+    }
+
+    public void testBootDelegation() throws Exception
+    {
+        // Server class extends JUnit TestCase class, which is not available to the bundle
+        File pluginServer = new PluginBuilder("plugin")
+            .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
+                "Bundle-Version: 1.0\n" +
+                "Bundle-SymbolicName: my.server\n" +
+                "Bundle-ManifestVersion: 2\n" +
+                "Export-Package: my.server\n")
+            .addJava("my.server.ServerClass", "package my.server; public class ServerClass extends junit.framework.TestCase {}")
+            .build();
+
+        // Client is necessary to load the server class in a Felix ContentClassLoader, to avoid the hack in Felix's
+        // R4SearchPolicyCore (approx. line 591) which will use parent delegation if a class cannot be found
+        // and the calling classloader is not a ContentClassLoader.
+        File pluginClient = new PluginBuilder("plugin")
+            .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
+                "Bundle-Version: 1.0\n" +
+                "Bundle-SymbolicName: my.client\n" +
+                "Bundle-ManifestVersion: 2\n" +
+                "Import-Package: my.server\n")
+            .addJava("my.client.ClientClass", "package my.client; public class ClientClass {" +
+                "public ClientClass() throws ClassNotFoundException {" +
+                    "getClass().getClassLoader().loadClass(\"my.server.ServerClass\");" +
+                "}}")
+            .build();
+
+        felix.start();
+        Bundle serverBundle = felix.installBundle(pluginServer);
+        serverBundle.start();
+        Bundle clientBundle = felix.installBundle(pluginClient);
+        clientBundle.start();
+        try
+        {
+            clientBundle.loadClass("my.client.ClientClass").newInstance();
+            fail("Expected exception: NoClassDefFoundError for junit.framework.TestCase");
+        }
+        catch (NoClassDefFoundError expected)
+        {
+        }
+        felix.stop();
+
+        // This system property exposes the JUnit TestCase class from the parent classloader to the bundle
+        System.setProperty("org.osgi.framework.bootdelegation", "junit.framework.*");
+        try
+        {
+            felix.start();
+            serverBundle = felix.installBundle(pluginServer);
+            serverBundle.start();
+            clientBundle = felix.installBundle(pluginClient);
+            clientBundle.start();
+            clientBundle.loadClass("my.client.ClientClass").newInstance();
+            felix.stop();
+        }
+        finally
+        {
+            System.clearProperty("org.osgi.framework.bootdelegation");
+        }
     }
 
     public void testInstallBundleTwice() throws URISyntaxException, IOException, BundleException
