@@ -35,12 +35,23 @@ public class TestFelixOsgiContainerManager extends TestCase
     @Override
     public void tearDown() throws Exception
     {
-        super.tearDown();
+        if (felix != null && felix.isRunning())
+        {
+            for (Bundle bundle : felix.getBundles())
+            {
+                try
+                {
+                    bundle.uninstall();
+                }
+                catch (BundleException ignored) {}
+            }
+        }
         if (felix != null)
             felix.stop();
         felix = null;
         tmpdir = null;
         FileUtils.deleteDirectory(frameworkBundlesDir);
+        super.tearDown();
     }
 
     public void testDeleteDirectory() throws IOException
