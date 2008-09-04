@@ -13,6 +13,7 @@ public class PluginTestUtils
     public static final String SIMPLE_TEST_JAR;
     public static final String INNER1_TEST_JAR;
     public static final String INNER2_TEST_JAR;
+    public static final String FILTER_TEST_JAR;
 
     static
     {
@@ -20,6 +21,7 @@ public class PluginTestUtils
         SIMPLE_TEST_JAR = "atlassian-plugins-simpletest-" + PROJECT_VERSION + ".jar";
         INNER1_TEST_JAR = "atlassian-plugins-innerjarone-" + PROJECT_VERSION + ".jar";
         INNER2_TEST_JAR = "atlassian-plugins-innerjartwo-" + PROJECT_VERSION + ".jar";
+        FILTER_TEST_JAR = "atlassian-plugins-filtertest-" + PROJECT_VERSION + ".jar";
     }
 
     public static File getFileForResource(final String resourceName) throws URISyntaxException
