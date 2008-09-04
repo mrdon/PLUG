@@ -35,6 +35,7 @@ import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.servlet.filter.DelegatingPluginFilter;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
 import com.atlassian.plugin.servlet.filter.PluginFilterConfig;
+import com.atlassian.plugin.servlet.util.ClassLoaderStack;
 import com.atlassian.plugin.servlet.util.DefaultPathMapper;
 import com.atlassian.plugin.servlet.util.LazyLoadedReference;
 import com.atlassian.plugin.servlet.util.PathMapper;
@@ -77,7 +78,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      */
     public HttpServlet getServlet(String path, final ServletConfig servletConfig) throws ServletException
     {
-        final String completeKey = servletMapper.get(path);
+        String completeKey = servletMapper.get(path);
 
         if (completeKey == null)
         {
@@ -150,7 +151,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         else
         {
             // there is already a value at that position, so we need to find the next available spot for it
-            while (comparator.compare(list.get(insertIndex), e) == 0)
+            while (insertIndex < list.size() && comparator.compare(list.get(insertIndex), e) == 0)
             {
                 insertIndex++;
             }
@@ -338,9 +339,17 @@ public class DefaultServletModuleManager implements ServletModuleManager
             Map<String, String> initParams = mergeInitParams(baseContext, plugin);
             ServletContext context = new PluginServletContextWrapper(plugin, baseContext, contextAttributes, initParams);
 
-            for (ServletContextListenerModuleDescriptor descriptor : findModuleDescriptorsByType(ServletContextListenerModuleDescriptor.class, plugin))
+            ClassLoaderStack.push(plugin.getClassLoader());
+            try
             {
-                descriptor.getModule().contextInitialized(new ServletContextEvent(context));
+                for (ServletContextListenerModuleDescriptor descriptor : findModuleDescriptorsByType(ServletContextListenerModuleDescriptor.class, plugin))
+                {
+                    descriptor.getModule().contextInitialized(new ServletContextEvent(context));
+                }
+            } catch (RuntimeException e)
+            {
+                ClassLoaderStack.pop();
+                throw e;
             }
             
             return context;

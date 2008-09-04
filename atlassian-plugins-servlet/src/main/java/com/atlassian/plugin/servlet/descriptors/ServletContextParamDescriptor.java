@@ -1,5 +1,6 @@
 package com.atlassian.plugin.servlet.descriptors;
 
+import org.apache.commons.lang.StringUtils;
 import org.dom4j.Element;
 
 import com.atlassian.plugin.Plugin;
@@ -20,7 +21,12 @@ public class ServletContextParamDescriptor extends AbstractModuleDescriptor<Void
         super.init(plugin, element);
         
         paramName = element.elementTextTrim("param-name");
+        if (StringUtils.isEmpty(paramName))
+            throw new IllegalArgumentException("param-name must be specified");
+        
         paramValue = element.elementTextTrim("param-value");
+        if (StringUtils.isEmpty(paramValue))
+            throw new IllegalArgumentException("param-value must be specified");
     }
 
     public String getParamName()

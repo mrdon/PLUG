@@ -7,10 +7,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 /**
@@ -62,7 +64,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
         Collection<String> keys = mappings.get(pattern);
         if (keys == null)
         {
-            keys = new HashSet<String>();
+            keys = new LinkedHashSet<String>();
             mappings.put(pattern, keys);
         }
         keys.add(key);
@@ -121,7 +123,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
             {
                 path = "/";
             }
-            final List<String> matches = new ArrayList<String>();
+            final Set<String> matches = new LinkedHashSet<String>();
             // find exact keys
             final String exactKey = matcher.findExactKey(path, mappings);
             if (exactKey != null)

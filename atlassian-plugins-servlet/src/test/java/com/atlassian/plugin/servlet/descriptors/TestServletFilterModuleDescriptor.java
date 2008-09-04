@@ -1,14 +1,15 @@
 package com.atlassian.plugin.servlet.descriptors;
 
+import junit.framework.TestCase;
+
+import org.dom4j.Element;
+import org.dom4j.dom.DOMElement;
+
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
-import junit.framework.TestCase;
-import org.dom4j.Element;
-import org.dom4j.dom.DOMElement;
-
-import javax.servlet.http.HttpServlet;
+import com.atlassian.plugin.servlet.filter.FilterTestUtils.FilterAdapter;
 
 public class TestServletFilterModuleDescriptor extends TestCase
 {
@@ -44,7 +45,7 @@ public class TestServletFilterModuleDescriptor extends TestCase
     {
         Element e = new DOMElement("servlet-filter");
         e.addAttribute("key", "key2");
-        e.addAttribute("class", SomeServlet.class.getName());
+        e.addAttribute("class", FilterAdapter.class.getName());
         Element url = new DOMElement("url-pattern");
         url.setText("/foo");
         e.add(url);
@@ -57,7 +58,7 @@ public class TestServletFilterModuleDescriptor extends TestCase
         plugin.setKey("somekey");
         Element e = new DOMElement("servlet-filter");
         e.addAttribute("key", "key2");
-        e.addAttribute("class", SomeServlet.class.getName());
+        e.addAttribute("class", FilterAdapter.class.getName());
         try
         {
             descriptor.init(plugin, e);
@@ -110,9 +111,5 @@ public class TestServletFilterModuleDescriptor extends TestCase
         {
             // very good
         }
-    }
-
-    public static final class SomeServlet extends HttpServlet
-    {
     }
 }

@@ -21,7 +21,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
-                            <includeArtifactIds>atlassian-plugins-simpletest</includeArtifactIds>
+                            <includeArtifactIds>atlassian-plugins-simpletest,atlassian-plugins-filtertest</includeArtifactIds>
                         </configuration>
                     </execution>
                 </executions>
@@ -50,6 +50,12 @@
         <dependency>
             <groupId>com.atlassian.plugins.test</groupId>
             <artifactId>atlassian-plugins-simpletest</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugins.test</groupId>
+            <artifactId>atlassian-plugins-filtertest</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

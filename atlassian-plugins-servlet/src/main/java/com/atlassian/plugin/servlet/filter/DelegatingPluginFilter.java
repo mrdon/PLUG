@@ -1,8 +1,5 @@
 package com.atlassian.plugin.servlet.filter;
 
-import static com.atlassian.plugin.servlet.util.ClassLoaderSubstitutor.restoreThreadClassLoader;
-import static com.atlassian.plugin.servlet.util.ClassLoaderSubstitutor.substituteThreadClassLoaderWithClassLoaderFrom;
-
 import java.io.IOException;
 
 import javax.servlet.Filter;
@@ -15,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.atlassian.plugin.servlet.PluginHttpRequestWrapper;
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
+import com.atlassian.plugin.servlet.util.ClassLoaderStack;
 
 /**
  * We wrap the plugins filter so that we can set some things up before the plugins filter is called. Currently we do 
@@ -37,23 +35,41 @@ public class DelegatingPluginFilter implements Filter
 
     public void init(FilterConfig filterConfig) throws ServletException
     {
-        substituteThreadClassLoaderWithClassLoaderFrom(descriptor.getPlugin());
-        filter.init(filterConfig);
-        restoreThreadClassLoader();
+        ClassLoaderStack.push(descriptor.getPlugin().getClassLoader());
+        try
+        {
+            filter.init(filterConfig);
+        }
+        finally
+        {
+            ClassLoaderStack.pop();
+        }
     }
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
         throws IOException, ServletException
     {
-        substituteThreadClassLoaderWithClassLoaderFrom(descriptor.getPlugin());
-        filter.doFilter(new PluginHttpRequestWrapper((HttpServletRequest) request, descriptor), response, chain);
-        restoreThreadClassLoader();
+        ClassLoaderStack.push(descriptor.getPlugin().getClassLoader());
+        try
+        {
+            filter.doFilter(new PluginHttpRequestWrapper((HttpServletRequest) request, descriptor), response, chain);
+        }
+        finally
+        {
+            ClassLoaderStack.pop();
+        }
     }
     
     public void destroy()
     {
-        substituteThreadClassLoaderWithClassLoaderFrom(descriptor.getPlugin());
-        filter.destroy();
-        restoreThreadClassLoader();
+        ClassLoaderStack.push(descriptor.getPlugin().getClassLoader());
+        try
+        {
+            filter.destroy();
+        }
+        finally
+        {
+            ClassLoaderStack.pop();
+        }
     }
 }

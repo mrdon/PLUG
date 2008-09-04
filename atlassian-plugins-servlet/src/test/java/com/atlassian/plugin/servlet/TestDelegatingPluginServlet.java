@@ -1,8 +1,5 @@
 package com.atlassian.plugin.servlet;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -13,8 +10,8 @@ import junit.framework.TestCase;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
-import com.atlassian.plugin.servlet.descriptors.MockServletModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptorBuilder;
 import com.atlassian.plugin.test.PluginTestUtils;
 import com.mockobjects.dynamic.Mock;
 
@@ -24,7 +21,6 @@ public class TestDelegatingPluginServlet extends TestCase
     private Plugin plugin;
     private Mock mockRequest;
     private Mock mockResponse;
-    private List<String> paths;
     
     public void setUp() throws Exception
     {
@@ -32,11 +28,8 @@ public class TestDelegatingPluginServlet extends TestCase
         plugin = new DefaultDynamicPlugin(null, classLoader);
         
         mockRequest = new Mock(HttpServletRequest.class);
-        mockRequest.matchAndReturn("getPathInfo", "/plugin/servlet/*");
+        mockRequest.matchAndReturn("getPathInfo", "/servlet/test");
         mockResponse = new Mock(HttpServletResponse.class);
-        
-        paths = new ArrayList<String>();
-        paths.add("/name/servlet");
     }
     
     /**
@@ -92,7 +85,11 @@ public class TestDelegatingPluginServlet extends TestCase
 
     private DelegatingPluginServlet getDelegatingServlet(HttpServlet wrappedServlet)
     {
-        ServletModuleDescriptor descriptor = new MockServletModuleDescriptor(plugin, wrappedServlet, paths);
+        ServletModuleDescriptor descriptor = new ServletModuleDescriptorBuilder()
+            .with(plugin)
+            .with(wrappedServlet)
+            .withPath("/servlet/*")
+            .build();
         return new DelegatingPluginServlet(descriptor);
     }
 }

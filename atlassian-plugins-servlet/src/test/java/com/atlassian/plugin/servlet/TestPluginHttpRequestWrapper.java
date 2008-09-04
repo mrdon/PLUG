@@ -1,20 +1,17 @@
 package com.atlassian.plugin.servlet;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 
 import junit.framework.TestCase;
 
-import com.atlassian.plugin.servlet.PluginHttpRequestWrapper;
-import com.atlassian.plugin.servlet.descriptors.MockServletModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptorBuilder;
 import com.mockobjects.dynamic.Mock;
 
 public class TestPluginHttpRequestWrapper extends TestCase
 {
     Mock mockWrappedRequest;
-    MockServletModuleDescriptor descriptor;
+    ServletModuleDescriptor descriptor;
     
     PluginHttpRequestWrapper request;
     
@@ -24,10 +21,7 @@ public class TestPluginHttpRequestWrapper extends TestCase
         mockWrappedRequest.matchAndReturn("getServletPath", "/context/plugins");
         mockWrappedRequest.matchAndReturn("getPathInfo", "/plugin/servlet/path/to/resource");
         
-        List<String> paths = new ArrayList<String>();
-        paths.add("/plugin/servlet/*");
-        
-        descriptor = new MockServletModuleDescriptor(null, null, paths);
+        descriptor = new ServletModuleDescriptorBuilder().withPath("/plugin/servlet/*").build();
         
         request = new PluginHttpRequestWrapper((HttpServletRequest) mockWrappedRequest.proxy(), descriptor);
     }

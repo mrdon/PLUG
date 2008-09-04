@@ -1,7 +1,6 @@
 package com.atlassian.plugin.servlet.filter;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -56,24 +55,7 @@ public abstract class ServletFilterModuleContainerFilter implements Filter
         }
         
         final Iterable<Filter> filters = getServletModuleManager().getFilters(location, request.getPathInfo(), filterConfig);
-        
-        FilterChain pluginFilterChain = new FilterChain()
-        {
-            private Iterator<Filter> filterIt = filters.iterator();
-            
-            public void doFilter(ServletRequest request, ServletResponse response) throws IOException, ServletException
-            {
-                if (filterIt.hasNext())
-                {
-                    Filter filter = filterIt.next();
-                    filter.doFilter(request, response, this);
-                }
-                else
-                {
-                    chain.doFilter(request, response);
-                }
-            }
-        };
+        FilterChain pluginFilterChain = new IteratingFilterChain(filters.iterator(), chain);
         pluginFilterChain.doFilter(request, response);
     }
     

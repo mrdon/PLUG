@@ -1,8 +1,5 @@
 package com.atlassian.plugin.servlet;
 
-import static com.atlassian.plugin.servlet.util.ClassLoaderSubstitutor.restoreThreadClassLoader;
-import static com.atlassian.plugin.servlet.util.ClassLoaderSubstitutor.substituteThreadClassLoaderWithClassLoaderFrom;
-
 import java.io.IOException;
 import java.util.Enumeration;
 
@@ -15,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.atlassian.plugin.servlet.descriptors.BaseServletModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
+import com.atlassian.plugin.servlet.util.ClassLoaderStack;
 
 /**
  * We are wrapping the plugins servlet in another servlet so that we can set some things up before
@@ -38,23 +36,41 @@ public class DelegatingPluginServlet extends HttpServlet
 
     public void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {
-        substituteThreadClassLoaderWithClassLoaderFrom(descriptor.getPlugin());
-        servlet.service(new PluginHttpRequestWrapper(req, descriptor), res);
-        restoreThreadClassLoader();
+        ClassLoaderStack.push(descriptor.getPlugin().getClassLoader());
+        try
+        {
+            servlet.service(new PluginHttpRequestWrapper(req, descriptor), res);
+        }
+        finally
+        {
+            ClassLoaderStack.pop();
+        }
     }
 
     public void init(ServletConfig config) throws ServletException
     {
-        substituteThreadClassLoaderWithClassLoaderFrom(descriptor.getPlugin());
-        servlet.init(config);
-        restoreThreadClassLoader();
+        ClassLoaderStack.push(descriptor.getPlugin().getClassLoader());
+        try
+        {
+            servlet.init(config);
+        }
+        finally
+        {
+            ClassLoaderStack.pop();
+        }
     }
 
     public void destroy()
     {
-        substituteThreadClassLoaderWithClassLoaderFrom(descriptor.getPlugin());
-        servlet.destroy();
-        restoreThreadClassLoader();
+        ClassLoaderStack.push(descriptor.getPlugin().getClassLoader());
+        try
+        {
+            servlet.destroy();
+        }
+        finally
+        {
+            ClassLoaderStack.pop();
+        }
     }
 
     public boolean equals(Object obj)
@@ -117,7 +133,8 @@ public class DelegatingPluginServlet extends HttpServlet
         return servlet.toString();
     }
 
-    public BaseServletModuleDescriptor<?> getDescriptor() {
+    public BaseServletModuleDescriptor<?> getDescriptor()
+    {
         return descriptor;
     }
 }
