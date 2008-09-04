@@ -5,15 +5,14 @@ import com.atlassian.plugin.servlet.ServletModuleContainerServlet;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 
 /**
- * Created by IntelliJ IDEA.
- * User: mrdon
- * Date: 06/07/2008
- * Time: 12:17:52 PM
- * To change this template use File | Settings | File Templates.
+ * This is a simple example of the {@link ServletModuleContainerServlet}.  It uses the static 
+ * {@link ContainerManager} to lookup the appropriate {@link ServletModuleManager}.  Other applications should use 
+ * their specific method of getting a reference to the {@link ServletModuleManager} and returning it. 
  */
-public class SimpleContainerServlet extends ServletModuleContainerServlet {
-    
-    protected ServletModuleManager getServletModuleManager() {
+public class SimpleContainerServlet extends ServletModuleContainerServlet
+{    
+    protected ServletModuleManager getServletModuleManager()
+    {
         return ContainerManager.getInstance().getServletModuleManager();
     }
 }
