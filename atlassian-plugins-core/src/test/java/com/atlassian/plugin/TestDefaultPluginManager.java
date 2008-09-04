@@ -1062,6 +1062,25 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertFalse(servicePlugin.isEnabled());
     }
 
+    public void testUninstallPluginClearsState() throws IOException
+    {
+        createFillAndCleanTempPluginDirectory();
+
+        DefaultPluginManager manager = makeClassLoadingPluginManager();
+
+        checkClasses(manager, true);
+        Plugin plugin = manager.getPlugin("test.atlassian.plugin.classloaded");
+
+        ModuleDescriptor<?> module = plugin.getModuleDescriptor("paddington");
+        assertTrue(manager.isPluginModuleEnabled(module.getCompleteKey()));
+        manager.disablePluginModule(module.getCompleteKey());
+        assertFalse(manager.isPluginModuleEnabled(module.getCompleteKey()));
+        manager.uninstall(plugin);
+        assertFalse(manager.isPluginModuleEnabled(module.getCompleteKey()));
+        assertTrue(pluginStateStore.loadPluginState().getState(plugin.getKey()) == null);
+        assertTrue(pluginStateStore.loadPluginState().getState(module.getCompleteKey()) == null);
+    }
+    
     public Plugin createPluginWithVersion(String version)
     {
         Plugin p = new StaticPlugin();

@@ -198,6 +198,10 @@ public class DefaultPluginManager implements PluginManager
     {
         PluginManagerState currentState = stateStore.loadPluginState();
         currentState.removeState(plugin.getKey());
+        for (ModuleDescriptor<?> moduleDescriptor : plugin.getModuleDescriptors())
+        {
+            currentState.removeState(moduleDescriptor.getCompleteKey());
+        }
         stateStore.savePluginState(currentState);
     }
 
