@@ -63,7 +63,7 @@ public abstract class ServletModuleContainerServlet extends HttpServlet
     }
 
     /**
-     * Retrieve the DefaultServletModuleManager from your container framework.
+     * Retrieve the ServletModuleManager from your container framework.
      */
     protected abstract ServletModuleManager getServletModuleManager();
 }

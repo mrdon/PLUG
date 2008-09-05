@@ -346,10 +346,10 @@ public class DefaultServletModuleManager implements ServletModuleManager
                 {
                     descriptor.getModule().contextInitialized(new ServletContextEvent(context));
                 }
-            } catch (RuntimeException e)
+            } 
+            finally
             {
                 ClassLoaderStack.pop();
-                throw e;
             }
             
             return context;
