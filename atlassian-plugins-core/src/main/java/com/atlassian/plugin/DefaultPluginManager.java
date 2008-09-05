@@ -404,7 +404,7 @@ public class DefaultPluginManager implements PluginManager
         for (Iterator moduleIter = newPlugin.getModuleDescriptors().iterator(); moduleIter.hasNext();)
         {
             ModuleDescriptor moduleDescriptor = (ModuleDescriptor) moduleIter.next();
-            newModuleKeys.add(moduleDescriptor.getKey());
+            newModuleKeys.add(moduleDescriptor.getCompleteKey());
         }
 
         // Remove any keys from the old plugin state that do not exist in the new version
