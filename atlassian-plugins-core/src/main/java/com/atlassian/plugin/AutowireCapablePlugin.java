@@ -43,4 +43,18 @@ public interface AutowireCapablePlugin
      * @return The created and wired bean
      */
     <T> T autowire(Class<T> clazz, AutowireStrategy autowireStrategy);
+
+    /**
+     * Autowires an existing object using the default strategy.
+     * @param instance The object to inject
+     */
+    void autowire(Object instance);
+
+    /**
+     * Autowires an existing object with a specific autowire strategy
+     *
+     * @param instance The object to autowire
+     * @param autowireStrategy The autowire strategy, must not be constructor
+     */
+    void autowire(Object instance, AutowireStrategy autowireStrategy);
 }

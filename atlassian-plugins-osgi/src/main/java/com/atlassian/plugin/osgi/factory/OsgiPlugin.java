@@ -27,6 +27,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private boolean bundled = false;
     private Object nativeBeanFactory;
     private Method nativeCreateBeanMethod;
+    private Method nativeAutowireBeanMethod;
 
     public OsgiPlugin(Bundle bundle)
     {
@@ -172,6 +173,31 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
     }
 
+    public void autowire(Object instance)
+    {
+        autowire(instance, AutowireStrategy.AUTOWIRE_AUTODETECT);
+    }
+
+    public void autowire(Object instance, AutowireStrategy autowireStrategy)
+    {
+        if (!ensureNativeBeanFactory())
+            return;
+
+        try
+        {
+            nativeAutowireBeanMethod.invoke(nativeBeanFactory, instance, autowireStrategy.ordinal(), false);
+        }
+        catch (IllegalAccessException e)
+        {
+            // Should never happen
+            throw new PluginException("Unable to access createBean method", e);
+        }
+        catch (InvocationTargetException e)
+        {
+            handleSpringMethodInvocationError(e);
+        }
+    }
+
     private boolean ensureNativeBeanFactory()
     {
         if (nativeBeanFactory == null)
@@ -219,13 +245,14 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             try
             {
                 nativeCreateBeanMethod = nativeBeanFactory.getClass().getMethod("createBean", Class.class, int.class, boolean.class);
+                nativeAutowireBeanMethod = nativeBeanFactory.getClass().getMethod("autowireBeanProperties", Object.class, int.class, boolean.class);
             } catch (NoSuchMethodException e)
             {
                 // Should never happen
                 throw new PluginException("Cannot find createBean method on registered bean factory: "+nativeBeanFactory, e);
             }
         }
-        return nativeBeanFactory != null && nativeCreateBeanMethod != null;
+        return nativeBeanFactory != null && nativeCreateBeanMethod != null && nativeAutowireBeanMethod != null;
     }
 
     private void handleSpringMethodInvocationError(InvocationTargetException e)
