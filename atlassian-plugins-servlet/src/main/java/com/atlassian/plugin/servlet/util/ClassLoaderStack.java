@@ -11,10 +11,13 @@ import java.util.List;
  */
 public class ClassLoaderStack
 {
-    private static final ThreadLocal<List<ClassLoader>> classLoaderStack = new ThreadLocal<List<ClassLoader>>();
-    static {
-        classLoaderStack.set(new LinkedList<ClassLoader>());
-    }
+    private static final ThreadLocal<List<ClassLoader>> classLoaderStack = new ThreadLocal<List<ClassLoader>>()
+    {
+        protected List<ClassLoader> initialValue()
+        {
+            return new LinkedList<ClassLoader>();
+        }
+    };
     
     public static void push(ClassLoader loader)
     {
