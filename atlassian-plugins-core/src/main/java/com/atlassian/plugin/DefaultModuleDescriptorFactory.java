@@ -34,7 +34,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
         if (moduleDescriptorClazz == null)
             throw new PluginParseException("Cannot find ModuleDescriptor class for plugin of type '" + type + "'.");
 
-        return (ModuleDescriptor) ClassLoaderUtils.loadClass(moduleDescriptorClazz.getName(), SinglePluginLoader.class).newInstance();
+        return (ModuleDescriptor) moduleDescriptorClazz.newInstance();
     }
 
     protected boolean shouldSkipModuleOfType(String type)

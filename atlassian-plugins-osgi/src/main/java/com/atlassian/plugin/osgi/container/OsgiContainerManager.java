@@ -2,6 +2,7 @@ package com.atlassian.plugin.osgi.container;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 import org.twdata.pkgscanner.ExportPackage;
 
 import java.io.File;
@@ -62,4 +63,13 @@ public interface OsgiContainerManager
      * @return A list of host component registrations
      */
     List<HostComponentRegistration> getHostComponentRegistrations();
+
+    /**
+     * Gets a service tracker to follow a service registered under a certain interface
+     *
+     * @param cls The interface class as a String
+     * @return A service tracker to follow all instances of that interface
+     * @since 2.1
+     */
+    ServiceTracker getServiceTracker(String cls);
 }

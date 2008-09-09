@@ -21,13 +21,14 @@ import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.StringMap;
 import org.osgi.framework.*;
+import org.osgi.util.tracker.ServiceTracker;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.jar.JarFile;
 
 /**
@@ -49,6 +50,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private File frameworkBundlesDir;
     private HostComponentProvider hostComponentProvider;
     private Logger felixLogger;
+    private final Set<ServiceTracker> trackers;
 
     /**
      * Constructs the container manager using the framework bundles zip file located in this library
@@ -85,6 +87,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         this.packageScannerConfig = packageScannerConfig;
         this.frameworkBundlesDir = frameworkBundlesDir;
         this.hostComponentProvider = provider;
+        this.trackers = Collections.synchronizedSet(new HashSet<ServiceTracker>());
         eventManager.register(this);
         felixLogger = new FelixLoggerBridge(log);
     }
@@ -175,7 +178,11 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         try
         {
             if (felixRunning)
+            {
                 felix.stop();
+                for (ServiceTracker tracker : trackers)
+                    tracker.close();
+            }
 
             if (cacheDirectory != null && cacheDirectory.exists()) {
                 FileUtils.deleteDirectory(cacheDirectory);
@@ -200,6 +207,17 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     public ServiceReference[] getRegisteredServices()
     {
         return felix.getRegisteredServices();
+    }
+
+    public ServiceTracker getServiceTracker(String cls)
+    {
+        if (!isRunning())
+            throw new IllegalStateException("Unable to create a tracker when osgi is not running");
+
+        ServiceTracker tracker = registration.getServiceTracker(cls);
+        tracker.open();
+        trackers.add(tracker);
+        return tracker;
     }
 
     public Bundle installBundle(File file) throws OsgiContainerException
@@ -341,6 +359,11 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         public Bundle[] getBundles()
         {
             return bundleContext.getBundles();
+        }
+
+        public ServiceTracker getServiceTracker(String clazz)
+        {
+            return new ServiceTracker(bundleContext, clazz, null);
         }
 
         public List<HostComponentRegistration> getHostComponentRegistrations()

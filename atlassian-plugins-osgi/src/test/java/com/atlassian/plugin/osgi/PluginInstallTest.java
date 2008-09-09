@@ -6,9 +6,12 @@ import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
 import java.io.File;
+import java.util.List;
+import java.util.Collection;
 
 public class PluginInstallTest extends PluginInContainerTestBase
 {
@@ -56,6 +59,52 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertEquals(1, pluginManager.getEnabledPlugins().size());
         assertEquals(2, pluginManager.getPlugin("test.plugin").getModuleDescriptors().size());
         assertEquals("Test 2", pluginManager.getPlugin("test.plugin").getName());
+    }
+
+    public void testDynamicPluginModule() throws Exception
+    {
+        initPluginManager(new HostComponentProvider(){public void provide(ComponentRegistrar registrar){}});
+
+        File pluginJar = new PluginBuilder("pluginType")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin.module' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component key='factory' class='foo.MyModuleDescriptorFactory' public='true'>",
+                        "       <interface>com.atlassian.plugin.ModuleDescriptorFactory</interface>",
+                        "    </component>",
+                        "</atlassian-plugin>")
+                .addJava("foo.MyModuleDescriptor",
+                        "package foo;" +
+                        "public class MyModuleDescriptor extends com.atlassian.plugin.descriptors.AbstractModuleDescriptor {" +
+                        "  public Object getModule(){return null;}" +
+                        "}")
+                .addJava("foo.MyModuleDescriptorFactory",
+                        "package foo;" +
+                        "public class MyModuleDescriptorFactory extends com.atlassian.plugin.DefaultModuleDescriptorFactory {" +
+                        "  public MyModuleDescriptorFactory() {" +
+                        "    super();" +
+                        "    addModuleDescriptor(\"foo\", MyModuleDescriptor.class);" +
+                        "  }" +
+                        "}")
+                .build();
+        File pluginJar2 = new PluginBuilder("fooUser")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <foo key='dum2'/>",
+                        "</atlassian-plugin>")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
+        assertEquals(1, descriptors.size());
+        ModuleDescriptor descriptor = descriptors.iterator().next();
+        assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
     }
 
     public static class DummyModuleDescriptor extends AbstractModuleDescriptor

@@ -4,6 +4,7 @@ import org.apache.commons.io.IOUtils;
 import org.codehaus.janino.ByteArrayClassLoader;
 import org.codehaus.janino.SimpleCompiler;
 import org.codehaus.janino.Parser;
+import org.codehaus.janino.CompileException;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -46,6 +47,8 @@ public class PluginBuilder {
         {
             compiler.cook(new StringReader(code));
         } catch (Parser.ParseException ex) {
+            throw new IllegalArgumentException("Unable to compile "+className, ex);
+        } catch (CompileException ex) {
             throw new IllegalArgumentException("Unable to compile "+className, ex);
         }
         classLoader = compiler.getClassLoader();

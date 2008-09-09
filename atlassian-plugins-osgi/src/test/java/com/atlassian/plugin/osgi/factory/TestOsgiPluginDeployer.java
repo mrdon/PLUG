@@ -19,6 +19,7 @@ import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.util.tracker.ServiceTracker;
 
 public class TestOsgiPluginDeployer extends TestCase
 {
@@ -54,6 +55,7 @@ public class TestOsgiPluginDeployer extends TestCase
     public void testCreateOsgiPlugin() throws PluginParseException {
         mockOsgi.expectAndReturn("installBundle", C.ANY_ARGS, mockBundle.proxy());
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
+        mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
         Plugin plugin = deployer.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiPlugin);
@@ -63,6 +65,7 @@ public class TestOsgiPluginDeployer extends TestCase
     public void testCreateOsgiPluginFail() throws PluginParseException {
         //noinspection ThrowableInstanceNeverThrown
         mockOsgi.expectAndThrow("installBundle", C.ANY_ARGS, new OsgiContainerException("Bad install"));
+        mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
         Plugin plugin = deployer.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
