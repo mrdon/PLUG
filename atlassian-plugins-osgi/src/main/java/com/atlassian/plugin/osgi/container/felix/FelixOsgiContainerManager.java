@@ -176,10 +176,17 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         {
             if (felixRunning)
                 felix.stop();
+
+            if (cacheDirectory != null && cacheDirectory.exists()) {
+                FileUtils.deleteDirectory(cacheDirectory);
+            }
             
             felixRunning = false;
             felix = null;
         } catch (BundleException e)
+        {
+            throw new OsgiContainerException("Unable to stop OSGi container", e);
+        } catch (IOException e)
         {
             throw new OsgiContainerException("Unable to stop OSGi container", e);
         }
@@ -218,12 +225,12 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     {
         try
         {
-            cacheDirectory = new File(File.createTempFile("foo", "bar").getParentFile(), "felix");
+            cacheDirectory = File.createTempFile("felix", null);
+            cacheDirectory.delete();
             if (cacheDirectory.exists())
                 FileUtils.deleteDirectory(cacheDirectory);
 
             cacheDirectory.mkdir();
-            cacheDirectory.deleteOnExit();
         } catch (IOException e)
         {
             throw new OsgiContainerException("Cannot create cache directory", e);

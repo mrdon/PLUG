@@ -73,12 +73,20 @@ public class PluginBuilder {
 
     public PluginBuilder addPluginInformation(String key, String name, String version, int pluginsVersion)
     {
+        return addPluginInformation(key, name, version, pluginsVersion, null);
+    }
+
+    public PluginBuilder addPluginInformation(String key, String name, String version, int pluginsVersion, Map<String,String> params)
+    {
         StringBuffer sb = new StringBuffer();
         sb.append("<atlassian-plugin name=\"").append(name).append("\" key=\"").append(key).append("\" pluginsVersion=\""+pluginsVersion+"\">\n");
         sb.append("    <plugin-info>\n");
         sb.append("        <description>This plugin descriptor is used for testing plugins!</description>\n");
         sb.append("        <version>").append(version).append("</version>\n");
         sb.append("        <vendor name=\"Atlassian Software Systems Pty Ltd\" url=\"http://www.atlassian.com\" />\n");
+        if (params != null)
+            for (Map.Entry<String,String> param : params.entrySet())
+                sb.append("<param name=\"").append(param.getKey()).append("\">").append(param.getValue()).append("</param>\n");
         sb.append("    </plugin-info>");
         sb.append("</atlassian-plugin>");
         jarContents.put("atlassian-plugin.xml", sb.toString().getBytes());

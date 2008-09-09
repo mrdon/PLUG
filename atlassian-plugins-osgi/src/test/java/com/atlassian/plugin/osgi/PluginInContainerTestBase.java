@@ -47,6 +47,9 @@ public abstract class PluginInContainerTestBase extends TestCase {
     @Override
     public void tearDown() throws Exception
     {
+        if (osgiContainerManager != null) {
+            osgiContainerManager.stop();
+        }
         FileUtils.deleteDirectory(frameworkBundlesDir);
         FileUtils.deleteDirectory(pluginsDir);
         osgiContainerManager = null;

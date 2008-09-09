@@ -20,6 +20,6 @@
     </modules>
 
     <properties>
-        <jdkLevel>1.4</jdkLevel>
+        <jdkLevel>1.5</jdkLevel>
     </properties>
 </project>

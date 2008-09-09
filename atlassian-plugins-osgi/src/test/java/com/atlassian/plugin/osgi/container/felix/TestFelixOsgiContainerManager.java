@@ -11,6 +11,7 @@ import org.osgi.framework.Constants;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.FilenameFilter;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -68,21 +69,21 @@ public class TestFelixOsgiContainerManager extends TestCase
         assertTrue(!dir.exists());
     }
 
-    public void testInitialiseCacheDirectory() throws IOException
-    {
-        File dir = new File(tmpdir, "felix");
-        File subdir = new File(dir, "subdir");
-        subdir.mkdir();
-        felix.initialiseCacheDirectory();
-        assertTrue(dir.exists());
-        assertEquals(0, dir.listFiles().length);
-    }
-
     public void testStartStop()
     {
+        FilenameFilter filter = new FilenameFilter()
+            {
+                public boolean accept(File file, String s)
+                {
+                    return s.startsWith("felix");
+                }
+            };
+        int filesNamedFelix = tmpdir.listFiles(filter).length;
         felix.start();
         assertTrue(felix.isRunning());
         assertEquals(1, felix.getBundles().length);
+        felix.stop();
+        assertEquals(filesNamedFelix, tmpdir.listFiles(filter).length);
     }
 
     public void testInstallBundle() throws URISyntaxException
