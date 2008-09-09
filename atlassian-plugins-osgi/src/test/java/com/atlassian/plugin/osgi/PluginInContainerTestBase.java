@@ -62,6 +62,10 @@ public abstract class PluginInContainerTestBase extends TestCase {
     }
 
     protected void initPluginManager(HostComponentProvider hostComponentProvider) throws Exception {
+        initPluginManager(hostComponentProvider, new DefaultModuleDescriptorFactory());
+    }
+    protected void initPluginManager(HostComponentProvider hostComponentProvider, ModuleDescriptorFactory moduleDescriptorFactory) throws Exception {
+        this.moduleDescriptorFactory = moduleDescriptorFactory;
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
         scannerConfig.getPackageIncludes().add("com.atlassian.plugin*");
         pluginEventManager = new DefaultPluginEventManager();
@@ -70,7 +74,6 @@ public abstract class PluginInContainerTestBase extends TestCase {
 
         OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, osgiContainerManager);
 
-        moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Collections.<PluginFactory>singletonList(osgiPluginDeployer), new DefaultPluginEventManager());
 
         pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader>asList(loader),
