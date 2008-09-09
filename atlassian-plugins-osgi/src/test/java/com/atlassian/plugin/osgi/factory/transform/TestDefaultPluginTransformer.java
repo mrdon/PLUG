@@ -138,6 +138,58 @@ public class TestDefaultPluginTransformer extends TestCase
 
     }
 
+    public void testGenerateManifestWithBundleInstructions() throws Exception
+    {
+        File plugin = new PluginBuilder("plugin")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test Bundle instruction plugin 2' key='test.plugin'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "        <bundle-instructions>",
+                        "            <Export-Package>!*.internal.*,*</Export-Package>",
+                        "        </bundle-instructions>",
+                        "    </plugin-info>",
+                        "</atlassian-plugin>")
+                .addJava("foo.MyClass", "package foo; public class MyClass{}")
+                .addJava("foo.internal.MyPrivateClass", "package foo.internal; public class MyPrivateClass{}")
+                .build();
+
+        DefaultPluginTransformer transformer = new DefaultPluginTransformer();
+        byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, Collections.<HostComponentRegistration>emptyList());
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Attributes attrs = mf.getMainAttributes();
+        assertEquals("test.plugin", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
+        assertEquals("foo", attrs.getValue(Constants.EXPORT_PACKAGE));
+    }
+
+    public void testGenerateManifestUsingPluginInfoParameters() throws Exception
+    {
+        File plugin = new PluginBuilder("plugin")
+                .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
+                        "Import-Package: javax.swing\n" +
+                        "Bundle-SymbolicName: my.foo.symbolicName\n" +
+                        "Bundle-ClassPath: .,foo\n")
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .addResource("foo/bar.txt", "Something")
+                .build();
+
+        List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>() {{
+            add(new MockRegistration("foo", AttributeSet.class));
+        }};
+
+        DefaultPluginTransformer transformer = new DefaultPluginTransformer();
+        byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Attributes attrs = mf.getMainAttributes();
+        assertEquals("my.foo.symbolicName", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
+        assertEquals(".,foo", attrs.getValue(Constants.BUNDLE_CLASSPATH));
+        String importPackage = attrs.getValue(Constants.IMPORT_PACKAGE);
+        System.out.println("imports:"+importPackage);
+        assertTrue(importPackage.contains("javax.print.attribute,"));
+        assertTrue(importPackage.contains("javax.swing"));
+
+    }
+
     public void testGenerateManifest_innerjars() throws URISyntaxException, PluginParseException, IOException
     {
         File innerJar = new PluginBuilder("innerjar1")

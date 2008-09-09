@@ -250,10 +250,11 @@ public class DefaultPluginTransformer implements PluginTransformer
      *
      * @param descriptorStream The existing manifest
      * @param file The jar
+     * @param regs The list of host component registrations
      * @return The new manifest file in bytes
      * @throws PluginParseException If there is any problems parsing atlassian-plugin.xml
      */
-    byte[] generateManifest(InputStream descriptorStream, File file, List<HostComponentRegistration> regs) throws PluginParseException, IOException
+    byte[] generateManifest(InputStream descriptorStream, File file, List<HostComponentRegistration> regs) throws PluginParseException
     {
 
         Builder builder = new Builder();
@@ -263,11 +264,7 @@ public class DefaultPluginTransformer implements PluginTransformer
             String referrers = OsgiHeaderUtil.findReferredPackages(regs);
             if (builder.getJar().getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null)
             {
-                String imports = builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
-                if (imports != null && imports.length() > 0)
-                    imports = referrers + imports;
-                else
-                    imports = referrers.substring(0, referrers.length() - 1);
+                String imports = addReferrersToImports(referrers, builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE));
                 builder.setProperty(Constants.IMPORT_PACKAGE, imports);
                 builder.mergeManifest(builder.getJar().getManifest());
             } else
@@ -280,7 +277,7 @@ public class DefaultPluginTransformer implements PluginTransformer
                 // Setup defaults
                 properties.put("Spring-Context", "*;timeout=60");
                 properties.put(Analyzer.BUNDLE_SYMBOLICNAME, parser.getKey());
-                properties.put(Analyzer.IMPORT_PACKAGE, referrers+"*;resolution:=optional");
+                properties.put(Analyzer.IMPORT_PACKAGE, "*;resolution:=optional");
                 properties.put(Analyzer.EXPORT_PACKAGE, "*");
                 properties.put(Analyzer.BUNDLE_VERSION, info.getVersion());
 
@@ -304,6 +301,11 @@ public class DefaultPluginTransformer implements PluginTransformer
                 }
                 header(properties, Analyzer.BUNDLE_CLASSPATH, classpath.toString());
 
+                // Process any bundle instructions in atlassian-plugin.xml
+                properties.putAll(processBundleInstructions(parser.getDocument()));
+
+                // Add referrers to the imports list
+                properties.put(Analyzer.IMPORT_PACKAGE, addReferrersToImports(properties.getProperty(Analyzer.IMPORT_PACKAGE), referrers));
                 builder.setProperties(properties);
             }
 
@@ -318,6 +320,36 @@ public class DefaultPluginTransformer implements PluginTransformer
         {
             throw new PluginParseException("Unable to process plugin to generate OSGi manifest", t);
         }
+    }
+
+    private Map<String,String> processBundleInstructions(Document document)
+    {
+        Map<String,String> instructions = new HashMap<String,String>();
+        Element pluginInfo = document.getRootElement().element("plugin-info");
+        if (pluginInfo != null)
+        {
+            Element instructionRoot = pluginInfo.element("bundle-instructions");
+            if (instructionRoot != null)
+            {
+                List<Element> instructionsElement = instructionRoot.elements();
+                for (Element instructionElement : instructionsElement)
+                {
+                    String name = instructionElement.getName();
+                    String value = instructionElement.getTextTrim();
+                    instructions.put(name, value);
+                }
+            }
+        }
+        return instructions;
+    }
+
+    private String addReferrersToImports(String referrers, String imports)
+    {
+        if (imports != null && imports.length() > 0)
+            imports = referrers + imports;
+        else
+            imports = referrers.substring(0, referrers.length() - 1);
+        return imports;
     }
 
     /**
@@ -390,7 +422,7 @@ public class DefaultPluginTransformer implements PluginTransformer
     /**
      * Descriptor parser that exposes the PluginInformation object directly
      */
-    static class PluginInformationDescriptorParser extends XmlDescriptorParser
+    private static class PluginInformationDescriptorParser extends XmlDescriptorParser
     {
         /**
          * @throws com.atlassian.plugin.PluginParseException
@@ -404,6 +436,12 @@ public class DefaultPluginTransformer implements PluginTransformer
         public PluginInformation getPluginInformation()
         {
             return createPluginInformation(getDocument().getRootElement().element("plugin-info"));
+        }
+
+        @Override
+        public Document getDocument()
+        {
+            return super.getDocument();
         }
     }
 }

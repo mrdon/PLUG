@@ -3,6 +3,7 @@ package com.atlassian.plugin.test;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.janino.ByteArrayClassLoader;
 import org.codehaus.janino.SimpleCompiler;
+import org.codehaus.janino.Parser;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -41,7 +42,12 @@ public class PluginBuilder {
     {
         SimpleCompiler compiler = new SimpleCompiler();
         compiler.setParentClassLoader(classLoader);
-        compiler.cook(new StringReader(code));
+        try
+        {
+            compiler.cook(new StringReader(code));
+        } catch (Parser.ParseException ex) {
+            throw new IllegalArgumentException("Unable to compile "+className, ex);
+        }
         classLoader = compiler.getClassLoader();
 
         // Silly hack because I'm too lazy to do it the "proper" janino way
@@ -63,6 +69,21 @@ public class PluginBuilder {
     public PluginBuilder addResource(String path, String contents)
     {
         jarContents.put(path, contents.getBytes());
+        return this;
+    }
+
+    /**
+     * Adds a resource in the jar as lines.  Single quotes are converted to double quotes.
+     * @param path The path for the jar entry
+     * @param lines The contents of the file to create
+     * @return
+     */
+    public PluginBuilder addFormattedResource(String path, String... lines)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (String line : lines)
+            sb.append(line.replace('\'', '"')).append('\n');
+        jarContents.put(path, sb.toString().getBytes());
         return this;
     }
 
