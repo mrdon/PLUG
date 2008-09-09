@@ -346,7 +346,7 @@ public class DefaultPluginTransformer implements PluginTransformer
     private String addReferrersToImports(String referrers, String imports)
     {
         if (imports != null && imports.length() > 0)
-            imports = referrers + imports;
+            imports = referrers + "," + imports;
         else
             imports = referrers.substring(0, referrers.length() - 1);
         return imports;
