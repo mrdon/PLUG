@@ -20,6 +20,7 @@ import com.atlassian.plugin.servlet.descriptors.ServletContextParamDescriptor;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
+import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
 
 import javax.servlet.ServletContext;
 import java.io.File;
@@ -77,6 +78,7 @@ public class ContainerManager
         moduleDescriptorFactory.addModuleDescriptor("servlet-filter", SimpleFilterModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("servlet-context-param", ServletContextParamDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("servlet-context-listener", SimpleContextListenerModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("web-resource", WebResourceModuleDescriptor.class);
         pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader>asList(/*bundledPluginLoader, */directoryPluginLoader),
                 moduleDescriptorFactory, pluginEventManager);
 
