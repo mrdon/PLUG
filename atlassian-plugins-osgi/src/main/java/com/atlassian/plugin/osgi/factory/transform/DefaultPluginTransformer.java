@@ -198,7 +198,7 @@ public class DefaultPluginTransformer implements PluginTransformer
             referrers += "com.atlassian.plugin.osgi.external,com.atlassian.plugin,";
             if (builder.getJar().getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null)
             {
-                String imports = addReferrersToImports(referrers, builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE));
+                String imports = addReferrersToImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), referrers);
                 builder.setProperty(Constants.IMPORT_PACKAGE, imports);
                 builder.mergeManifest(builder.getJar().getManifest());
             } else
