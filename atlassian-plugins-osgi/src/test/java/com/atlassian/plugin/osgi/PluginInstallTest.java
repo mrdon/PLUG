@@ -2,16 +2,21 @@ package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
+import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
 import java.io.File;
 import java.util.List;
 import java.util.Collection;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 public class PluginInstallTest extends PluginInContainerTestBase
 {
@@ -142,6 +147,61 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertEquals(1, descriptors.size());
         ModuleDescriptor descriptor = descriptors.iterator().next();
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
+    }
+
+    public void testDynamicModuleDescriptor() throws Exception
+    {
+        initPluginManager(null);
+
+        File pluginJar = new PluginBuilder("pluginType")
+                .addPluginInformation("test.plugin", "foo", "1.0")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        BundleContext ctx = ((OsgiPlugin) pluginManager.getPlugin("test.plugin")).getBundle().getBundleContext();
+        ServiceRegistration reg = ctx.registerService(ModuleDescriptor.class.getName(), new DummyWebItemModuleDescriptor(), null);
+
+        Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
+        assertEquals(1, descriptors.size());
+        ModuleDescriptor descriptor = descriptors.iterator().next();
+        assertEquals("DummyWebItemModuleDescriptor", descriptor.getClass().getSimpleName());
+        List<WebItemModuleDescriptor> list = pluginManager.getEnabledModuleDescriptorsByClass(WebItemModuleDescriptor.class);
+        assertEquals(1, list.size());
+        reg.unregister();
+        list = pluginManager.getEnabledModuleDescriptorsByClass(WebItemModuleDescriptor.class);
+        assertEquals(0, list.size());
+    }
+
+    public void testDynamicModuleDescriptorIsolatedToPlugin() throws Exception
+    {
+        initPluginManager(null);
+
+        File pluginJar = new PluginBuilder("pluginType")
+                .addPluginInformation("test.plugin", "foo", "1.0")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        BundleContext ctx = ((OsgiPlugin) pluginManager.getPlugin("test.plugin")).getBundle().getBundleContext();
+        ServiceRegistration reg = ctx.registerService(ModuleDescriptor.class.getName(), new DummyWebItemModuleDescriptor(), null);
+
+        File pluginJar2 = new PluginBuilder("pluginType")
+                .addPluginInformation("test.plugin2", "foo", "1.0")
+                .build();
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        BundleContext ctx2 = ((OsgiPlugin) pluginManager.getPlugin("test.plugin2")).getBundle().getBundleContext();
+        ServiceRegistration reg2 = ctx2.registerService(ModuleDescriptor.class.getName(), new DummyWebItemModuleDescriptor(), null);
+
+        Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
+        assertEquals(1, descriptors.size());
+        ModuleDescriptor descriptor = descriptors.iterator().next();
+        assertEquals("DummyWebItemModuleDescriptor", descriptor.getClass().getSimpleName());
+        List<WebItemModuleDescriptor> list = pluginManager.getEnabledModuleDescriptorsByClass(WebItemModuleDescriptor.class);
+        assertEquals(2, list.size());
+        reg2.unregister();
+        list = pluginManager.getEnabledModuleDescriptorsByClass(WebItemModuleDescriptor.class);
+        assertEquals(1, list.size());
+        descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
+        assertEquals(1, descriptors.size());
     }
 
     public static class DummyModuleDescriptor extends AbstractModuleDescriptor

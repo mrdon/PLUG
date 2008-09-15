@@ -4,10 +4,7 @@ import junit.framework.TestCase;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 import com.atlassian.plugin.AutowireCapablePlugin;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.*;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -22,15 +19,18 @@ public class TestOsgiPlugin extends TestCase
 {
     Mock mockBundle;
     OsgiPlugin plugin;
+    Mock mockBundleContext;
 
     @Override
     public void setUp()
     {
+
         mockBundle = new Mock(Bundle.class);
         Dictionary dict = new Hashtable();
         dict.put(Constants.BUNDLE_DESCRIPTION, "desc");
         dict.put(Constants.BUNDLE_VERSION, "1.0");
         mockBundle.matchAndReturn("getHeaders", dict);
+        mockBundleContext = new Mock(BundleContext.class);
 
         plugin = new OsgiPlugin((Bundle) mockBundle.proxy());
     }
@@ -40,8 +40,10 @@ public class TestOsgiPlugin extends TestCase
     {
         mockBundle = null;
         plugin = null;
+        mockBundleContext = null;
     }
     public void testEnabled() {
+        mockBundle.expectAndReturn("getBundleContext", null);
         mockBundle.expectAndReturn("getState", Bundle.RESOLVED);
         mockBundle.expect("start");
         plugin.enable();

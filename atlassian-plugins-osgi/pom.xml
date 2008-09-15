@@ -239,6 +239,13 @@
             <version>2.5.10</version>
             <scope>test</scope>
         </dependency>
+
+         <dependency>
+            <groupId>com.atlassian.plugins</groupId>
+            <artifactId>atlassian-plugins-webfragment</artifactId>
+            <version>${project.version}</version>
+             <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <properties>

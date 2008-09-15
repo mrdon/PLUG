@@ -4,14 +4,19 @@ import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 
 import java.net.URL;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.*;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
@@ -28,6 +33,8 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private Object nativeBeanFactory;
     private Method nativeCreateBeanMethod;
     private Method nativeAutowireBeanMethod;
+    private Map<String,ModuleDescriptor<?>> modules = new ConcurrentHashMap<String,ModuleDescriptor<?>>();
+    private ServiceTracker moduleDescriptorTracker;
 
     public OsgiPlugin(Bundle bundle)
     {
@@ -112,6 +119,11 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             if (bundle.getState() == Bundle.RESOLVED || bundle.getState() == Bundle.INSTALLED)
             {
                 bundle.start();
+                if (bundle.getBundleContext() != null)
+                {
+                    moduleDescriptorTracker = new ServiceTracker(bundle.getBundleContext(), ModuleDescriptor.class.getName(), new RegisteringServiceTrackerCustomizer());
+                    moduleDescriptorTracker.open();
+                }
             }
         }
         catch (BundleException e)
@@ -126,7 +138,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         {
             if (bundle.getState() == Bundle.ACTIVE)
             {
+                if (moduleDescriptorTracker != null) moduleDescriptorTracker.close();
                 bundle.stop();
+                moduleDescriptorTracker = null;
                 nativeBeanFactory = null;
                 nativeCreateBeanMethod = null;
             }
@@ -147,6 +161,51 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             throw new OsgiContainerException("Cannot uninstall bundle " + bundle.getSymbolicName());
         }
     }
+
+    public void addModuleDescriptor(ModuleDescriptor<?> moduleDescriptor)
+    {
+        modules.put(moduleDescriptor.getKey(), moduleDescriptor);
+    }
+
+    public Collection<ModuleDescriptor<?>> getModuleDescriptors()
+    {
+        return modules.values();
+    }
+
+    public ModuleDescriptor<?> getModuleDescriptor(String key)
+    {
+        return modules.get(key);
+    }
+
+    public <T> List<ModuleDescriptor<T>> getModuleDescriptorsByModuleClass(Class<T> aClass)
+    {
+        List<ModuleDescriptor<T>> result = new ArrayList<ModuleDescriptor<T>>();
+
+        for (ModuleDescriptor moduleDescriptor : modules.values())
+        {
+            Class moduleClass = moduleDescriptor.getModuleClass();
+            if (aClass.isAssignableFrom(moduleClass))
+            {
+                result.add((ModuleDescriptor<T>) moduleDescriptor);
+            }
+        }
+
+        return result;
+    }
+
+    public boolean containsSystemModule()
+    {
+        for (Iterator iterator = modules.values().iterator(); iterator.hasNext();)
+        {
+            ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator.next();
+            if(moduleDescriptor.isSystemModule())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     private boolean shouldHaveSpringContext()
     {
@@ -279,4 +338,39 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return getKey();
     }
 
+    /**
+     * Tracks module descriptors registered as services, then updates the descriptors map accordingly
+     */
+    private class RegisteringServiceTrackerCustomizer implements ServiceTrackerCustomizer
+    {
+
+        public Object addingService(ServiceReference serviceReference)
+        {
+            if (serviceReference.getBundle() == bundle)
+            {
+                ModuleDescriptor descriptor = (ModuleDescriptor) bundle.getBundleContext().getService(serviceReference);
+                modules.put(descriptor.getKey(), descriptor);
+                return descriptor;
+            }
+            return null;
+        }
+
+        public void modifiedService(ServiceReference serviceReference, Object o)
+        {
+            if (serviceReference.getBundle() == bundle)
+            {
+                ModuleDescriptor descriptor = (ModuleDescriptor) o;
+                modules.put(descriptor.getKey(), descriptor);
+            }
+        }
+
+        public void removedService(ServiceReference serviceReference, Object o)
+        {
+            if (serviceReference.getBundle() == bundle)
+            {
+                ModuleDescriptor descriptor = (ModuleDescriptor) o;
+                modules.remove(descriptor.getKey());
+            }
+        }
+    }
 }
