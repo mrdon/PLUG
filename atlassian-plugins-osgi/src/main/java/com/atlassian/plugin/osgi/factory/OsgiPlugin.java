@@ -95,12 +95,12 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         this.bundled = bundled;
     }
 
-    public boolean isEnabled()
+    public synchronized boolean isEnabled()
     {
         return Bundle.ACTIVE == bundle.getState() && (!shouldHaveSpringContext() || ensureNativeBeanFactory());
     }
 
-    public void setEnabled(boolean enabled) throws OsgiContainerException
+    public synchronized void setEnabled(boolean enabled) throws OsgiContainerException
     {
         if (enabled) enable(); else disable();
     }
@@ -110,7 +110,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         try
         {
             if (bundle.getState() == Bundle.RESOLVED || bundle.getState() == Bundle.INSTALLED)
+            {
                 bundle.start();
+            }
         }
         catch (BundleException e)
         {
@@ -123,14 +125,18 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         try
         {
             if (bundle.getState() == Bundle.ACTIVE)
+            {
                 bundle.stop();
+                nativeBeanFactory = null;
+                nativeCreateBeanMethod = null;
+            }
         } catch (BundleException e)
         {
             throw new OsgiContainerException("Cannot stop plugin: "+getKey(), e);
         }
     }
 
-    public void close() throws OsgiContainerException
+    public synchronized void close() throws OsgiContainerException
     {
         try
         {
@@ -152,7 +158,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return autowire(clazz, AutowireStrategy.AUTOWIRE_AUTODETECT);
     }
 
-    public <T> T autowire(Class<T> clazz, AutowireStrategy autowireStrategy)
+    public synchronized <T> T autowire(Class<T> clazz, AutowireStrategy autowireStrategy)
     {
         if (!ensureNativeBeanFactory())
             return null;

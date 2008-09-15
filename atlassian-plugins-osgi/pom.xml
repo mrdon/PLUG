@@ -135,10 +135,16 @@
             <version>0.0.255</version>
         </dependency>
         <dependency>
+            <groupId>org.springframework.osgi</groupId>
+            <artifactId>spring-osgi-core</artifactId>
+            <version>1.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
             <version>2.5.2</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -150,7 +156,7 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
             <version>2.5.2</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
 
 

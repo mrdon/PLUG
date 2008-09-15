@@ -41,6 +41,13 @@ public class DefaultPluginTransformer implements PluginTransformer
 
     private static final Logger log = Logger.getLogger(DefaultPluginTransformer.class);
 
+    private final List<SpringTransformer> springTransformers = Arrays.asList(
+            new ComponentSpringTransformer(),
+            new ComponentImportSpringTransformer(),
+            new HostComponentSpringTransformer(),
+            new ModuleTypeSpringTransformer()
+    );
+
     /**
      * Transforms the file into an OSGi bundle
      * @param pluginJar The plugin jar
@@ -146,88 +153,12 @@ public class DefaultPluginTransformer implements PluginTransformer
         root.setName("beans:beans");
         root.addAttribute("default-autowire", "autodetect");
 
-        // Write plugin components
         SAXReader reader = new SAXReader();
         Document pluginDoc = reader.read(in);
-        List<Element> elements = pluginDoc.getRootElement().elements("component");
-        for (Element component : elements)
+
+        for (SpringTransformer springTransformer : springTransformers)
         {
-            Element bean = root.addElement("beans:bean");
-            bean.addAttribute("id", component.attributeValue("key"));
-            bean.addAttribute("alias", component.attributeValue("alias"));
-            bean.addAttribute("class", component.attributeValue("class"));
-            if ("true".equalsIgnoreCase(component.attributeValue("public")))
-            {
-                Element osgiService = root.addElement("osgi:service");
-                osgiService.addAttribute("id", component.attributeValue("key")+"_osgiService");
-                osgiService.addAttribute("ref", component.attributeValue("key"));
-
-                List<String> interfaceNames = new ArrayList<String>();
-                List<Element> compInterfaces = component.elements("interface");
-                for (Element inf : compInterfaces)
-                    interfaceNames.add(inf.getTextTrim());
-
-                Element interfaces = osgiService.addElement("osgi:interfaces");
-                for (String name : interfaceNames)
-                {
-                    Element e = interfaces.addElement("beans:value");
-                    e.setText(name);
-                }
-            }
-        }
-
-        // Write plugin component imports
-        elements = pluginDoc.getRootElement().elements("component-import");
-        for (Element component : elements)
-        {
-            Element osgiReference = root.addElement("osgi:reference");
-            osgiReference.addAttribute("id", component.attributeValue("key"));
-            String infName = component.attributeValue("interface");
-            if (infName != null)
-                osgiReference.addAttribute("interface", infName);
-
-
-            List<Element> compInterfaces = component.elements("interface");
-            if (compInterfaces.size() > 0)
-            {
-                List<String> interfaceNames = new ArrayList<String>();
-                for (Element inf : compInterfaces)
-                    interfaceNames.add(inf.getTextTrim());
-
-                Element interfaces = osgiReference.addElement("osgi:interfaces");
-                for (String name : interfaceNames)
-                {
-                    Element e = interfaces.addElement("beans:value");
-                    e.setText(name);
-                }
-            }
-        }
-
-        // write host components
-        if (regs != null)
-        {
-            for (int x=0; x<regs.size(); x++)
-            {
-                HostComponentRegistration reg = regs.get(x);
-                String beanName = reg.getProperties().get(PropertyBuilder.BEAN_NAME);
-                String id = beanName;
-                if (id == null)
-                    id = "bean"+x;
-
-                id = id.replaceAll("#", "LB");
-                Element osgiService = root.addElement("osgi:reference");
-                osgiService.addAttribute("id", id);
-
-                if (beanName != null)
-                    osgiService.addAttribute("filter", "(bean-name="+beanName+")");
-
-                Element interfaces = osgiService.addElement("osgi:interfaces");
-                for (String name : reg.getMainInterfaces())
-                {
-                    Element e = interfaces.addElement("beans:value");
-                    e.setText(name);
-                }
-            }
+            springTransformer.transform(regs, pluginDoc, springDoc);
         }
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -262,6 +193,9 @@ public class DefaultPluginTransformer implements PluginTransformer
         {
             builder.setJar(file);
             String referrers = OsgiHeaderUtil.findReferredPackages(regs);
+            
+            // Possibly necessary due to Spring XML creation
+            referrers += "com.atlassian.plugin.osgi.external,com.atlassian.plugin,";
             if (builder.getJar().getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null)
             {
                 String imports = addReferrersToImports(referrers, builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE));
@@ -343,10 +277,10 @@ public class DefaultPluginTransformer implements PluginTransformer
         return instructions;
     }
 
-    private String addReferrersToImports(String referrers, String imports)
+    private String addReferrersToImports(String imports, String referrers)
     {
         if (imports != null && imports.length() > 0)
-            imports = referrers + "," + imports;
+            imports = referrers + imports;
         else
             imports = referrers.substring(0, referrers.length() - 1);
         return imports;

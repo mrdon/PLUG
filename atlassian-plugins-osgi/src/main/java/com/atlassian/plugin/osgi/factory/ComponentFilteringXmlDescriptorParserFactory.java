@@ -22,6 +22,6 @@ public class ComponentFilteringXmlDescriptorParserFactory implements DescriptorP
     public DescriptorParser getInstance(InputStream source) throws PluginParseException
     {
         Validate.notNull(source, "The descriptor source must not be null");
-        return new FilteringXmlDescriptorParser(source, "component", "component-import", "bean", "spring");
+        return new FilteringXmlDescriptorParser(source, "component", "component-import", "bean", "spring", "module-type");
     }
 }

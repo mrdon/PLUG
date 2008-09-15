@@ -67,9 +67,10 @@ public interface OsgiContainerManager
     /**
      * Gets a service tracker to follow a service registered under a certain interface
      *
-     * @param cls The interface class as a String
+     * @param interfaceClassName The interface class as a String
      * @return A service tracker to follow all instances of that interface
+     * @throws IllegalStateException If the OSGi container is not running
      * @since 2.1
      */
-    ServiceTracker getServiceTracker(String cls);
+    ServiceTracker getServiceTracker(String interfaceClassName);
 }

@@ -107,6 +107,43 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
     }
 
+    public void testDynamicPluginModuleUsingModuleTypeDescriptor() throws Exception
+    {
+        initPluginManager(new HostComponentProvider(){public void provide(ComponentRegistrar registrar){}});
+
+        File pluginJar = new PluginBuilder("pluginType")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin.module' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <module-type key='foo' class='foo.MyModuleDescriptor' />",
+                        "</atlassian-plugin>")
+                .addJava("foo.MyModuleDescriptor",
+                        "package foo;" +
+                        "public class MyModuleDescriptor extends com.atlassian.plugin.descriptors.AbstractModuleDescriptor {" +
+                        "  public Object getModule(){return null;}" +
+                        "}")
+                .build();
+        File pluginJar2 = new PluginBuilder("fooUser")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <foo key='dum2'/>",
+                        "</atlassian-plugin>")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        Thread.sleep(5000);
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
+        assertEquals(1, descriptors.size());
+        ModuleDescriptor descriptor = descriptors.iterator().next();
+        assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
+    }
+
     public static class DummyModuleDescriptor extends AbstractModuleDescriptor
     {
         public Object getModule()

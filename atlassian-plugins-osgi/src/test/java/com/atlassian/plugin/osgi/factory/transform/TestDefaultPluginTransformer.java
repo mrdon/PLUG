@@ -241,7 +241,7 @@ public class TestDefaultPluginTransformer extends TestCase
         assertTrue(classpathEntries.contains("META-INF/lib/innerjar.jar"));
 
         final Collection imports = Arrays.asList(attrs.getValue("Import-Package").split(","));
-        assertEquals(3, imports.size());
+        assertEquals(5, imports.size());
         assertTrue(imports.contains(Logger.class.getPackage().getName()+";resolution:=optional"));
         assertTrue(imports.contains(Filter.class.getPackage().getName()+";resolution:=optional"));
     }

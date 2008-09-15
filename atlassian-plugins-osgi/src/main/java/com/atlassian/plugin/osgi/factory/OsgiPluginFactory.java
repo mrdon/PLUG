@@ -1,7 +1,11 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.*;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.classloader.PluginClassLoader;
+import com.atlassian.plugin.descriptors.ChainModuleDescriptorFactory;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
@@ -12,18 +16,14 @@ import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformer;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
-import org.codehaus.classworlds.uberjar.protocol.jar.NonLockingJarHandler;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.osgi.util.tracker.ServiceTracker;
 
 import java.io.File;
 import java.io.InputStream;
-import java.net.URLClassLoader;
-import java.net.URL;
-import java.net.MalformedURLException;
 
 /**
  * Plugin loader that starts an OSGi container and loads plugins into it, wrapped as OSGi bundles.
@@ -85,12 +85,12 @@ public class OsgiPluginFactory implements PluginFactory
 
         try
         {
-
-            ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
+            Plugin osgiPlugin = createOsgiPlugin(deploymentUnit.getPath());
+            ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(osgiPlugin, moduleDescriptorFactory);
             pluginDescriptor = loader.getResourceAsStream(pluginDescriptorFileName);
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
-            plugin = parser.configurePlugin(combinedFactory, createOsgiPlugin(deploymentUnit.getPath()));
+            plugin = parser.configurePlugin(combinedFactory, osgiPlugin);
         }
         finally
         {
@@ -105,7 +105,7 @@ public class OsgiPluginFactory implements PluginFactory
      * @param originalFactory The factory provided by the host application
      * @return The composite factory
      */
-    ModuleDescriptorFactory getChainedModuleDescriptorFactory(ModuleDescriptorFactory originalFactory)
+    ModuleDescriptorFactory getChainedModuleDescriptorFactory(Plugin plugin, ModuleDescriptorFactory originalFactory)
     {
         // we really don't want two of these
         synchronized(this)
@@ -121,12 +121,15 @@ public class OsgiPluginFactory implements PluginFactory
             ModuleDescriptorFactory[] dynamicFactories;
             if (serviceObjs != null && serviceObjs.length > 0)
             {
-                dynamicFactories = new ModuleDescriptorFactory[serviceObjs.length + 1];
+                dynamicFactories = new ModuleDescriptorFactory[serviceObjs.length + 2];
                 System.arraycopy(serviceObjs, 0, dynamicFactories, 1, serviceObjs.length);
-                dynamicFactories[0] = originalFactory;
             }
             else
-                dynamicFactories = new ModuleDescriptorFactory[]{originalFactory};
+            {
+                dynamicFactories = new ModuleDescriptorFactory[1];
+            }
+            dynamicFactories[0] = originalFactory;
+
             return new ChainModuleDescriptorFactory(dynamicFactories);
         }
         else

@@ -1,4 +1,8 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.descriptors;
+
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.PluginParseException;
 
 /**
  * Module descriptor factory that checks multiple factories in sequence.  There is no attempt at caching the results.
@@ -8,7 +12,7 @@ public class ChainModuleDescriptorFactory implements ModuleDescriptorFactory
 {
     private final ModuleDescriptorFactory[] factories;
 
-    public ChainModuleDescriptorFactory(ModuleDescriptorFactory[] factories)
+    public ChainModuleDescriptorFactory(ModuleDescriptorFactory... factories)
     {
         this.factories = factories;
     }
