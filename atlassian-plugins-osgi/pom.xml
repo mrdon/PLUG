@@ -53,25 +53,25 @@
                                 <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
                                     <artifactId>spring-osgi-annotation</artifactId>
-                                    <version>1.1.0</version>
+                                    <version>${springDmVersion}</version>
                                 </artifactItem>
 
                                 <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
                                     <artifactId>spring-osgi-core</artifactId>
-                                    <version>1.1.0</version>
+                                    <version>${springDmVersion}</version>
                                 </artifactItem>
 
                                 <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
                                     <artifactId>spring-osgi-extender</artifactId>
-                                    <version>1.1.0</version>
+                                    <version>${springDmVersion}</version>
                                 </artifactItem>
 
                                 <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
                                     <artifactId>spring-osgi-io</artifactId>
-                                    <version>1.1.0</version>
+                                    <version>${springDmVersion}</version>
                                 </artifactItem>
 
                                 <artifactItem>
@@ -137,25 +137,25 @@
         <dependency>
             <groupId>org.springframework.osgi</groupId>
             <artifactId>spring-osgi-core</artifactId>
-            <version>1.1.0</version>
+            <version>${springDmVersion}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
-            <version>2.5.2</version>
+            <version>${springVersion}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>2.5.2</version>
+            <version>${springVersion}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
-            <version>2.5.2</version>
+            <version>${springVersion}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -166,7 +166,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.main</artifactId>
-            <version>1.0.4</version>
+            <version>1.2.1</version>
             <exclusions>
                <exclusion>
                     <groupId>org.apache.felix</groupId>
@@ -244,5 +244,7 @@
     <properties>
         <!-- This should use ${project.build.directory} instead of target, but Maven < 2.0.9 fails to interpolate. -->
         <frameworkBundleDirectory>target/framework-bundles</frameworkBundleDirectory>
+        <springDmVersion>1.1.1</springDmVersion>
+        <springVersion>2.5.5</springVersion>
     </properties>
 </project>
