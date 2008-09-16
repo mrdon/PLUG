@@ -26,14 +26,14 @@ import org.apache.commons.lang.Validate;
  */
 public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin, DynamicPlugin
 {
-    private Bundle bundle;
+    private final Bundle bundle;
     private static final Log log = LogFactory.getLog(OsgiPlugin.class);
     private boolean deletable = true;
     private boolean bundled = false;
     private Object nativeBeanFactory;
     private Method nativeCreateBeanMethod;
     private Method nativeAutowireBeanMethod;
-    private Map<String,ModuleDescriptor<?>> modules = new ConcurrentHashMap<String,ModuleDescriptor<?>>();
+    private final Map<String,ModuleDescriptor<?>> modules = new ConcurrentHashMap<String,ModuleDescriptor<?>>();
     private ServiceTracker moduleDescriptorTracker;
 
     public OsgiPlugin(Bundle bundle)
@@ -144,7 +144,8 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 nativeBeanFactory = null;
                 nativeCreateBeanMethod = null;
             }
-        } catch (BundleException e)
+        }
+        catch (BundleException e)
         {
             throw new OsgiContainerException("Cannot stop plugin: "+getKey(), e);
         }
@@ -156,7 +157,8 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         {
             if (bundle.getState() != Bundle.UNINSTALLED)
                 bundle.uninstall();
-        } catch (BundleException e)
+        }
+        catch (BundleException e)
         {
             throw new OsgiContainerException("Cannot uninstall bundle " + bundle.getSymbolicName());
         }
@@ -167,9 +169,13 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         modules.put(moduleDescriptor.getKey(), moduleDescriptor);
     }
 
+    /**
+     * Returns a copy of the module descriptors for this plugin
+     * @return A copy of the internal list
+     */
     public Collection<ModuleDescriptor<?>> getModuleDescriptors()
     {
-        return modules.values();
+        return new ArrayList<ModuleDescriptor<?>>(modules.values());
     }
 
     public ModuleDescriptor<?> getModuleDescriptor(String key)
@@ -195,9 +201,8 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
 
     public boolean containsSystemModule()
     {
-        for (Iterator iterator = modules.values().iterator(); iterator.hasNext();)
+        for (ModuleDescriptor moduleDescriptor : modules.values())
         {
-            ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator.next();
             if(moduleDescriptor.isSystemModule())
             {
                 return true;

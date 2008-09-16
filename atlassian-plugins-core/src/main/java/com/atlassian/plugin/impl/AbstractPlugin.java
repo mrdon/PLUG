@@ -62,9 +62,13 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         modules.put(moduleDescriptor.getKey(), moduleDescriptor);
     }
 
+    /**
+     * Returns a copy of the module descriptors for this plugin
+     * @return A copy of the internal list
+     */
     public Collection<ModuleDescriptor<?>> getModuleDescriptors()
     {
-        return modules.values();
+        return new ArrayList<ModuleDescriptor<?>>(modules.values());
     }
 
     public ModuleDescriptor<?> getModuleDescriptor(String key)
@@ -169,9 +173,8 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 
     public boolean containsSystemModule()
     {
-        for (Iterator iterator = modules.values().iterator(); iterator.hasNext();)
+        for (ModuleDescriptor moduleDescriptor : modules.values())
         {
-            ModuleDescriptor moduleDescriptor = (ModuleDescriptor) iterator.next();
             if(moduleDescriptor.isSystemModule())
             {
                 return true;
