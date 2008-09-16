@@ -3,7 +3,9 @@
 <%@ page import="org.osgi.framework.Bundle" %>
 <%@ page import="org.osgi.framework.ServiceReference" %>
 <html>
-
+<head>
+    <meta name="decorator" content="atl.general"/>
+</head>
     <h2>Plugins</h2>
     <ul>
 <% for (Object plugin : ContainerManager.getInstance().getPluginManager().getPlugins()) {

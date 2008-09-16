@@ -20,8 +20,9 @@ public class TestIndex extends WebTestCase
         beginAt("/");
         assertTextPresent("com.springsource.slf4j.log4j");
 
-        assertTextNotPresent("RESOLVED");
-        assertTextNotPresent("INSTALLED");
+        assertTextNotPresent("Resolved");
+        assertTextNotPresent("Installed");
+        assertTextPresent("General Decorator");
     }
 
 }
