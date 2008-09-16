@@ -196,7 +196,7 @@ public class DefaultPluginTransformer implements PluginTransformer
             
             // Possibly necessary due to Spring XML creation
             referrers += "com.atlassian.plugin.osgi.external,com.atlassian.plugin,";
-            if (builder.getJar().getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null)
+            if (isOsgiBundle(builder))
             {
                 String imports = addReferrersToImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), referrers);
                 builder.setProperty(Constants.IMPORT_PACKAGE, imports);
@@ -254,6 +254,11 @@ public class DefaultPluginTransformer implements PluginTransformer
         {
             throw new PluginParseException("Unable to process plugin to generate OSGi manifest", t);
         }
+    }
+
+    private boolean isOsgiBundle(Builder builder) throws IOException
+    {
+        return builder.getJar().getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null;
     }
 
     private Map<String,String> processBundleInstructions(Document document)
