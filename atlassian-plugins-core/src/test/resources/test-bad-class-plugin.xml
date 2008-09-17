@@ -1,4 +1,6 @@
 <atlassian-plugin key="test.bad.plugin" name="Bad Plugin">
+    <plugin-info />
+
     <mineral key="gold" name="Bar" class="com.doesnt.exist">
         <weight>20</weight>
     </mineral>

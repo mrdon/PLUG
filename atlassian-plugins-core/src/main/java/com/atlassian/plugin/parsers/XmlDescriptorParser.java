@@ -107,6 +107,12 @@ public class XmlDescriptorParser implements DescriptorParser
             }
         }
 
+        // CONF-12680
+        if( plugin.getPluginInformation() == null) 
+        {
+            throw new PluginParseException("No plugin-info section found in configuration file");
+        }
+        
         plugin.setResources(Resources.fromXml(pluginElement));
 
         return plugin;

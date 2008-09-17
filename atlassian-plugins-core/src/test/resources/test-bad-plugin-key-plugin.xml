@@ -1,1 +1,4 @@
-<atlassian-plugin key="test:bad" name="Bad Plugin Key" />
+<atlassian-plugin key="test:bad" name="Bad Plugin Key" >
+    <plugin-info />
+
+</atlassian-plugin>
