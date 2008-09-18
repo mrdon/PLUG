@@ -11,6 +11,8 @@ import com.atlassian.plugin.util.JavaVersionUtils;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 public class PluginInformation
 {
     private String description;
@@ -23,6 +25,36 @@ public class PluginInformation
     private Float minJavaVersion;
     private Map<Object,Object> parameters = new HashMap<Object,Object>();
 
+    public static final String NOT_SPECIFIED = "Not provided";
+    public static final String NO_VERSION_SPECIFIED = "0.0";
+    public static final Float NO_MIN_JAVA_VERSION = new Float(0.0);
+
+    public static PluginInformation getInstanceWithDefaults()
+    {
+        PluginInformation newInfo = new PluginInformation();
+        validateRequiredFields(newInfo);
+        
+        return newInfo;
+    }
+    
+    public static void validateRequiredFields(PluginInformation pluginInformation)
+    {
+        if( StringUtils.isBlank(pluginInformation.getVendorName()))
+        {
+            pluginInformation.setVendorName(NOT_SPECIFIED);
+        }
+        
+        if( StringUtils.isBlank(pluginInformation.getVersion()))
+        {
+            pluginInformation.setVersion(NO_VERSION_SPECIFIED);
+        }
+        
+        if( pluginInformation.getMinJavaVersion() == null) 
+        {
+            pluginInformation.setMinJavaVersion(NO_MIN_JAVA_VERSION);
+        }
+    }
+    
     public String getDescription()
     {
         return description;
@@ -118,4 +150,5 @@ public class PluginInformation
     {
         return descriptionKey;
     }
+
 }

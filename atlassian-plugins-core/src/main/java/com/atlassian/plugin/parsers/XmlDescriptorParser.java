@@ -107,10 +107,13 @@ public class XmlDescriptorParser implements DescriptorParser
             }
         }
 
-        // CONF-12680
+        // CONF-12680 If there was no info specified in the file, create one with default values
         if( plugin.getPluginInformation() == null) 
         {
-            throw new PluginParseException("No plugin-info section found in configuration file");
+            plugin.setPluginInformation(PluginInformation.getInstanceWithDefaults());
+        }
+        else {
+            PluginInformation.validateRequiredFields(plugin.getPluginInformation());
         }
         
         plugin.setResources(Resources.fromXml(pluginElement));

@@ -1,4 +1,3 @@
 <atlassian-plugin key="test.bad.plugin" name="Bad Plugin">
-    <plugin-info />
     <unknown-plugin />
 </atlassian-plugin>

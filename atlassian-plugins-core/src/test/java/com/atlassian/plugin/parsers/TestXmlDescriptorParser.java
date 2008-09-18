@@ -7,14 +7,14 @@ import java.net.URL;
 
 import junit.framework.TestCase;
 
-import org.mockito.Mockito;
-
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
 import com.atlassian.plugin.util.ClassLoaderUtils;
+import com.mockobjects.dynamic.Mock;
 
 public class TestXmlDescriptorParser extends TestCase
 {
@@ -31,7 +31,8 @@ public class TestXmlDescriptorParser extends TestCase
     {
         // mock up some supporting objects
         PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
-        ModuleDescriptorFactory mockFactory = Mockito.mock(ModuleDescriptorFactory.class);
+        Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
+        mockFactory.expect("getModuleDescriptorClass", "unknown-plugin");
 
         // create a Plugin for testing
         Plugin testPlugin = new DefaultDynamicPlugin(null, classLoader);
@@ -39,19 +40,22 @@ public class TestXmlDescriptorParser extends TestCase
         try
         {
             XmlDescriptorParser parser = new XmlDescriptorParser(new FileInputStream(getTestFile(MISSING_INFO_TEST_FILE)));
-            parser.configurePlugin(mockFactory, testPlugin);
+            parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
+            
+            PluginInformation info = testPlugin.getPluginInformation();
+            assertNotNull("Info should not be null", info);
+            assertNotNull("Minimum java version should not be null", info.getMinJavaVersion());
+            assertNotNull("Minimum java version should be set to 0.0", info.getMinJavaVersion().equals(PluginInformation.NO_MIN_JAVA_VERSION));
         }
         catch (PluginParseException e)
         {
-            return;
+            fail("Plugin information parsing should not fail.");
         }
         catch (FileNotFoundException e)
         {
             // This shouldn't happen
-            e.printStackTrace();
+            fail("Error setting up test");
         }
-
-        fail("Wrong/No exception thrown");
     }
 
     // Also CONF-12680 test for missing "essential metadata"
