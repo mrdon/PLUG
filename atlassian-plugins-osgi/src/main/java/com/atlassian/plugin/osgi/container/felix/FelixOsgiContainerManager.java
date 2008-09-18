@@ -172,17 +172,11 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
     public void stop() throws OsgiContainerException
     {
-        try
-        {
-            if (felixRunning)
-                felix.stop();
+        if (felixRunning)
+            felix.stopAndWait();
             
-            felixRunning = false;
-            felix = null;
-        } catch (BundleException e)
-        {
-            throw new OsgiContainerException("Unable to stop OSGi container", e);
-        }
+        felixRunning = false;
+        felix = null;
     }
 
     public Bundle[] getBundles()
