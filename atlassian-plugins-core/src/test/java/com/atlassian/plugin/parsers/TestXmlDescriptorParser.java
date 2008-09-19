@@ -44,8 +44,6 @@ public class TestXmlDescriptorParser extends TestCase
             
             PluginInformation info = testPlugin.getPluginInformation();
             assertNotNull("Info should not be null", info);
-            assertNotNull("Minimum java version should not be null", info.getMinJavaVersion());
-            assertNotNull("Minimum java version should be set to 0.0", info.getMinJavaVersion().equals(PluginInformation.NO_MIN_JAVA_VERSION));
         }
         catch (PluginParseException e)
         {

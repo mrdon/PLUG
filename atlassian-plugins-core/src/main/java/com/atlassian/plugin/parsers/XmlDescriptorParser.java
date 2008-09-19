@@ -110,10 +110,7 @@ public class XmlDescriptorParser implements DescriptorParser
         // CONF-12680 If there was no info specified in the file, create one with default values
         if( plugin.getPluginInformation() == null) 
         {
-            plugin.setPluginInformation(PluginInformation.getInstanceWithDefaults());
-        }
-        else {
-            PluginInformation.validateRequiredFields(plugin.getPluginInformation());
+            plugin.setPluginInformation(new PluginInformation());
         }
         
         plugin.setResources(Resources.fromXml(pluginElement));
