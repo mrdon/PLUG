@@ -1,0 +1,4 @@
+<decorators defaultdir="/decorators">
+    <decorator name="atl.general" page="general.jsp" />
+    <decorator name="atl.admin" page="admin.jsp" />
+</decorators>
