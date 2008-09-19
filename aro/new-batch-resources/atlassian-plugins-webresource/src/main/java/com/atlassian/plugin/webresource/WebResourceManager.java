@@ -10,6 +10,7 @@ import java.io.Writer;
  * <p/>
  * By using the WebResourceManager, components can declare dependencies on javascript and css that they would
  * otherwise have to embed inline (which means that it can't be cached, and are often duplicated in a page).
+ * @deprecated Since 2.1. Use {@link PluginWebResourceManager} instead.
  */
 public interface WebResourceManager
 {

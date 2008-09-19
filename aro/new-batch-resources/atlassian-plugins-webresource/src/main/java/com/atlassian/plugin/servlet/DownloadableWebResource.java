@@ -24,7 +24,8 @@ public class DownloadableWebResource extends AbstractDownloadableResource
         try
         {
             httpServletResponse.setContentType(getContentType()); // this will be used if content-type is not set by the forward handler, e.g. for webapp content in Tomcat
-            httpServletRequest.getRequestDispatcher(getLocation()).forward(httpServletRequest, httpServletResponse);
+            // todo check this
+            httpServletRequest.getRequestDispatcher(getLocation()).include(httpServletRequest, httpServletResponse);
         }
         catch (ServletException e)
         {

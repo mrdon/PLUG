@@ -10,7 +10,7 @@ import java.util.Arrays;
 class CssWebResourceFormatter extends AbstractWebResourceFormatter
 {
     private static final String CSS_EXTENSION = ".css";
-    private static final List/*<String>*/ HANDLED_PARAMETERS = Arrays.asList(new String[] {"title", "media", "charset"});
+    private static final List<String> HANDLED_PARAMETERS = Arrays.asList(new String[] {"title", "media", "charset"});
 
     public boolean matches(String name)
     {
@@ -18,6 +18,11 @@ class CssWebResourceFormatter extends AbstractWebResourceFormatter
     }
     
     public String formatResource(String name, String url, Map params)
+    {
+        return format(url, params);
+    }
+
+    public String format(String url, Map<String, String> params)
     {
         StringBuffer buffer = new StringBuffer();
         buffer.append("<link type=\"text/css\" rel=\"stylesheet\" href=\"").append(url).append("\"");
@@ -35,7 +40,7 @@ class CssWebResourceFormatter extends AbstractWebResourceFormatter
         buffer.append("/>\n");
 
         // ie conditional commment
-        if(BooleanUtils.toBoolean((String) params.get("ieonly")))
+        if(BooleanUtils.toBoolean(params.get("ieonly")))
         {
             buffer.insert(0, "<!--[if IE]>\n");
             buffer.append("<![endif]-->\n");
@@ -44,7 +49,7 @@ class CssWebResourceFormatter extends AbstractWebResourceFormatter
         return buffer.toString();
     }
 
-    protected List/*<String>*/ getAttributeParameters()
+    protected List<String> getAttributeParameters()
     {
         return HANDLED_PARAMETERS;
     }

@@ -1,5 +1,7 @@
 package com.atlassian.plugin.servlet;
 
+import com.atlassian.plugin.webresource.PluginResource;
+
 /**
  * Parses resource download URLs for a plugin resource download strategy, and can determine whether a given URL is valid
  * for that download strategy.
@@ -7,6 +9,7 @@ package com.atlassian.plugin.servlet;
  * The URLs are in the form "/servletPath/strategyPrefix/moduleCompleteKey/resourceName", where the 'servletPath' is
  * defined as {@link AbstractFileServerServlet#SERVLET_PATH}, the 'strategyPrefix' is defined by a constructor parameter,
  * the remainder is parsed by this parser into a {@link PluginResource}.
+ * @deprecated Since 2.1. Use {@link PluginResource#parse(String)} instead.
  */
 public class ResourceUrlParser
 {

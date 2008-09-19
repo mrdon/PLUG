@@ -15,7 +15,7 @@ abstract class AbstractWebResourceFormatter implements WebResourceFormatter
      * 
      * @return a {@link List} of parameter names
      */
-    protected abstract List/*<String>*/ getAttributeParameters();
+    protected abstract List<String> getAttributeParameters();
 
     /**
      * A convenient method to convert the given parameter map into a List of HTML {@link String} attributes.

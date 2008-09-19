@@ -96,12 +96,15 @@ public class ContainerManager
             e.printStackTrace();
         }
 
+        SimpleContentTypeResolver contentTypeResolver = new SimpleContentTypeResolver();
+        String characterEncoding = "UTF-8";
+
+        PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginManager, contentTypeResolver, characterEncoding);
+        BatchPluginResourceDownload batchPluginResourceDownload = new BatchPluginResourceDownload(pluginManager, contentTypeResolver, characterEncoding);
+
         downloadStrategies = new ArrayList<DownloadStrategy>();
-        PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload();
-        pluginDownloadStrategy.setPluginManager(pluginManager);
-        pluginDownloadStrategy.setContentTypeResolver(new SimpleContentTypeResolver());
-        pluginDownloadStrategy.setCharacterEncoding("UTF-8");
         downloadStrategies.add(pluginDownloadStrategy);
+        downloadStrategies.add(batchPluginResourceDownload);
     }
 
     public static synchronized void setInstance(ContainerManager mgr)

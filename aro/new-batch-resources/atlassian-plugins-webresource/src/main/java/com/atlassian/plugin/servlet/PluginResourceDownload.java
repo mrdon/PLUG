@@ -4,6 +4,7 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.webresource.PluginResource;
 import com.atlassian.plugin.elements.ResourceLocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,8 +23,8 @@ import java.net.URLDecoder;
 public class PluginResourceDownload implements DownloadStrategy
 {
     private static final Log log = LogFactory.getLog(PluginResourceDownload.class);
-    private static final String DOWNLOAD_RESOURCE = "download";
-    private final ResourceUrlParser urlParser = new ResourceUrlParser(AbstractFileServerServlet.RESOURCE_URL_PREFIX);
+    public static final String DOWNLOAD_RESOURCE = "download";
+
     private PluginAccessor pluginAccessor;
     private String characterEncoding = "UTF-8"; // default to sensible encoding
     private ContentTypeResolver contentTypeResolver;
@@ -42,7 +43,7 @@ public class PluginResourceDownload implements DownloadStrategy
 
     public boolean matches(String urlPath)
     {
-        return urlParser.matches(urlPath);
+        return urlPath.indexOf(PluginResource.URL_PREFIX) != -1;
     }
 
     public void serveFile(HttpServletRequest request, HttpServletResponse response) throws DownloadException
@@ -50,7 +51,7 @@ public class PluginResourceDownload implements DownloadStrategy
         try
         {
             String requestUri = URLDecoder.decode(request.getRequestURI(), characterEncoding);
-            PluginResource resource = urlParser.parse(requestUri);
+            PluginResource resource = PluginResource.parse(requestUri);
 
             if (resource != null)
             {

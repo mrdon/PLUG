@@ -26,6 +26,7 @@ import java.util.Map;
  * </pre>
  * <p/>
  * Sub-classes should implement the abstract methods
+ * @deprecated Since 2.1. Use {@link PluginWebResourceManagerImpl} instead.
  */
 public class WebResourceManagerImpl implements WebResourceManager
 {

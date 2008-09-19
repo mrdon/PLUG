@@ -9,7 +9,7 @@ import java.util.Arrays;
 class JavascriptWebResourceFormatter extends AbstractWebResourceFormatter
 {
     private static final String JAVA_SCRIPT_EXTENSION = ".js";
-    private static final List/*<String>*/ HANDLED_PARAMETERS = Arrays.asList(new String[] {"charset"});
+    private static final List<String> HANDLED_PARAMETERS = Arrays.asList("charset");
 
     public boolean matches(String name)
     {
@@ -18,6 +18,11 @@ class JavascriptWebResourceFormatter extends AbstractWebResourceFormatter
 
     public String formatResource(String name, String url, Map params)
     {
+        return format(url, params);
+    }
+
+    public String format(String url, Map<String, String> params)
+    {
         StringBuffer buffer = new StringBuffer("<script type=\"text/javascript\" ");
         buffer.append("src=\"").append(url).append("\" ");
         buffer.append(StringUtils.join(getParametersAsAttributes(params).iterator(), " "));
@@ -25,7 +30,7 @@ class JavascriptWebResourceFormatter extends AbstractWebResourceFormatter
         return buffer.toString();
     }
 
-    protected List/*<String>*/ getAttributeParameters()
+    protected List<String> getAttributeParameters()
     {
         return HANDLED_PARAMETERS;
     }

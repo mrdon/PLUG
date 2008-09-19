@@ -2,6 +2,7 @@ package com.atlassian.plugin.servlet;
 
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.webresource.PluginResource;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
