@@ -214,6 +214,16 @@
         </dependency>
     </dependencies>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.framework</artifactId>
+                <version>1.0.4-atlassian-1</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <properties>
         <!-- This should use ${project.build.directory} instead of target, but Maven < 2.0.9 fails to interpolate. -->
         <frameworkBundleDirectory>target/framework-bundles</frameworkBundleDirectory>
