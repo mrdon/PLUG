@@ -2,6 +2,7 @@ package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
+import com.atlassian.plugin.factories.XmlDynamicPluginFactory;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.test.PluginBuilder;
@@ -15,10 +16,7 @@ import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Collections;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.net.URL;
@@ -30,7 +28,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     private DirectoryPluginLoader loader;
     private DefaultModuleDescriptorFactory moduleDescriptorFactory;
     private static final List DEFAULT_PLUGIN_FACTORIES =
-            Collections.singletonList(new LegacyDynamicPluginFactory(DefaultPluginManager.PLUGIN_DESCRIPTOR_FILENAME));
+            Arrays.asList(new LegacyDynamicPluginFactory(DefaultPluginManager.PLUGIN_DESCRIPTOR_FILENAME), new XmlDynamicPluginFactory());
 
     public static final String BAD_PLUGIN_JAR = "bad-plugins/crap-plugin.jar";
 
@@ -203,15 +201,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
 
     public void testInvalidPluginHandled() throws IOException, PluginParseException
     {
-        File atlassianPluginXML = new File(pluginsTestDir, "atlassian-plugin.xml");
-
-        FileWriter writer = new FileWriter(atlassianPluginXML);
-        writer.write("this is invalid XML - the classloadingpluginloader should throw PluginParseException");
-        writer.close();
-
-        //now jar up the evilplugin
-
-        createJarFile("evilplugin.jar", atlassianPluginXML.getName(), pluginsTestDir.getAbsolutePath());
+        createJarFile("evilplugin.jar", PluginManager.PLUGIN_DESCRIPTOR_FILENAME, pluginsTestDir.getAbsolutePath());
 
         loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
 
@@ -258,6 +248,35 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         assertTrue(plugin.exists());
 
 
+    }
+
+    public void testMixedFactories() throws URISyntaxException, IOException, PluginParseException, InterruptedException
+    {
+        FileUtils.cleanDirectory(pluginsTestDir);
+        File plugin = new File(pluginsTestDir, "some-plugin.jar");
+        new PluginBuilder("plugin")
+                .addPluginInformation("some.key", "My name", "1.0", 1)
+                .addResource("foo.txt", "foo")
+                .build()
+                .renameTo(plugin);
+        FileUtils.writeStringToFile(new File(pluginsTestDir, "foo.xml"), "<atlassian-plugin key=\"jim\"></atlassian-plugin>");
+
+        loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
+
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        assertEquals(2, plugins.size());
+    }
+
+    public void testUnknownPluginArtifact() throws URISyntaxException, IOException, PluginParseException, InterruptedException
+    {
+        FileUtils.cleanDirectory(pluginsTestDir);
+        FileUtils.writeStringToFile(new File(pluginsTestDir, "foo.bob"), "<an>");
+
+        loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
+
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        assertEquals(1, plugins.size());
+        assertTrue(plugins.iterator().next() instanceof UnloadablePlugin);
     }
 
     private void createJarFile(String jarname, String jarEntry, String saveDir)

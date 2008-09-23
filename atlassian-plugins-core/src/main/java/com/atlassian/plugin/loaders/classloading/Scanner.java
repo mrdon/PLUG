@@ -9,16 +9,11 @@ import java.net.MalformedURLException;
 import java.util.*;
 
 /**
- * Scans the filesystem for changed or added plugin jars and stores a map of the currently known ones.
+ * Scans the filesystem for changed or added plugin files and stores a map of the currently known ones.
  */
 public class Scanner
 {
     private static Log log = LogFactory.getLog(Scanner.class);
-
-    /**
-     * File filter used to load just the jars.
-     */
-    private final static FileFilter fileFilter = new JarFileFilter();
 
     /**
      * Tracks the classloading
@@ -101,7 +96,7 @@ public class Scanner
 
         // Checks for new files.
         Collection<DeploymentUnit> result = new ArrayList();
-        File files[] = libDir.listFiles(fileFilter);
+        File files[] = libDir.listFiles();
         if (files == null)
         {
             log.error("listFiles returned null for directory " + libDir.getAbsolutePath());
@@ -164,16 +159,5 @@ public class Scanner
     public void clearAll()
     {
         scannedDeploymentUnits.clear();
-    }
-
-    /**
-     * Reinvents the wheel and lets only files ending in .jar pass through.
-     */
-    static class JarFileFilter implements FileFilter
-    {
-        public boolean accept(File file)
-        {
-            return file.getName().endsWith(".jar");
-        }
     }
 }

@@ -14,6 +14,7 @@ import org.apache.commons.lang.Validate;
 
 import java.io.File;
 import java.util.*;
+import java.net.MalformedURLException;
 
 /**
  * A plugin loader to load plugins from a directory on disk.  A {@link Scanner} is used to locate plugin artifacts
@@ -25,6 +26,7 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
     private final Scanner scanner;
     private final Map<DeploymentUnit,Plugin> plugins;
     private final List<PluginFactory> pluginFactories;
+    private final PluginArtifactFactory pluginArtifactFactory;
 
     /**
      * Constructs a loader for a particular directory and set of deployers
@@ -34,6 +36,20 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
      * @since 2.0.0
      */
     public DirectoryPluginLoader(File path, List<PluginFactory> pluginFactories,
+                                 PluginEventManager pluginEventManager)
+    {
+        this(path, pluginFactories, new DefaultPluginArtifactFactory(), pluginEventManager);
+    }
+
+    /**
+     * Constructs a loader for a particular directory and set of deployers
+     * @param path The directory containing the plugins
+     * @param pluginFactories The deployers that will handle turning an artifact into a plugin
+     * @param pluginArtifactFactory The plugin artifact factory
+     * @param pluginEventManager The event manager, used for listening for shutdown events
+     * @since 2.1.0
+     */
+    public DirectoryPluginLoader(File path, List<PluginFactory> pluginFactories, PluginArtifactFactory pluginArtifactFactory,
                                  PluginEventManager pluginEventManager)
     {
         if (log.isDebugEnabled())
@@ -46,6 +62,7 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
         scanner = new Scanner(path);
         plugins = new HashMap<DeploymentUnit,Plugin>();
         this.pluginFactories = new ArrayList<PluginFactory>(pluginFactories);
+        this.pluginArtifactFactory = pluginArtifactFactory;
         pluginEventManager.register(this);
     }
 
@@ -79,17 +96,31 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
     protected Plugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         Plugin plugin = null;
+        String errorText = "No plugin factories found for plugin file "+deploymentUnit;
+
         for (PluginFactory factory : pluginFactories)
         {
-            if (factory.canCreate(new JarPluginArtifact(deploymentUnit.getPath())) != null)
+            try
             {
-                plugin = factory.create(deploymentUnit, moduleDescriptorFactory);
-                if (plugin != null)
-                    break;
+                PluginArtifact artifact = pluginArtifactFactory.create(deploymentUnit.getPath().toURL());
+                if (factory.canCreate(artifact) != null)
+                {
+                    plugin = factory.create(deploymentUnit, moduleDescriptorFactory);
+                    if (plugin != null)
+                        break;
+                }
+
+            } catch (MalformedURLException e)
+            {
+                // Should never happen
+                throw new RuntimeException(e);
+            } catch (IllegalArgumentException ex)
+            {
+                errorText = ex.getMessage();
             }
         }
         if (plugin == null)
-            plugin = new UnloadablePlugin("No plugin factories found for plugin file "+deploymentUnit);
+            plugin = new UnloadablePlugin(errorText);
         else
             log.info("Plugin " + deploymentUnit + " created");
 

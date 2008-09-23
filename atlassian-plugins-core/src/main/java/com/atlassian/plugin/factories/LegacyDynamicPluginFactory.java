@@ -1,10 +1,12 @@
 package com.atlassian.plugin.factories;
 
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.factories.PluginFactory;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
-import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
@@ -12,9 +14,9 @@ import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
 
-import java.io.InputStream;
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 
 /**
@@ -121,11 +123,17 @@ public class LegacyDynamicPluginFactory implements PluginFactory
         final InputStream descriptorStream = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
         if (descriptorStream != null)
         {
-            final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
+            try
+            {
+                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
 
-            // Only recognize version 1 plugins
-            if (descriptorParser.getPluginsVersion() <= 1)
-                pluginKey = descriptorParser.getKey();
+                // Only recognize version 1 plugins
+                if (descriptorParser.getPluginsVersion() <= 1)
+                    pluginKey = descriptorParser.getKey();
+            } finally
+            {
+                IOUtils.closeQuietly(descriptorStream);
+            }
         }
         return pluginKey;
     }

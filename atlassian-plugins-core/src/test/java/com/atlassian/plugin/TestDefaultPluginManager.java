@@ -18,6 +18,7 @@ import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.factories.PluginFactory;
+import com.atlassian.plugin.factories.XmlDynamicPluginFactory;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
@@ -584,7 +585,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     private DefaultPluginManager makeClassLoadingPluginManager() throws PluginParseException
     {
         directoryPluginLoader = new DirectoryPluginLoader(pluginsTestDir,
-                Collections.<PluginFactory>singletonList(new LegacyDynamicPluginFactory(DefaultPluginManager.PLUGIN_DESCRIPTOR_FILENAME)),
+                Arrays.asList(new LegacyDynamicPluginFactory(DefaultPluginManager.PLUGIN_DESCRIPTOR_FILENAME), new XmlDynamicPluginFactory()),
                         pluginEventManager);
         pluginLoaders.add(directoryPluginLoader);
 

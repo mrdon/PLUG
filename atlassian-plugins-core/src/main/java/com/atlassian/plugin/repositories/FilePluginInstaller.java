@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * Simple implementation of a PluginInstaller which writes plugin JARs
+ * Simple implementation of a PluginInstaller which writes plugin artifact
  * to a specified directory.
  *
  * @see PluginInstaller

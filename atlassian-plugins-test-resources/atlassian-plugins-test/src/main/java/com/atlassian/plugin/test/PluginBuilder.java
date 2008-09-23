@@ -24,6 +24,13 @@ public class PluginBuilder {
 
     /**
      * Creates the builder
+     */
+    public PluginBuilder() {
+        this("test");
+    }
+
+    /**
+     * Creates the builder
      * @param name The plugin name
      */
     public PluginBuilder(String name) {

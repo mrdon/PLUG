@@ -94,10 +94,4 @@ public class TestScanner extends AbstractTestClassLoader
         assertEquals(secondModification, newPaddingtonUnit.lastModified());
     }
 
-    public void testAcceptOnlyJar() throws Exception
-    {
-        Scanner.JarFileFilter filter = new Scanner.JarFileFilter();
-        assertTrue(filter.accept(new File("myfile.jar")));
-        assertFalse(filter.accept(new File("myfile.txt")));
-    }
 }
