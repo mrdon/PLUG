@@ -179,9 +179,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         {
             if (felixRunning)
             {
-                felix.stop();
                 for (ServiceTracker tracker : trackers)
                     tracker.close();
+                felix.stopAndWait();
             }
 
             if (cacheDirectory != null && cacheDirectory.exists()) {
@@ -190,9 +190,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             
             felixRunning = false;
             felix = null;
-        } catch (BundleException e)
-        {
-            throw new OsgiContainerException("Unable to stop OSGi container", e);
         } catch (IOException e)
         {
             throw new OsgiContainerException("Unable to stop OSGi container", e);
