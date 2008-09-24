@@ -10,9 +10,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.List;
-import java.util.Iterator;
 
 /**
+ * To make this test pass in your IDE, make sure you run Maven to build the necessary plugins and copy
+ * them to the target directory ('mvn package') and when running the tests, set the 'project.version'
+ * system property to the current version in the POM. E.g. -Dproject.version=2.1.0-SNAPSHOT
  */
 public class TestPluginClassLoader extends TestCase
 {
@@ -21,6 +23,7 @@ public class TestPluginClassLoader extends TestCase
 
     protected void setUp() throws Exception
     {
+        super.setUp();
         tmpDir = new File("target/" + this.getClass().getName());
         tmpDir.mkdirs();
 
@@ -32,6 +35,7 @@ public class TestPluginClassLoader extends TestCase
     protected void tearDown() throws Exception
     {
         FileUtils.deleteDirectory(tmpDir);
+        super.tearDown();
     }
 
     public void testPluginClassLoaderFindsInnerJars() throws Exception
@@ -112,7 +116,7 @@ public class TestPluginClassLoader extends TestCase
         Object instance = mockVersionedClass.newInstance();
 
         assertEquals("PluginClassLoader is searching the parent classloader for classes before inner JARs",
-                new Integer(2), BeanUtils.getValue(instance, "version"));
+            2, BeanUtils.getValue(instance, "version"));
     }
 
     public void testPluginClassLoaderDoesNotLockTheJarsPermanently() throws Exception
