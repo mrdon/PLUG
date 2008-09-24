@@ -4,6 +4,7 @@ public class ParameterUtils
 {
     public static String getBaseUrl()
     {
-        return System.getProperty("baseurl", "http://localhost:8080/atlassian-plugins-refimpl");
+        String port = System.getProperty("http.port", "8080");
+        return System.getProperty("baseurl", "http://localhost:" + port + "/atlassian-plugins-refimpl");
     }
 }
