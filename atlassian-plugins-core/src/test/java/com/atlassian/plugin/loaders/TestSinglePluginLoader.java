@@ -1,5 +1,12 @@
 package com.atlassian.plugin.loaders;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
+import junit.framework.TestCase;
+
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
@@ -7,15 +14,12 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
-import com.atlassian.plugin.impl.UnloadablePlugin;
-import com.atlassian.plugin.mock.*;
+import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
+import com.atlassian.plugin.mock.MockBear;
+import com.atlassian.plugin.mock.MockGold;
+import com.atlassian.plugin.mock.MockMineral;
+import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 import com.atlassian.plugin.util.ClassLoaderUtils;
-import junit.framework.TestCase;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Iterator;
 
 public class TestSinglePluginLoader extends TestCase
 {
@@ -205,20 +209,24 @@ public class TestSinglePluginLoader extends TestCase
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
-        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
-        List pluginsList = new ArrayList(plugins);
+        Collection<Plugin> plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        List<Plugin> pluginsList = new ArrayList<Plugin>(plugins);
 
         assertEquals(1, pluginsList.size());
 
-        // Since there were errors, we should get back an UnloadablePlugin
-        assertEquals(UnloadablePlugin.class, pluginsList.get(0).getClass());
+        Plugin plugin = (Plugin) pluginsList.get(0);
 
-        UnloadablePlugin plugin = (UnloadablePlugin) pluginsList.get(0);
+        List<ModuleDescriptor> moduleList = new ArrayList<ModuleDescriptor>(plugin.getModuleDescriptors());
 
-        List moduleList = new ArrayList(plugin.getModuleDescriptors());
-
-        // There shouldn't be any modules
-        assertEquals(UnloadableModuleDescriptor.class, moduleList.get(0).getClass());
+        try
+        {
+            moduleList.get(0).getModuleClass();
+            fail("Shouldn't be able to load the class");
+        }
+        catch (PluginParseException e)
+        {
+            // this is good
+        }
     }
 
     public void testBadPluginKey() throws PluginParseException
