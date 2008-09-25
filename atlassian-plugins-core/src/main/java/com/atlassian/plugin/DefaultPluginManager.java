@@ -13,6 +13,7 @@ import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
+import com.atlassian.plugin.util.WaitUntil;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
@@ -129,7 +130,6 @@ public class DefaultPluginManager implements PluginManager
         String key = validatePlugin(pluginArtifact);
         pluginInstaller.installPlugin(key, pluginArtifact);
         scanForNewPlugins();
-
         return key;
     }
 
@@ -281,7 +281,7 @@ public class DefaultPluginManager implements PluginManager
      */
     protected void addPlugins(PluginLoader loader, Collection<Plugin> pluginsToAdd) throws PluginParseException
     {
-        Set<Plugin> pluginsThatShouldBeEnabled = new HashSet<Plugin>();
+        final Set<Plugin> pluginsThatShouldBeEnabled = new HashSet<Plugin>();
         for (Plugin plugin : pluginsToAdd)
         {
             // testing to make sure plugin keys are unique
@@ -322,27 +322,22 @@ public class DefaultPluginManager implements PluginManager
         if (!plugins.isEmpty())
         {
             // Now try to enable plugins that weren't enabled before, probably due to dependency ordering issues
-
-            for (int tries = 5; tries > 0; tries--)
+            WaitUntil.invoke(new WaitUntil.WaitCondition()
             {
-                for (Iterator<Plugin> i = pluginsThatShouldBeEnabled.iterator(); i.hasNext(); )
+                public boolean isFinished()
                 {
-                    Plugin plugin = i.next();
-                    if (plugin.isEnabled())
-                        i.remove();
+                    for (Iterator<Plugin> i = pluginsThatShouldBeEnabled.iterator(); i.hasNext(); )
+                    {
+                        Plugin plugin = i.next();
+                        if (plugin.isEnabled())
+                            i.remove();
+                    }
+                    return pluginsThatShouldBeEnabled.isEmpty();
                 }
-                if (!pluginsThatShouldBeEnabled.isEmpty())
-                    log.info("Plugins that have yet to start: "+pluginsThatShouldBeEnabled+", "+tries+" tries remaining");
-                else
-                    break;
-                try
-                {
-                    sleep(1000);
-                } catch (InterruptedException e)
-                {
-                    break;
-                }
-            }
+
+                public String getWaitMessage() {return "Plugins that have yet to start: "+pluginsThatShouldBeEnabled;}
+            });
+
 
             // Disable any plugins that aren't enabled by now
             if (!pluginsThatShouldBeEnabled.isEmpty())
@@ -690,8 +685,14 @@ public class DefaultPluginManager implements PluginManager
             return;
         }
 
-        enablePluginState(plugin, getStore());
-        notifyPluginEnabled(plugin);
+        plugin.setEnabled(true);
+
+        // Only change the state if the plugin was enabled successfully
+        if (WaitUntil.invoke(new PluginEnabledCondition(plugin)))
+        {
+            enablePluginState(plugin, getStore());
+            notifyPluginEnabled(plugin);
+        }
     }
 
     protected void enablePluginState(Plugin plugin, PluginStateStore stateStore)
@@ -715,8 +716,6 @@ public class DefaultPluginManager implements PluginManager
     protected void notifyPluginEnabled(Plugin plugin)
     {
         classLoader.notifyPluginOrModuleEnabled();
-
-        plugin.setEnabled(true);
 
         enablePluginModules(plugin);
 
@@ -979,5 +978,25 @@ public class DefaultPluginManager implements PluginManager
      */
     public void setDescriptorParserFactory(DescriptorParserFactory descriptorParserFactory)
     {
+    }
+
+    private static class PluginEnabledCondition implements WaitUntil.WaitCondition
+    {
+        private final Plugin plugin;
+
+        public PluginEnabledCondition(Plugin plugin)
+        {
+            this.plugin = plugin;
+        }
+
+        public boolean isFinished()
+        {
+            return plugin.isEnabled();
+        }
+
+        public String getWaitMessage()
+        {
+            return "Waiting until plugin " + plugin + " is enabled";
+        }
     }
 }
