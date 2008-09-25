@@ -1,7 +1,6 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
-import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.loaders.*;
@@ -41,7 +40,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     private DefaultPluginManager manager;
 
     private PluginStateStore pluginStateStore;
-    private List pluginLoaders;
+    private List<PluginLoader> pluginLoaders;
     private DefaultModuleDescriptorFactory moduleDescriptorFactory; // we should be able to use the interface here?
 
     private DirectoryPluginLoader directoryPluginLoader;
@@ -54,7 +53,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginEventManager = new DefaultPluginEventManager();
 
         pluginStateStore = new MemoryPluginStateStore();
-        pluginLoaders = new LinkedList();
+        pluginLoaders = new ArrayList<PluginLoader>();
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
 
         manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
@@ -184,10 +183,12 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
-        pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin-newer.xml"));
-        pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
+        pluginLoaders.add(new MultiplePluginLoader(
+            "test-atlassian-plugin-newer.xml",
+            "test-atlassian-plugin.xml",
+            "test-another-plugin.xml"));
         manager.init();
-        assertEquals(1, manager.getEnabledPlugins().size());
+        assertEquals(2, manager.getEnabledPlugins().size());
     }
 
     public void testLoadNewerDuplicatePlugin() throws PluginParseException
@@ -775,7 +776,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         DefaultPluginManager manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
         Mock mockLoader = new Mock(DynamicPluginLoader.class);
-        pluginLoaders.add(mockLoader.proxy());
+        pluginLoaders.add((PluginLoader) mockLoader.proxy());
 
         Mock mockPluginJar = new Mock(PluginArtifact.class);
         PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
@@ -791,7 +792,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         DefaultPluginManager manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
         Mock mockLoader = new Mock(PluginLoader.class);
-        pluginLoaders.add(mockLoader.proxy());
+        pluginLoaders.add((PluginLoader) mockLoader.proxy());
 
         Mock mockPluginJar = new Mock(PluginArtifact.class);
         PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
@@ -1066,7 +1067,6 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         Plugin p = new StaticPlugin();
         p.setKey("test.default.plugin");
-        p.setPluginInformation(new PluginInformation());
         PluginInformation pInfo = p.getPluginInformation();
         pInfo.setVersion(version);
         return p;
@@ -1125,4 +1125,45 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     }
 
     class NothingModuleDescriptor extends MockUnusedModuleDescriptor {}
+
+    private class MultiplePluginLoader implements PluginLoader
+    {
+        private final String[] descriptorPaths;
+
+        public MultiplePluginLoader(String... descriptorPaths)
+        {
+            this.descriptorPaths = descriptorPaths;
+        }
+
+        public Collection<Plugin> loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+        {
+            List<Plugin> result = new ArrayList<Plugin>(descriptorPaths.length);
+            for (String path : descriptorPaths)
+            {
+                SinglePluginLoader loader = new SinglePluginLoader(path);
+                result.addAll(loader.loadAllPlugins(moduleDescriptorFactory));
+            }
+            return result;
+        }
+
+        public boolean supportsAddition()
+        {
+            return false;
+        }
+
+        public boolean supportsRemoval()
+        {
+            return false;
+        }
+
+        public Collection<Plugin> addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+        {
+            throw new UnsupportedOperationException("This PluginLoader does not support addition.");
+        }
+
+        public void removePlugin(Plugin plugin) throws PluginException
+        {
+            throw new UnsupportedOperationException("This PluginLoader does not support addition.");
+        }
+    }
 }
