@@ -295,18 +295,9 @@ public class DefaultPluginManager implements PluginManager
                 Plugin existingPlugin = plugins.get(plugin.getKey());
                 if (plugin.compareTo(existingPlugin) >= 0)
                 {
-                    if (log.isDebugEnabled())
-                    {
-                        log.debug("Reinstalling plugin '" + plugin.getKey() + "' version " +
-                            existingPlugin.getPluginInformation().getVersion() + " with version " +
-                            plugin.getPluginInformation().getVersion());
-                    }
                     try
                     {
-                        log.info("Unloading " + existingPlugin.getName() + " to upgrade.");
                         updatePlugin(existingPlugin, plugin);
-                        if (log.isDebugEnabled())
-                            log.debug("Plugin '" + plugin.getKey() + "' unloaded.");
                     }
                     catch (PluginException e)
                     {
@@ -319,7 +310,7 @@ public class DefaultPluginManager implements PluginManager
                     if (log.isDebugEnabled())
                         log.debug("Duplicate plugin found (installed version is newer): '" + plugin.getKey() + "'");
                     // and don't install the older plugin
-                    return;
+                    continue;
                 }
             }
 
@@ -391,11 +382,17 @@ public class DefaultPluginManager implements PluginManager
         if (!oldPlugin.getKey().equals(newPlugin.getKey()))
             throw new IllegalArgumentException("New plugin must have the same key as the old plugin");
 
+        if (log.isInfoEnabled())
+            log.info("Updating plugin '" + oldPlugin + "' to '" + newPlugin + "'");
+
+
         // Preserve the old plugin configuration - uninstall changes it (as disable is called on all modules) and then
         // removes it
         Map<String,Boolean> oldPluginState = getState().getPluginStateMap(oldPlugin);
 
+        if (log.isDebugEnabled()) log.debug("Uninstalling old plugin: " + oldPlugin);
         uninstall(oldPlugin);
+        if (log.isDebugEnabled()) log.debug("Plugin uninstalled '" + oldPlugin +"', preserving old state");
 
         // Build a set of module keys from the new plugin version
         final Set<String> newModuleKeys = new HashSet<String>();
