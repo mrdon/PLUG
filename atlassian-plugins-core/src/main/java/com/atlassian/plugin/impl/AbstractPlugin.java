@@ -1,12 +1,6 @@
 package com.atlassian.plugin.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.elements.ResourceDescriptor;
@@ -20,7 +14,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     private String key;
     private Map<String,ModuleDescriptor<?>> modules = new LinkedHashMap<String,ModuleDescriptor<?>>();
     private boolean enabledByDefault = true;
-    private PluginInformation pluginInformation;
+    private PluginInformation pluginInformation = new PluginInformation();
     private boolean enabled;
     private boolean system;
     private Resourced resources = Resources.EMPTY_RESOURCES;
@@ -217,4 +211,9 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         return version.replaceAll(" ", "");
     }
 
+    public String toString()
+    {
+        final PluginInformation info = getPluginInformation();
+        return getKey() + ":" + (info == null ? "?" : info.getVersion());
+    }
 }

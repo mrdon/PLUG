@@ -1,9 +1,3 @@
-/*
- * Created by IntelliJ IDEA.
- * User: Mike
- * Date: Jul 31, 2004
- * Time: 12:58:29 PM
- */
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.util.JavaVersionUtils;
@@ -13,10 +7,10 @@ import java.util.Map;
 
 public class PluginInformation
 {
-    private String description;
+    private String description = "";
     private String descriptionKey;
-    private String version;
-    private String vendorName;
+    private String version = "0.0";
+    private String vendorName = "(unknown)";
     private String vendorUrl;
     private float maxVersion;
     private float minVersion;
