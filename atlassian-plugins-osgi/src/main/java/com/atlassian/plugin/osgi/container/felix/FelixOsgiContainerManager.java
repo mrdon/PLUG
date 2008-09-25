@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.container.felix;
 
 import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
@@ -102,12 +103,14 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         this.disableMultipleBundleVersions = val;
     }
 
-    public void channel(PluginFrameworkStartingEvent event)
+    @PluginEventListener
+    public void onStart(PluginFrameworkStartingEvent event)
     {
         start();
     }
 
-    public void channel(PluginFrameworkShutdownEvent event)
+    @PluginEventListener
+    public void onShtudown(PluginFrameworkShutdownEvent event)
     {
         stop();
     }

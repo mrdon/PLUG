@@ -233,7 +233,7 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
      * @param event The shutdown event
      */
     @PluginEventListener
-    public void channel(PluginFrameworkShutdownEvent event)
+    public void onShutdown(PluginFrameworkShutdownEvent event)
     {
         scanner.clearAll();
         for (Iterator<Plugin> it = plugins.values().iterator(); it.hasNext();)
@@ -249,7 +249,7 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
      */
     public void shutDown()
     {
-        channel(null);
+        onShutdown(null);
     }
 
     /**

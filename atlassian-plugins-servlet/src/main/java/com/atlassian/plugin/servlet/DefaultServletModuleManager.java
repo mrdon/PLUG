@@ -176,7 +176,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * associated with the plugin that was disabled.
      */
     @PluginEventListener
-    public void channel(PluginDisabledEvent event)
+    public void onPluginDisabled(PluginDisabledEvent event)
     {
         Plugin plugin = event.getPlugin();
         LazyLoadedReference<ServletContext> context = pluginContextRefs.remove(plugin);

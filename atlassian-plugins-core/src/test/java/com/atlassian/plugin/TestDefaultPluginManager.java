@@ -3,6 +3,7 @@ package com.atlassian.plugin;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.impl.StaticPlugin;
+import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.loaders.*;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.*;
@@ -88,6 +89,33 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(1, manager.getEnabledPlugins().size());
         manager.enablePlugin("test.disabled.plugin");
         assertEquals(2, manager.getEnabledPlugins().size());
+    }
+
+    public void testEnableFailed() throws PluginParseException
+    {
+        Mock mockPluginLoader = new Mock(PluginLoader.class);
+        Plugin plugin = new StaticPlugin() {
+            @Override
+            public void setEnabled(boolean enabled) {
+                // do nothing
+            }
+        };
+        plugin.setKey("foo");
+        plugin.setEnabledByDefault(false);
+        plugin.setPluginInformation(new PluginInformation());
+
+        mockPluginLoader.expectAndReturn("loadAllPlugins", C.ANY_ARGS, Collections.singletonList(plugin));
+
+        pluginLoaders.add((PluginLoader) mockPluginLoader.proxy());
+        manager.init();
+
+        assertEquals(1, manager.getPlugins().size());
+        assertEquals(0, manager.getEnabledPlugins().size());
+        assertFalse(plugin.isEnabled());
+        manager.enablePlugin("foo");
+        assertEquals(1, manager.getPlugins().size());
+        assertEquals(0, manager.getEnabledPlugins().size());
+        assertFalse(plugin.isEnabled());
     }
 
     public void testEnabledDisabledRetrieval() throws PluginParseException
