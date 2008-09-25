@@ -34,6 +34,12 @@ public class DownloadableClasspathResource extends AbstractDownloadableResource
             return;
         }
 
+        // overwrite caching headers with private cache-control
+        if("true".equalsIgnoreCase(resourceLocation.getParameter("cache-private")))
+        {
+            ResourceDownloadUtils.addCachingHeaders(httpServletResponse, "private");    
+        }
+
         httpServletResponse.setContentType(getContentType());
         OutputStream out = httpServletResponse.getOutputStream();
         try

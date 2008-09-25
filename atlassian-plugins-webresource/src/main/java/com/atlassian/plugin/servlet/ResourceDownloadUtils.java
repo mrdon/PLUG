@@ -47,26 +47,31 @@ public class ResourceDownloadUtils
 
 
     /**
-     * Set 'expire' headers to cache for ten years.
+     * Set 'expire' headers to cache for ten years. Also adds the additional cache control values passed in.
+     * Note, this method resets the cache control headers if set previously. 
      */
-    public static void addCachingHeaders(HttpServletResponse httpServletResponse)
+    public static void addCachingHeaders(HttpServletResponse httpServletResponse, String... cacheControls)
     {
         if (!Boolean.getBoolean("atlassian.disable.caches"))
         {
             httpServletResponse.setDateHeader("Expires", System.currentTimeMillis() + TEN_YEARS);
             httpServletResponse.setHeader("Cache-Control", "max-age=" + TEN_YEARS);
-            httpServletResponse.addHeader("Cache-Control", "private");
+            for(String cacheControl : cacheControls)
+            {
+                httpServletResponse.addHeader("Cache-Control", cacheControl);
+            }
         }
     }
 
     /**
-     * Set 'expire' headers to cache for ten years.  This method is called from UrlRewriteFilter, and therefore needs
-     * to have 'request' and 'response' as parameters.
+     * Set 'expire' headers to cache for ten years, with public caching turned on.
+     *
+     * This method is called from UrlRewriteFilter, and therefore needs to have 'request' and 'response' as parameters.
      *
      * @see <a href="http://tuckey.org/urlrewrite/manual/2.6/">http://tuckey.org/urlrewrite/manual/2.6/</a>
      */
     public static void addCachingHeaders(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
     {
-        addCachingHeaders(httpServletResponse);
+        addCachingHeaders(httpServletResponse, "public");
     }
 }
