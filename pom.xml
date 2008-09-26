@@ -32,9 +32,9 @@
     </ciManagement>
 
     <scm>
-        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/branches/PLUG-157</connection>
-        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/branches/PLUG-157</developerConnection>
-        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/branches/PLUG-157</url>
+        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/branches/private/rwallace/PLUG-157</connection>
+        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/branches/private/rwallace/PLUG-157</developerConnection>
+        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/branches/private/rwallace/PLUG-157</url>
     </scm>
 
     <modules>
