@@ -22,26 +22,24 @@ import java.util.List;
 
 public class TestAbstractModuleDescriptor extends TestCase
 {
-    public void testAssertImplements() throws DocumentException, PluginParseException
+    public void testAssertModuleClassImplements() throws DocumentException, PluginParseException
     {
         ModuleDescriptor descriptor = new AbstractModuleDescriptor() {
+            public void init(Plugin plugin, Element element) throws PluginParseException
+            {
+                super.init(plugin, element);
+                assertModuleClassImplements(MockMineral.class);
+            }
+
             public Object getModule()
             {
                 return null;
             }
-            
-            public Class getModuleClass()
-            {
-                Class c = super.getModuleClass();
-                assertImplements(c, MockMineral.class);
-                return c;
-            }
         };
 
-        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" />").getRootElement());
         try
         {
-            descriptor.getModuleClass();
+            descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" />").getRootElement());
             fail("Should have blown up.");
         }
         catch (PluginParseException e)

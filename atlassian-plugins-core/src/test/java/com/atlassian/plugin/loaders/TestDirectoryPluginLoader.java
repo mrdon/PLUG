@@ -91,7 +91,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         }
     }
 
-    // Tests that a regular Plugin is returned when there's a missing class dependency, but that it is unable to load the class
+    // Tests that an UnloadablePlugin is returned when there's a missing class dependency
     public void testAtlassianPluginWithMissingClass() throws Exception
     {
         addTestModuleDecriptors();
@@ -111,6 +111,8 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
 
         Plugin plugin = (Plugin) pluginsArray[0];
 
+        assertEquals(UnloadablePlugin.class, plugin.getClass());
+
         // grab module descriptors
         Collection moduleDescriptors = plugin.getModuleDescriptors();
         Object[] descriptorsArray = moduleDescriptors.toArray();
@@ -118,15 +120,8 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         assertEquals(1, moduleDescriptors.size());
 
         ModuleDescriptor descriptor = (ModuleDescriptor) descriptorsArray[0];
-        try
-        {
-            descriptor.getModuleClass();
-            fail("Shouldn't be able to load the class");
-        }
-        catch (PluginParseException e)
-        {
-            // this is good
-        }
+
+        assertEquals(UnloadableModuleDescriptor.class, descriptor.getClass());
     }
 
     private void addTestModuleDecriptors()

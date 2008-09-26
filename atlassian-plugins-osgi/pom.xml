@@ -15,6 +15,7 @@
 
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -22,6 +23,7 @@
                     <execution>
                         <id>copy-framework-bundles</id>
                         <phase>generate-sources</phase>
+
                         <goals>
                             <goal>copy</goal>
                         </goals>
@@ -30,6 +32,7 @@
                                 <artifactItem>
                                     <groupId>org.springframework</groupId>
                                     <artifactId>spring</artifactId>
+
                                     <version>2.5.5</version>
                                 </artifactItem>
                                 <artifactItem>
@@ -45,6 +48,7 @@
                                 </artifactItem>
 
                                 <artifactItem>
+
                                     <groupId>org.slf4j</groupId>
                                     <artifactId>com.springsource.slf4j.log4j</artifactId>
                                     <version>1.5.0</version>
@@ -52,6 +56,7 @@
 
                                 <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
+
                                     <artifactId>spring-osgi-annotation</artifactId>
                                     <version>${springDmVersion}</version>
                                 </artifactItem>
@@ -59,6 +64,7 @@
                                 <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
                                     <artifactId>spring-osgi-core</artifactId>
+
                                     <version>${springDmVersion}</version>
                                 </artifactItem>
 
@@ -66,6 +72,7 @@
                                     <groupId>org.springframework.osgi</groupId>
                                     <artifactId>spring-osgi-extender</artifactId>
                                     <version>${springDmVersion}</version>
+
                                 </artifactItem>
 
                                 <artifactItem>
@@ -81,6 +88,7 @@
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>${frameworkBundleDirectory}</outputDirectory>
+
                         </configuration>
                     </execution>
                     <execution>
@@ -89,6 +97,7 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
+
                             <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
                             <includeArtifactIds>atlassian-plugins-simpletest</includeArtifactIds>
                         </configuration>
@@ -97,6 +106,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+
                 <version>2.2-beta-1</version>
                 <configuration>
                     <finalName>osgi</finalName>
@@ -104,6 +114,7 @@
                         <descriptor>src/main/assembly/framework-bundles.xml</descriptor>
                     </descriptors>
                     <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+
                 </configuration>
                 <executions>
                     <execution>
@@ -115,6 +126,7 @@
                         <phase>process-resources</phase>
                         <goals>
                             <goal>attached</goal>
+
                         </goals>
                     </execution>
                 </executions>
@@ -125,6 +137,7 @@
 
     <dependencies>
         <dependency>
+
             <groupId>com.atlassian.plugins</groupId>
             <artifactId>atlassian-plugins-core</artifactId>
             <version>${project.version}</version>
@@ -132,6 +145,7 @@
         <dependency>
             <groupId>biz.aQute</groupId>
             <artifactId>bndlib</artifactId>
+
             <version>0.0.255</version>
         </dependency>
         <dependency>
@@ -139,6 +153,7 @@
             <artifactId>spring-osgi-core</artifactId>
             <version>${springDmVersion}</version>
             <scope>provided</scope>
+
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -146,6 +161,7 @@
             <version>${springVersion}</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
@@ -153,12 +169,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
             <version>${springVersion}</version>
             <scope>provided</scope>
         </dependency>
-
 
 
 
@@ -169,6 +185,7 @@
             <version>1.2.1</version>
             <exclusions>
                <exclusion>
+
                     <groupId>org.apache.felix</groupId>
                     <artifactId>org.apache.felix.shell</artifactId>
                 </exclusion>
@@ -176,6 +193,7 @@
                     <groupId>org.apache.felix</groupId>
                     <artifactId>org.apache.felix.shell.tui</artifactId>
                 </exclusion>
+
                 <exclusion>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>org.apache.felix.bundlerepository</artifactId>
@@ -184,6 +202,7 @@
         </dependency>
 
         <dependency>
+
             <groupId>org.twdata.pkgscanner</groupId>
             <artifactId>package-scanner</artifactId>
             <version>0.6.1</version>
@@ -191,6 +210,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+
             <version>1.4</version>
         </dependency>
         <dependency>
@@ -198,6 +218,7 @@
           <artifactId>log4j</artifactId>
           <version>1.2.15</version>
           <exclusions>
+
             <exclusion>
               <groupId>com.sun.jdmk</groupId>
               <artifactId>jmxtools</artifactId>
@@ -205,6 +226,7 @@
             <exclusion>
               <groupId>com.sun.jmx</groupId>
               <artifactId>jmxri</artifactId>
+
             </exclusion>
             <exclusion>
               <groupId>javax.jms</groupId>
@@ -212,6 +234,7 @@
             </exclusion>
             <exclusion>
               <groupId>javax.mail</groupId>
+
               <artifactId>mail</artifactId>
             </exclusion>
             <exclusion>
@@ -219,6 +242,7 @@
               <artifactId>activation</artifactId>
             </exclusion>
           </exclusions>
+
         </dependency>
 
         <dependency>
@@ -226,6 +250,7 @@
             <artifactId>atlassian-plugins-test</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
+
         </dependency>
         <dependency>
             <groupId>com.atlassian.plugins.test</groupId>
@@ -233,6 +258,7 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>janino</groupId>
             <artifactId>janino</artifactId>
@@ -255,3 +281,5 @@
         <springVersion>2.5.5</springVersion>
     </properties>
 </project>
+
+
