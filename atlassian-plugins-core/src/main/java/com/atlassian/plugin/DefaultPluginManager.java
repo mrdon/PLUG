@@ -287,7 +287,7 @@ public class DefaultPluginManager implements PluginManager
     protected void addPlugins(PluginLoader loader, Collection<Plugin> pluginsToAdd) throws PluginParseException
     {
         final Set<Plugin> pluginsThatShouldBeEnabled = new HashSet<Plugin>();
-        for (Plugin plugin : pluginsToAdd)
+        for (Plugin plugin : new TreeSet<Plugin>(pluginsToAdd))
         {
             // testing to make sure plugin keys are unique
             if (plugins.containsKey(plugin.getKey()))

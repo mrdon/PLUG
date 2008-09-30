@@ -3,11 +3,13 @@ package com.atlassian.plugin.osgi;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
+import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
 import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
@@ -204,6 +206,64 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertEquals(1, descriptors.size());
     }
 
+    public void testPluginDependentOnPackageImport() throws Exception
+    {
+        PluginBuilder firstBuilder = new PluginBuilder("first");
+        firstBuilder
+                .addPluginInformation("first", "Some name", "1.0")
+                .addFormattedJava("first.MyInterface",
+                        "package first;",
+                        "public interface MyInterface {}")
+                .build(pluginsDir);
+
+        new PluginBuilder("asecond", firstBuilder.getClassLoader())
+                .addPluginInformation("second", "Some name", "1.0")
+                .addFormattedJava("second.MyImpl",
+                        "package second;",
+                        "public class MyImpl implements first.MyInterface {}")
+                .build(pluginsDir);
+
+        initPluginManager();
+
+        assertEquals(2, pluginManager.getEnabledPlugins().size());
+        assertNotNull(pluginManager.getPlugin("first"));
+        assertNotNull(pluginManager.getPlugin("second"));
+    }
+
+    public void testPluginWithServletDependentOnPackageImport() throws Exception
+    {
+        PluginBuilder firstBuilder = new PluginBuilder("first");
+        firstBuilder
+                .addPluginInformation("first", "Some name", "1.0")
+                .addFormattedJava("first.MyInterface",
+                        "package first;",
+                        "public interface MyInterface {}")
+                .build(pluginsDir);
+
+        new PluginBuilder("asecond", firstBuilder.getClassLoader())
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='asecond' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <servlet key='foo' class='second.MyServlet'>",
+                        "       <url-pattern>/foo</url-pattern>",
+                        "    </servlet>",
+                        "</atlassian-plugin>")
+                .addFormattedJava("second.MyServlet",
+                        "package second;",
+                        "public class MyServlet extends javax.servlet.http.HttpServlet implements first.MyInterface {}")
+                .build(pluginsDir);
+
+
+        initPluginManager(null, new SingleModuleDescriptorFactory("servlet", StubServletModuleDescriptor.class));
+
+        assertEquals(2, pluginManager.getEnabledPlugins().size());
+        assertTrue(pluginManager.getPlugin("first").isEnabled());
+        assertNotNull(pluginManager.getPlugin("asecond").isEnabled());
+    }
+
+
     public static class DummyModuleDescriptor extends AbstractModuleDescriptor
     {
         public Object getModule()
@@ -211,5 +271,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
             return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }
+
+
 
 }

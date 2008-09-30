@@ -10,8 +10,10 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
 /**
  * Provides a way for plugins to declare {@link ServletContextListener}s so they can be notified when the 
- * {@link ServletContext} is created for the plugin.  Implementors need to extend this class and implement the
+ * {@link javax.servlet.ServletContext} is created for the plugin.  Implementors need to extend this class and implement the
  * {#link autowireObject} method.
+ *
+ * @since 2.1.0
  */
 public abstract class ServletContextListenerModuleDescriptor extends AbstractModuleDescriptor<ServletContextListener>
 {

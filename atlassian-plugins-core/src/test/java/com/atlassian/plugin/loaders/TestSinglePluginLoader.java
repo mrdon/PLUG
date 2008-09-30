@@ -1,9 +1,6 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.DefaultModuleDescriptorFactory;
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
@@ -46,6 +43,7 @@ public class TestSinglePluginLoader extends TestCase
 
         // test the plugin information
         Plugin plugin = (Plugin) plugins.iterator().next();
+        enableModules(plugin);
         assertEquals("Test Plugin", plugin.getName());
         assertEquals("test.atlassian.plugin", plugin.getKey());
         assertNotNull(plugin.getPluginInformation());
@@ -198,29 +196,6 @@ public class TestSinglePluginLoader extends TestCase
         assertNull(plugin.getModuleDescriptor("gold"));
     }
 
-    public void testPluginWithInvalidClass() throws PluginParseException
-    {
-        SinglePluginLoader loader = new SinglePluginLoader("test-bad-class-plugin.xml");
-
-        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
-        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
-
-        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
-        List pluginsList = new ArrayList(plugins);
-
-        assertEquals(1, pluginsList.size());
-
-        // Since there were errors, we should get back an UnloadablePlugin
-        assertEquals(UnloadablePlugin.class, pluginsList.get(0).getClass());
-
-        UnloadablePlugin plugin = (UnloadablePlugin) pluginsList.get(0);
-
-        List moduleList = new ArrayList(plugin.getModuleDescriptors());
-
-        // There shouldn't be any modules
-        assertEquals(UnloadableModuleDescriptor.class, moduleList.get(0).getClass());
-    }
-
     public void testBadPluginKey() throws PluginParseException
     {
         try
@@ -263,6 +238,17 @@ public class TestSinglePluginLoader extends TestCase
         catch (PluginParseException e)
         {
             // Expected exception
+        }
+    }
+
+    public void enableModules(Plugin plugin)
+    {
+        for (ModuleDescriptor descriptor : plugin.getModuleDescriptors())
+        {
+            if (descriptor instanceof StateAware)
+            {
+                ((StateAware)descriptor).enabled();
+            }
         }
     }
 }

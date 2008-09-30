@@ -7,6 +7,7 @@ import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
@@ -61,9 +62,16 @@ public abstract class PluginInContainerTestBase extends TestCase {
         pluginEventManager = null;
     }
 
+    protected void initPluginManager() throws Exception {
+        initPluginManager(new HostComponentProvider(){
+                public void provide(ComponentRegistrar registrar) {}
+            }, new DefaultModuleDescriptorFactory());
+    }
+
     protected void initPluginManager(HostComponentProvider hostComponentProvider) throws Exception {
         initPluginManager(hostComponentProvider, new DefaultModuleDescriptorFactory());
     }
+    
     protected void initPluginManager(HostComponentProvider hostComponentProvider, ModuleDescriptorFactory moduleDescriptorFactory) throws Exception {
         this.moduleDescriptorFactory = moduleDescriptorFactory;
         PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();

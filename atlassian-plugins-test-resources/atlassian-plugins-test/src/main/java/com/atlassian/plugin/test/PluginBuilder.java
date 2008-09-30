@@ -34,9 +34,25 @@ public class PluginBuilder {
      * @param name The plugin name
      */
     public PluginBuilder(String name) {
+        this(name, PluginBuilder.class.getClassLoader());
+    }
+
+    /**
+     * Creates the builder
+     * @param name The plugin name
+     */
+    public PluginBuilder(String name, ClassLoader classLoader) {
         jarContents = new HashMap();
         this.name = name;
-        classLoader = getClass().getClassLoader();
+        this.classLoader = classLoader;
+    }
+
+    public PluginBuilder addFormattedJava(String className, String... lines) throws Exception
+    {
+        StringBuilder sb = new StringBuilder();
+        for (String line : lines)
+            sb.append(line.replace('\'', '"')).append('\n');
+        return addJava(className, sb.toString());
     }
 
     /**
@@ -180,6 +196,11 @@ public class PluginBuilder {
         }
         zout.close();
         return jarFile;
+    }
+
+    public ClassLoader getClassLoader()
+    {
+        return classLoader;
     }
 
 }

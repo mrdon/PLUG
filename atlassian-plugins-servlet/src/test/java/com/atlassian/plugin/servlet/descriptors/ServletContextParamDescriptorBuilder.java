@@ -29,20 +29,20 @@ public class ServletContextParamDescriptorBuilder
         return this;
     }
 
-    public ServletContextParamDescriptor build()
+    public ServletContextParamModuleDescriptor build()
     {
-        Descriptor d = new Descriptor(plugin, key, paramName, paramValue);
+        ModuleDescriptor d = new ModuleDescriptor(plugin, key, paramName, paramValue);
         plugin.addModuleDescriptor(d);
         return d;
     }
 
-    private static final class Descriptor extends ServletContextParamDescriptor
+    private static final class ModuleDescriptor extends ServletContextParamModuleDescriptor
     {
         final String key;
         final String name;
         final String value;
         
-        public Descriptor(
+        public ModuleDescriptor(
             Plugin plugin,
             String key,
             String name,

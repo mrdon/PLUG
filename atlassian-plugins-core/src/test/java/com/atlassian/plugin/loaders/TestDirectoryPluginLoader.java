@@ -70,6 +70,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
                 assertEquals("test.atlassian.plugin.classloaded", plugin.getKey());
                 assertEquals(1, plugin.getModuleDescriptors().size());
                 MockAnimalModuleDescriptor paddingtonDescriptor = (MockAnimalModuleDescriptor) plugin.getModuleDescriptor("paddington");
+                paddingtonDescriptor.enabled();
                 assertEquals("Paddington Bear", paddingtonDescriptor.getName());
                 MockBear paddington = (MockBear) paddingtonDescriptor.getModule();
                 assertEquals("com.atlassian.plugin.mock.MockPaddington", paddington.getClass().getName());
@@ -80,6 +81,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
                 assertEquals("test.atlassian.plugin.classloaded2", plugin.getKey());
                 assertEquals(1, plugin.getModuleDescriptors().size());
                 MockAnimalModuleDescriptor poohDescriptor = (MockAnimalModuleDescriptor) plugin.getModuleDescriptor("pooh");
+                poohDescriptor.enabled();
                 assertEquals("Pooh Bear", poohDescriptor.getName());
                 MockBear pooh = (MockBear) poohDescriptor.getModule();
                 assertEquals("com.atlassian.plugin.mock.MockPooh", pooh.getClass().getName());
@@ -89,39 +91,6 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
                 fail("What plugin name?!");
             }
         }
-    }
-
-    // Tests that an UnloadablePlugin is returned when there's a missing class dependency
-    public void testAtlassianPluginWithMissingClass() throws Exception
-    {
-        addTestModuleDecriptors();
-
-        URL url = ClassLoaderUtils.getResource(BAD_PLUGIN_JAR, TestClassPathPluginLoader.class);
-        String path = url.toExternalForm();
-        path = path.replace('/', File.separatorChar);
-        path = path.substring(5);
-        File pluginFile = new File(path);
-        loader = new DirectoryPluginLoader(pluginFile.getParentFile(), DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
-
-        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
-
-        assertEquals(1, plugins.size());
-
-        Object[] pluginsArray = plugins.toArray();
-
-        Plugin plugin = (Plugin) pluginsArray[0];
-
-        assertEquals(UnloadablePlugin.class, plugin.getClass());
-
-        // grab module descriptors
-        Collection moduleDescriptors = plugin.getModuleDescriptors();
-        Object[] descriptorsArray = moduleDescriptors.toArray();
-
-        assertEquals(1, moduleDescriptors.size());
-
-        ModuleDescriptor descriptor = (ModuleDescriptor) descriptorsArray[0];
-
-        assertEquals(UnloadableModuleDescriptor.class, descriptor.getClass());
     }
 
     private void addTestModuleDecriptors()

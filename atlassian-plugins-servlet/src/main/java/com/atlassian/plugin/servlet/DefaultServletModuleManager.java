@@ -29,7 +29,7 @@ import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.servlet.descriptors.ServletContextListenerModuleDescriptor;
-import com.atlassian.plugin.servlet.descriptors.ServletContextParamDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.servlet.filter.DelegatingPluginFilter;
@@ -363,7 +363,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
                 String paramName = e.nextElement();
                 mergedInitParams.put(paramName, baseContext.getInitParameter(paramName));
             }
-            for (ServletContextParamDescriptor descriptor : findModuleDescriptorsByType(ServletContextParamDescriptor.class, plugin))
+            for (ServletContextParamModuleDescriptor descriptor : findModuleDescriptorsByType(ServletContextParamModuleDescriptor.class, plugin))
             {
                 mergedInitParams.put(descriptor.getParamName(), descriptor.getParamValue());
             }

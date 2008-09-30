@@ -14,6 +14,7 @@ public abstract class ServletModuleDescriptor extends BaseServletModuleDescripto
 {
     public void enabled()
     {
+        super.enabled();
         getServletModuleManager().addServletModule(this);
     }
 
