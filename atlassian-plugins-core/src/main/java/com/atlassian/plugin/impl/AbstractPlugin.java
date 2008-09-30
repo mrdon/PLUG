@@ -18,7 +18,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     private String name;
     private String i18nNameKey;
     private String key;
-    private Map<String,ModuleDescriptor<?>> modules = new ConcurrentHashMap<String,ModuleDescriptor<?>>();
+    private Map<String,ModuleDescriptor<?>> modules = new LinkedHashMap<String,ModuleDescriptor<?>>();
     private boolean enabledByDefault = true;
     private PluginInformation pluginInformation = new PluginInformation();
     private boolean enabled;
@@ -60,6 +60,11 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     public void addModuleDescriptor(ModuleDescriptor<?> moduleDescriptor)
     {
         modules.put(moduleDescriptor.getKey(), moduleDescriptor);
+    }
+
+    protected void removeModuleDescriptor(String key)
+    {
+        modules.remove(key);
     }
 
     /**

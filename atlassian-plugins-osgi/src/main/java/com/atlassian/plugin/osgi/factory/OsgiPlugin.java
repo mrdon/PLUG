@@ -1,25 +1,22 @@
 package com.atlassian.plugin.osgi.factory;
 
+import com.atlassian.plugin.AutowireCapablePlugin;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
-import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.PluginException;
-import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
-
-import java.net.URL;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
+import org.apache.commons.lang.Validate;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.*;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.lang.Validate;
+
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URL;
 
 /**
  * Plugin that wraps an OSGi bundle that does contain a plugin descriptor.
@@ -33,7 +30,6 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private Object nativeBeanFactory;
     private Method nativeCreateBeanMethod;
     private Method nativeAutowireBeanMethod;
-    private final Map<String,ModuleDescriptor<?>> modules = new ConcurrentHashMap<String,ModuleDescriptor<?>>();
     private ServiceTracker moduleDescriptorTracker;
 
     public OsgiPlugin(Bundle bundle)
@@ -163,54 +159,6 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             throw new OsgiContainerException("Cannot uninstall bundle " + bundle.getSymbolicName());
         }
     }
-
-    public void addModuleDescriptor(ModuleDescriptor<?> moduleDescriptor)
-    {
-        modules.put(moduleDescriptor.getKey(), moduleDescriptor);
-    }
-
-    /**
-     * Returns a copy of the module descriptors for this plugin
-     * @return A copy of the internal list
-     */
-    public Collection<ModuleDescriptor<?>> getModuleDescriptors()
-    {
-        return new ArrayList<ModuleDescriptor<?>>(modules.values());
-    }
-
-    public ModuleDescriptor<?> getModuleDescriptor(String key)
-    {
-        return modules.get(key);
-    }
-
-    public <T> List<ModuleDescriptor<T>> getModuleDescriptorsByModuleClass(Class<T> aClass)
-    {
-        List<ModuleDescriptor<T>> result = new ArrayList<ModuleDescriptor<T>>();
-
-        for (ModuleDescriptor moduleDescriptor : modules.values())
-        {
-            Class moduleClass = moduleDescriptor.getModuleClass();
-            if (aClass.isAssignableFrom(moduleClass))
-            {
-                result.add((ModuleDescriptor<T>) moduleDescriptor);
-            }
-        }
-
-        return result;
-    }
-
-    public boolean containsSystemModule()
-    {
-        for (ModuleDescriptor moduleDescriptor : modules.values())
-        {
-            if(moduleDescriptor.isSystemModule())
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
 
     private boolean shouldHaveSpringContext()
     {
@@ -354,7 +302,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             if (serviceReference.getBundle() == bundle)
             {
                 ModuleDescriptor descriptor = (ModuleDescriptor) bundle.getBundleContext().getService(serviceReference);
-                modules.put(descriptor.getKey(), descriptor);
+                addModuleDescriptor(descriptor);
                 return descriptor;
             }
             return null;
@@ -365,7 +313,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             if (serviceReference.getBundle() == bundle)
             {
                 ModuleDescriptor descriptor = (ModuleDescriptor) o;
-                modules.put(descriptor.getKey(), descriptor);
+                addModuleDescriptor(descriptor);
             }
         }
 
@@ -374,7 +322,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             if (serviceReference.getBundle() == bundle)
             {
                 ModuleDescriptor descriptor = (ModuleDescriptor) o;
-                modules.remove(descriptor.getKey());
+                removeModuleDescriptor(descriptor.getKey());
             }
         }
     }
