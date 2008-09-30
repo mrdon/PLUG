@@ -199,7 +199,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * initialized for each module descriptor.
      * 
      * @param descriptor
-     * @param filterConfig
+     * @param servletConfig
      * @return
      */
     private HttpServlet getServlet(final ServletModuleDescriptor descriptor, final ServletConfig servletConfig)
