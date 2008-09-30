@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.elements.ResourceDescriptor;
@@ -17,7 +18,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     private String name;
     private String i18nNameKey;
     private String key;
-    private Map<String,ModuleDescriptor<?>> modules = new LinkedHashMap<String,ModuleDescriptor<?>>();
+    private Map<String,ModuleDescriptor<?>> modules = new ConcurrentHashMap<String,ModuleDescriptor<?>>();
     private boolean enabledByDefault = true;
     private PluginInformation pluginInformation = new PluginInformation();
     private boolean enabled;
