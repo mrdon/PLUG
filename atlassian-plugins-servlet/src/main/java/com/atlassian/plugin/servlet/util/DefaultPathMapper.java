@@ -23,6 +23,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * path, while the getAll() method returns the aggregate matches.
  * <p/>
  * In practice, matching a servlet path should use the get() method and matching filters should use the getAll() method.
+ * 
+ * @since 2.1.0
  */
 public class DefaultPathMapper implements Serializable, PathMapper
 {

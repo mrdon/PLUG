@@ -42,6 +42,8 @@ import com.atlassian.plugin.servlet.util.PathMapper;
 
 /**
  * A simple servletModuleManager to track and retrieve the loaded servlet plugin modules.
+ * 
+ * @since 2.1.0
  */
 public class DefaultServletModuleManager implements ServletModuleManager
 {

@@ -8,6 +8,8 @@ import java.util.List;
  * threads current context class loader.  This can be used when implementing delegating plugin {@link Filter}s or 
  * {@link Servlet}s that need to set the {@link ClassLoader} to the {@link PluginClassLoader} the filter or servlet is
  * declared in.
+ * 
+ * @since 2.1.0
  */
 public class ClassLoaderStack
 {
