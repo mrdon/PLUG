@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
-import com.atlassian.plugin.test.PluginBuilder;
+import com.atlassian.plugin.test.PluginJarBuilder;
 
 public class TestDefaultPluginArtifactFactory extends TestCase
 {
@@ -26,7 +26,7 @@ public class TestDefaultPluginArtifactFactory extends TestCase
     {
         File xmlFile = new File(testDir, "foo.xml");
         FileUtils.writeStringToFile(xmlFile, "<xml/>");
-        File jarFile = new PluginBuilder("jar").build(testDir);
+        File jarFile = new PluginJarBuilder("jar").build(testDir);
 
         DefaultPluginArtifactFactory factory = new DefaultPluginArtifactFactory();
         PluginArtifact jarArt = factory.create(jarFile.toURL());

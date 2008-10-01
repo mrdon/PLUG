@@ -4,7 +4,6 @@ import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.impl.StaticPlugin;
-import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.*;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
@@ -14,7 +13,7 @@ import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.PluginPredicate;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
-import com.atlassian.plugin.test.PluginBuilder;
+import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
@@ -988,7 +987,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         FileUtils.cleanDirectory(pluginsTestDir);
         File plugin = File.createTempFile("plugin", ".jar");
-        new PluginBuilder("plugin")
+        new PluginJarBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
                 .addJava("my.MyClass", "package my; public class MyClass {}")
@@ -1020,7 +1019,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         // sleep to ensure the new plugin is picked up
         Thread.currentThread().sleep(1000);
 
-        new PluginBuilder("plugin")
+        new PluginJarBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("bar.txt", "bar")
                 .addJava("my.MyNewClass", "package my; public class MyNewClass {}")
@@ -1054,7 +1053,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         createFillAndCleanTempPluginDirectory();
 
         FileUtils.cleanDirectory(pluginsTestDir);
-        File plugin1 = new PluginBuilder("plugin")
+        File plugin1 = new PluginJarBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
                 .addJava("my.MyClass", "package my; public class MyClass {}")
@@ -1085,7 +1084,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         // sleep to ensure the new plugin is picked up
         Thread.currentThread().sleep(1000);
 
-        File plugin2 = new PluginBuilder("plugin")
+        File plugin2 = new PluginJarBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("bar.txt", "bar")
                 .addJava("my.MyNewClass", "package my; public class MyNewClass {}")

@@ -2,7 +2,7 @@ package com.atlassian.plugin.osgi.factory.transform;
 
 import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.test.PluginBuilder;
+import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
 import com.atlassian.plugin.osgi.factory.transform.test.SomeClass;
@@ -71,7 +71,7 @@ public class TestDefaultPluginTransformer extends TestCase
 
     public void testGenerateManifestWithProperNestedInferredImports() throws Exception
     {
-        File plugin = new PluginBuilder("plugin")
+        File plugin = new PluginJarBuilder("plugin")
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
@@ -91,7 +91,7 @@ public class TestDefaultPluginTransformer extends TestCase
 
     public void testGenerateManifestWithInferredImportsOfSuperInterfaces() throws Exception
     {
-        File plugin = new PluginBuilder("plugin")
+        File plugin = new PluginJarBuilder("plugin")
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
@@ -112,7 +112,7 @@ public class TestDefaultPluginTransformer extends TestCase
 
     public void testGenerateManifestMergeHostComponentImportsWithExisting() throws Exception
     {
-        File plugin = new PluginBuilder("plugin")
+        File plugin = new PluginJarBuilder("plugin")
                 .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
                         "Import-Package: javax.swing\n" +
                         "Bundle-SymbolicName: my.foo.symbolicName\n" +
@@ -140,7 +140,7 @@ public class TestDefaultPluginTransformer extends TestCase
 
     public void testGenerateManifestWithBundleInstructions() throws Exception
     {
-        File plugin = new PluginBuilder("plugin")
+        File plugin = new PluginJarBuilder("plugin")
                 .addFormattedResource("atlassian-plugin.xml",
                         "<atlassian-plugin name='Test Bundle instruction plugin 2' key='test.plugin'>",
                         "    <plugin-info>",
@@ -164,7 +164,7 @@ public class TestDefaultPluginTransformer extends TestCase
 
     public void testGenerateManifestUsingPluginInfoParameters() throws Exception
     {
-        File plugin = new PluginBuilder("plugin")
+        File plugin = new PluginJarBuilder("plugin")
                 .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
                         "Import-Package: javax.swing\n" +
                         "Bundle-SymbolicName: my.foo.symbolicName\n" +
@@ -192,11 +192,11 @@ public class TestDefaultPluginTransformer extends TestCase
 
     public void testGenerateManifest_innerjars() throws URISyntaxException, PluginParseException, IOException
     {
-        File innerJar = new PluginBuilder("innerjar1")
+        File innerJar = new PluginJarBuilder("innerjar1")
                 .build();
-        File innerJar2 = new PluginBuilder("innerjar2")
+        File innerJar2 = new PluginJarBuilder("innerjar2")
                 .build();
-        File plugin = new PluginBuilder("plugin")
+        File plugin = new PluginJarBuilder("plugin")
                 .addFile("META-INF/lib/innerjar.jar", innerJar)
                 .addFile("META-INF/lib/innerjar2.jar", innerJar2)
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
@@ -216,11 +216,11 @@ public class TestDefaultPluginTransformer extends TestCase
 
     public void testGenerateManifest_innerjarsInImports() throws Exception, PluginParseException, IOException
     {
-        File innerJar = new PluginBuilder("innerjar")
+        File innerJar = new PluginJarBuilder("innerjar")
                 .addJava("my.Foo", "package my;import org.apache.log4j.Logger; public class Foo{Logger log;}")
                 .build();
         assertNotNull(innerJar);
-        File plugin = new PluginBuilder("plugin")
+        File plugin = new PluginJarBuilder("plugin")
                 .addJava("my.Bar", "package my;import org.apache.log4j.spi.Filter; public class Bar{Filter log;}")
                 .addFile("META-INF/lib/innerjar.jar", innerJar)
                 .addPluginInformation("innerjarcp", "Some name", "1.0")

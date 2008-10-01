@@ -4,12 +4,10 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
-import com.atlassian.plugin.test.PluginBuilder;
+import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
@@ -35,7 +33,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
             }
         }, factory);
 
-        File pluginJar = new PluginBuilder("first")
+        File pluginJar = new PluginJarBuilder("first")
                 .addFormattedResource("atlassian-plugin.xml",
                         "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
                         "    <plugin-info>",
@@ -45,7 +43,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
                         "    <dummy key='dum1'/>",
                         "</atlassian-plugin>")
                 .build();
-        File pluginJar2 = new PluginBuilder("second")
+        File pluginJar2 = new PluginJarBuilder("second")
                 .addFormattedResource("atlassian-plugin.xml",
                         "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
                         "    <plugin-info>",
@@ -72,7 +70,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
     {
         initPluginManager(new HostComponentProvider(){public void provide(ComponentRegistrar registrar){}});
 
-        File pluginJar = new PluginBuilder("pluginType")
+        File pluginJar = new PluginJarBuilder("pluginType")
                 .addFormattedResource("atlassian-plugin.xml",
                         "<atlassian-plugin name='Test' key='test.plugin.module' pluginsVersion='2'>",
                         "    <plugin-info>",
@@ -96,7 +94,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
                         "  }" +
                         "}")
                 .build();
-        File pluginJar2 = new PluginBuilder("fooUser")
+        File pluginJar2 = new PluginJarBuilder("fooUser")
                 .addFormattedResource("atlassian-plugin.xml",
                         "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
                         "    <plugin-info>",
@@ -118,7 +116,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
     {
         initPluginManager(new HostComponentProvider(){public void provide(ComponentRegistrar registrar){}});
 
-        File pluginJar = new PluginBuilder("pluginType")
+        File pluginJar = new PluginJarBuilder("pluginType")
                 .addFormattedResource("atlassian-plugin.xml",
                         "<atlassian-plugin name='Test' key='test.plugin.module' pluginsVersion='2'>",
                         "    <plugin-info>",
@@ -132,7 +130,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
                         "  public Object getModule(){return null;}" +
                         "}")
                 .build();
-        File pluginJar2 = new PluginBuilder("fooUser")
+        File pluginJar2 = new PluginJarBuilder("fooUser")
                 .addFormattedResource("atlassian-plugin.xml",
                         "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
                         "    <plugin-info>",
@@ -155,7 +153,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
     {
         initPluginManager(null);
 
-        File pluginJar = new PluginBuilder("pluginType")
+        File pluginJar = new PluginJarBuilder("pluginType")
                 .addPluginInformation("test.plugin", "foo", "1.0")
                 .build();
 
@@ -178,7 +176,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
     {
         initPluginManager(null);
 
-        File pluginJar = new PluginBuilder("pluginType")
+        File pluginJar = new PluginJarBuilder("pluginType")
                 .addPluginInformation("test.plugin", "foo", "1.0")
                 .build();
 
@@ -186,7 +184,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
         BundleContext ctx = ((OsgiPlugin) pluginManager.getPlugin("test.plugin")).getBundle().getBundleContext();
         ServiceRegistration reg = ctx.registerService(ModuleDescriptor.class.getName(), new DummyWebItemModuleDescriptor(), null);
 
-        File pluginJar2 = new PluginBuilder("pluginType")
+        File pluginJar2 = new PluginJarBuilder("pluginType")
                 .addPluginInformation("test.plugin2", "foo", "1.0")
                 .build();
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
@@ -208,7 +206,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
     public void testPluginDependentOnPackageImport() throws Exception
     {
-        PluginBuilder firstBuilder = new PluginBuilder("first");
+        PluginJarBuilder firstBuilder = new PluginJarBuilder("first");
         firstBuilder
                 .addPluginInformation("first", "Some name", "1.0")
                 .addFormattedJava("first.MyInterface",
@@ -216,7 +214,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
                         "public interface MyInterface {}")
                 .build(pluginsDir);
 
-        new PluginBuilder("asecond", firstBuilder.getClassLoader())
+        new PluginJarBuilder("asecond", firstBuilder.getClassLoader())
                 .addPluginInformation("second", "Some name", "1.0")
                 .addFormattedJava("second.MyImpl",
                         "package second;",
@@ -232,7 +230,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
     public void testPluginWithServletDependentOnPackageImport() throws Exception
     {
-        PluginBuilder firstBuilder = new PluginBuilder("first");
+        PluginJarBuilder firstBuilder = new PluginJarBuilder("first");
         firstBuilder
                 .addPluginInformation("first", "Some name", "1.0")
                 .addFormattedJava("first.MyInterface",
@@ -240,7 +238,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
                         "public interface MyInterface {}")
                 .build(pluginsDir);
 
-        new PluginBuilder("asecond", firstBuilder.getClassLoader())
+        new PluginJarBuilder("asecond", firstBuilder.getClassLoader())
                 .addFormattedResource("atlassian-plugin.xml",
                         "<atlassian-plugin name='Test' key='asecond' pluginsVersion='2'>",
                         "    <plugin-info>",

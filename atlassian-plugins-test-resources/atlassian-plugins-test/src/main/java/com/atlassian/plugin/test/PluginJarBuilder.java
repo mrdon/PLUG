@@ -17,15 +17,16 @@ import java.lang.reflect.Field;
 /**
  * Builds a plugin jar, including optionally compiling simple Java code
  */
-public class PluginBuilder {
-    private final Map/*<String,byte[]>*/ jarContents;
+public class PluginJarBuilder
+{
+    private final Map<String,byte[]> jarContents;
     private final String name;
     private ClassLoader classLoader;
 
     /**
      * Creates the builder
      */
-    public PluginBuilder() {
+    public PluginJarBuilder() {
         this("test");
     }
 
@@ -33,21 +34,21 @@ public class PluginBuilder {
      * Creates the builder
      * @param name The plugin name
      */
-    public PluginBuilder(String name) {
-        this(name, PluginBuilder.class.getClassLoader());
+    public PluginJarBuilder(String name) {
+        this(name, PluginJarBuilder.class.getClassLoader());
     }
 
     /**
      * Creates the builder
      * @param name The plugin name
      */
-    public PluginBuilder(String name, ClassLoader classLoader) {
-        jarContents = new HashMap();
+    public PluginJarBuilder(String name, ClassLoader classLoader) {
+        jarContents = new HashMap<String,byte[]>();
         this.name = name;
         this.classLoader = classLoader;
     }
 
-    public PluginBuilder addFormattedJava(String className, String... lines) throws Exception
+    public PluginJarBuilder addFormattedJava(String className, String... lines) throws Exception
     {
         StringBuilder sb = new StringBuilder();
         for (String line : lines)
@@ -62,7 +63,7 @@ public class PluginBuilder {
      * @return The builder
      * @throws Exception
      */
-    public PluginBuilder addJava(String className, String code) throws Exception
+    public PluginJarBuilder addJava(String className, String code) throws Exception
     {
         SimpleCompiler compiler = new SimpleCompiler();
         compiler.setParentClassLoader(classLoader);
@@ -82,7 +83,7 @@ public class PluginBuilder {
         field.setAccessible(true);
         Map classes = (Map) field.get(cl);
 
-        jarContents.put(className.replace('.',File.separatorChar)+".class", classes.get(className));
+        jarContents.put(className.replace('.',File.separatorChar)+".class", (byte[]) classes.get(className));
         return this;
     }
 
@@ -92,7 +93,7 @@ public class PluginBuilder {
      * @param contents The contents of the file to create
      * @return
      */
-    public PluginBuilder addResource(String path, String contents)
+    public PluginJarBuilder addResource(String path, String contents)
     {
         jarContents.put(path, contents.getBytes());
         return this;
@@ -104,7 +105,7 @@ public class PluginBuilder {
      * @param lines The contents of the file to create
      * @return
      */
-    public PluginBuilder addFormattedResource(String path, String... lines)
+    public PluginJarBuilder addFormattedResource(String path, String... lines)
     {
         StringBuilder sb = new StringBuilder();
         for (String line : lines)
@@ -113,17 +114,17 @@ public class PluginBuilder {
         return this;
     }
 
-    public PluginBuilder addPluginInformation(String key, String name, String version)
+    public PluginJarBuilder addPluginInformation(String key, String name, String version)
     {
         return addPluginInformation(key, name, version, 2);
     }
 
-    public PluginBuilder addPluginInformation(String key, String name, String version, int pluginsVersion)
+    public PluginJarBuilder addPluginInformation(String key, String name, String version, int pluginsVersion)
     {
         return addPluginInformation(key, name, version, pluginsVersion, null);
     }
 
-    public PluginBuilder addPluginInformation(String key, String name, String version, int pluginsVersion, Map<String,String> params)
+    public PluginJarBuilder addPluginInformation(String key, String name, String version, int pluginsVersion, Map<String,String> params)
     {
         StringBuffer sb = new StringBuffer();
         sb.append("<atlassian-plugin name=\"").append(name).append("\" key=\"").append(key).append("\" pluginsVersion=\""+pluginsVersion+"\">\n");
@@ -147,7 +148,7 @@ public class PluginBuilder {
      * @return
      * @throws IOException
      */
-    public PluginBuilder addFile(String path, File file) throws IOException {
+    public PluginJarBuilder addFile(String path, File file) throws IOException {
         jarContents.put(path, IOUtils.toByteArray(new FileInputStream(file)));
         return this;
     }

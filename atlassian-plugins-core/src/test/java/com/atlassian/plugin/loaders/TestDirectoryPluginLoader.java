@@ -5,21 +5,18 @@ import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.factories.XmlDynamicPluginFactory;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
-import com.atlassian.plugin.test.PluginBuilder;
-import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
+import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
-import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
-import java.net.URL;
 import java.net.URISyntaxException;
 
 public class TestDirectoryPluginLoader extends AbstractTestClassLoader
@@ -189,7 +186,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     {
         FileUtils.cleanDirectory(pluginsTestDir);
         File plugin = new File(pluginsTestDir, "some-plugin.jar");
-        new PluginBuilder("plugin")
+        new PluginJarBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
                 .build()
@@ -205,7 +202,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         // sleep to ensure the new plugin is picked up
         Thread.currentThread().sleep(1000);
         
-        new PluginBuilder("plugin")
+        new PluginJarBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("bar.txt", "bar")
                 .build()
@@ -223,7 +220,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     {
         FileUtils.cleanDirectory(pluginsTestDir);
         File plugin = new File(pluginsTestDir, "some-plugin.jar");
-        new PluginBuilder("plugin")
+        new PluginJarBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
                 .build()

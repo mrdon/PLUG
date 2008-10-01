@@ -5,7 +5,7 @@ import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.test.PluginBuilder;
+import com.atlassian.plugin.test.PluginJarBuilder;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
@@ -36,7 +36,7 @@ public class TestOsgiBundleDeployer extends TestCase {
     }
     public void testCanDeploy() throws PluginParseException, IOException
     {
-        File bundle = new PluginBuilder("someplugin")
+        File bundle = new PluginJarBuilder("someplugin")
             .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
                         "Import-Package: javax.swing\n" +
                         "Bundle-SymbolicName: my.foo.symbolicName\n")
@@ -46,7 +46,7 @@ public class TestOsgiBundleDeployer extends TestCase {
 
     public void testCanDeployNoBundle() throws IOException, PluginParseException {
 
-        File plugin = new PluginBuilder("someplugin")
+        File plugin = new PluginJarBuilder("someplugin")
             .addPluginInformation("my.foo.symb", "name", "1.0")
             .build();
         assertNull(deployer.canCreate(new JarPluginArtifact(plugin)));
@@ -77,7 +77,7 @@ public class TestOsgiBundleDeployer extends TestCase {
     }
 
     public void testDeploy() throws PluginParseException, IOException {
-        File bundle = new PluginBuilder("someplugin")
+        File bundle = new PluginJarBuilder("someplugin")
             .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
                         "Import-Package: javax.swing\n" +
                         "Bundle-SymbolicName: my.foo.symbolicName\n")
@@ -96,7 +96,7 @@ public class TestOsgiBundleDeployer extends TestCase {
     }
 
     public void testDeployFail() throws PluginParseException, IOException {
-        File bundle = new PluginBuilder("someplugin")
+        File bundle = new PluginJarBuilder("someplugin")
             .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
                         "Import-Package: javax.swing\n" +
                         "Bundle-SymbolicName: my.foo.symbolicName\n")

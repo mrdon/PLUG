@@ -3,7 +3,7 @@ package com.atlassian.plugin.osgi;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.test.PluginBuilder;
+import com.atlassian.plugin.test.PluginJarBuilder;
 
 import java.io.File;
 
@@ -11,7 +11,7 @@ public class EnableDisablePluginTest extends PluginInContainerTestBase
 {
     public void testEnableDisableEnable() throws Exception
     {
-        File pluginJar = new PluginBuilder("enabledisabletest")
+        File pluginJar = new PluginJarBuilder("enabledisabletest")
                 .addPluginInformation("enabledisable", "foo", "1.0")
                 .addJava("my.Foo", "package my;" +
                         "public class Foo {}")

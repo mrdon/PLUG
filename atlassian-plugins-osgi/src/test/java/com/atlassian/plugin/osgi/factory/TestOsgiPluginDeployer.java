@@ -10,7 +10,7 @@ import java.util.Hashtable;
 import java.util.ArrayList;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.test.PluginBuilder;
+import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
@@ -19,7 +19,6 @@ import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
-import org.osgi.util.tracker.ServiceTracker;
 
 public class TestOsgiPluginDeployer extends TestCase
 {
@@ -34,7 +33,7 @@ public class TestOsgiPluginDeployer extends TestCase
     {
         mockOsgi = new Mock(OsgiContainerManager.class);
         deployer = new OsgiPluginFactory(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, (OsgiContainerManager) mockOsgi.proxy());
-        this.jar = new PluginBuilder("someplugin")
+        this.jar = new PluginJarBuilder("someplugin")
             .addPluginInformation("plugin.key", "My Plugin", "1.0")
             .build();
 
@@ -74,13 +73,13 @@ public class TestOsgiPluginDeployer extends TestCase
     }
 
     public void testCanLoadWithXml() throws PluginParseException, IOException {
-        File plugin = new PluginBuilder("loadwithxml").addPluginInformation("foo.bar", "", "1.0").build();
+        File plugin = new PluginJarBuilder("loadwithxml").addPluginInformation("foo.bar", "", "1.0").build();
         String key = deployer.canCreate(new JarPluginArtifact(plugin));
         assertEquals("foo.bar", key);
     }
 
     public void testCanLoadNoXml() throws PluginParseException, IOException {
-        File plugin = new PluginBuilder("loadwithxml").build();
+        File plugin = new PluginJarBuilder("loadwithxml").build();
         String key = deployer.canCreate(new JarPluginArtifact(plugin));
         assertNull(key);
     }
