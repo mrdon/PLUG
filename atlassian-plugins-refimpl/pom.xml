@@ -77,6 +77,11 @@
             <version>3.0</version>
         </dependency>
         <dependency>
+            <groupId>bouncycastle</groupId>
+            <artifactId>bcprov-jdk14</artifactId>
+            <version>138</version>
+        </dependency>
+        <dependency>
             <groupId>com.atlassian.extras</groupId>
             <artifactId>atlassian-extras</artifactId>
             <version>1.20</version>

@@ -50,7 +50,11 @@ public class ContainerManager
         servletModuleManager = new DefaultServletModuleManager(pluginEventManager);
         webResourceManager = new WebResourceManagerImpl(new SimpleWebResourceIntegration(servletContext));
 
-        PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
+        DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
+        List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
+        packageIncludes.add("org.bouncycastle*");
+        scannerConfig.setPackageIncludes(packageIncludes);
+        
         publicContainer = new HashMap<Class,Object>();
         hostComponentProvider = new SimpleHostComponentProvider();
         osgiContainerManager = new FelixOsgiContainerManager(
