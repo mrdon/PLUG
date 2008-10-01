@@ -15,7 +15,7 @@ public class TestModuleTypeSpringTransformer extends TestCase
         moduleType.addAttribute("key", "foo");
         moduleType.addAttribute("class", "my.FooDescriptor");
 
-        SpringTransformerTestHelper.transform(pluginRoot, "beans:bean[@id='moduleType-foo']",
+        SpringTransformerTestHelper.transform(new ModuleTypeSpringTransformer(), pluginRoot, "beans:bean[@id='moduleType-foo']",
                               "osgi:service[@id='moduleType-foo_osgiService']");
     }
 

@@ -20,9 +20,9 @@ import com.mockobjects.dynamic.C;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 
-public class TestOsgiPluginDeployer extends TestCase
+public class TestOsgiPluginFactory extends TestCase
 {
-    OsgiPluginFactory deployer;
+    OsgiPluginFactory factory;
 
     private File jar;
     Mock mockOsgi;
@@ -32,7 +32,7 @@ public class TestOsgiPluginDeployer extends TestCase
     public void setUp() throws IOException, URISyntaxException
     {
         mockOsgi = new Mock(OsgiContainerManager.class);
-        deployer = new OsgiPluginFactory(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, (OsgiContainerManager) mockOsgi.proxy());
+        factory = new OsgiPluginFactory(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, (OsgiContainerManager) mockOsgi.proxy());
         this.jar = new PluginJarBuilder("someplugin")
             .addPluginInformation("plugin.key", "My Plugin", "1.0")
             .build();
@@ -47,7 +47,7 @@ public class TestOsgiPluginDeployer extends TestCase
     @Override
     public void tearDown()
     {
-        deployer = null;
+        factory = null;
         this.jar.delete();
     }
 
@@ -55,7 +55,7 @@ public class TestOsgiPluginDeployer extends TestCase
         mockOsgi.expectAndReturn("installBundle", C.ANY_ARGS, mockBundle.proxy());
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
         mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
-        Plugin plugin = deployer.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+        Plugin plugin = factory.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiPlugin);
         mockOsgi.verify();
@@ -66,7 +66,7 @@ public class TestOsgiPluginDeployer extends TestCase
         mockOsgi.expectAndThrow("installBundle", C.ANY_ARGS, new OsgiContainerException("Bad install"));
         mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
-        Plugin plugin = deployer.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+        Plugin plugin = factory.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof UnloadablePlugin);
         mockOsgi.verify();
@@ -74,13 +74,13 @@ public class TestOsgiPluginDeployer extends TestCase
 
     public void testCanLoadWithXml() throws PluginParseException, IOException {
         File plugin = new PluginJarBuilder("loadwithxml").addPluginInformation("foo.bar", "", "1.0").build();
-        String key = deployer.canCreate(new JarPluginArtifact(plugin));
+        String key = factory.canCreate(new JarPluginArtifact(plugin));
         assertEquals("foo.bar", key);
     }
 
     public void testCanLoadNoXml() throws PluginParseException, IOException {
         File plugin = new PluginJarBuilder("loadwithxml").build();
-        String key = deployer.canCreate(new JarPluginArtifact(plugin));
+        String key = factory.canCreate(new JarPluginArtifact(plugin));
         assertNull(key);
     }
 }

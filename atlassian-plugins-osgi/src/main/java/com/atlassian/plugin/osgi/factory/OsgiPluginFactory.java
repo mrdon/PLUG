@@ -86,7 +86,7 @@ public class OsgiPluginFactory implements PluginFactory
         try
         {
             Plugin osgiPlugin = createOsgiPlugin(deploymentUnit.getPath());
-            ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(osgiPlugin, moduleDescriptorFactory);
+            ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
             pluginDescriptor = loader.getResourceAsStream(pluginDescriptorFileName);
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
@@ -105,7 +105,7 @@ public class OsgiPluginFactory implements PluginFactory
      * @param originalFactory The factory provided by the host application
      * @return The composite factory
      */
-    ModuleDescriptorFactory getChainedModuleDescriptorFactory(Plugin plugin, ModuleDescriptorFactory originalFactory)
+    private ModuleDescriptorFactory getChainedModuleDescriptorFactory(ModuleDescriptorFactory originalFactory)
     {
         // we really don't want two of these
         synchronized(this)
@@ -121,7 +121,7 @@ public class OsgiPluginFactory implements PluginFactory
             ModuleDescriptorFactory[] dynamicFactories;
             if (serviceObjs != null && serviceObjs.length > 0)
             {
-                dynamicFactories = new ModuleDescriptorFactory[serviceObjs.length + 2];
+                dynamicFactories = new ModuleDescriptorFactory[serviceObjs.length + 1];
                 System.arraycopy(serviceObjs, 0, dynamicFactories, 1, serviceObjs.length);
             }
             else
@@ -138,7 +138,7 @@ public class OsgiPluginFactory implements PluginFactory
 
     }
 
-    Plugin createOsgiPlugin(File file)
+    private Plugin createOsgiPlugin(File file)
     {
         try
         {

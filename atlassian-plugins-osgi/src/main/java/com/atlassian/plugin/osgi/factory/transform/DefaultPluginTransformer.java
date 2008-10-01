@@ -26,6 +26,7 @@ import java.net.URLClassLoader;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -196,7 +197,7 @@ public class DefaultPluginTransformer implements PluginTransformer
             
             // Possibly necessary due to Spring XML creation
             referrers += "com.atlassian.plugin.osgi.external,com.atlassian.plugin,";
-            if (isOsgiBundle(builder))
+            if (isOsgiBundle(builder.getJar().getManifest()))
             {
                 String imports = addReferrersToImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), referrers);
                 builder.setProperty(Constants.IMPORT_PACKAGE, imports);
@@ -256,9 +257,9 @@ public class DefaultPluginTransformer implements PluginTransformer
         }
     }
 
-    private boolean isOsgiBundle(Builder builder) throws IOException
+    private boolean isOsgiBundle(Manifest manifest) throws IOException
     {
-        return builder.getJar().getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null;
+        return manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null;
     }
 
     private Map<String,String> processBundleInstructions(Document document)

@@ -263,71 +263,6 @@ public class TestDefaultPluginTransformer extends TestCase
         assertNotNull(entry);
     }
 
-    public void testGenerateSpringXml() throws Exception
-    {
-        // no components
-        assertSpringTransformContains("<foo/>","</beans:beans>");
-
-        // private component
-        assertSpringTransformContains("<foo><component key='foo' class='my.Foo'/></foo>",
-                                      "<beans:bean id='foo' class='my.Foo'/>");
-
-        // public component without interface
-        assertSpringTransformContains("<foo><component key='foo' class='my.Foo' public='true'/></foo>",
-                                      "<beans:bean id='foo' class='my.Foo'",
-                                      "<osgi:service id='foo_osgiService' ref='foo'");
-
-        // public component with interface
-        assertSpringTransformContains("<foo><component key='foo' class='my.Foo' public='true'><interface>my.IFoo</interface></component></foo>",
-                                      "<osgi:interfaces>",
-                                      "<beans:value>my.IFoo</beans:value>");
-    }
-
-    public void testGenerateSpringXml_imports() throws Exception
-    {
-        // private component
-        assertSpringTransformContains("<foo><component-import key='foo' interface='my.Foo'/></foo>",
-                                      "<osgi:reference id='foo' interface='my.Foo'/>");
-
-        // public component with interface
-        assertSpringTransformContains("<foo><component-import key='foo'><interface>my.IFoo</interface></component-import></foo>",
-                                      "<osgi:reference id='foo'><osgi:interfaces><beans:value>my.IFoo</beans:value></osgi:interfaces></osgi:reference>");
-
-    }
-
-    public void testGenerateSpringXml_hostComponents() throws Exception
-    {
-        // host componen with name
-        assertSpringTransformContains(new ArrayList<HostComponentRegistration>(){{
-            add(new StubHostComponentRegistration("foo", String.class));
-        }},
-                "<foo/>",
-                "<osgi:reference id='foo'",
-                "<osgi:interfaces>",
-                "<beans:value>java.lang.String</beans:value>",
-                "filter='(bean-name=foo)");
-
-        // host componen with name with # sign
-        assertSpringTransformContains(new ArrayList<HostComponentRegistration>(){{
-            add(new StubHostComponentRegistration("foo#1", String.class));
-        }},
-                "<foo/>",
-                "<osgi:reference id='fooLB1'",
-                "<osgi:interfaces>",
-                "<beans:value>java.lang.String</beans:value>",
-                "filter='(bean-name=foo#1)");
-
-        // host component with no bean name
-        assertSpringTransformContains(new ArrayList<HostComponentRegistration>(){{
-            add(new StubHostComponentRegistration(String.class));
-        }},
-                "<foo/>",
-                "<osgi:reference id='bean0'",
-                "<osgi:interfaces>",
-                "<beans:value>java.lang.String</beans:value>");
-
-    }
-
     public void testTransform() throws URISyntaxException, IOException, PluginParseException, DocumentException
     {
         final File file = PluginTestUtils.getFileForResource("myapp-1.0-plugin2.jar");
@@ -352,79 +287,9 @@ public class TestDefaultPluginTransformer extends TestCase
 
     }
 
-    private void assertSpringTransformContains(String input, String... outputs) throws DocumentException, IOException
-    {
-        assertSpringTransformContains(null, input, outputs);
-    }
-
-    private void assertSpringTransformContains(List<HostComponentRegistration> regs, String input, String... outputs) throws DocumentException, IOException
-    {
-        DefaultPluginTransformer trans = new DefaultPluginTransformer();
-        String generated = new String(trans.generateSpringXml(stringToStream(input), regs)).replace('\"', '\'');
-        for (String output : outputs)
-        {
-            boolean passed = generated.replaceAll("[ \\r\\n]", "").contains(output.replaceAll("[ \\r\\n]", ""));
-            if (!passed)
-                fail("Output "+generated+" does not contain "+output);
-        }
-    }
-
-    private InputStream stringToStream(String value)
-    {
-        return new ByteArrayInputStream(value.getBytes());
-    }
-
     private ClassLoader getClassLoader(File file) throws MalformedURLException
     {
         return new URLClassLoader(new URL[]{file.toURL()}, null);
     }
 
-    static class StubHostComponentRegistration implements HostComponentRegistration
-    {
-        private String[] mainInterfaces;
-        private Dictionary<String,String> properties;
-        private Class[] mainInterfaceClasses;
-
-        public StubHostComponentRegistration(Class... ifs)
-        {
-            this(null, ifs);
-        }
-
-        public StubHostComponentRegistration(String name, Class... ifs)
-        {
-            this.mainInterfaceClasses = ifs;
-            mainInterfaces = new String[ifs.length];
-            for (int x=0; x<ifs.length; x++)
-                mainInterfaces[x] = ifs[x].getName();
-            this.properties = new Hashtable<String,String>();
-            if (name != null)
-                properties.put("bean-name", name);
-        }
-
-        public StubHostComponentRegistration(String[] ifs, Dictionary<String,String> props)
-        {
-            mainInterfaces = ifs;
-            this.properties = props;
-        }
-
-        public Object getInstance()
-        {
-            return null;
-        }
-
-        public Class[] getMainInterfaceClasses()
-        {
-            return mainInterfaceClasses;
-        }
-
-        public Dictionary<String, String> getProperties()
-        {
-            return properties;
-        }
-
-        public String[] getMainInterfaces()
-        {
-            return mainInterfaces;
-        }
-    }
 }
