@@ -1,8 +1,8 @@
 package com.atlassian.plugin.osgi;
 
-import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.artifact.JarPluginArtifact;
 import com.atlassian.plugin.test.PluginJarBuilder;
 
 import java.io.File;

@@ -45,14 +45,14 @@ public class LegacyDynamicPluginFactory implements PluginFactory
 
     /**
      * Deploys the plugin jar
-     * @param deploymentUnit the jar to deploy
+     * @param pluginArtifact the jar to deploy
      * @param moduleDescriptorFactory The factory for plugin modules
      * @return The instantiated and populated plugin
      * @throws PluginParseException If the descriptor cannot be parsed
      */
-    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public Plugin create(PluginArtifact pluginArtifact, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        Validate.notNull(deploymentUnit, "The deployment unit must not be null");
+        Validate.notNull(pluginArtifact, "The deployment unit must not be null");
         Validate.notNull(moduleDescriptorFactory, "The module descriptor factory must not be null");
 
         Plugin plugin = null;
@@ -60,15 +60,15 @@ public class LegacyDynamicPluginFactory implements PluginFactory
         PluginClassLoader loader = null;
         try
         {
-            loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader(), tempDirectory);
+            loader = new PluginClassLoader(pluginArtifact.getFile(), Thread.currentThread().getContextClassLoader(), tempDirectory);
             URL pluginDescriptorUrl = loader.getLocalResource(pluginDescriptorFileName);
             if (pluginDescriptorUrl == null)
-                throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);
+                throw new PluginParseException("No descriptor found in classloader for : " + pluginArtifact);
 
             pluginDescriptor = pluginDescriptorUrl.openStream();
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
-            plugin = parser.configurePlugin(moduleDescriptorFactory, createPlugin(deploymentUnit, loader));
+            plugin = parser.configurePlugin(moduleDescriptorFactory, createPlugin(pluginArtifact, loader));
         }
         // Under normal conditions, the deployer would be closed when the plugins are undeployed. However,
         // these are not normal conditions, so we need to make sure that we close them explicitly.
@@ -99,14 +99,23 @@ public class LegacyDynamicPluginFactory implements PluginFactory
     }
 
     /**
-     * Creates the plugin.  Override to use a different Plugin class
-     * @param deploymentUnit The deployment unit
-     * @param loader The plugin loader
-     * @return The plugin instance
+     * @deprecated Since 2.1.0, use {@link #createPlugin(PluginArtifact,PluginClassLoader)} instead
      */
     protected DynamicPlugin createPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
     {
-        return new DefaultDynamicPlugin(deploymentUnit, loader);
+        return createPlugin((PluginArtifact)deploymentUnit, loader);
+    }
+
+    /**
+     * Creates the plugin.  Override to use a different Plugin class
+     * @param pluginArtifact The deployment unit
+     * @param loader The plugin loader
+     * @return The plugin instance
+     * @since 2.1.0
+     */
+    protected DynamicPlugin createPlugin(PluginArtifact pluginArtifact, PluginClassLoader loader)
+    {
+        return new DefaultDynamicPlugin(pluginArtifact, loader);
     }
 
     /**
@@ -136,5 +145,13 @@ public class LegacyDynamicPluginFactory implements PluginFactory
             }
         }
         return pluginKey;
+    }
+
+    /**
+     * @deprecated Since 2.1.0, use {@link #create(PluginArtifact,ModuleDescriptorFactory)} instead
+     */
+    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    {
+        return create((PluginArtifact)deploymentUnit, moduleDescriptorFactory);
     }
 }

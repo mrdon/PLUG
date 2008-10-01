@@ -33,21 +33,21 @@ public class XmlDynamicPluginFactory implements PluginFactory
 
     /**
      * Deploys the plugin XML
-     * @param deploymentUnit the XML file to deploy
+     * @param pluginArtifact the XML file to deploy
      * @param moduleDescriptorFactory The factory for plugin modules
      * @return The instantiated and populated plugin
      * @throws com.atlassian.plugin.PluginParseException If the descriptor cannot be parsed
      */
-    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public Plugin create(PluginArtifact pluginArtifact, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        Validate.notNull(deploymentUnit, "The deployment unit must not be null");
+        Validate.notNull(pluginArtifact, "The deployment unit must not be null");
         Validate.notNull(moduleDescriptorFactory, "The module descriptor factory must not be null");
 
         Plugin plugin = null;
         InputStream pluginDescriptor = null;
         try
         {
-            pluginDescriptor = new FileInputStream(deploymentUnit.getPath());
+            pluginDescriptor = new FileInputStream(pluginArtifact.getFile());
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
             plugin = parser.configurePlugin(moduleDescriptorFactory, new XmlDynamicPlugin());
@@ -94,5 +94,13 @@ public class XmlDynamicPluginFactory implements PluginFactory
             }
         }
         return pluginKey;
+    }
+
+    /**
+     * @deprecated Since 2.1.0, use {@link #create(PluginArtifact,ModuleDescriptorFactory)} instead
+     */
+    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    {
+        return create((PluginArtifact)deploymentUnit, moduleDescriptorFactory);
     }
 }

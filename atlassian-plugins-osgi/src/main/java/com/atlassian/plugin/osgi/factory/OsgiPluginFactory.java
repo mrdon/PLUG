@@ -58,43 +58,46 @@ public class OsgiPluginFactory implements PluginFactory
         try
         {
             descriptorStream = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
+            if (descriptorStream != null)
+            {
+                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
+                if (descriptorParser.getPluginsVersion() == 2)
+                    pluginKey = descriptorParser.getKey();
+            }
         } catch (PluginParseException ex)
         {
             // no descriptor, no worries
         }
-
-        if (descriptorStream != null)
+        finally
         {
-            final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
-            if (descriptorParser.getPluginsVersion() == 2)
-                pluginKey = descriptorParser.getKey();
+            IOUtils.closeQuietly(descriptorStream);
         }
+
+
         return pluginKey;
     }
 
-    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException {
-        Validate.notNull(deploymentUnit, "The plugin deployment unit is required");
+    public Plugin create(PluginArtifact pluginArtifact, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException {
+        Validate.notNull(pluginArtifact, "The plugin deployment unit is required");
         Validate.notNull(moduleDescriptorFactory, "The module descriptor factory is required");
 
         Plugin plugin = null;
-        InputStream pluginDescriptor = null;
-        PluginClassLoader loader = new PluginClassLoader(deploymentUnit.getPath());
 
-        if (loader.getResource(pluginDescriptorFileName) == null)
-            throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);
-
+        InputStream descriptorStream = null;
         try
         {
-            Plugin osgiPlugin = createOsgiPlugin(deploymentUnit.getPath());
+            descriptorStream = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
+            if (descriptorStream == null)
+                throw new PluginParseException("No descriptor found in classloader for : " + pluginArtifact);
+
+            Plugin osgiPlugin = createOsgiPlugin(pluginArtifact.getFile());
             ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
-            pluginDescriptor = loader.getResourceAsStream(pluginDescriptorFileName);
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
-            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
+            DescriptorParser parser = descriptorParserFactory.getInstance(descriptorStream);
             plugin = parser.configurePlugin(combinedFactory, osgiPlugin);
-        }
-        finally
+        } finally
         {
-            IOUtils.closeQuietly(pluginDescriptor);
+            IOUtils.closeQuietly(descriptorStream);
         }
         return plugin;
     }
@@ -160,5 +163,13 @@ public class OsgiPluginFactory implements PluginFactory
         UnloadablePlugin plugin = new UnloadablePlugin();
         plugin.setErrorText("Unable to load plugin: "+e.getMessage());
         return plugin;
+    }
+
+    /**
+     * @deprecated Since 2.1.0, use {@link #create(PluginArtifact,ModuleDescriptorFactory)} instead
+     */
+    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    {
+        return create((PluginArtifact)deploymentUnit, moduleDescriptorFactory);
     }
 }

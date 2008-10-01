@@ -1,6 +1,8 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.artifact.DefaultPluginArtifactFactory;
+import com.atlassian.plugin.artifact.PluginArtifactFactory;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
@@ -24,7 +26,7 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
 {
     private static Log log = LogFactory.getLog(DirectoryPluginLoader.class);
     private final Scanner scanner;
-    private final Map<DeploymentUnit,Plugin> plugins;
+    private final Map<PluginArtifact,Plugin> plugins;
     private final List<PluginFactory> pluginFactories;
     private final PluginArtifactFactory pluginArtifactFactory;
 
@@ -59,8 +61,8 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
         Validate.notNull(pluginFactories, "The list of plugin factories must be specified");
         Validate.notNull(pluginEventManager, "The event manager must be specified");
 
-        scanner = new Scanner(path);
-        plugins = new HashMap<DeploymentUnit,Plugin>();
+        scanner = new Scanner(path, pluginArtifactFactory);
+        plugins = new HashMap<PluginArtifact,Plugin>();
         this.pluginFactories = new ArrayList<PluginFactory>(pluginFactories);
         this.pluginArtifactFactory = pluginArtifactFactory;
         pluginEventManager.register(this);
@@ -70,50 +72,54 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
     {
         scanner.scan();
 
-        for (DeploymentUnit deploymentUnit : scanner.getDeploymentUnits())
+        for (PluginArtifact pluginArtifact : scanner.getPluginArtifacts())
         {
             try
             {
-                Plugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
-                plugins.put(deploymentUnit, plugin);
+                Plugin plugin = deployPluginArtifact(pluginArtifact, moduleDescriptorFactory);
+                plugins.put(pluginArtifact, plugin);
             }
             catch (PluginParseException e)
             {
                 // This catches errors so that the successfully loaded plugins can be returned.
                 // It might be nicer if this method returned an object containing both the succesfully loaded
                 // plugins and the unsuccessfully loaded plugins.
-                log.error("Error loading descriptor for : " + deploymentUnit, e);
+                log.error("Error loading descriptor for : " + pluginArtifact, e);
             }
         }
 
-        if (scanner.getDeploymentUnits().size() == 0)
+        if (scanner.getPluginArtifacts().size() == 0)
             log.info("No plugins found to be deployed");
 
         return plugins.values();
     }
 
-
+    /**
+     * @deprecated Since 2.1.0, use {@link #deployPluginArtifact(PluginArtifact, com.atlassian.plugin.ModuleDescriptorFactory)} instead
+     */
     protected Plugin deployPluginFromUnit(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
+        return deployPluginArtifact(deploymentUnit, moduleDescriptorFactory);
+    }
+
+    /**
+     * @since 2.1.0
+     */
+    protected Plugin deployPluginArtifact(PluginArtifact pluginArtifact, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    {
         Plugin plugin = null;
-        String errorText = "No plugin factories found for plugin file "+deploymentUnit;
+        String errorText = "No plugin factories found for plugin file "+pluginArtifact;
 
         for (PluginFactory factory : pluginFactories)
         {
             try
             {
-                PluginArtifact artifact = pluginArtifactFactory.create(deploymentUnit.getPath().toURL());
-                if (factory.canCreate(artifact) != null)
+                if (factory.canCreate(pluginArtifact) != null)
                 {
-                    plugin = factory.create(deploymentUnit, moduleDescriptorFactory);
+                    plugin = factory.create(pluginArtifact, moduleDescriptorFactory);
                     if (plugin != null)
                         break;
                 }
-
-            } catch (MalformedURLException e)
-            {
-                // Should never happen
-                throw new RuntimeException(e);
             } catch (IllegalArgumentException ex)
             {
                 errorText = ex.getMessage();
@@ -122,7 +128,7 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
         if (plugin == null)
             plugin = new UnloadablePlugin(errorText);
         else
-            log.info("Plugin " + deploymentUnit + " created");
+            log.info("Plugin " + pluginArtifact + " created");
 
         return plugin;
     }
@@ -144,15 +150,15 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
     public Collection<Plugin> addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         // find missing plugins
-        Collection<DeploymentUnit> updatedDeploymentUnits = scanner.scan();
+        Collection<PluginArtifact> updatedDeploymentUnits = scanner.scanForArtifacts();
 
         // create list while updating internal state
         List<Plugin> foundPlugins = new ArrayList<Plugin>();
-        for (DeploymentUnit deploymentUnit : updatedDeploymentUnits)
+        for (PluginArtifact deploymentUnit : updatedDeploymentUnits)
         {
             if (!plugins.containsKey(deploymentUnit))
             {
-                Plugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
+                Plugin plugin = deployPluginArtifact(deploymentUnit, moduleDescriptorFactory);
                 plugins.put(deploymentUnit, plugin);
                 foundPlugins.add(plugin);
             }
@@ -177,16 +183,16 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
             throw new PluginException("Cannot remove an uninstallable plugin: [" + plugin.getName() + "]" );
         }
 
-        DeploymentUnit deploymentUnit = findMatchingDeploymentUnit(plugin);
-        File pluginOnDisk = deploymentUnit.getPath();
+        PluginArtifact deploymentUnit = findMatchingPluginArtifact(plugin);
+        File pluginOnDisk = deploymentUnit.getFile();
         plugin.close();
 
         try
         {
             boolean found = false;
-            for (DeploymentUnit unit : plugins.keySet())
+            for (PluginArtifact unit : plugins.keySet())
             {
-                if(unit.getPath().equals(deploymentUnit.getPath()) && !unit.equals(deploymentUnit))
+                if(unit.getFile().equals(deploymentUnit.getFile()) && !unit.equals(deploymentUnit))
                 {
                     found = true;
                     break;
@@ -206,26 +212,26 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
         log.info("Removed plugin " + plugin.getKey());
     }
 
-    private DeploymentUnit findMatchingDeploymentUnit(Plugin plugin)
+    private PluginArtifact findMatchingPluginArtifact(Plugin plugin)
             throws PluginException
     {
-        DeploymentUnit deploymentUnit = null;
-        for (Iterator<Map.Entry<DeploymentUnit,Plugin>> iterator = plugins.entrySet().iterator(); iterator.hasNext();)
+        PluginArtifact pluginArtifact = null;
+        for (Iterator<Map.Entry<PluginArtifact,Plugin>> iterator = plugins.entrySet().iterator(); iterator.hasNext();)
         {
-            Map.Entry<DeploymentUnit,Plugin> entry = iterator.next();
+            Map.Entry<PluginArtifact,Plugin> entry = iterator.next();
             // no, you don't want to use entry.getValue().equals(plugin) here as it breaks upgrades where it is a new
             // version of the plugin but the key and version number hasn't changed, and hence, equals() will always return
             // true
             if (entry.getValue() == plugin)
             {
-                deploymentUnit = entry.getKey();
+                pluginArtifact = entry.getKey();
                 break;
             }
         }
 
-        if (deploymentUnit == null) //the pluginLoader has no memory of deploying this plugin
+        if (pluginArtifact == null) //the pluginLoader has no memory of deploying this plugin
             throw new PluginException("This pluginLoader has no memory of deploying the plugin you are trying remove: [" + plugin.getName() + "]" );
-        return deploymentUnit;
+        return pluginArtifact;
     }
 
     /**

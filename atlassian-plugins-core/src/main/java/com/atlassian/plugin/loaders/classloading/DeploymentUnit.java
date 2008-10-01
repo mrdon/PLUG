@@ -1,71 +1,35 @@
 package com.atlassian.plugin.loaders.classloading;
 
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.artifact.AbstractFilePluginArtifact;
+
 import java.io.File;
+import java.io.InputStream;
 
 /**
- * A file that is to, or has been, deployed as a plugin.  Differs to the {@link com.atlassian.plugin.PluginArtifact},
- * which identifies an artifact to be deployed but may not be a physical file.
+ * @deprecated Since 2.1.0, use {@link PluginArtifact} instead
  */
-public class DeploymentUnit implements Comparable<DeploymentUnit>
+public class DeploymentUnit extends AbstractFilePluginArtifact
 {
-	private final File path;
-    private long lastModifiedAtTimeOfDeployment;
-
     public DeploymentUnit(File path)
 	{
-        if (path == null)
-        {
-            throw new IllegalArgumentException("File should not be null!");
-        }
-        this.path = path;
-        this.lastModifiedAtTimeOfDeployment = path.lastModified();
+        super(path);
     }
 
-	public long lastModified()
+    public DeploymentUnit(PluginArtifact artifact)
 	{
-		return lastModifiedAtTimeOfDeployment;
-	}
-
-	public File getPath()
-	{
-		return path;
-	}
-
-    public int compareTo(DeploymentUnit target)
-    {
-        int result = path.compareTo(target.getPath());
-        if (result == 0)
-            result = (lastModifiedAtTimeOfDeployment > target.lastModified() ? 1 :
-                    lastModifiedAtTimeOfDeployment < target.lastModified() ? -1 : 0);
-        return result;
+        super(artifact.getFile(), artifact.lastModified());
     }
 
-    public boolean equals(Object deploymentUnit)
+    public File getPath()
     {
-        if (deploymentUnit instanceof DeploymentUnit)
-            return equals((DeploymentUnit) deploymentUnit);
-        else
-            return false;
+        return getFile();
     }
 
-    public boolean equals(DeploymentUnit deploymentUnit)
+    public InputStream getResourceAsStream(String name) throws PluginParseException
     {
-        if (!path.equals(deploymentUnit.path)) return false;
-        if (lastModifiedAtTimeOfDeployment != deploymentUnit.lastModifiedAtTimeOfDeployment) return false;
-
-        return true;
+        return null;
     }
 
-    public int hashCode()
-    {
-        int result;
-        result = path.hashCode();
-        result = 31 * result + (int) (lastModifiedAtTimeOfDeployment ^ (lastModifiedAtTimeOfDeployment >>> 32));
-        return result;
-    }
-
-    public String toString()
-    {
-        return "Unit: " + path.toString() + " (" + lastModifiedAtTimeOfDeployment + ")";
-    }
 }
