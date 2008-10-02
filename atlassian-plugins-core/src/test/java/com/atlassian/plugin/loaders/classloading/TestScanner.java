@@ -61,7 +61,7 @@ public class TestScanner extends AbstractTestClassLoader
         File pluginsDirectory = getPluginsDirectory();
         File paddington = new File(pluginsDirectory, "paddington-test-plugin.jar");
 
-        File testTempDirectory = new File(System.getProperty("java.io.tmpdir") + File.separator + "TestScannerTests");
+        File testTempDirectory = new File("target/plugins-temp/TestScannerTests");
 
         if (testTempDirectory.exists()) // if the directory exists, nuke it.
             testTempDirectory.delete();

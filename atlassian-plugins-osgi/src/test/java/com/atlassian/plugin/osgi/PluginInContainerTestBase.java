@@ -38,7 +38,8 @@ public abstract class PluginInContainerTestBase extends TestCase {
     @Override
     public void setUp() throws Exception
     {
-        tmpDir = new File(System.getProperty("java.io.tmpdir"));
+        tmpDir = new File("target/plugin-temp");
+        tmpDir.mkdirs();
         frameworkBundlesDir = new File(tmpDir, "framework-bundles");
         frameworkBundlesDir.mkdir();
         pluginsDir = new File(tmpDir, "plugins");

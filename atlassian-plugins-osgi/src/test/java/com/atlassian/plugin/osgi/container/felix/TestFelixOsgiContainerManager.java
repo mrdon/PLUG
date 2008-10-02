@@ -26,7 +26,7 @@ public class TestFelixOsgiContainerManager extends TestCase
     public void setUp() throws Exception
     {
         super.setUp();
-        tmpdir = new File(System.getProperty("java.io.tmpdir"));
+        tmpdir = new File("target/plugin-temp");
         frameworkBundlesDir = new File(tmpdir, "framework-bundles-test");
 
         felix = new FelixOsgiContainerManager(frameworkBundlesUrl, frameworkBundlesDir, new DefaultPackageScannerConfiguration(),

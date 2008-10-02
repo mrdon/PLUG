@@ -17,7 +17,7 @@ public class TestBundledPluginLoader extends TestCase
 
     public void setUp() throws IOException, URISyntaxException
     {
-        pluginDir = new File(new File(System.getProperty("java.io.tmpdir")), "test-plugin-dir");
+        pluginDir = new File("target/test-plugin-dir");
         pluginDir.mkdir();
     }
 

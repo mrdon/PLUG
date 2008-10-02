@@ -61,7 +61,7 @@ public abstract class AbstractTestClassLoader extends TestCase
     protected void createFillAndCleanTempPluginDirectory() throws IOException
     {
         pluginsDirectory = getPluginsDirectory(); // hacky way of getting to the directoryPluginLoaderFiles classloading
-        tempDir = new File(System.getProperty("java.io.tmpdir"));
+        tempDir = new File("target/plugins-temp");
 
         File pluginsDir = new File(tempDir.toString() + File.separator +  "plugins");
         pluginsTestDir = new File(pluginsDir, randomString(6));
