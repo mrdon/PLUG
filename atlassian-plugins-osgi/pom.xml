@@ -202,6 +202,13 @@
         </dependency>
 
         <dependency>
+            <!-- patched for FELIX-721 -->
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>1.2.1-atlassian-1</version>
+        </dependency>
+
+        <dependency>
 
             <groupId>org.twdata.pkgscanner</groupId>
             <artifactId>package-scanner</artifactId>
@@ -280,17 +287,6 @@
              <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <!-- patched for FELIX-721 -->
-                <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.framework</artifactId>
-                <version>1.2.1-atlassian-1</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <properties>
         <!-- This should use ${project.build.directory} instead of target, but Maven < 2.0.9 fails to interpolate. -->
