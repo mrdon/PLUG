@@ -59,6 +59,7 @@ public abstract class ServletFilterModuleDescriptor extends BaseServletModuleDes
     public void disabled()
     {
         getServletModuleManager().removeFilterModule(this);
+        super.disabled();
     }
 
     @Override

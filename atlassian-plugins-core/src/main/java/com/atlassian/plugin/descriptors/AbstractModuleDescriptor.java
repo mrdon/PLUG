@@ -303,7 +303,8 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     }
 
     /**
-     * Enables the descriptor by loading the module class
+     * Enables the descriptor by loading the module class. Classes overriding this method MUST
+     * call super.enabled() before their own enabling code.
      *
      * @since 2.1.0
      */
@@ -314,7 +315,8 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     }
 
     /**
-     * Disables the module descriptor
+     * Disables the module descriptor. Classes overriding this method MUST call super.disabled() after
+     * their own disabling code.
      */
     public void disabled()
     {

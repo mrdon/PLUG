@@ -246,6 +246,7 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     public void disabled()
     {
         webInterfaceManager.refresh();
+        super.disabled();
     }
 
     public int getWeight()

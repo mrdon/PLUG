@@ -21,6 +21,7 @@ public abstract class ServletModuleDescriptor extends BaseServletModuleDescripto
     public void disabled()
     {
         getServletModuleManager().removeServletModule(this);
+        super.disabled();
     }
 
     public HttpServlet getModule()

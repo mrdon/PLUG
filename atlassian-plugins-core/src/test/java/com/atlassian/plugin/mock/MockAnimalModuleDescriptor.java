@@ -46,6 +46,7 @@ public class MockAnimalModuleDescriptor extends AbstractModuleDescriptor impleme
     public void disabled()
     {
         disabled = true;
+        super.disabled();
     }
 
     public boolean isEnabled()
