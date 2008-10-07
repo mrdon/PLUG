@@ -242,7 +242,7 @@
                             <goal>execute</goal>
                         </goals>
                         <configuration>
-                            <containers>tomcat5x,jetty6x,jboss42x</containers>
+                            <containers>tomcat5x,jboss42x</containers>
                         </configuration>
                     </execution>
                 </executions>
