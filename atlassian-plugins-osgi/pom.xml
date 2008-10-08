@@ -300,7 +300,7 @@
     <properties>
         <!-- This should use ${project.build.directory} instead of target, but Maven < 2.0.9 fails to interpolate. -->
         <frameworkBundleDirectory>target/framework-bundles</frameworkBundleDirectory>
-        <springDmVersion>1.1.1</springDmVersion>
+        <springDmVersion>1.1.2</springDmVersion>
         <springVersion>2.5.5</springVersion>
     </properties>
 </project>

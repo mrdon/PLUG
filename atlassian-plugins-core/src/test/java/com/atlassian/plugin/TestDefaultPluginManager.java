@@ -2,6 +2,7 @@ package com.atlassian.plugin;
 
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -654,6 +655,27 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
     }
 
+    public void testFindingNewPluginsNotLoadingRestartRequiredDescriptors() throws PluginParseException, IOException
+    {
+        createFillAndCleanTempPluginDirectory();
+
+        DefaultPluginManager manager = makeClassLoadingPluginManager();
+        moduleDescriptorFactory.addModuleDescriptor("requiresRestart", RequiresRestartModuleDescriptor.class);
+
+        assertEquals(2, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded2"));
+
+        pluginLoaders.add(new DynamicSinglePluginLoader("test.atlassian.plugin", "test-requiresRestart-plugin.xml"));
+
+        manager.scanForNewPlugins();
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded2"));
+        assertNotNull(manager.getPlugin("test.atlassian.plugin"));
+
+        Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        assertTrue(plugin instanceof UnloadablePlugin);
+    }
+
     private DefaultPluginManager makeClassLoadingPluginManager() throws PluginParseException
     {
         directoryPluginLoader = new DirectoryPluginLoader(pluginsTestDir,
@@ -930,6 +952,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPluginLoader.expectAndReturn("canLoad", C.args(C.eq(pluginArtifact)), "test");
         mockPlugin.matchAndReturn("getKey", "test");
         mockPlugin.matchAndReturn("hashCode", mockPlugin.hashCode());
+        mockPlugin.expectAndReturn("getModuleDescriptors", new ArrayList());
         mockPlugin.expectAndReturn("getModuleDescriptors", new ArrayList());
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
@@ -1217,6 +1240,9 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     class NothingModuleDescriptor extends MockUnusedModuleDescriptor {}
 
+    @RequiresRestart
+    public static class RequiresRestartModuleDescriptor extends MockUnusedModuleDescriptor {}
+
     private class MultiplePluginLoader implements PluginLoader
     {
         private final String[] descriptorPaths;
@@ -1255,6 +1281,36 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         public void removePlugin(Plugin plugin) throws PluginException
         {
             throw new UnsupportedOperationException("This PluginLoader does not support addition.");
+        }
+    }
+
+    private static class DynamicSinglePluginLoader extends SinglePluginLoader implements DynamicPluginLoader
+    {
+        private String key;
+        public DynamicSinglePluginLoader(String key, String resource)
+        {
+            super(resource);
+            this.key = key;
+        }
+
+        public DynamicSinglePluginLoader(InputStream is)
+        {
+            super(is);
+        }
+
+        public String canLoad(PluginArtifact pluginArtifact) throws PluginParseException
+        {
+            return key;
+        }
+
+        public boolean supportsAddition()
+        {
+            return true;
+        }
+
+        public Collection<Plugin> addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+        {
+            return super.loadAllPlugins(moduleDescriptorFactory);
         }
     }
 }
