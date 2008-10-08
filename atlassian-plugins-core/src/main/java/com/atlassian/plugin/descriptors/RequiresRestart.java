@@ -9,6 +9,8 @@ import java.lang.annotation.ElementType;
  * Marks {@link com.atlassian.plugin.ModuleDescriptor} implementations that require a restart of the application to
  * start the plugin when installed at runtime.  If this annotation is not present, it is assumed that the module descriptor
  * supports runtime installation.
+ *
+ * @since 2.1
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

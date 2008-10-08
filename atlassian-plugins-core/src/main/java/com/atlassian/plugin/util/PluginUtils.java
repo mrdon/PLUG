@@ -6,6 +6,8 @@ import com.atlassian.plugin.descriptors.RequiresRestart;
 
 /**
  * General plugin utility methods
+ *
+ * @since 2.1
  */
 public class PluginUtils
 {
@@ -15,6 +17,7 @@ public class PluginUtils
      *
      * @param plugin The plugin that was just installed at runtime, but not yet enabled
      * @return True if a restart is required
+     * @since 2.1
      */
     public static boolean doesPluginRequireRestart(Plugin plugin)
     {
