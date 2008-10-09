@@ -1,21 +1,21 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.artifact;
 
+import com.atlassian.plugin.PluginParseException;
 import org.apache.commons.lang.Validate;
 
 import java.io.*;
 
-public class DirectoryPluginArtifact implements PluginArtifact
+public class DirectoryPluginArtifact extends AbstractFilePluginArtifact
 {
-    private final File directory;
-
     public DirectoryPluginArtifact(File directory)
     {
-        this.directory = directory;
+        super(directory);
     }
 
     public InputStream getResourceAsStream(String fileName) throws PluginParseException
     {
         Validate.notNull(fileName, "The file name must not be null");
+        File directory = getFile();
         File resource = new File(directory, fileName);
         if (!resource.exists())
         {
@@ -33,11 +33,6 @@ public class DirectoryPluginArtifact implements PluginArtifact
         }
         return descriptorStream;
 
-    }
-
-    public String getName()
-    {
-        return directory.getName();
     }
 
     public InputStream getInputStream()

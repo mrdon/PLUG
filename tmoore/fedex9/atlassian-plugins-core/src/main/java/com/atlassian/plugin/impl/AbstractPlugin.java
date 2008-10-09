@@ -1,16 +1,11 @@
 package com.atlassian.plugin.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.util.VersionStringComparator;
+
+import java.util.*;
 
 public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 {
@@ -126,12 +121,12 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         this.resources = resources != null ? resources : Resources.EMPTY_RESOURCES;
     }
 
-    public List getResourceDescriptors()
+    public List<ResourceDescriptor> getResourceDescriptors()
     {
         return resources.getResourceDescriptors();
     }
 
-    public List getResourceDescriptors(String type)
+    public List<ResourceDescriptor> getResourceDescriptors(String type)
     {
         return resources.getResourceDescriptors(type);
     }

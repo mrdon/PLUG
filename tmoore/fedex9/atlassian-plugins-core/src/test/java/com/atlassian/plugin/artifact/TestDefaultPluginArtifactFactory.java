@@ -1,12 +1,12 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.artifact;
 
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.test.PluginBuilder;
 import junit.framework.TestCase;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-
-import org.apache.commons.io.FileUtils;
-import com.atlassian.plugin.test.PluginBuilder;
 
 public class TestDefaultPluginArtifactFactory extends TestCase
 {
@@ -29,18 +29,18 @@ public class TestDefaultPluginArtifactFactory extends TestCase
         File jarFile = new PluginBuilder("jar").build(testDir);
 
         DefaultPluginArtifactFactory factory = new DefaultPluginArtifactFactory();
-        PluginArtifact jarArt = factory.create(jarFile.toURL());
+        PluginArtifact jarArt = factory.create(jarFile);
         assertNotNull(jarArt);
         assertTrue(jarArt instanceof JarPluginArtifact);
 
-        PluginArtifact xmlArt = factory.create(xmlFile.toURL());
+        PluginArtifact xmlArt = factory.create(xmlFile);
         assertNotNull(xmlArt);
-        assertTrue(xmlArt instanceof XmlPluginArtifact);
+        assertTrue(xmlArt instanceof AtomicPluginArtifact);
 
         try
         {
 
-            factory.create(new File(testDir, "bob.jim").toURL());
+            factory.create(new File(testDir, "bob.jim"));
             fail("Should have thrown exception");
         } catch (IllegalArgumentException ex)
         {

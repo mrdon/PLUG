@@ -1,6 +1,7 @@
 package com.atlassian.plugin;
 
 import java.io.InputStream;
+import java.io.File;
 
 /**
  * Allows the retrieval of files and/or an input stream of a plugin artifact. Implementations
@@ -28,4 +29,8 @@ public interface PluginArtifact
      * multiple times will return a fresh input stream each time.
      */
     InputStream getInputStream();
+
+    File getFile();
+
+    long lastModified();
 }

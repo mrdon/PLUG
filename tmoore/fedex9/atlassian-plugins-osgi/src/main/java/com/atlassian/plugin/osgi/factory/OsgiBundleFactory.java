@@ -52,17 +52,17 @@ public class OsgiBundleFactory implements PluginFactory
         return pluginKey;
     }
 
-    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException {
+    public Plugin create(PluginArtifact deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException {
         Validate.notNull(deploymentUnit, "The plugin deployment unit is required");
         Validate.notNull(moduleDescriptorFactory, "The module descriptor factory is required");
         
         Bundle bundle;
         try
         {
-            bundle = osgi.installBundle(deploymentUnit.getPath());
+            bundle = osgi.installBundle(deploymentUnit.getFile());
         } catch (OsgiContainerException ex)
         {
-            return reportUnloadablePlugin(deploymentUnit.getPath(), ex);
+            return reportUnloadablePlugin(deploymentUnit.getFile(), ex);
         }
         return new OsgiBundlePlugin(bundle);
     }
@@ -74,5 +74,13 @@ public class OsgiBundleFactory implements PluginFactory
         UnloadablePlugin plugin = new UnloadablePlugin();
         plugin.setErrorText("Unable to load plugin: "+e.getMessage());
         return plugin;
+    }
+
+    /**
+     * @deprecated Since 2.1.0, use {@link #create(PluginArtifact,ModuleDescriptorFactory)} instead
+     */
+    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    {
+        return create((PluginArtifact)deploymentUnit, moduleDescriptorFactory);
     }
 }

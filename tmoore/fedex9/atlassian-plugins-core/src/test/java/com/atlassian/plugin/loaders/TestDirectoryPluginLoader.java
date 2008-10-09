@@ -270,7 +270,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     public void testUnknownPluginArtifact() throws URISyntaxException, IOException, PluginParseException, InterruptedException
     {
         FileUtils.cleanDirectory(pluginsTestDir);
-        FileUtils.writeStringToFile(new File(pluginsTestDir, "foo.bob"), "<an>");
+        FileUtils.writeStringToFile(new File(pluginsTestDir, "foo.xml"), "<an>");
 
         loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
 
