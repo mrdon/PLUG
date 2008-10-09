@@ -4,7 +4,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.net.MalformedURLException;
 import java.util.*;
 
@@ -132,7 +131,19 @@ public class Scanner
     private boolean isModified(File file)
     {
         DeploymentUnit unit = locateDeploymentUnit(file);
-        return file.lastModified() > unit.lastModified();
+        return isModifiedSince(file, unit.lastModified());
+    }
+
+    private boolean isModifiedSince(File file, long since)
+    {
+        if (!file.isDirectory())
+            return file.lastModified() > since;
+        for (File childFile : file.listFiles())
+        {
+            if (isModifiedSince(childFile, since))
+                return true;
+        }
+        return false;
     }
 
     private void clear(List<File> toUndeploy)

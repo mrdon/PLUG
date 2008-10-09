@@ -98,7 +98,7 @@ public final class PluginClassLoader extends ClassLoader
                 }
                 else
                 {
-                    addEntryMapping(jarEntry, file, true);
+                    addEntryMapping(jarEntry.getName(), file, true);
                 }
             }
         }
@@ -132,7 +132,7 @@ public final class PluginClassLoader extends ClassLoader
                 for (Enumeration entries = innerJarJarFile.entries(); entries.hasMoreElements();)
                 {
                     final JarEntry innerJarEntry = (JarEntry) entries.nextElement();
-                    addEntryMapping(innerJarEntry, innerJarFile, false);
+                    addEntryMapping(innerJarEntry.getName(), innerJarFile, false);
                 }
             }
             finally
@@ -284,23 +284,23 @@ public final class PluginClassLoader extends ClassLoader
         return entryMappings.containsKey(name);
     }
 
-    private void addEntryMapping(JarEntry jarEntry, File jarFile, boolean overrideExistingEntries)
+    private void addEntryMapping(String entryName, File jarFile, boolean overrideExistingEntries)
     {
         if (overrideExistingEntries)
         {
-            addEntryUrl(jarEntry, jarFile);
+            addEntryUrl(entryName, jarFile);
         }
         else
         {
-            if (!entryMappings.containsKey(jarEntry.getName()))
+            if (!entryMappings.containsKey(entryName))
             {
-                addEntryUrl(jarEntry, jarFile);
+                addEntryUrl(entryName, jarFile);
             }
         }
     }
 
-    private void addEntryUrl(JarEntry jarEntry, File jarFile)
+    private void addEntryUrl(String entryName, File jarFile)
     {
-        entryMappings.put(jarEntry.getName(), getUrlOfResourceInJar(jarEntry.getName(), jarFile));
+        entryMappings.put(entryName, getUrlOfResourceInJar(entryName, jarFile));
     }
 }

@@ -37,6 +37,8 @@ public class DefaultPluginArtifactFactory implements PluginArtifactFactory
                 artifact = new JarPluginArtifact(artifactFile);
             else if (file.endsWith(".xml"))
                 artifact = new XmlPluginArtifact(artifactFile);
+            else if (artifactFile.isDirectory())
+                artifact = new DirectoryPluginArtifact(artifactFile);
         }
 
         if (artifact == null)
