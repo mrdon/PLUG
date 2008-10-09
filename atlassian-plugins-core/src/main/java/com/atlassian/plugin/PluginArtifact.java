@@ -11,9 +11,8 @@ import java.io.InputStream;
 public interface PluginArtifact
 {
     /**
-     * @return an input stream of the resource specified inside the artifact.
-     * @throws PluginParseException if the resource was not found or could not be
-     * read from the artifact.
+     * @return an input stream of the resource specified inside the artifact.  Null if the resource cannot be found.
+     * @throws PluginParseException if the there was an exception retrieving the resource from the artifact
      */
     InputStream getResourceAsStream(String name) throws PluginParseException;
 

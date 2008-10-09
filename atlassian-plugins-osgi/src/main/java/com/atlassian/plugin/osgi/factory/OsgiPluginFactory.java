@@ -58,16 +58,17 @@ public class OsgiPluginFactory implements PluginFactory
         try
         {
             descriptorStream = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
-        } catch (PluginParseException ex)
-        {
-            // no descriptor, no worries
-        }
 
-        if (descriptorStream != null)
+            if (descriptorStream != null)
+            {
+                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
+                if (descriptorParser.getPluginsVersion() == 2)
+                    pluginKey = descriptorParser.getKey();
+            }
+        } 
+        finally
         {
-            final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
-            if (descriptorParser.getPluginsVersion() == 2)
-                pluginKey = descriptorParser.getKey();
+            IOUtils.closeQuietly(descriptorStream);
         }
         return pluginKey;
     }

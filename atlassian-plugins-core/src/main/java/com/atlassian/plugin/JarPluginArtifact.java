@@ -41,7 +41,7 @@ public class JarPluginArtifact implements PluginArtifact
         ZipEntry entry = jar.getEntry(fileName);
         if (entry == null)
         {
-            throw new PluginParseException("File " + fileName + " not found in plugin JAR [" + jarFile + "]");
+            return null;
         }
 
         InputStream descriptorStream;
