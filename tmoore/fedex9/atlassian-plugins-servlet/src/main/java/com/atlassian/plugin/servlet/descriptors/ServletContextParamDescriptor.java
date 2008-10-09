@@ -8,11 +8,9 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
 /**
- * Allows plugin developers to specify init parameters they would like added to the plugin local {@link javax.servlet.ServletContext}.
- *
- * @since 2.1.0
+ * Allows plugin developers to specify init parameters they would like added to the plugin local {@link ServletContext}.
  */
-public class ServletContextParamModuleDescriptor extends AbstractModuleDescriptor<Void>
+public class ServletContextParamDescriptor extends AbstractModuleDescriptor<Void>
 {
     private String paramName;
     private String paramValue;

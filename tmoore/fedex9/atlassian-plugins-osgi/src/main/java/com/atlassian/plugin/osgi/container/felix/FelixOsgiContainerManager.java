@@ -201,17 +201,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
     public Bundle[] getBundles()
     {
-        if (isRunning())
-        {
-            return registration.getBundles();
-        }
-        else
-        {
-            throw new IllegalStateException("Cannot retrieve the bundles if the Felix container isn't running.  Check" +
-                    " earlier in the logs for the possible cause as to why Felix didn't start correctly.");
-        }
-
-        
+        return registration.getBundles();
     }
 
     public ServiceReference[] getRegisteredServices()

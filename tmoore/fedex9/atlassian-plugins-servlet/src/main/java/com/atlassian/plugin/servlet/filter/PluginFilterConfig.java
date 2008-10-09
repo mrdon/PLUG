@@ -13,8 +13,6 @@ import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
  * Instances of the PluginFilterConfig are passed to plugins {@link Filter} init() method.  It provides
  * access to the init parameters defined in the plugin xml as well as the ServletContext shared by other filters and
  * servlets in the plugin.
- * 
- * @since 2.1.0
  */
 public class PluginFilterConfig implements FilterConfig
 {

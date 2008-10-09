@@ -7,15 +7,16 @@ import org.dom4j.dom.DOMElement;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.impl.StaticPlugin;
+import com.atlassian.plugin.servlet.descriptors.TestServletModuleDescriptor.SomeServlet;
 
 public class TestServletContextParamDescriptor extends TestCase
 {
-    ServletContextParamModuleDescriptor descriptor;
+    ServletContextParamDescriptor descriptor;
 
     @Override
     public void setUp()
     {
-        descriptor = new ServletContextParamModuleDescriptor();
+        descriptor = new ServletContextParamDescriptor();
     }
 
     @Override

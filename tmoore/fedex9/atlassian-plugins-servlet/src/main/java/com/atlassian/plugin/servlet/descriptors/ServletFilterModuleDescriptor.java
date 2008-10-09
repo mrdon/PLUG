@@ -24,8 +24,6 @@ import com.atlassian.plugin.servlet.filter.FilterLocation;
  * <p/>
  * The weight attribute can have any integer value.  Filters with lower values of the weight attribute will come before
  * those with higher values within the same location.
- *
- * @since 2.1.0
  */
 public abstract class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<Filter> implements StateAware
 {
@@ -52,14 +50,12 @@ public abstract class ServletFilterModuleDescriptor extends BaseServletModuleDes
     
     public void enabled()
     {
-        super.enabled();
         getServletModuleManager().addFilterModule(this);
     }
 
     public void disabled()
     {
         getServletModuleManager().removeFilterModule(this);
-        super.disabled();
     }
 
     @Override

@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.atlassian.plugins</groupId>
         <artifactId>atlassian-plugins-parent</artifactId>
-        <version>2.1.0-tmoore-fedex9-SNAPSHOT</version>
+        <version>2.1.0.beta1</version>
     </parent>
 
    <artifactId>atlassian-plugins-refimpl</artifactId>
@@ -75,11 +75,6 @@
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
             <version>3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>bouncycastle</groupId>
-            <artifactId>bcprov-jdk14</artifactId>
-            <version>138</version>
         </dependency>
         <dependency>
             <groupId>com.atlassian.extras</groupId>
@@ -242,7 +237,9 @@
                             <goal>execute</goal>
                         </goals>
                         <configuration>
-                            <containers>tomcat5x,jboss42x</containers>
+                            <containers>tomcat5x,jetty6x,jboss42x</containers>
+                            <httpPort>7442</httpPort>
+                            <rmiPort>7432</rmiPort>
                         </configuration>
                     </execution>
                 </executions>

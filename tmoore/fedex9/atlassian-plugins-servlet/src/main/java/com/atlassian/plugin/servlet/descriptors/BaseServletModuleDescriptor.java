@@ -17,8 +17,6 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 /**
  * Acts as a base for other servlet type module descriptors to inherit.  It adds parsing and retrieval of any paths
  * declared in the descriptor with &lt;url-pattern&gt; as well as &lt;init-param&gt;s. 
- * 
- * @since 2.1.0
  */
 public abstract class BaseServletModuleDescriptor<T> extends AbstractModuleDescriptor<T>
 {

@@ -8,12 +8,12 @@ import java.net.URLClassLoader;
 import java.net.URL;
 
 import org.apache.commons.io.IOUtils;
-import com.atlassian.plugin.test.PluginJarBuilder;
+import com.atlassian.plugin.test.PluginBuilder;
 
-public class PluginJarBuilderTest extends TestCase {
+public class PluginBuilderTest extends TestCase {
 
     public void testBuild() throws Exception {
-        File jar = new PluginJarBuilder("foo")
+        File jar = new PluginBuilder("foo")
                 .addJava("my.Foo", "package my; public class Foo { public String hi() {return \"hi\";}}")
                 .addResource("foo.txt", "Some text")
                 .addPluginInformation("someKey", "someName", "1.33")

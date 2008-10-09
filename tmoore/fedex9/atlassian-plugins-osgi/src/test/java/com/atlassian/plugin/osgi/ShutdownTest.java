@@ -1,6 +1,6 @@
 package com.atlassian.plugin.osgi;
 
-import com.atlassian.plugin.test.PluginJarBuilder;
+import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.JarPluginArtifact;
 
 import java.io.File;
@@ -9,7 +9,7 @@ public class ShutdownTest extends PluginInContainerTestBase
 {
     public void testShutdown() throws Exception
     {
-        File pluginJar = new PluginJarBuilder("shutdowntest")
+        File pluginJar = new PluginBuilder("shutdowntest")
                 .addPluginInformation("shutdown", "foo", "1.0")
                 .build();
         initPluginManager(null);

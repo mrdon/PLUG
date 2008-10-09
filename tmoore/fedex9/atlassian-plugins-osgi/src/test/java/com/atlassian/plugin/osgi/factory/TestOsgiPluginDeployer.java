@@ -10,7 +10,7 @@ import java.util.Hashtable;
 import java.util.ArrayList;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.test.PluginJarBuilder;
+import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
@@ -19,10 +19,11 @@ import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.util.tracker.ServiceTracker;
 
-public class TestOsgiPluginFactory extends TestCase
+public class TestOsgiPluginDeployer extends TestCase
 {
-    OsgiPluginFactory factory;
+    OsgiPluginFactory deployer;
 
     private File jar;
     Mock mockOsgi;
@@ -32,8 +33,8 @@ public class TestOsgiPluginFactory extends TestCase
     public void setUp() throws IOException, URISyntaxException
     {
         mockOsgi = new Mock(OsgiContainerManager.class);
-        factory = new OsgiPluginFactory(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, (OsgiContainerManager) mockOsgi.proxy());
-        this.jar = new PluginJarBuilder("someplugin")
+        deployer = new OsgiPluginFactory(PluginManager.PLUGIN_DESCRIPTOR_FILENAME, (OsgiContainerManager) mockOsgi.proxy());
+        this.jar = new PluginBuilder("someplugin")
             .addPluginInformation("plugin.key", "My Plugin", "1.0")
             .build();
 
@@ -47,7 +48,7 @@ public class TestOsgiPluginFactory extends TestCase
     @Override
     public void tearDown()
     {
-        factory = null;
+        deployer = null;
         this.jar.delete();
     }
 
@@ -55,7 +56,7 @@ public class TestOsgiPluginFactory extends TestCase
         mockOsgi.expectAndReturn("installBundle", C.ANY_ARGS, mockBundle.proxy());
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
         mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
-        Plugin plugin = factory.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+        Plugin plugin = deployer.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiPlugin);
         mockOsgi.verify();
@@ -66,21 +67,21 @@ public class TestOsgiPluginFactory extends TestCase
         mockOsgi.expectAndThrow("installBundle", C.ANY_ARGS, new OsgiContainerException("Bad install"));
         mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
-        Plugin plugin = factory.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+        Plugin plugin = deployer.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof UnloadablePlugin);
         mockOsgi.verify();
     }
 
     public void testCanLoadWithXml() throws PluginParseException, IOException {
-        File plugin = new PluginJarBuilder("loadwithxml").addPluginInformation("foo.bar", "", "1.0").build();
-        String key = factory.canCreate(new JarPluginArtifact(plugin));
+        File plugin = new PluginBuilder("loadwithxml").addPluginInformation("foo.bar", "", "1.0").build();
+        String key = deployer.canCreate(new JarPluginArtifact(plugin));
         assertEquals("foo.bar", key);
     }
 
     public void testCanLoadNoXml() throws PluginParseException, IOException {
-        File plugin = new PluginJarBuilder("loadwithxml").build();
-        String key = factory.canCreate(new JarPluginArtifact(plugin));
+        File plugin = new PluginBuilder("loadwithxml").build();
+        String key = deployer.canCreate(new JarPluginArtifact(plugin));
         assertNull(key);
     }
 }

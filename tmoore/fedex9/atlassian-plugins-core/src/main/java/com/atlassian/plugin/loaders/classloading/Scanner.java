@@ -95,7 +95,7 @@ public class Scanner
         clear(removedFiles);
 
         // Checks for new files.
-        Collection<DeploymentUnit> result = new ArrayList<DeploymentUnit>();
+        Collection<DeploymentUnit> result = new ArrayList();
         File files[] = libDir.listFiles();
         if (files == null)
         {

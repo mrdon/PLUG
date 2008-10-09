@@ -37,8 +37,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p/>
  * <strong>Note:</strong> Copied from JIRA com.atlassian.jira.util.concurrent.ThreadsafeLazyLoadedReference and 
  * modified to use generics and java.util.concurrent. 
- * 
- * @since 2.1.0
  */
 public abstract class LazyLoadedReference<V>
 {

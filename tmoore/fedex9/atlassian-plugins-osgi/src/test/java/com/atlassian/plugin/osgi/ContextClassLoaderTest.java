@@ -4,7 +4,7 @@ import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ContextClassLoaderStrategy;
-import com.atlassian.plugin.test.PluginJarBuilder;
+import com.atlassian.plugin.test.PluginBuilder;
 import junit.framework.TestCase;
 
 import java.io.File;
@@ -14,7 +14,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
     public void testCorrectContextClassLoaderForHostComponents() throws Exception
     {
         final DummyHostComponentImpl comp = new DummyHostComponentImpl(TestCase.class.getName());
-        File plugin = new PluginJarBuilder("ccltest")
+        File plugin = new PluginBuilder("ccltest")
                 .addResource("atlassian-plugin.xml",
                         "<atlassian-plugin key=\"ccltest\" pluginsVersion=\"2\">\n" +
                         "    <plugin-info>\n" +
@@ -46,7 +46,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
     public void testCorrectContextClassLoaderForHostComponentsUsePluginStrategy() throws Exception
     {
         final DummyHostComponentImpl comp = new DummyHostComponentImpl(TestCase.class.getName());
-        File plugin = new PluginJarBuilder("ccltest")
+        File plugin = new PluginBuilder("ccltest")
                 .addResource("atlassian-plugin.xml",
                         "<atlassian-plugin key=\"ccltest\" pluginsVersion=\"2\">\n" +
                         "    <plugin-info>\n" +
@@ -76,7 +76,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
     public void testCorrectContextClassLoaderForHostComponentsUsePluginStrategyLoadingLocalClass() throws Exception
     {
         final DummyHostComponentImpl comp = new DummyHostComponentImpl("my.Foo");
-        File plugin = new PluginJarBuilder("ccltest")
+        File plugin = new PluginBuilder("ccltest")
                 .addResource("atlassian-plugin.xml",
                         "<atlassian-plugin key=\"ccltest\" pluginsVersion=\"2\">\n" +
                         "    <plugin-info>\n" +
@@ -106,7 +106,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
     public void testCorrectContextClassLoaderForHostComponentsUseHostStrategy() throws Exception
     {
         final DummyHostComponentImpl comp = new DummyHostComponentImpl(TestCase.class.getName());
-        File plugin = new PluginJarBuilder("ccltest")
+        File plugin = new PluginBuilder("ccltest")
                 .addResource("atlassian-plugin.xml",
                         "<atlassian-plugin key=\"ccltest\" pluginsVersion=\"2\">\n" +
                         "    <plugin-info>\n" +

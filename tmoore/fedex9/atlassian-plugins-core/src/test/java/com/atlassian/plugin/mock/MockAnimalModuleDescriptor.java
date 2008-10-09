@@ -15,38 +15,33 @@ public class MockAnimalModuleDescriptor extends AbstractModuleDescriptor impleme
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);
+        try
+        {
+            module = getModuleClass().newInstance();
+        }
+        catch (InstantiationException e)
+        {
+            throw new PluginParseException(e);
+        }
+        catch (IllegalAccessException e)
+        {
+            throw new PluginParseException(e);
+        }
     }
 
     public Object getModule()
     {
-        if (module == null)
-        {
-            try
-            {
-                module = getModuleClass().newInstance();
-            }
-            catch (InstantiationException e)
-            {
-                throw new PluginParseException(e);
-            }
-            catch (IllegalAccessException e)
-            {
-                throw new PluginParseException(e);
-            }
-        }
         return module;
     }
 
     public void enabled()
     {
-        super.enabled();
         enabled = true;
     }
 
     public void disabled()
     {
         disabled = true;
-        super.disabled();
     }
 
     public boolean isEnabled()

@@ -5,18 +5,21 @@ import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.factories.XmlDynamicPluginFactory;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
-import com.atlassian.plugin.test.PluginJarBuilder;
+import com.atlassian.plugin.test.PluginBuilder;
+import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
+import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import java.net.URL;
 import java.net.URISyntaxException;
 
 public class TestDirectoryPluginLoader extends AbstractTestClassLoader
@@ -67,7 +70,6 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
                 assertEquals("test.atlassian.plugin.classloaded", plugin.getKey());
                 assertEquals(1, plugin.getModuleDescriptors().size());
                 MockAnimalModuleDescriptor paddingtonDescriptor = (MockAnimalModuleDescriptor) plugin.getModuleDescriptor("paddington");
-                paddingtonDescriptor.enabled();
                 assertEquals("Paddington Bear", paddingtonDescriptor.getName());
                 MockBear paddington = (MockBear) paddingtonDescriptor.getModule();
                 assertEquals("com.atlassian.plugin.mock.MockPaddington", paddington.getClass().getName());
@@ -78,7 +80,6 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
                 assertEquals("test.atlassian.plugin.classloaded2", plugin.getKey());
                 assertEquals(1, plugin.getModuleDescriptors().size());
                 MockAnimalModuleDescriptor poohDescriptor = (MockAnimalModuleDescriptor) plugin.getModuleDescriptor("pooh");
-                poohDescriptor.enabled();
                 assertEquals("Pooh Bear", poohDescriptor.getName());
                 MockBear pooh = (MockBear) poohDescriptor.getModule();
                 assertEquals("com.atlassian.plugin.mock.MockPooh", pooh.getClass().getName());
@@ -88,6 +89,39 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
                 fail("What plugin name?!");
             }
         }
+    }
+
+    // Tests that an UnloadablePlugin is returned when there's a missing class dependency
+    public void testAtlassianPluginWithMissingClass() throws Exception
+    {
+        addTestModuleDecriptors();
+
+        URL url = ClassLoaderUtils.getResource(BAD_PLUGIN_JAR, TestClassPathPluginLoader.class);
+        String path = url.toExternalForm();
+        path = path.replace('/', File.separatorChar);
+        path = path.substring(5);
+        File pluginFile = new File(path);
+        loader = new DirectoryPluginLoader(pluginFile.getParentFile(), DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
+
+        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+
+        assertEquals(1, plugins.size());
+
+        Object[] pluginsArray = plugins.toArray();
+
+        Plugin plugin = (Plugin) pluginsArray[0];
+
+        assertEquals(UnloadablePlugin.class, plugin.getClass());
+
+        // grab module descriptors
+        Collection moduleDescriptors = plugin.getModuleDescriptors();
+        Object[] descriptorsArray = moduleDescriptors.toArray();
+
+        assertEquals(1, moduleDescriptors.size());
+
+        ModuleDescriptor descriptor = (ModuleDescriptor) descriptorsArray[0];
+
+        assertEquals(UnloadableModuleDescriptor.class, descriptor.getClass());
     }
 
     private void addTestModuleDecriptors()
@@ -186,7 +220,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     {
         FileUtils.cleanDirectory(pluginsTestDir);
         File plugin = new File(pluginsTestDir, "some-plugin.jar");
-        new PluginJarBuilder("plugin")
+        new PluginBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
                 .build()
@@ -202,7 +236,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         // sleep to ensure the new plugin is picked up
         Thread.currentThread().sleep(1000);
         
-        new PluginJarBuilder("plugin")
+        new PluginBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("bar.txt", "bar")
                 .build()
@@ -220,7 +254,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     {
         FileUtils.cleanDirectory(pluginsTestDir);
         File plugin = new File(pluginsTestDir, "some-plugin.jar");
-        new PluginJarBuilder("plugin")
+        new PluginBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
                 .build()

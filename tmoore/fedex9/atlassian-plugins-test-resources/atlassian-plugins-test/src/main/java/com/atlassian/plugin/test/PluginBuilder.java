@@ -17,16 +17,15 @@ import java.lang.reflect.Field;
 /**
  * Builds a plugin jar, including optionally compiling simple Java code
  */
-public class PluginJarBuilder
-{
-    private final Map<String,byte[]> jarContents;
+public class PluginBuilder {
+    private final Map/*<String,byte[]>*/ jarContents;
     private final String name;
     private ClassLoader classLoader;
 
     /**
      * Creates the builder
      */
-    public PluginJarBuilder() {
+    public PluginBuilder() {
         this("test");
     }
 
@@ -34,26 +33,10 @@ public class PluginJarBuilder
      * Creates the builder
      * @param name The plugin name
      */
-    public PluginJarBuilder(String name) {
-        this(name, PluginJarBuilder.class.getClassLoader());
-    }
-
-    /**
-     * Creates the builder
-     * @param name The plugin name
-     */
-    public PluginJarBuilder(String name, ClassLoader classLoader) {
-        jarContents = new HashMap<String,byte[]>();
+    public PluginBuilder(String name) {
+        jarContents = new HashMap();
         this.name = name;
-        this.classLoader = classLoader;
-    }
-
-    public PluginJarBuilder addFormattedJava(String className, String... lines) throws Exception
-    {
-        StringBuilder sb = new StringBuilder();
-        for (String line : lines)
-            sb.append(line.replace('\'', '"')).append('\n');
-        return addJava(className, sb.toString());
+        classLoader = getClass().getClassLoader();
     }
 
     /**
@@ -63,7 +46,7 @@ public class PluginJarBuilder
      * @return The builder
      * @throws Exception
      */
-    public PluginJarBuilder addJava(String className, String code) throws Exception
+    public PluginBuilder addJava(String className, String code) throws Exception
     {
         SimpleCompiler compiler = new SimpleCompiler();
         compiler.setParentClassLoader(classLoader);
@@ -83,7 +66,7 @@ public class PluginJarBuilder
         field.setAccessible(true);
         Map classes = (Map) field.get(cl);
 
-        jarContents.put(className.replace('.',File.separatorChar)+".class", (byte[]) classes.get(className));
+        jarContents.put(className.replace('.',File.separatorChar)+".class", classes.get(className));
         return this;
     }
 
@@ -93,7 +76,7 @@ public class PluginJarBuilder
      * @param contents The contents of the file to create
      * @return
      */
-    public PluginJarBuilder addResource(String path, String contents)
+    public PluginBuilder addResource(String path, String contents)
     {
         jarContents.put(path, contents.getBytes());
         return this;
@@ -105,7 +88,7 @@ public class PluginJarBuilder
      * @param lines The contents of the file to create
      * @return
      */
-    public PluginJarBuilder addFormattedResource(String path, String... lines)
+    public PluginBuilder addFormattedResource(String path, String... lines)
     {
         StringBuilder sb = new StringBuilder();
         for (String line : lines)
@@ -114,17 +97,17 @@ public class PluginJarBuilder
         return this;
     }
 
-    public PluginJarBuilder addPluginInformation(String key, String name, String version)
+    public PluginBuilder addPluginInformation(String key, String name, String version)
     {
         return addPluginInformation(key, name, version, 2);
     }
 
-    public PluginJarBuilder addPluginInformation(String key, String name, String version, int pluginsVersion)
+    public PluginBuilder addPluginInformation(String key, String name, String version, int pluginsVersion)
     {
         return addPluginInformation(key, name, version, pluginsVersion, null);
     }
 
-    public PluginJarBuilder addPluginInformation(String key, String name, String version, int pluginsVersion, Map<String,String> params)
+    public PluginBuilder addPluginInformation(String key, String name, String version, int pluginsVersion, Map<String,String> params)
     {
         StringBuffer sb = new StringBuffer();
         sb.append("<atlassian-plugin name=\"").append(name).append("\" key=\"").append(key).append("\" pluginsVersion=\""+pluginsVersion+"\">\n");
@@ -148,7 +131,7 @@ public class PluginJarBuilder
      * @return
      * @throws IOException
      */
-    public PluginJarBuilder addFile(String path, File file) throws IOException {
+    public PluginBuilder addFile(String path, File file) throws IOException {
         jarContents.put(path, IOUtils.toByteArray(new FileInputStream(file)));
         return this;
     }
@@ -197,11 +180,6 @@ public class PluginJarBuilder
         }
         zout.close();
         return jarFile;
-    }
-
-    public ClassLoader getClassLoader()
-    {
-        return classLoader;
     }
 
 }

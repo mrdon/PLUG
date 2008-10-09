@@ -1,7 +1,7 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
-import com.atlassian.plugin.test.PluginJarBuilder;
+import com.atlassian.plugin.test.PluginBuilder;
 import com.atlassian.plugin.factories.PluginFactory;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
@@ -17,7 +17,7 @@ public class TestBundledPluginLoader extends TestCase
 
     public void setUp() throws IOException, URISyntaxException
     {
-        pluginDir = new File("target/test-plugin-dir");
+        pluginDir = new File(new File(System.getProperty("java.io.tmpdir")), "test-plugin-dir");
         pluginDir.mkdir();
     }
 
@@ -28,7 +28,7 @@ public class TestBundledPluginLoader extends TestCase
     }
 
     public void testCreateWithUnzip() throws IOException {
-        File bundledZip = new PluginJarBuilder("bundledPlugins")
+        File bundledZip = new PluginBuilder("bundledPlugins")
             .addResource("foo.txt", "foo")
             .build();
 

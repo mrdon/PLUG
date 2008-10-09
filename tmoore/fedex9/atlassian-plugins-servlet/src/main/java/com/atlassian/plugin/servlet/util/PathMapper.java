@@ -20,8 +20,6 @@ import java.util.Collection;
  * </code></blockquote>
  * <p>
  * This was copied from Atlassian Seraph 1.0
- * 
- * @since 2.1.0
  */
 public interface PathMapper
 {

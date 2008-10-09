@@ -16,7 +16,6 @@ import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import com.atlassian.plugin.util.WaitUntil;
-import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
@@ -177,29 +176,9 @@ public class DefaultPluginManager implements PluginManager
             {
                 if (loader.supportsAddition())
                 {
-                    List<Plugin> pluginsToAdd = new ArrayList<Plugin>();
-                    for (Plugin plugin : loader.addFoundPlugins(moduleDescriptorFactory))
-                    {
-                        // Only actually install the plugin if its module descriptors support it.  Otherwise, mark it as
-                        // unloadable.
-                        if (!(plugin instanceof UnloadablePlugin) && PluginUtils.doesPluginRequireRestart(plugin))
-                        {
-                            try
-                            {
-                                plugin.close();
-                            }
-                            catch (RuntimeException ex)
-                            {
-                                log.warn("Unable to uninstall the plugin after it was determined to require a restart", ex);
-                            }
-                            UnloadablePlugin unloadablePlugin = new UnloadablePlugin("Plugin requires a restart of the application");
-                            unloadablePlugin.setKey(plugin.getKey());
-                            plugin = unloadablePlugin;
-                        }
-                        pluginsToAdd.add(plugin);
-                    }
-                    addPlugins(loader, pluginsToAdd);
-                    numberFound = pluginsToAdd.size();
+                    Collection<Plugin> addedPlugins = loader.addFoundPlugins(moduleDescriptorFactory);
+                    addPlugins(loader, addedPlugins);
+                    numberFound = addedPlugins.size();
                 }
             }
         }
@@ -308,7 +287,7 @@ public class DefaultPluginManager implements PluginManager
     protected void addPlugins(PluginLoader loader, Collection<Plugin> pluginsToAdd) throws PluginParseException
     {
         final Set<Plugin> pluginsThatShouldBeEnabled = new HashSet<Plugin>();
-        for (Plugin plugin : new TreeSet<Plugin>(pluginsToAdd))
+        for (Plugin plugin : pluginsToAdd)
         {
             // testing to make sure plugin keys are unique
             if (plugins.containsKey(plugin.getKey()))

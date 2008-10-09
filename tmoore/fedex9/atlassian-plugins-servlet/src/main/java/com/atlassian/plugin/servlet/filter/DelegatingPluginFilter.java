@@ -21,8 +21,6 @@ import com.atlassian.plugin.servlet.util.ClassLoaderStack;
  *        <li>set the Threads classloader to the plugins classloader)</li>
  *        <li>wrap the request so that path info is right for the filters</li>
  *      </ul>
- *      
- * @since 2.1.0
  */
 public class DelegatingPluginFilter implements Filter
 {

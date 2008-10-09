@@ -1,6 +1,9 @@
 package com.atlassian.plugin.descriptors;
 
-import com.atlassian.plugin.*;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.Resources;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.loaders.LoaderUtils;
@@ -11,12 +14,11 @@ import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
 
-public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>, StateAware
+public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
 {
     protected Plugin plugin;
     String key;
     String name;
-    String moduleClassName;
     Class moduleClass;
     String description;
     boolean enabledByDefault = true;
@@ -28,7 +30,6 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     private String i18nNameKey;
     private String descriptionKey;
 	private String completeKey;
-    boolean enabled = false;
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
@@ -37,8 +38,8 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         this.name = element.attributeValue("name");
         this.i18nNameKey = element.attributeValue("i18n-name-key");
         this.completeKey = buildCompleteKey(plugin, key);
+        loadClass(plugin, element);
         this.description = element.elementTextTrim("description");
-        this.moduleClassName = element.attributeValue("class");
         Element descriptionElement = element.element("description");
         this.descriptionKey = (descriptionElement != null) ? descriptionElement.attributeValue("key") : null;
         params = LoaderUtils.getParams(element);
@@ -78,19 +79,9 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
      * Override this for module descriptors which don't expect to be able to load a class successfully
      * @param plugin
      * @param element
-     * @deprecated Since 2.1.0, use {@link #loadClass(Plugin,String)} instead
      */
     protected void loadClass(Plugin plugin, Element element) throws PluginParseException {
-        loadClass(plugin, element.attributeValue("class"));
-    }
-
-    /**
-     * Override this for module descriptors which don't expect to be able to load a class successfully
-     * @param plugin
-     * @param clazz The module class name to load
-     * @since 2.1.0
-     */
-    protected void loadClass(Plugin plugin, String clazz) throws PluginParseException {
+        String clazz = element.attributeValue("class");
         try
         {
             if (clazz != null)  //not all plugins have to have a class
@@ -186,10 +177,6 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
      */
     final protected void assertModuleClassImplements(Class requiredModuleClazz) throws PluginParseException
     {
-        if (!enabled)
-        {
-            throw new PluginParseException("Plugin module " + getKey() + " not enabled");
-        }
         if (!requiredModuleClazz.isAssignableFrom(getModuleClass()))
         {
             throw new PluginParseException("Given module class: " + getModuleClass().getName() + " does not implement " + requiredModuleClazz.getName());
@@ -300,26 +287,5 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     public String toString()
     {
         return getCompleteKey() + " (" + getDescription() + ")";
-    }
-
-    /**
-     * Enables the descriptor by loading the module class. Classes overriding this method MUST
-     * call super.enabled() before their own enabling code.
-     *
-     * @since 2.1.0
-     */
-    public void enabled()
-    {
-        loadClass(plugin, moduleClassName);
-        enabled = true;
-    }
-
-    /**
-     * Disables the module descriptor. Classes overriding this method MUST call super.disabled() after
-     * their own disabling code.
-     */
-    public void disabled()
-    {
-        enabled = false;
     }
 }

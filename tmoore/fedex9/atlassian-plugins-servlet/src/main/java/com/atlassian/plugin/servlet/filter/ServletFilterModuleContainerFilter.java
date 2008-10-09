@@ -26,8 +26,6 @@ import com.atlassian.plugin.servlet.ServletModuleManager;
  * "top", "middle" or "bottom".  A filter with a "top" location must appear before the filter with a "middle" location
  * which must appear before a filter with a "bottom" location.  Where any other application filters lie in the filter
  * stack is completely up to the application.        
- * 
- * @since 2.1.0
  */
 public abstract class ServletFilterModuleContainerFilter implements Filter
 {

@@ -207,7 +207,6 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
 
     public void enabled()
     {
-        super.enabled();
         // this was moved to the enabled() method because spring beans declared
         // by the plugin are not available for injection during the init() phase
         try
@@ -246,7 +245,6 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     public void disabled()
     {
         webInterfaceManager.refresh();
-        super.disabled();
     }
 
     public int getWeight()

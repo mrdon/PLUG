@@ -38,14 +38,12 @@ public class StubModuleDescriptor extends AbstractModuleDescriptor implements St
 
     public void enabled()
     {
-        super.enabled();
         enabled = true;
     }
 
     public void disabled()
     {
         enabled = false;
-        super.disabled();
     }
 
     public boolean isEnabled()

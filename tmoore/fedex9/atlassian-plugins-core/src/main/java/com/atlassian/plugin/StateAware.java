@@ -7,8 +7,8 @@ package com.atlassian.plugin;
 public interface StateAware
 {
     /**
-     * Called by the plugin manager when a plugin or module is activated. Any exceptions thrown should
-     * be interpreted as the plugin is unloadable.
+     * Called by the plugin manager when a plugin or module is activated. Plugins or modules that are active
+     * when the plugin manager is initialised will have this method called at that time.
      */
     void enabled();
 

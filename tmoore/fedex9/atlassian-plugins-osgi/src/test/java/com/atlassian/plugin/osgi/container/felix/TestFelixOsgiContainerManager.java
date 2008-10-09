@@ -2,7 +2,7 @@ package com.atlassian.plugin.osgi.container.felix;
 
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
-import com.atlassian.plugin.test.PluginJarBuilder;
+import com.atlassian.plugin.test.PluginBuilder;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
@@ -26,7 +26,7 @@ public class TestFelixOsgiContainerManager extends TestCase
     public void setUp() throws Exception
     {
         super.setUp();
-        tmpdir = new File("target/plugin-temp");
+        tmpdir = new File(System.getProperty("java.io.tmpdir"));
         frameworkBundlesDir = new File(tmpdir, "framework-bundles-test");
 
         felix = new FelixOsgiContainerManager(frameworkBundlesUrl, frameworkBundlesDir, new DefaultPackageScannerConfiguration(),
@@ -98,7 +98,7 @@ public class TestFelixOsgiContainerManager extends TestCase
     public void testBootDelegation() throws Exception
     {
         // Server class extends JUnit TestCase class, which is not available to the bundle
-        File pluginServer = new PluginJarBuilder("plugin")
+        File pluginServer = new PluginBuilder("plugin")
             .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
                 "Bundle-Version: 1.0\n" +
                 "Bundle-SymbolicName: my.server\n" +
@@ -110,7 +110,7 @@ public class TestFelixOsgiContainerManager extends TestCase
         // Client is necessary to load the server class in a Felix ContentClassLoader, to avoid the hack in Felix's
         // R4SearchPolicyCore (approx. line 591) which will use parent delegation if a class cannot be found
         // and the calling classloader is not a ContentClassLoader.
-        File pluginClient = new PluginJarBuilder("plugin")
+        File pluginClient = new PluginBuilder("plugin")
             .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
                 "Bundle-Version: 1.0\n" +
                 "Bundle-SymbolicName: my.client\n" +
@@ -157,7 +157,7 @@ public class TestFelixOsgiContainerManager extends TestCase
 
     public void testInstallBundleTwice() throws URISyntaxException, IOException, BundleException
     {
-        File plugin = new PluginJarBuilder("plugin")
+        File plugin = new PluginBuilder("plugin")
                 .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
                         "Import-Package: javax.swing\n" +
                         "Bundle-Version: 1.0\n" +
@@ -166,7 +166,7 @@ public class TestFelixOsgiContainerManager extends TestCase
                 .addResource("foo.txt", "foo")
                 .build();
 
-        File pluginUpdate = new PluginJarBuilder("plugin")
+        File pluginUpdate = new PluginBuilder("plugin")
                 .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
                         "Import-Package: javax.swing\n" +
                         "Bundle-Version: 1.0\n" +
@@ -196,7 +196,7 @@ public class TestFelixOsgiContainerManager extends TestCase
 
     public void testInstallFailure() throws Exception
     {
-        File plugin = new PluginJarBuilder("plugin")
+        File plugin = new PluginBuilder("plugin")
                 .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
                         "Bundle-Version: 1.0\n" +
                         "Import-Package: foo.missing.package\n" +

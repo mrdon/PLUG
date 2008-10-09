@@ -29,7 +29,7 @@ import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.servlet.descriptors.ServletContextListenerModuleDescriptor;
-import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletContextParamDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.servlet.filter.DelegatingPluginFilter;
@@ -42,8 +42,6 @@ import com.atlassian.plugin.servlet.util.PathMapper;
 
 /**
  * A simple servletModuleManager to track and retrieve the loaded servlet plugin modules.
- * 
- * @since 2.1.0
  */
 public class DefaultServletModuleManager implements ServletModuleManager
 {
@@ -201,7 +199,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * initialized for each module descriptor.
      * 
      * @param descriptor
-     * @param servletConfig
+     * @param filterConfig
      * @return
      */
     private HttpServlet getServlet(final ServletModuleDescriptor descriptor, final ServletConfig servletConfig)
@@ -365,7 +363,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
                 String paramName = e.nextElement();
                 mergedInitParams.put(paramName, baseContext.getInitParameter(paramName));
             }
-            for (ServletContextParamModuleDescriptor descriptor : findModuleDescriptorsByType(ServletContextParamModuleDescriptor.class, plugin))
+            for (ServletContextParamDescriptor descriptor : findModuleDescriptorsByType(ServletContextParamDescriptor.class, plugin))
             {
                 mergedInitParams.put(descriptor.getParamName(), descriptor.getParamValue());
             }
