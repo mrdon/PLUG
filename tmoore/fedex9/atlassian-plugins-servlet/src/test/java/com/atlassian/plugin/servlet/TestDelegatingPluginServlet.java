@@ -1,19 +1,19 @@
 package com.atlassian.plugin.servlet;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import junit.framework.TestCase;
-
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.artifact.JarPluginArtifact;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptorBuilder;
 import com.atlassian.plugin.test.PluginTestUtils;
 import com.mockobjects.dynamic.Mock;
+import junit.framework.TestCase;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public class TestDelegatingPluginServlet extends TestCase
 {
@@ -24,7 +24,7 @@ public class TestDelegatingPluginServlet extends TestCase
     
     public void setUp() throws Exception
     {
-        classLoader = new PluginClassLoader(PluginTestUtils.getFileForResource(PluginTestUtils.SIMPLE_TEST_JAR));
+        classLoader = new PluginClassLoader(new JarPluginArtifact(PluginTestUtils.getFileForResource(PluginTestUtils.SIMPLE_TEST_JAR)));
         plugin = new DefaultDynamicPlugin(null, classLoader);
         
         mockRequest = new Mock(HttpServletRequest.class);

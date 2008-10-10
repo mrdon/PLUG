@@ -1,20 +1,20 @@
 package com.atlassian.plugin.parsers;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.net.URL;
-
-import junit.framework.TestCase;
-
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.artifact.JarPluginArtifact;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.mockobjects.dynamic.Mock;
+import junit.framework.TestCase;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.net.URL;
 
 public class TestXmlDescriptorParser extends TestCase
 {
@@ -30,7 +30,7 @@ public class TestXmlDescriptorParser extends TestCase
     public void testMissingPluginInfo()
     {
         // mock up some supporting objects
-        PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
+        PluginClassLoader classLoader = new PluginClassLoader(new JarPluginArtifact(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE)));
         Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
         mockFactory.expect("getModuleDescriptorClass", "unknown-plugin");
 

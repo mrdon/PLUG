@@ -1,6 +1,7 @@
 package com.atlassian.plugin.classloader;
 
 import com.atlassian.plugin.test.PluginTestUtils;
+import com.atlassian.plugin.artifact.JarPluginArtifact;
 import com.opensymphony.util.BeanUtils;
 import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
@@ -29,7 +30,8 @@ public class TestPluginClassLoader extends TestCase
 
         URL url = getClass().getClassLoader().getResource(PluginTestUtils.SIMPLE_TEST_JAR);
         assertNotNull("Can't find test resource", url);
-        pluginClassLoader = new PluginClassLoader(new File(url.getFile()), getClass().getClassLoader(), tmpDir);
+        JarPluginArtifact artifact = new JarPluginArtifact(new File(url.getFile()));
+        pluginClassLoader = new PluginClassLoader(artifact, getClass().getClassLoader(), tmpDir);
     }
 
     protected void tearDown() throws Exception
@@ -126,9 +128,10 @@ public class TestPluginClassLoader extends TestCase
         File original = new File(fileLoc);
         File tmpFile = new File(fileLoc + ".tmp");
         FileUtils.copyFile(original, tmpFile);
+        JarPluginArtifact artifact = new JarPluginArtifact(tmpFile);
 
         PluginClassLoader pluginClassLoaderThatHasNotLockedFileYet = new
-                PluginClassLoader(tmpFile, getClass().getClassLoader());
+                PluginClassLoader(artifact, getClass().getClassLoader());
         Class mockVersionedClass =
                 Class.forName("com.atlassian.plugin.mock.MockVersionedClass", true, pluginClassLoader);
         assertTrue(tmpFile.delete());

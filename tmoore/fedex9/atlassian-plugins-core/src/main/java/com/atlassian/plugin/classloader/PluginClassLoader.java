@@ -1,19 +1,20 @@
 package com.atlassian.plugin.classloader;
 
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.artifact.JarPluginArtifact;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
-import org.codehaus.classworlds.uberjar.protocol.jar.NonLockingJarHandler;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.net.MalformedURLException;
-import java.util.*;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A class loader used to load classes and resources from a given plugin.
@@ -35,41 +36,41 @@ public final class PluginClassLoader extends ClassLoader
     private final File tempDirectory;
 
     /**
-     * @param pluginFile file reference to the jar for this plugin
+     * @param artifact file reference to the jar for this plugin
      */
-    public PluginClassLoader(final File pluginFile)
+    public PluginClassLoader(final PluginArtifact artifact)
     {
-        this(pluginFile, null);
+        this(artifact, null);
     }
 
     /**
-     * @param pluginFile file reference to the jar for this plugin
+     * @param artifact file reference to the jar for this plugin
      * @param parent     the parent class loader
      */
-    public PluginClassLoader(final File pluginFile, ClassLoader parent)
+    public PluginClassLoader(final PluginArtifact artifact, ClassLoader parent)
     {
-        this(pluginFile, parent, new File(System.getProperty("java.io.tmpdir")));
+        this(artifact, parent, new File(System.getProperty("java.io.tmpdir")));
     }
 
     /**
-     * @param pluginFile    file reference to the jar for this plugin
+     * @param artifact    file reference to the jar for this plugin
      * @param parent        the parent class loader
      * @param tempDirectory the temporary directory to store inner jars
      * @since 2.0.2
      */
-    public PluginClassLoader(final File pluginFile, ClassLoader parent, File tempDirectory)
+    public PluginClassLoader(final PluginArtifact artifact, ClassLoader parent, File tempDirectory)
     {
         super(parent);
         Validate.isTrue(tempDirectory.exists(), "Temp directory should exist");
         this.tempDirectory = tempDirectory;
         try
         {
-            if (pluginFile == null || !pluginFile.exists())
+            if (artifact == null)
             {
                 throw new IllegalArgumentException("Plugin jar file must not be null and must exist.");
             }
             this.pluginInnerJars = new ArrayList<File>();
-            initialiseOuterJar(pluginFile);
+            initialiseOuterPlugin(artifact);
         }
         catch (IOException e)
         {
@@ -78,33 +79,24 @@ public final class PluginClassLoader extends ClassLoader
     }
 
     /**
-     * Go through all entries in the given JAR, and recursively populate entryMappings by providing
+     * Go through all entries in the given plugin, and recursively populate entryMappings by providing
      * resource or Class name to URL mappings.
      *
-     * @param file the file to scan
+     * @param artifact the plugin artifact to scan
      * @throws IOException if the plugin jar can not be read
      */
-    private void initialiseOuterJar(File file) throws IOException
+    private void initialiseOuterPlugin(PluginArtifact artifact) throws IOException
     {
-        final JarFile jarFile = new JarFile(file);
-        try
+        for (String jarEntry : artifact.getResourceNames())
         {
-            for (Enumeration entries = jarFile.entries(); entries.hasMoreElements();)
+            if (isInnerJarPath(jarEntry))
             {
-                final JarEntry jarEntry = (JarEntry) entries.nextElement();
-                if (isInnerJarPath(jarEntry.getName()))
-                {
-                    initialiseInnerJar(jarFile, jarEntry);
-                }
-                else
-                {
-                    addEntryMapping(jarEntry.getName(), file, true);
-                }
+                initialiseInnerJar(artifact, jarEntry);
             }
-        }
-        finally
-        {
-            jarFile.close();
+            else
+            {
+                addEntryMapping(jarEntry, artifact, true);
+            }
         }
     }
 
@@ -114,30 +106,22 @@ public final class PluginClassLoader extends ClassLoader
         return name.startsWith("META-INF/lib/") && name.endsWith(".jar");
     }
 
-    private void initialiseInnerJar(JarFile jarFile, JarEntry jarEntry) throws IOException
+    private void initialiseInnerJar(PluginArtifact pluginArtifact, String innerJar) throws IOException
     {
         InputStream inputStream = null;
         FileOutputStream fileOutputStream = null;
         try
         {
             final File innerJarFile = File.createTempFile(PLUGIN_INNER_JAR_PREFIX, ".jar", tempDirectory);
-            inputStream = jarFile.getInputStream(jarEntry);
+            inputStream = pluginArtifact.getResourceAsStream(innerJar);
             fileOutputStream = new FileOutputStream(innerJarFile);
             IOUtils.copy(inputStream, fileOutputStream);
             IOUtils.closeQuietly(fileOutputStream);
 
-            final JarFile innerJarJarFile = new JarFile(innerJarFile);
-            try
+            final JarPluginArtifact innerJarArtifact = new JarPluginArtifact(innerJarFile);
+            for (String innerJarEntry : innerJarArtifact.getResourceNames())
             {
-                for (Enumeration entries = innerJarJarFile.entries(); entries.hasMoreElements();)
-                {
-                    final JarEntry innerJarEntry = (JarEntry) entries.nextElement();
-                    addEntryMapping(innerJarEntry.getName(), innerJarFile, false);
-                }
-            }
-            finally
-            {
-                innerJarJarFile.close();
+                addEntryMapping(innerJarEntry, innerJarArtifact, false);
             }
 
             pluginInnerJars.add(innerJarFile);
@@ -267,40 +251,28 @@ public final class PluginClassLoader extends ClassLoader
         }
     }
 
-    private URL getUrlOfResourceInJar(String name, File jarFile)
-    {
-        try
-        {
-            return new URL(new URL("jar:file:" + jarFile.getAbsolutePath() + "!/"), name, NonLockingJarHandler.getInstance());
-        }
-        catch (MalformedURLException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
     private boolean isEntryInPlugin(String name)
     {
         return entryMappings.containsKey(name);
     }
 
-    private void addEntryMapping(String entryName, File jarFile, boolean overrideExistingEntries)
+    private void addEntryMapping(String entryName, PluginArtifact artifact, boolean overrideExistingEntries)
     {
         if (overrideExistingEntries)
         {
-            addEntryUrl(entryName, jarFile);
+            addEntryUrl(entryName, artifact);
         }
         else
         {
             if (!entryMappings.containsKey(entryName))
             {
-                addEntryUrl(entryName, jarFile);
+                addEntryUrl(entryName, artifact);
             }
         }
     }
 
-    private void addEntryUrl(String entryName, File jarFile)
+    private void addEntryUrl(String entryName, PluginArtifact artifact)
     {
-        entryMappings.put(entryName, getUrlOfResourceInJar(entryName, jarFile));
+        entryMappings.put(entryName, artifact.getResource(entryName));
     }
 }

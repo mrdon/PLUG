@@ -1,7 +1,9 @@
 package com.atlassian.plugin;
 
-import java.io.InputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 /**
  * Allows the retrieval of files and/or an input stream of a plugin artifact. Implementations
@@ -11,6 +13,10 @@ import java.io.File;
  */
 public interface PluginArtifact
 {
+    Iterable<String> getResourceNames() throws IOException;
+
+    URL getResource(String name);
+
     /**
      * @return an input stream of the resource specified inside the artifact.
      * @throws PluginParseException if the resource was not found or could not be

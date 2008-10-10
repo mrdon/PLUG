@@ -1,25 +1,26 @@
 package com.atlassian.plugin.osgi.factory;
 
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.artifact.JarPluginArtifact;
+import com.atlassian.plugin.impl.UnloadablePlugin;
+import com.atlassian.plugin.osgi.container.OsgiContainerException;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.atlassian.plugin.test.PluginBuilder;
+import com.mockobjects.dynamic.C;
+import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.ArrayList;
-
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.test.PluginBuilder;
-import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
-import com.atlassian.plugin.impl.UnloadablePlugin;
-import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.container.OsgiContainerException;
-import com.mockobjects.dynamic.Mock;
-import com.mockobjects.dynamic.C;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
-import org.osgi.util.tracker.ServiceTracker;
 
 public class TestOsgiPluginDeployer extends TestCase
 {
@@ -52,11 +53,13 @@ public class TestOsgiPluginDeployer extends TestCase
         this.jar.delete();
     }
 
-    public void testCreateOsgiPlugin() throws PluginParseException {
+    public void testCreateOsgiPlugin() throws PluginParseException
+    {
         mockOsgi.expectAndReturn("installBundle", C.ANY_ARGS, mockBundle.proxy());
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
         mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
-        Plugin plugin = deployer.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+        Plugin plugin = deployer.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(
+            ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiPlugin);
         mockOsgi.verify();
@@ -67,7 +70,7 @@ public class TestOsgiPluginDeployer extends TestCase
         mockOsgi.expectAndThrow("installBundle", C.ANY_ARGS, new OsgiContainerException("Bad install"));
         mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
-        Plugin plugin = deployer.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+        Plugin plugin = deployer.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof UnloadablePlugin);
         mockOsgi.verify();

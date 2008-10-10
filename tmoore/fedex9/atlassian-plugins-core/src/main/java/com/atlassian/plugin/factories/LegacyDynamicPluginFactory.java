@@ -60,7 +60,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
         PluginClassLoader loader = null;
         try
         {
-            loader = new PluginClassLoader(pluginArtifact.getFile(), Thread.currentThread().getContextClassLoader(), tempDirectory);
+            loader = new PluginClassLoader(pluginArtifact, Thread.currentThread().getContextClassLoader(), tempDirectory);
             URL pluginDescriptorUrl = loader.getLocalResource(pluginDescriptorFileName);
             if (pluginDescriptorUrl == null)
                 throw new PluginParseException("No descriptor found in classloader for : " + pluginArtifact);
