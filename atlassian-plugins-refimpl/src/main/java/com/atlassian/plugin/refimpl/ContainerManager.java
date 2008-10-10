@@ -15,6 +15,7 @@ import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.refimpl.servlet.*;
 import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
+import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.atlassian.plugin.servlet.*;
 import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
@@ -85,6 +86,7 @@ public class ContainerManager
         moduleDescriptorFactory.addModuleDescriptor("web-resource", WebResourceModuleDescriptor.class);
         pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader>asList(/*bundledPluginLoader, */directoryPluginLoader),
                 moduleDescriptorFactory, pluginEventManager);
+        pluginManager.setPluginInstaller(new FilePluginInstaller(new File(servletContext.getRealPath("/WEB-INF/plugins"))));
 
         publicContainer.put(PluginController.class, pluginManager);
         publicContainer.put(PluginAccessor.class, pluginManager);
