@@ -13,10 +13,23 @@ public class DirectoryPluginArtifact extends AbstractFilePluginArtifact
 {
     public DirectoryPluginArtifact(File directory)
     {
-        super(directory);
+        super(directory, getMaxLastModified(directory));
         if (!directory.isDirectory())
             throw new IllegalArgumentException(getClass().getSimpleName() + " called with non-directory " + directory);
     }
+
+    private static long getMaxLastModified(File file)
+    {
+        if (!file.isDirectory())
+            return file.lastModified();
+        long max = 0;
+        for (File childFile : file.listFiles())
+        {
+            max = Math.max(max, getMaxLastModified(childFile));
+        }
+        return max;
+    }
+
 
     public Iterable<String> getResourceNames() throws IOException
     {

@@ -139,7 +139,7 @@ public class Scanner
         List<File> removedFiles = new ArrayList<File>();
         for (PluginArtifact unit : scannedDeploymentUnits.values())
         {
-            if (!unit.getFile().exists() || !unit.getFile().canRead())
+            if (!unit.getFile().exists() || (!unit.getFile().isDirectory() && !unit.getFile().canRead()))
             {
                 removedFiles.add(unit.getFile());
             }
