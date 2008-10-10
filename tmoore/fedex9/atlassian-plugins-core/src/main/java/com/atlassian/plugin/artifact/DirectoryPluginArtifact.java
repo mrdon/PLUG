@@ -30,10 +30,11 @@ public class DirectoryPluginArtifact extends AbstractFilePluginArtifact
         assert directory.isDirectory();
         for (File childFile : directory.listFiles())
         {
-            collection.add(prefix + childFile.getName());
+            final String relativePath = prefix + childFile.getName();
+            collection.add(relativePath);
             if (childFile.isDirectory())
             {
-                appendContents(childFile.getName() + "/", childFile, collection);
+                appendContents(relativePath + "/", childFile, collection);
             }
         }
     }
