@@ -210,8 +210,10 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         // If the compared plugin doesn't have the same key, the current object is greater
         if (!otherPlugin.getKey().equals(this.getKey())) return getKey().compareTo(otherPlugin.getKey());
     
-        String thisVersion = cleanVersionString(this.getPluginInformation().getVersion());
-        String otherVersion = cleanVersionString(otherPlugin.getPluginInformation().getVersion());
+        String thisVersion = cleanVersionString(
+                (this.getPluginInformation() != null ? this.getPluginInformation().getVersion() : null));
+        String otherVersion = cleanVersionString(
+                (otherPlugin.getPluginInformation() != null ? otherPlugin.getPluginInformation().getVersion() : null));
     
         if (!VersionStringComparator.isValidVersionString(thisVersion)) return -1;
         if (!VersionStringComparator.isValidVersionString(otherVersion)) return -1;
