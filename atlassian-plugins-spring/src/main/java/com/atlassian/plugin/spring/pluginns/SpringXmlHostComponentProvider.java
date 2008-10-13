@@ -5,6 +5,8 @@ import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Collections;
 
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.BeanFactory;
@@ -21,10 +23,16 @@ public class SpringXmlHostComponentProvider implements HostComponentProvider, Be
     public static final String HOST_COMPONENT_PROVIDER = "hostComponentProvider";
     private BeanFactory beanFactory;
     private List<String> beans;
+    private Map<String,Class[]> interfaces = Collections.emptyMap();
 
     public void setRegistrations(List<String> names)
     {
         this.beans = names;
+    }
+
+    public void setInterfaces(Map<String,Class[]> interfaces)
+    {
+        this.interfaces = interfaces;
     }
 
     public void provide(ComponentRegistrar registrar)
@@ -32,7 +40,12 @@ public class SpringXmlHostComponentProvider implements HostComponentProvider, Be
         for (String name : beans)
         {
             Object bean = beanFactory.getBean(name);
-            registrar.register(findInterfaces(bean.getClass())).forInstance(bean)
+            Class[] beanInterfaces = interfaces.get(name);
+            if (beanInterfaces == null)
+            {
+                beanInterfaces = findInterfaces(bean.getClass());
+            }
+            registrar.register(beanInterfaces).forInstance(bean)
                     .withName(name);
         }
         if (beanFactory instanceof HierarchicalBeanFactory)
@@ -63,5 +76,4 @@ public class SpringXmlHostComponentProvider implements HostComponentProvider, Be
         }
         return validInterfaces.toArray(new Class[0]);
     }
-
 }

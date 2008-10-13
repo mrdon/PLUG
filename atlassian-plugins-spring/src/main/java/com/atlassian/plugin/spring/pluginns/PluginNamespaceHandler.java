@@ -8,10 +8,15 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 public class PluginNamespaceHandler extends NamespaceHandlerSupport
 {
     /**
-     * Registeres the "available" attribute for beans
+     * Registers the following features:
+     * <ul>
+     * <li>The "available" attribute for beans</li>
+     * <li>The "interface" attribute for beans to declare which interfaces they should be registered against</li>
+     * </ul>
      */
     public void init()
     {
+        super.registerBeanDefinitionDecorator("interface", new PluginInterfaceBeanDefinitionDecorator());
         super.registerBeanDefinitionDecoratorForAttribute("available",
                 new PluginAvailableBeanDefinitionDecorator());
     }

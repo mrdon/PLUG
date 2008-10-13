@@ -7,4 +7,6 @@
 
    <xsd:attribute name="available" type="xsd:boolean"/>
 
+   <xsd:element name="interface" type="xsd:string"/>
+
 </xsd:schema>
