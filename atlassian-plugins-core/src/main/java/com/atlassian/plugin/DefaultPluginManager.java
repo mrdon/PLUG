@@ -362,7 +362,7 @@ public class DefaultPluginManager implements PluginManager
                 }
 
                 public String getWaitMessage() {return "Plugins that have yet to start: "+pluginsThatShouldBeEnabled;}
-            });
+            }, 60);
 
 
             // Disable any plugins that aren't enabled by now
