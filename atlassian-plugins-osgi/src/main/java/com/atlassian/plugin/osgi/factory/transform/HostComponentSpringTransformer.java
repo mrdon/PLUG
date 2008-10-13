@@ -2,6 +2,7 @@ package com.atlassian.plugin.osgi.factory.transform;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
+import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 
 import java.util.List;
 
@@ -33,8 +34,8 @@ public class HostComponentSpringTransformer implements SpringTransformer
 
                 // Disabling this for now due to some strange Spring DM bug where it will occasionally generate an invalid
                 // filter, see http://jira.atlassian.com/browse/CONF-13292
-                //if (beanName != null)
-                //    osgiService.addAttribute("filter", "(bean-name="+beanName+")");
+                if (beanName != null)
+                    osgiService.addAttribute("filter", "(&(bean-name="+beanName+")("+ ComponentRegistrar.HOST_COMPONENT_FLAG+"=true))");
 
                 Element interfaces = osgiService.addElement("osgi:interfaces");
                 for (String name : reg.getMainInterfaces())
