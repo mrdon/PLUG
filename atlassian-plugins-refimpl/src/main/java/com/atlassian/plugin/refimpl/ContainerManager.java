@@ -86,7 +86,12 @@ public class ContainerManager
         moduleDescriptorFactory.addModuleDescriptor("web-resource", WebResourceModuleDescriptor.class);
         pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader>asList(/*bundledPluginLoader, */directoryPluginLoader),
                 moduleDescriptorFactory, pluginEventManager);
-        pluginManager.setPluginInstaller(new FilePluginInstaller(new File(servletContext.getRealPath("/WEB-INF/plugins"))));
+        File pluginDir = new File(servletContext.getRealPath("/WEB-INF/plugins"));
+        if (!pluginDir.exists())
+        {
+            pluginDir.mkdirs();
+        }
+        pluginManager.setPluginInstaller(new FilePluginInstaller(pluginDir));
 
         publicContainer.put(PluginController.class, pluginManager);
         publicContainer.put(PluginAccessor.class, pluginManager);
