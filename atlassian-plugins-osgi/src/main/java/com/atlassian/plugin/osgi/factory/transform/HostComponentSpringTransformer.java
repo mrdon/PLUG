@@ -31,8 +31,10 @@ public class HostComponentSpringTransformer implements SpringTransformer
                 Element osgiService = root.addElement("osgi:reference");
                 osgiService.addAttribute("id", id);
 
-                if (beanName != null)
-                    osgiService.addAttribute("filter", "(bean-name="+beanName+")");
+                // Disabling this for now due to some strange Spring DM bug where it will occasionally generate an invalid
+                // filter, see http://jira.atlassian.com/browse/CONF-13292
+                //if (beanName != null)
+                //    osgiService.addAttribute("filter", "(bean-name="+beanName+")");
 
                 Element interfaces = osgiService.addElement("osgi:interfaces");
                 for (String name : reg.getMainInterfaces())
