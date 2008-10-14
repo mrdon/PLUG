@@ -51,7 +51,7 @@ public abstract class ServletFilterModuleContainerFilter implements Filter
     {
         if (getServletModuleManager() == null)
         {
-            log.warn("No ServletModuleManager, which is only ok when the application is still being set up");
+            log.info("Could not get ServletModuleManager. Skipping filter plugins.");
             chain.doFilter(request, response);
             return;
         }
