@@ -51,8 +51,8 @@ public abstract class ServletFilterModuleContainerFilter implements Filter
     {
         if (getServletModuleManager() == null)
         {
-            log.error("Could not get DefaultServletModuleManager?");
-            response.sendError(500, "Could not get DefaultServletModuleManager.");
+            log.warn("No ServletModuleManager, which is only ok when the application is still being set up");
+            chain.doFilter(request, response);
             return;
         }
         

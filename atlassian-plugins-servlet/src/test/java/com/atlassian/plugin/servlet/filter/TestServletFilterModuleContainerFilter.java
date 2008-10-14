@@ -41,6 +41,23 @@ public class TestServletFilterModuleContainerFilter extends TestCase
         mockManager.verify();
     }
 
+    public void testNoServletModuleManager() throws IOException, ServletException
+    {
+
+        MyFilter filter = new MyFilter(null);
+        Mock mockRequest = new Mock(HttpServletRequest.class);
+
+        Mock mockResponse = new Mock(HttpServletResponse.class);
+        Mock mockChain = new Mock(FilterChain.class);
+        mockChain.expect("doFilter", C.ANY_ARGS);
+
+        filter.doFilter((HttpServletRequest)mockRequest.proxy(), (HttpServletResponse)mockResponse.proxy(), (FilterChain)mockChain.proxy());
+
+        mockRequest.verify();
+        mockResponse.verify();
+        mockChain.verify();
+    }
+
     static class MyFilter extends ServletFilterModuleContainerFilter
     {
         private final Mock mockManager;
@@ -55,7 +72,7 @@ public class TestServletFilterModuleContainerFilter extends TestCase
 
         protected ServletModuleManager getServletModuleManager()
         {
-            return (ServletModuleManager) mockManager.proxy();
+             return (mockManager != null ? (ServletModuleManager) mockManager.proxy() : null);
         }
     }
 }
