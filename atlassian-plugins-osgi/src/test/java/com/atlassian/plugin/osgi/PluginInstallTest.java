@@ -261,14 +261,35 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertNotNull(pluginManager.getPlugin("asecond").isEnabled());
     }
 
+    /*
     public void testLotsOfHostComponents() throws Exception
     {
+        File pluginJar = new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <dummy key='dum1'/>",
+                        "</atlassian-plugin>")
+                .build(pluginsDir);
+        File pluginJar2 = new PluginJarBuilder("second")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test.plugin2' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <dummy key='dum1'/>",
+                        "    <dummy key='dum2'/>",
+                        "</atlassian-plugin>")
+                .build(pluginsDir);
+
         DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory();
         factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
         initPluginManager(new HostComponentProvider(){
             public void provide(ComponentRegistrar registrar)
             {
-                for (int x=0; x<500; x++)
+                for (int x=0; x<100; x++)
                 {
                     registrar.register(SomeInterface.class).forInstance(new SomeInterface(){}).withName("some"+x);
                     registrar.register(AnotherInterface.class).forInstance(new AnotherInterface(){}).withName("another"+x);
@@ -276,38 +297,8 @@ public class PluginInstallTest extends PluginInContainerTestBase
             }
         }, factory);
 
-        File pluginJar = new PluginJarBuilder("first")
-                .addFormattedResource("atlassian-plugin.xml",
-                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
-                        "    <plugin-info>",
-                        "        <version>1.0</version>",
-                        "    </plugin-info>",
-                        "    <component-import key='comp1' interface='com.atlassian.plugin.osgi.SomeInterface' />",
-                        "    <dummy key='dum1'/>",
-                        "</atlassian-plugin>")
-                .build();
-        File pluginJar2 = new PluginJarBuilder("second")
-                .addFormattedResource("atlassian-plugin.xml",
-                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
-                        "    <plugin-info>",
-                        "        <version>1.0</version>",
-                        "    </plugin-info>",
-                        "    <component-import key='comp1' interface='com.atlassian.plugin.osgi.SomeInterface' />",
-                        "    <component-import key='comp2' interface='com.atlassian.plugin.osgi.AnotherInterface' />",
-                        "    <dummy key='dum1'/>",
-                        "    <dummy key='dum2'/>",
-                        "</atlassian-plugin>")
-                .build();
-
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        assertEquals(1, pluginManager.getEnabledPlugins().size());
-        assertEquals("Test", pluginManager.getPlugin("test.plugin").getName());
-        assertEquals(1, pluginManager.getPlugin("test.plugin").getModuleDescriptors().size());
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
-        assertEquals(1, pluginManager.getEnabledPlugins().size());
-        assertEquals(2, pluginManager.getPlugin("test.plugin").getModuleDescriptors().size());
-        assertEquals("Test 2", pluginManager.getPlugin("test.plugin").getName());
-    }
+        assertEquals(2, pluginManager.getEnabledPlugins().size());
+    }*/
 
 
     public static class DummyModuleDescriptor extends AbstractModuleDescriptor

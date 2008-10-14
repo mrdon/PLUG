@@ -39,6 +39,7 @@ public abstract class PluginInContainerTestBase extends TestCase {
     public void setUp() throws Exception
     {
         tmpDir = new File("target/plugin-temp");
+        if (tmpDir.exists())  FileUtils.cleanDirectory(tmpDir);
         tmpDir.mkdirs();
         frameworkBundlesDir = new File(tmpDir, "framework-bundles");
         frameworkBundlesDir.mkdir();

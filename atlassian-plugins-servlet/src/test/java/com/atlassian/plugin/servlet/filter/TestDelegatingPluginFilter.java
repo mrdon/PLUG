@@ -1,30 +1,23 @@
 package com.atlassian.plugin.servlet.filter;
 
-import static com.atlassian.plugin.servlet.filter.FilterTestUtils.emptyChain;
-import static com.atlassian.plugin.servlet.filter.FilterTestUtils.newList;
-import static com.atlassian.plugin.test.PluginTestUtils.FILTER_TEST_JAR;
-import static com.atlassian.plugin.test.PluginTestUtils.getFileForResource;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import junit.framework.TestCase;
-
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptorBuilder;
 import com.atlassian.plugin.servlet.filter.FilterTestUtils.FilterAdapter;
+import static com.atlassian.plugin.servlet.filter.FilterTestUtils.emptyChain;
+import static com.atlassian.plugin.servlet.filter.FilterTestUtils.newList;
+import com.atlassian.plugin.test.PluginJarBuilder;
+import static com.atlassian.plugin.test.PluginTestUtils.getFileForResource;
 import com.mockobjects.dynamic.Mock;
+import junit.framework.TestCase;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 
 public class TestDelegatingPluginFilter extends TestCase
 {
@@ -32,6 +25,7 @@ public class TestDelegatingPluginFilter extends TestCase
     {
         Mock mockRequest = new Mock(HttpServletRequest.class);
         mockRequest.expectAndReturn("getPathInfo", "/servlet");
+
         Mock mockResponse = new Mock(HttpServletResponse.class);
 
         createClassLoaderCheckingFilter("filter").doFilter((HttpServletRequest) mockRequest.proxy(), (HttpServletResponse) mockResponse.proxy(), emptyChain);
@@ -82,9 +76,38 @@ public class TestDelegatingPluginFilter extends TestCase
         }
     }
 
-    private Filter createClassLoaderCheckingFilter(final String name) throws URISyntaxException
+    private Filter createClassLoaderCheckingFilter(final String name) throws Exception
     {
-        final PluginClassLoader loader = new PluginClassLoader(getFileForResource(FILTER_TEST_JAR));
+        File pluginFile = new PluginJarBuilder()
+                .addFormattedJava("my.SimpleFilter",
+                        "package my;" +
+                        "import java.io.IOException;" +
+                        "import javax.servlet.Filter;" +
+                        "import javax.servlet.FilterChain;" +
+                        "import javax.servlet.FilterConfig;" +
+                        "import javax.servlet.ServletException;" +
+                        "import javax.servlet.ServletRequest;" +
+                        "import javax.servlet.ServletResponse;" +
+                        "" +
+                        "public class SimpleFilter implements Filter" +
+                        "{" +
+                        "    String name;" +
+                        "    public void init(FilterConfig filterConfig) throws ServletException" +
+                        "    {" +
+                        "        name = filterConfig.getInitParameter('name');" +
+                        "    }" +
+                        "" +
+                        "    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException" +
+                        "    {" +
+                        "        response.getWriter().write('entered: ' + name + '\');" +
+                        "        chain.doFilter(request, response);" +
+                        "        response.getWriter().write('exiting: ' + name + '\');" +
+                        "    }" +
+                        "    public void destroy() {}" +
+                        "}")
+                .addFile("atlassian-plugin.xml", getFileForResource("com/atlassian/plugin/servlet/filter/atlassian-plugin-filter.xml"))
+                .build();
+        final PluginClassLoader loader = new PluginClassLoader(pluginFile);
         Plugin plugin = new DefaultDynamicPlugin(null, loader);
         FilterAdapter testFilter = new FilterAdapter()
         {
