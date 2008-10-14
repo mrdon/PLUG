@@ -255,7 +255,7 @@ public class TestDefaultServletModuleManager extends TestCase
         // get the filters, if the filter doesn't get the same context as the context listener did, the assert will fail
         Mock mockFilterConfig = new Mock(FilterConfig.class);
         mockFilterConfig.expectAndReturn("getServletContext", mockServletContext.proxy());
-        servletModuleManager.getFilters(FilterLocation.bottom, "/servlet", (FilterConfig) mockFilterConfig.proxy());
+        servletModuleManager.getFilters(FilterLocation.BEFORE_DISPATCH, "/servlet", (FilterConfig) mockFilterConfig.proxy());
     }
     
     public void testFiltersWithSameLocationAndWeightInTheSamePluginAppearInTheOrderTheyAreDeclared() throws Exception
@@ -289,7 +289,7 @@ public class TestDefaultServletModuleManager extends TestCase
         mockHttpServletRequest.matchAndReturn("getPathInfo", "/servlet");
         Mock mockHttpServletResponse = new Mock(HttpServletResponse.class);
         
-        Iterable<Filter> filters = servletModuleManager.getFilters(FilterLocation.bottom, "/some/path", (FilterConfig) mockFilterConfig.proxy());
+        Iterable<Filter> filters = servletModuleManager.getFilters(FilterLocation.BEFORE_DISPATCH, "/some/path", (FilterConfig) mockFilterConfig.proxy());
         FilterChain chain = new IteratingFilterChain(filters.iterator(), emptyChain);
         
         chain.doFilter((HttpServletRequest) mockHttpServletRequest.proxy(), (HttpServletResponse) mockHttpServletResponse.proxy());

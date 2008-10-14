@@ -49,7 +49,7 @@ public class TestServletFilterModuleContainerFilter extends TestCase
         {
             this.mockManager = mockManager;
             Mock config = new Mock(FilterConfig.class);
-            config.expectAndReturn("getInitParameter", C.ANY_ARGS, "top");
+            config.expectAndReturn("getInitParameter", C.ANY_ARGS, "after-encoding");
             init((FilterConfig) config.proxy());
         }
 

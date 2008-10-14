@@ -261,7 +261,6 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertNotNull(pluginManager.getPlugin("asecond").isEnabled());
     }
 
-    /*
     public void testLotsOfHostComponents() throws Exception
     {
         File pluginJar = new PluginJarBuilder("first")
@@ -298,7 +297,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
         }, factory);
 
         assertEquals(2, pluginManager.getEnabledPlugins().size());
-    }*/
+    }
 
 
     public static class DummyModuleDescriptor extends AbstractModuleDescriptor

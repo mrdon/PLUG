@@ -17,7 +17,7 @@ public class ServletFilterModuleDescriptorBuilder
     private Plugin plugin = new PluginBuilder().build();
     private String key = "test.servlet.context.listener";
     private Filter filter;
-    private FilterLocation location = FilterLocation.bottom;
+    private FilterLocation location = FilterLocation.BEFORE_DISPATCH;
     private int weight = 100;
     private List<String> paths = new LinkedList<String>();
     private ServletModuleManager servletModuleManager;

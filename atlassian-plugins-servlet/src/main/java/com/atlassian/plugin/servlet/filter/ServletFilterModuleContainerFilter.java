@@ -39,7 +39,7 @@ public abstract class ServletFilterModuleContainerFilter implements Filter
     public void init(FilterConfig filterConfig) throws ServletException
     {
         this.filterConfig = filterConfig;
-        location = FilterLocation.valueOf(filterConfig.getInitParameter("location"));
+        location = FilterLocation.parse(filterConfig.getInitParameter("location"));
     }
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException

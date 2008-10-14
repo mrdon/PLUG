@@ -18,9 +18,16 @@ import com.atlassian.plugin.servlet.filter.FilterLocation;
  * filter should be applied to by defining one or more &lt;url-pattern&gt; elements and they can decide where in the
  * filter stack a plugin filter should go by defining the "location" and "weight" attributes. 
  * <p/>
- * The location attribute can have one of three values, "top", "middle" and "bottom".  Where each of these filters lies
- * relative to the applications filters depends on the application.  But filters with "top" will always come before 
- * those defined with "middle" which always come before "bottom".  The default for the location attribute is "bottom".
+ * The location attribute can have one of four values:
+ * </p>
+ * <ul>
+ * <li>after-encoding - after the character encoding filter</li>
+ * <li>before-login - before the login filter</li>
+ * <li>before-decoration - before any global decoration like sitemesh</li>
+ * <li>before-dispatch - before any dispatching filters or servlets</li>
+ * </ul>
+ * <p>
+ * The default for the location attribute is "before-dispatch".
  * <p/>
  * The weight attribute can have any integer value.  Filters with lower values of the weight attribute will come before
  * those with higher values within the same location.
@@ -29,7 +36,7 @@ import com.atlassian.plugin.servlet.filter.FilterLocation;
  */
 public abstract class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<Filter> implements StateAware
 {
-    static final String DEFAULT_LOCATION = FilterLocation.bottom.name();
+    static final String DEFAULT_LOCATION = FilterLocation.BEFORE_DISPATCH.name();
     static final String DEFAULT_WEIGHT = "100";
     
     private FilterLocation location;
@@ -46,7 +53,7 @@ public abstract class ServletFilterModuleDescriptor extends BaseServletModuleDes
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);
-        location = FilterLocation.valueOf(element.attributeValue("location", DEFAULT_LOCATION));
+        location = FilterLocation.parse(element.attributeValue("location", DEFAULT_LOCATION));
         weight = Integer.valueOf(element.attributeValue("weight", DEFAULT_WEIGHT));
     }
     

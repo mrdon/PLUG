@@ -37,7 +37,7 @@ public class TestServletFilterModuleDescriptor extends TestCase
         plugin.setKey("somekey");
         Element e = getValidConfig();
         descriptor.init(plugin, e);
-        assertEquals(FilterLocation.bottom, descriptor.getLocation());
+        assertEquals(FilterLocation.BEFORE_DISPATCH, descriptor.getLocation());
         assertEquals(100, descriptor.getWeight());
     }
 
@@ -74,10 +74,10 @@ public class TestServletFilterModuleDescriptor extends TestCase
         Plugin plugin = new StaticPlugin();
         plugin.setKey("somekey");
         Element e = getValidConfig();
-        e.addAttribute("location", "top");
+        e.addAttribute("location", "after-encoding");
         e.addAttribute("weight", "122");
         descriptor.init(plugin, e);
-        assertEquals(FilterLocation.top, descriptor.getLocation());
+        assertEquals(FilterLocation.AFTER_ENCODING, descriptor.getLocation());
         assertEquals(122, descriptor.getWeight());
     }
 
