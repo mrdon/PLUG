@@ -70,12 +70,12 @@ public abstract class ServletFilterModuleContainerFilter implements Filter
      */
     protected abstract ServletModuleManager getServletModuleManager();
 
-    protected FilterConfig getFilterConfig()
+    protected final FilterConfig getFilterConfig()
     {
         return filterConfig;
     }
 
-    protected FilterLocation getFilterLocation()
+    protected final FilterLocation getFilterLocation()
     {
         return location;
     }
@@ -87,7 +87,7 @@ public abstract class ServletFilterModuleContainerFilter implements Filter
      *            The request
      * @return The uri
      */
-    protected String getUri(HttpServletRequest request) {
+    private static String getUri(HttpServletRequest request) {
         // handle http dispatcher includes.
         String uri = (String) request
                 .getAttribute("javax.servlet.include.servlet_path");
@@ -112,7 +112,7 @@ public abstract class ServletFilterModuleContainerFilter implements Filter
      * @param request the request
      * @return the servlet path
      */
-    public static String getServletPath(HttpServletRequest request) {
+    private static String getServletPath(HttpServletRequest request) {
         String servletPath = request.getServletPath();
 
         String requestUri = request.getRequestURI();
