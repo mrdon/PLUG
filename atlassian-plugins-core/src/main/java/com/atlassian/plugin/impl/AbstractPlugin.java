@@ -207,6 +207,9 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
      */
     public int compareTo(Plugin otherPlugin)
     {
+        if (otherPlugin.getKey() == null) return 1;
+        if (getKey() == null) return -1;
+
         // If the compared plugin doesn't have the same key, the current object is greater
         if (!otherPlugin.getKey().equals(this.getKey())) return getKey().compareTo(otherPlugin.getKey());
     

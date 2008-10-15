@@ -32,4 +32,19 @@ public class TestAbstractPlugin extends TestCase
 
         assertTrue(p1.compareTo(p2) == -1 * p2.compareTo(p1));
     }
+
+    public void testCompareToWithNullKey()
+    {
+        AbstractPlugin p1 = new StaticPlugin(){};
+        AbstractPlugin p2 = new StaticPlugin(){};
+        p2.setKey("foo");
+
+        assertTrue(p1.compareTo(p2) == -1 * p2.compareTo(p1));
+
+        p1 = new StaticPlugin(){};
+        p1.setKey("foo");
+        p2 = new StaticPlugin(){};
+
+        assertTrue(p1.compareTo(p2) == -1 * p2.compareTo(p1));
+    }
 }

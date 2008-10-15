@@ -120,7 +120,9 @@ public class DirectoryPluginLoader implements DynamicPluginLoader
             }
         }
         if (plugin == null)
+        {
             plugin = new UnloadablePlugin(errorText);
+        }
         else
             log.info("Plugin " + deploymentUnit + " created");
 

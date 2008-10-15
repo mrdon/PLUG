@@ -7,12 +7,14 @@ package com.atlassian.plugin.impl;
  */
 public class UnloadablePlugin extends StaticPlugin
 {
+    private static final String UNKNOWN_KEY_PREFIX = "Unknown-";
     private String errorText;
     private boolean uninstallable;
     private boolean deletable;
 
     public UnloadablePlugin()
     {
+        this(null);
     }
 
     /**
@@ -22,6 +24,7 @@ public class UnloadablePlugin extends StaticPlugin
     public UnloadablePlugin(String text)
     {
         this.errorText = text;
+        setKey(UNKNOWN_KEY_PREFIX + System.identityHashCode(this));
     }
 
     public boolean isUninstallable()
