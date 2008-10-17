@@ -174,14 +174,26 @@
         <!-- patch for FELIX-721 -->
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.framework</artifactId>
+            <artifactId>org.apache.felix.main</artifactId>
             <version>1.2.1-atlassian-3</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.felix</groupId>
-                    <artifactId>org.osgi.compendium</artifactId>
-                </exclusion>
-            </exclusions>
+          <exclusions>
+            <exclusion>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.shell</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.shell</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.shell.tui</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.bundlerepository</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
  
         <dependency>
