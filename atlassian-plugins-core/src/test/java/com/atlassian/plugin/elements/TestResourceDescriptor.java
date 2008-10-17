@@ -3,6 +3,7 @@ package com.atlassian.plugin.elements;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
+import org.dom4j.Element;
 import junit.framework.TestCase;
 import com.atlassian.plugin.mock.MockBear;
 
@@ -112,6 +113,55 @@ public class TestResourceDescriptor extends TestCase
         assertEquals(rd.getLocation(), location.getLocation());
         assertEquals(rd.getType(), location.getType());
         assertEquals(rd.getName(), location.getName());
+    }
+
+    public void testEquals()
+    {
+        Element desc = DocumentHelper.createElement("foo");
+        desc.addAttribute("name", "foo");
+        assertFalse(new ResourceDescriptor(desc).equals(null));
+    }
+
+    public void testEqualsWithNullNameAndType()
+    {
+        Element e = DocumentHelper.createElement("foo");
+        e.addAttribute("namePattern", "foo");
+        e.addAttribute("location", "/foo/");
+        ResourceDescriptor desc = new ResourceDescriptor(e);
+
+        ResourceDescriptor desc2 = new ResourceDescriptor(e);
+        assertTrue(desc.equals(desc2));
+    }
+
+    public void testEqualsWithNullType()
+    {
+        Element e = DocumentHelper.createElement("foo");
+        e.addAttribute("name", "foo");
+        e.addAttribute("location", "/foo/");
+        ResourceDescriptor desc = new ResourceDescriptor(e);
+
+        e.addAttribute("type", "foo");
+        ResourceDescriptor desc2 = new ResourceDescriptor(e);
+        assertFalse(desc.equals(desc2));
+
+        desc = new ResourceDescriptor(e);
+
+        e.addAttribute("type", null);
+        desc2 = new ResourceDescriptor(e);
+        assertFalse(desc.equals(desc2));
+    }
+
+    public void testHashcode()
+    {
+        Element desc = DocumentHelper.createElement("foo");
+        desc.addAttribute("name", "foo");
+        desc.addAttribute("type", "bar");
+        assertNotNull(new ResourceDescriptor(desc).hashCode());
+        desc.addAttribute("type", null);
+        assertNotNull(new ResourceDescriptor(desc).hashCode());
+        desc.addAttribute("name", null);
+        desc.addAttribute("namePattern", "foo");
+        desc.addAttribute("location", "bar");
     }
 
 }

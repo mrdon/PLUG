@@ -38,6 +38,11 @@ public class ResourceDescriptor
 
         this.location = element.attributeValue("location");
 
+        if (namePattern != null && location == null)
+        {
+            throw new RuntimeException("resource descriptor must have the 'location' attribute specified when the 'namePattern' attribute is used");
+        }
+
         if (namePattern != null && !location.endsWith("/"))
         {
             throw new RuntimeException("when 'namePattern' is specified, 'location' must be a directory (ending in '/')");
@@ -132,13 +137,34 @@ public class ResourceDescriptor
 
         final ResourceDescriptor resourceDescriptor = (ResourceDescriptor) o;
 
-        if (!name.equals(resourceDescriptor.name))
+        if (name != null)
         {
-            return false;
+            if (!name.equals(resourceDescriptor.name))
+            {
+                return false;
+            }
         }
-        if (!type.equals(resourceDescriptor.type))
+        else if (pattern != null)
         {
-            return false;
+            if (!pattern.toString().equals(resourceDescriptor.pattern.toString()))
+            {
+                return false;
+            }
+        }
+
+        if (type == null)
+        {
+            if (resourceDescriptor.type != null)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (!type.equals(resourceDescriptor.type))
+            {
+                return false;
+            }
         }
 
         return true;
@@ -146,9 +172,18 @@ public class ResourceDescriptor
 
     public int hashCode()
     {
-        int result;
-        result = type.hashCode();
-        result = 29 * result + name.hashCode();
+        int result = 0;
+        if (type != null)
+        {
+            result = type.hashCode();
+        }
+        if (name != null)
+        {
+            result = 29 * result + name.hashCode();
+        } else if (pattern != null)
+        {
+            result = 29 * result + pattern.hashCode();
+        }
         return result;
     }
 
