@@ -338,8 +338,14 @@ public class DefaultPluginManager implements PluginManager
             plugins.put(plugin.getKey(), plugin);
             if (isPluginEnabled(plugin.getKey()))
             {
-                plugin.setEnabled(true);
-                pluginsThatShouldBeEnabled.add(plugin);
+                try
+                {
+                    plugin.setEnabled(true);
+                    pluginsThatShouldBeEnabled.add(plugin);
+                } catch (RuntimeException ex)
+                {
+                    log.error("Unable to enable plugin "+plugin.getKey(), ex);
+                }
             }
 
             pluginToPluginLoader.put(plugin, loader);

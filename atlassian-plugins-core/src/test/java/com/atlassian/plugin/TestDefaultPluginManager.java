@@ -1158,6 +1158,15 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertFalse(servicePlugin.isEnabled());
     }
 
+    public void testAddPluginsThatThrowExceptionOnEnabled() throws Exception
+    {
+        Plugin plugin = new CannotEnablePlugin();
+
+        manager.addPlugins(null, Arrays.asList(plugin));
+
+        assertFalse(plugin.isEnabled());
+    }
+
     public void testUninstallPluginClearsState() throws IOException
     {
         createFillAndCleanTempPluginDirectory();
@@ -1311,6 +1320,24 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         public Collection<Plugin> addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
         {
             return super.loadAllPlugins(moduleDescriptorFactory);
+        }
+    }
+
+    private static class CannotEnablePlugin extends StaticPlugin 
+    {
+        public CannotEnablePlugin()
+        {
+            setKey("foo");
+        }
+
+        @Override
+        public void setEnabled(boolean enabled)
+        {
+            throw new RuntimeException("boo");
+        }
+
+        public void disabled()
+        {
         }
     }
 }
