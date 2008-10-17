@@ -53,9 +53,15 @@ public class ClassLoaderUtils
                 }
                 catch (ClassNotFoundException exc)
                 {
-                    return callingClass.getClassLoader().loadClass(className);
+                    if (callingClass != null && callingClass.getClassLoader() != null)
+                    {
+                        return callingClass.getClassLoader().loadClass(className);
+                    }
+                    else
+                    {
+                        throw exc;
+                    }
                 }
-
             }
         }
     }
