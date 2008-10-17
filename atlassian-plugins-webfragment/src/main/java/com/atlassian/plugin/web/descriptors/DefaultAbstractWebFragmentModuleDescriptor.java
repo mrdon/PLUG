@@ -188,4 +188,10 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
     {
         return decoratedDescriptor.getResourceDescriptor(type, name);
     }
+
+    @Override
+    public String toString()
+    {
+        return decoratedDescriptor.toString();
+    }
 }
