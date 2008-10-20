@@ -14,37 +14,35 @@ import java.io.Writer;
 public interface WebResourceManager
 {
     /**
-     * Called by a component to indicate that a certain resource is required to be inserted into
-     * this page.  Note that this will always include the resources as if we are in {@link #DELAYED_INCLUDE_MODE}.
-     * Use this if you do not want to inline a resource.
+     * Indicates to that a given plugin web resource is required. All resources called via this method must be
+     * included when {@link #writeRequiredResources(Writer)} is called.
      *
-     * @param resourceName The fully qualified plugin name to include (eg <code>jira.webresources:scriptaculous</code>)
-     * @throws IllegalStateException If this method is called while not in {@link #DELAYED_INCLUDE_MODE}.
+     * @param webResourceName The fully qualified plugin web resource name (eg <code>jira.webresources:scriptaculous</code>)
+     * @see #writeRequiredResources(Writer)
      */
-    void requireResource(String resourceName);
+    public void requireResource(String webResourceName);
 
     /**
-     * Called by a component to indicate that a certain resource is required to be inserted into
-     * this page.
-     *
-     * @param resourceName The fully qualified plugin name to include (eg <code>jira.webresources:scriptaculous</code>)
-     * @param writer       The writer to write the links to if the {@link WebResourceManager.IncludeMode} equals {@link WebResourceManager#INLINE_INCLUDE_MODE}
+     * Writes out the resource tags to the previously required resources called via {@link #requireResource(String)}.
+     * If you need it as a String to embed the tags in a template, use {@link #getRequiredResources()}.
      */
-    public void requireResource(String resourceName, Writer writer);
+    public void writeRequiredResources(Writer writer);
 
     /**
-     * Include the resources that have already been specified by the request in the page.  This is done by including
-     * links to the resources that have been specified.
-     * <p/>
-     * Example - if a 'javascript' resource has been specified, this method should output:
-     * <pre><code>
-     *  &lt;script type=&quot;text/javascript&quot; src=&quot;$contextPath/scripts/javascript.js&quot;&gt;&lt;/script&gt;
-     * </code></pre>
-     * Similarly for other supported resources
-     *
-     * @param writer The writer to write the links to
+     * @see {@link #writeRequiredResources(Writer)}
      */
-    public void includeResources(Writer writer);
+    public String getRequiredResources();
+
+    /**
+     * Writes the resource tags of the specified resource to the writer.
+     * If you need it as a String to embed the tags in a template, use {@link #getRequiredResources()}.
+     */
+    public void writeResourceTags(String webResourceName, Writer writer);
+
+    /**
+     * @see {@link #writeResourceTags(String, Writer)}
+     */
+    public String getResourceTags(String webResourceName);
 
     /**
      * A helper method to return a prefix for 'system' static resources.  Generally the implementation will return
@@ -88,33 +86,48 @@ public interface WebResourceManager
     public String getStaticResourcePrefix(String resourceCounter);
 
     /**
-     * A helper method to return a url for 'plugin' resources.  Generally the implementation will return
-     * <p/>
-     * <pre><code>/s/{build num}/{system counter}/{plugin version}/_/download/resources/plugin.key:module.key/resource.name</code></pre>
-     * <p/>
-     * Note that the servlet context is prepended, and there is no trailing slash.
-     * <p/>
-     * <p/>
-     * Typical usage is to replace:
-     * <p/>
-     * <pre><code>&lt;%= request.getContextPath() %>/download/resources/plugin.key:module.key/resource.name</code></pre>
-     * with
-     * <pre><code>&lt;%= webResourceManager.getStaticPluginResource(descriptor, resourceName) %></code></pre>
-     *
-     * @return A url that can be used to request 'plugin' resources.
+     * @param moduleCompleteKey complete plugin module key
+     * @return returns the url of this plugin resource
+     */
+    public String getStaticPluginResource(String moduleCompleteKey, String resourceName);
+
+
+    // Deprecated methods
+
+    /**
+     * @deprecated Since 2.2. Use {@link #getStaticPluginResource(String, String)} instead.
      */
     public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName);
+
+    /**
+     * Called by a component to indicate that a certain resource is required to be inserted into
+     * this page.
+     *
+     * @param resourceName The fully qualified plugin name to include (eg <code>jira.webresources:scriptaculous</code>)
+     * @param writer       The writer to write the links to if the {@link WebResourceManager.IncludeMode} equals {@link WebResourceManager#INLINE_INCLUDE_MODE}
+     * @deprecated Since 2.2. Use #writeResourceTags instead.
+     */
+    public void requireResource(String resourceName, Writer writer);
+
+    /**
+     * Include the resources that have already been specified by the request in the page.  This is done by including
+     * links to the resources that have been specified.
+     * <p/>
+     * Example - if a 'javascript' resource has been specified, this method should output:
+     * <pre><code>
+     *  &lt;script type=&quot;text/javascript&quot; src=&quot;$contextPath/scripts/javascript.js&quot;&gt;&lt;/script&gt;
+     * </code></pre>
+     * Similarly for other supported resources
+     *
+     * @param writer The writer to write the links to
+     * @deprecated Since 2.2. Use {@link #writeRequiredResources} instead.
+     */
+    public void includeResources(Writer writer);
 
     /**
      * @deprecated Use #getStaticPluginResource instead
      */
     public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, String resourceName);
-
-    /**
-     * @param pluginModuleKey complete plugin module key
-     * @return returns the url of this plugin resource
-     */
-    public String getStaticPluginResource(String pluginModuleKey, String resourceName);
 
     /**
      * Whether resources should be included inline, or at the top of the page.  In most cases, you want to leave this
@@ -124,9 +137,13 @@ public interface WebResourceManager
      * @param includeMode If there is no decorator for this request, set this to be {@link #INLINE_INCLUDE_MODE}
      * @see #DELAYED_INCLUDE_MODE
      * @see #INLINE_INCLUDE_MODE
+     * @deprecated Since 2.2.
      */
     public void setIncludeMode(IncludeMode includeMode);
 
+    /**
+     * @deprecated Since 2.2. Use {@link #writeResourceTags(String, Writer)} instead.
+     */
     public static final IncludeMode DELAYED_INCLUDE_MODE = new IncludeMode()
     {
         public String getModeName()
@@ -135,6 +152,9 @@ public interface WebResourceManager
         }
     };
 
+    /**
+     * @deprecated Since 2.2. Use {@link #requireResource(String)}  instead.
+     */
     public static final IncludeMode INLINE_INCLUDE_MODE = new IncludeMode()
     {
         public String getModeName()
@@ -143,6 +163,9 @@ public interface WebResourceManager
         }
     };
 
+    /**
+     * @deprecated Since 2.2
+     */
     public static interface IncludeMode
     {
         public String getModeName();

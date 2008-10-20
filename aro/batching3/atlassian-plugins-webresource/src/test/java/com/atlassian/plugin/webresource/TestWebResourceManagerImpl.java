@@ -2,21 +2,18 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.servlet.AbstractFileServerServlet;
-import com.atlassian.plugin.webresource.mock.StubModuleDescriptor;
+import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class TestWebResourceManagerImpl extends TestCase
 {
+    private Mock mockPluginAccessor;
     private WebResourceManager webResourceManager;
 
-    private static final String ANIMAL_PLUGIN_VERSION = "2.1";
+    private static final String ANIMAL_PLUGIN_VERSION = "2";
     private static final String BASEURL = "http://www.foo.com";
     private static final String SYSTEM_COUNTER = "123";
     private static final String SYSTEM_BUILD_NUMBER = "650";
@@ -25,8 +22,13 @@ public class TestWebResourceManagerImpl extends TestCase
     {
         super.setUp();
 
+        mockPluginAccessor = new Mock(PluginAccessor.class);
+
         Mock webResourceIntegration = new Mock(WebResourceIntegration.class);
-        webResourceManager = new WebResourceManagerImpl((WebResourceIntegration) webResourceIntegration.proxy());
+        webResourceIntegration.matchAndReturn("getPluginAccessor", mockPluginAccessor.proxy());
+
+        PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl((WebResourceIntegration) webResourceIntegration.proxy(), null);
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, (WebResourceIntegration) webResourceIntegration.proxy());
 
         webResourceIntegration.expectAndReturn("getBaseUrl", BASEURL);
         webResourceIntegration.expectAndReturn("getSystemBuildNumber", SYSTEM_BUILD_NUMBER);
@@ -36,112 +38,53 @@ public class TestWebResourceManagerImpl extends TestCase
     protected void tearDown() throws Exception
     {
         webResourceManager = null;
+        mockPluginAccessor = null;
 
         super.tearDown();
     }
 
     public void testGetStaticResourcePrefix()
     {
-        String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
+        String expectedPrefix = BASEURL + "/" + PluginResourceLocatorImpl.STATIC_RESOURCE_PREFIX + "/" +
+            SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + PluginResourceLocatorImpl.STATIC_RESOURCE_SUFFIX;
         assertEquals(expectedPrefix, webResourceManager.getStaticResourcePrefix());
     }
 
     public void testGetStaticResourcePrefixWithCounter()
     {
         String resourceCounter = "456";
-        String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + resourceCounter + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
+        String expectedPrefix = BASEURL + "/" + PluginResourceLocatorImpl.STATIC_RESOURCE_PREFIX + "/" +
+            SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + resourceCounter + "/" + PluginResourceLocatorImpl.STATIC_RESOURCE_SUFFIX;
         assertEquals(expectedPrefix, webResourceManager.getStaticResourcePrefix(resourceCounter));
     }
 
     public void testGetStaticPluginResourcePrefix()
     {
-        Plugin animalPlugin = new StaticPlugin();
-        PluginInformation pluginInfo = new PluginInformation();
-        pluginInfo.setVersion(ANIMAL_PLUGIN_VERSION);
-        animalPlugin.setKey("confluence.extra.animal:animal");
-        animalPlugin.setPluginInformation(pluginInfo);
+        final String moduleKey = "confluence.extra.animal:animal";
 
-        final  StubModuleDescriptor animalModuleDescriptor = new StubModuleDescriptor();
-        animalModuleDescriptor.setPlugin(animalPlugin);
+        final Plugin animalPlugin = new StaticPlugin();
+        animalPlugin.setKey("confluence.extra.animal");
+        animalPlugin.setPluginsVersion(Integer.parseInt(ANIMAL_PLUGIN_VERSION));
+
+        WebResourceModuleDescriptor moduleDescriptor = new WebResourceModuleDescriptor() {
+            public String getCompleteKey()
+            {
+                return moduleKey;
+            }
+
+            public Plugin getPlugin()
+            {
+                return animalPlugin;
+            }
+        };
+
+        mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(moduleKey)), moduleDescriptor);
 
         String resourceName = "foo.js";
-        String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + ANIMAL_PLUGIN_VERSION + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + "/" + AbstractFileServerServlet
-            .SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" + animalModuleDescriptor.getCompleteKey() + "/" + resourceName;
-        assertEquals(expectedPrefix, webResourceManager.getStaticPluginResource(animalModuleDescriptor, resourceName));
-    }
+        String expectedPrefix = BASEURL + "/" + PluginResourceLocatorImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER +
+            "/" + SYSTEM_COUNTER + "/" + ANIMAL_PLUGIN_VERSION + "/" + PluginResourceLocatorImpl.STATIC_RESOURCE_SUFFIX + "/" + AbstractFileServerServlet
+            .SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleKey + "/" + resourceName;
 
-
-    public void testRequireResourceWithoutWriter()
-    {
-        WebResourceManagerImpl manager = new WebResourceManagerImpl(new FakeWebResourceIntegration(new HashMap()));
-        //default should be delayed mode
-        assertEquals(WebResourceManager.DELAYED_INCLUDE_MODE, manager.getIncludeMode());
-
-        //lets add a resource and check
-        manager.requireResource("resource1");
-
-        // lets try the same in inline mode.  Should throw an exception.
-        manager.setIncludeMode(WebResourceManager.INLINE_INCLUDE_MODE);
-        assertEquals(WebResourceManager.INLINE_INCLUDE_MODE, manager.getIncludeMode());
-        try
-        {
-            manager.requireResource("resource1");
-            fail();
-        }
-        catch (IllegalStateException e)
-        {
-            //expected exception.
-        }
-    }
-
-    public void testSettingIncludedMode()
-    {
-        WebResourceManagerImpl manager = new WebResourceManagerImpl(new FakeWebResourceIntegration(new HashMap()));
-        //default should be delayed mode
-        assertEquals(WebResourceManager.DELAYED_INCLUDE_MODE, manager.getIncludeMode());
-
-        // lets try the same in inline mode.
-        manager.setIncludeMode(WebResourceManager.INLINE_INCLUDE_MODE);
-        assertEquals(WebResourceManager.INLINE_INCLUDE_MODE, manager.getIncludeMode());
-
-        // lets switch back
-        manager.setIncludeMode(WebResourceManager.DELAYED_INCLUDE_MODE);
-        assertEquals(WebResourceManager.DELAYED_INCLUDE_MODE, manager.getIncludeMode());
-    }
-
-    private class FakeWebResourceIntegration implements WebResourceIntegration
-    {
-        private final Map requestCache;
-
-
-        public FakeWebResourceIntegration(Map requestCache)
-        {
-            this.requestCache = requestCache;
-        }
-
-        public PluginAccessor getPluginAccessor()
-        {
-            return null;
-        }
-
-        public Map getRequestCache()
-        {
-            return requestCache;
-        }
-
-        public String getSystemCounter()
-        {
-            return null;
-        }
-
-        public String getSystemBuildNumber()
-        {
-            return null;
-        }
-
-        public String getBaseUrl()
-        {
-            return null;
-        }
+        assertEquals(expectedPrefix, webResourceManager.getStaticPluginResource(moduleKey, resourceName));
     }
 }

@@ -6,13 +6,21 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import org.dom4j.Element;
 
-/**
- *
- */
 public class StubModuleDescriptor extends AbstractModuleDescriptor implements StateAware
 {
     private Object module;
     private boolean enabled;
+    private final String moduleCompleteKey;
+
+    public StubModuleDescriptor(String moduleCompleteKey)
+    {
+        this.moduleCompleteKey = moduleCompleteKey;
+    }
+
+    public String getCompleteKey()
+    {
+        return moduleCompleteKey;
+    }
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {

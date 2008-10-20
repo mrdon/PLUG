@@ -22,6 +22,8 @@ import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
 import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
+import com.atlassian.plugin.webresource.PluginResourceLocator;
+import com.atlassian.plugin.webresource.PluginResourceLocatorImpl;
 
 import javax.servlet.ServletContext;
 import java.io.File;
@@ -49,7 +51,12 @@ public class ContainerManager
         instance = this;
         pluginEventManager = new DefaultPluginEventManager();
         servletModuleManager = new DefaultServletModuleManager(pluginEventManager);
-        webResourceManager = new WebResourceManagerImpl(new SimpleWebResourceIntegration(servletContext));
+
+        SimpleWebResourceIntegration webResourceIntegration = new SimpleWebResourceIntegration(servletContext);
+        PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(webResourceIntegration, null); //todo servlet context factory
+        PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
+
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration);
 
         DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
         List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
@@ -108,10 +115,6 @@ public class ContainerManager
         }
 
         downloadStrategies = new ArrayList<DownloadStrategy>();
-        PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload();
-        pluginDownloadStrategy.setPluginManager(pluginManager);
-        pluginDownloadStrategy.setContentTypeResolver(new SimpleContentTypeResolver());
-        pluginDownloadStrategy.setCharacterEncoding("UTF-8");
         downloadStrategies.add(pluginDownloadStrategy);
     }
 

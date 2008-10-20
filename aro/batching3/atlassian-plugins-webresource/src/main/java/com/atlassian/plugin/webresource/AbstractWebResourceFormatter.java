@@ -12,10 +12,10 @@ abstract class AbstractWebResourceFormatter implements WebResourceFormatter
     /**
      * Should return a List of parameter name {@link String}s, which the WebResourceFormatter will write out as
      * HTML attributes.
-     * 
+     *
      * @return a {@link List} of parameter names
      */
-    protected abstract List/*<String>*/ getAttributeParameters();
+    protected abstract List<String> getAttributeParameters();
 
     /**
      * A convenient method to convert the given parameter map into a List of HTML {@link String} attributes.
@@ -25,9 +25,9 @@ abstract class AbstractWebResourceFormatter implements WebResourceFormatter
      * @param params a {@link Map} of parameters
      * @return a list of HTML {@link String} attributes
      */
-    protected List getParametersAsAttributes(Map params)
+    protected List<String> getParametersAsAttributes(Map params)
     {
-        final List attributes = new ArrayList();
+        final List<String> attributes = new ArrayList<String>();
         for (Iterator iterator = params.entrySet().iterator(); iterator.hasNext();)
         {
             Map.Entry entry = (Map.Entry) iterator.next();

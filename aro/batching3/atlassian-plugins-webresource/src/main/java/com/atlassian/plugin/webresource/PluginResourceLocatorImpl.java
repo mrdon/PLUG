@@ -1,0 +1,278 @@
+package com.atlassian.plugin.webresource;
+
+import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.StringUtils;
+
+import java.util.*;
+
+import com.atlassian.plugin.servlet.ServletContextFactory;
+import com.atlassian.plugin.servlet.DownloadableResource;
+import com.atlassian.plugin.servlet.DownloadableWebResource;
+import com.atlassian.plugin.servlet.DownloadableClasspathResource;
+
+public class PluginResourceLocatorImpl implements PluginResourceLocator
+{
+    private static final Log log = LogFactory.getLog(PluginResourceLocatorImpl.class);
+
+    static final String STATIC_RESOURCE_PREFIX = "s";
+    static final String STATIC_RESOURCE_SUFFIX = "_";
+
+    private static final String DOWNLOAD_TYPE = "download";
+
+    private static String[] BATCH_PARAMS = new String[] { "ieonly", "media", "content-type" };
+
+    private WebResourceIntegration webResourceIntegration;
+    private ServletContextFactory servletContextFactory;
+    private PluginAccessor pluginAccessor;
+
+    public PluginResourceLocatorImpl(WebResourceIntegration webResourceIntegration, ServletContextFactory servletContextFactory)
+    {
+        this.webResourceIntegration = webResourceIntegration;
+        this.servletContextFactory = servletContextFactory;
+        this.pluginAccessor = webResourceIntegration.getPluginAccessor();
+    }
+
+    public boolean matches(String url)
+    {
+        return SinglePluginResource.matches(url) || BatchPluginResource.matches(url);
+    }
+
+    public DownloadableResource getDownloadableResource(String url, Map<String, String> queryParams)
+    {
+        if(SinglePluginResource.matches(url))
+        {
+            SinglePluginResource resource = SinglePluginResource.parse(url);
+            return locatePluginResource(resource.getModuleCompleteKey(), resource.getResourceName());
+        }
+
+        if(BatchPluginResource.matches(url))
+        {
+            BatchPluginResource batchResource = BatchPluginResource.parse(url, queryParams);
+            ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(batchResource.getModuleCompleteKey());
+            for(ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors(DOWNLOAD_TYPE))
+            {
+                if(isResourceInBatch(resourceDescriptor, batchResource))
+                    batchResource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
+            }
+            return batchResource;
+        }
+
+        log.error("Cannot locate resource for unknown url: " + url);
+        return null;
+    }
+
+    private boolean isResourceInBatch(ResourceDescriptor resourceDescriptor, BatchPluginResource batchResource)
+    {
+        if(!resourceDescriptor.getName().endsWith("." + batchResource.getType()))
+            return false;
+
+        for (String param : BATCH_PARAMS)
+        {
+            String batchValue = batchResource.getParams().get(param);
+            String resourceValue = resourceDescriptor.getParameter(param);
+
+            if (batchValue == null && resourceValue != null)
+                return false;
+
+            if(batchValue != null && !batchValue.equals(resourceValue))
+                return false;
+        }
+
+        return true;
+    }
+
+    private DownloadableResource locatePluginResource(String moduleCompleteKey, String resourceName)
+    {
+        DownloadableResource resource;
+
+        // resource from the module
+        if (moduleCompleteKey.indexOf(":") > -1)
+        {
+            ModuleDescriptor moduleDescriptor = pluginAccessor.getPluginModule(moduleCompleteKey);
+            if (moduleDescriptor != null && pluginAccessor.isPluginModuleEnabled(moduleCompleteKey))
+            {
+                resource = getResourceFromModule(moduleDescriptor, resourceName, "");
+            }
+            else
+            {
+                log.info("Module not found: " + moduleCompleteKey);
+                return null;
+            }
+        }
+        else // resource from plugin
+        {
+            Plugin plugin = pluginAccessor.getPlugin(moduleCompleteKey);
+            resource = getResourceFromPlugin(plugin, resourceName, "");
+        }
+
+        if (resource == null)
+            resource = getResourceFromPlugin(getPlugin(moduleCompleteKey), resourceName, "");
+
+        if (resource == null)
+        {
+            log.info("Unable to find resource for plugin: " + moduleCompleteKey + " and path: " + resourceName);
+            return null;
+        }
+
+        return resource;
+    }
+
+    private Plugin getPlugin(String moduleKey)
+    {
+        if (moduleKey.indexOf(':') < 0 || moduleKey.indexOf(':') == moduleKey.length() - 1)
+            return null;
+
+        return pluginAccessor.getPlugin(moduleKey.substring(0, moduleKey.indexOf(':')));
+    }
+
+    private DownloadableResource getResourceFromModule(ModuleDescriptor moduleDescriptor, String resourcePath, String filePath)
+    {
+        Plugin plugin = pluginAccessor.getPlugin(moduleDescriptor.getPluginKey());
+        ResourceLocation resourceLocation = moduleDescriptor.getResourceLocation(DOWNLOAD_TYPE, resourcePath);
+
+        if (resourceLocation != null)
+        {
+            return getDownloadablePluginResource(plugin, resourceLocation, filePath);
+        }
+
+        String[] nextParts = splitLastPathPart(resourcePath);
+        if (nextParts == null)
+            return null;
+
+        return getResourceFromModule(moduleDescriptor, nextParts[0], nextParts[1] + filePath);
+    }
+
+    private DownloadableResource getResourceFromPlugin(Plugin plugin, String resourcePath, String filePath)
+    {
+        if (plugin == null)
+            return null;
+
+        ResourceLocation resourceLocation = plugin.getResourceLocation(DOWNLOAD_TYPE, resourcePath);
+        if (resourceLocation != null)
+        {
+            return getDownloadablePluginResource(plugin, resourceLocation, filePath);
+        }
+
+        String[] nextParts = splitLastPathPart(resourcePath);
+        if (nextParts == null)
+            return null;
+
+        return getResourceFromPlugin(plugin, nextParts[0], nextParts[1] + filePath);
+    }
+
+    private String[] splitLastPathPart(String resourcePath)
+    {
+        int indexOfSlash = resourcePath.lastIndexOf('/');
+        if (resourcePath.endsWith("/")) // skip over the trailing slash
+        {
+            indexOfSlash = resourcePath.lastIndexOf('/', indexOfSlash - 1);
+        }
+
+        if (indexOfSlash < 0) return null;
+
+        return new String[] {
+            resourcePath.substring(0, indexOfSlash + 1),
+            resourcePath.substring(indexOfSlash + 1)
+        };
+    }
+
+    private DownloadableResource getDownloadablePluginResource(Plugin plugin, ResourceLocation resourceLocation, String filePath)
+    {
+        // this allows plugins that are loaded from the web to be served
+        if ("webContext".equalsIgnoreCase(resourceLocation.getParameter("source")))
+            return new DownloadableWebResource(plugin, resourceLocation, filePath, servletContextFactory.getServletContext());
+
+        return new DownloadableClasspathResource(plugin, resourceLocation, filePath);
+    }
+
+    public List<PluginResource> getPluginResource(String moduleCompleteKey)
+    {
+        ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(moduleCompleteKey);
+        if (moduleDescriptor == null || !(moduleDescriptor instanceof WebResourceModuleDescriptor))
+        {
+            log.error("Error loading resource \"" + moduleDescriptor + "\". Resource is not a Web Resource Module");
+            return Collections.EMPTY_LIST;
+        }
+
+        boolean singleMode = Boolean.valueOf(System.getProperty("plugin.webresource.single.download"));
+        List<PluginResource> resources = new ArrayList<PluginResource>();
+
+        for(ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors())
+        {
+            String staticUrlPrefix = getUrlPrefix((WebResourceModuleDescriptor) moduleDescriptor, resourceDescriptor);
+            if (singleMode)
+            {
+                resources.add(new SinglePluginResource(resourceDescriptor.getName(), moduleDescriptor.getCompleteKey(), staticUrlPrefix));
+            }
+            else
+            {
+                BatchPluginResource batchResource = createBatchResource(moduleDescriptor.getKey(), moduleDescriptor.getCompleteKey(),  resourceDescriptor, staticUrlPrefix);
+                if(!resources.contains(batchResource))
+                    resources.add(batchResource);
+            }
+        }
+        return resources;
+    }
+
+    private BatchPluginResource createBatchResource(String batchName, String moduleCompleteKey, ResourceDescriptor resourceDescriptor, String staticUrlPrefix)
+    {
+        String name = resourceDescriptor.getName();
+        String type = name.substring(name.lastIndexOf(".") + 1);
+        Map<String, String> params = new TreeMap<String, String>();
+        for(String param : BATCH_PARAMS)
+        {
+            String value = resourceDescriptor.getParameter(param);
+            if(StringUtils.isNotEmpty(value))
+                params.put(param, value);
+        }
+
+        return new BatchPluginResource(batchName, moduleCompleteKey, type, params, staticUrlPrefix);
+    }
+
+    private String getUrlPrefix(WebResourceModuleDescriptor moduleDescriptor, ResourceDescriptor resourceDescriptor)
+    {
+        if (!"false".equalsIgnoreCase(resourceDescriptor.getParameter("cache"))) //todo preserve for batching
+            return getStaticResourceUrlPrefix(String.valueOf(moduleDescriptor.getPlugin().getPluginsVersion()));
+
+        return "";
+    }
+
+    public String getStaticResourceUrlPrefix()
+    {
+        // "{base url}/s/{build num}/{system counter}/_"
+        return getStaticResourceUrlPrefix(null);
+    }
+
+    public String getStaticResourceUrlPrefix(String resourceCounter)
+    {
+        // "{base url}/s/{build num}/{system counter}/{resourceCounter}/_"
+        StringBuffer sb = new StringBuffer();
+        sb.append(webResourceIntegration.getBaseUrl()).append("/").
+            append(STATIC_RESOURCE_PREFIX).append("/").
+            append(webResourceIntegration.getSystemBuildNumber()).append("/").
+            append(webResourceIntegration.getSystemCounter()).append("/");
+
+        if(resourceCounter != null)
+            sb.append(resourceCounter).append("/");
+
+        sb.append(STATIC_RESOURCE_SUFFIX);
+        return sb.toString();
+    }
+
+    public String getStaticResourceUrl(String moduleCompleteKey, String resourceName)
+    {
+        ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(moduleCompleteKey);
+        if(moduleDescriptor == null)
+            return null;
+
+        String staticUrlPrefix = getStaticResourceUrlPrefix(String.valueOf(moduleDescriptor.getPlugin().getPluginsVersion()));
+        PluginResource pluginResource = new SinglePluginResource(resourceName, moduleCompleteKey, staticUrlPrefix);
+        return pluginResource.getUrl();
+    }
+}
