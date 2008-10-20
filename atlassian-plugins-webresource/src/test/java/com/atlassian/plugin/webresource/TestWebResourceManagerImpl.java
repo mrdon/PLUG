@@ -3,6 +3,7 @@ package com.atlassian.plugin.webresource;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.servlet.AbstractFileServerServlet;
 import com.atlassian.plugin.webresource.mock.StubModuleDescriptor;
@@ -11,10 +12,12 @@ import junit.framework.TestCase;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.net.URLEncoder;
+import java.io.UnsupportedEncodingException;
 
 public class TestWebResourceManagerImpl extends TestCase
 {
-    private WebResourceManager webResourceManager;
+    private WebResourceManagerImpl webResourceManager;
 
     private static final String ANIMAL_PLUGIN_VERSION = "2.1";
     private static final String BASEURL = "http://www.foo.com";
@@ -53,7 +56,7 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(expectedPrefix, webResourceManager.getStaticResourcePrefix(resourceCounter));
     }
 
-    public void testGetStaticPluginResourcePrefix()
+    public void testGetStaticPluginResourcePrefix() throws UnsupportedEncodingException
     {
         Plugin animalPlugin = new StaticPlugin();
         PluginInformation pluginInfo = new PluginInformation();
@@ -63,13 +66,31 @@ public class TestWebResourceManagerImpl extends TestCase
 
         final  StubModuleDescriptor animalModuleDescriptor = new StubModuleDescriptor();
         animalModuleDescriptor.setPlugin(animalPlugin);
+        String encodedDescriptorKey = URLEncoder.encode(animalModuleDescriptor.getCompleteKey(), "UTF-8");
 
         String resourceName = "foo.js";
         String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + ANIMAL_PLUGIN_VERSION + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + "/" + AbstractFileServerServlet
-            .SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" + animalModuleDescriptor.getCompleteKey() + "/" + resourceName;
+            .SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" + encodedDescriptorKey + "/" + resourceName;
         assertEquals(expectedPrefix, webResourceManager.getStaticPluginResource(animalModuleDescriptor, resourceName));
     }
 
+    public void testGetResourceUrl()
+    {
+        Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
+        mockModuleDescriptor.expectAndReturn("getCompleteKey", "foo:bar");
+        String url = webResourceManager.getResourceUrl((ModuleDescriptor) mockModuleDescriptor.proxy(), "baz");
+        String expectedPrefix ="/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/foo%3Abar/baz";
+        assertEquals(expectedPrefix, url);
+    }
+
+    public void testGetResourceUrlWithEncodedResourceName()
+    {
+        Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
+        mockModuleDescriptor.expectAndReturn("getCompleteKey", "foo:bar");
+        String url = webResourceManager.getResourceUrl((ModuleDescriptor) mockModuleDescriptor.proxy(), "baz:baz");
+        String expectedPrefix ="/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/foo%3Abar/baz%3Abaz";
+        assertEquals(expectedPrefix, url);
+    }
 
     public void testRequireResourceWithoutWriter()
     {

@@ -9,9 +9,11 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.net.URLEncoder;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -219,9 +221,22 @@ public class WebResourceManagerImpl implements WebResourceManager
     }
 
     // "/download/resources/plugin.key:module.key/resource.name"
-    private String getResourceUrl(ModuleDescriptor moduleDescriptor, String resourceName)
+    String getResourceUrl(ModuleDescriptor moduleDescriptor, String resourceName)
     {
-        return "/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleDescriptor.getCompleteKey() + "/" + resourceName;
+        String encodedDescriptorKey;
+        String encodedResourceName;
+        try
+        {
+            encodedDescriptorKey = URLEncoder.encode(moduleDescriptor.getCompleteKey(), "UTF-8");
+            encodedResourceName = URLEncoder.encode(resourceName, "UTF-8");
+        } catch (UnsupportedEncodingException e)
+        {
+            // Should never happen
+            throw new RuntimeException("Unable to encode URL as UTF-8", e);
+        }
+
+        return "/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/"
+                + encodedDescriptorKey + "/" + encodedResourceName;
     }
 
     public String getStaticPluginResource(String pluginModuleKey, String resourceName)
