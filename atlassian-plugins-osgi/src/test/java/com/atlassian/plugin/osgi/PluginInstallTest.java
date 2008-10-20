@@ -66,6 +66,47 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertEquals("Test 2", pluginManager.getPlugin("test.plugin").getName());
     }
 
+    public void testUpgradeTestingForCachedXml() throws Exception
+    {
+        DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory();
+        factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
+        initPluginManager(new HostComponentProvider(){
+            public void provide(ComponentRegistrar registrar)
+            {
+                registrar.register(SomeInterface.class).forInstance(new SomeInterface(){});
+                registrar.register(AnotherInterface.class).forInstance(new AnotherInterface(){});
+            }
+        }, factory);
+
+        File pluginJar = new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component key='comp1' interface='com.atlassian.plugin.osgi.SomeInterface' class='my.ServiceImpl' />",
+                        "</atlassian-plugin>")
+                .addFormattedJava("my.ServiceImpl",
+                        "package my;",
+                        "public class ServiceImpl implements com.atlassian.plugin.osgi.SomeInterface {}")
+                .build();
+        File pluginJar2 = new PluginJarBuilder("second")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "</atlassian-plugin>")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+        assertEquals("Test", pluginManager.getPlugin("test.plugin").getName());
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+        assertEquals("Test 2", pluginManager.getPlugin("test.plugin").getName());
+    }
+
     public void testDynamicPluginModule() throws Exception
     {
         initPluginManager(new HostComponentProvider(){public void provide(ComponentRegistrar registrar){}});
