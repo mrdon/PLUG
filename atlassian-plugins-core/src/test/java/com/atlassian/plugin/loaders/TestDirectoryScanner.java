@@ -1,4 +1,4 @@
-package com.atlassian.plugin.loaders.classloading;
+package com.atlassian.plugin.loaders;
 
 import org.apache.commons.io.FileUtils;
 
@@ -8,18 +8,30 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class TestScanner extends AbstractTestClassLoader
+import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
+import com.atlassian.plugin.loaders.classloading.Scanner;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
+
+public class TestDirectoryScanner extends AbstractTestClassLoader
 {
+
+    protected void setUp() throws Exception
+    {
+        super.setUp();
+
+        super.createFillAndCleanTempPluginDirectory();
+    }
+
     public void testNormalOperation() throws Exception
     {
-        File pluginsDirectory = getPluginsDirectory();
-        Scanner scanner = new Scanner(pluginsDirectory);
+        File pluginsDirectory = pluginsTestDir;
+        Scanner scanner = new DirectoryScanner(pluginsDirectory);
         scanner.scan();
-        Collection deployedUnits = scanner.getDeploymentUnits();
+        Collection<DeploymentUnit> deployedUnits = scanner.getDeploymentUnits();
         assertEquals(2, deployedUnits.size());
 
         // put them into a list so we're sure we get them in the right order
-        Set orderedUnits = new TreeSet(deployedUnits);
+        Set<DeploymentUnit> orderedUnits = new TreeSet<DeploymentUnit>(deployedUnits);
         Iterator iterator = orderedUnits.iterator();
         DeploymentUnit unit = (DeploymentUnit) iterator.next();
         assertEquals("paddington-test-plugin.jar", unit.getPath().getName());
@@ -28,9 +40,26 @@ public class TestScanner extends AbstractTestClassLoader
         assertEquals("pooh-test-plugin.jar", unit.getPath().getName());
     }
 
-    public void testAddAndRemoveJar() throws Exception
+    public void testRemove()
     {
-        File pluginsDirectory = getPluginsDirectory();
+        File pluginsDirectory = pluginsTestDir;
+        File paddington = new File(pluginsDirectory, "paddington-test-plugin.jar");
+
+        assertTrue(paddington.exists());
+
+        DirectoryScanner scanner = new DirectoryScanner(pluginsDirectory);
+        scanner.scan();
+        assertEquals(2, scanner.getDeploymentUnits().size());
+        DeploymentUnit paddingtonUnit = scanner.locateDeploymentUnit(paddington);
+        scanner.remove(paddingtonUnit);
+
+        assertFalse(paddington.exists());
+        assertEquals(1, scanner.getDeploymentUnits().size());
+    }
+
+    public void testAddAndRemoveJarFromOutsideScanner() throws Exception
+    {
+        File pluginsDirectory = pluginsTestDir;
         File paddington = new File(pluginsDirectory, "paddington-test-plugin.jar");
         File duplicate = new File(pluginsDirectory, "duplicate-test-plugin.jar");
 
@@ -39,7 +68,7 @@ public class TestScanner extends AbstractTestClassLoader
             duplicate.delete();
 
         // should be 2 to start with
-        Scanner scanner = new Scanner(pluginsDirectory);
+        Scanner scanner = new DirectoryScanner(pluginsDirectory);
         scanner.scan();
         assertEquals(2, scanner.getDeploymentUnits().size());
 
@@ -58,7 +87,7 @@ public class TestScanner extends AbstractTestClassLoader
     {
         // Note windows is a piece of shit (can't modify files in the classpath) so
         // we need to create a temporary directory outside the classpath where we can modify files freely.
-        File pluginsDirectory = getPluginsDirectory();
+        File pluginsDirectory = pluginsTestDir;
         File paddington = new File(pluginsDirectory, "paddington-test-plugin.jar");
 
         File testTempDirectory = new File("target/plugins-temp/TestScannerTests");
@@ -78,7 +107,7 @@ public class TestScanner extends AbstractTestClassLoader
         assertEquals(originalModification, newPaddington.lastModified());
 
         // should be 2 to start with
-        Scanner scanner = new Scanner(testTempDirectory);
+        DirectoryScanner scanner = new DirectoryScanner(testTempDirectory);
         scanner.scan();
         assertEquals(1, scanner.getDeploymentUnits().size());
 
