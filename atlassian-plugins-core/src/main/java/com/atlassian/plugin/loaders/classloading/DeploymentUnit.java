@@ -6,10 +6,10 @@ import java.io.File;
  * A file that is to, or has been, deployed as a plugin.  Differs to the {@link com.atlassian.plugin.PluginArtifact},
  * which identifies an artifact to be deployed but may not be a physical file.
  */
-public class DeploymentUnit implements Comparable<DeploymentUnit>
+public final class DeploymentUnit implements Comparable<DeploymentUnit>
 {
 	private final File path;
-    private long lastModifiedAtTimeOfDeployment;
+    private final long lastModifiedAtTimeOfDeployment;
 
     public DeploymentUnit(File path)
 	{

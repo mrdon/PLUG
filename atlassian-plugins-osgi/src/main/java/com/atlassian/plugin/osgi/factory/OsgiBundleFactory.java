@@ -12,6 +12,7 @@ import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
+import org.apache.commons.io.IOUtils;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Bundle;
 
@@ -39,17 +40,25 @@ public class OsgiBundleFactory implements PluginFactory
         Validate.notNull(pluginArtifact, "The plugin artifact is required");
         String pluginKey = null;
         InputStream manifestStream = pluginArtifact.getResourceAsStream("META-INF/MANIFEST.MF");
-        if (manifestStream != null)
+
+        try
         {
-            Manifest mf;
-            try {
-                mf = new Manifest(manifestStream);
-            } catch (IOException e) {
-                throw new PluginParseException("Unable to parse manifest", e);
+            if (manifestStream != null)
+            {
+                Manifest mf;
+                try {
+                    mf = new Manifest(manifestStream);
+                } catch (IOException e) {
+                    throw new PluginParseException("Unable to parse manifest", e);
+                }
+                pluginKey = mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
             }
-            pluginKey = mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+            return pluginKey;
         }
-        return pluginKey;
+        finally
+        {
+            IOUtils.closeQuietly(manifestStream);
+        }
     }
 
     public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException {

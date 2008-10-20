@@ -60,24 +60,34 @@ public class DefaultPluginTransformer implements PluginTransformer
     {
         Validate.notNull(pluginJar, "The plugin jar is required");
         Validate.notNull(regs, "The host component registrations are required");
-        final JarFile jar;
+        JarFile jar = null;
         try
         {
             jar = new JarFile(pluginJar);
+            return transform(pluginJar, regs, jar);
+
+
         }
         catch (IOException e)
         {
             throw new PluginTransformationException("Plugin is not a valid jar file", e);
         }
+        finally
+        {
+            if (jar != null) try { jar.close(); } catch (IOException e) { log.warn("Unable to close jar " + jar + " " + e.getMessage(), e);}
+        }
+    }
 
+    private File transform(File pluginJar, List<HostComponentRegistration> regs, JarFile jar)
+    {
         // List of all files to add/override in the new jar
         Map<String,byte[]> filesToAdd = new HashMap<String, byte[]>();
 
         // Try to generate a manifest if none available or merge with an existing one to add host component imports
         URL atlassianPluginsXmlUrl = null;
         try
-        {
-            final ClassLoader cl = new URLClassLoader(new URL[]{pluginJar.toURL()}, null);
+            {
+                final ClassLoader cl = new URLClassLoader(new URL[]{pluginJar.toURL()}, null);
             atlassianPluginsXmlUrl = cl.getResource(PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
             if (atlassianPluginsXmlUrl == null)
                 throw new IllegalStateException("Cannot find atlassian-plugins.xml in jar");
@@ -113,8 +123,8 @@ public class DefaultPluginTransformer implements PluginTransformer
 
         // Create a new jar by overriding the specified files
         try
-        {
-            if (log.isDebugEnabled())
+            {
+                if (log.isDebugEnabled())
             {
                 StringBuilder sb = new StringBuilder();
                 sb.append("Overriding files in ").append(pluginJar.getName()).append(":\n");
@@ -130,7 +140,6 @@ public class DefaultPluginTransformer implements PluginTransformer
         {
             throw new PluginTransformationException("Unable to add files to plugin jar");
         }
-
     }
 
     /**
