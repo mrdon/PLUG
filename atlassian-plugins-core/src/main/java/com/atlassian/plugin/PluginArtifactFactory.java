@@ -1,6 +1,6 @@
 package com.atlassian.plugin;
 
-import java.net.URL;
+import java.net.URI;
 
 /**
  * Creates a plugin artifact from a URL
@@ -11,9 +11,9 @@ public interface PluginArtifactFactory
 {
     /**
      * Creates a plugin artifact
-     * @param artifactUrl The artifact URL
+     * @param artifactUri The artifact URI
      * @return The artifact.  Must not return null
      * @throws IllegalArgumentException If the artifact cannot be created
      */
-    PluginArtifact create(URL artifactUrl) throws IllegalArgumentException;
+    PluginArtifact create(URI artifactUri) throws IllegalArgumentException;
 }

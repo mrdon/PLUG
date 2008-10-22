@@ -10,8 +10,6 @@ import com.atlassian.plugin.loaders.classloading.*;
 import com.atlassian.plugin.loaders.classloading.Scanner;
 
 import java.util.*;
-import java.net.MalformedURLException;
-import java.io.File;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -90,7 +88,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
             }
         }
 
-        if (scanner.getDeploymentUnits().size() == 0)
+        if (scanner.getDeploymentUnits().isEmpty())
             log.info("No plugins found to be deployed");
 
         return plugins.values();
@@ -105,19 +103,15 @@ public class ScanningPluginLoader implements DynamicPluginLoader
         {
             try
             {
-                PluginArtifact artifact = pluginArtifactFactory.create(deploymentUnit.getPath().toURL());
+                PluginArtifact artifact = pluginArtifactFactory.create(deploymentUnit.getPath().toURI());
                 if (factory.canCreate(artifact) != null)
                 {
                     plugin = factory.create(deploymentUnit, moduleDescriptorFactory);
                     if (plugin != null)
                         break;
                 }
-
-            } catch (MalformedURLException e)
-            {
-                // Should never happen
-                throw new RuntimeException(e);
-            } catch (IllegalArgumentException ex)
+            }
+            catch (IllegalArgumentException ex)
             {
                 errorText = ex.getMessage();
             }
@@ -160,7 +154,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
                 foundPlugins.add(plugin);
             }
         }
-        if (foundPlugins.size() == 0)
+        if (foundPlugins.isEmpty())
             log.info("No plugins found to be installed");
 
         return foundPlugins;
