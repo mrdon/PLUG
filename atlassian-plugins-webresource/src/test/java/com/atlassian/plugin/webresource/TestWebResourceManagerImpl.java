@@ -87,8 +87,8 @@ public class TestWebResourceManagerImpl extends TestCase
     {
         Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         mockModuleDescriptor.expectAndReturn("getCompleteKey", "foo:bar");
-        String url = webResourceManager.getResourceUrl((ModuleDescriptor) mockModuleDescriptor.proxy(), "baz:baz");
-        String expectedPrefix ="/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/foo%3Abar/baz%3Abaz";
+        String url = webResourceManager.getResourceUrl((ModuleDescriptor) mockModuleDescriptor.proxy(), "baz:baz/foobar");
+        String expectedPrefix ="/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/foo%3Abar/baz%3Abaz/foobar";
         assertEquals(expectedPrefix, url);
     }
 
