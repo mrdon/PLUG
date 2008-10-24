@@ -4,6 +4,7 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.servlet.AbstractFileServerServlet;
 import org.apache.commons.collections.set.ListOrderedSet;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -228,7 +229,13 @@ public class WebResourceManagerImpl implements WebResourceManager
         try
         {
             encodedDescriptorKey = URLEncoder.encode(moduleDescriptor.getCompleteKey(), "UTF-8");
-            encodedResourceName = URLEncoder.encode(resourceName, "UTF-8");
+            String[] resourceNameComponents = resourceName.split("/");
+            String[] encodedResourceNameComponents = new String[resourceNameComponents.length]; 
+            for (int i = 0; i < resourceNameComponents.length; i++)
+            {
+                encodedResourceNameComponents[i] = URLEncoder.encode(resourceNameComponents[i], "UTF-8");
+            }
+            encodedResourceName = StringUtils.join(encodedResourceNameComponents, '/');
         } catch (UnsupportedEncodingException e)
         {
             // Should never happen
