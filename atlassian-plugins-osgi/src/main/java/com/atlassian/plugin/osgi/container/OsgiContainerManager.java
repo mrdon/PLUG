@@ -3,13 +3,10 @@ package com.atlassian.plugin.osgi.container;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
-import org.twdata.pkgscanner.ExportPackage;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.List;
 
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 
 /**
