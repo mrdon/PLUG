@@ -15,16 +15,20 @@ public class FelixLoggerBridge extends Logger {
     private final Log log;
 
     private static final List<String> messagesToIgnore = Arrays.asList(
-            "BeanInfo'. Please",
-            "BeanInfo' was not found",
+            "BeanInfo",
             "sun.beans.editors.",
             "add an import for 'org.springframework.osgi.service.",
             "Class 'org.springframework.util.Assert'",
             "Class '[Lorg.springframework.osgi.service",
-            "Class 'org.springframework.core.InfrastructureProxy'",
-            "Class 'org.springframework.aop.SpringProxy'",
-            "Class 'org.springframework.aop.IntroductionInfo'",
-            "Class 'org.apache.commons.logging.impl.Log4JLogger'"
+            "org.springframework.core.InfrastructureProxy",
+            "org.springframework.aop.SpringProxy",
+            "org.springframework.aop.IntroductionInfo",
+            "Class 'org.apache.commons.logging.impl.Log4JLogger'",
+            "org.springframework.util.Assert",
+            "org.springframework.osgi.service.importer.ServiceReferenceProxy",
+            "org.springframework.osgi.service.importer.ImportedOsgiServiceProxy",
+            "org.springframework.osgi.service.importer.support.ImportContextClassLoaderEditor",
+            "[Lorg.springframework.osgi.service.importer.OsgiServiceLifecycleListener;Editor"
     );
 
     public FelixLoggerBridge(Log log) {

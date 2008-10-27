@@ -111,7 +111,11 @@ public class ScanningPluginLoader implements DynamicPluginLoader
                         break;
                 }
             }
-            catch (IllegalArgumentException ex)
+            catch (PluginParseException ex)
+            {
+                throw ex;
+            }
+            catch (RuntimeException ex)
             {
                 errorText = ex.getMessage();
             }

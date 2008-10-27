@@ -12,10 +12,10 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.ClassLoaderUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.FileUtils;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.cache.BundleCache;
@@ -29,7 +29,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.jar.JarFile;
 
 /**
@@ -52,6 +51,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private HostComponentProvider hostComponentProvider;
     private Logger felixLogger;
     private final Set<ServiceTracker> trackers;
+    private ExportsBuilder exportsBuilder;
 
     /**
      * Constructs the container manager using the framework bundles zip file located in this library
@@ -59,6 +59,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
      * @param packageScannerConfig The configuration for package scanning
      * @param provider The host component provider.  May be null.
      * @param eventManager The plugin event manager to register for init and shutdown events
+     * @deprecated Since 2.2.0, use
+     *   {@link #FelixOsgiContainerManager(File,PackageScannerConfiguration,HostComponentProvider,PluginEventManager,File)} instead
      */
     public FelixOsgiContainerManager(File frameworkBundlesDir, PackageScannerConfiguration packageScannerConfig,
                                      HostComponentProvider provider, PluginEventManager eventManager)
@@ -74,10 +76,51 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
      * @param packageScannerConfig The configuration for package scanning
      * @param provider The host component provider.  May be null.
      * @param eventManager The plugin event manager to register for init and shutdown events
+     * @deprecated Since 2.2.0, use
+     *   {@link #FelixOsgiContainerManager(URL, File,PackageScannerConfiguration,HostComponentProvider,PluginEventManager,File)} instead
      */
     public FelixOsgiContainerManager(URL frameworkBundlesZip, File frameworkBundlesDir,
                                      PackageScannerConfiguration packageScannerConfig, HostComponentProvider provider,
                                      PluginEventManager eventManager)
+    {
+        this(frameworkBundlesZip, frameworkBundlesDir,
+                packageScannerConfig, provider, eventManager, new File(frameworkBundlesDir.getParentFile(), "osgi-cache"));
+    }
+
+    /**
+     * Constructs the container manager using the framework bundles zip file located in this library
+     * @param frameworkBundlesDir The directory to unzip the framework bundles into.
+     * @param packageScannerConfig The configuration for package scanning
+     * @param provider The host component provider.  May be null.
+     * @param eventManager The plugin event manager to register for init and shutdown events
+     * @param cacheDir The directory to use for the felix cache
+     *
+     * @since 2.2.0
+     */
+    public FelixOsgiContainerManager(File frameworkBundlesDir, PackageScannerConfiguration packageScannerConfig,
+                                     HostComponentProvider provider, PluginEventManager eventManager, File cacheDir)
+    {
+        this(ClassLoaderUtils.getResource(OSGI_FRAMEWORK_BUNDLES_ZIP, FelixOsgiContainerManager.class), frameworkBundlesDir,
+                packageScannerConfig, provider, eventManager, cacheDir);
+    }
+
+    /**
+     * Constructs the container manager
+     * @param frameworkBundlesZip The location of the zip file containing framework bundles
+     * @param frameworkBundlesDir The directory to unzip the framework bundles into.
+     * @param packageScannerConfig The configuration for package scanning
+     * @param provider The host component provider.  May be null.
+     * @param eventManager The plugin event manager to register for init and shutdown events
+     * @param cacheDir The directory to use for the felix cache
+     *
+     * @since 2.2.0
+     * @throws com.atlassian.plugin.osgi.container.OsgiContainerException If the host version isn't supplied and the
+     *  cache directory cannot be cleaned.
+     */
+    public FelixOsgiContainerManager(URL frameworkBundlesZip, File frameworkBundlesDir,
+                                     PackageScannerConfiguration packageScannerConfig, HostComponentProvider provider,
+                                     PluginEventManager eventManager, File cacheDir)
+            throws OsgiContainerException
     {
         Validate.notNull(frameworkBundlesZip, "The framework bundles zip is required");
         Validate.notNull(frameworkBundlesDir, "The framework bundles directory must not be null");
@@ -91,6 +134,24 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         this.trackers = Collections.synchronizedSet(new HashSet<ServiceTracker>());
         eventManager.register(this);
         felixLogger = new FelixLoggerBridge(log);
+        exportsBuilder = new ExportsBuilder();
+        this.cacheDirectory = cacheDir;
+        if (!cacheDir.exists())
+        {
+            cacheDir.mkdir();
+        }
+        else if (packageScannerConfig.getCurrentHostVersion() == null)
+        {
+            try
+            {
+                FileUtils.cleanDirectory(cacheDir);
+            }
+            catch (IOException e)
+            {
+                throw new OsgiContainerException("Unable to clean the cache directory: "+cacheDir, e);
+            }
+        }
+        log.debug("Using cache directory :"+cacheDir.getAbsolutePath());
     }
 
     public void setFelixLogger(Logger logger)
@@ -121,8 +182,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         if (isRunning())
             return;
 
-        initialiseCacheDirectory();
-
         DefaultComponentRegistrar registrar = collectHostComponents(hostComponentProvider);
         // Create a case-insensitive configuration property map.
         final StringMap configMap = new StringMap(false);
@@ -130,7 +189,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         configMap.put(FelixConstants.EMBEDDED_EXECUTION_PROP, "true");
         // Add the bundle provided service interface package and the core OSGi
         // packages to be exported from the class path via the system bundle.
-        configMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES, OsgiHeaderUtil.determineExports(registrar.getRegistry(), packageScannerConfig));
+        configMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES, exportsBuilder.determineExports(registrar.getRegistry(), packageScannerConfig, cacheDirectory));
 
         // Explicitly specify the directory to use for caching bundles.
         configMap.put(BundleCache.CACHE_PROFILE_DIR_PROP, cacheDirectory.getAbsolutePath());
@@ -178,25 +237,15 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
     public void stop() throws OsgiContainerException
     {
-        try
+        if (felixRunning)
         {
-            if (felixRunning)
-            {
-                for (ServiceTracker tracker : trackers)
-                    tracker.close();
-                felix.stopAndWait();
-            }
-
-            if (cacheDirectory != null && cacheDirectory.exists()) {
-                FileUtils.deleteDirectory(cacheDirectory);
-            }
-            
-            felixRunning = false;
-            felix = null;
-        } catch (IOException e)
-        {
-            throw new OsgiContainerException("Unable to stop OSGi container", e);
+            for (ServiceTracker tracker : trackers)
+                tracker.close();
+            felix.stopAndWait();
         }
+
+        felixRunning = false;
+        felix = null;
     }
 
     public Bundle[] getBundles()
@@ -210,8 +259,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             throw new IllegalStateException("Cannot retrieve the bundles if the Felix container isn't running.  Check" +
                     " earlier in the logs for the possible cause as to why Felix didn't start correctly.");
         }
-
-        
     }
 
     public ServiceReference[] getRegisteredServices()
@@ -247,22 +294,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         if (provider != null)
             provider.provide(registrar);
         return registrar;
-    }
-
-    void initialiseCacheDirectory() throws OsgiContainerException
-    {
-        try
-        {
-            cacheDirectory = File.createTempFile("felix", null);
-            cacheDirectory.delete();
-            if (cacheDirectory.exists())
-                FileUtils.deleteDirectory(cacheDirectory);
-
-            cacheDirectory.mkdir();
-        } catch (IOException e)
-        {
-            throw new OsgiContainerException("Cannot create cache directory", e);
-        }
     }
 
     public boolean isRunning()

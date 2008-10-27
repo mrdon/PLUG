@@ -38,8 +38,7 @@ public class TestDefaultPluginTransformer extends TestCase
         final File file = PluginTestUtils.getFileForResource("myapp-1.0-plugin.jar");
 
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        byte[] manifest = transformer.generateManifest(getClassLoader(file).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file, null);
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Manifest mf = transformer.generateManifest(getClassLoader(file).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file, null);
         Attributes attrs = mf.getMainAttributes();
 
         assertEquals("1.1", attrs.getValue(Constants.BUNDLE_VERSION));
@@ -49,7 +48,7 @@ public class TestDefaultPluginTransformer extends TestCase
         assertEquals("http://www.atlassian.com", attrs.getValue(Constants.BUNDLE_DOCURL));
         assertEquals("com.mycompany.myapp", attrs.getValue(Constants.EXPORT_PACKAGE));
         assertEquals(".", attrs.getValue(Constants.BUNDLE_CLASSPATH));
-        assertEquals("*;timeout=60", attrs.getValue("Spring-Context"));
+        assertEquals("*;timeout:=60", attrs.getValue("Spring-Context"));
         
     }
 
@@ -61,8 +60,7 @@ public class TestDefaultPluginTransformer extends TestCase
         final File file = PluginTestUtils.getFileForResource("myapp-1.0-plugin.jar");
 
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        byte[] manifest = transformer.generateManifest(getClassLoader(file).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file, regs);
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Manifest mf = transformer.generateManifest(getClassLoader(file).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), file, regs);
         Attributes attrs = mf.getMainAttributes();
 
         assertTrue(attrs.getValue(Constants.IMPORT_PACKAGE).contains(AttributeSet.class.getPackage().getName()));
@@ -80,8 +78,7 @@ public class TestDefaultPluginTransformer extends TestCase
         }};
 
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Manifest mf = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
         Attributes attrs = mf.getMainAttributes();
 
         String importPackage = attrs.getValue(Constants.IMPORT_PACKAGE);
@@ -100,8 +97,7 @@ public class TestDefaultPluginTransformer extends TestCase
         }};
 
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Manifest mf = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
         Attributes attrs = mf.getMainAttributes();
 
         String importPackage = attrs.getValue(Constants.IMPORT_PACKAGE);
@@ -126,8 +122,7 @@ public class TestDefaultPluginTransformer extends TestCase
         }};
 
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Manifest mf = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
         Attributes attrs = mf.getMainAttributes();
         assertEquals("my.foo.symbolicName", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals(".,foo", attrs.getValue(Constants.BUNDLE_CLASSPATH));
@@ -155,8 +150,7 @@ public class TestDefaultPluginTransformer extends TestCase
                 .build();
 
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, Collections.<HostComponentRegistration>emptyList());
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Manifest mf = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, Collections.<HostComponentRegistration>emptyList());
         Attributes attrs = mf.getMainAttributes();
         assertEquals("test.plugin", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals("foo", attrs.getValue(Constants.EXPORT_PACKAGE));
@@ -178,8 +172,7 @@ public class TestDefaultPluginTransformer extends TestCase
         }};
 
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Manifest mf = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, regs);
         Attributes attrs = mf.getMainAttributes();
         assertEquals("my.foo.symbolicName", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals(".,foo", attrs.getValue(Constants.BUNDLE_CLASSPATH));
@@ -203,8 +196,7 @@ public class TestDefaultPluginTransformer extends TestCase
                 .build();
 
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        byte[] manifest = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, null);
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Manifest mf = transformer.generateManifest(getClassLoader(plugin).getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, null);
         Attributes attrs = mf.getMainAttributes();
 
         final Collection classpathEntries = Arrays.asList(attrs.getValue(Constants.BUNDLE_CLASSPATH).split(","));
@@ -228,8 +220,7 @@ public class TestDefaultPluginTransformer extends TestCase
 
         URLClassLoader cl = new URLClassLoader(new URL[]{plugin.toURI().toURL()}, null);
         DefaultPluginTransformer transformer = new DefaultPluginTransformer();
-        byte[] manifest = transformer.generateManifest(cl.getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, null);
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest));
+        Manifest mf = transformer.generateManifest(cl.getResourceAsStream(PluginManager.PLUGIN_DESCRIPTOR_FILENAME), plugin, null);
         Attributes attrs = mf.getMainAttributes();
 
         assertEquals("1.0", attrs.getValue(Constants.BUNDLE_VERSION));

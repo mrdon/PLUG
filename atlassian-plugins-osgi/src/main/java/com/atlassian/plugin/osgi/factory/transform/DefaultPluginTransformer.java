@@ -7,13 +7,10 @@ import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
-import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
-import com.atlassian.plugin.osgi.hostcomponents.ContextClassLoaderStrategy;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.apache.commons.lang.Validate;
+import org.apache.log4j.Logger;
 import org.dom4j.*;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
@@ -51,8 +48,9 @@ public class DefaultPluginTransformer implements PluginTransformer
 
     /**
      * Transforms the file into an OSGi bundle
+     *
      * @param pluginJar The plugin jar
-     * @param regs The list of registered host components
+     * @param regs      The list of registered host components
      * @return The new OSGi-enabled plugin jar
      * @throws PluginTransformationException If anything goes wrong
      */
@@ -65,8 +63,6 @@ public class DefaultPluginTransformer implements PluginTransformer
         {
             jar = new JarFile(pluginJar);
             return transform(pluginJar, regs, jar);
-
-
         }
         catch (IOException e)
         {
@@ -74,26 +70,42 @@ public class DefaultPluginTransformer implements PluginTransformer
         }
         finally
         {
-            if (jar != null) try { jar.close(); } catch (IOException e) { log.warn("Unable to close jar " + jar + " " + e.getMessage(), e);}
+            if (jar != null)
+            {
+                try
+                {
+                    jar.close();
+                }
+                catch (IOException e)
+                {
+                    log.warn("Unable to close jar " + jar + " " + e.getMessage(), e);
+                }
+            }
         }
     }
 
     private File transform(File pluginJar, List<HostComponentRegistration> regs, JarFile jar)
     {
         // List of all files to add/override in the new jar
-        Map<String,byte[]> filesToAdd = new HashMap<String, byte[]>();
+        Map<String, byte[]> filesToAdd = new HashMap<String, byte[]>();
+        Manifest mf = null;
 
         // Try to generate a manifest if none available or merge with an existing one to add host component imports
         URL atlassianPluginsXmlUrl = null;
         try
-            {
-                final ClassLoader cl = new URLClassLoader(new URL[]{pluginJar.toURL()}, null);
+        {
+            final ClassLoader cl = new URLClassLoader(new URL[]{pluginJar.toURL()}, null);
             atlassianPluginsXmlUrl = cl.getResource(PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
             if (atlassianPluginsXmlUrl == null)
                 throw new IllegalStateException("Cannot find atlassian-plugins.xml in jar");
 
-            log.info("Generating the manifest for plugin "+pluginJar.getName());
-            filesToAdd.put("META-INF/MANIFEST.MF", generateManifest(atlassianPluginsXmlUrl.openStream(), pluginJar, regs));
+            log.info("Generating the manifest for plugin " + pluginJar.getName());
+            mf = generateManifest(atlassianPluginsXmlUrl.openStream(), pluginJar, regs);
+
+
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            mf.write(bout);
+            filesToAdd.put("META-INF/MANIFEST.MF", bout.toByteArray());
         }
         catch (PluginParseException e)
         {
@@ -105,11 +117,12 @@ public class DefaultPluginTransformer implements PluginTransformer
         }
 
         // Try to generate the spring config that pulls in host components and exports plugin components
-        if (jar.getEntry(ATLASSIAN_PLUGIN_SPRING_XML) == null) {
+        if (jar.getEntry(ATLASSIAN_PLUGIN_SPRING_XML) == null)
+        {
             try
             {
-                log.info("Generating "+ATLASSIAN_PLUGIN_SPRING_XML + " for plugin "+pluginJar.getName());
-                filesToAdd.put(ATLASSIAN_PLUGIN_SPRING_XML, generateSpringXml(atlassianPluginsXmlUrl.openStream(), regs));
+                log.info("Generating " + ATLASSIAN_PLUGIN_SPRING_XML + " for plugin " + pluginJar.getName());
+                filesToAdd.put(ATLASSIAN_PLUGIN_SPRING_XML, generateSpringXml(pluginJar, atlassianPluginsXmlUrl.openStream(), mf, regs));
             }
             catch (DocumentException e)
             {
@@ -123,12 +136,12 @@ public class DefaultPluginTransformer implements PluginTransformer
 
         // Create a new jar by overriding the specified files
         try
-            {
-                if (log.isDebugEnabled())
+        {
+            if (log.isDebugEnabled())
             {
                 StringBuilder sb = new StringBuilder();
                 sb.append("Overriding files in ").append(pluginJar.getName()).append(":\n");
-                for (Map.Entry<String,byte[]> entry : filesToAdd.entrySet())
+                for (Map.Entry<String, byte[]> entry : filesToAdd.entrySet())
                 {
                     sb.append("==").append(entry.getKey()).append("==\n");
                     sb.append(new String(entry.getValue()));
@@ -136,7 +149,8 @@ public class DefaultPluginTransformer implements PluginTransformer
                 log.debug(sb.toString());
             }
             return addFilesToExistingZip(pluginJar, filesToAdd);
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             throw new PluginTransformationException("Unable to add files to plugin jar");
         }
@@ -144,12 +158,13 @@ public class DefaultPluginTransformer implements PluginTransformer
 
     /**
      * Generate the spring xml by processing the atlassian-plugins.xml file
-     * @param in The stream of the atlassian-plugins.xml file
+     *
+     * @param in   The stream of the atlassian-plugins.xml file
      * @param regs The list of registered host components
      * @return The new spring xml in bytes
      * @throws DocumentException If there are any errors processing the atlassian-plugins.xml document
      */
-    byte[] generateSpringXml(InputStream in, List<HostComponentRegistration> regs) throws DocumentException
+    byte[] generateSpringXml(File pluginJar, InputStream in, Manifest mf, List<HostComponentRegistration> regs) throws DocumentException
     {
         Document springDoc = DocumentHelper.createDocument();
         Element root = springDoc.addElement("beans");
@@ -159,7 +174,7 @@ public class DefaultPluginTransformer implements PluginTransformer
         root.addNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance");
         root.addAttribute(new QName("schemaLocation", new Namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")),
                 "http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd\n" +
-                "http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd");
+                        "http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd");
         root.setName("beans:beans");
         root.addAttribute("default-autowire", "autodetect");
 
@@ -168,7 +183,7 @@ public class DefaultPluginTransformer implements PluginTransformer
 
         for (SpringTransformer springTransformer : springTransformers)
         {
-            springTransformer.transform(regs, pluginDoc, springDoc);
+            springTransformer.transform(pluginJar, mf, regs, pluginDoc, springDoc);
         }
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -176,9 +191,10 @@ public class DefaultPluginTransformer implements PluginTransformer
 
         try
         {
-            XMLWriter writer = new XMLWriter(bout, format );
-            writer.write(springDoc );
-        } catch (IOException e)
+            XMLWriter writer = new XMLWriter(bout, format);
+            writer.write(springDoc);
+        }
+        catch (IOException e)
         {
             throw new PluginTransformationException("Unable to print generated Spring XML", e);
         }
@@ -190,12 +206,12 @@ public class DefaultPluginTransformer implements PluginTransformer
      * Generates a new manifest file
      *
      * @param descriptorStream The existing manifest
-     * @param file The jar
-     * @param regs The list of host component registrations
+     * @param file             The jar
+     * @param regs             The list of host component registrations
      * @return The new manifest file in bytes
      * @throws PluginParseException If there is any problems parsing atlassian-plugin.xml
      */
-    byte[] generateManifest(InputStream descriptorStream, File file, List<HostComponentRegistration> regs) throws PluginParseException
+    Manifest generateManifest(InputStream descriptorStream, File file, List<HostComponentRegistration> regs) throws PluginParseException
     {
 
         Builder builder = new Builder();
@@ -203,7 +219,7 @@ public class DefaultPluginTransformer implements PluginTransformer
         {
             builder.setJar(file);
             String referrers = OsgiHeaderUtil.findReferredPackages(regs);
-            
+
             // Possibly necessary due to Spring XML creation
             referrers += "com.atlassian.plugin.osgi.external,com.atlassian.plugin,";
             if (isOsgiBundle(builder.getJar().getManifest()))
@@ -211,15 +227,16 @@ public class DefaultPluginTransformer implements PluginTransformer
                 String imports = addReferrersToImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), referrers);
                 builder.setProperty(Constants.IMPORT_PACKAGE, imports);
                 builder.mergeManifest(builder.getJar().getManifest());
-            } else
+            }
+            else
             {
-                PluginInformationDescriptorParser parser = new PluginInformationDescriptorParser(descriptorStream);
+                DocumentExposingDescriptorParser parser = new DocumentExposingDescriptorParser(descriptorStream);
                 PluginInformation info = parser.getPluginInformation();
 
                 Properties properties = new Properties();
 
                 // Setup defaults
-                properties.put("Spring-Context", "*;timeout=60");
+                properties.put("Spring-Context", "*;timeout:=60");
                 properties.put(Analyzer.BUNDLE_SYMBOLICNAME, parser.getKey());
                 properties.put(Analyzer.IMPORT_PACKAGE, "*;resolution:=optional");
                 properties.put(Analyzer.EXPORT_PACKAGE, "*");
@@ -237,7 +254,7 @@ public class DefaultPluginTransformer implements PluginTransformer
                 StringBuilder classpath = new StringBuilder();
                 classpath.append(".");
                 JarFile jarfile = new JarFile(file);
-                for (Enumeration<JarEntry> e = jarfile.entries(); e.hasMoreElements(); )
+                for (Enumeration<JarEntry> e = jarfile.entries(); e.hasMoreElements();)
                 {
                     JarEntry entry = e.nextElement();
                     if (entry.getName().startsWith("META-INF/lib/") && entry.getName().endsWith(".jar"))
@@ -253,14 +270,11 @@ public class DefaultPluginTransformer implements PluginTransformer
                 builder.setProperties(properties);
             }
 
-            // Not sure if this is the best incantation of bnd, but as I don't have the source, it'll have to do
             builder.calcManifest();
             Jar jar = builder.build();
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            jar.writeManifest(bout);
-            return bout.toByteArray();
-
-        } catch (Exception t)
+            return jar.getManifest();
+        }
+        catch (Exception t)
         {
             throw new PluginParseException("Unable to process plugin to generate OSGi manifest", t);
         }
@@ -271,9 +285,9 @@ public class DefaultPluginTransformer implements PluginTransformer
         return manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null;
     }
 
-    private Map<String,String> processBundleInstructions(Document document)
+    private Map<String, String> processBundleInstructions(Document document)
     {
-        Map<String,String> instructions = new HashMap<String,String>();
+        Map<String, String> instructions = new HashMap<String, String>();
         Element pluginInfo = document.getRootElement().element("plugin-info");
         if (pluginInfo != null)
         {
@@ -305,54 +319,56 @@ public class DefaultPluginTransformer implements PluginTransformer
      * Creates a new jar by overriding the specified files in the existing one
      *
      * @param zipFile The existing zip file
-     * @param files The files to override
+     * @param files   The files to override
      * @return The new zip
      * @throws IOException If there are any problems processing the streams
      */
     static File addFilesToExistingZip(File zipFile,
-			 Map<String,byte[]> files) throws IOException {
-                // get a temp file
-		File tempFile = File.createTempFile(zipFile.getName(), null);
-                // delete it, otherwise you cannot rename your existing zip to it.
-		byte[] buf = new byte[1024];
+                                      Map<String, byte[]> files) throws IOException
+    {
+        // get a temp file
+        File tempFile = File.createTempFile(zipFile.getName(), null);
+        // delete it, otherwise you cannot rename your existing zip to it.
+        byte[] buf = new byte[1024];
 
-		ZipInputStream zin = new ZipInputStream(new FileInputStream(zipFile));
-		ZipOutputStream out = new ZipOutputStream(new FileOutputStream(tempFile));
+        ZipInputStream zin = new ZipInputStream(new FileInputStream(zipFile));
+        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(tempFile));
 
-		ZipEntry entry = zin.getNextEntry();
-		while (entry != null)
+        ZipEntry entry = zin.getNextEntry();
+        while (entry != null)
         {
-			String name = entry.getName();
-			if (!files.containsKey(name))
+            String name = entry.getName();
+            if (!files.containsKey(name))
             {
-				// Add ZIP entry to output stream.
-				out.putNextEntry(new ZipEntry(name));
-				// Transfer bytes from the ZIP file to the output file
-				int len;
-				while ((len = zin.read(buf)) > 0)
-					out.write(buf, 0, len);
-			}
-			entry = zin.getNextEntry();
-		}
-		// Close the streams
-		zin.close();
-		// Compress the files
-		for (Map.Entry<String,byte[]> fentry : files.entrySet())
+                // Add ZIP entry to output stream.
+                out.putNextEntry(new ZipEntry(name));
+                // Transfer bytes from the ZIP file to the output file
+                int len;
+                while ((len = zin.read(buf)) > 0)
+                    out.write(buf, 0, len);
+            }
+            entry = zin.getNextEntry();
+        }
+        // Close the streams
+        zin.close();
+        // Compress the files
+        for (Map.Entry<String, byte[]> fentry : files.entrySet())
         {
             InputStream in = new ByteArrayInputStream(fentry.getValue());
-			// Add ZIP entry to output stream.
-			out.putNextEntry(new ZipEntry(fentry.getKey()));
-			// Transfer bytes from the file to the ZIP file
-			int len;
-			while ((len = in.read(buf)) > 0) {
-				out.write(buf, 0, len);
-			}
-			// Complete the entry
-			out.closeEntry();
-			in.close();
-		}
-		// Complete the ZIP file
-		out.close();
+            // Add ZIP entry to output stream.
+            out.putNextEntry(new ZipEntry(fentry.getKey()));
+            // Transfer bytes from the file to the ZIP file
+            int len;
+            while ((len = in.read(buf)) > 0)
+            {
+                out.write(buf, 0, len);
+            }
+            // Complete the entry
+            out.closeEntry();
+            in.close();
+        }
+        // Complete the ZIP file
+        out.close();
         return tempFile;
     }
 
@@ -368,23 +384,15 @@ public class DefaultPluginTransformer implements PluginTransformer
         properties.put(key, value.toString().replaceAll("[\r\n]", ""));
     }
 
-    /**
-     * Descriptor parser that exposes the PluginInformation object directly
-     */
-    private static class PluginInformationDescriptorParser extends XmlDescriptorParser
+    private static class DocumentExposingDescriptorParser extends XmlDescriptorParser
     {
         /**
          * @throws com.atlassian.plugin.PluginParseException
          *          if there is a problem reading the descriptor from the XML {@link java.io.InputStream}.
          */
-        public PluginInformationDescriptorParser(InputStream source) throws PluginParseException
+        public DocumentExposingDescriptorParser(InputStream source) throws PluginParseException
         {
             super(source);
-        }
-
-        public PluginInformation getPluginInformation()
-        {
-            return createPluginInformation(getDocument().getRootElement().element("plugin-info"));
         }
 
         @Override

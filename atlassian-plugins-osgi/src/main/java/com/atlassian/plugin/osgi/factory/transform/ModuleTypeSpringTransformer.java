@@ -5,6 +5,8 @@ import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 
 import java.util.List;
+import java.util.jar.Manifest;
+import java.io.File;
 
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -15,7 +17,7 @@ import org.dom4j.Element;
  */
 public class ModuleTypeSpringTransformer implements SpringTransformer
 {
-    public void transform(List<HostComponentRegistration> regs, Document pluginDoc, Document springDoc)
+    public void transform(File pluginJar, Manifest mf, List<HostComponentRegistration> regs, Document pluginDoc, Document springDoc)
     {
         Element root = springDoc.getRootElement();
         List<Element> elements = pluginDoc.getRootElement().elements("module-type");

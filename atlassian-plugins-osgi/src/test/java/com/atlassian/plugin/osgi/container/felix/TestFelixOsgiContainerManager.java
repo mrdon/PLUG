@@ -27,10 +27,14 @@ public class TestFelixOsgiContainerManager extends TestCase
     {
         super.setUp();
         tmpdir = new File("target/plugin-temp");
+        if (tmpdir.exists())
+        {
+            FileUtils.cleanDirectory(tmpdir);
+        }
         frameworkBundlesDir = new File(tmpdir, "framework-bundles-test");
 
         felix = new FelixOsgiContainerManager(frameworkBundlesUrl, frameworkBundlesDir, new DefaultPackageScannerConfiguration(),
-                null, new DefaultPluginEventManager());
+                null, new DefaultPluginEventManager(), tmpdir);
     }
 
     @Override

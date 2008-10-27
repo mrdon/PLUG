@@ -1,9 +1,6 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.descriptors.ChainModuleDescriptorFactory;
 import com.atlassian.plugin.factories.PluginFactory;
@@ -21,6 +18,8 @@ import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 
 import java.io.File;
 import java.io.InputStream;
@@ -86,11 +85,23 @@ public class OsgiPluginFactory implements PluginFactory
 
         try
         {
-            Plugin osgiPlugin = createOsgiPlugin(deploymentUnit.getPath());
             ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
             pluginDescriptor = loader.getResourceAsStream(pluginDescriptorFileName);
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
+
+            Bundle existingBundle = findBundle(parser.getKey(), parser.getPluginInformation().getVersion(), deploymentUnit);
+            Plugin osgiPlugin;
+            if (existingBundle != null)
+            {
+                osgiPlugin = new OsgiPlugin(existingBundle);
+                log.info("OSGi bundle "+parser.getKey()+" found already installed.");
+            }
+            else
+            {
+                osgiPlugin = createOsgiPlugin(deploymentUnit.getPath());
+            }
+                
             plugin = parser.configurePlugin(combinedFactory, osgiPlugin);
         }
         finally
@@ -152,6 +163,19 @@ public class OsgiPluginFactory implements PluginFactory
         {
             return reportUnloadablePlugin(file, ex);
         }
+    }
+
+    private Bundle findBundle(String key, String version, DeploymentUnit deploymentUnit)
+    {
+        for (Bundle bundle : osgi.getBundles())
+        {
+            if (key.equals(bundle.getSymbolicName()) && version.equals(bundle.getHeaders().get(Constants.BUNDLE_VERSION))
+                    && deploymentUnit.lastModified() < bundle.getLastModified())
+            {
+                return bundle;
+            }
+        }
+        return null;
     }
 
     private Plugin reportUnloadablePlugin(File file, Exception e)

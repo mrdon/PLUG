@@ -38,4 +38,10 @@ public interface PackageScannerConfiguration
      * @return A map of package patterns and their versions
      */
     Map<String,String> getPackageVersions();
+
+    /**
+     * @return The current host application version number.  Used as a caching key for scanned data.
+     * @since 2.2.0
+     */
+    String getCurrentHostVersion();
 }

@@ -90,6 +90,7 @@ public class DefaultPluginManager implements PluginManager
      */
     public void init() throws PluginParseException
     {
+        long start = System.currentTimeMillis();
         log.info("Initialising the plugin system");
         pluginEventManager.broadcast(new PluginFrameworkStartingEvent(this, this));
         for (PluginLoader loader : pluginLoaders)
@@ -99,6 +100,8 @@ public class DefaultPluginManager implements PluginManager
             addPlugins(loader, loader.loadAllPlugins(moduleDescriptorFactory));
         }
         pluginEventManager.broadcast(new PluginFrameworkStartedEvent(this, this));
+        long end = System.currentTimeMillis();
+        log.info("Plugin system started in "+(end - start)+"ms");
     }
 
     /**

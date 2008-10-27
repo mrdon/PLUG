@@ -228,6 +228,12 @@ public class XmlDescriptorParser implements DescriptorParser
         }
     }
 
+    public PluginInformation getPluginInformation()
+    {
+        return createPluginInformation(getDocument().getRootElement().element("plugin-info"));
+    }
+
+
     public boolean isSystemPlugin()
     {
         return "true".equalsIgnoreCase(getPluginElement().attributeValue("system"));

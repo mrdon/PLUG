@@ -5,10 +5,14 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
 import java.io.IOException;
+import java.io.File;
 import java.util.List;
+import java.util.jar.Manifest;
+import java.util.jar.JarFile;
 
 import junit.framework.Assert;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import aQute.lib.osgi.Jar;
 
 public class SpringTransformerTestHelper
 {
@@ -19,13 +23,18 @@ public class SpringTransformerTestHelper
 
     public static Element transform(SpringTransformer transformer, List<HostComponentRegistration> regs, Element pluginRoot, String... xpaths) throws IOException
     {
+        return transform(transformer, null, regs, pluginRoot, xpaths);
+    }
+
+    public static Element transform(SpringTransformer transformer, File pluginJar, List<HostComponentRegistration> regs, Element pluginRoot, String... xpaths) throws IOException
+    {
         Document springDoc = DocumentHelper.createDocument();
 
         Element springRoot = springDoc.addElement("beans:beans");
         springRoot.addNamespace("beans", "http://www.springframework.org/schema/beans");
         springRoot.addNamespace("osgi", "http://www.springframework.org/schema/osgi");
 
-        transformer.transform(regs, pluginRoot.getDocument(), springDoc);
+        transformer.transform(pluginJar, (pluginJar != null ? new JarFile(pluginJar).getManifest() : null), regs, pluginRoot.getDocument(), springDoc);
 
         for (String xp : xpaths)
         {

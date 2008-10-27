@@ -55,6 +55,7 @@ public class TestOsgiPluginFactory extends TestCase
         mockOsgi.expectAndReturn("installBundle", C.ANY_ARGS, mockBundle.proxy());
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
         mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
+        mockOsgi.expectAndReturn("getBundles", new Bundle[]{});
         Plugin plugin = factory.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiPlugin);
@@ -66,6 +67,7 @@ public class TestOsgiPluginFactory extends TestCase
         mockOsgi.expectAndThrow("installBundle", C.ANY_ARGS, new OsgiContainerException("Bad install"));
         mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
+        mockOsgi.expectAndReturn("getBundles", new Bundle[]{});
         Plugin plugin = factory.create(new DeploymentUnit(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof UnloadablePlugin);

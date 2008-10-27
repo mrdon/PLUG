@@ -9,7 +9,6 @@ import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
-import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
 import java.io.File;
 import java.util.List;
@@ -339,16 +338,4 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
         assertEquals(2, pluginManager.getEnabledPlugins().size());
     }
-
-
-    public static class DummyModuleDescriptor extends AbstractModuleDescriptor
-    {
-        public Object getModule()
-        {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-    }
-
-
-
 }

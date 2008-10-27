@@ -15,9 +15,20 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
     private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "javax.swing.tree", "org.quartz", "org.quartz.*", "bucket.*", "net.sf.cglib", "net.sf.cglib.*", "net.sf.hibernate", "net.sf.hibernate.*", "com.octo.captcha.*", "com.opensymphony.*", "org.apache.*", "org.xml.*", "javax.*", "org.w3c.*");
     private List<String> packageExcludes = Arrays.asList("com.springframework*", "org.apache.commons.logging*");
     private Map<String, String> packageVersions;
+    private String hostVersion;
 
     public DefaultPackageScannerConfiguration()
     {
+        this(null);
+    }
+
+    /**
+     * @since 2.2
+     * @param hostVersion The current host application version
+     */
+    public DefaultPackageScannerConfiguration(String hostVersion)
+    {
+        this.hostVersion = hostVersion;
         jarIncludes = new ArrayList<String>(jarIncludes);
         jarExcludes = new ArrayList<String>(jarExcludes);
         packageIncludes = new ArrayList<String>(packageIncludes);
@@ -97,5 +108,10 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
     public Map<String, String> getPackageVersions()
     {
         return packageVersions;
+    }
+
+    public String getCurrentHostVersion()
+    {
+        return hostVersion;
     }
 }

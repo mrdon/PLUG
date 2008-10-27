@@ -3,6 +3,7 @@ package com.atlassian.plugin.parsers;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.PluginInformation;
 
 /**
  * Interface for parsing a plugin descriptor file, e.g. atlassian-plugin.xml.
@@ -39,4 +40,6 @@ public interface DescriptorParser
      * @return The version of the plugin system expected by this plugin.  If unknown, it is assumed to be 1.
      */
     int getPluginsVersion();
+
+    PluginInformation getPluginInformation();
 }

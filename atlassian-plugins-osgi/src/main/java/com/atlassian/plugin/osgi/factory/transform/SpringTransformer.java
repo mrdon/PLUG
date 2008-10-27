@@ -1,9 +1,12 @@
 package com.atlassian.plugin.osgi.factory.transform;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.PluginParseException;
 import org.dom4j.Document;
 
 import java.util.List;
+import java.util.jar.Manifest;
+import java.io.File;
 
 /**
  * Converts a piece of the plugin descriptor into Spring configuration
@@ -18,5 +21,7 @@ public interface SpringTransformer
      * @param pluginDoc The plugin document
      * @param springDoc The spring document to write the configuration into
      */
-    void transform(List<HostComponentRegistration> regs, Document pluginDoc, Document springDoc);
+    void transform(File jar, Manifest manifest, List<HostComponentRegistration> regs, Document pluginDoc, Document springDoc)
+        throws PluginParseException;
+
 }

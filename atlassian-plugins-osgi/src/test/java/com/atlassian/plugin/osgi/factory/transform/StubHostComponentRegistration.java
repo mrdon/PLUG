@@ -10,6 +10,7 @@ public class StubHostComponentRegistration implements HostComponentRegistration
     private String[] mainInterfaces;
     private Dictionary<String,String> properties;
     private Class[] mainInterfaceClasses;
+    private Object instance;
 
     public StubHostComponentRegistration(Class... ifs)
     {
@@ -18,6 +19,10 @@ public class StubHostComponentRegistration implements HostComponentRegistration
 
     public StubHostComponentRegistration(String name, Class... ifs)
     {
+        this(name, null, ifs);
+    }
+    public StubHostComponentRegistration(String name, Object value, Class... ifs)
+    {
         this.mainInterfaceClasses = ifs;
         mainInterfaces = new String[ifs.length];
         for (int x=0; x<ifs.length; x++)
@@ -25,6 +30,7 @@ public class StubHostComponentRegistration implements HostComponentRegistration
         this.properties = new Hashtable<String,String>();
         if (name != null)
             properties.put("bean-name", name);
+        instance = value;
     }
 
     public StubHostComponentRegistration(String[] ifs, Dictionary<String,String> props)
@@ -35,7 +41,7 @@ public class StubHostComponentRegistration implements HostComponentRegistration
 
     public Object getInstance()
     {
-        return null;
+        return instance;
     }
 
     public Class[] getMainInterfaceClasses()
