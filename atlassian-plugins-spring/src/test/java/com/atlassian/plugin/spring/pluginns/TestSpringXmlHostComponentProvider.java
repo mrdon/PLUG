@@ -1,13 +1,9 @@
 package com.atlassian.plugin.spring.pluginns;
 
 import junit.framework.TestCase;
-import org.springframework.beans.factory.support.StaticListableBeanFactory;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.core.io.ClassPathResource;
-import com.atlassian.plugin.spring.SpringHostComponentProvider;
-import com.atlassian.plugin.spring.AvailableToPlugins;
 import com.atlassian.plugin.spring.Fooable;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
