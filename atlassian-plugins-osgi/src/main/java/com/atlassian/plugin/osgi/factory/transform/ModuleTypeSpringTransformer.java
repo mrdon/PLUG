@@ -23,7 +23,7 @@ public class ModuleTypeSpringTransformer implements SpringTransformer
         {
             Element bean = root.addElement("beans:bean");
             bean.addAttribute("id", getBeanId(e));
-            bean.addAttribute("class", SingleModuleDescriptorFactory.class.getName());
+            bean.addAttribute("class", "com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory");
 
             Element arg = bean.addElement("beans:constructor-arg");
             arg.addAttribute("index", "0");
