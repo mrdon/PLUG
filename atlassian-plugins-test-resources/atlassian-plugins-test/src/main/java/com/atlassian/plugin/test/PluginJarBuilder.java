@@ -95,7 +95,8 @@ public class PluginJarBuilder
         field.setAccessible(true);
         Map classes = (Map) field.get(cl);
 
-        jarContents.put(className.replace('.', File.separatorChar) + ".class", (byte[]) classes.get(className));
+        // jar files use '/' as a directory separator, regardless of platform
+        jarContents.put(className.replace('.', '/') + ".class", (byte[]) classes.get(className));
         return this;
     }
 
