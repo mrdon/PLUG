@@ -6,6 +6,8 @@ import org.dom4j.Element;
 
 import java.io.IOException;
 
+import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
+
 public class TestModuleTypeSpringTransformer extends TestCase
 {
     public void testTransform() throws IOException
@@ -15,8 +17,9 @@ public class TestModuleTypeSpringTransformer extends TestCase
         moduleType.addAttribute("key", "foo");
         moduleType.addAttribute("class", "my.FooDescriptor");
 
-        SpringTransformerTestHelper.transform(new ModuleTypeSpringTransformer(), pluginRoot, "beans:bean[@id='moduleType-foo']",
-                              "osgi:service[@id='moduleType-foo_osgiService']");
+        SpringTransformerTestHelper.transform(new ModuleTypeSpringTransformer(), pluginRoot,
+                "beans:bean[@id='moduleType-foo' and @class='"+ SingleModuleDescriptorFactory.class.getName()+"']",
+                "osgi:service[@id='moduleType-foo_osgiService']");
     }
 
 }

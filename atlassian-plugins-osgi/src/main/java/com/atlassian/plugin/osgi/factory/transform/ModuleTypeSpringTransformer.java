@@ -1,7 +1,6 @@
 package com.atlassian.plugin.osgi.factory.transform;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
-import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 
 import java.util.List;
@@ -25,7 +24,7 @@ public class ModuleTypeSpringTransformer implements SpringTransformer
         {
             Element bean = root.addElement("beans:bean");
             bean.addAttribute("id", getBeanId(e));
-            bean.addAttribute("class", SingleModuleDescriptorFactory.class.getName());
+            bean.addAttribute("class", "com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory");
 
             Element arg = bean.addElement("beans:constructor-arg");
             arg.addAttribute("index", "0");
