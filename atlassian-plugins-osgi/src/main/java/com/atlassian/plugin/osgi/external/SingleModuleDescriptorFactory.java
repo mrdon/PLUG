@@ -11,11 +11,10 @@ import org.springframework.beans.BeansException;
  * of using the available beanfactory to autowire new module descriptors
  * @since 2.1
  */
-public class SingleModuleDescriptorFactory<T extends ModuleDescriptor> implements ModuleDescriptorFactory, BeanFactoryAware
+public class SingleModuleDescriptorFactory<T extends ModuleDescriptor> implements ModuleDescriptorFactory
 {
     private final String type;
     private final Class<T> moduleDescriptorClass;
-    private AutowireCapableBeanFactory beanFactory;
 
     public SingleModuleDescriptorFactory(String type, Class<T> moduleDescriptorClass)
     {
@@ -28,14 +27,9 @@ public class SingleModuleDescriptorFactory<T extends ModuleDescriptor> implement
         T result = null;
         if (this.type.equals(type))
         {
-            if (beanFactory != null)
-            {
-                result = (T) beanFactory.createBean(moduleDescriptorClass);
-            }
-            else
-            {
-                result = moduleDescriptorClass.newInstance();
-            }
+            // We can't use an autowired bean factory to create the instance because it would be loaded by this class's
+            // classloader, which will not have access to the spring instance in bundle space.
+            result = moduleDescriptorClass.newInstance();
         }
         return result;
     }
@@ -48,11 +42,5 @@ public class SingleModuleDescriptorFactory<T extends ModuleDescriptor> implement
     public Class<? extends ModuleDescriptor> getModuleDescriptorClass(String type)
     {
         return (this.type.equals(type) ? moduleDescriptorClass : null);
-    }
-
-    public void setBeanFactory(BeanFactory beanFactory) throws BeansException
-    {
-        if (beanFactory instanceof AutowireCapableBeanFactory)
-            this.beanFactory = (AutowireCapableBeanFactory) beanFactory;
     }
 }
