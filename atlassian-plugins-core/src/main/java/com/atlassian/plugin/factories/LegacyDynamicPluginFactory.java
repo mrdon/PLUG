@@ -90,7 +90,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
         catch (IOException e)
         {
             if (loader != null) loader.close();
-            throw new PluginParseException();
+            throw new PluginParseException(e);
         } finally
         {
             IOUtils.closeQuietly(pluginDescriptor);
