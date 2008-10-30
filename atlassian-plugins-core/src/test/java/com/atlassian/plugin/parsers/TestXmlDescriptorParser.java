@@ -1,8 +1,6 @@
 package com.atlassian.plugin.parsers;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.net.URL;
 
 import junit.framework.TestCase;
@@ -57,6 +55,27 @@ public class TestXmlDescriptorParser extends TestCase
     }
 
     // Also CONF-12680 test for missing "essential metadata"
+
+    public void testPluginsVersion()
+    {
+        String xml = "<atlassian-plugin key=\"foo\" pluginsVersion=\"2\" />";
+        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()));
+        assertEquals(2, parser.getPluginsVersion());
+    }
+
+    public void testPluginsVersionWithDash()
+    {
+        String xml = "<atlassian-plugin key=\"foo\" plugins-version=\"2\" />";
+        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()));
+        assertEquals(2, parser.getPluginsVersion());
+    }
+
+    public void testPluginsVersionMissing()
+    {
+        String xml = "<atlassian-plugin key=\"foo\" />";
+        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()));
+        assertEquals(1, parser.getPluginsVersion());
+    }
     
 
     private String getTestFile(String filename)

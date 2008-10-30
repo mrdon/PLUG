@@ -221,6 +221,10 @@ public class XmlDescriptorParser implements DescriptorParser
     public int getPluginsVersion()
     {
         String val = getPluginElement().attributeValue("pluginsVersion");
+        if (val == null)
+        {
+            val = getPluginElement().attributeValue("plugins-version");
+        }
         if (val != null) {
             return Integer.parseInt(val);
         } else {
