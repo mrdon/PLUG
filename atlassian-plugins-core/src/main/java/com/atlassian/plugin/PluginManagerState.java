@@ -5,6 +5,7 @@ import org.apache.commons.collections.Predicate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.io.Serializable;
 
 /**
  * Represents a configuration state for plugins and plugin modules. The configuration state (enabled
@@ -17,7 +18,7 @@ import java.util.Map;
  * <p>
  * Please note that this method is not threadsafe.  Access to instances should be synchronised.
  */
-public class PluginManagerState
+public class PluginManagerState implements Serializable
 {
     private Map<String,Boolean> map = new HashMap<String,Boolean>();
 
