@@ -32,9 +32,9 @@
     </ciManagement>
 
     <scm>
-        <connection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</connection>
-        <developerConnection>scm:svn:https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</developerConnection>
-        <url>https://svn.atlassian.com/svn/private/atlassian/plugins/trunk</url>
+	    <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.1.x</connection>
+        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.1.x</developerConnection>
+        <url>https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.1.x</url>
     </scm>
 
     <modules>
