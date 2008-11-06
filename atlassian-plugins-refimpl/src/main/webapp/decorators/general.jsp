@@ -12,7 +12,7 @@
 <body>
 <div id="header">
 <div id="header-top">
-    <a id="logo" href="/secure/Dashboard.jspa">
+    <a id="logo" href="#">
         <img class="logo"
              src="<%= request.getContextPath() %>/jira_logo_small.png"
              width="111"
@@ -22,16 +22,16 @@
     </a>
 
     <ul id="account-options">
-        <li><a id="user_nav_bar_tmoore" href="/secure/ViewProfile.jspa?name=tmoore">Tim Moore [Atlassian]</a></li>
+        <li><a id="user_nav_bar_tmoore" href="#">Tim Moore [Atlassian]</a></li>
         <li>
             <a class="dropdownmenu"
                id="saved_filters"
                title="View and open your favourite filters"
-               href="/secure/FavouriteFilters.jspa"
+               href="#"
                onClick="return false;"><span>Filters</span></a>
         </li>
         <li>
-            <a href="/logout" title="Log out and cancel any automatic login.">Log Out</a>
+            <a href="#" title="Log out and cancel any automatic login.">Log Out</a>
         </li>
         <li class="icon">
             <a rel="nofollow"
@@ -62,31 +62,31 @@
 
     <ul id="main-nav">
         <li>
-            <a href="/secure/Dashboard.jspa"
+            <a href="#"
                class="selected" id="home_link" title="A configurable overview of JIRA" accessKey="h"><u>h</u>ome</a>
         </li>
         <li>
-            <a href="/secure/BrowseProject.jspa"
+            <a href="#"
                id="browse_link" title="Browse the projects you have permissions to view" accessKey="b"><u>b</u>rowse
                 projects</a>
         </li>
         <li>
-            <a href="/secure/IssueNavigator.jspa"
+            <a href="#"
                id="find_link"
                title="Find issues in the projects you have permissions to view"
                accessKey="f"><u>f</u>ind issues</a>
         </li>
         <li>
-            <a href="/secure/CreateIssue!default.jspa"
+            <a href="#"
                id="create_link" title="Create a new issue / bug / feature request / etc" accessKey="c"><u>c</u>reate
                 new issue</a>
         </li>
         <li>
-            <a href="/secure/project/ViewProjects.jspa"
+            <a href="#"
                id="admin_link" title="Manage this JIRA instance" accessKey="a"><u>a</u>dministration</a>
         </li>
         <li>
-            <a href="/secure/PlanningBoard.jspa?decorator=none"
+            <a href="#"
                id="planningboardmenu" title="Go to the Planning board of the current Project" accessKey="p"><u>p</u>lanning
                 board</a>
         </li>
@@ -98,7 +98,7 @@
     </ul>
 
 
-    <form id="quicksearch" action="/secure/QuickSearch.jspa" method="post">
+    <form id="quicksearch" action="#" method="post">
         <label onclick="quickSearchTextBoxSetFocus();" onmouseover="showToolTip()" onmouseout="hideToolTip()">&nbsp;
             &nbsp;<u>Q</u>uick Search:</label>
         <input id="quickSearchInput"
@@ -132,7 +132,7 @@ the Professional <a href="http://www.atlassian.com/software/jira">Issue Tracker<
 <span style="color: #666666;">(Enterprise Edition, Version: 3.13.1-#333)</span>    - <a href="http://jira.atlassian.com/default.jsp?clicked=footer">Bug/feature
     request</a>
 - <a href="http://www.atlassian.com/about/connected.jsp?s_kwcid=jira-stayintouch">Atlassian news</a>
-- <a href="/secure/Administrators.jspa">Contact Administrators</a>
+- <a href="#">Contact Administrators</a>
 </span>
 
 
