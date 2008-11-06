@@ -1,0 +1,93 @@
+
+
+
+.pagetitle { color: #003366; }
+.formtitle { color: #003366; }
+.bluetext { color: #003366; }
+.toptext, .toptext a { color: #f0f0f0; }
+.portletLoginHeader { color: #ffffff; background-color: #3c78b5}
+.bgBorder {border:1px #114070 solid; }
+#filterFormHeader, .leftFormHeader { border-bottom-color: #3c78b5; }
+#filterForm .tableUnderline { border-bottom-color: #3c78b5; }
+
+
+
+#header-top {
+    color :  #f0f0f0;
+    background-color :  #114070;
+    border-bottom-color : #003366;
+}
+
+#account-options {
+    color :  #f0f0f0;
+    background-color :  #114070;
+}
+
+#account-options li a {
+    color :  #f0f0f0;
+    background-color :  #114070;
+}
+
+#account-options li a:hover, #account-options li a.dropdownmenu:active, #account-options li a.dropdownmenu:focus, #account-options li a.current {
+    color: #ffffff;
+    background-color: #325c82;
+}
+
+
+#menu {
+     color: #ffffff;
+     background-color: #3c78b5;
+}
+
+#menuspacer {
+    background-color:#ffffff;
+}
+
+
+#main-nav li a:link, #main-nav li a:visited {
+     color: #ffffff;
+     background-color: #3c78b5;
+}
+
+#main-nav li a:hover, #main-nav li a:active, #main-nav li a:focus, #main-nav li a.current
+{
+    color: #114070;
+    background-color: #ffffff;
+}
+
+#main-nav li a.selected, #main-nav li a:link.selected, #main-nav li a:visited.selected {
+    color: #114070;
+    background-color: #ffffff;
+}
+
+#menu #quicksearch {
+    color: #ffffff;
+    background-color: #3c78b5;
+}
+
+div.jira-menubutton {
+    background-color: #ffffff;
+    color: #003366;
+    border-color: #bbbbbb;
+}
+
+
+.jira-menubutton ul li a {
+    background-color: #ffffff;
+    color: #003366;
+}
+
+.jira-menubutton ul li a:hover,
+    .jira-menubutton ul li a:active,
+    .jira-menubutton ul li a:focus {
+    background-color: #325c82;
+    color: #ffffff;
+}
+
+#account-options li a.dropdownmenu span, #account-options li a.dropdownmenu:link span, #account-options li a.dropdownmenu:visited span {
+    background-image: url( "../images/menu_indicator_for_dark_backgrounds.gif");
+}
+
+span.switch {
+    color: #003366;
+}
