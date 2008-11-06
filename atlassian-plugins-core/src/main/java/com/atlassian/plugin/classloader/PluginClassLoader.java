@@ -73,6 +73,7 @@ public final class PluginClassLoader extends ClassLoader
         }
         catch (IOException e)
         {
+            
             throw new IllegalStateException(e);
         }
     }
