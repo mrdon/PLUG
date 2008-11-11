@@ -162,6 +162,30 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertTrue(plugin instanceof UnloadablePlugin);
     }
 
+    public void testEnabledModuleOutOfSyncWithPlugin() throws PluginParseException
+        {
+            Mock mockPluginLoader = new Mock(PluginLoader.class);
+            Plugin plugin = new StaticPlugin();
+            plugin.setKey("foo");
+            plugin.setEnabledByDefault(true);
+            plugin.setPluginInformation(new PluginInformation());
+
+            mockPluginLoader.expectAndReturn("loadAllPlugins", C.ANY_ARGS, Collections.singletonList(plugin));
+
+            pluginLoaders.add((PluginLoader) mockPluginLoader.proxy());
+            manager.init();
+
+            assertEquals(1, manager.getPlugins().size());
+            assertEquals(1, manager.getEnabledPlugins().size());
+            plugin = manager.getPlugin("foo");
+            assertTrue(plugin.isEnabled());
+            assertTrue(manager.isPluginEnabled("foo"));
+            plugin.setEnabled(false);
+            assertFalse(plugin.isEnabled());
+            assertFalse(manager.isPluginEnabled("foo"));
+        }
+
+
     public void testEnabledDisabledRetrieval() throws PluginParseException
     {
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));

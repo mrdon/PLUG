@@ -336,7 +336,7 @@ public class DefaultPluginManager implements PluginManager
             }
 
             plugins.put(plugin.getKey(), plugin);
-            if (isPluginEnabled(plugin.getKey()))
+            if (getState().isEnabled(plugin))
             {
                 try
                 {
@@ -944,9 +944,29 @@ public class DefaultPluginManager implements PluginManager
         return isPluginEnabled(key.getPluginKey()) && pluginModule != null && getState().isEnabled(pluginModule);
     }
 
+    /**
+     * This method checks to see if the plugin should be enabled based on the state manager.  It also detects if the
+     * state manager state doesn't match the actual plugin state, and if so, disables the plugin
+     *
+     * @param key The plugin key
+     * @return True if the plugin is enabled
+     */
     public boolean isPluginEnabled(String key)
     {
-        return plugins.containsKey(key) && getState().isEnabled((Plugin) plugins.get(key));
+        Plugin plugin = plugins.get(key);
+
+        boolean shouldBeEnabled = plugin != null && getState().isEnabled(plugin);
+
+        // Detect if the plugin state is out of sync with the plugin state store
+        if (shouldBeEnabled && !plugin.isEnabled())
+        {
+            log.warn("Plugin "+key+" is out of sync with the plugin system, disabling");
+            // Just changing the state in the store to prevent a stack overflow as disabling modules requires the
+            // plugin to be enabled, thus calling this method in a infinite loop.
+            disablePluginState(plugin, getStore());
+            shouldBeEnabled = false;
+        }
+        return shouldBeEnabled;
     }
 
     public InputStream getDynamicResourceAsStream(String name)
