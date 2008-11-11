@@ -6,7 +6,8 @@ package com.atlassian.plugin.servlet.filter;
  * 
  * @since 2.1.0
  */
-public enum FilterLocation {
+public enum FilterLocation
+{
     AFTER_ENCODING,
     BEFORE_LOGIN,
     BEFORE_DECORATION,

@@ -24,11 +24,11 @@ public class ServletContextParamModuleDescriptor extends AbstractModuleDescripto
         
         paramName = element.elementTextTrim("param-name");
         if (StringUtils.isEmpty(paramName))
-            throw new IllegalArgumentException("param-name must be specified");
+            throw new PluginParseException("param-name must be specified");
         
         paramValue = element.elementTextTrim("param-value");
         if (StringUtils.isEmpty(paramValue))
-            throw new IllegalArgumentException("param-value must be specified");
+            throw new PluginParseException("param-value must be specified");
     }
 
     public String getParamName()

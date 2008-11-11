@@ -9,8 +9,8 @@ public class UnloadablePlugin extends StaticPlugin
 {
     private static final String UNKNOWN_KEY_PREFIX = "Unknown-";
     private String errorText;
-    private boolean uninstallable;
-    private boolean deletable;
+    private boolean uninstallable = true;
+    private boolean deletable = true;
 
     public UnloadablePlugin()
     {
