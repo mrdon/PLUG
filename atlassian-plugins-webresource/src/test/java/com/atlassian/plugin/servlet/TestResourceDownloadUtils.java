@@ -13,7 +13,7 @@ public class TestResourceDownloadUtils extends TestCase
     private static final long TEN_YEARS = 1000L * 60L * 60L * 24L *365L * 10L;
     private static final String CACHE_CONTROL = "Cache-Control";
 
-    public void testAddCachingHeaders()
+    public void testAddPublicCachingHeaders()
     {
         Mock mockRequest = new Mock(HttpServletRequest.class);
 
@@ -22,7 +22,7 @@ public class TestResourceDownloadUtils extends TestCase
         mockResponse.expect("setHeader", C.args(C.eq(CACHE_CONTROL), C.eq("max-age=" + TEN_YEARS)));
         mockResponse.expect("addHeader", C.args(C.eq(CACHE_CONTROL), C.eq("public")));
 
-        ResourceDownloadUtils.addCachingHeaders((HttpServletRequest) mockRequest.proxy(), (HttpServletResponse) mockResponse.proxy());
+        ResourceDownloadUtils.addPublicCachingHeaders((HttpServletRequest) mockRequest.proxy(), (HttpServletResponse) mockResponse.proxy());
     }
 
     public void testAddCachingHeadersWithCacheControls()
