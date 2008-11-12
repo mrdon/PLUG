@@ -213,7 +213,7 @@ public class OsgiHeaderUtil
             }
             catch (MalformedURLException e)
             {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                log.warn(e);
             }
         }
         
