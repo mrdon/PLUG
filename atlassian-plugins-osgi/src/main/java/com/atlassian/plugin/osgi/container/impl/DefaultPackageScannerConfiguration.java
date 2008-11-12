@@ -2,6 +2,7 @@ package com.atlassian.plugin.osgi.container.impl;
 
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 
+import javax.servlet.ServletContext;
 import java.util.*;
 
 /**
@@ -15,6 +16,7 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
     private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "javax.swing.tree", "org.quartz", "org.quartz.*", "bucket.*", "net.sf.cglib", "net.sf.cglib.*", "net.sf.hibernate", "net.sf.hibernate.*", "com.octo.captcha.*", "com.opensymphony.*", "org.apache.*", "org.xml.*", "javax.*", "org.w3c.*");
     private List<String> packageExcludes = Arrays.asList("com.springframework*", "org.apache.commons.logging*");
     private Map<String, String> packageVersions;
+    private ServletContext servletContext;
 
     public DefaultPackageScannerConfiguration()
     {
@@ -97,5 +99,15 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
     public Map<String, String> getPackageVersions()
     {
         return packageVersions;
+    }
+
+    public ServletContext getServletContext()
+    {
+        return servletContext;
+    }
+
+    public void setServletContext(ServletContext servletContext)
+    {
+        this.servletContext = servletContext;
     }
 }

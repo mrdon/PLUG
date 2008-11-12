@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 
 import org.twdata.pkgscanner.ExportPackage;
 import org.twdata.pkgscanner.PackageScanner;
@@ -25,6 +26,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.IOUtils;
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Jar;
+
+import javax.servlet.ServletContext;
 
 /**
  * Utilities to help create OSGi headers
@@ -186,7 +189,8 @@ public class OsgiHeaderUtil
     static Collection<ExportPackage> generateExports(PackageScannerConfiguration packageScannerConfig)
     {
         String[] arrType = new String[0];
-        Collection<ExportPackage> exports = new PackageScanner()
+
+        PackageScanner scanner = new PackageScanner()
            .select(
                jars(
                        include(packageScannerConfig.getJarIncludes().toArray(arrType)),
@@ -195,9 +199,44 @@ public class OsgiHeaderUtil
                        include(packageScannerConfig.getPackageIncludes().toArray(arrType)),
                        exclude(packageScannerConfig.getPackageExcludes().toArray(arrType)))
            )
-           .withMappings(packageScannerConfig.getPackageVersions())
-           .scan();
+           .withMappings(packageScannerConfig.getPackageVersions());
+
+        Collection<ExportPackage> exports = scanner.scan();
+
+        if (!doExportsContainLog4j(exports) && packageScannerConfig.getServletContext() != null)
+        {
+            log.warn("Unable to find expected packages via classloader scanning.  Trying ServletContext scanning...");
+            ServletContext ctx = packageScannerConfig.getServletContext();
+            try
+            {
+                exports = scanner.scan(ctx.getResource("/WEB-INF/lib"), ctx.getResource("/WEB-INF/classes"));
+            }
+            catch (MalformedURLException e)
+            {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+        }
+        
+        if (!doExportsContainLog4j(exports))
+        {
+            throw new IllegalStateException("Unable to find required packages via classloader or servlet context"
+                    + " scanning, most likely due to an application server bug.");
+        }
         return exports;
+    }
+
+    private static boolean doExportsContainLog4j(Collection<ExportPackage> exports)
+    {
+        boolean log4jFound = false;
+        for (ExportPackage export : exports)
+        {
+            if (export.getPackageName().equals("org.apache.log4j"))
+            {
+                log4jFound = true;
+                break;
+            }
+        }
+        return log4jFound;
     }
 
     static void constructJdkExports(StringBuilder sb, String packageListPath)

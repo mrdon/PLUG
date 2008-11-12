@@ -242,13 +242,15 @@
                             <goal>execute</goal>
                         </goals>
                         <configuration>
-                            <containers>tomcat5x,jboss42x</containers>
+                            <containers>resin3x,tomcat5x,jboss42x</containers>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
+
+
     
     <properties>
         <pluginBundleDirectory>target/bundled-plugins</pluginBundleDirectory>

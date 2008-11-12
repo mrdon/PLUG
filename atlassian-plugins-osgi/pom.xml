@@ -199,7 +199,7 @@
         <dependency>
             <groupId>org.twdata.pkgscanner</groupId>
             <artifactId>package-scanner</artifactId>
-            <version>0.6.2</version>
+            <version>0.7</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -266,6 +266,13 @@
             <version>${project.version}</version>
              <scope>test</scope>
         </dependency>
+        <dependency>
+           <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.3</version>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
 
     <properties>
