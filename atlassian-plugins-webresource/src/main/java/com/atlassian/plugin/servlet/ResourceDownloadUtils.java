@@ -64,14 +64,14 @@ public class ResourceDownloadUtils
     }
 
     /**
-     * Set 'expire' headers to cache for ten years, with private caching turned on.
+     * Set 'expire' headers to cache for ten years, with public caching turned on.
      *
      * @deprecated Please use {@link #addPublicCachingHeaders(HttpServletRequest, HttpServletResponse)} or
      * {@link #addPrivateCachingHeaders(HttpServletRequest, HttpServletResponse)} instead.
      */
     public static void addCachingHeaders(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
     {
-        addPrivateCachingHeaders(httpServletRequest, httpServletResponse);
+        addPublicCachingHeaders(httpServletRequest, httpServletResponse);
     }
 
     /**
