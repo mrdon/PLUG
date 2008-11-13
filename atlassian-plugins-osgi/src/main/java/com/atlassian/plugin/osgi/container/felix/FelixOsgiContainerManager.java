@@ -110,7 +110,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     }
 
     @PluginEventListener
-    public void onShtudown(PluginFrameworkShutdownEvent event)
+    public void onShutdown(PluginFrameworkShutdownEvent event)
     {
         stop();
     }
@@ -224,7 +224,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         if (!isRunning())
             throw new IllegalStateException("Unable to create a tracker when osgi is not running");
 
-        ServiceTracker tracker = registration.getServiceTracker(cls);
+        ServiceTracker tracker = registration.getServiceTracker(cls, trackers);
         tracker.open();
         trackers.add(tracker);
         return tracker;
@@ -371,9 +371,15 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             return bundleContext.getBundles();
         }
 
-        public ServiceTracker getServiceTracker(String clazz)
+        public ServiceTracker getServiceTracker(String clazz, final Set<ServiceTracker> trackedTrackers)
         {
-            return new ServiceTracker(bundleContext, clazz, null);
+            return new ServiceTracker(bundleContext, clazz, null){
+                @Override
+                public void close()
+                {
+                    trackedTrackers.remove(this);
+                }
+            };
         }
 
         public List<HostComponentRegistration> getHostComponentRegistrations()
