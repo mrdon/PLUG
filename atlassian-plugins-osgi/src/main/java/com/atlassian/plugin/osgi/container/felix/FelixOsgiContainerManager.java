@@ -182,7 +182,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         {
             if (felixRunning)
             {
-                for (ServiceTracker tracker : trackers)
+                for (ServiceTracker tracker : new HashSet<ServiceTracker>(trackers))
                     tracker.close();
                 felix.stopAndWait();
             }
