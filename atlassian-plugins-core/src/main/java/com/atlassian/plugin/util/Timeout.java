@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
  * 
  * where if the first call takes quarter of a second, the second call is passed the equivalent of
  * three-quarters of a second.
+ * 
+ * @since 2.2
  */
 public class Timeout
 {
