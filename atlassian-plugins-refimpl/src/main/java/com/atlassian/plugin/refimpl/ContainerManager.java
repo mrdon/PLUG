@@ -154,6 +154,11 @@ public class ContainerManager
     {
         return downloadStrategies;
     }
+    
+    public WebResourceManager getWebResourceManager()
+    {
+        return webResourceManager;
+    }
 
     /**
      * A simple content type resolver that can identify css and js resources.

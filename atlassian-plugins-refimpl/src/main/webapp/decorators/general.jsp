@@ -4,6 +4,9 @@
     <head>
         <title><decorator:title default="Welcome!" /></title>
         <decorator:head />
+        <%
+            com.atlassian.plugin.refimpl.ContainerManager.getInstance().getWebResourceManager().includeResources(out);
+        %>
     </head>
 
     <body>
