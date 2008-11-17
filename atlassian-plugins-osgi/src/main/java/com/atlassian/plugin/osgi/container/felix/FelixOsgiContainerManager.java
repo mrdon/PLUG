@@ -140,7 +140,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
         configMap.put(FelixConstants.LOG_LEVEL_PROP, String.valueOf(felixLogger.getLogLevel()));
         String bootDelegation = getAtlassianSpecificOsgiSystemProperty(OSGI_BOOTDELEGATION);
-        if (bootDelegation == null || bootDelegation.trim().length() > 0)
+        if (bootDelegation == null || bootDelegation.trim().length() == 0)
         {
             bootDelegation = "weblogic.*,com.yourkit.*,org.jprofiler.*";
         }

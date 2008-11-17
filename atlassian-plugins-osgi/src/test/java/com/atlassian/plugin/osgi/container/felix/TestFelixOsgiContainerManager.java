@@ -138,7 +138,7 @@ public class TestFelixOsgiContainerManager extends TestCase
         felix.stop();
 
         // This system property exposes the JUnit TestCase class from the parent classloader to the bundle
-        System.setProperty("org.osgi.framework.bootdelegation", "junit.framework.*");
+        System.setProperty("atlassian.org.osgi.framework.bootdelegation", "junit.framework.*");
         try
         {
             felix.start();
@@ -151,7 +151,7 @@ public class TestFelixOsgiContainerManager extends TestCase
         }
         finally
         {
-            System.clearProperty("org.osgi.framework.bootdelegation");
+            System.clearProperty("atlassian.org.osgi.framework.bootdelegation");
         }
     }
 
