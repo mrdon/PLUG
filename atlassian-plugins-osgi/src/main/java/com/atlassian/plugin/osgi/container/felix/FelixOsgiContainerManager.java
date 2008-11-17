@@ -40,6 +40,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private static final Log log = LogFactory.getLog(FelixOsgiContainerManager.class);
     public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "osgi-framework-bundles.zip";
     private static final String OSGI_BOOTDELEGATION = "org.osgi.framework.bootdelegation";
+    private static final String ATLASSIAN_PREFIX = "atlassian.";
     private BundleRegistration registration = null;
     private Felix felix = null;
     private boolean felixRunning = false;
@@ -121,6 +122,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         if (isRunning())
             return;
 
+        detectIncorrectOsgiVersion();
+
         initialiseCacheDirectory();
 
         DefaultComponentRegistrar registrar = collectHostComponents(hostComponentProvider);
@@ -136,8 +139,17 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         configMap.put(BundleCache.CACHE_PROFILE_DIR_PROP, cacheDirectory.getAbsolutePath());
 
         configMap.put(FelixConstants.LOG_LEVEL_PROP, String.valueOf(felixLogger.getLogLevel()));
-        if (System.getProperty(OSGI_BOOTDELEGATION) != null)
-            configMap.put(Constants.FRAMEWORK_BOOTDELEGATION, System.getProperty(OSGI_BOOTDELEGATION));
+        String bootDelegation = getAtlassianSpecificOsgiSystemProperty(OSGI_BOOTDELEGATION);
+        if (bootDelegation == null || bootDelegation.trim().length() > 0)
+        {
+            bootDelegation = "weblogic.*,com.yourkit.*,org.jprofiler.*";
+        }
+
+        configMap.put(Constants.FRAMEWORK_BOOTDELEGATION, bootDelegation);
+        if (log.isDebugEnabled())
+        {
+            log.debug("Felix configuration: "+configMap);
+        }
 
         try
         {
@@ -173,6 +185,23 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         catch (Exception ex)
         {
             throw new OsgiContainerException("Unable to start OSGi container", ex);
+        }
+    }
+
+    /**
+     * Detects incorrect configuration of WebSphere 6.1 that leaks OSGi 4.0 jars into the application
+     */
+    private void detectIncorrectOsgiVersion()
+    {
+        try
+        {
+            Bundle.class.getMethod("getBundleContext");
+        }
+        catch (NoSuchMethodException e)
+        {
+            throw new OsgiContainerException("Detected older version (4.0 or earlier) of OSGi.  If using WebSphere "+
+                "6.1, please enable application-first (parent-last) classloading and the 'Single classloader for "+
+                "application' WAR classloader policy.");
         }
     }
 
@@ -273,6 +302,11 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     public List<HostComponentRegistration> getHostComponentRegistrations()
     {
         return registration.getHostComponentRegistrations();
+    }
+
+    private String getAtlassianSpecificOsgiSystemProperty(String originalSystemProperty)
+    {
+        return System.getProperty(ATLASSIAN_PREFIX + originalSystemProperty);
     }
 
     /**
