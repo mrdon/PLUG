@@ -1,57 +1,62 @@
 package com.atlassian.plugin.elements;
 
 import com.atlassian.plugin.loaders.LoaderUtils;
+
 import org.dom4j.Element;
 
-import java.util.Map;
 import java.util.Collections;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class ResourceDescriptor
 {
-    private String type;
-    private String name;
-    private String location;
-    private String contentType;
+    private final String type;
+    private final String name;
+    private final String location;
+    private final String contentType;
 
-    private Pattern pattern;
-    private String content;
-    private Map<String,String> params;
-    private ResourceLocation ourLocation;
+    private final Pattern pattern;
+    private final String content;
+    private final Map<String, String> params;
+    private final ResourceLocation ourLocation;
 
-    public ResourceDescriptor(Element element)
+    public ResourceDescriptor(final Element element)
     {
-        this.type = element.attributeValue("type");
-        String name = element.attributeValue("name");
-        String namePattern = element.attributeValue("namePattern");
-        if (name == null && namePattern == null)
+        type = element.attributeValue("type");
+        final String name = element.attributeValue("name");
+        final String namePattern = element.attributeValue("namePattern");
+        if ((name == null) && (namePattern == null))
         {
             throw new RuntimeException("resource descriptor needs one of 'name' and 'namePattern' attributes.");
         }
 
-        if (name != null && namePattern != null)
+        if ((name != null) && (namePattern != null))
         {
             throw new RuntimeException("resource descriptor can have only one of 'name' and 'namePattern' attributes.");
         }
 
         this.name = name;
 
-        this.location = element.attributeValue("location");
+        location = element.attributeValue("location");
 
-        if (namePattern != null && location == null)
+        if ((namePattern != null) && (location == null))
         {
             throw new RuntimeException("resource descriptor must have the 'location' attribute specified when the 'namePattern' attribute is used");
         }
 
-        if (namePattern != null && !location.endsWith("/"))
+        if ((namePattern != null) && !location.endsWith("/"))
         {
             throw new RuntimeException("when 'namePattern' is specified, 'location' must be a directory (ending in '/')");
         }
-        this.params = LoaderUtils.getParams(element);
+        params = LoaderUtils.getParams(element);
 
-        if (element.getTextTrim() != null && !"".equals(element.getTextTrim()))
+        if ((element.getTextTrim() != null) && !"".equals(element.getTextTrim()))
         {
             content = element.getTextTrim();
+        }
+        else
+        {
+            content = null;
         }
 
         contentType = getParameter("content-type");
@@ -59,12 +64,13 @@ public class ResourceDescriptor
         if (namePattern != null)
         {
             pattern = Pattern.compile(namePattern);
+            ourLocation = null;
         }
         else
         {
             ourLocation = new ResourceLocation(location, name, type, contentType, content, params);
+            pattern = null;
         }
-
     }
 
     public String getType()
@@ -89,15 +95,14 @@ public class ResourceDescriptor
         return location;
     }
 
-
     public String getContent()
     {
         return content;
     }
 
-    public boolean doesTypeAndNameMatch(String type, String name)
+    public boolean doesTypeAndNameMatch(final String type, final String name)
     {
-        if (type != null && type.equalsIgnoreCase(this.type))
+        if ((type != null) && type.equalsIgnoreCase(this.type))
         {
             if (pattern != null)
             {
@@ -105,7 +110,7 @@ public class ResourceDescriptor
             }
             else
             {
-                return name != null && name.equalsIgnoreCase(this.name);
+                return (name != null) && name.equalsIgnoreCase(this.name);
             }
         }
         else
@@ -114,17 +119,18 @@ public class ResourceDescriptor
         }
     }
 
-    public Map getParameters()
+    public Map<String, String> getParameters()
     {
         return Collections.unmodifiableMap(params);
     }
 
-    public String getParameter(String key)
+    public String getParameter(final String key)
     {
-        return (String) params.get(key);
+        return params.get(key);
     }
 
-    public boolean equals(Object o)
+    @Override
+    public boolean equals(final Object o)
     {
         if (this == o)
         {
@@ -146,6 +152,10 @@ public class ResourceDescriptor
         }
         else if (pattern != null)
         {
+            if (resourceDescriptor.pattern == null)
+            {
+                return false;
+            }
             if (!pattern.toString().equals(resourceDescriptor.pattern.toString()))
             {
                 return false;
@@ -170,6 +180,7 @@ public class ResourceDescriptor
         return true;
     }
 
+    @Override
     public int hashCode()
     {
         int result = 0;
@@ -180,7 +191,8 @@ public class ResourceDescriptor
         if (name != null)
         {
             result = 29 * result + name.hashCode();
-        } else if (pattern != null)
+        }
+        else if (pattern != null)
         {
             result = 29 * result + pattern.hashCode();
         }
@@ -193,7 +205,7 @@ public class ResourceDescriptor
      * @return the location of an individual resource with the name if it matches the pattern,
      * otherwise the location for the actual resource descriptor.
      */
-    public ResourceLocation getResourceLocationForName(String name)
+    public ResourceLocation getResourceLocationForName(final String name)
     {
 
         if (pattern != null)

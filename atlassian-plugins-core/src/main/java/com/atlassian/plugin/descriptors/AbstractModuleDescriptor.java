@@ -1,10 +1,15 @@
 package com.atlassian.plugin.descriptors;
 
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.elements.ResourceLocation;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.Resources;
+import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import com.atlassian.plugin.util.JavaVersionUtils;
+
 import org.dom4j.Element;
 
 import java.lang.reflect.Constructor;
@@ -17,20 +22,20 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     String key;
     String name;
     String moduleClassName;
-    Class moduleClass;
+    Class<T> moduleClass;
     String description;
     boolean enabledByDefault = true;
     boolean systemModule = false;
     protected boolean singleton = true;
-    Map<String,String> params;
+    Map<String, String> params;
     protected Resources resources = Resources.EMPTY_RESOURCES;
     private Float minJavaVersion;
     private String i18nNameKey;
     private String descriptionKey;
-	private String completeKey;
+    private String completeKey;
     boolean enabled = false;
 
-    public void init(Plugin plugin, Element element) throws PluginParseException
+    public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
         this.plugin = plugin;
         this.key = element.attributeValue("key");
@@ -39,7 +44,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         this.completeKey = buildCompleteKey(plugin, key);
         this.description = element.elementTextTrim("description");
         this.moduleClassName = element.attributeValue("class");
-        Element descriptionElement = element.element("description");
+        final Element descriptionElement = element.element("description");
         this.descriptionKey = (descriptionElement != null) ? descriptionElement.attributeValue("key") : null;
         params = LoaderUtils.getParams(element);
 
@@ -80,7 +85,9 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
      * @param element
      * @deprecated Since 2.1.0, use {@link #loadClass(Plugin,String)} instead
      */
-    protected void loadClass(Plugin plugin, Element element) throws PluginParseException {
+    @Deprecated
+    protected void loadClass(final Plugin plugin, final Element element) throws PluginParseException
+    {
         loadClass(plugin, element.attributeValue("class"));
     }
 
@@ -90,42 +97,45 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
      * @param clazz The module class name to load
      * @since 2.1.0
      */
-    protected void loadClass(Plugin plugin, String clazz) throws PluginParseException {
+    protected void loadClass(final Plugin plugin, final String clazz) throws PluginParseException
+    {
         try
         {
-            if (clazz != null)  //not all plugins have to have a class
+            if (clazz != null) //not all plugins have to have a class
             {
                 // First try and load the class, to make sure the class exists
-                moduleClass = plugin.loadClass(clazz, getClass());
+                @SuppressWarnings("unchecked")
+                final Class<T> loadedClass = (Class<T>) plugin.loadClass(clazz, getClass());
+                moduleClass = loadedClass;
 
                 // Then instantiate the class, so we can see if there are any dependencies that aren't satisfied
                 try
                 {
-                    Constructor noargConstructor = moduleClass.getConstructor(new Class[]{});
-                    if(noargConstructor != null)
+                    final Constructor<T> noargConstructor = moduleClass.getConstructor(new Class[] {});
+                    if (noargConstructor != null)
                     {
                         moduleClass.newInstance();
                     }
                 }
-                catch (NoSuchMethodException e)
+                catch (final NoSuchMethodException e)
                 {
                     // If there is no "noarg" constructor then don't do the check
                 }
             }
         }
-        catch (ClassNotFoundException e)
+        catch (final ClassNotFoundException e)
         {
             throw new PluginParseException("Could not load class: " + clazz, e);
         }
-        catch (NoClassDefFoundError e)
+        catch (final NoClassDefFoundError e)
         {
             throw new PluginParseException("Error retrieving dependency of class: " + clazz + ". Missing class: " + e.getMessage());
         }
-        catch (UnsupportedClassVersionError e)
+        catch (final UnsupportedClassVersionError e)
         {
             throw new PluginParseException("Class version is incompatible with current JVM: " + clazz, e);
         }
-        catch (Throwable t)
+        catch (final Throwable t)
         {
             throw new PluginParseException(t);
         }
@@ -138,10 +148,12 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
      * @param moduleKey The key for the module
      * @return A newly constructed complete key, null if the plugin is null
      */
-    private String buildCompleteKey(Plugin plugin, String moduleKey)
+    private String buildCompleteKey(final Plugin plugin, final String moduleKey)
     {
         if (plugin == null)
+        {
             return null;
+        }
 
         final StringBuffer completeKeyBuffer = new StringBuffer(32);
         completeKeyBuffer.append(plugin.getKey()).append(":").append(moduleKey);
@@ -151,7 +163,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     /**
      * Override this if your plugin needs to clean up when it's been removed.
      */
-    public void destroy(Plugin plugin)
+    public void destroy(final Plugin plugin)
     {}
 
     public boolean isEnabledByDefault()
@@ -184,7 +196,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
      * @param requiredModuleClazz The class this module's class must implement or extend.
      * @throws PluginParseException If the module class does not implement or extend the given class.
      */
-    final protected void assertModuleClassImplements(Class requiredModuleClazz) throws PluginParseException
+    final protected void assertModuleClassImplements(final Class<T> requiredModuleClazz) throws PluginParseException
     {
         if (!enabled)
         {
@@ -192,12 +204,13 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         }
         if (!requiredModuleClazz.isAssignableFrom(getModuleClass()))
         {
-            throw new PluginParseException("Given module class: " + getModuleClass().getName() + " does not implement " + requiredModuleClazz.getName());
+            throw new PluginParseException(
+                "Given module class: " + getModuleClass().getName() + " does not implement " + requiredModuleClazz.getName());
         }
     }
 
-    public String getCompleteKey() 
-	{
+    public String getCompleteKey()
+    {
         return completeKey;
     }
 
@@ -228,19 +241,19 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         return description;
     }
 
-    public Map getParams()
+    public Map<String, String> getParams()
     {
         return params;
     }
 
     public String getI18nNameKey()
     {
-        return i18nNameKey;  //To change body of implemented methods use File | Settings | File Templates.
+        return i18nNameKey;
     }
 
     public String getDescriptionKey()
     {
-        return descriptionKey;  //To change body of implemented methods use File | Settings | File Templates.
+        return descriptionKey;
     }
 
     public List<ResourceDescriptor> getResourceDescriptors()
@@ -248,12 +261,12 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         return resources.getResourceDescriptors();
     }
 
-    public List<ResourceDescriptor> getResourceDescriptors(String type)
+    public List<ResourceDescriptor> getResourceDescriptors(final String type)
     {
         return resources.getResourceDescriptors(type);
     }
 
-    public ResourceLocation getResourceLocation(String type, String name)
+    public ResourceLocation getResourceLocation(final String type, final String name)
     {
         return resources.getResourceLocation(type, name);
     }
@@ -261,7 +274,8 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     /**
      * @deprecated
      */
-    public ResourceDescriptor getResourceDescriptor(String type, String name)
+    @Deprecated
+    public ResourceDescriptor getResourceDescriptor(final String type, final String name)
     {
         return resources.getResourceDescriptor(type, name);
     }
@@ -273,7 +287,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
 
     public boolean satisfiesMinJavaVersion()
     {
-        if(minJavaVersion != null)
+        if (minJavaVersion != null)
         {
             return JavaVersionUtils.satisfiesMinVersion(minJavaVersion);
         }
@@ -283,7 +297,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     /**
      * Sets the plugin for the ModuleDescriptor
      */
-    public void setPlugin(Plugin plugin)
+    public void setPlugin(final Plugin plugin)
     {
         this.completeKey = buildCompleteKey(plugin, key);
         this.plugin = plugin;
@@ -297,6 +311,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         return plugin;
     }
 
+    @Override
     public String toString()
     {
         return getCompleteKey() + " (" + getDescription() + ")";

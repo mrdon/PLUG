@@ -2,9 +2,13 @@ package com.atlassian.plugin;
 
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
+
 import org.dom4j.Element;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * An aggregate of all resource descriptors within the given plugin module or plugin.
@@ -14,8 +18,9 @@ import java.util.*;
  */
 public class Resources implements Resourced
 {
-    public static final Resources EMPTY_RESOURCES = new Resources(Collections.<ResourceDescriptor>emptyList());
-    private List<ResourceDescriptor> resourceDescriptors;
+    public static final Resources EMPTY_RESOURCES = new Resources(Collections.<ResourceDescriptor> emptyList());
+
+    private final List<ResourceDescriptor> resourceDescriptors;
 
     /**
      * Parses the resource descriptors from the provided plugin XML element and creates a Resources object containing them.
@@ -29,25 +34,30 @@ public class Resources implements Resourced
      * occurs
      * @throws IllegalArgumentException if the provided element is null
      */
-    public static Resources fromXml(Element element) throws PluginParseException, IllegalArgumentException
+    public static Resources fromXml(final Element element) throws PluginParseException, IllegalArgumentException
     {
         if (element == null)
+        {
             throw new IllegalArgumentException("Cannot parse resources from null XML element");
+        }
 
-        List<Element> elements = element.elements("resource");
+        @SuppressWarnings("unchecked")
+        final List<Element> elements = element.elements("resource");
 
-        List<ResourceDescriptor> templates = new ArrayList<ResourceDescriptor>(elements.size());
+        final List<ResourceDescriptor> templates = new ArrayList<ResourceDescriptor>(elements.size());
 
-        for (Element e : elements)
+        for (final Element e : elements)
         {
             final ResourceDescriptor resourceDescriptor = new ResourceDescriptor(e);
 
             if (templates.contains(resourceDescriptor))
-                throw new PluginParseException("Duplicate resource with type '" + resourceDescriptor.getType() + "' and name '" + resourceDescriptor.getName() + "' found");
+            {
+                throw new PluginParseException(
+                    "Duplicate resource with type '" + resourceDescriptor.getType() + "' and name '" + resourceDescriptor.getName() + "' found");
+            }
 
             templates.add(resourceDescriptor);
         }
-
         return new Resources(templates);
     }
 
@@ -57,62 +67,58 @@ public class Resources implements Resourced
      * @param resourceDescriptors the descriptors which are part of this resources object
      * @throws IllegalArgumentException if the resourceDescriptors list is null
      */
-    public Resources(List<ResourceDescriptor> resourceDescriptors) throws IllegalArgumentException
+    public Resources(final List<ResourceDescriptor> resourceDescriptors) throws IllegalArgumentException
     {
         if (resourceDescriptors == null)
+        {
             throw new IllegalArgumentException("Resources cannot be created with a null resources list. Pass empty list instead");
-        this.resourceDescriptors = resourceDescriptors;
+        }
+        this.resourceDescriptors = Collections.unmodifiableList(new ArrayList<ResourceDescriptor>(resourceDescriptors));
     }
 
-   public List<ResourceDescriptor> getResourceDescriptors()
+    public List<ResourceDescriptor> getResourceDescriptors()
     {
         return resourceDescriptors;
     }
 
-    public List<ResourceDescriptor> getResourceDescriptors(String type)
+    public List<ResourceDescriptor> getResourceDescriptors(final String type)
     {
-        List<ResourceDescriptor> typedResourceDescriptors = new LinkedList<ResourceDescriptor>();
-
-        for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
+        final List<ResourceDescriptor> typedResourceDescriptors = new LinkedList<ResourceDescriptor>();
+        for (final ResourceDescriptor resourceDescriptor : resourceDescriptors)
         {
-            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator.next();
             if (resourceDescriptor.getType().equalsIgnoreCase(type))
             {
                 typedResourceDescriptors.add(resourceDescriptor);
             }
         }
-
         return typedResourceDescriptors;
     }
 
-    public ResourceLocation getResourceLocation(String type, String name)
+    public ResourceLocation getResourceLocation(final String type, final String name)
     {
-        for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
+        for (final ResourceDescriptor resourceDescriptor : resourceDescriptors)
         {
-            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator.next();
             if (resourceDescriptor.doesTypeAndNameMatch(type, name))
             {
                 return resourceDescriptor.getResourceLocationForName(name);
             }
         }
-
         return null;
     }
 
     /**
      * @deprecated
      */
-    public ResourceDescriptor getResourceDescriptor(String type, String name)
+    @Deprecated
+    public ResourceDescriptor getResourceDescriptor(final String type, final String name)
     {
-        for (Iterator iterator = resourceDescriptors.iterator(); iterator.hasNext();)
+        for (final ResourceDescriptor resourceDescriptor : resourceDescriptors)
         {
-            ResourceDescriptor resourceDescriptor = (ResourceDescriptor) iterator.next();
             if (resourceDescriptor.getType().equalsIgnoreCase(type) && resourceDescriptor.getName().equalsIgnoreCase(name))
             {
                 return resourceDescriptor;
             }
         }
-
         return null;
     }
 }

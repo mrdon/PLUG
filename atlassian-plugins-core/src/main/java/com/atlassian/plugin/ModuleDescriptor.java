@@ -31,7 +31,7 @@ public interface ModuleDescriptor<T> extends Resourced
 
     /**
      * A simple description of this descriptor.
-     */ 
+     */
     String getDescription();
 
     /**
@@ -44,10 +44,9 @@ public interface ModuleDescriptor<T> extends Resourced
      */
     T getModule();
 
-
     /**
      * Initialise a module given it's parent plugin and the XML element representing the module.
-     */ 
+     */
     void init(Plugin plugin, Element element) throws PluginParseException;
 
     /**
@@ -78,7 +77,7 @@ public interface ModuleDescriptor<T> extends Resourced
      */
     boolean satisfiesMinJavaVersion();
 
-    Map getParams();
+    Map<String, String> getParams();
 
     /**
      * Key used to override {@link #getName()} when using internationalisation.

@@ -1,38 +1,41 @@
 package com.atlassian.plugin.impl;
 
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.Resourced;
+import com.atlassian.plugin.Resources;
+import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
+import com.atlassian.plugin.util.VersionStringComparator;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.elements.ResourceLocation;
-import com.atlassian.plugin.util.VersionStringComparator;
 
 public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 {
     private String name;
     private String i18nNameKey;
     private String key;
-    private Map<String,ModuleDescriptor<?>> modules = new LinkedHashMap<String,ModuleDescriptor<?>>();
+    private final Map<String, ModuleDescriptor<?>> modules = new LinkedHashMap<String, ModuleDescriptor<?>>();
     private boolean enabledByDefault = true;
     private PluginInformation pluginInformation = new PluginInformation();
     private boolean enabled;
     private boolean system;
     private Resourced resources = Resources.EMPTY_RESOURCES;
     private int pluginsVersion = 1;
-    private Date dateLoaded = new Date();
+    private final Date dateLoaded = new Date();
 
     public String getName()
     {
         return name;
     }
 
-    public void setName(String name)
+    public void setName(final String name)
     {
         this.name = name;
     }
@@ -42,7 +45,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         return i18nNameKey;
     }
 
-    public void setI18nNameKey(String i18nNameKey)
+    public void setI18nNameKey(final String i18nNameKey)
     {
         this.i18nNameKey = i18nNameKey;
     }
@@ -52,17 +55,17 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         return key;
     }
 
-    public void setKey(String aPackage)
+    public void setKey(final String aPackage)
     {
-        this.key = aPackage;
+        key = aPackage;
     }
 
-    public void addModuleDescriptor(ModuleDescriptor<?> moduleDescriptor)
+    public void addModuleDescriptor(final ModuleDescriptor<?> moduleDescriptor)
     {
         modules.put(moduleDescriptor.getKey(), moduleDescriptor);
     }
 
-    protected void removeModuleDescriptor(String key)
+    protected void removeModuleDescriptor(final String key)
     {
         modules.remove(key);
     }
@@ -76,33 +79,33 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         return new ArrayList<ModuleDescriptor<?>>(modules.values());
     }
 
-    public ModuleDescriptor<?> getModuleDescriptor(String key)
+    public ModuleDescriptor<?> getModuleDescriptor(final String key)
     {
         return modules.get(key);
     }
 
-    public <T> List<ModuleDescriptor<T>> getModuleDescriptorsByModuleClass(Class<T> aClass)
+    public <T> List<ModuleDescriptor<T>> getModuleDescriptorsByModuleClass(final Class<T> aClass)
     {
-        List<ModuleDescriptor<T>> result = new ArrayList<ModuleDescriptor<T>>();
-
-        for (ModuleDescriptor moduleDescriptor : modules.values())
+        final List<ModuleDescriptor<T>> result = new ArrayList<ModuleDescriptor<T>>();
+        for (final ModuleDescriptor<?> moduleDescriptor : modules.values())
         {
-            Class moduleClass = moduleDescriptor.getModuleClass();
+            final Class<?> moduleClass = moduleDescriptor.getModuleClass();
             if (aClass.isAssignableFrom(moduleClass))
             {
-                result.add((ModuleDescriptor<T>) moduleDescriptor);
+                @SuppressWarnings("unchecked")
+                final ModuleDescriptor<T> typedModuleDescriptor = (ModuleDescriptor<T>) moduleDescriptor;
+                result.add(typedModuleDescriptor);
             }
         }
-    
         return result;
     }
 
     public boolean isEnabledByDefault()
     {
-        return enabledByDefault && (pluginInformation == null || pluginInformation.satisfiesMinJavaVersion());
+        return enabledByDefault && ((pluginInformation == null) || pluginInformation.satisfiesMinJavaVersion());
     }
 
-    public void setEnabledByDefault(boolean enabledByDefault)
+    public void setEnabledByDefault(final boolean enabledByDefault)
     {
         this.enabledByDefault = enabledByDefault;
     }
@@ -112,7 +115,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         return pluginsVersion;
     }
 
-    public void setPluginsVersion(int pluginsVersion)
+    public void setPluginsVersion(final int pluginsVersion)
     {
         this.pluginsVersion = pluginsVersion;
     }
@@ -122,27 +125,27 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         return pluginInformation;
     }
 
-    public void setPluginInformation(PluginInformation pluginInformation)
+    public void setPluginInformation(final PluginInformation pluginInformation)
     {
         this.pluginInformation = pluginInformation;
     }
 
-    public void setResources(Resourced resources)
+    public void setResources(final Resourced resources)
     {
         this.resources = resources != null ? resources : Resources.EMPTY_RESOURCES;
     }
 
-    public List getResourceDescriptors()
+    public List<ResourceDescriptor> getResourceDescriptors()
     {
         return resources.getResourceDescriptors();
     }
 
-    public List getResourceDescriptors(String type)
+    public List<ResourceDescriptor> getResourceDescriptors(final String type)
     {
         return resources.getResourceDescriptors(type);
     }
 
-    public ResourceLocation getResourceLocation(String type, String name)
+    public ResourceLocation getResourceLocation(final String type, final String name)
     {
         return resources.getResourceLocation(type, name);
     }
@@ -150,7 +153,8 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     /**
      * @deprecated
      */
-    public ResourceDescriptor getResourceDescriptor(String type, String name)
+    @Deprecated
+    public ResourceDescriptor getResourceDescriptor(final String type, final String name)
     {
         return resources.getResourceDescriptor(type, name);
     }
@@ -166,7 +170,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     /**
      * Setter for the enabled state of a plugin. If this is set to false then the plugin will not execute.
      */
-    public void setEnabled(boolean enabled)
+    public void setEnabled(final boolean enabled)
     {
         this.enabled = enabled;
     }
@@ -178,9 +182,9 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 
     public boolean containsSystemModule()
     {
-        for (ModuleDescriptor moduleDescriptor : modules.values())
+        for (final ModuleDescriptor<?> moduleDescriptor : modules.values())
         {
-            if(moduleDescriptor.isSystemModule())
+            if (moduleDescriptor.isSystemModule())
             {
                 return true;
             }
@@ -188,7 +192,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         return false;
     }
 
-    public void setSystemPlugin(boolean system)
+    public void setSystemPlugin(final boolean system)
     {
         this.system = system;
     }
@@ -205,31 +209,48 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
      * @return <tt>-1</tt> if the other plugin is newer, <tt>0</tt> if equal,
      * <tt>1</tt> if the other plugin is older or has a different plugin key.
      */
-    public int compareTo(Plugin otherPlugin)
+    public int compareTo(final Plugin otherPlugin)
     {
-        if (otherPlugin.getKey() == null) return 1;
-        if (getKey() == null) return -1;
+        if (otherPlugin.getKey() == null)
+        {
+            return 1;
+        }
+        if (getKey() == null)
+        {
+            return -1;
+        }
 
         // If the compared plugin doesn't have the same key, the current object is greater
-        if (!otherPlugin.getKey().equals(this.getKey())) return getKey().compareTo(otherPlugin.getKey());
-    
-        String thisVersion = cleanVersionString(
-                (this.getPluginInformation() != null ? this.getPluginInformation().getVersion() : null));
-        String otherVersion = cleanVersionString(
-                (otherPlugin.getPluginInformation() != null ? otherPlugin.getPluginInformation().getVersion() : null));
-    
-        if (!VersionStringComparator.isValidVersionString(thisVersion)) return -1;
-        if (!VersionStringComparator.isValidVersionString(otherVersion)) return -1;
-    
+        if (!otherPlugin.getKey().equals(getKey()))
+        {
+            return getKey().compareTo(otherPlugin.getKey());
+        }
+
+        final String thisVersion = cleanVersionString((getPluginInformation() != null ? getPluginInformation().getVersion() : null));
+        final String otherVersion = cleanVersionString((otherPlugin.getPluginInformation() != null ? otherPlugin.getPluginInformation().getVersion() : null));
+
+        if (!VersionStringComparator.isValidVersionString(thisVersion))
+        {
+            return -1;
+        }
+        if (!VersionStringComparator.isValidVersionString(otherVersion))
+        {
+            return -1;
+        }
+
         return new VersionStringComparator().compare(thisVersion, otherVersion);
     }
 
-    private String cleanVersionString(String version)
+    private String cleanVersionString(final String version)
     {
-        if (version == null || version.trim().equals("")) return "0";
+        if ((version == null) || version.trim().equals(""))
+        {
+            return "0";
+        }
         return version.replaceAll(" ", "");
     }
 
+    @Override
     public String toString()
     {
         final PluginInformation info = getPluginInformation();
