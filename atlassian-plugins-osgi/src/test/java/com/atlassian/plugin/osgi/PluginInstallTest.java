@@ -165,6 +165,99 @@ public class PluginInstallTest extends PluginInContainerTestBase
         }
     }
 
+    public void testUpgradeWithNewComponentImplementationWithInterfaceInPlugin() throws Exception
+    {
+        DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory();
+        factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
+        initPluginManager(new HostComponentProvider(){
+            public void provide(ComponentRegistrar registrar)
+            {
+                registrar.register(SomeInterface.class).forInstance(new SomeInterface(){});
+                registrar.register(AnotherInterface.class).forInstance(new AnotherInterface(){});
+            }
+        }, factory);
+
+        PluginJarBuilder builder1  = new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component key='svc' class='my.ServiceImpl' public='true'>",
+                        "    <interface>my.Service</interface>",
+                        "    </component>",
+                        "</atlassian-plugin>")
+                .addFormattedJava("my.Service",
+                        "package my;",
+                        "public interface Service {",
+                        "    public Object call() throws Exception;",
+                        "}")
+                .addFormattedJava("my.ServiceImpl",
+                        "package my;",
+                        "public class ServiceImpl implements Service {",
+                        "    public Object call() throws Exception { return 'hi';}",
+                        "}");
+        File pluginJar = builder1.build();
+        File pluginJar2 = new PluginJarBuilder("second", builder1.getClassLoader())
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test2.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component-import key='svc' interface='my.Service' />",
+                        "    <component key='del' class='my2.ServiceDelegate' public='true'>",
+                        "    <interface>java.util.concurrent.Callable</interface>",
+                        "    </component>",
+                        "</atlassian-plugin>")
+                .addFormattedJava("my2.ServiceDelegate",
+                        "package my2;",
+                        "import my.Service;",
+                        "import java.util.concurrent.Callable;",
+                        "public class ServiceDelegate implements Callable {",
+                        "    private final Service delegate;",
+                        "    public ServiceDelegate(Service foo) { this.delegate = foo;}",
+                        "    public Object call() throws Exception { return delegate.call();}",
+                        "}")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+        ServiceTracker tracker = osgiContainerManager.getServiceTracker(Callable.class.getName());
+        ServiceTracker svcTracker = osgiContainerManager.getServiceTracker("my.Service");
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        assertEquals("hi", svcTracker.getService().getClass().getMethod("call").invoke(svcTracker.getService()));
+        assertEquals("hi", ((Callable)tracker.getService()).call());
+
+        assertEquals(2, pluginManager.getEnabledPlugins().size());
+
+        File updatedJar = new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component key='svc' class='my.Service2Impl' public='true'>",
+                        "    <interface>my.Service</interface>",
+                        "    </component>",
+                        "</atlassian-plugin>")
+                .addFormattedJava("my.Service",
+                        "package my;",
+                        "public interface Service {",
+                        "    public Object call() throws Exception;",
+                        "}")
+                .addFormattedJava("my.Service2Impl",
+                        "package my;",
+                        "public class Service2Impl implements Service {",
+                        "    public Object call() throws Exception {return 'bob';}",
+                        "}")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(updatedJar));
+        assertEquals("bob", svcTracker.getService().getClass().getMethod("call").invoke(svcTracker.getService()));
+        assertEquals("bob", ((Callable)tracker.getService()).call());
+    }
+
 
     public void testUpgradeTestingForCachedXml() throws Exception
     {

@@ -23,6 +23,7 @@ import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.StringMap;
 import org.osgi.framework.*;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.service.packageadmin.PackageAdmin;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -321,6 +322,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         private List<HostComponentRegistration> hostComponentRegistrations;
         private URL frameworkBundlesUrl;
         private File frameworkBundlesDir;
+        private PackageAdmin packageAdmin;
 
         public BundleRegistration(URL frameworkBundlesUrl, File frameworkBundlesDir, DefaultComponentRegistrar registrar)
         {
@@ -331,6 +333,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
         public void start(BundleContext context) throws Exception {
             this.bundleContext = context;
+            ServiceReference ref = context.getServiceReference(org.osgi.service.packageadmin.PackageAdmin.class.getName());
+            packageAdmin = (PackageAdmin) context.getService(ref);
+
             context.addBundleListener(this);
 
             loadHostComponents(registrar);
@@ -389,6 +394,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                         {
                             log.info("Uninstalling existing version "+oldBundle.getHeaders().get(Constants.BUNDLE_VERSION));
                             oldBundle.uninstall();
+                            packageAdmin.refreshPackages(new Bundle[]{oldBundle});
                         }
                     }
 
