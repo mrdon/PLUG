@@ -24,6 +24,8 @@ import org.osgi.util.tracker.ServiceTracker;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Plugin loader that starts an OSGi container and loads plugins into it, wrapped as OSGi bundles.
@@ -47,7 +49,7 @@ public class OsgiPluginFactory implements PluginFactory
         pluginTransformer = new DefaultPluginTransformer();
         this.osgi = osgi;
         this.pluginDescriptorFileName = pluginDescriptorFileName;
-        this.descriptorParserFactory = new ComponentFilteringXmlDescriptorParserFactory();
+        this.descriptorParserFactory = new OsgiPluginXmlDescriptorParserFactory();
     }
 
     public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException {
@@ -118,20 +120,22 @@ public class OsgiPluginFactory implements PluginFactory
         // Really shouldn't be null, but could be in tests since we can't mock a service tracker :(
         if (moduleDescriptorFactoryTracker != null)
         {
+            List<ModuleDescriptorFactory> factories = new ArrayList<ModuleDescriptorFactory>();
             Object[] serviceObjs = moduleDescriptorFactoryTracker.getServices();
-            ModuleDescriptorFactory[] dynamicFactories;
-            if (serviceObjs != null && serviceObjs.length > 0)
-            {
-                dynamicFactories = new ModuleDescriptorFactory[serviceObjs.length + 1];
-                System.arraycopy(serviceObjs, 0, dynamicFactories, 1, serviceObjs.length);
-            }
-            else
-            {
-                dynamicFactories = new ModuleDescriptorFactory[1];
-            }
-            dynamicFactories[0] = originalFactory;
 
-            return new ChainModuleDescriptorFactory(dynamicFactories);
+            // Add all the dynamic module descriptor factories registered as osgi services
+            if (serviceObjs != null)
+            {
+                for (Object fac : serviceObjs) factories.add((ModuleDescriptorFactory) fac);
+            }
+
+            // Put the application factory first
+            factories.add(0, originalFactory);
+
+            // Catch all unknown descriptors as deferred
+            factories.add(new UnrecognisedModuleDescriptorFallbackFactory());
+
+            return new ChainModuleDescriptorFactory(factories.toArray(new ModuleDescriptorFactory[]{}));
         }
         else
             return originalFactory;

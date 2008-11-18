@@ -27,6 +27,7 @@ public class UnrecognisedModuleDescriptor extends AbstractModuleDescriptor
         this.resources = new Resources(Collections.<ResourceDescriptor>emptyList());
     }
 
+    @Override
     public boolean isEnabledByDefault()
     {
         //never enable a UnrecognisedModuleDescriptor

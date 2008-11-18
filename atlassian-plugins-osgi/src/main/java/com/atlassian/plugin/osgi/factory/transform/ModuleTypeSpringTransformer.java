@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.factory.transform;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 
 import java.util.List;
@@ -36,7 +37,7 @@ public class ModuleTypeSpringTransformer implements SpringTransformer
             Element osgiService = root.addElement("osgi:service");
             osgiService.addAttribute("id", getBeanId(e) +"_osgiService");
             osgiService.addAttribute("ref", getBeanId(e));
-            osgiService.addAttribute("interface", ModuleDescriptorFactory.class.getName());
+            osgiService.addAttribute("auto-export", "interfaces");
         }
     }
 
