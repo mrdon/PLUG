@@ -24,13 +24,9 @@ public class HostComponentSpringTransformer implements SpringTransformer
             {
                 HostComponentRegistration reg = regs.get(x);
                 String beanName = reg.getProperties().get(PropertyBuilder.BEAN_NAME);
-                String id = beanName;
-                if (id == null)
-                    id = "bean"+x;
 
-                id = id.replaceAll("#", "LB");
                 Element osgiService = root.addElement("osgi:reference");
-                osgiService.addAttribute("id", id);
+                osgiService.addAttribute("id", determineId(pluginDoc, beanName, x));
 
                 // Disabling this for now due to some strange Spring DM bug where it will occasionally generate an invalid
                 // filter, see http://jira.atlassian.com/browse/CONF-13292
@@ -45,5 +41,25 @@ public class HostComponentSpringTransformer implements SpringTransformer
                 }
             }
         }
+    }
+
+    private String determineId(Document pluginDoc, String beanName, int iteration)
+    {
+        String id = beanName;
+        if (id == null)
+            id = "bean"+iteration;
+
+        id = id.replaceAll("#", "LB");
+
+        for (Object element : pluginDoc.getRootElement().elements("component-import"))
+        {
+            String key = ((Element)element).attributeValue("key");
+            if (id.equals(key))
+            {
+                id+=iteration;
+                break;
+            }
+        }
+        return id;
     }
 }

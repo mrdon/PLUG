@@ -11,26 +11,38 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 
 public class TestHostComponentSpringTransformer extends TestCase
 {
+    HostComponentSpringTransformer transformer = new HostComponentSpringTransformer();
     public void testTransform() throws IOException
     {
-        HostComponentSpringTransformer transformer = new HostComponentSpringTransformer();
-
-        // host component with name
         Element pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
         SpringTransformerTestHelper.transform(transformer, new ArrayList<HostComponentRegistration>(){{
             add(new StubHostComponentRegistration("foo", String.class));
         }}, pluginRoot, "osgi:reference[@id='foo' and @filter='(&(bean-name=foo)(plugins-host=true))']/osgi:interfaces/beans:value/text()='java.lang.String'");
+    }
 
-        // host component with name with # sign
-        pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
+    public void testTransformWithPoundSign() throws IOException
+    {
+        Element pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
         SpringTransformerTestHelper.transform(transformer, new ArrayList<HostComponentRegistration>(){{
             add(new StubHostComponentRegistration("foo#1", String.class));
         }}, pluginRoot, "osgi:reference[@id='fooLB1' and @filter='(&(bean-name=foo#1)(plugins-host=true))']/osgi:interfaces/beans:value/text()='java.lang.String'");
+    }
 
-        // host component with no bean name
-        pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
+    public void testTransformWithNoBeanName() throws IOException
+    {
+        Element pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
         SpringTransformerTestHelper.transform(transformer, new ArrayList<HostComponentRegistration>(){{
             add(new StubHostComponentRegistration(String.class));
         }}, pluginRoot, "osgi:reference[@id='bean0' and not(@filter)]/osgi:interfaces/beans:value/text()='java.lang.String'");
+    }
+
+    public void testTransformWithExistingComponentImport() throws IOException
+    {
+        Element pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
+        Element compImport = pluginRoot.addElement("component-import");
+        compImport.addAttribute("key", "foo");
+        SpringTransformerTestHelper.transform(transformer, new ArrayList<HostComponentRegistration>(){{
+            add(new StubHostComponentRegistration("foo", String.class));
+        }}, pluginRoot, "osgi:reference[@id='foo0' and @filter='(&(bean-name=foo)(plugins-host=true))']/osgi:interfaces/beans:value/text()='java.lang.String'");
     }
 }
