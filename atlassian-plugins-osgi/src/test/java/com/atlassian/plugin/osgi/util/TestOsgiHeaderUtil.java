@@ -107,4 +107,26 @@ public class TestOsgiHeaderUtil extends TestCase {
         OsgiHeaderUtil.constructJdkExports(sb, OsgiHeaderUtil.JDK_PACKAGES_PATH);
         assertTrue(sb.toString().contains("org.xml.sax"));
     }
+
+    public void testConstructJdkExportsWithJdk5And6()
+    {
+        String jdkVersion = System.getProperty("java.specification.version");
+        try
+        {
+            System.setProperty("java.specification.version", "1.5");
+            String exports = OsgiHeaderUtil.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
+            assertFalse(exports.contains("javax.script"));
+            System.setProperty("java.specification.version", "1.6");
+            exports = OsgiHeaderUtil.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
+            assertTrue(exports.contains("javax.script"));
+        }
+        finally
+        {
+            System.setProperty("java.specification.version", jdkVersion);
+        }
+
+
+    }
+
+
 }

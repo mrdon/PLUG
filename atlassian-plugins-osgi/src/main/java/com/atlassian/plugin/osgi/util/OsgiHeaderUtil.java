@@ -35,6 +35,7 @@ import javax.servlet.ServletContext;
 public class OsgiHeaderUtil
 {
     static final String JDK_PACKAGES_PATH = "jdk-packages.txt";
+    static final String JDK6_PACKAGES_PATH = "jdk6-packages.txt";
     static Log log = LogFactory.getLog(OsgiHeaderUtil.class);
 
     /**
@@ -140,6 +141,11 @@ public class OsgiHeaderUtil
 
         constructJdkExports(origExports, JDK_PACKAGES_PATH);
         origExports.append(",");
+
+        if (System.getProperty("java.specification.version").equals("1.6")) {
+            constructJdkExports(origExports, JDK6_PACKAGES_PATH);
+            origExports.append(",");
+        }
 
         Collection<ExportPackage> exportList = generateExports(packageScannerConfig);
         constructAutoExports(origExports, exportList);
