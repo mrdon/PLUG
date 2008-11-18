@@ -63,6 +63,36 @@
             </plugin>
         </plugins>
     </build>
+    
+    <profiles>
+        <profile>
+            <id>clover.optimize</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.atlassian.maven.plugins</groupId>
+                        <artifactId>maven-clover2-plugin</artifactId>
+                        <version>2.4.1</version>
+                        <configuration>
+                            <fullRunEvery>20</fullRunEvery>
+                            <!--<snapshot>${user.home}/.clover/atlassian-plugins-clover.snapshot</snapshot>-->
+                            <singleCloverDatabase>true</singleCloverDatabase>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>clean</goal>
+                                    <goal>setup</goal>
+                                    <goal>optimize</goal>
+                                    <goal>snapshot</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencyManagement>
         <dependencies>
