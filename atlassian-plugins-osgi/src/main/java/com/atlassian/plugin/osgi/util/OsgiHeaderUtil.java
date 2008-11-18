@@ -209,7 +209,7 @@ public class OsgiHeaderUtil
 
         Collection<ExportPackage> exports = scanner.scan();
 
-        if (!doExportsContainLog4j(exports) && packageScannerConfig.getServletContext() != null)
+        if (!isPackageScanSuccessful(exports) && packageScannerConfig.getServletContext() != null)
         {
             log.warn("Unable to find expected packages via classloader scanning.  Trying ServletContext scanning...");
             ServletContext ctx = packageScannerConfig.getServletContext();
@@ -223,7 +223,7 @@ public class OsgiHeaderUtil
             }
         }
         
-        if (!doExportsContainLog4j(exports))
+        if (!isPackageScanSuccessful(exports))
         {
             throw new IllegalStateException("Unable to find required packages via classloader or servlet context"
                     + " scanning, most likely due to an application server bug.");
@@ -231,7 +231,13 @@ public class OsgiHeaderUtil
         return exports;
     }
 
-    private static boolean doExportsContainLog4j(Collection<ExportPackage> exports)
+    /**
+     * Tests to see if a scan of packages to export was successful, using the presence of log4j as the criteria.
+     *
+     * @param exports The exports found so far
+     * @return True if log4j is present, false otherwise
+     */
+    private static boolean isPackageScanSuccessful(Collection<ExportPackage> exports)
     {
         boolean log4jFound = false;
         for (ExportPackage export : exports)
