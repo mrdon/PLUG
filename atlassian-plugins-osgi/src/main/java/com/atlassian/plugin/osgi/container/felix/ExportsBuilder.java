@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.jar.Manifest;
 import java.io.*;
+import java.net.MalformedURLException;
 
 import org.twdata.pkgscanner.ExportPackage;
 import org.twdata.pkgscanner.PackageScanner;
@@ -25,6 +26,8 @@ import org.apache.commons.logging.LogFactory;
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Jar;
 
+import javax.servlet.ServletContext;
+
 /**
  * Builds the OSGi package exports string.  Uses a file to cache the scanned results, keyed by the application version.
  */
@@ -32,6 +35,7 @@ class ExportsBuilder
 {
 
     static final String JDK_PACKAGES_PATH = "jdk-packages.txt";
+    static final String JDK6_PACKAGES_PATH = "jdk6-packages.txt";
     private static Log log = LogFactory.getLog(ExportsBuilder.class);
     private static final String EXPORTS_TXT = "exports.txt";
 
@@ -60,6 +64,11 @@ class ExportsBuilder
 
             constructJdkExports(origExports, JDK_PACKAGES_PATH);
             origExports.append(",");
+
+            if (System.getProperty("java.specification.version").equals("1.6")) {
+                constructJdkExports(origExports, JDK6_PACKAGES_PATH);
+                origExports.append(",");
+            }
 
             Collection<ExportPackage> exportList = generateExports(packageScannerConfig);
             constructAutoExports(origExports, exportList);
@@ -183,7 +192,7 @@ class ExportsBuilder
     Collection<ExportPackage> generateExports(PackageScannerConfiguration packageScannerConfig)
     {
         String[] arrType = new String[0];
-        Collection<ExportPackage> exports = new PackageScanner()
+        PackageScanner scanner = new PackageScanner()
            .select(
                jars(
                        include(packageScannerConfig.getJarIncludes().toArray(arrType)),
@@ -192,9 +201,50 @@ class ExportsBuilder
                        include(packageScannerConfig.getPackageIncludes().toArray(arrType)),
                        exclude(packageScannerConfig.getPackageExcludes().toArray(arrType)))
            )
-           .withMappings(packageScannerConfig.getPackageVersions())
-           .scan();
+           .withMappings(packageScannerConfig.getPackageVersions());
+
+        Collection<ExportPackage> exports = scanner.scan();
+
+        if (!isPackageScanSuccessful(exports) && packageScannerConfig.getServletContext() != null)
+        {
+            log.warn("Unable to find expected packages via classloader scanning.  Trying ServletContext scanning...");
+            ServletContext ctx = packageScannerConfig.getServletContext();
+            try
+            {
+                exports = scanner.scan(ctx.getResource("/WEB-INF/lib"), ctx.getResource("/WEB-INF/classes"));
+            }
+            catch (MalformedURLException e)
+            {
+                log.warn(e);
+            }
+        }
+
+        if (!isPackageScanSuccessful(exports))
+        {
+            throw new IllegalStateException("Unable to find required packages via classloader or servlet context"
+                    + " scanning, most likely due to an application server bug.");
+        }
         return exports;
+    }
+
+    /**
+     * Tests to see if a scan of packages to export was successful, using the presence of log4j as the criteria.
+     *
+     * @param exports The exports found so far
+     * @return True if log4j is present, false otherwise
+     */
+    private static boolean isPackageScanSuccessful(Collection<ExportPackage> exports)
+    {
+        boolean log4jFound = false;
+        for (ExportPackage export : exports)
+        {
+            if (export.getPackageName().equals("org.apache.log4j"))
+            {
+                log4jFound = true;
+                break;
+            }
+        }
+        return log4jFound;
     }
 
     void constructJdkExports(StringBuilder sb, String packageListPath)

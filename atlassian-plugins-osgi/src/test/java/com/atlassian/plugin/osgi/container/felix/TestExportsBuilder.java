@@ -3,20 +3,22 @@ package com.atlassian.plugin.osgi.container.felix;
 import junit.framework.TestCase;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
+import java.util.*;
 
 import org.apache.commons.io.FileUtils;
 import org.twdata.pkgscanner.ExportPackage;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
+import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
+import com.mockobjects.dynamic.Mock;
+import com.mockobjects.dynamic.C;
 
 import javax.print.attribute.HashAttributeSet;
 import javax.print.attribute.AttributeSet;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import javax.servlet.ServletContext;
 
 public class TestExportsBuilder extends TestCase
 {
@@ -101,4 +103,74 @@ public class TestExportsBuilder extends TestCase
         builder.constructJdkExports(sb, ExportsBuilder.JDK_PACKAGES_PATH);
         assertTrue(sb.toString().contains("org.xml.sax"));
     }
+
+    public void testConstructJdkExportsWithJdk5And6()
+    {
+        String jdkVersion = System.getProperty("java.specification.version");
+        try
+        {
+            System.setProperty("java.specification.version", "1.5");
+            String exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration(), tmpDir);
+            assertFalse(exports.contains("javax.script"));
+            System.setProperty("java.specification.version", "1.6");
+            exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration(), tmpDir);
+            assertTrue(exports.contains("javax.script"));
+        }
+        finally
+        {
+            System.setProperty("java.specification.version", jdkVersion);
+        }
+    }
+
+
+    public void testGenerateExports()
+        {
+            Mock mockServletContext = new Mock(ServletContext.class);
+            mockServletContext.expectAndReturn("getResource", C.args(C.eq("/WEB-INF/lib")), getClass().getClassLoader().getResource("scanbase/WEB-INF/lib"));
+            mockServletContext.expectAndReturn("getResource", C.args(C.eq("/WEB-INF/classes")), getClass().getClassLoader().getResource("scanbase/WEB-INF/classes"));
+            DefaultPackageScannerConfiguration config = new DefaultPackageScannerConfiguration();
+            config.setPackageIncludes(Arrays.asList("org.*"));
+            config.setServletContext((ServletContext) mockServletContext.proxy());
+
+            Collection<ExportPackage> exports = builder.generateExports(config);
+            assertNotNull(exports);
+            assertTrue(exports.contains(new ExportPackage("org.apache.log4j", "1.2.15")));
+
+            // Test falling through to servlet context scanning
+            config.setJarIncludes(Arrays.asList("testlog*"));
+            config.setJarExcludes(Arrays.asList("log4j*"));
+            exports = builder.generateExports(config);
+            assertNotNull(exports);
+            assertTrue(exports.contains(new ExportPackage("org.apache.log4j", "1.2.15")));
+
+            // Test failure when even servlet context scanning fails
+            mockServletContext.expectAndReturn("getResource", C.args(C.eq("/WEB-INF/lib")), getClass().getClassLoader().getResource("scanbase/WEB-INF/lib"));
+            mockServletContext.expectAndReturn("getResource", C.args(C.eq("/WEB-INF/classes")), getClass().getClassLoader().getResource("scanbase/WEB-INF/classes"));
+            config.setJarIncludes(Arrays.asList("testlog4j23*"));
+            config.setJarExcludes(Collections.<String>emptyList());
+            try
+            {
+                exports = builder.generateExports(config);
+                fail("Should have thrown an exception");
+            } catch (IllegalStateException ex)
+            {
+                // good stuff
+            }
+
+            // Test failure when no servlet context
+            config.setJarIncludes(Arrays.asList("testlog4j23*"));
+            config.setJarExcludes(Collections.<String>emptyList());
+            config.setServletContext(null);
+            try
+            {
+                exports = builder.generateExports(config);
+                fail("Should have thrown an exception");
+            } catch (IllegalStateException ex)
+            {
+                // good stuff
+            }
+
+            mockServletContext.verify();
+        }
+
 }
