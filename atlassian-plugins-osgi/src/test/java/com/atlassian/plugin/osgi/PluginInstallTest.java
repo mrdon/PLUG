@@ -253,6 +253,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
                 .build();
 
         pluginManager.installPlugin(new JarPluginArtifact(updatedJar));
+        svcTracker.waitForService(5000);
         assertEquals("bob", svcTracker.getService().getClass().getMethod("call").invoke(svcTracker.getService()));
         assertEquals("bob", ((Callable)tracker.getService()).call());
     }
