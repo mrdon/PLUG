@@ -10,19 +10,22 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 import org.dom4j.tree.DefaultElement;
+import org.osgi.framework.Bundle;
 
-public class TestFilteringXmlDescriptorParser extends TestCase
+public class TestOsgiPluginXmlDescriptorParser extends TestCase
 {
     public void testCreateModuleDescriptor() throws PluginParseException
     {
-        FilteringXmlDescriptorParser parser = new FilteringXmlDescriptorParser(new ByteArrayInputStream("<foo/>".getBytes()), "foo");
+        OsgiPluginXmlDescriptorParser parser = new OsgiPluginXmlDescriptorParser(new ByteArrayInputStream("<foo/>".getBytes()), "foo");
 
         Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         mockModuleDescriptor.expect("init", C.ANY_ARGS);
+        mockModuleDescriptor.expectAndReturn("getKey", "bob");
         Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
         mockModuleDescriptorFactory.expectAndReturn("getModuleDescriptor", C.args(C.eq("bar")), mockModuleDescriptor.proxy());
-        assertNull(parser.createModuleDescriptor(null, new DefaultElement("foo"), null));
-        assertNotNull(parser.createModuleDescriptor(null, new DefaultElement("bar"), (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy()));
+        Mock mockBundle = new Mock(Bundle.class);
+        assertNull(parser.createModuleDescriptor(new OsgiPlugin((Bundle) mockBundle.proxy()), new DefaultElement("foo"), null));
+        assertNotNull(parser.createModuleDescriptor(new OsgiPlugin((Bundle) mockBundle.proxy()), new DefaultElement("bar"), (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy()));
 
         mockModuleDescriptor.verify();
         mockModuleDescriptorFactory.verify();

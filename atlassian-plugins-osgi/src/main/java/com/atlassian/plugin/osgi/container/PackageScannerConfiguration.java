@@ -1,5 +1,6 @@
 package com.atlassian.plugin.osgi.container;
 
+import javax.servlet.ServletContext;
 import java.util.List;
 import java.util.Map;
 
@@ -44,4 +45,9 @@ public interface PackageScannerConfiguration
      * @since 2.2.0
      */
     String getCurrentHostVersion();
+
+    /**
+     * @return The servlet context to use to scan for jars, in case the classloader scanning fails
+     */
+    ServletContext getServletContext();
 }

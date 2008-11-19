@@ -19,7 +19,7 @@ public class TestModuleTypeSpringTransformer extends TestCase
 
         SpringTransformerTestHelper.transform(new ModuleTypeSpringTransformer(), pluginRoot,
                 "beans:bean[@id='moduleType-foo' and @class='"+ SingleModuleDescriptorFactory.class.getName()+"']",
-                "osgi:service[@id='moduleType-foo_osgiService']");
+                "osgi:service[@id='moduleType-foo_osgiService' and @auto-export='interfaces']");
     }
 
 }

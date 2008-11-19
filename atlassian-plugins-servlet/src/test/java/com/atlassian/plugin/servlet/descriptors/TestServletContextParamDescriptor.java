@@ -6,6 +6,7 @@ import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.impl.StaticPlugin;
 
 public class TestServletContextParamDescriptor extends TestCase
@@ -58,7 +59,7 @@ public class TestServletContextParamDescriptor extends TestCase
         {
             descriptor.init(plugin, e);
             fail("Should have thrown exception");
-        } catch (IllegalArgumentException ex)
+        } catch (PluginParseException ex)
         {
             // very good
         }
@@ -77,7 +78,7 @@ public class TestServletContextParamDescriptor extends TestCase
         {
             descriptor.init(plugin, e);
             fail("Should have thrown exception");
-        } catch (IllegalArgumentException ex)
+        } catch (PluginParseException ex)
         {
             // very good
         }

@@ -9,13 +9,18 @@ import com.atlassian.plugin.ModuleDescriptorFactory;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import org.dom4j.Element;
+import org.apache.commons.lang.Validate;
 
 /**
- * Descriptor parser that ignores certain modules
+ * Descriptor parser that handles special tasks for osgi plugins such as ignoring certain modules and recording the
+ * originating module descriptor elements.  Must only be used with {@link OsgiPlugin} instances.
+ *
+ * @since 2.1.2
  */
-public class FilteringXmlDescriptorParser extends XmlDescriptorParser
+public class OsgiPluginXmlDescriptorParser extends XmlDescriptorParser
 {
     private HashSet<String> modulesToIgnore;
 
@@ -23,14 +28,15 @@ public class FilteringXmlDescriptorParser extends XmlDescriptorParser
      * @throws com.atlassian.plugin.PluginParseException
      *          if there is a problem reading the descriptor from the XML {@link java.io.InputStream}.
      */
-    public FilteringXmlDescriptorParser(InputStream source, String... modulesToIgnore) throws PluginParseException
+    public OsgiPluginXmlDescriptorParser(InputStream source, String... modulesToIgnore) throws PluginParseException
     {
         super(source);
+        Validate.notNull(source, "The descriptor source must not be null");
         this.modulesToIgnore = new HashSet<String>(Arrays.asList(modulesToIgnore));
     }
 
     /**
-     * Ignores matched modules, otherwise, the normal behavior occurs
+     * Ignores matched modules and passes module descriptor elements back to the {@link OsgiPlugin}
      * @param plugin The plugin
      * @param element The module element
      * @param moduleDescriptorFactory The module descriptor factory
@@ -40,12 +46,13 @@ public class FilteringXmlDescriptorParser extends XmlDescriptorParser
     @Override
     protected ModuleDescriptor createModuleDescriptor(Plugin plugin, Element element, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
+        ModuleDescriptor descriptor = null;
         if (!modulesToIgnore.contains(element.getName()))
         {
-            return super.createModuleDescriptor(plugin, element, moduleDescriptorFactory);
-        } else
-        {
-            return null;
+            descriptor = super.createModuleDescriptor(plugin, element, moduleDescriptorFactory);
+            String key = (descriptor != null ? descriptor.getKey() : element.attributeValue("key"));
+            ((OsgiPlugin)plugin).addModuleDescriptorElement(key, element);
         }
+        return descriptor;
     }
 }

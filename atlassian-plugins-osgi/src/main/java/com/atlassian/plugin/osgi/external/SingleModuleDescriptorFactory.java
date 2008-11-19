@@ -6,12 +6,16 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.beans.BeansException;
 
+import java.util.Set;
+import java.util.Collections;
+
 /**
- * Single module descriptor factory for plugins to use when they want to expose just one plugin.  Has the added benefit
- * of using the available beanfactory to autowire new module descriptors
+ * Single module descriptor factory for plugins to use when they want to expose just one plugin. Does not support
+ * autowiring module descriptors. 
+ *
  * @since 2.1
  */
-public class SingleModuleDescriptorFactory<T extends ModuleDescriptor> implements ModuleDescriptorFactory
+public class SingleModuleDescriptorFactory<T extends ModuleDescriptor> implements ListableModuleDescriptorFactory
 {
     private final String type;
     private final Class<T> moduleDescriptorClass;
@@ -42,5 +46,10 @@ public class SingleModuleDescriptorFactory<T extends ModuleDescriptor> implement
     public Class<? extends ModuleDescriptor> getModuleDescriptorClass(String type)
     {
         return (this.type.equals(type) ? moduleDescriptorClass : null);
+    }
+
+    public Set<Class<ModuleDescriptor<?>>> getModuleDescriptorClasses()
+    {
+        return Collections.singleton((Class<ModuleDescriptor<?>>)moduleDescriptorClass);
     }
 }

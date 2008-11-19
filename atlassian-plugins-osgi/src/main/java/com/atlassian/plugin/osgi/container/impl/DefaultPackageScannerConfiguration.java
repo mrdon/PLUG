@@ -2,6 +2,7 @@ package com.atlassian.plugin.osgi.container.impl;
 
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 
+import javax.servlet.ServletContext;
 import java.util.*;
 
 /**
@@ -16,6 +17,7 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
     private List<String> packageExcludes = Arrays.asList("com.springframework*", "org.apache.commons.logging*");
     private Map<String, String> packageVersions;
     private String hostVersion;
+    private ServletContext servletContext;
 
     public DefaultPackageScannerConfiguration()
     {
@@ -113,5 +115,15 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
     public String getCurrentHostVersion()
     {
         return hostVersion;
+    }
+
+    public ServletContext getServletContext()
+    {
+        return servletContext;
+    }
+
+    public void setServletContext(ServletContext servletContext)
+    {
+        this.servletContext = servletContext;
     }
 }

@@ -99,12 +99,14 @@ public class ScanningPluginLoader implements DynamicPluginLoader
         Plugin plugin = null;
         String errorText = "No plugin factories found for plugin file "+deploymentUnit;
 
+        String pluginKey = null;
         for (PluginFactory factory : pluginFactories)
         {
             try
             {
                 PluginArtifact artifact = pluginArtifactFactory.create(deploymentUnit.getPath().toURI());
-                if (factory.canCreate(artifact) != null)
+                pluginKey = factory.canCreate(artifact);
+                if (pluginKey != null)
                 {
                     plugin = factory.create(deploymentUnit, moduleDescriptorFactory);
                     if (plugin != null)
@@ -117,11 +119,18 @@ public class ScanningPluginLoader implements DynamicPluginLoader
             }
             catch (RuntimeException ex)
             {
+                log.error("Unable to deploy plugin '"+pluginKey+"', file "+deploymentUnit, ex);
                 errorText = ex.getMessage();
             }
         }
         if (plugin == null)
+        {
             plugin = new UnloadablePlugin(errorText);
+            if (pluginKey != null)
+            {
+                plugin.setKey(pluginKey);
+            }
+        }
         else
             log.info("Plugin " + deploymentUnit + " created");
 

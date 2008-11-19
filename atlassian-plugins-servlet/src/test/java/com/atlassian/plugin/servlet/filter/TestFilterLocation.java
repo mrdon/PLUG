@@ -1,6 +1,7 @@
 package com.atlassian.plugin.servlet.filter;
 
 import junit.framework.TestCase;
+import com.atlassian.plugin.PluginParseException;
 
 public class TestFilterLocation extends TestCase
 {

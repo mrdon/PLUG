@@ -82,11 +82,6 @@
             <version>138</version>
         </dependency>
         <dependency>
-            <groupId>com.atlassian.extras</groupId>
-            <artifactId>atlassian-extras</artifactId>
-            <version>1.20</version>
-        </dependency>
-        <dependency>
             <groupId>net.java.dev.urlrewrite</groupId>
             <artifactId>urlrewrite</artifactId>
             <version>2.6.0</version>
@@ -242,13 +237,15 @@
                             <goal>execute</goal>
                         </goals>
                         <configuration>
-                            <containers>tomcat5x,jboss42x</containers>
+                            <containers>resin3x,tomcat5x,jboss42x</containers>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
+
+
     
     <properties>
         <pluginBundleDirectory>target/bundled-plugins</pluginBundleDirectory>

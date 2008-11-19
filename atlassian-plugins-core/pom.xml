@@ -19,7 +19,6 @@
         <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/trunk/atlassian-plugins-core</developerConnection>
         <url>https://studio.atlassian.com/svn/PLUG/trunk/atlassian-plugins-core</url>
     </scm>
-
     <build>
         <testResources>
             <testResource>

@@ -62,13 +62,9 @@ public class HostComponentSpringTransformer implements SpringTransformer
                 if (!found) continue;
                 
                 String beanName = reg.getProperties().get(PropertyBuilder.BEAN_NAME);
-                String id = beanName;
-                if (id == null)
-                    id = "bean"+x;
 
-                id = id.replaceAll("#", "LB");
                 Element osgiService = root.addElement("osgi:reference");
-                osgiService.addAttribute("id", id);
+                osgiService.addAttribute("id", determineId(pluginDoc, beanName, x));
 
                 if (beanName != null)
                     osgiService.addAttribute("filter", "(&(bean-name="+beanName+")("+ ComponentRegistrar.HOST_COMPONENT_FLAG+"=true))");
@@ -178,5 +174,25 @@ public class HostComponentSpringTransformer implements SpringTransformer
         {
             // do nothing
         }
+    }
+
+    private String determineId(Document pluginDoc, String beanName, int iteration)
+    {
+        String id = beanName;
+        if (id == null)
+            id = "bean"+iteration;
+
+        id = id.replaceAll("#", "LB");
+
+        for (Object element : pluginDoc.getRootElement().elements("component-import"))
+        {
+            String key = ((Element)element).attributeValue("key");
+            if (id.equals(key))
+            {
+                id+=iteration;
+                break;
+            }
+        }
+        return id;
     }
 }

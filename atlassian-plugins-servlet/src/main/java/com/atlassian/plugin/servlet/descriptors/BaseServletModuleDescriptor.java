@@ -41,7 +41,7 @@ public abstract class BaseServletModuleDescriptor<T> extends AbstractModuleDescr
         }
 
         if (paths.isEmpty())
-            throw new IllegalArgumentException("There must be at least one path specified");
+            throw new PluginParseException("There must be at least one path specified");
     
         initParams = new HashMap<String,String>();
         List<Element> paramsList = element.elements("init-param");

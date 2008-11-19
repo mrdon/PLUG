@@ -1,4 +1,4 @@
-# Java package list pulled from Java SE 5
+# Java package list pulled from Java SE 5 (excluding java.*)
 # Copied from the packages frame in the Javadocs - http://java.sun.com/j2se/1.5.0/docs/api/index.html
 
 javax.accessibility

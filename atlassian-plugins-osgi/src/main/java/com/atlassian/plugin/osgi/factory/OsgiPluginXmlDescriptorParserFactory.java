@@ -9,12 +9,14 @@ import java.io.InputStream;
 import org.apache.commons.lang.Validate;
 
 /**
- * Descriptor parser factory that creates parsers that ignore all component-related modules
+ * Descriptor parser factory that creates parsers for Osgi plugins.  Must only be used with {@link OsgiPlugin} instances.
+ *
+ * @since 2.1.2
  */
-public class ComponentFilteringXmlDescriptorParserFactory implements DescriptorParserFactory
+public class OsgiPluginXmlDescriptorParserFactory implements DescriptorParserFactory
 {
     /**
-     * Gets an instance that filters the modules "component", "bean", and "spring"
+     * Gets an instance that filters the modules "component", "component-import", "module-type", "bean", and "spring"
      * @param source The descriptor source
      * @return The parser
      * @throws PluginParseException
@@ -22,6 +24,6 @@ public class ComponentFilteringXmlDescriptorParserFactory implements DescriptorP
     public DescriptorParser getInstance(InputStream source) throws PluginParseException
     {
         Validate.notNull(source, "The descriptor source must not be null");
-        return new FilteringXmlDescriptorParser(source, "component", "component-import", "bean", "spring", "module-type");
+        return new OsgiPluginXmlDescriptorParser(source, "component", "component-import", "bean", "spring", "module-type");
     }
 }

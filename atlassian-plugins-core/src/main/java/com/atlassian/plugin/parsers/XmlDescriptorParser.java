@@ -152,7 +152,7 @@ public class XmlDescriptorParser implements DescriptorParser
             moduleDescriptorDescriptor.init(plugin, element);
         }
         // If it fails, return a dummy module that contains the error
-        catch (PluginParseException e)
+        catch (Exception e)
         {
             UnloadableModuleDescriptor descriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin, element, e, moduleDescriptorFactory);
 

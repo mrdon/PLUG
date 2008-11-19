@@ -3,20 +3,25 @@ package com.atlassian.plugin.osgi.factory;
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
+import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.*;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
+import org.dom4j.Element;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.*;
 
 /**
  * Plugin that wraps an OSGi bundle that does contain a plugin descriptor.
@@ -31,6 +36,8 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private Method nativeCreateBeanMethod;
     private Method nativeAutowireBeanMethod;
     private ServiceTracker moduleDescriptorTracker;
+    private ServiceTracker deferredModuleTracker;
+    private final Map<String, Element> moduleElements = new HashMap<String,Element>();
 
     public OsgiPlugin(Bundle bundle)
     {
@@ -42,6 +49,12 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     {
         return bundle;
     }
+
+    public void addModuleDescriptorElement(String key, Element element)
+    {
+        moduleElements.put(key, element);
+    }
+
 
     public Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException
     {
@@ -119,6 +132,8 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 {
                     moduleDescriptorTracker = new ServiceTracker(bundle.getBundleContext(), ModuleDescriptor.class.getName(), new RegisteringServiceTrackerCustomizer());
                     moduleDescriptorTracker.open();
+                    deferredModuleTracker = new ServiceTracker(bundle.getBundleContext(), ListableModuleDescriptorFactory.class.getName(), new DeferredServiceTrackerCustomizer());
+                    deferredModuleTracker.open();
                 }
             }
         }
@@ -135,6 +150,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             if (bundle.getState() == Bundle.ACTIVE)
             {
                 if (moduleDescriptorTracker != null) moduleDescriptorTracker.close();
+                if (deferredModuleTracker != null) deferredModuleTracker.close();
                 bundle.stop();
                 moduleDescriptorTracker = null;
                 nativeBeanFactory = null;
@@ -291,6 +307,20 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return getKey();
     }
 
+    protected <T extends ModuleDescriptor> List<T> getModuleDescriptorsByDescriptorClass(Class<T> descriptor)
+    {
+        List<T> result = new ArrayList<T>();
+
+        for (ModuleDescriptor<?> moduleDescriptor : getModuleDescriptors())
+        {
+            if (moduleDescriptor.getClass().isAssignableFrom(descriptor))
+            {
+                result.add((T) moduleDescriptor);
+            }
+        }
+        return result;
+    }
+
     /**
      * Tracks module descriptors registered as services, then updates the descriptors map accordingly
      */
@@ -299,13 +329,14 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
 
         public Object addingService(ServiceReference serviceReference)
         {
+            ModuleDescriptor descriptor = null;
             if (serviceReference.getBundle() == bundle)
             {
-                ModuleDescriptor descriptor = (ModuleDescriptor) bundle.getBundleContext().getService(serviceReference);
+                descriptor = (ModuleDescriptor) bundle.getBundleContext().getService(serviceReference);
                 addModuleDescriptor(descriptor);
-                return descriptor;
+                log.info("Dynamically registered new module descriptor: "+descriptor.getCompleteKey());
             }
-            return null;
+            return descriptor;
         }
 
         public void modifiedService(ServiceReference serviceReference, Object o)
@@ -314,6 +345,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             {
                 ModuleDescriptor descriptor = (ModuleDescriptor) o;
                 addModuleDescriptor(descriptor);
+                log.info("Dynamically upgraded new module descriptor: "+descriptor.getCompleteKey());
             }
         }
 
@@ -323,6 +355,90 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             {
                 ModuleDescriptor descriptor = (ModuleDescriptor) o;
                 removeModuleDescriptor(descriptor.getKey());
+                log.info("Dynamically removed module descriptor: "+descriptor.getCompleteKey());
+            }
+        }
+    }
+
+    /**
+     * Service tracker that tracks {@link ListableModuleDescriptorFactory} instances and handles transforming
+     * {@link UnrecognisedModuleDescriptor}} instances into modules if the new factory supports them.  Updates to factories
+     * and removal are also handled.
+     *
+     * @since 2.1.2
+     */
+    private class DeferredServiceTrackerCustomizer implements ServiceTrackerCustomizer
+    {
+
+        /**
+         * Turns any {@link UnrecognisedModuleDescriptor} modules that can be handled by the new factory into real
+         * modules
+         */
+        public Object addingService(ServiceReference serviceReference)
+        {
+            ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) bundle.getBundleContext().getService(serviceReference);
+            for (UnrecognisedModuleDescriptor deferred : getModuleDescriptorsByDescriptorClass(UnrecognisedModuleDescriptor.class))
+            {
+                Element source = moduleElements.get(deferred.getKey());
+                if (source != null && factory.hasModuleDescriptor(source.getName()))
+                {
+                    try
+                    {
+                        ModuleDescriptor descriptor = factory.getModuleDescriptor(source.getName());
+                        descriptor.init(deferred.getPlugin(), source);
+                        addModuleDescriptor(descriptor);
+                        log.info("Turned plugin module "+descriptor.getCompleteKey()+" into module "+descriptor);
+                    }
+                    catch (IllegalAccessException e)
+                    {
+                        log.error("Unable to transform "+deferred.getKey()+" into actual plugin module using factory "+
+                            factory, e);
+                    }
+                    catch (InstantiationException e)
+                    {
+                        log.error("Unable to transform "+deferred.getKey()+" into actual plugin module using factory "+
+                            factory, e);
+                    }
+                    catch (ClassNotFoundException e)
+                    {
+                        log.error("Unable to transform "+deferred.getKey()+" into actual plugin module using factory "+
+                            factory, e);
+                    }
+                }
+            }
+            return factory;
+        }
+
+        /**
+         * Updates any local module descriptors that were created from the modified factory
+         */
+        public void modifiedService(ServiceReference serviceReference, Object o)
+        {
+            removedService(serviceReference, o);
+            addingService(serviceReference);
+        }
+
+        /**
+         * Reverts any current module descriptors that were provided from the factory being removed into {@link
+         * UnrecognisedModuleDescriptor} instances.
+         */
+        public void removedService(ServiceReference serviceReference, Object o)
+        {
+            ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) o;
+            for (Class<ModuleDescriptor<?>> moduleDescriptorClass : factory.getModuleDescriptorClasses())
+            {
+                for (ModuleDescriptor<?> descriptor : getModuleDescriptorsByDescriptorClass(moduleDescriptorClass))
+                {
+                    UnrecognisedModuleDescriptor deferred = new UnrecognisedModuleDescriptor();
+                    Element source = moduleElements.get(descriptor.getKey());
+                    if (source != null)
+                    {
+                        deferred.init(OsgiPlugin.this, source);
+                        deferred.setErrorText(UnrecognisedModuleDescriptorFallbackFactory.DESCRIPTOR_TEXT);
+                        addModuleDescriptor(deferred);
+                        log.info("Removed plugin module "+deferred.getCompleteKey()+" as its factory was uninstalled");
+                    }
+                }
             }
         }
     }

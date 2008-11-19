@@ -23,6 +23,7 @@ import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.StringMap;
 import org.osgi.framework.*;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.service.packageadmin.PackageAdmin;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -39,6 +40,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private static final Log log = LogFactory.getLog(FelixOsgiContainerManager.class);
     public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "osgi-framework-bundles.zip";
     private static final String OSGI_BOOTDELEGATION = "org.osgi.framework.bootdelegation";
+    private static final String ATLASSIAN_PREFIX = "atlassian.";
     private BundleRegistration registration = null;
     private Felix felix = null;
     private boolean felixRunning = false;
@@ -171,7 +173,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     }
 
     @PluginEventListener
-    public void onShtudown(PluginFrameworkShutdownEvent event)
+    public void onShutdown(PluginFrameworkShutdownEvent event)
     {
         stop();
     }
@@ -181,6 +183,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     {
         if (isRunning())
             return;
+
+        detectIncorrectOsgiVersion();
 
         DefaultComponentRegistrar registrar = collectHostComponents(hostComponentProvider);
         // Create a case-insensitive configuration property map.
@@ -195,8 +199,17 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         configMap.put(BundleCache.CACHE_PROFILE_DIR_PROP, cacheDirectory.getAbsolutePath());
 
         configMap.put(FelixConstants.LOG_LEVEL_PROP, String.valueOf(felixLogger.getLogLevel()));
-        if (System.getProperty(OSGI_BOOTDELEGATION) != null)
-            configMap.put(Constants.FRAMEWORK_BOOTDELEGATION, System.getProperty(OSGI_BOOTDELEGATION));
+        String bootDelegation = getAtlassianSpecificOsgiSystemProperty(OSGI_BOOTDELEGATION);
+        if (bootDelegation == null || bootDelegation.trim().length() == 0)
+        {
+            bootDelegation = "weblogic.*,META-INF.services,com.yourkit.*,org.jprofiler.*";
+        }
+
+        configMap.put(Constants.FRAMEWORK_BOOTDELEGATION, bootDelegation);
+        if (log.isDebugEnabled())
+        {
+            log.debug("Felix configuration: "+configMap);
+        }
 
         try
         {
@@ -235,11 +248,28 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         }
     }
 
+    /**
+     * Detects incorrect configuration of WebSphere 6.1 that leaks OSGi 4.0 jars into the application
+     */
+    private void detectIncorrectOsgiVersion()
+    {
+        try
+        {
+            Bundle.class.getMethod("getBundleContext");
+        }
+        catch (NoSuchMethodException e)
+        {
+            throw new OsgiContainerException("Detected older version (4.0 or earlier) of OSGi.  If using WebSphere "+
+                "6.1, please enable application-first (parent-last) classloading and the 'Single classloader for "+
+                "application' WAR classloader policy.");
+        }
+    }
+
     public void stop() throws OsgiContainerException
     {
         if (felixRunning)
         {
-            for (ServiceTracker tracker : trackers)
+            for (ServiceTracker tracker : new HashSet<ServiceTracker>(trackers))
                 tracker.close();
             felix.stopAndWait();
         }
@@ -271,7 +301,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         if (!isRunning())
             throw new IllegalStateException("Unable to create a tracker when osgi is not running");
 
-        ServiceTracker tracker = registration.getServiceTracker(cls);
+        ServiceTracker tracker = registration.getServiceTracker(cls, trackers);
         tracker.open();
         trackers.add(tracker);
         return tracker;
@@ -306,6 +336,11 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         return registration.getHostComponentRegistrations();
     }
 
+    private String getAtlassianSpecificOsgiSystemProperty(String originalSystemProperty)
+    {
+        return System.getProperty(ATLASSIAN_PREFIX + originalSystemProperty);
+    }
+
     /**
      * Manages framwork-level framework bundles and host components registration, and individual plugin bundle
      * installation and removal.
@@ -318,6 +353,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         private List<HostComponentRegistration> hostComponentRegistrations;
         private URL frameworkBundlesUrl;
         private File frameworkBundlesDir;
+        private PackageAdmin packageAdmin;
 
         public BundleRegistration(URL frameworkBundlesUrl, File frameworkBundlesDir, DefaultComponentRegistrar registrar)
         {
@@ -328,6 +364,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
         public void start(BundleContext context) throws Exception {
             this.bundleContext = context;
+            ServiceReference ref = context.getServiceReference(org.osgi.service.packageadmin.PackageAdmin.class.getName());
+            packageAdmin = (PackageAdmin) context.getService(ref);
+
             context.addBundleListener(this);
 
             loadHostComponents(registrar);
@@ -402,9 +441,15 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             return bundleContext.getBundles();
         }
 
-        public ServiceTracker getServiceTracker(String clazz)
+        public ServiceTracker getServiceTracker(String clazz, final Set<ServiceTracker> trackedTrackers)
         {
-            return new ServiceTracker(bundleContext, clazz, null);
+            return new ServiceTracker(bundleContext, clazz, null){
+                @Override
+                public void close()
+                {
+                    trackedTrackers.remove(this);
+                }
+            };
         }
 
         public List<HostComponentRegistration> getHostComponentRegistrations()

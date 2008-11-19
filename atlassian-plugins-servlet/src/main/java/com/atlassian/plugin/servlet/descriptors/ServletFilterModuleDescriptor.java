@@ -53,8 +53,15 @@ public abstract class ServletFilterModuleDescriptor extends BaseServletModuleDes
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);
-        location = FilterLocation.parse(element.attributeValue("location", DEFAULT_LOCATION));
-        weight = Integer.valueOf(element.attributeValue("weight", DEFAULT_WEIGHT));
+        try
+        {
+            location = FilterLocation.parse(element.attributeValue("location", DEFAULT_LOCATION));
+            weight = Integer.valueOf(element.attributeValue("weight", DEFAULT_WEIGHT));
+        }
+        catch (IllegalArgumentException ex)
+        {
+            throw new PluginParseException(ex);
+        }
     }
     
     public void enabled()
