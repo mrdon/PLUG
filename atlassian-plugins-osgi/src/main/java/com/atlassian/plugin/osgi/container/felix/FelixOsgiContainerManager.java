@@ -425,6 +425,23 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                         {
                             log.info("Uninstalling existing version "+oldBundle.getHeaders().get(Constants.BUNDLE_VERSION));
                             oldBundle.uninstall();
+                            // The following is a rather ugly workaround for https://issues.apache.org/jira/browse/FELIX-822
+                            try
+                            {
+                                packageAdmin.refreshPackages(new Bundle[]{oldBundle});
+                            } catch (NullPointerException ex)
+                            {
+                                // Bug in Felix that causes this to occassionally happen, so let's try again
+                                try
+                                {
+                                    packageAdmin.refreshPackages(new Bundle[]{oldBundle});
+                                }
+                                catch (NullPointerException e)
+                                {
+                                    // Ok, we give up
+                                    log.warn("Unable to fully uninstall bundle "+name, e);
+                                }
+                            }
                         }
                     }
 
