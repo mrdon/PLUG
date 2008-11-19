@@ -1,7 +1,7 @@
 package com.atlassian.plugin.osgi.container.felix;
 
-import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.PluginEventListener;
+import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
@@ -10,20 +10,19 @@ import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
-import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.ClassLoaderUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.io.FileUtils;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.StringMap;
 import org.osgi.framework.*;
-import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -399,6 +398,12 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 case BundleEvent.INSTALLED:
                     log.info("Installed bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
                     break;
+                case BundleEvent.RESOLVED:
+                    log.info("Resolved bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
+                    break;
+                case BundleEvent.UNRESOLVED:
+                    log.info("Unresolved bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
+                    break;
                 case BundleEvent.STARTED:
                     log.info("Started bundle " + evt.getBundle().getSymbolicName() + " ("+evt.getBundle().getBundleId()+")");
                     break;
@@ -425,23 +430,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                         {
                             log.info("Uninstalling existing version "+oldBundle.getHeaders().get(Constants.BUNDLE_VERSION));
                             oldBundle.uninstall();
-                            // The following is a rather ugly workaround for https://issues.apache.org/jira/browse/FELIX-822
-                            try
-                            {
-                                packageAdmin.refreshPackages(new Bundle[]{oldBundle});
-                            } catch (NullPointerException ex)
-                            {
-                                // Bug in Felix that causes this to occassionally happen, so let's try again
-                                try
-                                {
-                                    packageAdmin.refreshPackages(new Bundle[]{oldBundle});
-                                }
-                                catch (NullPointerException e)
-                                {
-                                    // Ok, we give up
-                                    log.warn("Unable to fully uninstall bundle "+name, e);
-                                }
-                            }
+
+                            // Commented out because it results in a race condition for dependent bundles, primarily
+                            // because the default import package setting is optional resolution.
+                            //packageAdmin.refreshPackages(new Bundle[]{oldBundle});
                         }
                     }
 
@@ -450,7 +442,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                     throw new BundleException("Invalid bundle format", e);
                 }
             }
-            return bundleContext.installBundle(path.toURI().toString());
+            Bundle bundle = bundleContext.installBundle(path.toURI().toString());
+            return bundle;
         }
 
         public Bundle[] getBundles()
