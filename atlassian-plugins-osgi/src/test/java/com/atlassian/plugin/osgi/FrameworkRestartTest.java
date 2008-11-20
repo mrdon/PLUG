@@ -12,15 +12,8 @@ import org.apache.commons.io.FileUtils;
  */
 public class FrameworkRestartTest extends PluginInContainerTestBase
 {
-    @Override
-    public void setUp() throws Exception
-    {
-        super.setUp();
-    }
-
     public void testMultiplePlugins() throws Exception
     {
-
         final int numHostComponents = 200;
         final int numPlugins = 50;
 
@@ -92,7 +85,5 @@ public class FrameworkRestartTest extends PluginInContainerTestBase
         }
 
         System.out.println("Start speed test - legacy: " + (legacyTotal / 10) + " no caching: " + (noCacheTotal / 10) + " ms  caching: " + (cacheTotal / 10) + " ms");
-        //assertTrue(cacheTotal < noCacheTotal);
     }
-
 }
