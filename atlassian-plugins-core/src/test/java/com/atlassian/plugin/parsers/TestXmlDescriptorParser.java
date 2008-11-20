@@ -63,6 +63,20 @@ public class TestXmlDescriptorParser extends TestCase
         assertEquals(2, parser.getPluginsVersion());
     }
 
+    public void testPluginsVersionAfterConfigure()
+    {
+        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream("<atlassian-plugin key=\"foo\" plugins-version=\"2\" />".getBytes()));
+        // mock up some supporting objects
+        PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
+        Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
+        mockFactory.expect("getModuleDescriptorClass", "unknown-plugin");
+
+        // create a Plugin for testing
+        Plugin testPlugin = new DefaultDynamicPlugin(null, classLoader);
+        parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
+        assertEquals(2, testPlugin.getPluginsVersion());
+    }
+
     public void testPluginsVersionWithDash()
     {
         String xml = "<atlassian-plugin key=\"foo\" plugins-version=\"2\" />";
