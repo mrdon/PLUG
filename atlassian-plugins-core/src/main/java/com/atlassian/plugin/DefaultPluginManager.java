@@ -25,7 +25,6 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.InputStream;
 import java.util.*;
-import static java.lang.Thread.*;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -750,6 +749,7 @@ public class DefaultPluginManager implements PluginManager
      */
     protected void notifyPluginEnabled(Plugin plugin)
     {
+        plugin.setEnabled(true);
         classLoader.notifyPluginOrModuleEnabled();
         enablePluginModules(plugin);
         pluginEventManager.broadcast(new PluginEnabledEvent(plugin));
