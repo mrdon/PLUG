@@ -26,6 +26,9 @@ public class InitListener implements ServletContextListener {
     }
 
     public void contextDestroyed(ServletContextEvent sce) {
+        ContainerManager mgr = ContainerManager.getInstance();
+        if (mgr != null)
+            mgr.shutdown();
         ContainerManager.setInstance(null);
     }
 

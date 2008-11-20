@@ -160,6 +160,11 @@ public class ContainerManager
         return webResourceManager;
     }
 
+    void shutdown()
+    {
+        pluginManager.shutdown();
+    }
+
     /**
      * A simple content type resolver that can identify css and js resources.
      */
