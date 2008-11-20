@@ -61,6 +61,22 @@
                     </systemProperties>
                 </configuration>
             </plugin>
+            <plugin>
+            <!-- Deploy to the maven1 repo, necessary as maven1 can't resolve snapshots -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-one-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <remoteRepositoryId>atlassian-m1-repository</remoteRepositoryId>
+                            <remoteRepositoryUrl>dav:https://maven.atlassian.com/maven1</remoteRepositoryUrl>
+                        </configuration>
+                        <goals>
+                            <goal>deploy-maven-one-repository</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     
