@@ -1,5 +1,7 @@
 package com.atlassian.plugin.impl;
 
+import static com.atlassian.plugin.util.concurrent.CopyOnWriteMap.newLinkedMap;
+
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginInformation;
@@ -12,16 +14,15 @@ import com.atlassian.plugin.util.VersionStringComparator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 {
+    private final Map<String, ModuleDescriptor<?>> modules = newLinkedMap();
     private String name;
     private String i18nNameKey;
     private String key;
-    private final Map<String, ModuleDescriptor<?>> modules = new LinkedHashMap<String, ModuleDescriptor<?>>();
     private boolean enabledByDefault = true;
     private PluginInformation pluginInformation = new PluginInformation();
     private boolean enabled;
