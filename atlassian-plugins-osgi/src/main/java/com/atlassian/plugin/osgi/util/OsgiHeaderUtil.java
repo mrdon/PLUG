@@ -131,12 +131,12 @@ public class OsgiHeaderUtil
         String exports = null;
 
         StringBuilder origExports = new StringBuilder();
-        origExports.append("org.osgi.framework; version=1.3.0,");
+        origExports.append("org.osgi.framework; version=1.4.1,");
         origExports.append("org.osgi.service.packageadmin; version=1.2.0," );
         origExports.append("org.osgi.service.startlevel; version=1.0.0,");
         origExports.append("org.osgi.service.url; version=1.0.0,");
-        origExports.append("org.osgi.util; version=1.3.0,");
-        origExports.append("org.osgi.util.tracker; version=1.3.0,");
+        origExports.append("org.osgi.util; version=1.4.1,");
+        origExports.append("org.osgi.util.tracker; version=1.4.1,");
         origExports.append("host.service.command; version=1.0.0,");
 
         constructJdkExports(origExports, JDK_PACKAGES_PATH);
