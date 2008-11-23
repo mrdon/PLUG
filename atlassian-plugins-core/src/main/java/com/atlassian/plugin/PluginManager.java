@@ -3,24 +3,14 @@ package com.atlassian.plugin;
 /**
  * A plugin manager is responsible for retrieving plugins and modules, as well as managing plugin loading and state.
  *
- * @deprecated since 2006-09-26
+ * @deprecated since 2006-09-26 the preferred technique is to use the interfaces that this on e extends directly.
+ * 
  * @see PluginController
  * @see PluginAccessor
+ * @see PluginSystemLifecycle
  */
-public interface PluginManager extends PluginController, PluginAccessor
+@Deprecated
+public interface PluginManager extends PluginController, PluginAccessor, PluginSystemLifecycle
 {
     public static final String PLUGIN_DESCRIPTOR_FILENAME = "atlassian-plugin.xml";
-
-    /**
-     * Initialise the plugin manager. This <b>must</b> be called before anything else.
-     * @throws PluginParseException If parsing the plugins failed.
-     */
-    void init() throws PluginParseException;
-
-    /**
-     * Destroys the plugin manager. This <b>must</b> be called when getting rid of the manager instance and you
-     * plan to create another one.
-     * @since 2.0.0
-     */
-    void shutdown();
 }

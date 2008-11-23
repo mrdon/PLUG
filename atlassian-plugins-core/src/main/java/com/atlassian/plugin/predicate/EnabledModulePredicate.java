@@ -6,7 +6,7 @@ import com.atlassian.plugin.PluginAccessor;
 /**
  * A {@link ModuleDescriptorPredicate} that matches enabled modules.
  */
-public class EnabledModulePredicate implements ModuleDescriptorPredicate
+public class EnabledModulePredicate<T> implements ModuleDescriptorPredicate<T>
 {
     private final PluginAccessor pluginAccessor;
 
@@ -22,8 +22,8 @@ public class EnabledModulePredicate implements ModuleDescriptorPredicate
         this.pluginAccessor = pluginAccessor;
     }
 
-    public boolean matches(final ModuleDescriptor moduleDescriptor)
+    public boolean matches(final ModuleDescriptor<? extends T> moduleDescriptor)
     {
-        return moduleDescriptor != null && pluginAccessor.isPluginModuleEnabled(moduleDescriptor.getCompleteKey());
+        return (moduleDescriptor != null) && pluginAccessor.isPluginModuleEnabled(moduleDescriptor.getCompleteKey());
     }
 }

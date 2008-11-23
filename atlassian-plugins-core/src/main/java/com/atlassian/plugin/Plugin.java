@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface Plugin extends Resourced, Comparable<Plugin>
 {
-    public static final Comparator NAME_COMPARATOR = new PluginNameComparator();
+    public static final Comparator<Plugin> NAME_COMPARATOR = new PluginNameComparator();
 
     /**
      * Gets the version of the plugins system to handle this plugin
@@ -107,7 +107,7 @@ public interface Plugin extends Resourced, Comparable<Plugin>
      * @return The classloader used to load classes for this plugin
      */
     ClassLoader getClassLoader();
-    
+
     /**
      * Retrieve the URL of the resource from the plugin.
      * 
