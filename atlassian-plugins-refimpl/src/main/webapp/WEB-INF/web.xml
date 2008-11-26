@@ -47,6 +47,16 @@
             <param-value>before-dispatch</param-value>
         </init-param>
     </filter>
+    
+    <filter>
+        <filter-name>web-resource-request-cleaner</filter-name>
+        <filter-class>com.atlassian.plugin.refimpl.webresource.RequestCacheCleaner</filter-class>
+    </filter>
+    
+    <filter-mapping>
+        <filter-name>web-resource-request-cleaner</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
     <filter-mapping>
         <filter-name>filter-plugin-dispatcher-after-encoding</filter-name>

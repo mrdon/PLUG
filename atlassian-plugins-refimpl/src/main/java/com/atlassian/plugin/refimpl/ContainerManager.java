@@ -6,7 +6,6 @@ import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
@@ -19,6 +18,7 @@ import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.atlassian.plugin.servlet.*;
 import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.atlassian.plugin.webresource.WebResourceIntegration;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
 import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
@@ -33,6 +33,7 @@ import java.util.*;
 public class ContainerManager
 {
     private final ServletModuleManager servletModuleManager;
+    private final SimpleWebResourceIntegration webResourceIntegration;
     private final WebResourceManager webResourceManager;
     private final OsgiContainerManager osgiContainerManager;
     private final DefaultPluginManager pluginManager;
@@ -49,7 +50,8 @@ public class ContainerManager
         instance = this;
         pluginEventManager = new DefaultPluginEventManager();
         servletModuleManager = new DefaultServletModuleManager(pluginEventManager);
-        webResourceManager = new WebResourceManagerImpl(new SimpleWebResourceIntegration(servletContext));
+        webResourceIntegration = new SimpleWebResourceIntegration(servletContext);
+        webResourceManager = new WebResourceManagerImpl(webResourceIntegration);
 
         DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
         List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
@@ -158,6 +160,11 @@ public class ContainerManager
     public WebResourceManager getWebResourceManager()
     {
         return webResourceManager;
+    }
+
+    public WebResourceIntegration getWebResourceIntegration()
+    {
+        return webResourceIntegration;
     }
 
     void shutdown()
