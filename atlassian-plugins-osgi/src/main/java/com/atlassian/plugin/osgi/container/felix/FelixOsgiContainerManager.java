@@ -384,7 +384,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         private List<HostComponentRegistration> hostComponentRegistrations;
         private final URL frameworkBundlesUrl;
         private final File frameworkBundlesDir;
-        // @TODO unused. Is there any side effects to the ServiceReference lookup? if not remove.
         private PackageAdmin packageAdmin;
 
         public BundleRegistration(final URL frameworkBundlesUrl, final File frameworkBundlesDir, final DefaultComponentRegistrar registrar)
@@ -397,7 +396,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         public void start(final BundleContext context) throws Exception
         {
             bundleContext = context;
-            // @TODO only used to lookup unused PackageAdmin. If there are no side effects to this call, remove.
             final ServiceReference ref = context.getServiceReference(org.osgi.service.packageadmin.PackageAdmin.class.getName());
             packageAdmin = (PackageAdmin) context.getService(ref);
 
@@ -473,9 +471,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                             log.info("Uninstalling existing version " + oldBundle.getHeaders().get(Constants.BUNDLE_VERSION));
                             oldBundle.uninstall();
 
-                            // Commented out because it results in a race condition for dependent bundles, primarily
-                            // because the default import package setting is optional resolution.
-                            //packageAdmin.refreshPackages(new Bundle[]{oldBundle});
+                            packageAdmin.refreshPackages(new Bundle[]{oldBundle});
                         }
                     }
 
