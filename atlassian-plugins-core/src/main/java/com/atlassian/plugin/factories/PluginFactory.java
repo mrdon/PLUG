@@ -1,10 +1,11 @@
 package com.atlassian.plugin.factories;
 
-import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
+import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 
 /**
  * Creates the plugin artifact and deploys it into the appropriate plugin management system
@@ -31,5 +32,5 @@ public interface PluginFactory
      * @return the plugin loaded from the deployment unit, or an UnloadablePlugin instance if loading fails.
      * @throws com.atlassian.plugin.PluginParseException if the plugin could not be parsed
      */
-    Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException;
+    <T> Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException;
 }

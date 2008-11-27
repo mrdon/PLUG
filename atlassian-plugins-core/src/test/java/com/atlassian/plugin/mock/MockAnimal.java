@@ -1,5 +1,4 @@
 package com.atlassian.plugin.mock;
 
-public interface MockAnimal
-{
-}
+public interface MockAnimal extends MockThing
+{}

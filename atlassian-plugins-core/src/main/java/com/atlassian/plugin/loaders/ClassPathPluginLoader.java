@@ -1,19 +1,27 @@
 package com.atlassian.plugin.loaders;
 
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.util.ClassLoaderUtils;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.*;
-import java.net.URL;
 import java.io.IOException;
-
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.util.ClassLoaderUtils;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.List;
 
 /**
  * Loads plugins from the classpath
  */
-public class ClassPathPluginLoader implements PluginLoader
+public class ClassPathPluginLoader<T> implements PluginLoader<T>
 {
     private static Log log = LogFactory.getLog(ClassPathPluginLoader.class);
     List<Plugin> plugins;
@@ -24,21 +32,22 @@ public class ClassPathPluginLoader implements PluginLoader
         this(PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
     }
 
-    public ClassPathPluginLoader(String fileNameToLoad)
+    public ClassPathPluginLoader(final String fileNameToLoad)
     {
         this.fileNameToLoad = fileNameToLoad;
     }
 
-    private void loadClassPathPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException {
+    private void loadClassPathPlugins(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException
+    {
         URL url = null;
-        final Enumeration pluginDescriptorFiles;
+        final Enumeration<URL> pluginDescriptorFiles;
         plugins = new ArrayList<Plugin>();
-        
+
         try
         {
             pluginDescriptorFiles = ClassLoaderUtils.getResources(fileNameToLoad, this.getClass());
         }
-        catch (IOException e)
+        catch (final IOException e)
         {
             log.error("Could not load classpath plugins: " + e, e);
             return;
@@ -46,24 +55,24 @@ public class ClassPathPluginLoader implements PluginLoader
 
         while (pluginDescriptorFiles.hasMoreElements())
         {
-            url = (URL) pluginDescriptorFiles.nextElement();
+            url = pluginDescriptorFiles.nextElement();
             try
             {
-                SinglePluginLoader loader = new SinglePluginLoader(url.openConnection().getInputStream());
+                final SinglePluginLoader<T> loader = new SinglePluginLoader<T>(url.openConnection().getInputStream());
                 plugins.addAll(loader.loadAllPlugins(moduleDescriptorFactory));
             }
-            catch (IOException e)
+            catch (final IOException e)
             {
                 log.error("IOException parsing inputstream for : " + url, e);
             }
-            catch (PluginParseException e)
+            catch (final PluginParseException e)
             {
                 log.error("Unable to load plugin at url: " + url + ", " + e.getMessage(), e);
             }
         }
     }
 
-    public Collection<Plugin> loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException
     {
         if (plugins == null)
         {
@@ -83,12 +92,12 @@ public class ClassPathPluginLoader implements PluginLoader
         return false;
     }
 
-    public Collection<Plugin> addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
+    public Collection<Plugin> addFoundPlugins(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory)
     {
         throw new UnsupportedOperationException("This PluginLoader does not support addition.");
     }
 
-    public void removePlugin(Plugin plugin) throws PluginException
+    public void removePlugin(final Plugin plugin) throws PluginException
     {
         throw new PluginException("This PluginLoader does not support removal.");
     }

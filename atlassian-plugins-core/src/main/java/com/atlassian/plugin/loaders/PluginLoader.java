@@ -1,5 +1,6 @@
 package com.atlassian.plugin.loaders;
 
+import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginException;
@@ -10,9 +11,14 @@ import java.util.Collection;
 /**
  * Handles loading and unloading plugin artifacts from a location
  */
-public interface PluginLoader
+public interface PluginLoader<T>
 {
-    Collection<Plugin> loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException;
+    Collection<Plugin> loadAllPlugins(ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException;
+
+    /**
+     * @return a collection of discovered plugins which have now been loaded by this PluginLoader
+     */
+    Collection<Plugin> addFoundPlugins(ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException;
 
     /**
      * @return true if this PluginLoader tracks whether or not plugins are added to it.
@@ -25,13 +31,7 @@ public interface PluginLoader
     boolean supportsRemoval();
 
     /**
-     * @return a collection of discovered plugins which have now been loaded by this pluginloader
-     */
-    Collection<Plugin> addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException;
-
-    /**
      * Remove a specific plugin
      */
     void removePlugin(Plugin plugin) throws PluginException;
-
 }

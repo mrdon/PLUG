@@ -6,16 +6,17 @@
  */
 package com.atlassian.plugin.store;
 
-import junit.framework.TestCase;
 import com.atlassian.plugin.PluginManagerState;
+
+import junit.framework.TestCase;
 
 public class TestMemoryPluginStateStore extends TestCase
 {
     public void testStore()
     {
-        MemoryPluginStateStore store = new MemoryPluginStateStore();
-        PluginManagerState state = new PluginManagerState();
+        final MemoryPluginStateStore store = new MemoryPluginStateStore();
+        final PluginManagerState state = new PluginManagerState();
         store.savePluginState(state);
-        assertEquals(state, store.loadPluginState());
+        assertEquals(state.getMap(), store.loadPluginState().getMap());
     }
 }

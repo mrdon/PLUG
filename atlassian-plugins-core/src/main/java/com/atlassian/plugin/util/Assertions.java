@@ -1,4 +1,4 @@
-package com.atlassian.plugin.util.concurrent;
+package com.atlassian.plugin.util;
 
 /**
  * Design by contract assertions.

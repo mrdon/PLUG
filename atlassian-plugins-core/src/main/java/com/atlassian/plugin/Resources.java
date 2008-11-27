@@ -91,7 +91,7 @@ public class Resources implements Resourced
                 typedResourceDescriptors.add(resourceDescriptor);
             }
         }
-        return typedResourceDescriptors;
+        return Collections.unmodifiableList(typedResourceDescriptors);
     }
 
     public ResourceLocation getResourceLocation(final String type, final String name)
@@ -106,10 +106,6 @@ public class Resources implements Resourced
         return null;
     }
 
-    /**
-     * @deprecated
-     */
-    @Deprecated
     public ResourceDescriptor getResourceDescriptor(final String type, final String name)
     {
         for (final ResourceDescriptor resourceDescriptor : resourceDescriptors)

@@ -10,7 +10,7 @@ package com.atlassian.plugin;
  * @see PluginSystemLifecycle
  */
 @Deprecated
-public interface PluginManager extends PluginController, PluginAccessor, PluginSystemLifecycle
+public interface PluginManager<T> extends PluginController, PluginAccessor<T>, PluginSystemLifecycle
 {
     public static final String PLUGIN_DESCRIPTOR_FILENAME = "atlassian-plugin.xml";
 }

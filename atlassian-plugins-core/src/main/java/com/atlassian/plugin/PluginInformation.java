@@ -6,10 +6,11 @@
  */
 package com.atlassian.plugin;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.atlassian.plugin.util.JavaVersionUtils;
+import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
+
+import java.util.Collections;
+import java.util.Map;
 
 public class PluginInformation
 {
@@ -21,15 +22,14 @@ public class PluginInformation
     private float maxVersion;
     private float minVersion;
     private Float minJavaVersion;
-    private Map<Object,Object> parameters = new HashMap<Object,Object>();
+    private final Map<String, String> parameters = CopyOnWriteMap.newHashMap();
 
-    
     public String getDescription()
     {
         return description;
     }
 
-    public void setDescription(String description)
+    public void setDescription(final String description)
     {
         this.description = description;
     }
@@ -39,17 +39,17 @@ public class PluginInformation
         return version;
     }
 
-    public void setVersion(String version)
+    public void setVersion(final String version)
     {
         this.version = version;
     }
 
-    public void setVendorName(String vendorName)
+    public void setVendorName(final String vendorName)
     {
         this.vendorName = vendorName;
     }
 
-    public void setVendorUrl(String vendorUrl)
+    public void setVendorUrl(final String vendorUrl)
     {
         this.vendorUrl = vendorUrl;
     }
@@ -64,13 +64,12 @@ public class PluginInformation
         return vendorUrl;
     }
 
-
-    public void setMaxVersion(float maxVersion)
+    public void setMaxVersion(final float maxVersion)
     {
         this.maxVersion = maxVersion;
     }
 
-    public void setMinVersion(float minVersion)
+    public void setMinVersion(final float minVersion)
     {
         this.minVersion = minVersion;
     }
@@ -90,27 +89,27 @@ public class PluginInformation
         return minJavaVersion;
     }
 
-    public void setMinJavaVersion(Float minJavaVersion)
+    public void setMinJavaVersion(final Float minJavaVersion)
     {
         this.minJavaVersion = minJavaVersion;
     }
 
-    public Map getParameters()
+    public Map<String, String> getParameters()
     {
-        return parameters;
+        return Collections.unmodifiableMap(parameters);
     }
 
-    public void addParameter(Object key, Object value)
+    public void addParameter(final String key, final String value)
     {
-        this.parameters.put(key, value);
+        parameters.put(key, value);
     }
 
     public boolean satisfiesMinJavaVersion()
     {
-        return minJavaVersion == null || JavaVersionUtils.satisfiesMinVersion(minJavaVersion);
+        return (minJavaVersion == null) || JavaVersionUtils.satisfiesMinVersion(minJavaVersion);
     }
 
-    public void setDescriptionKey(String descriptionKey)
+    public void setDescriptionKey(final String descriptionKey)
     {
         this.descriptionKey = descriptionKey;
     }

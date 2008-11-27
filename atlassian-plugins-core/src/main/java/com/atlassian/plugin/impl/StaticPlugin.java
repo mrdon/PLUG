@@ -1,9 +1,9 @@
 package com.atlassian.plugin.impl;
 
+import com.atlassian.plugin.util.ClassLoaderUtils;
+
 import java.io.InputStream;
 import java.net.URL;
-
-import com.atlassian.plugin.util.ClassLoaderUtils;
 
 public class StaticPlugin extends AbstractPlugin
 {
@@ -15,7 +15,7 @@ public class StaticPlugin extends AbstractPlugin
         return false;
     }
 
-    public Class<?> loadClass(String clazz, Class callingClass) throws ClassNotFoundException
+    public Class<?> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
     {
         return ClassLoaderUtils.loadClass(clazz, callingClass);
     }
@@ -24,13 +24,13 @@ public class StaticPlugin extends AbstractPlugin
     {
         return getClass().getClassLoader();
     }
-    
-    public URL getResource(String name)
+
+    public URL getResource(final String name)
     {
         return ClassLoaderUtils.getResource(name, getClass());
     }
-    
-    public InputStream getResourceAsStream(String name)
+
+    public InputStream getResourceAsStream(final String name)
     {
         return ClassLoaderUtils.getResourceAsStream(name, getClass());
     }
@@ -50,10 +50,8 @@ public class StaticPlugin extends AbstractPlugin
         return false;
     }
 
-
     public void close()
     {
 
     }
 }
-

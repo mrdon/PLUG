@@ -1,7 +1,7 @@
 package com.atlassian.plugin.util;
 
-import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 
 /**
@@ -19,17 +19,15 @@ public class PluginUtils
      * @return True if a restart is required
      * @since 2.1
      */
-    public static boolean doesPluginRequireRestart(Plugin plugin)
+    public static boolean doesPluginRequireRestart(final Plugin plugin)
     {
-        boolean requiresRestart = false;
-        for (ModuleDescriptor descriptor : plugin.getModuleDescriptors())
+        for (final ModuleDescriptor<?> descriptor : plugin.getModuleDescriptors())
         {
             if (descriptor.getClass().getAnnotation(RequiresRestart.class) != null)
             {
-                requiresRestart = true;
-                break;
+                return true;
             }
         }
-        return requiresRestart;
+        return false;
     }
 }

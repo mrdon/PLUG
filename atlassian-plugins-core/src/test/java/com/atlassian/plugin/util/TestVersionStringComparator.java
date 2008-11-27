@@ -4,12 +4,7 @@ import junit.framework.TestCase;
 
 public class TestVersionStringComparator extends TestCase
 {
-    private VersionStringComparator comparator = new VersionStringComparator();
-
-    public void testNonStringsEqual()
-    {
-        assertBothSame(new Long(25), new byte[]{ 0 });
-    }
+    private final VersionStringComparator comparator = new VersionStringComparator();
 
     public void testIntegers()
     {
@@ -105,10 +100,10 @@ public class TestVersionStringComparator extends TestCase
         assertInvalidVersion("%^&%#");
     }
 
-    private void assertSecondGreater(Object first, Object second)
+    private void assertSecondGreater(final String first, final String second)
     {
-        assertValidVersion(first.toString());
-        assertValidVersion(second.toString());
+        assertValidVersion(first);
+        assertValidVersion(second);
 
         // check both are reflexive
         assertBothSame(first, first);
@@ -119,17 +114,17 @@ public class TestVersionStringComparator extends TestCase
         assertEquals(first.toString() + " < " + second.toString(), -1, comparator.compare(first, second));
     }
 
-    private void assertValidVersion(String string)
+    private void assertValidVersion(final String string)
     {
         assertTrue(VersionStringComparator.isValidVersionString(string));
     }
 
-    private void assertInvalidVersion(String string)
+    private void assertInvalidVersion(final String string)
     {
         assertFalse(VersionStringComparator.isValidVersionString(string));
     }
 
-    private void assertBothSame(Object first, Object second)
+    private void assertBothSame(final String first, final String second)
     {
         assertEquals(first.toString() + " == " + second.toString(), 0, comparator.compare(first, second));
     }

@@ -1,11 +1,14 @@
 package com.atlassian.plugin;
 
+import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 
+import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.io.Serializable;
 
 /**
  * Represents a configuration state for plugins and plugin modules. The configuration state (enabled
@@ -20,22 +23,27 @@ import java.io.Serializable;
  */
 public class PluginManagerState implements Serializable
 {
-    private Map<String,Boolean> map = new HashMap<String,Boolean>();
+    private final Map<String, Boolean> map;
 
     public PluginManagerState()
     {
-
+        map = CopyOnWriteMap.newHashMap();
     }
 
-    public PluginManagerState(Map<String,Boolean> map)
+    public PluginManagerState(final Map<String, Boolean> map)
     {
-        this.map = map;
+        this.map = CopyOnWriteMap.newHashMap(map);
+    }
+
+    public PluginManagerState(final PluginManagerState state)
+    {
+        map = CopyOnWriteMap.newHashMap(state.getMap());
     }
 
     /**
      * Get the state of a given plugin.
      */
-    public Boolean getState(String key)
+    public Boolean getState(final String key)
     {
         return map.get(key);
     }
@@ -43,51 +51,70 @@ public class PluginManagerState implements Serializable
     /**
      * Get the map of all states.
      */
-    public Map<String,Boolean> getMap()
+    public Map<String, Boolean> getMap()
     {
-        return map;
+        return Collections.unmodifiableMap(map);
     }
 
     /**
      * Whether or not a plugin is enabled, calculated from it's current state AND default state.
      */
-    public boolean isEnabled(Plugin plugin)
+    public boolean isEnabled(final Plugin plugin)
     {
-        Boolean bool = getState(plugin.getKey());
+        final Boolean bool = getState(plugin.getKey());
         return (bool == null) ? plugin.isEnabledByDefault() : bool.booleanValue();
     }
 
     /**
      * Whether or not a given plugin module is enabled in this state, calculated from it's current state AND default state.
      */
-    public boolean isEnabled(ModuleDescriptor pluginModule)
+    public boolean isEnabled(final ModuleDescriptor<?> pluginModule)
     {
         if (pluginModule == null)
+        {
             return false;
-        
-        Boolean bool = getState(pluginModule.getCompleteKey());
+        }
+
+        final Boolean bool = getState(pluginModule.getCompleteKey());
         return (bool == null) ? pluginModule.isEnabledByDefault() : bool.booleanValue();
     }
 
     /**
      * Set a plugins state.
      */
-    public void setState(String key, Boolean enabled)
+    public void setState(final String key, final Boolean enabled)
     {
         map.put(key, enabled);
     }
 
     /**
+     * reset all plugin's state.
+     */
+    public void setState(final PluginManagerState state)
+    {
+        map.clear();
+        map.putAll(state.getMap());
+    }
+
+    /**
+     * Add the plugin state.
+     */
+    public void addState(final Map<String, Boolean> state)
+    {
+        map.putAll(state);
+    }
+
+    /**
      * Remove a plugin's state.
      */
-    public void removeState(String key)
+    public void removeState(final String key)
     {
         map.remove(key);
     }
 
-    public Map<String,Boolean> getPluginStateMap(final Plugin plugin)
+    public Map<String, Boolean> getPluginStateMap(final Plugin plugin)
     {
-        Map state = new HashMap<String,Boolean>(getMap());
+        final Map<String, Boolean> state = new HashMap<String, Boolean>(getMap());
         CollectionUtils.filter(state.keySet(), new StringStartsWith(plugin.getKey()));
         return state;
     }
@@ -96,14 +123,14 @@ public class PluginManagerState implements Serializable
     {
         private final String prefix;
 
-        public StringStartsWith(String keyPrefix)
+        public StringStartsWith(final String keyPrefix)
         {
-            this.prefix = keyPrefix;
+            prefix = keyPrefix;
         }
 
-        public boolean evaluate(Object object)
+        public boolean evaluate(final Object object)
         {
-            String str = (String) object;
+            final String str = (String) object;
             return str.startsWith(prefix);
         }
     }

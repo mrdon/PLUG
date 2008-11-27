@@ -1,6 +1,6 @@
 package com.atlassian.plugin;
 
-public interface ModuleDescriptorFactory<T, M extends ModuleDescriptor<T>>
+public interface ModuleDescriptorFactory<T, M extends ModuleDescriptor<? extends T>>
 {
     ModuleDescriptor<T> getModuleDescriptor(String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException;
 

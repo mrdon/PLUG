@@ -4,27 +4,30 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Resources;
 import com.atlassian.plugin.elements.ResourceDescriptor;
+
 import org.dom4j.Element;
 
 import java.util.Collections;
 
-public class UnrecognisedModuleDescriptor extends AbstractModuleDescriptor
+public class UnrecognisedModuleDescriptor<T> extends AbstractModuleDescriptor<T>
 {
     private String errorText;
 
-    public Object getModule()
+    @Override
+    public T getModule()
     {
         return null;
     }
 
-    public void init(Plugin plugin, Element element) throws PluginParseException
+    @Override
+    public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
-        this.key = element.attributeValue("key");
-        this.name = element.attributeValue("name");
-        this.description = element.elementTextTrim("description");
+        key = element.attributeValue("key");
+        name = element.attributeValue("name");
+        description = element.elementTextTrim("description");
 
         this.plugin = plugin;
-        this.resources = new Resources(Collections.<ResourceDescriptor>emptyList());
+        resources = new Resources(Collections.<ResourceDescriptor> emptyList());
     }
 
     @Override
@@ -39,7 +42,7 @@ public class UnrecognisedModuleDescriptor extends AbstractModuleDescriptor
         return errorText;
     }
 
-    public void setErrorText(String errorText)
+    public void setErrorText(final String errorText)
     {
         this.errorText = errorText;
     }
@@ -52,7 +55,7 @@ public class UnrecognisedModuleDescriptor extends AbstractModuleDescriptor
      *
      * @param key the key of the ModuleDescriptor
      */
-    public void setKey(String key)
+    public void setKey(final String key)
     {
         this.key = key;
     }
@@ -65,7 +68,7 @@ public class UnrecognisedModuleDescriptor extends AbstractModuleDescriptor
      *
      * @param name the name of the ModuleDescriptor
      */
-    public void setName(String name)
+    public void setName(final String name)
     {
         this.name = name;
     }

@@ -7,12 +7,12 @@ import com.atlassian.plugin.ModuleDescriptor;
  */
 public class ModuleOfClassPredicate<T> implements ModuleDescriptorPredicate<T>
 {
-    private final Class<T> moduleClass;
+    private final Class<? extends T> moduleClass;
 
     /**
      * @throws IllegalArgumentException if the moduleClass is <code>null</code>
      */
-    public ModuleOfClassPredicate(final Class<T> moduleClass)
+    public ModuleOfClassPredicate(final Class<? extends T> moduleClass)
     {
         if (moduleClass == null)
         {

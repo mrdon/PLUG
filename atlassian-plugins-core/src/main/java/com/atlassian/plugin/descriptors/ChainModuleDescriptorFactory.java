@@ -1,59 +1,56 @@
 package com.atlassian.plugin.descriptors;
 
-import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginParseException;
 
 /**
  * Module descriptor factory that checks multiple factories in sequence.  There is no attempt at caching the results.
  * @since 2.1
  */
-public class ChainModuleDescriptorFactory implements ModuleDescriptorFactory
+public class ChainModuleDescriptorFactory<T, M extends ModuleDescriptor<T>> implements ModuleDescriptorFactory<T, M>
 {
-    private final ModuleDescriptorFactory[] factories;
+    private final ModuleDescriptorFactory<T, M>[] factories;
 
-    public ChainModuleDescriptorFactory(ModuleDescriptorFactory... factories)
+    public ChainModuleDescriptorFactory(final ModuleDescriptorFactory<T, M>... factories)
     {
         this.factories = factories;
     }
 
-    public ModuleDescriptor getModuleDescriptor(String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
+    public ModuleDescriptor<T> getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
     {
-        ModuleDescriptor descriptor = null;
-        for (ModuleDescriptorFactory factory : factories)
+        for (final ModuleDescriptorFactory<T, M> factory : factories)
         {
             if (factory.hasModuleDescriptor(type))
             {
-                descriptor = factory.getModuleDescriptor(type);
-                break;
+                return factory.getModuleDescriptor(type);
             }
         }
-        return descriptor;
+        return null;
     }
 
-    public boolean hasModuleDescriptor(String type)
+    public boolean hasModuleDescriptor(final String type)
     {
-        boolean found = false;
-        for (ModuleDescriptorFactory factory : factories)
+        for (final ModuleDescriptorFactory<T, M> factory : factories)
         {
             if (factory.hasModuleDescriptor(type))
             {
-                found = true;
-                break;
+                return true;
             }
         }
-        return found;
+        return false;
     }
 
-    public Class<? extends ModuleDescriptor> getModuleDescriptorClass(String type)
+    public Class<M> getModuleDescriptorClass(final String type)
     {
-        Class<? extends ModuleDescriptor> descriptorClass = null;
-        for (ModuleDescriptorFactory factory : factories)
+        for (final ModuleDescriptorFactory<T, M> factory : factories)
         {
-            descriptorClass = factory.getModuleDescriptorClass(type);
+            final Class<M> descriptorClass = factory.getModuleDescriptorClass(type);
             if (descriptorClass != null)
-                break;
+            {
+                return descriptorClass;
+            }
         }
-        return descriptorClass;
+        return null;
     }
 }

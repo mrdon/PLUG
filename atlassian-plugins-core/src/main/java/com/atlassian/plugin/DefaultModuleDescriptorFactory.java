@@ -12,11 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public class DefaultModuleDescriptorFactory<T, M extends ModuleDescriptor<T>> implements ModuleDescriptorFactory<T, M>
+public class DefaultModuleDescriptorFactory<T, M extends ModuleDescriptor<? extends T>> implements ModuleDescriptorFactory<T, M>
 {
     private static Log log = LogFactory.getLog(DefaultModuleDescriptorFactory.class);
 
-    private final Map<String, Class<M>> moduleDescriptorClasses = CopyOnWriteMap.newHashMap();
+    private final Map<String, Class<? extends ModuleDescriptor<? extends T>>> moduleDescriptorClasses = CopyOnWriteMap.newHashMap();
     private final List<String> permittedModuleKeys = new ArrayList<String>();
 
     public DefaultModuleDescriptorFactory()
@@ -24,7 +24,9 @@ public class DefaultModuleDescriptorFactory<T, M extends ModuleDescriptor<T>> im
 
     public Class<M> getModuleDescriptorClass(final String type)
     {
-        return moduleDescriptorClasses.get(type);
+        @SuppressWarnings("unchecked")
+        final Class<M> result = (Class<M>) moduleDescriptorClasses.get(type);
+        return result;
     }
 
     public ModuleDescriptor<T> getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
@@ -41,7 +43,9 @@ public class DefaultModuleDescriptorFactory<T, M extends ModuleDescriptor<T>> im
             throw new PluginParseException("Cannot find ModuleDescriptor class for plugin of type '" + type + "'.");
         }
 
-        return moduleDescriptorClazz.newInstance();
+        @SuppressWarnings("unchecked")
+        final ModuleDescriptor<T> result = (ModuleDescriptor<T>) moduleDescriptorClazz.newInstance();
+        return result;
     }
 
     protected boolean shouldSkipModuleOfType(final String type)
@@ -56,7 +60,7 @@ public class DefaultModuleDescriptorFactory<T, M extends ModuleDescriptor<T>> im
     {
         for (final Entry<String, String> entry : moduleDescriptorClassNames.entrySet())
         {
-            final Class<M> descriptorClass = getClassFromEntry(entry);
+            final Class<? extends ModuleDescriptor<? extends T>> descriptorClass = getClassFromEntry(entry);
             if (descriptorClass != null)
             {
                 addModuleDescriptor(entry.getKey(), descriptorClass);
@@ -95,7 +99,7 @@ public class DefaultModuleDescriptorFactory<T, M extends ModuleDescriptor<T>> im
         return moduleDescriptorClasses.containsKey(type);
     }
 
-    public void addModuleDescriptor(final String type, final Class<M> moduleDescriptorClass)
+    public <N extends ModuleDescriptor<? extends T>> void addModuleDescriptor(final String type, final Class<? extends N> moduleDescriptorClass)
     {
         moduleDescriptorClasses.put(type, moduleDescriptorClass);
     }
@@ -105,7 +109,7 @@ public class DefaultModuleDescriptorFactory<T, M extends ModuleDescriptor<T>> im
         moduleDescriptorClasses.remove(type);
     }
 
-    protected Map<String, Class<M>> getDescriptorClassesMap()
+    protected Map<String, Class<? extends ModuleDescriptor<? extends T>>> getDescriptorClassesMap()
     {
         return Collections.unmodifiableMap(moduleDescriptorClasses);
     }

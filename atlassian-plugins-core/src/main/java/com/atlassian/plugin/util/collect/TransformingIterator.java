@@ -1,6 +1,6 @@
 package com.atlassian.plugin.util.collect;
 
-import static com.atlassian.plugin.util.concurrent.Assertions.notNull;
+import static com.atlassian.plugin.util.Assertions.notNull;
 
 import java.util.Iterator;
 

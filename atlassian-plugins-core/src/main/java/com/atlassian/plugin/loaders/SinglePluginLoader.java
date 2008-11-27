@@ -1,11 +1,17 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.parsers.DescriptorParser;
-import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
-import com.atlassian.plugin.parsers.DescriptorParserFactory;
-import com.atlassian.plugin.util.ClassLoaderUtils;
+import static com.atlassian.plugin.util.Assertions.notNull;
+
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.impl.StaticPlugin;
+import com.atlassian.plugin.parsers.DescriptorParser;
+import com.atlassian.plugin.parsers.DescriptorParserFactory;
+import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
+import com.atlassian.plugin.util.ClassLoaderUtils;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -24,27 +30,31 @@ import java.util.Collections;
  * @see ClassPathPluginLoader
  * @see DescriptorParser#isSystemPlugin()
  */
-public class SinglePluginLoader implements PluginLoader
+public class SinglePluginLoader<T> implements PluginLoader<T>
 {
     protected Collection<Plugin> plugins;
-    protected String resource;
-    protected InputStream is;
-    private DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
+    protected final String resource;
+    protected final InputStream is;
+    private final DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
 
-    public SinglePluginLoader(String resource)
+    public SinglePluginLoader(final String resource)
     {
-        this.resource = resource;
+        this.resource = notNull("resource", resource);
+        this.is = null;
     }
 
-    public SinglePluginLoader(InputStream is)
+    public SinglePluginLoader(final InputStream is)
     {
-        this.is = is;
+        this.is = notNull("inputStream", is);
+        this.resource = null;
     }
 
-    public Collection<Plugin> loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException
     {
         if (plugins == null)
+        {
             plugins = Collections.singleton(loadPlugin(moduleDescriptorFactory));
+        }
         return plugins;
     }
 
@@ -58,33 +68,37 @@ public class SinglePluginLoader implements PluginLoader
         return false;
     }
 
-    public Collection<Plugin> addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory)
+    public Collection<Plugin> addFoundPlugins(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory)
     {
         throw new UnsupportedOperationException("This PluginLoader does not support addition.");
     }
 
-    public void removePlugin(Plugin plugin) throws PluginException
+    public void removePlugin(final Plugin plugin) throws PluginException
     {
         throw new PluginException("This PluginLoader does not support removal.");
     }
 
-    protected Plugin loadPlugin(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    protected Plugin loadPlugin(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException
     {
-        InputStream source = getSource();
+        final InputStream source = getSource();
         if (source == null)
+        {
             throw new PluginParseException("Invalid resource or inputstream specified to load plugins from.");
+        }
 
         Plugin plugin;
         try
         {
-            DescriptorParser parser = descriptorParserFactory.getInstance(source);
+            final DescriptorParser parser = descriptorParserFactory.getInstance(source);
             plugin = parser.configurePlugin(moduleDescriptorFactory, getNewPlugin());
             if (parser.isSystemPlugin())
+            {
                 plugin.setSystemPlugin(true);
+            }
         }
-        catch (PluginParseException e)
+        catch (final PluginParseException e)
         {
-            throw new PluginParseException("Unable to load plugin resource: " + resource + " - " + e.getMessage() ,e);
+            throw new PluginParseException("Unable to load plugin resource: " + resource + " - " + e.getMessage(), e);
         }
 
         return plugin;
@@ -98,7 +112,9 @@ public class SinglePluginLoader implements PluginLoader
     protected InputStream getSource()
     {
         if (resource == null)
+        {
             return is;
+        }
 
         return ClassLoaderUtils.getResourceAsStream(resource, this.getClass());
     }

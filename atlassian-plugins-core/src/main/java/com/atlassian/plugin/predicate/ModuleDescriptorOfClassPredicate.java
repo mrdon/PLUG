@@ -12,19 +12,19 @@ import java.util.Collections;
 /**
  * A {@link ModuleDescriptorPredicate} that matches modules for which their descriptor is an instance of one of the given {@link Class}.
  */
-public class ModuleDescriptorOfClassPredicate<T, M extends ModuleDescriptor<T>> implements ModuleDescriptorPredicate<T>
+public class ModuleDescriptorOfClassPredicate<T> implements ModuleDescriptorPredicate<T>
 {
-    private final Collection<Class<M>> moduleDescriptorClasses;
+    private final Collection<Class<? extends ModuleDescriptor<? extends T>>> moduleDescriptorClasses;
 
-    public ModuleDescriptorOfClassPredicate(final Class<M> moduleDescriptorClass)
+    public ModuleDescriptorOfClassPredicate(final Class<? extends ModuleDescriptor<? extends T>> moduleDescriptorClass)
     {
-        moduleDescriptorClasses = Collections.singleton(moduleDescriptorClass);
+        moduleDescriptorClasses = Collections.<Class<? extends ModuleDescriptor<? extends T>>> singleton(moduleDescriptorClass);
     }
 
     /**
      * @throws IllegalArgumentException if the moduleDescriptorClasses is <code>null</code>
      */
-    public ModuleDescriptorOfClassPredicate(final Class<M>[] moduleDescriptorClasses)
+    public ModuleDescriptorOfClassPredicate(final Class<? extends ModuleDescriptor<? extends T>>[] moduleDescriptorClasses)
     {
         if (moduleDescriptorClasses == null)
         {
