@@ -117,14 +117,4 @@ public class Timeout
 
         TimeUnit precision();
     }
-
-    public static void main(final String[] args) throws InterruptedException
-    {
-        final Timeout timeout = Timeout.getMillisTimeout(10, TimeUnit.SECONDS);
-        while (!timeout.isExpired())
-        {
-            Thread.sleep(100);
-            System.out.println(timeout.getRemaining());
-        }
-    }
 }
