@@ -95,7 +95,7 @@ public class Timeout
 
     public String getRemaining()
     {
-        return getTime() + " " + getUnit() + " remaining";
+        return TimeUnit.SECONDS.convert(getTime(), getUnit()) + " seconds remaining";
     }
 
     /**
@@ -116,5 +116,15 @@ public class Timeout
         long currentTime();
 
         TimeUnit precision();
+    }
+
+    public static void main(final String[] args) throws InterruptedException
+    {
+        final Timeout timeout = Timeout.getMillisTimeout(10, TimeUnit.SECONDS);
+        while (!timeout.isExpired())
+        {
+            Thread.sleep(100);
+            System.out.println(timeout.getRemaining());
+        }
     }
 }
