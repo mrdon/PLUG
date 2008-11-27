@@ -174,9 +174,23 @@ public class PluginResourceDownload implements DownloadStrategy
         };
     }
 
+    /**
+     * @deprecated since 2.2.0, use {@link #setPluginAccessor(PluginAccessor)} instead
+     */
+    @Deprecated
     public void setPluginManager(PluginManager pluginManager)
     {
-        this.pluginAccessor = pluginManager;
+        setPluginAccessor(pluginManager);
+    }
+
+    /**
+     * Sets the plugin accessor
+     * @param pluginAccessor the plugin accessor
+     * @since 2.2.0
+     */
+    public void setPluginAccessor(PluginAccessor pluginAccessor)
+    {
+        this.pluginAccessor = pluginAccessor;
     }
 
     public void setContentTypeResolver(ContentTypeResolver contentTypeResolver)
