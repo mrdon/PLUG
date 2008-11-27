@@ -471,7 +471,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                             log.info("Uninstalling existing version " + oldBundle.getHeaders().get(Constants.BUNDLE_VERSION));
                             oldBundle.uninstall();
 
-                            packageAdmin.refreshPackages(new Bundle[]{oldBundle});
+                            //packageAdmin.refreshPackages(new Bundle[]{oldBundle});
                         }
                     }
 
