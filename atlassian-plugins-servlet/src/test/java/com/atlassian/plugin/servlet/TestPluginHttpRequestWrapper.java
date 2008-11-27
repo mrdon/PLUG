@@ -10,29 +10,31 @@ import com.mockobjects.dynamic.Mock;
 
 public class TestPluginHttpRequestWrapper extends TestCase
 {
-    Mock mockWrappedRequest;
-    ServletModuleDescriptor descriptor;
-    
-    PluginHttpRequestWrapper request;
-    
-    public void setUp()
+
+    public void testWildcardMatching()
     {
-        mockWrappedRequest = new Mock(HttpServletRequest.class);
-        mockWrappedRequest.matchAndReturn("getServletPath", "/context/plugins");
-        mockWrappedRequest.matchAndReturn("getPathInfo", "/plugin/servlet/path/to/resource");
-        
-        descriptor = new ServletModuleDescriptorBuilder().withPath("/plugin/servlet/*").build();
-        
-        request = new PluginHttpRequestWrapper((HttpServletRequest) mockWrappedRequest.proxy(), descriptor);
+        PluginHttpRequestWrapper request = getWrappedRequest("/context/plugins", "/plugin/servlet/path/to/resource",
+            new ServletModuleDescriptorBuilder().withPath("/plugin/servlet/*").build());
+
+        assertEquals("/path/to/resource", request.getPathInfo());
+        assertEquals("/context/plugins/plugin/servlet", request.getServletPath());
     }
 
-    public void testGetPathInfo()
+    public void testExactPathMatching()
     {
-        assertEquals("/path/to/resource", request.getPathInfo());
-    }
-    
-    public void testGetServletPath()
-    {
+        PluginHttpRequestWrapper request = getWrappedRequest("/context/plugins", "/plugin/servlet",
+            new ServletModuleDescriptorBuilder().withPath("/plugin/servlet").build());
+
+        assertNull(request.getPathInfo());
         assertEquals("/context/plugins/plugin/servlet", request.getServletPath());
+    }
+
+    private PluginHttpRequestWrapper getWrappedRequest(String servletPath, String pathInfo,
+        ServletModuleDescriptor servletModuleDescriptor)
+    {
+        Mock mockWrappedRequest = new Mock(HttpServletRequest.class);
+        mockWrappedRequest.matchAndReturn("getServletPath", servletPath);
+        mockWrappedRequest.matchAndReturn("getPathInfo", pathInfo);
+        return new PluginHttpRequestWrapper((HttpServletRequest) mockWrappedRequest.proxy(), servletModuleDescriptor);
     }
 }
