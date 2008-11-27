@@ -3,10 +3,11 @@ package com.atlassian.plugin.osgi.hostcomponents.impl;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 
 import java.util.Dictionary;
+import java.util.Hashtable;
 
 public class MockRegistration implements HostComponentRegistration
 {
-    private Dictionary<String,String> properties;
+    private Dictionary<String,String> properties = new Hashtable<String,String>();
     private Class[] mainInterfaceClasses;
     private String[] mainInterfaces;
     private Object instance;

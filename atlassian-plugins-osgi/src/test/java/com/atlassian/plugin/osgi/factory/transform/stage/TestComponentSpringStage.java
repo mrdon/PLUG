@@ -1,16 +1,17 @@
-package com.atlassian.plugin.osgi.factory.transform;
+package com.atlassian.plugin.osgi.factory.transform.stage;
 
 import junit.framework.TestCase;
+import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import java.io.IOException;
 
-public class TestComponentSpringTransformer extends TestCase
+public class TestComponentSpringStage extends TestCase
 {
-    public void testTransform() throws IOException
+    public void testTransform() throws IOException, DocumentException
     {
-        ComponentSpringTransformer transformer = new ComponentSpringTransformer();
+        ComponentSpringStage transformer = new ComponentSpringStage();
 
         // private component
         Element pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
@@ -41,9 +42,5 @@ public class TestComponentSpringTransformer extends TestCase
                                                                        "//osgi:interfaces",
                                                                        "//beans:value[.='my.IFoo']");
 
-        // No component
-        pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
-        SpringTransformerTestHelper.transform(transformer, pluginRoot, "count(/atlassian-plugin/child::*)=0");
     }
-
 }

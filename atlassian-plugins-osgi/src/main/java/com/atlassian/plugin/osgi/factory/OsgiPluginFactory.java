@@ -45,7 +45,7 @@ public class OsgiPluginFactory implements PluginFactory
         Validate.notNull(pluginDescriptorFileName, "Plugin descriptor is required");
         Validate.notNull(osgi, "The OSGi container is required");
 
-        pluginTransformer = new DefaultPluginTransformer();
+        pluginTransformer = new DefaultPluginTransformer(pluginDescriptorFileName);
         this.osgi = osgi;
         this.pluginDescriptorFileName = pluginDescriptorFileName;
         this.descriptorParserFactory = new OsgiPluginXmlDescriptorParserFactory();

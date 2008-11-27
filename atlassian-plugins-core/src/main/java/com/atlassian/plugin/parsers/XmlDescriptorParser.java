@@ -41,6 +41,18 @@ public class XmlDescriptorParser implements DescriptorParser
         document = createDocument(source);
     }
 
+    /**
+     * Constructs a parser with an already-constructed document
+     * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
+     * @since 2.2.0
+     */
+    public XmlDescriptorParser(Document source) throws PluginParseException
+    {
+        if (source == null)
+            throw new IllegalArgumentException("source cannot be null");
+        document = source;
+    }
+
     protected Document createDocument(InputStream source) throws PluginParseException
     {
         SAXReader reader = new SAXReader();
