@@ -8,7 +8,7 @@
 </head>
     <h2>Plugins</h2>
     <ul>
-<% for (Object plugin : ContainerManager.getInstance().getPluginManager().getPlugins()) {
+<% for (Object plugin : ContainerManager.getInstance().getPluginAccessor().getPlugins()) {
     Plugin p = (Plugin) plugin;
 %>
         <li><%=p.getKey()%></li>

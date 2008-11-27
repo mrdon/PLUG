@@ -22,7 +22,7 @@ public class InitListener implements ServletContextListener {
         Logger.getLogger(InitListener.class).info("Logging initialized.");
         ContainerManager.setInstance(new ContainerManager(sce.getServletContext()));
         ContainerManager mgr = ContainerManager.getInstance();
-        mgr.getPluginManager().getPlugins();
+        mgr.getPluginAccessor().getPlugins();
     }
 
     public void contextDestroyed(ServletContextEvent sce) {

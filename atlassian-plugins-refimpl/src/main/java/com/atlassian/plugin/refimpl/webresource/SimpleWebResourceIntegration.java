@@ -31,7 +31,7 @@ public class SimpleWebResourceIntegration implements WebResourceIntegration
 
     public PluginAccessor getPluginAccessor()
     {
-        return ContainerManager.getInstance().getPluginManager();
+        return ContainerManager.getInstance().getPluginAccessor();
     }
 
     public Map getRequestCache()

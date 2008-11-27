@@ -35,7 +35,7 @@
         </dependency>
         <dependency>
             <groupId>com.atlassian.plugins</groupId>
-            <artifactId>atlassian-plugins-osgi</artifactId>
+            <artifactId>atlassian-plugins-main</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
