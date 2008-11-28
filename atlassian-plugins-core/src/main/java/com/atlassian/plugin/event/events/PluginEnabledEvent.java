@@ -2,6 +2,9 @@ package com.atlassian.plugin.event.events;
 
 import com.atlassian.plugin.Plugin;
 
+/**
+ * Event fired when a plugin is enabled, installed or updated.
+ */
 public class PluginEnabledEvent
 {
     private final Plugin plugin;

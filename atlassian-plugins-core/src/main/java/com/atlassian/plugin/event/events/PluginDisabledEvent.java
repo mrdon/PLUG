@@ -3,7 +3,7 @@ package com.atlassian.plugin.event.events;
 import com.atlassian.plugin.Plugin;
 
 /**
- * Event that signifies a plugin has been shutdown
+ * Event that signifies a plugin has been disabled, uninstalled or updated
  */
 public class PluginDisabledEvent
 {
