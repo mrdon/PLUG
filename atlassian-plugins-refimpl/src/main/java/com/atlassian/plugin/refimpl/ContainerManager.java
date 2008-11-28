@@ -77,7 +77,7 @@ public class ContainerManager
                 .setModuleDescriptorFactory(moduleDescriptorFactory)
                 .setPackageScannerConfiguration(scannerConfig)
                 .setHostComponentProvider(hostComponentProvider)
-                .setFrameworkBundlesDirectory()
+                .setFrameworkBundlesDirectory(bundlesDir)
                 .build();
         plugins = new AtlassianPlugins(config);
 
