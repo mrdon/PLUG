@@ -53,6 +53,11 @@ public class ContainerManager
         {
             pluginDir.mkdirs();
         }
+        File bundlesDir = new File(servletContext.getRealPath("/WEB-INF/framework-bundles"));
+        if (!bundlesDir.exists())
+        {
+            bundlesDir.mkdirs();
+        }
 
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
         moduleDescriptorFactory.addModuleDescriptor("servlet", SimpleServletModuleDescriptor.class);
@@ -72,7 +77,7 @@ public class ContainerManager
                 .setModuleDescriptorFactory(moduleDescriptorFactory)
                 .setPackageScannerConfiguration(scannerConfig)
                 .setHostComponentProvider(hostComponentProvider)
-                .setFrameworkBundlesDirectory(new File(servletContext.getRealPath("/WEB-INF/framework-bundles")))
+                .setFrameworkBundlesDirectory()
                 .build();
         plugins = new AtlassianPlugins(config);
 
