@@ -386,7 +386,8 @@ public class DefaultPluginManager implements PluginManager
 
         for (Plugin plugin : pluginsToAdd)
             if (plugin.isEnabled())
-                enablePluginModules(plugin);
+                // This method enables the plugin modules
+                notifyPluginEnabled(plugin);
 
     }
 
@@ -746,7 +747,6 @@ public class DefaultPluginManager implements PluginManager
      */
     protected void notifyPluginEnabled(Plugin plugin)
     {
-        plugin.setEnabled(true);
         classLoader.notifyPluginOrModuleEnabled();
         enablePluginModules(plugin);
         pluginEventManager.broadcast(new PluginEnabledEvent(plugin));

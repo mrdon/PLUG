@@ -3,6 +3,10 @@ package com.atlassian.plugin;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginEnabledEvent;
+import com.atlassian.plugin.event.events.PluginDisabledEvent;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -59,7 +63,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders = new ArrayList<PluginLoader>();
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
 
-        manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
+        manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, pluginEventManager);
     }
 
     protected void tearDown() throws Exception
@@ -153,6 +157,9 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPluginLoader.expectAndReturn("loadAllPlugins", C.ANY_ARGS, Collections.singletonList(plugin));
 
         pluginLoaders.add((PluginLoader) mockPluginLoader.proxy());
+
+        pluginEventManager.register(new FailListener(PluginEnabledEvent.class));
+
         manager.init();
 
         assertEquals(1, manager.getPlugins().size());
@@ -192,6 +199,12 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("bullshit", MockUnusedModuleDescriptor.class);
+
+        PassListener enabledListener = new PassListener(PluginEnabledEvent.class);
+        PassListener disabledListener = new PassListener(PluginDisabledEvent.class);
+        pluginEventManager.register(enabledListener);
+        pluginEventManager.register(disabledListener);
+
         manager.init();
 
         // check non existant plugins don't show
@@ -216,6 +229,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertFalse(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
         assertFalse(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
         assertEquals(new MockBear(), manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).get(0));
+        enabledListener.assertCalled();
 
         // now only retrieve via always retrieve methods
         manager.disablePlugin(pluginKey);
@@ -226,6 +240,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertTrue(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
         assertTrue(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
         assertTrue(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
+        disabledListener.assertCalled();
 
         // now enable again and check back to start
         manager.enablePlugin(pluginKey);
@@ -236,8 +251,10 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertFalse(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
         assertFalse(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
         assertFalse(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
+        enabledListener.assertCalled();
 
         // now let's disable the module, but not the plugin
+        pluginEventManager.register(new FailListener(PluginEnabledEvent.class));
         manager.disablePluginModule(moduleKey);
         assertNotNull(manager.getPlugin(pluginKey));
         assertNotNull(manager.getEnabledPlugin(pluginKey));
@@ -248,6 +265,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertTrue(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
 
         // now enable the module again
+        pluginEventManager.register(new FailListener(PluginDisabledEvent.class));
         manager.enablePluginModule(moduleKey);
         assertNotNull(manager.getPlugin(pluginKey));
         assertNotNull(manager.getEnabledPlugin(pluginKey));
@@ -256,7 +274,6 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertFalse(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
         assertFalse(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
         assertFalse(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
-
     }
 
     public void testDuplicatePluginKeysAreBad() throws PluginParseException
@@ -720,6 +737,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(2, manager.getPlugins().size());
         MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
         assertFalse(moduleDescriptor.disabled);
+        PassListener disabledListener = new PassListener(PluginDisabledEvent.class);
+        pluginEventManager.register(disabledListener);
         manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded"));
         assertTrue("Module must have had disable() called before being removed", moduleDescriptor.disabled);
 
@@ -729,6 +748,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(1, manager.getPlugins().size());
         assertNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
         assertEquals(1, pluginsTestDir.listFiles().length);
+        disabledListener.assertCalled();
     }
 
     public void testNonRemovablePlugins() throws PluginParseException
@@ -960,7 +980,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         DefaultPluginManager pluginManager = new DefaultPluginManager(
                 (PluginStateStore) mockPluginStateStore.proxy(),
                 Collections.<PluginLoader>singletonList((PluginLoader) mockPluginLoader.proxy()),
-                moduleDescriptorFactory, new DefaultPluginEventManager()
+                moduleDescriptorFactory, pluginEventManager
         );
 
         Plugin plugin = (Plugin) mockPlugin.proxy();
@@ -985,6 +1005,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         pluginManager.setPluginInstaller((PluginInstaller) mockRepository.proxy());
         pluginManager.init();
+        PassListener enabledListener = new PassListener(PluginEnabledEvent.class);
+        pluginEventManager.register(enabledListener);
         pluginManager.installPlugin(pluginArtifact);
 
         assertEquals(plugin, pluginManager.getPlugin("test"));
@@ -997,6 +1019,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockDescriptorParserFactory.verify();
         mockPluginLoader.verify();
         mockPluginStateStore.verify();
+        enabledListener.assertCalled();
     }
 
     private void checkResources(PluginAccessor manager, boolean canGetGlobal, boolean canGetModule) throws IOException
@@ -1362,6 +1385,60 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         public void disabled()
         {
+        }
+    }
+
+    public static class FailListener
+    {
+        private final Class clazz;
+
+        private FailListener(Class clazz)
+        {
+            this.clazz = clazz;
+        }
+
+        public void channel(Object o)
+        {
+            if (clazz.isInstance(o))
+            {
+                fail("Event thrown of type " + clazz.getName());
+            }
+        }
+    }
+
+    public static class PassListener
+    {
+        private final Class clazz;
+        private int called = 0;
+
+        private PassListener(Class clazz)
+        {
+            this.clazz = clazz;
+        }
+
+        public void channel(Object o)
+        {
+            if (clazz.isInstance(o))
+            {
+                called++;
+            }
+        }
+
+        public void assertCalled()
+        {
+            assertTrue("Event not thrown " + clazz.getName(), called > 0);
+            reset();
+        }
+
+        public void assertCalled(int times)
+        {
+            assertEquals("Event not thrown " + clazz.getName(), times, called);
+            reset();
+        }
+
+        public void reset()
+        {
+            called = 0;
         }
     }
 }
