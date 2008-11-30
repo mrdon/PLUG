@@ -1,6 +1,7 @@
 package com.atlassian.plugin.web;
 
 import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.web.descriptors.*;
 
 import java.util.*;
@@ -13,7 +14,7 @@ import org.apache.commons.logging.Log;
  */
 public class DefaultWebInterfaceManager implements WebInterfaceManager
 {
-    private PluginManager pluginManager;
+    private PluginAccessor pluginAccessor;
     private WebFragmentHelper webFragmentHelper;
     private Map<String,List<WebSectionModuleDescriptor>> sections;
     private Map<String,List<WebItemModuleDescriptor>> items;
@@ -26,9 +27,9 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         refresh();
     }
 
-    public DefaultWebInterfaceManager(PluginManager pluginManager, WebFragmentHelper webFragmentHelper)
+    public DefaultWebInterfaceManager(PluginAccessor pluginAccessor, WebFragmentHelper webFragmentHelper)
     {
-        this.pluginManager = pluginManager;
+        this.pluginAccessor = pluginAccessor;
         this.webFragmentHelper = webFragmentHelper;
         refresh();
     }
@@ -50,7 +51,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         if (result == null)
         {
             result = new ArrayList<WebSectionModuleDescriptor>(); // use a tree map so we get nice weight sorting
-            List<WebSectionModuleDescriptor> descriptors = pluginManager.getEnabledModuleDescriptorsByClass(WebSectionModuleDescriptor.class);
+            List<WebSectionModuleDescriptor> descriptors = pluginAccessor.getEnabledModuleDescriptorsByClass(WebSectionModuleDescriptor.class);
             for (Iterator iterator = descriptors.iterator(); iterator.hasNext();)
             {
                 WebSectionModuleDescriptor descriptor = (WebSectionModuleDescriptor) iterator.next();
@@ -82,7 +83,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         if (result == null)
         {
             result = new ArrayList<WebItemModuleDescriptor>(); // use a tree map so we get nice weight sorting
-            List<WebItemModuleDescriptor> descriptors = pluginManager.getEnabledModuleDescriptorsByClass(WebItemModuleDescriptor.class);
+            List<WebItemModuleDescriptor> descriptors = pluginAccessor.getEnabledModuleDescriptorsByClass(WebItemModuleDescriptor.class);
             for (Iterator iterator = descriptors.iterator(); iterator.hasNext();)
             {
                 WebItemModuleDescriptor descriptor = (WebItemModuleDescriptor) iterator.next();
@@ -136,9 +137,23 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         items = Collections.synchronizedMap(new HashMap());
     }
 
+    /**
+     * @deprecated since 2.2.0, use {@link #setPluginAccessor(PluginAccessor)} instead
+     * @param pluginManager
+     */
+    @Deprecated
     public void setPluginManager(PluginManager pluginManager)
     {
-        this.pluginManager = pluginManager;
+        setPluginAccessor(pluginManager);
+    }
+
+    /**
+     * @param pluginAccessor The plugin accessor to set
+     * @since 2.2.0
+     */
+    public void setPluginAccessor(PluginAccessor pluginAccessor)
+    {
+        this.pluginAccessor = pluginAccessor;
     }
 
     public void setWebFragmentHelper(WebFragmentHelper webFragmentHelper)
