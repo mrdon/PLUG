@@ -1,6 +1,7 @@
 package com.atlassian.plugin.servlet.filter;
 
 import com.atlassian.plugin.servlet.ServletModuleManager;
+import com.atlassian.plugin.hostcontainer.HostContainerAccessor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -22,7 +23,7 @@ import java.io.IOException;
  *
  * @since 2.1.0
  */
-public abstract class ServletFilterModuleContainerFilter implements Filter
+public class ServletFilterModuleContainerFilter implements Filter
 {
     private static final Log log = LogFactory.getLog(ServletFilterModuleContainerFilter.class);
 
@@ -59,9 +60,13 @@ public abstract class ServletFilterModuleContainerFilter implements Filter
     }
 
     /**
-     * Retrieve the DefaultServletModuleManager from your container framework.
+     * Retrieve the DefaultServletModuleManager from your container framework.  Uses the {@link HostContainerAccessor}
+     * by default.
      */
-    protected abstract ServletModuleManager getServletModuleManager();
+    protected ServletModuleManager getServletModuleManager()
+    {
+        return HostContainerAccessor.getHostContainer().getInstance(ServletModuleManager.class);
+    }
 
     protected final FilterConfig getFilterConfig()
     {

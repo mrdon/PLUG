@@ -6,10 +6,8 @@ import javax.servlet.Filter;
 
 import org.dom4j.Element;
 
-import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.StateAware;
+import com.atlassian.plugin.*;
+import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
 
@@ -34,14 +32,38 @@ import com.atlassian.plugin.servlet.filter.FilterLocation;
  *
  * @since 2.1.0
  */
-public abstract class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<Filter> implements StateAware
+public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<Filter> implements StateAware
 {
     static final String DEFAULT_LOCATION = FilterLocation.BEFORE_DISPATCH.name();
     static final String DEFAULT_WEIGHT = "100";
     
     private FilterLocation location;
+
     private int weight;
-    
+    private final ServletModuleManager servletModuleManager;
+    private final HostContainer hostContainer;
+
+    /**
+     * @deprecated Since 2.2.0, don't extend and use {@link #ServletFilterModuleDescriptor(com.atlassian.plugin.hostcontainer.HostContainer ,ServletModuleManager)} instead
+     */
+    @Deprecated
+    public ServletFilterModuleDescriptor()
+    {
+        this(null, null);
+    }
+
+    /**
+     * Creates a descriptor that uses a module factory to create instances
+     *
+     * @param hostContainer The module factory
+     * @since 2.2.0
+     */
+    public ServletFilterModuleDescriptor(HostContainer hostContainer, ServletModuleManager servletModuleManager)
+    {
+        this.hostContainer = hostContainer;
+        this.servletModuleManager = servletModuleManager;
+    }
+
     public static final Comparator<ServletFilterModuleDescriptor> byWeight = new Comparator<ServletFilterModuleDescriptor>()
     {
         public int compare(ServletFilterModuleDescriptor lhs, ServletFilterModuleDescriptor rhs)
@@ -49,7 +71,7 @@ public abstract class ServletFilterModuleDescriptor extends BaseServletModuleDes
             return Integer.valueOf(lhs.getWeight()).compareTo(rhs.getWeight());
         }
     };
-    
+
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);
@@ -87,8 +109,15 @@ public abstract class ServletFilterModuleDescriptor extends BaseServletModuleDes
                 filter = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
             else
             {
-                filter = getModuleClass().newInstance();
-                autowireObject(filter);
+                if (hostContainer != null)
+                {
+                    filter = hostContainer.create(getModuleClass());
+                }
+                else
+                {
+                    filter = getModuleClass().newInstance();
+                    autowireObject(filter);
+                }
             }
         }
         catch (InstantiationException e)
@@ -113,12 +142,26 @@ public abstract class ServletFilterModuleDescriptor extends BaseServletModuleDes
     }
 
     /**
-     * Autowire an object. Implement this in your IoC framework or simply do nothing.
+     * @deprecated Since 2.2.0, don't extend and use a {@link com.atlassian.plugin.hostcontainer.HostContainer} instead
      */
-    protected abstract void autowireObject(Object obj);
+    @Deprecated
+    protected void autowireObject(Object obj)
+    {
+        throw new UnsupportedOperationException("This method must be overridden if a HostContainer is not used");
+    }
 
     /**
-     * Retrieve the DefaultServletModuleManager class from your container framework.
+     * @deprecated Since 2.2.0, don't extend and use a {@link com.atlassian.plugin.hostcontainer.HostContainer} instead
      */
-    protected abstract ServletModuleManager getServletModuleManager();
+    @Deprecated
+    protected ServletModuleManager getServletModuleManager()
+    {
+        if (servletModuleManager == null)
+        {
+            throw new IllegalStateException("This method must be implemented if a HostContainer is not used");
+        }
+
+        return servletModuleManager;
+    }
+
 }

@@ -11,13 +11,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import com.atlassian.plugin.hostcontainer.HostContainerAccessor;
 
 /**
  * Applications need to create a concrete subclass of this for use in their webapp.  This servlets responsiblity
  * is to retrieve the servlet to be used to serve the request from the {@link ServletModuleManager}.  If no servlet
  * can be found to serve the request, a 404 should be sent back to the client.
  */
-public abstract class ServletModuleContainerServlet extends HttpServlet
+public class ServletModuleContainerServlet extends HttpServlet
 {
     private static final Log log = LogFactory.getLog(ServletModuleContainerServlet.class);
     private ServletConfig servletConfig;
@@ -63,7 +64,11 @@ public abstract class ServletModuleContainerServlet extends HttpServlet
     }
 
     /**
-     * Retrieve the ServletModuleManager from your container framework.
+     * Retrieve the DefaultServletModuleManager from your container framework.  Uses the {@link com.atlassian.plugin.hostcontainer.HostContainerAccessor}
+     * by default.
      */
-    protected abstract ServletModuleManager getServletModuleManager();
+    protected ServletModuleManager getServletModuleManager()
+    {
+        return HostContainerAccessor.getHostContainer().getInstance(ServletModuleManager.class);
+    }
 }

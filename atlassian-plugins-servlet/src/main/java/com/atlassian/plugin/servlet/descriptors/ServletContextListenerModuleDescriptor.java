@@ -6,6 +6,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.atlassian.plugin.AutowireCapablePlugin;
+import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
 /**
@@ -15,9 +16,31 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
  *
  * @since 2.1.0
  */
-public abstract class ServletContextListenerModuleDescriptor extends AbstractModuleDescriptor<ServletContextListener>
+public class ServletContextListenerModuleDescriptor extends AbstractModuleDescriptor<ServletContextListener>
 {
     protected static final Log log = LogFactory.getLog(ServletContextListenerModuleDescriptor.class);
+
+    protected final HostContainer hostContainer;
+
+    /**
+     * @deprecated Since 2.2.0, don't extend and use {@link #ServletContextListenerModuleDescriptor(com.atlassian.plugin.hostcontainer.HostContainer)} instead
+     */
+    @Deprecated
+    public ServletContextListenerModuleDescriptor()
+    {
+        this(null);
+    }
+
+    /**
+     * Creates a descriptor that uses a module factory to create instances
+     *
+     * @param hostContainer The module factory
+     * @since 2.2.0
+     */
+    public ServletContextListenerModuleDescriptor(HostContainer hostContainer)
+    {
+        this.hostContainer = hostContainer;
+    }
 
     @Override
     public ServletContextListener getModule()
@@ -30,8 +53,15 @@ public abstract class ServletContextListenerModuleDescriptor extends AbstractMod
                 obj = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
             else
             {
-                obj = getModuleClass().newInstance();
-                autowireObject(obj);
+                if (hostContainer != null)
+                {
+                    obj = hostContainer.create(getModuleClass());
+                }
+                else
+                {
+                    obj = getModuleClass().newInstance();
+                    autowireObject(obj);
+                }
             }
         }
         catch (InstantiationException e)
@@ -46,7 +76,12 @@ public abstract class ServletContextListenerModuleDescriptor extends AbstractMod
     }
 
     /**
-     * Autowire an object. Implement this in your IoC framework or simply do nothing.
+     * @deprecated Since 2.2.0, don't extend and use a {@link com.atlassian.plugin.hostcontainer.HostContainer} instead
      */
-    protected abstract void autowireObject(Object obj);
+    @Deprecated
+    protected void autowireObject(Object obj)
+    {
+        throw new UnsupportedOperationException("This method must be overridden if a HostContainer is not used");
+    }
+
 }

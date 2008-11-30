@@ -1,6 +1,10 @@
 package com.atlassian.plugin.refimpl;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
+import com.atlassian.plugin.hostcontainer.HostContainer;
+import com.atlassian.plugin.hostcontainer.HostContainerAccessor;
+import com.atlassian.plugin.hostcontainer.SingletonHostContainerAccessor;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.main.AtlassianPlugins;
 import com.atlassian.plugin.main.PluginsConfiguration;
@@ -9,12 +13,12 @@ import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.refimpl.servlet.SimpleContextListenerModuleDescriptor;
-import com.atlassian.plugin.refimpl.servlet.SimpleFilterModuleDescriptor;
-import com.atlassian.plugin.refimpl.servlet.SimpleServletModuleDescriptor;
 import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
 import com.atlassian.plugin.servlet.*;
 import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletContextListenerModuleDescriptor;
 import com.atlassian.plugin.webresource.WebResourceIntegration;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
@@ -38,6 +42,7 @@ public class ContainerManager
     private final DefaultModuleDescriptorFactory moduleDescriptorFactory;
     private final Map<Class,Object> publicContainer;
     private final AtlassianPlugins plugins;
+    private final HostContainer hostContainer;
 
     private static ContainerManager instance;
     private List<DownloadStrategy> downloadStrategies;
@@ -59,11 +64,28 @@ public class ContainerManager
             bundlesDir.mkdirs();
         }
 
-        moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
-        moduleDescriptorFactory.addModuleDescriptor("servlet", SimpleServletModuleDescriptor.class);
-        moduleDescriptorFactory.addModuleDescriptor("servlet-filter", SimpleFilterModuleDescriptor.class);
+        // Delegating host container since the real one requires the created object map, which won't be available
+        // until later
+        HostContainerAccessor.setHostContainerAccessor(new SingletonHostContainerAccessor(new HostContainer()
+        {
+            public <T> T create(Class<T> moduleClass) throws IllegalArgumentException
+            {
+                return hostContainer.create(moduleClass);
+            }
+
+            public <T> T getInstance(Class<T> moduleClass)
+            {
+                return hostContainer.getInstance(moduleClass);
+            }
+        }));
+
+        moduleDescriptorFactory = new DefaultModuleDescriptorFactory(HostContainerAccessor.getHostContainer());
+
+
+        moduleDescriptorFactory.addModuleDescriptor("servlet", ServletModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("servlet-filter", ServletFilterModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("servlet-context-param", ServletContextParamModuleDescriptor.class);
-        moduleDescriptorFactory.addModuleDescriptor("servlet-context-listener", SimpleContextListenerModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("servlet-context-listener", ServletContextListenerModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("web-resource", WebResourceModuleDescriptor.class);
 
         DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
@@ -92,8 +114,10 @@ public class ContainerManager
         publicContainer.put(PluginController.class, plugins.getPluginController());
         publicContainer.put(PluginAccessor.class, pluginAccessor);
         publicContainer.put(PluginEventManager.class, pluginEventManager);
+        publicContainer.put(ServletModuleManager.class, servletModuleManager);
         publicContainer.put(Map.class, publicContainer);
 
+        hostContainer = new SimpleConstructorHostContainer(publicContainer);
 
         try {
             plugins.start();

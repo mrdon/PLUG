@@ -2,6 +2,7 @@ package com.atlassian.plugin;
 
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
+import com.atlassian.plugin.hostcontainer.HostContainer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -18,9 +19,17 @@ public class DefaultModuleDescriptorFactory<T, M extends ModuleDescriptor<? exte
 
     private final Map<String, Class<? extends ModuleDescriptor<? extends T>>> moduleDescriptorClasses = CopyOnWriteMap.newHashMap();
     private final List<String> permittedModuleKeys = new ArrayList<String>();
+    private final HostContainer hostContainer;
 
     public DefaultModuleDescriptorFactory()
-    {}
+    {
+        this.hostContainer = null;
+    }
+
+    public DefaultModuleDescriptorFactory(HostContainer hostContainer)
+    {
+        this.hostContainer = hostContainer;
+    }
 
     public Class<M> getModuleDescriptorClass(final String type)
     {
@@ -44,7 +53,16 @@ public class DefaultModuleDescriptorFactory<T, M extends ModuleDescriptor<? exte
         }
 
         @SuppressWarnings("unchecked")
-        final ModuleDescriptor<T> result = (ModuleDescriptor<T>) moduleDescriptorClazz.newInstance();
+        ModuleDescriptor<T> result;
+        if (hostContainer != null)
+        {
+            result = (ModuleDescriptor<T>) hostContainer.create(moduleDescriptorClazz);
+        }
+        else
+        {
+            result = (ModuleDescriptor<T>) moduleDescriptorClazz.newInstance();
+        }
+
         return result;
     }
 

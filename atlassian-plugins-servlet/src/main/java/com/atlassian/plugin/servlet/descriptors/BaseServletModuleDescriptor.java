@@ -12,6 +12,7 @@ import org.dom4j.Element;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
 /**

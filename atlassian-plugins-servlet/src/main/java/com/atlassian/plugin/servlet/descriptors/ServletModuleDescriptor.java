@@ -4,14 +4,39 @@ import javax.servlet.http.HttpServlet;
 
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.StateAware;
+import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 
 /**
  * A module descriptor that allows plugin developers to define servlets. Developers can define what urls the 
  * servlet should be serve by defining one or more &lt;url-pattern&gt; elements.
  */
-public abstract class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpServlet> implements StateAware
+public class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpServlet> implements StateAware
 {
+    private final ServletModuleManager servletModuleManager;
+    private final HostContainer hostContainer;
+
+    /**
+     * @deprecated Since 2.2.0, don't extend and use {@link #ServletModuleDescriptor(com.atlassian.plugin.hostcontainer.HostContainer ,ServletModuleManager)} instead
+     */
+    @Deprecated
+    public ServletModuleDescriptor()
+    {
+        this(null, null);
+    }
+
+    /**
+     * Creates a descriptor that uses a module factory to create instances
+     *
+     * @param hostContainer The module factory
+     * @since 2.2.0
+     */
+    public ServletModuleDescriptor(HostContainer hostContainer, ServletModuleManager servletModuleManager)
+    {
+        this.hostContainer = hostContainer;
+        this.servletModuleManager = servletModuleManager;
+    }
+
     public void enabled()
     {
         super.enabled();
@@ -34,8 +59,15 @@ public abstract class ServletModuleDescriptor extends BaseServletModuleDescripto
                 obj = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
             else
             {
-                obj = getModuleClass().newInstance();
-                autowireObject(obj);
+                if (hostContainer != null)
+                {
+                    obj = hostContainer.create(getModuleClass());
+                }
+                else
+                {
+                    obj = getModuleClass().newInstance();
+                    autowireObject(obj);
+                }
             }
         }
         catch (InstantiationException e)
@@ -58,12 +90,25 @@ public abstract class ServletModuleDescriptor extends BaseServletModuleDescripto
     }
 
     /**
-     * Autowire an object. Implement this in your IoC framework or simply do nothing.
+     * @deprecated Since 2.2.0, don't extend and use a {@link com.atlassian.plugin.hostcontainer.HostContainer} instead
      */
-    protected abstract void autowireObject(Object obj);
+    @Deprecated
+    protected void autowireObject(Object obj)
+    {
+        throw new UnsupportedOperationException("This method must be overridden if a HostContainer is not used");
+    }
 
     /**
-     * Retrieve the DefaultServletModuleManager class from your container framework.
+     * @deprecated Since 2.2.0, don't extend and use a {@link com.atlassian.plugin.hostcontainer.HostContainer} instead
      */
-    protected abstract ServletModuleManager getServletModuleManager();
+    @Deprecated
+    protected ServletModuleManager getServletModuleManager()
+    {
+        if (servletModuleManager == null)
+        {
+            throw new IllegalStateException("This method must be implemented if a HostContainer is not used");
+        }
+
+        return servletModuleManager;
+    }
 }
