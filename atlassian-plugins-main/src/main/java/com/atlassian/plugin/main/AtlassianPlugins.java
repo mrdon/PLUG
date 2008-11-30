@@ -30,6 +30,7 @@ public class AtlassianPlugins
     private PluginEventManager pluginEventManager;
     private DefaultPluginManager pluginManager;
     private PluginsConfiguration pluginsConfiguration;
+    private HotDeployer hotDeployer;
 
     /**
      * Constructs an instance of the plugin framework with the specified config.  No additional validation is performed
@@ -77,7 +78,14 @@ public class AtlassianPlugins
                 pluginEventManager);
         pluginManager.setPluginInstaller(new FilePluginInstaller(
                 config.getPluginDirectory()));
+
+        if (config.getHotDeployPollingPeriod() > 0)
+        {
+            hotDeployer = new HotDeployer(pluginManager, config.getHotDeployPollingPeriod());
+        }
         this.pluginsConfiguration = config;
+
+
     }
 
     /**
@@ -89,6 +97,10 @@ public class AtlassianPlugins
     public void start() throws PluginParseException
     {
         pluginManager.init();
+        if (hotDeployer != null && !hotDeployer.isRunning())
+        {
+            hotDeployer.start();
+        }
     }
 
     /**
@@ -96,6 +108,10 @@ public class AtlassianPlugins
      */
     public void stop()
     {
+        if (hotDeployer != null && hotDeployer.isRunning())
+        {
+            hotDeployer.stop();
+        }
         pluginManager.shutdown();
         deleteDirIfTmp(pluginsConfiguration.getBundleCacheDirectory());
         deleteDirIfTmp(pluginsConfiguration.getFrameworkBundlesDirectory());

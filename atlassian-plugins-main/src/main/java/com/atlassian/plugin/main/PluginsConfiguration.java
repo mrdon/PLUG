@@ -63,4 +63,9 @@ public interface PluginsConfiguration
      * @return the plugin state store implementation
      */
     PluginStateStore getPluginStateStore();
+
+    /**
+     * @return the number of milliseconds between polling.  Zero to disable.
+     */
+    long getHotDeployPollingPeriod();
 }

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The builder for {@link PluginsConfiguration} instances that additionally performs validation and default creation.
@@ -29,6 +30,7 @@ public class PluginsConfigurationBuilder
     private String pluginDescriptorFilename;
     private ModuleDescriptorFactory moduleDescriptorFactory;
     private PluginStateStore pluginStateStore;
+    private long hotDeployPollingPeriod;
 
     /**
      * Sets the package scanner configuration instance that contains information about what packages to expose to plugins
@@ -191,6 +193,17 @@ public class PluginsConfigurationBuilder
     }
 
     /**
+     * Sets the polling frequency for scanning for new plugins
+     *
+     * @param hotDeployPollingFrequency The quantity of time periods
+     * @param timeUnit The units for the frequency
+     */
+    public void setHotDeployPollingFrequency(long hotDeployPollingFrequency, TimeUnit timeUnit)
+    {
+        this.hotDeployPollingPeriod = hotDeployPollingFrequency * timeUnit.toMillis(hotDeployPollingFrequency);
+    }
+
+    /**
      * Builds a {@link com.atlassian.plugin.main.PluginsConfiguration} instance by processing the configuration that
      * was previously set, validating the input, and setting any defaults where not explicitly specified.
      *
@@ -310,6 +323,11 @@ public class PluginsConfigurationBuilder
         public PluginStateStore getPluginStateStore()
         {
             return pluginStateStore;
+        }
+
+        public long getHotDeployPollingPeriod()
+        {
+            return hotDeployPollingPeriod;
         }
     }
 
