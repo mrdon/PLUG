@@ -92,7 +92,10 @@ public class SimpleConstructorHostContainer implements HostContainer
                 return false;
             }
         });
-        constructors.addAll(Arrays.<Constructor<T>>asList(moduleClass.getConstructors()));
+        for (Constructor constructor : moduleClass.getConstructors())
+        {
+            constructors.add((Constructor<T>) constructor);
+        }
         return constructors;
     }
 }
