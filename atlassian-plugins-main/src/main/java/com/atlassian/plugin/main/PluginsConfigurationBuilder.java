@@ -198,9 +198,10 @@ public class PluginsConfigurationBuilder
      * @param hotDeployPollingFrequency The quantity of time periods
      * @param timeUnit The units for the frequency
      */
-    public void setHotDeployPollingFrequency(long hotDeployPollingFrequency, TimeUnit timeUnit)
+    public PluginsConfigurationBuilder setHotDeployPollingFrequency(long hotDeployPollingFrequency, TimeUnit timeUnit)
     {
         this.hotDeployPollingPeriod = hotDeployPollingFrequency * timeUnit.toMillis(hotDeployPollingFrequency);
+        return this;
     }
 
     /**
