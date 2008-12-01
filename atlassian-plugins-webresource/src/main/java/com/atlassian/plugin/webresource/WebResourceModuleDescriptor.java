@@ -7,7 +7,7 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
  * on any given page, as well as ensuring that plugins can declare resources, even if they are included
  * at the bottom of a page.
  */
-public class WebResourceModuleDescriptor extends AbstractModuleDescriptor
+public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Object>
 {
     /**
      * As this descriptor just handles resources, you should never call this
