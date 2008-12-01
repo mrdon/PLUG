@@ -745,7 +745,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     private DefaultPluginManager<MockThing> makeClassLoadingPluginManager() throws PluginParseException
     {
         directoryPluginLoader = new DirectoryPluginLoader<MockThing>(pluginsTestDir, Arrays.asList(new LegacyDynamicPluginFactory(
-            DefaultPluginManager.PLUGIN_DESCRIPTOR_FILENAME), new XmlDynamicPluginFactory()), pluginEventManager);
+            PluginAccessor.Descriptor.FILENAME), new XmlDynamicPluginFactory()), pluginEventManager);
         pluginLoaders.add(directoryPluginLoader);
 
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);

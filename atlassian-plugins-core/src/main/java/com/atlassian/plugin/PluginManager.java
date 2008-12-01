@@ -12,5 +12,9 @@ package com.atlassian.plugin;
 @Deprecated
 public interface PluginManager<T> extends PluginController, PluginAccessor<T>, PluginSystemLifecycle
 {
-    public static final String PLUGIN_DESCRIPTOR_FILENAME = "atlassian-plugin.xml";
+    /**
+     * @deprecated since 2.2 - Please use {@link Descriptor#FILENAME} instead.
+     */
+    @Deprecated
+    public static final String PLUGIN_DESCRIPTOR_FILENAME = PluginAccessor.Descriptor.FILENAME;
 }

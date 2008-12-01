@@ -3,8 +3,8 @@ package com.atlassian.plugin.loaders;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginException;
-import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 
@@ -29,7 +29,7 @@ public class ClassPathPluginLoader<T> implements PluginLoader<T>
 
     public ClassPathPluginLoader()
     {
-        this(PluginManager.PLUGIN_DESCRIPTOR_FILENAME);
+        this(PluginAccessor.Descriptor.FILENAME);
     }
 
     public ClassPathPluginLoader(final String fileNameToLoad)

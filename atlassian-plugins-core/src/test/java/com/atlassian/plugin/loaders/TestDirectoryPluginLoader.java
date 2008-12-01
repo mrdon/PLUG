@@ -2,8 +2,8 @@ package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginException;
-import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
@@ -37,7 +37,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     private PluginEventManager pluginEventManager;
     private DirectoryPluginLoader loader;
     private DefaultModuleDescriptorFactory moduleDescriptorFactory;
-    private static final List DEFAULT_PLUGIN_FACTORIES = Arrays.asList(new LegacyDynamicPluginFactory(PluginManager.PLUGIN_DESCRIPTOR_FILENAME),
+    private static final List DEFAULT_PLUGIN_FACTORIES = Arrays.asList(new LegacyDynamicPluginFactory(PluginAccessor.Descriptor.FILENAME),
         new XmlDynamicPluginFactory());
 
     public static final String BAD_PLUGIN_JAR = "bad-plugins/crap-plugin.jar";
@@ -184,7 +184,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
 
     public void testInvalidPluginHandled() throws IOException, PluginParseException
     {
-        createJarFile("evilplugin.jar", PluginManager.PLUGIN_DESCRIPTOR_FILENAME, pluginsTestDir.getAbsolutePath());
+        createJarFile("evilplugin.jar", PluginAccessor.Descriptor.FILENAME, pluginsTestDir.getAbsolutePath());
 
         loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
 

@@ -13,6 +13,22 @@ import java.util.List;
 public interface PluginAccessor<T>
 {
     /**
+     * The plugin descriptor file.
+     * 
+     * @since 2.2
+     */
+    public static final class Descriptor
+    {
+        /**
+         * The default filename.
+         */
+        public static final String FILENAME = "atlassian-plugin.xml";
+
+        private Descriptor()
+        {}
+    }
+
+    /**
      * Gets all of the currently installed plugins.
      * @return a collection of installed {@link Plugin}s.
      */
