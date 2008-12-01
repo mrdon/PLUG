@@ -26,25 +26,25 @@ public final class UnrecognisedModuleDescriptorFactory
      * @return a new UnloadableModuleDescriptor instance
      * @throws com.atlassian.plugin.PluginParseException if there was a problem constructing the UnloadableModuleDescriptor
      */
-    public static <T, M extends ModuleDescriptor<T>> UnrecognisedModuleDescriptor<T> createUnrecognisedModuleDescriptor(final Plugin plugin, final Element element, final Throwable e, final ModuleDescriptorFactory<T, M> moduleDescriptorFactory) throws PluginParseException
+    public static <M, D extends ModuleDescriptor<M>> UnrecognisedModuleDescriptor<M> createUnrecognisedModuleDescriptor(final Plugin plugin, final Element element, final Throwable e, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        final UnrecognisedModuleDescriptor<T> descriptor = new UnrecognisedModuleDescriptor<T>();
+        final UnrecognisedModuleDescriptor<M> descriptor = new UnrecognisedModuleDescriptor<M>();
         descriptor.init(plugin, element);
 
         final String name = element.getName();
-        final Class<M> moduleClass = moduleDescriptorFactory.getModuleDescriptorClass(name);
-        String moduleClassName;
+        final Class<D> descriptorClass = moduleDescriptorFactory.<M, D> getModuleDescriptorClass(name);
+        String descriptorClassName;
 
-        if (moduleClass == null)
+        if (descriptorClass == null)
         {
-            moduleClassName = descriptor.getKey();
+            descriptorClassName = descriptor.getKey();
         }
         else
         {
-            moduleClassName = moduleClass.getName();
+            descriptorClassName = descriptorClass.getName();
         }
 
-        final String errorMsg = UnrecognisedModuleDescriptorFactory.constructErrorMessage(plugin, name, moduleClassName, e);
+        final String errorMsg = UnrecognisedModuleDescriptorFactory.constructErrorMessage(plugin, name, descriptorClassName, e);
 
         descriptor.setErrorText(errorMsg);
 

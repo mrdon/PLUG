@@ -11,7 +11,6 @@ import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
-import com.atlassian.plugin.mock.MockThing;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.test.PluginJarBuilder;
@@ -35,13 +34,13 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
     /**
      * the object being tested
      */
-    private DefaultPluginManager<MockThing> manager;
+    private DefaultPluginManager manager;
 
     private PluginStateStore pluginStateStore;
-    private List<PluginLoader<MockThing>> pluginLoaders;
-    private DefaultModuleDescriptorFactory<MockThing, ModuleDescriptor<? extends MockThing>> moduleDescriptorFactory; // we should be able to use the interface here?
+    private List<PluginLoader> pluginLoaders;
+    private DefaultModuleDescriptorFactory moduleDescriptorFactory; // we should be able to use the interface here?
 
-    private DirectoryPluginLoader<MockThing> directoryPluginLoader;
+    private DirectoryPluginLoader directoryPluginLoader;
     private PluginEventManager pluginEventManager;
 
     @Override
@@ -51,10 +50,10 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         pluginEventManager = new DefaultPluginEventManager();
 
         pluginStateStore = new MemoryPluginStateStore();
-        pluginLoaders = new ArrayList<PluginLoader<MockThing>>();
-        moduleDescriptorFactory = new DefaultModuleDescriptorFactory<MockThing, ModuleDescriptor<? extends MockThing>>();
+        pluginLoaders = new ArrayList<PluginLoader>();
+        moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
 
-        manager = new DefaultPluginManager<MockThing>(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
+        manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
     }
 
     @Override
@@ -91,8 +90,7 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
 
         mockPluginLoader.expectAndReturn("loadAllPlugins", C.ANY_ARGS, Collections.singletonList(plugin));
 
-        @SuppressWarnings("unchecked")
-        final PluginLoader<MockThing> proxy = (PluginLoader) mockPluginLoader.proxy();
+        final PluginLoader proxy = (PluginLoader) mockPluginLoader.proxy();
         pluginLoaders.add(proxy);
         manager.init();
 
@@ -105,9 +103,9 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         assertFalse(plugin.isEnabled());
     }
 
-    private DefaultPluginManager<MockThing> makeClassLoadingPluginManager() throws PluginParseException
+    private DefaultPluginManager makeClassLoadingPluginManager() throws PluginParseException
     {
-        directoryPluginLoader = new DirectoryPluginLoader<MockThing>(pluginsTestDir, Arrays.asList(new LegacyDynamicPluginFactory(
+        directoryPluginLoader = new DirectoryPluginLoader(pluginsTestDir, Arrays.asList(new LegacyDynamicPluginFactory(
             PluginAccessor.Descriptor.FILENAME), new XmlDynamicPluginFactory()), pluginEventManager);
         pluginLoaders.add(directoryPluginLoader);
 
@@ -125,7 +123,7 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         new PluginJarBuilder("plugin").addPluginInformation("some.key", "My name", "1.0", 1).addResource("foo.txt", "foo").addJava("my.MyClass",
             "package my; public class MyClass {}").build().renameTo(plugin);
 
-        final DefaultPluginManager<MockThing> manager = makeClassLoadingPluginManager();
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
         manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
 
         final String pluginKey = manager.installPlugin(new JarPluginArtifact(plugin));
@@ -183,7 +181,7 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         final File plugin1 = new PluginJarBuilder("plugin").addPluginInformation("some.key", "My name", "1.0", 1).addResource("foo.txt", "foo").addJava(
             "my.MyClass", "package my; public class MyClass {}").build();
 
-        final DefaultPluginManager<MockThing> manager = makeClassLoadingPluginManager();
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
         manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
 
         final String pluginKey = manager.installPlugin(new JarPluginArtifact(plugin1));

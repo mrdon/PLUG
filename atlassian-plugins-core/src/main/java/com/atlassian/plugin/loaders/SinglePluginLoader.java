@@ -2,7 +2,6 @@ package com.atlassian.plugin.loaders;
 
 import static com.atlassian.plugin.util.Assertions.notNull;
 
-import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginException;
@@ -30,7 +29,7 @@ import java.util.Collections;
  * @see ClassPathPluginLoader
  * @see DescriptorParser#isSystemPlugin()
  */
-public class SinglePluginLoader<T> implements PluginLoader<T>
+public class SinglePluginLoader implements PluginLoader
 {
     protected Collection<Plugin> plugins;
     protected final String resource;
@@ -40,16 +39,16 @@ public class SinglePluginLoader<T> implements PluginLoader<T>
     public SinglePluginLoader(final String resource)
     {
         this.resource = notNull("resource", resource);
-        this.is = null;
+        is = null;
     }
 
     public SinglePluginLoader(final InputStream is)
     {
         this.is = notNull("inputStream", is);
-        this.resource = null;
+        resource = null;
     }
 
-    public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException
+    public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         if (plugins == null)
         {
@@ -68,7 +67,7 @@ public class SinglePluginLoader<T> implements PluginLoader<T>
         return false;
     }
 
-    public Collection<Plugin> addFoundPlugins(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory)
+    public Collection<Plugin> addFoundPlugins(final ModuleDescriptorFactory moduleDescriptorFactory)
     {
         throw new UnsupportedOperationException("This PluginLoader does not support addition.");
     }
@@ -78,7 +77,7 @@ public class SinglePluginLoader<T> implements PluginLoader<T>
         throw new PluginException("This PluginLoader does not support removal.");
     }
 
-    protected Plugin loadPlugin(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException
+    protected Plugin loadPlugin(final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         final InputStream source = getSource();
         if (source == null)

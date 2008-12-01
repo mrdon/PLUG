@@ -26,25 +26,25 @@ public final class UnloadableModuleDescriptorFactory
      * @return a new UnloadableModuleDescriptor instance
      * @throws PluginParseException if there was a problem constructing the UnloadableModuleDescriptor
      */
-    public static <T, M extends ModuleDescriptor<T>> UnloadableModuleDescriptor<T> createUnloadableModuleDescriptor(final Plugin plugin, final Element element, final Throwable e, final ModuleDescriptorFactory<T, M> moduleDescriptorFactory) throws PluginParseException
+    public static <M, D extends ModuleDescriptor<M>> UnloadableModuleDescriptor<M> createUnloadableModuleDescriptor(final Plugin plugin, final Element element, final Throwable e, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        final UnloadableModuleDescriptor<T> descriptor = new UnloadableModuleDescriptor<T>();
+        final UnloadableModuleDescriptor<M> descriptor = new UnloadableModuleDescriptor<M>();
         descriptor.init(plugin, element);
 
         final String name = element.getName();
-        final Class<M> moduleClass = moduleDescriptorFactory.getModuleDescriptorClass(name);
-        String moduleClassName;
+        final Class<D> descriptorClass = moduleDescriptorFactory.<M, D> getModuleDescriptorClass(name);
+        String descriptorClassName;
 
-        if (moduleClass == null)
+        if (descriptorClass == null)
         {
-            moduleClassName = descriptor.getKey();
+            descriptorClassName = descriptor.getKey();
         }
         else
         {
-            moduleClassName = moduleClass.getName();
+            descriptorClassName = descriptorClass.getName();
         }
 
-        final String errorMsg = constructErrorMessage(plugin, name, moduleClassName, e);
+        final String errorMsg = constructErrorMessage(plugin, name, descriptorClassName, e);
 
         descriptor.setErrorText(errorMsg);
 

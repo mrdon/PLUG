@@ -6,7 +6,7 @@ import com.atlassian.plugin.PluginParseException;
 /**
  * Plugin loader that supports installed plugins at runtime
  */
-public interface DynamicPluginLoader<T> extends PluginLoader<T>
+public interface DynamicPluginLoader extends PluginLoader
 {
     /**
      * Determines if this loader can load the jar.

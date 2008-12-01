@@ -353,7 +353,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
         final BundleContext ctx = ((OsgiPlugin) pluginManager.getPlugin("test.plugin")).getBundle().getBundleContext();
-        final ServiceRegistration reg = ctx.registerService(ModuleDescriptor.class.getName(), new DummyWebItemModuleDescriptor(), null);
+        ctx.registerService(ModuleDescriptor.class.getName(), new DummyWebItemModuleDescriptor(), null);
 
         final File pluginJar2 = new PluginJarBuilder("pluginType").addPluginInformation("test.plugin2", "foo", "1.0").build();
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
@@ -362,7 +362,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
         Collection<ModuleDescriptor<Object>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
         assertEquals(1, descriptors.size());
-        final ModuleDescriptor descriptor = descriptors.iterator().next();
+        final ModuleDescriptor<?> descriptor = descriptors.iterator().next();
         assertEquals("DummyWebItemModuleDescriptor", descriptor.getClass().getSimpleName());
         List<WebItemModuleDescriptor> list = pluginManager.getEnabledModuleDescriptorsByClass(WebItemModuleDescriptor.class);
         assertEquals(2, list.size());

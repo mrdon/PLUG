@@ -1,20 +1,26 @@
 package com.atlassian.plugin.parsers;
 
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.impl.UnloadablePluginFactory;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.Resources;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
+import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptorFactory;
-import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
-import org.dom4j.Element;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.io.SAXReader;
+import com.atlassian.plugin.impl.UnloadablePluginFactory;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 
-import java.util.Iterator;
 import java.io.InputStream;
+import java.util.Iterator;
 
 /**
  * Provides access to the descriptor information retrieved from an XML InputStream.
@@ -29,15 +35,17 @@ public class XmlDescriptorParser implements DescriptorParser
     private static Log log = LogFactory.getLog(XmlDescriptorParser.class);
 
     boolean recogniseSystemPlugins = false;
-    private Document document;
+    private final Document document;
 
     /**
      * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
      */
-    public XmlDescriptorParser(InputStream source) throws PluginParseException
+    public XmlDescriptorParser(final InputStream source) throws PluginParseException
     {
         if (source == null)
+        {
             throw new IllegalArgumentException("source cannot be null");
+        }
         document = createDocument(source);
     }
 
@@ -46,21 +54,23 @@ public class XmlDescriptorParser implements DescriptorParser
      * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
      * @since 2.2.0
      */
-    public XmlDescriptorParser(Document source) throws PluginParseException
+    public XmlDescriptorParser(final Document source) throws PluginParseException
     {
         if (source == null)
+        {
             throw new IllegalArgumentException("source cannot be null");
+        }
         document = source;
     }
 
-    protected Document createDocument(InputStream source) throws PluginParseException
+    protected Document createDocument(final InputStream source) throws PluginParseException
     {
-        SAXReader reader = new SAXReader();
+        final SAXReader reader = new SAXReader();
         try
         {
             return reader.read(source);
         }
-        catch (DocumentException e)
+        catch (final DocumentException e)
         {
             throw new PluginParseException("Cannot parse XML plugin descriptor", e);
         }
@@ -71,10 +81,10 @@ public class XmlDescriptorParser implements DescriptorParser
         return document;
     }
 
-    public Plugin configurePlugin(ModuleDescriptorFactory moduleDescriptorFactory, Plugin plugin) throws PluginParseException
+    public Plugin configurePlugin(final ModuleDescriptorFactory moduleDescriptorFactory, final Plugin plugin) throws PluginParseException
     {
 
-        Element pluginElement = getPluginElement();
+        final Element pluginElement = getPluginElement();
         plugin.setName(pluginElement.attributeValue("name"));
         plugin.setKey(getKey());
         plugin.setPluginsVersion(getPluginsVersion());
@@ -85,14 +95,18 @@ public class XmlDescriptorParser implements DescriptorParser
         }
 
         if (plugin.getKey().indexOf(":") > 0)
+        {
             throw new PluginParseException("Plugin keys cannot contain ':'. Key is '" + plugin.getKey() + "'");
+        }
 
         if ("disabled".equalsIgnoreCase(pluginElement.attributeValue("state")))
-            plugin.setEnabledByDefault(false);
-
-        for (Iterator i = pluginElement.elementIterator(); i.hasNext();)
         {
-            Element element = (Element) i.next();
+            plugin.setEnabledByDefault(false);
+        }
+
+        for (final Iterator i = pluginElement.elementIterator(); i.hasNext();)
+        {
+            final Element element = (Element) i.next();
 
             if ("plugin-info".equalsIgnoreCase(element.getName()))
             {
@@ -100,14 +114,18 @@ public class XmlDescriptorParser implements DescriptorParser
             }
             else if (!"resource".equalsIgnoreCase(element.getName()))
             {
-                ModuleDescriptor moduleDescriptor = createModuleDescriptor(plugin, element, moduleDescriptorFactory);
+                final ModuleDescriptor<?> moduleDescriptor = createModuleDescriptor(plugin, element, moduleDescriptorFactory);
 
                 // If we're not loading the module descriptor, null is returned, so we skip it
                 if (moduleDescriptor == null)
+                {
                     continue;
+                }
 
                 if (plugin.getModuleDescriptor(moduleDescriptor.getKey()) != null)
+                {
                     throw new PluginParseException("Found duplicate key '" + moduleDescriptor.getKey() + "' within plugin '" + plugin.getKey() + "'");
+                }
 
                 plugin.addModuleDescriptor(moduleDescriptor);
 
@@ -130,21 +148,22 @@ public class XmlDescriptorParser implements DescriptorParser
         return document.getRootElement();
     }
 
-    protected ModuleDescriptor createModuleDescriptor(Plugin plugin, Element element, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    protected <M> ModuleDescriptor<M> createModuleDescriptor(final Plugin plugin, final Element element, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        String name = element.getName();
+        final String name = element.getName();
 
-        ModuleDescriptor moduleDescriptorDescriptor;
+        ModuleDescriptor<M> moduleDescriptorDescriptor;
 
         // Try to retrieve the module descriptor
         try
         {
-            moduleDescriptorDescriptor = moduleDescriptorFactory.getModuleDescriptor(name);
+            moduleDescriptorDescriptor = moduleDescriptorFactory.<M> getModuleDescriptor(name);
         }
         // When there's a problem loading a module, return an UnrecognisedModuleDescriptor with error
-        catch (Throwable e)
+        catch (final Throwable e)
         {
-            UnrecognisedModuleDescriptor descriptor = UnrecognisedModuleDescriptorFactory.createUnrecognisedModuleDescriptor(plugin, element, e, moduleDescriptorFactory);
+            final UnrecognisedModuleDescriptor<M> descriptor = UnrecognisedModuleDescriptorFactory.<M, ModuleDescriptor<M>> createUnrecognisedModuleDescriptor(
+                plugin, element, e, moduleDescriptorFactory);
 
             log.error("There were problems loading the module '" + name + "' in plugin '" + plugin.getName() + "'. The module has been disabled.");
             log.error(descriptor.getErrorText(), e);
@@ -165,9 +184,10 @@ public class XmlDescriptorParser implements DescriptorParser
             moduleDescriptorDescriptor.init(plugin, element);
         }
         // If it fails, return a dummy module that contains the error
-        catch (Exception e)
+        catch (final Exception e)
         {
-            UnloadableModuleDescriptor descriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin, element, e, moduleDescriptorFactory);
+            final UnloadableModuleDescriptor<M> descriptor = UnloadableModuleDescriptorFactory.<M, ModuleDescriptor<M>> createUnloadableModuleDescriptor(
+                plugin, element, e, moduleDescriptorFactory);
 
             log.error("There were problems loading the module '" + name + "'. The module and its plugin have been disabled.");
             log.error(descriptor.getErrorText(), e);
@@ -178,10 +198,9 @@ public class XmlDescriptorParser implements DescriptorParser
         return moduleDescriptorDescriptor;
     }
 
-
-    protected PluginInformation createPluginInformation(Element element)
+    protected PluginInformation createPluginInformation(final Element element)
     {
-        PluginInformation pluginInfo = new PluginInformation();
+        final PluginInformation pluginInfo = new PluginInformation();
 
         if (element.element("description") != null)
         {
@@ -193,7 +212,9 @@ public class XmlDescriptorParser implements DescriptorParser
         }
 
         if (element.element("version") != null)
+        {
             pluginInfo.setVersion(element.element("version").getTextTrim());
+        }
 
         if (element.element("vendor") != null)
         {
@@ -203,13 +224,15 @@ public class XmlDescriptorParser implements DescriptorParser
         }
 
         // initialize any parameters on the plugin xml definition
-        for (Iterator iterator = element.elements("param").iterator(); iterator.hasNext();)
+        for (final Iterator iterator = element.elements("param").iterator(); iterator.hasNext();)
         {
-            Element param = (Element) iterator.next();
+            final Element param = (Element) iterator.next();
 
             // Retrieve the parameter info => name & text
             if (param.attribute("name") != null)
+            {
                 pluginInfo.addParameter(param.attribute("name").getData().toString(), param.getText());
+            }
         }
 
         if (element.element("application-version") != null)
@@ -238,9 +261,12 @@ public class XmlDescriptorParser implements DescriptorParser
         {
             val = getPluginElement().attributeValue("plugins-version");
         }
-        if (val != null) {
+        if (val != null)
+        {
             return Integer.parseInt(val);
-        } else {
+        }
+        else
+        {
             return 1;
         }
     }
@@ -249,7 +275,6 @@ public class XmlDescriptorParser implements DescriptorParser
     {
         return createPluginInformation(getDocument().getRootElement().element("plugin-info"));
     }
-
 
     public boolean isSystemPlugin()
     {

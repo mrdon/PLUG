@@ -1,16 +1,20 @@
 package com.atlassian.plugin;
 
+import com.atlassian.plugin.mock.MockAnimal;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
+import com.atlassian.plugin.mock.MockMineral;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
-import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import junit.framework.TestCase;
 
 public class TestDefaultModuleDescriptorFactory extends TestCase
 {
     private DefaultModuleDescriptorFactory moduleDescriptorFactory;
 
+    @Override
     protected void setUp() throws Exception
     {
         super.setUp();
@@ -25,19 +29,19 @@ public class TestDefaultModuleDescriptorFactory extends TestCase
             moduleDescriptorFactory.getModuleDescriptor("foobar");
             fail("Should have thrown exception");
         }
-        catch (IllegalAccessException e)
+        catch (final IllegalAccessException e)
         {
             e.printStackTrace();
         }
-        catch (PluginParseException e)
+        catch (final PluginParseException e)
         {
             return;
         }
-        catch (ClassNotFoundException e)
+        catch (final ClassNotFoundException e)
         {
             e.printStackTrace();
         }
-        catch (InstantiationException e)
+        catch (final InstantiationException e)
         {
             e.printStackTrace();
         }
@@ -50,8 +54,8 @@ public class TestDefaultModuleDescriptorFactory extends TestCase
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
-        assertTrue(moduleDescriptorFactory.getModuleDescriptor("animal") instanceof MockAnimalModuleDescriptor);
-        assertTrue(moduleDescriptorFactory.getModuleDescriptor("mineral") instanceof MockMineralModuleDescriptor);
+        assertTrue(moduleDescriptorFactory.<MockAnimal> getModuleDescriptor("animal") instanceof MockAnimalModuleDescriptor);
+        assertTrue(moduleDescriptorFactory.<MockMineral> getModuleDescriptor("mineral") instanceof MockMineralModuleDescriptor);
 
         assertTrue(moduleDescriptorFactory.hasModuleDescriptor("animal"));
         assertTrue(moduleDescriptorFactory.hasModuleDescriptor("mineral"));
@@ -65,7 +69,7 @@ public class TestDefaultModuleDescriptorFactory extends TestCase
 
         // Ensure the other one is still there
         assertTrue(moduleDescriptorFactory.hasModuleDescriptor("animal"));
-        assertTrue(moduleDescriptorFactory.getModuleDescriptor("animal") instanceof MockAnimalModuleDescriptor);
+        assertTrue(moduleDescriptorFactory.<MockAnimal> getModuleDescriptor("animal") instanceof MockAnimalModuleDescriptor);
     }
 
     // PLUG-5
@@ -76,7 +80,7 @@ public class TestDefaultModuleDescriptorFactory extends TestCase
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
         // Exclude "mineral"
-        List permittedList = new ArrayList();
+        final List<String> permittedList = new ArrayList<String>();
         permittedList.add("animal");
         moduleDescriptorFactory.setPermittedModuleKeys(permittedList);
         // Try and grab the "animal" descriptor

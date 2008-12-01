@@ -1,5 +1,7 @@
 package com.atlassian.plugin.classloader;
 
+import static com.atlassian.plugin.util.Assertions.notNull;
+
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 
@@ -20,7 +22,8 @@ import java.util.Set;
 public class PluginsClassLoader extends AbstractClassLoader
 {
     private static final Log log = LogFactory.getLog(PluginsClassLoader.class);
-    private final PluginAccessor<?> pluginAccessor;
+
+    private final PluginAccessor pluginAccessor;
 
     private final Map<String, Plugin> pluginResourceIndex = new HashMap<String, Plugin>();
     private final Map<String, Plugin> pluginClassIndex = new HashMap<String, Plugin>();
@@ -28,19 +31,15 @@ public class PluginsClassLoader extends AbstractClassLoader
     private final Set<String> missedPluginResource = new HashSet<String>();
     private final Set<String> missedPluginClass = new HashSet<String>();
 
-    public PluginsClassLoader(final PluginAccessor<?> pluginAccessor)
+    public PluginsClassLoader(final PluginAccessor pluginAccessor)
     {
         this(null, pluginAccessor);
     }
 
-    public PluginsClassLoader(final ClassLoader parent, final PluginAccessor<?> pluginAccessor)
+    public PluginsClassLoader(final ClassLoader parent, final PluginAccessor pluginAccessor)
     {
         super(parent);
-        if (pluginAccessor == null)
-        {
-            throw new IllegalArgumentException("The plugin accessor should not be null.");
-        }
-        this.pluginAccessor = pluginAccessor;
+        this.pluginAccessor = notNull("pluginAccessor", pluginAccessor);
     }
 
     @Override

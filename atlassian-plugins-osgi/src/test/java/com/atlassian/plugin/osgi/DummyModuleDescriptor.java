@@ -2,18 +2,21 @@ package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
-public class DummyModuleDescriptor extends AbstractModuleDescriptor
+public class DummyModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
     private boolean enabled = false;
-    public Object getModule()
+
+    @Override
+    public Void getModule()
     {
         return null;
     }
 
+    @Override
     public void enabled()
     {
         super.enabled();
-        this.enabled = true;
+        enabled = true;
 
     }
 
@@ -23,4 +26,3 @@ public class DummyModuleDescriptor extends AbstractModuleDescriptor
     }
 
 }
-

@@ -1,6 +1,5 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
@@ -21,11 +20,12 @@ import java.util.List;
 /**
  * Loads plugins from the classpath
  */
-public class ClassPathPluginLoader<T> implements PluginLoader<T>
+public class ClassPathPluginLoader implements PluginLoader
 {
     private static Log log = LogFactory.getLog(ClassPathPluginLoader.class);
-    List<Plugin> plugins;
-    String fileNameToLoad;
+
+    private final String fileNameToLoad;
+    private List<Plugin> plugins;
 
     public ClassPathPluginLoader()
     {
@@ -37,7 +37,7 @@ public class ClassPathPluginLoader<T> implements PluginLoader<T>
         this.fileNameToLoad = fileNameToLoad;
     }
 
-    private void loadClassPathPlugins(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException
+    private void loadClassPathPlugins(final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         URL url = null;
         final Enumeration<URL> pluginDescriptorFiles;
@@ -58,7 +58,7 @@ public class ClassPathPluginLoader<T> implements PluginLoader<T>
             url = pluginDescriptorFiles.nextElement();
             try
             {
-                final SinglePluginLoader<T> loader = new SinglePluginLoader<T>(url.openConnection().getInputStream());
+                final SinglePluginLoader loader = new SinglePluginLoader(url.openConnection().getInputStream());
                 plugins.addAll(loader.loadAllPlugins(moduleDescriptorFactory));
             }
             catch (final IOException e)
@@ -72,7 +72,7 @@ public class ClassPathPluginLoader<T> implements PluginLoader<T>
         }
     }
 
-    public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException
+    public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         if (plugins == null)
         {
@@ -92,7 +92,7 @@ public class ClassPathPluginLoader<T> implements PluginLoader<T>
         return false;
     }
 
-    public Collection<Plugin> addFoundPlugins(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory)
+    public Collection<Plugin> addFoundPlugins(final ModuleDescriptorFactory moduleDescriptorFactory)
     {
         throw new UnsupportedOperationException("This PluginLoader does not support addition.");
     }

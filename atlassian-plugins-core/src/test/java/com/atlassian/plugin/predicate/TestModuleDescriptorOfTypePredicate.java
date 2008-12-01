@@ -1,6 +1,5 @@
 package com.atlassian.plugin.predicate;
 
-import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
@@ -19,9 +18,8 @@ public class TestModuleDescriptorOfTypePredicate extends TestCase
         final Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
         mockModuleDescriptorFactory.matchAndReturn("getModuleDescriptorClass", C.ANY_ARGS, ModuleDescriptorStubA.class);
 
-        @SuppressWarnings("unchecked")
-        final ModuleDescriptorPredicate<Object> moduleDescriptorPredicate = new ModuleDescriptorOfTypePredicate<Object, Object>(
-            (ModuleDescriptorFactory<Object, ModuleDescriptor<? extends Object>>) mockModuleDescriptorFactory.proxy(), "test-module-type");
+        final ModuleDescriptorPredicate<Object> moduleDescriptorPredicate = new ModuleDescriptorOfTypePredicate<Object>(
+            (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy(), "test-module-type");
         assertTrue(moduleDescriptorPredicate.matches(new ModuleDescriptorStubB()));
     }
 
@@ -30,9 +28,8 @@ public class TestModuleDescriptorOfTypePredicate extends TestCase
         final Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
         mockModuleDescriptorFactory.matchAndReturn("getModuleDescriptorClass", C.ANY_ARGS, ModuleDescriptorStubB.class);
 
-        @SuppressWarnings("unchecked")
-        final ModuleDescriptorPredicate<Object> moduleDescriptorPredicate = new ModuleDescriptorOfTypePredicate<Object, Object>(
-            (ModuleDescriptorFactory<Object, ModuleDescriptor<? extends Object>>) mockModuleDescriptorFactory.proxy(), "test-module-type");
+        final ModuleDescriptorPredicate<Object> moduleDescriptorPredicate = new ModuleDescriptorOfTypePredicate<Object>(
+            (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy(), "test-module-type");
         assertFalse(moduleDescriptorPredicate.matches(new AbstractModuleDescriptor<Object>()
         {
             @Override

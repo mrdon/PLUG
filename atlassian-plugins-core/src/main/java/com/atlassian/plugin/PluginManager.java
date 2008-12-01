@@ -10,7 +10,7 @@ package com.atlassian.plugin;
  * @see PluginSystemLifecycle
  */
 @Deprecated
-public interface PluginManager<T> extends PluginController, PluginAccessor<T>, PluginSystemLifecycle
+public interface PluginManager extends PluginController, PluginAccessor, PluginSystemLifecycle
 {
     /**
      * @deprecated since 2.2 - Please use {@link Descriptor#FILENAME} instead.

@@ -1,6 +1,5 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
@@ -22,7 +21,7 @@ import java.util.List;
  * plugins from that zip file.  It also treats all plugins loaded from the directory as bundled plugins, meaning they
  * can can be upgraded, but not deleted.
  */
-public class BundledPluginLoader<T> extends DirectoryPluginLoader<T>
+public class BundledPluginLoader extends DirectoryPluginLoader
 {
 
     private static final Log log = LogFactory.getLog(BundledPluginLoader.class);
@@ -46,7 +45,7 @@ public class BundledPluginLoader<T> extends DirectoryPluginLoader<T>
      * @throws PluginParseException If there is a problem parsing the configuration
      */
     @Override
-    protected Plugin deployPluginFromUnit(final DeploymentUnit deploymentUnit, final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException
+    protected Plugin deployPluginFromUnit(final DeploymentUnit deploymentUnit, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         final Plugin plugin = super.deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
         if (plugin instanceof DynamicPlugin)

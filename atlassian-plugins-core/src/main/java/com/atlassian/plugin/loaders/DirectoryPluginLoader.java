@@ -11,7 +11,7 @@ import java.util.List;
  * A plugin loader to load plugins from a directory on disk.  A {@link DirectoryScanner} is used to locate plugin artifacts
  * and determine if they need to be redeployed or not.
  */
-public class DirectoryPluginLoader<T> extends ScanningPluginLoader<T>
+public class DirectoryPluginLoader extends ScanningPluginLoader
 {
 
     /**

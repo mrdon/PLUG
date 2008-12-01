@@ -8,12 +8,12 @@ import com.atlassian.plugin.PluginAccessor;
  */
 public class EnabledModulePredicate<T> implements ModuleDescriptorPredicate<T>
 {
-    private final PluginAccessor<? super T> pluginAccessor;
+    private final PluginAccessor pluginAccessor;
 
     /**
      * @throws IllegalArgumentException if pluginAccessor is <code>null</code>
      */
-    public EnabledModulePredicate(final PluginAccessor<? super T> pluginAccessor)
+    public EnabledModulePredicate(final PluginAccessor pluginAccessor)
     {
         if (pluginAccessor == null)
         {

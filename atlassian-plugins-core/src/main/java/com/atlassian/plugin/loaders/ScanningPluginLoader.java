@@ -1,7 +1,6 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.DefaultPluginArtifactFactory;
-import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginArtifact;
@@ -33,7 +32,7 @@ import java.util.Map;
  *
  * @since 2.1.0
  */
-public class ScanningPluginLoader<T> implements DynamicPluginLoader<T>
+public class ScanningPluginLoader implements DynamicPluginLoader
 {
     private static Log log = LogFactory.getLog(DirectoryPluginLoader.class);
     protected final com.atlassian.plugin.loaders.classloading.Scanner scanner;
@@ -69,7 +68,7 @@ public class ScanningPluginLoader<T> implements DynamicPluginLoader<T>
         Validate.notNull(pluginEventManager, "The event manager must be specified");
         Validate.notNull(scanner, "The scanner must be specified");
 
-        this.plugins = new HashMap<DeploymentUnit, Plugin>();
+        plugins = new HashMap<DeploymentUnit, Plugin>();
 
         this.pluginArtifactFactory = pluginArtifactFactory;
         this.scanner = scanner;
@@ -78,7 +77,7 @@ public class ScanningPluginLoader<T> implements DynamicPluginLoader<T>
         pluginEventManager.register(this);
     }
 
-    public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException
+    public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         scanner.scan();
 
@@ -106,7 +105,7 @@ public class ScanningPluginLoader<T> implements DynamicPluginLoader<T>
         return plugins.values();
     }
 
-    protected Plugin deployPluginFromUnit(final DeploymentUnit deploymentUnit, final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException
+    protected Plugin deployPluginFromUnit(final DeploymentUnit deploymentUnit, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         Plugin plugin = null;
         String errorText = "No plugin factories found for plugin file " + deploymentUnit;
@@ -167,7 +166,7 @@ public class ScanningPluginLoader<T> implements DynamicPluginLoader<T>
      * @return all plugins, now loaded by the pluginLoader, which have been discovered and added since the
      * last time a check was performed.
      */
-    public Collection<Plugin> addFoundPlugins(final ModuleDescriptorFactory<T, ModuleDescriptor<? extends T>> moduleDescriptorFactory) throws PluginParseException
+    public Collection<Plugin> addFoundPlugins(final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         // find missing plugins
         final Collection<DeploymentUnit> updatedDeploymentUnits = scanner.scan();
