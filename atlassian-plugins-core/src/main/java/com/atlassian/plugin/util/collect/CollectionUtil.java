@@ -98,6 +98,12 @@ public class CollectionUtil
         {
             return new FilteredIterator<T>(delegate.iterator(), predicate);
         }
+
+        @Override
+        public String toString()
+        {
+            return toList(this).toString();
+        }
     }
 
     public static <T> List<T> sort(final Collection<T> collection, final Comparator<T> comparator)

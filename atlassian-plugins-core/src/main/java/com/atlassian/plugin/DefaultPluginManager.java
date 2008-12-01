@@ -527,9 +527,9 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
      * @see PluginAccessor#getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)
      * @since 0.17
      */
-    public Collection<T> getModules(final ModuleDescriptorPredicate<T> moduleDescriptorPredicate)
+    public <M extends T> Collection<M> getModules(final ModuleDescriptorPredicate<M> moduleDescriptorPredicate)
     {
-        final Collection<ModuleDescriptor<T>> moduleDescriptors = getModuleDescriptors(moduleDescriptorPredicate);
+        final Collection<ModuleDescriptor<M>> moduleDescriptors = getModuleDescriptors(moduleDescriptorPredicate);
         return getModules(moduleDescriptors);
     }
 
@@ -537,17 +537,12 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
      * @see PluginAccessor#getModuleDescriptors(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)
      * @since 0.17
      */
-    public Collection<ModuleDescriptor<T>> getModuleDescriptors(final ModuleDescriptorPredicate<T> moduleDescriptorPredicate)
+    public <M extends T> Collection<ModuleDescriptor<M>> getModuleDescriptors(final ModuleDescriptorPredicate<M> moduleDescriptorPredicate)
     {
-        final Collection<ModuleDescriptor<T>> moduleDescriptors = new ArrayList<ModuleDescriptor<T>>();
-        for (final ModuleDescriptor<T> desc : getModuleDescriptors(getPlugins()))
+        final List<ModuleDescriptor<M>> moduleDescriptors = getModuleDescriptorsList(getPlugins());
+        return toList(filter(moduleDescriptors, new Predicate<ModuleDescriptor<M>>()
         {
-            moduleDescriptors.add(desc);
-        }
-
-        return toList(filter(moduleDescriptors, new Predicate<ModuleDescriptor<T>>()
-        {
-            public boolean evaluate(final ModuleDescriptor<T> input)
+            public boolean evaluate(final ModuleDescriptor<M> input)
             {
                 return moduleDescriptorPredicate.matches(input);
             }
@@ -560,19 +555,13 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
      * @param plugins a collection of {@link Plugin}s
      * @return a collection of {@link ModuleDescriptor}s
      */
-    private List<ModuleDescriptor<T>> getModuleDescriptors(final Collection<Plugin> plugins)
+    private <M extends T> List<ModuleDescriptor<M>> getModuleDescriptorsList(final Collection<Plugin> plugins)
     {
         // hack way to get typed descriptors from plugin and keep generics happy
-        final List<ModuleDescriptor<T>> moduleDescriptors = new LinkedList<ModuleDescriptor<T>>();
+        final List<ModuleDescriptor<M>> moduleDescriptors = new LinkedList<ModuleDescriptor<M>>();
         for (final Plugin plugin : plugins)
         {
-            final Collection<ModuleDescriptor<?>> pluginModuleDescriptors = plugin.getModuleDescriptors();
-            for (final ModuleDescriptor<?> moduleDescriptor : pluginModuleDescriptors)
-            {
-                @SuppressWarnings("unchecked")
-                final ModuleDescriptor<T> descriptor = (ModuleDescriptor<T>) moduleDescriptor;
-                moduleDescriptors.add(descriptor);
-            }
+            moduleDescriptors.addAll(plugin.<M> getModuleDescriptors());
         }
         return moduleDescriptors;
     }
@@ -584,11 +573,11 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
      * @return a {@link Collection} modules that can be any type of object.
      *         This collection will not contain any null value.
      */
-    private List<T> getModules(final Iterable<ModuleDescriptor<T>> moduleDescriptors)
+    private <M extends T> List<M> getModules(final Iterable<ModuleDescriptor<M>> moduleDescriptors)
     {
-        return transform(moduleDescriptors, new Function<ModuleDescriptor<T>, T>()
+        return transform(moduleDescriptors, new Function<ModuleDescriptor<M>, M>()
         {
-            public T get(final ModuleDescriptor<T> input)
+            public M get(final ModuleDescriptor<M> input)
             {
                 return input.getModule();
             }
@@ -606,25 +595,22 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
         {
             return null;
         }
-
         return getPlugin(pluginKey);
     }
 
-    public ModuleDescriptor<?> getPluginModule(final String completeKey)
+    public <M extends T> ModuleDescriptor<M> getPluginModule(final String completeKey)
     {
         final ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
-
         final Plugin plugin = getPlugin(key.getPluginKey());
 
         if (plugin == null)
         {
             return null;
         }
-
-        return plugin.getModuleDescriptor(key.getModuleKey());
+        return plugin.<M> getModuleDescriptor(key.getModuleKey());
     }
 
-    public ModuleDescriptor<?> getEnabledPluginModule(final String completeKey)
+    public <M extends T> ModuleDescriptor<M> getEnabledPluginModule(final String completeKey)
     {
         final ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
 
@@ -634,13 +620,13 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
             return null;
         }
 
-        return getEnabledPlugin(key.getPluginKey()).getModuleDescriptor(key.getModuleKey());
+        return getEnabledPlugin(key.getPluginKey()).<M> getModuleDescriptor(key.getModuleKey());
     }
 
     /**
      * @see PluginAccessor#getEnabledModulesByClass(Class)
      */
-    public <M extends T> List<T> getEnabledModulesByClass(final Class<M> moduleClass)
+    public <M extends T> List<M> getEnabledModulesByClass(final Class<M> moduleClass)
     {
         return getModules(getEnabledModuleDescriptorsByModuleClass(moduleClass));
     }
@@ -650,10 +636,10 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
      * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     @Deprecated
-    public List<T> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<T>>[] descriptorClasses, final Class<? extends T> moduleClass)
+    public <M extends T> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>>[] descriptorClasses, final Class<? extends M> moduleClass)
     {
-        final Iterable<ModuleDescriptor<T>> moduleDescriptors = filterModuleDescriptors(getEnabledModuleDescriptorsByModuleClass(moduleClass),
-            new ModuleDescriptorOfClassPredicate<T>(descriptorClasses));
+        final Iterable<ModuleDescriptor<M>> moduleDescriptors = filterModuleDescriptors(getEnabledModuleDescriptorsByModuleClass(moduleClass),
+            new ModuleDescriptorOfClassPredicate<M>(descriptorClasses));
 
         return getModules(moduleDescriptors);
     }
@@ -663,10 +649,10 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
      * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     @Deprecated
-    public List<T> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<T>> descriptorClass, final Class<? extends T> moduleClass)
+    public <M extends T> List<M> getEnabledModulesByClassAndDescriptor(final Class<? extends ModuleDescriptor<M>> descriptorClass, final Class<? extends M> moduleClass)
     {
-        final Iterable<ModuleDescriptor<T>> moduleDescriptors = getEnabledModuleDescriptorsByModuleClass(moduleClass);
-        return getModules(filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfClassPredicate<T>(descriptorClass)));
+        final Iterable<ModuleDescriptor<M>> moduleDescriptors = getEnabledModuleDescriptorsByModuleClass(moduleClass);
+        return getModules(filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfClassPredicate<M>(descriptorClass)));
     }
 
     /**
@@ -675,16 +661,16 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
      * @param moduleClass the class of the module within the module descriptor.
      * @return a collection of {@link ModuleDescriptor}s
      */
-    private <M extends T> Collection<ModuleDescriptor<T>> getEnabledModuleDescriptorsByModuleClass(final Class<M> moduleClass)
+    private <M extends T> Collection<ModuleDescriptor<M>> getEnabledModuleDescriptorsByModuleClass(final Class<? extends M> moduleClass)
     {
-        Iterable<ModuleDescriptor<T>> moduleDescriptors = getModuleDescriptors(getEnabledPlugins());
-        moduleDescriptors = filterModuleDescriptors(moduleDescriptors, new ModuleOfClassPredicate<T>(moduleClass));
-        moduleDescriptors = filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate<T>(this));
+        Iterable<ModuleDescriptor<M>> moduleDescriptors = getModuleDescriptorsList(getEnabledPlugins());
+        moduleDescriptors = filterModuleDescriptors(moduleDescriptors, new ModuleOfClassPredicate<M>(moduleClass));
+        moduleDescriptors = filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate<M>(this));
 
         return toList(moduleDescriptors);
     }
 
-    public <D extends ModuleDescriptor<? extends T>> List<D> getEnabledModuleDescriptorsByClass(final Class<? extends D> descriptorClazz)
+    public <M extends T> List<ModuleDescriptor<M>> getEnabledModuleDescriptorsByClass(final Class<? extends ModuleDescriptor<M>> descriptorClazz)
     {
         return getEnabledModuleDescriptorsByClass(descriptorClazz, false);
     }
@@ -696,7 +682,7 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
      *
      * @see PluginAccessor#getEnabledModuleDescriptorsByClass(Class)
      */
-    public <D extends ModuleDescriptor<? extends T>> List<D> getEnabledModuleDescriptorsByClass(final Class<? extends D> descriptorClazz, final boolean verbose)
+    public <M extends T, D extends ModuleDescriptor<M>> List<D> getEnabledModuleDescriptorsByClass(final Class<? extends D> descriptorClazz, final boolean verbose)
     {
         final List<D> result = new LinkedList<D>();
         for (final Plugin plugin : plugins.values())
@@ -737,12 +723,11 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
      * @deprecated since 0.17, use {@link #getModuleDescriptors(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     @Deprecated
-    public List<ModuleDescriptor<T>> getEnabledModuleDescriptorsByType(final String type) throws PluginParseException, IllegalArgumentException
+    public <M extends T> List<ModuleDescriptor<M>> getEnabledModuleDescriptorsByType(final String type) throws PluginParseException, IllegalArgumentException
     {
-        Iterable<ModuleDescriptor<T>> moduleDescriptors = getModuleDescriptors(getEnabledPlugins());
-        moduleDescriptors = filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfTypePredicate<T, ModuleDescriptor<T>>(
-            moduleDescriptorFactory, type));
-        moduleDescriptors = filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate<T>(this));
+        Iterable<ModuleDescriptor<M>> moduleDescriptors = getModuleDescriptorsList(getEnabledPlugins());
+        moduleDescriptors = filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfTypePredicate<T, M>(moduleDescriptorFactory, type));
+        moduleDescriptors = filterModuleDescriptors(moduleDescriptors, new EnabledModulePredicate<M>(this));
         return toList(moduleDescriptors);
     }
 
@@ -752,11 +737,11 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
      * @param moduleDescriptors         the collection of {@link ModuleDescriptor}s to filter.
      * @param moduleDescriptorPredicate the predicate to use for filtering.
      */
-    private static <T> Iterable<ModuleDescriptor<T>> filterModuleDescriptors(final Iterable<ModuleDescriptor<T>> moduleDescriptors, final ModuleDescriptorPredicate<T> moduleDescriptorPredicate)
+    private static <M> Iterable<ModuleDescriptor<M>> filterModuleDescriptors(final Iterable<ModuleDescriptor<M>> moduleDescriptors, final ModuleDescriptorPredicate<M> moduleDescriptorPredicate)
     {
-        return CollectionUtil.filter(moduleDescriptors, new Predicate<ModuleDescriptor<T>>()
+        return CollectionUtil.filter(moduleDescriptors, new Predicate<ModuleDescriptor<M>>()
         {
-            public boolean evaluate(final ModuleDescriptor<T> input)
+            public boolean evaluate(final ModuleDescriptor<M> input)
             {
                 return moduleDescriptorPredicate.matches(input);
             }
@@ -950,7 +935,7 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
             throw new IllegalArgumentException("You must specify a plugin module key to disable.");
         }
 
-        final ModuleDescriptor<?> module = getPluginModule(completeKey);
+        final ModuleDescriptor<T> module = getPluginModule(completeKey);
 
         if (module == null)
         {
@@ -995,7 +980,7 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
             throw new IllegalArgumentException("You must specify a plugin module key to disable.");
         }
 
-        final ModuleDescriptor<?> module = getPluginModule(completeKey);
+        final ModuleDescriptor<T> module = getPluginModule(completeKey);
 
         if (module == null)
         {
@@ -1049,7 +1034,7 @@ public class DefaultPluginManager<T> implements PluginController, PluginAccessor
         }
         final ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
 
-        final ModuleDescriptor<?> pluginModule = getPluginModule(completeKey);
+        final ModuleDescriptor<T> pluginModule = getPluginModule(completeKey);
         return isPluginEnabled(key.getPluginKey()) && (pluginModule != null) && getState().isEnabled(pluginModule);
     }
 

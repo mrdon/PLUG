@@ -1,12 +1,11 @@
 package com.atlassian.plugin.impl;
 
-import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 
 /**
  * Utility class to create UnloadablePlugin instances.
@@ -19,7 +18,7 @@ public final class UnloadablePluginFactory
      * @param oldPlugin the Plugin that is unloadable
      * @return UnloadablePlugin instance
      */
-    public static UnloadablePlugin createUnloadablePlugin(Plugin oldPlugin)
+    public static UnloadablePlugin createUnloadablePlugin(final Plugin oldPlugin)
     {
         return createUnloadablePlugin(oldPlugin, null);
     }
@@ -34,9 +33,9 @@ public final class UnloadablePluginFactory
      * @param unloadableDescriptor the ModuleDescriptor containing the error
      * @return UnloadablePlugin instance
      */
-    public static UnloadablePlugin createUnloadablePlugin(Plugin oldPlugin, UnloadableModuleDescriptor unloadableDescriptor)
+    public static UnloadablePlugin createUnloadablePlugin(final Plugin oldPlugin, final UnloadableModuleDescriptor<?> unloadableDescriptor)
     {
-        UnloadablePlugin newPlugin = new UnloadablePlugin();
+        final UnloadablePlugin newPlugin = new UnloadablePlugin();
 
         newPlugin.setName(oldPlugin.getName());
         newPlugin.setKey(oldPlugin.getKey());
@@ -49,24 +48,23 @@ public final class UnloadablePluginFactory
 
         newPlugin.setPluginInformation(oldPlugin.getPluginInformation());
 
-        List moduleDescriptors = new ArrayList(oldPlugin.getModuleDescriptors());
-        Iterator descriptorIterator = moduleDescriptors.iterator();
+        final List<ModuleDescriptor<?>> moduleDescriptors = new ArrayList<ModuleDescriptor<?>>(oldPlugin.getModuleDescriptors());
 
-        // Add the existing descriptors to the new plugin
-        while (descriptorIterator.hasNext())
+        for (final ModuleDescriptor<?> descriptor : moduleDescriptors)
         {
-            ModuleDescriptor descriptor = (ModuleDescriptor) descriptorIterator.next();
-
             // If we find the module descriptor that is causing the problem, skip it
-            if (unloadableDescriptor != null && descriptor.getKey().equals(unloadableDescriptor.getKey()))
+            if ((unloadableDescriptor != null) && descriptor.getKey().equals(unloadableDescriptor.getKey()))
+            {
                 continue;
-
+            }
             newPlugin.addModuleDescriptor(descriptor);
         }
 
         // Add the unloadable descriptor to the end (if it exists)
         if (unloadableDescriptor != null)
+        {
             newPlugin.addModuleDescriptor(unloadableDescriptor);
+        }
 
         return newPlugin;
     }

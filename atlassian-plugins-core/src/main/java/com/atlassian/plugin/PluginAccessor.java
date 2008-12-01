@@ -38,7 +38,7 @@ public interface PluginAccessor<T>
      * @return a collection of modules as per {@link ModuleDescriptor#getModule()} that match the given predicate.
      * @since 0.17
      */
-    Collection<T> getModules(final ModuleDescriptorPredicate<T> moduleDescriptorPredicate);
+    <M extends T> Collection<M> getModules(final ModuleDescriptorPredicate<M> moduleDescriptorPredicate);
 
     /**
      * Gets all module descriptors of installed modules that match the given predicate.
@@ -46,7 +46,7 @@ public interface PluginAccessor<T>
      * @return a collection of {@link ModuleDescriptor}s that match the given predicate.
      * @since 0.17
      */
-    Collection<ModuleDescriptor<T>> getModuleDescriptors(final ModuleDescriptorPredicate<T> moduleDescriptorPredicate);
+    <M extends T> Collection<ModuleDescriptor<M>> getModuleDescriptors(final ModuleDescriptorPredicate<M> moduleDescriptorPredicate);
 
     /**
      * Retrieve a given plugin (whether enabled or not).
@@ -65,12 +65,12 @@ public interface PluginAccessor<T>
      * <p>
      * Note: the module may or may not be disabled.
      */
-    ModuleDescriptor<?> getPluginModule(String completeKey);
+    <M extends T> ModuleDescriptor<M> getPluginModule(String completeKey);
 
     /**
      * Retrieve an enabled plugin module by complete module key.
      */
-    ModuleDescriptor<?> getEnabledPluginModule(String completeKey);
+    <M extends T> ModuleDescriptor<M> getEnabledPluginModule(String completeKey);
 
     /**
      * Whether or not a given plugin is currently enabled.
@@ -89,7 +89,7 @@ public interface PluginAccessor<T>
      *
      * @return List of modules that implement or extend the given class.
      */
-    <M extends T> List<T> getEnabledModulesByClass(Class<M> moduleClass);
+    <M extends T> List<M> getEnabledModulesByClass(Class<M> moduleClass);
 
     /**
      * Retrieve all plugin modules that implement or extend a specific class, and has a descriptor class
@@ -101,7 +101,7 @@ public interface PluginAccessor<T>
      * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     @Deprecated
-    List<T> getEnabledModulesByClassAndDescriptor(Class<ModuleDescriptor<T>>[] descriptorClazz, Class<? extends T> moduleClass);
+    <M extends T> List<M> getEnabledModulesByClassAndDescriptor(Class<ModuleDescriptor<M>>[] descriptorClazz, Class<? extends M> moduleClass);
 
     /**
      * Retrieve all plugin modules that implement or extend a specific class, and has a descriptor class
@@ -113,7 +113,7 @@ public interface PluginAccessor<T>
      * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     @Deprecated
-    List<T> getEnabledModulesByClassAndDescriptor(Class<ModuleDescriptor<T>> descriptorClazz, Class<? extends T> moduleClass);
+    <M extends T> List<M> getEnabledModulesByClassAndDescriptor(final Class<? extends ModuleDescriptor<M>> descriptorClass, final Class<? extends M> moduleClass);
 
     /**
      * Get all enabled module descriptors that have a specific descriptor class.
@@ -121,7 +121,7 @@ public interface PluginAccessor<T>
      * @param descriptorClazz module descriptor class
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
      */
-    <D extends ModuleDescriptor<? extends T>> List<D> getEnabledModuleDescriptorsByClass(Class<? extends D> descriptorClazz);
+    <M extends T> List<ModuleDescriptor<M>> getEnabledModuleDescriptorsByClass(Class<? extends ModuleDescriptor<M>> descriptorClazz);
 
     /**
      * Get all enabled module descriptors that have a specific descriptor class.
@@ -130,7 +130,7 @@ public interface PluginAccessor<T>
      * @param verbose         log verbose messages flag
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
      */
-    <D extends ModuleDescriptor<? extends T>> List<D> getEnabledModuleDescriptorsByClass(Class<? extends D> descriptorClazz, boolean verbose);
+    <M extends T, D extends ModuleDescriptor<M>> List<D> getEnabledModuleDescriptorsByClass(Class<? extends D> descriptorClazz, boolean verbose);
 
     /**
      * Get all enabled module descriptors that have a specific descriptor type.
@@ -139,7 +139,7 @@ public interface PluginAccessor<T>
      * @deprecated since 0.17, use {@link #getModuleDescriptors(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     @Deprecated
-    <D extends ModuleDescriptor<T>> List<D> getEnabledModuleDescriptorsByType(String type) throws PluginParseException;
+    <M extends T> List<ModuleDescriptor<M>> getEnabledModuleDescriptorsByType(String type) throws PluginParseException;
 
     /**
      * Retrieve a resource from a currently loaded (and active) dynamically loaded plugin. Will return the first resource

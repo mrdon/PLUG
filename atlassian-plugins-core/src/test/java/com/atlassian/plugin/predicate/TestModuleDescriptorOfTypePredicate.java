@@ -1,25 +1,27 @@
 package com.atlassian.plugin.predicate;
 
-import junit.framework.TestCase;
-import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
-import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.mockobjects.dynamic.Mock;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+
 import com.mockobjects.dynamic.C;
+import com.mockobjects.dynamic.Mock;
+
+import junit.framework.TestCase;
 
 /**
  * Testing {@link ModuleDescriptorOfTypePredicate}
  */
 public class TestModuleDescriptorOfTypePredicate extends TestCase
 {
-    private ModuleDescriptorPredicate moduleDescriptorPredicate;
-
     public void testMatchesModuleWithModuleDescriptorMatchingType()
     {
         final Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
         mockModuleDescriptorFactory.matchAndReturn("getModuleDescriptorClass", C.ANY_ARGS, ModuleDescriptorStubA.class);
 
-        moduleDescriptorPredicate = new ModuleDescriptorOfTypePredicate((ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy(), "test-module-type");
+        @SuppressWarnings("unchecked")
+        final ModuleDescriptorPredicate<Object> moduleDescriptorPredicate = new ModuleDescriptorOfTypePredicate<Object, Object>(
+            (ModuleDescriptorFactory<Object, ModuleDescriptor<? extends Object>>) mockModuleDescriptorFactory.proxy(), "test-module-type");
         assertTrue(moduleDescriptorPredicate.matches(new ModuleDescriptorStubB()));
     }
 
@@ -28,12 +30,22 @@ public class TestModuleDescriptorOfTypePredicate extends TestCase
         final Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
         mockModuleDescriptorFactory.matchAndReturn("getModuleDescriptorClass", C.ANY_ARGS, ModuleDescriptorStubB.class);
 
-        moduleDescriptorPredicate = new ModuleDescriptorOfTypePredicate((ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy(), "test-module-type");
-        assertFalse(moduleDescriptorPredicate.matches(new MockUnusedModuleDescriptor()));
+        @SuppressWarnings("unchecked")
+        final ModuleDescriptorPredicate<Object> moduleDescriptorPredicate = new ModuleDescriptorOfTypePredicate<Object, Object>(
+            (ModuleDescriptorFactory<Object, ModuleDescriptor<? extends Object>>) mockModuleDescriptorFactory.proxy(), "test-module-type");
+        assertFalse(moduleDescriptorPredicate.matches(new AbstractModuleDescriptor<Object>()
+        {
+            @Override
+            public Object getModule()
+            {
+                throw new UnsupportedOperationException();
+            }
+        }));
     }
 
-    private static class ModuleDescriptorStubA extends AbstractModuleDescriptor
+    private static class ModuleDescriptorStubA extends AbstractModuleDescriptor<Object>
     {
+        @Override
         public Object getModule()
         {
             return null;
@@ -41,7 +53,5 @@ public class TestModuleDescriptorOfTypePredicate extends TestCase
     }
 
     private static class ModuleDescriptorStubB extends ModuleDescriptorStubA
-    {
-    }
-
+    {}
 }

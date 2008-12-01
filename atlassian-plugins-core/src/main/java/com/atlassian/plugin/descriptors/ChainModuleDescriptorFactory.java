@@ -17,7 +17,7 @@ public class ChainModuleDescriptorFactory<T, M extends ModuleDescriptor<T>> impl
         this.factories = factories;
     }
 
-    public ModuleDescriptor<T> getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
+    public M getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
     {
         for (final ModuleDescriptorFactory<T, M> factory : factories)
         {

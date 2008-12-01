@@ -2,8 +2,8 @@ package com.atlassian.plugin.impl;
 
 import com.atlassian.plugin.util.ClassLoaderUtils;
 
-import java.net.URL;
 import java.io.InputStream;
+import java.net.URL;
 
 /**
  * A dynamic XML plugin that consists of the Atlassian plugin descriptor
@@ -14,7 +14,6 @@ public class XmlDynamicPlugin extends AbstractPlugin implements DynamicPlugin
 {
     private boolean bundledPlugin;
     private boolean deletable;
-
 
     public boolean isBundledPlugin()
     {
@@ -37,20 +36,19 @@ public class XmlDynamicPlugin extends AbstractPlugin implements DynamicPlugin
     }
 
     public void close()
-    {
-    }
+    {}
 
-    public void setDeletable(boolean deletable)
+    public void setDeletable(final boolean deletable)
     {
         this.deletable = deletable;
     }
 
-    public void setBundled(boolean bundled)
+    public void setBundled(final boolean bundled)
     {
-        this.bundledPlugin = bundled;
+        bundledPlugin = bundled;
     }
 
-    public Class<?> loadClass(String clazz, Class callingClass) throws ClassNotFoundException
+    public <M> Class<M> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
     {
         return ClassLoaderUtils.loadClass(clazz, callingClass);
     }
@@ -60,12 +58,12 @@ public class XmlDynamicPlugin extends AbstractPlugin implements DynamicPlugin
         return getClass().getClassLoader();
     }
 
-    public URL getResource(String name)
+    public URL getResource(final String name)
     {
         return ClassLoaderUtils.getResource(name, getClass());
     }
 
-    public InputStream getResourceAsStream(String name)
+    public InputStream getResourceAsStream(final String name)
     {
         return ClassLoaderUtils.getResourceAsStream(name, getClass());
     }

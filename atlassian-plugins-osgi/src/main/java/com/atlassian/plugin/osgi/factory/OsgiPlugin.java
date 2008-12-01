@@ -3,25 +3,32 @@ package com.atlassian.plugin.osgi.factory;
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginException;
-import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
+
 import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.osgi.framework.*;
+import org.dom4j.Element;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import org.dom4j.Element;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Plugin that wraps an OSGi bundle that does contain a plugin descriptor.
@@ -37,9 +44,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private Method nativeAutowireBeanMethod;
     private ServiceTracker moduleDescriptorTracker;
     private ServiceTracker deferredModuleTracker;
-    private final Map<String, Element> moduleElements = new HashMap<String,Element>();
+    private final Map<String, Element> moduleElements = new HashMap<String, Element>();
 
-    public OsgiPlugin(Bundle bundle)
+    public OsgiPlugin(final Bundle bundle)
     {
         Validate.notNull(bundle, "The bundle is required");
         this.bundle = bundle;
@@ -50,13 +57,12 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return bundle;
     }
 
-    public void addModuleDescriptorElement(String key, Element element)
+    public void addModuleDescriptorElement(final String key, final Element element)
     {
         moduleElements.put(key, element);
     }
 
-
-    public Class loadClass(String clazz, Class callingClass) throws ClassNotFoundException
+    public <T> Class<T> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
     {
         return BundleClassLoaderAccessor.loadClass(bundle, clazz, callingClass);
     }
@@ -66,12 +72,12 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return true;
     }
 
-    public URL getResource(String name)
+    public URL getResource(final String name)
     {
         return BundleClassLoaderAccessor.getResource(bundle, name);
     }
 
-    public InputStream getResourceAsStream(String name)
+    public InputStream getResourceAsStream(final String name)
     {
         return BundleClassLoaderAccessor.getResourceAsStream(bundle, name);
     }
@@ -90,13 +96,12 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return true;
     }
 
-
     public boolean isDeleteable()
     {
         return deletable;
     }
 
-    public void setDeletable(boolean deletable)
+    public void setDeletable(final boolean deletable)
     {
         this.deletable = deletable;
     }
@@ -106,40 +111,51 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return bundled;
     }
 
-    public void setBundled(boolean bundled)
+    public void setBundled(final boolean bundled)
     {
         this.bundled = bundled;
     }
 
+    @Override
     public synchronized boolean isEnabled()
     {
-        return Bundle.ACTIVE == bundle.getState() && (!shouldHaveSpringContext() || ensureNativeBeanFactory());
+        return (Bundle.ACTIVE == bundle.getState()) && (!shouldHaveSpringContext() || ensureNativeBeanFactory());
     }
 
-    public synchronized void setEnabled(boolean enabled) throws OsgiContainerException
+    @Override
+    public synchronized void setEnabled(final boolean enabled) throws OsgiContainerException
     {
-        if (enabled) enable(); else disable();
+        if (enabled)
+        {
+            enable();
+        }
+        else
+        {
+            disable();
+        }
     }
 
     void enable() throws OsgiContainerException
     {
         try
         {
-            if (bundle.getState() == Bundle.RESOLVED || bundle.getState() == Bundle.INSTALLED)
+            if ((bundle.getState() == Bundle.RESOLVED) || (bundle.getState() == Bundle.INSTALLED))
             {
                 bundle.start();
                 if (bundle.getBundleContext() != null)
                 {
-                    moduleDescriptorTracker = new ServiceTracker(bundle.getBundleContext(), ModuleDescriptor.class.getName(), new RegisteringServiceTrackerCustomizer());
+                    moduleDescriptorTracker = new ServiceTracker(bundle.getBundleContext(), ModuleDescriptor.class.getName(),
+                        new RegisteringServiceTrackerCustomizer());
                     moduleDescriptorTracker.open();
-                    deferredModuleTracker = new ServiceTracker(bundle.getBundleContext(), ListableModuleDescriptorFactory.class.getName(), new DeferredServiceTrackerCustomizer());
+                    deferredModuleTracker = new ServiceTracker(bundle.getBundleContext(), ListableModuleDescriptorFactory.class.getName(),
+                        new DeferredServiceTrackerCustomizer());
                     deferredModuleTracker.open();
                 }
             }
         }
-        catch (BundleException e)
+        catch (final BundleException e)
         {
-            throw new OsgiContainerException("Cannot start plugin: "+getKey(), e);
+            throw new OsgiContainerException("Cannot start plugin: " + getKey(), e);
         }
     }
 
@@ -149,17 +165,23 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         {
             if (bundle.getState() == Bundle.ACTIVE)
             {
-                if (moduleDescriptorTracker != null) moduleDescriptorTracker.close();
-                if (deferredModuleTracker != null) deferredModuleTracker.close();
+                if (moduleDescriptorTracker != null)
+                {
+                    moduleDescriptorTracker.close();
+                }
+                if (deferredModuleTracker != null)
+                {
+                    deferredModuleTracker.close();
+                }
                 bundle.stop();
                 moduleDescriptorTracker = null;
                 nativeBeanFactory = null;
                 nativeCreateBeanMethod = null;
             }
         }
-        catch (BundleException e)
+        catch (final BundleException e)
         {
-            throw new OsgiContainerException("Cannot stop plugin: "+getKey(), e);
+            throw new OsgiContainerException("Cannot stop plugin: " + getKey(), e);
         }
     }
 
@@ -168,9 +190,11 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         try
         {
             if (bundle.getState() != Bundle.UNINSTALLED)
+            {
                 bundle.uninstall();
+            }
         }
-        catch (BundleException e)
+        catch (final BundleException e)
         {
             throw new OsgiContainerException("Cannot uninstall bundle " + bundle.getSymbolicName());
         }
@@ -181,52 +205,56 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return bundle.getHeaders().get("Spring-Context") != null;
     }
 
-    public <T> T autowire(Class<T> clazz)
+    public <T> T autowire(final Class<T> clazz)
     {
         return autowire(clazz, AutowireStrategy.AUTOWIRE_AUTODETECT);
     }
 
-    public synchronized <T> T autowire(Class<T> clazz, AutowireStrategy autowireStrategy)
+    public synchronized <T> T autowire(final Class<T> clazz, final AutowireStrategy autowireStrategy)
     {
         if (!ensureNativeBeanFactory())
+        {
             return null;
-        
+        }
+
         try
         {
             return (T) nativeCreateBeanMethod.invoke(nativeBeanFactory, clazz, autowireStrategy.ordinal(), false);
         }
-        catch (IllegalAccessException e)
+        catch (final IllegalAccessException e)
         {
             // Should never happen
             throw new PluginException("Unable to access createBean method", e);
         }
-        catch (InvocationTargetException e)
+        catch (final InvocationTargetException e)
         {
             handleSpringMethodInvocationError(e);
             return null;
         }
     }
 
-    public void autowire(Object instance)
+    public void autowire(final Object instance)
     {
         autowire(instance, AutowireStrategy.AUTOWIRE_AUTODETECT);
     }
 
-    public void autowire(Object instance, AutowireStrategy autowireStrategy)
+    public void autowire(final Object instance, final AutowireStrategy autowireStrategy)
     {
         if (!ensureNativeBeanFactory())
+        {
             return;
+        }
 
         try
         {
             nativeAutowireBeanMethod.invoke(nativeBeanFactory, instance, autowireStrategy.ordinal(), false);
         }
-        catch (IllegalAccessException e)
+        catch (final IllegalAccessException e)
         {
             // Should never happen
             throw new PluginException("Unable to access createBean method", e);
         }
-        catch (InvocationTargetException e)
+        catch (final InvocationTargetException e)
         {
             handleSpringMethodInvocationError(e);
         }
@@ -236,65 +264,73 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     {
         if (nativeBeanFactory == null)
         {
-
             try
             {
-                BundleContext ctx = bundle.getBundleContext();
+                final BundleContext ctx = bundle.getBundleContext();
                 if (ctx == null)
                 {
                     log.warn("no bundle context - we are screwed");
                     return false;
                 }
-                ServiceReference[] services = ctx.getServiceReferences("org.springframework.context.ApplicationContext", "(org.springframework.context.service.name="+bundle.getSymbolicName()+")");
-                if (services == null || services.length == 0)
+                final ServiceReference[] services = ctx.getServiceReferences("org.springframework.context.ApplicationContext",
+                    "(org.springframework.context.service.name=" + bundle.getSymbolicName() + ")");
+                if ((services == null) || (services.length == 0))
                 {
                     log.debug("No spring bean factory found...yet");
                     return false;
                 }
 
-                Object applicationContext = ctx.getService(services[0]);
+                final Object applicationContext = ctx.getService(services[0]);
                 try
                 {
-                    Method m = applicationContext.getClass().getMethod("getAutowireCapableBeanFactory");
+                    final Method m = applicationContext.getClass().getMethod("getAutowireCapableBeanFactory");
                     nativeBeanFactory = m.invoke(applicationContext);
-                } catch (NoSuchMethodException e)
+                }
+                catch (final NoSuchMethodException e)
                 {
                     // Should never happen
-                    throw new PluginException("Cannot find createBean method on registered bean factory: "+nativeBeanFactory, e);
-                } catch (IllegalAccessException e)
+                    throw new PluginException("Cannot find createBean method on registered bean factory: " + nativeBeanFactory, e);
+                }
+                catch (final IllegalAccessException e)
                 {
                     // Should never happen
                     throw new PluginException("Cannot access createBean method", e);
-                } catch (InvocationTargetException e)
+                }
+                catch (final InvocationTargetException e)
                 {
                     handleSpringMethodInvocationError(e);
                     return false;
                 }
-            } catch (InvalidSyntaxException e)
+            }
+            catch (final InvalidSyntaxException e)
             {
                 throw new OsgiContainerException("Invalid LDAP filter", e);
             }
-
 
             try
             {
                 nativeCreateBeanMethod = nativeBeanFactory.getClass().getMethod("createBean", Class.class, int.class, boolean.class);
                 nativeAutowireBeanMethod = nativeBeanFactory.getClass().getMethod("autowireBeanProperties", Object.class, int.class, boolean.class);
-            } catch (NoSuchMethodException e)
+            }
+            catch (final NoSuchMethodException e)
             {
                 // Should never happen
-                throw new PluginException("Cannot find createBean method on registered bean factory: "+nativeBeanFactory, e);
+                throw new PluginException("Cannot find createBean method on registered bean factory: " + nativeBeanFactory, e);
             }
         }
-        return nativeBeanFactory != null && nativeCreateBeanMethod != null && nativeAutowireBeanMethod != null;
+        return (nativeBeanFactory != null) && (nativeCreateBeanMethod != null) && (nativeAutowireBeanMethod != null);
     }
 
-    private void handleSpringMethodInvocationError(InvocationTargetException e)
+    private void handleSpringMethodInvocationError(final InvocationTargetException e)
     {
         if (e.getCause() instanceof Error)
+        {
             throw (Error) e.getCause();
+        }
         else if (e.getCause() instanceof RuntimeException)
+        {
             throw (RuntimeException) e.getCause();
+        }
         else
         {
             // Should never happen as Spring methods only throw runtime exceptions
@@ -302,16 +338,17 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
     }
 
+    @Override
     public String toString()
     {
         return getKey();
     }
 
-    protected <T extends ModuleDescriptor> List<T> getModuleDescriptorsByDescriptorClass(Class<T> descriptor)
+    protected <T extends ModuleDescriptor> List<T> getModuleDescriptorsByDescriptorClass(final Class<T> descriptor)
     {
-        List<T> result = new ArrayList<T>();
+        final List<T> result = new ArrayList<T>();
 
-        for (ModuleDescriptor<?> moduleDescriptor : getModuleDescriptors())
+        for (final ModuleDescriptor<?> moduleDescriptor : getModuleDescriptors())
         {
             if (moduleDescriptor.getClass().isAssignableFrom(descriptor))
             {
@@ -327,35 +364,35 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private class RegisteringServiceTrackerCustomizer implements ServiceTrackerCustomizer
     {
 
-        public Object addingService(ServiceReference serviceReference)
+        public Object addingService(final ServiceReference serviceReference)
         {
             ModuleDescriptor descriptor = null;
             if (serviceReference.getBundle() == bundle)
             {
                 descriptor = (ModuleDescriptor) bundle.getBundleContext().getService(serviceReference);
                 addModuleDescriptor(descriptor);
-                log.info("Dynamically registered new module descriptor: "+descriptor.getCompleteKey());
+                log.info("Dynamically registered new module descriptor: " + descriptor.getCompleteKey());
             }
             return descriptor;
         }
 
-        public void modifiedService(ServiceReference serviceReference, Object o)
+        public void modifiedService(final ServiceReference serviceReference, final Object o)
         {
             if (serviceReference.getBundle() == bundle)
             {
-                ModuleDescriptor descriptor = (ModuleDescriptor) o;
+                final ModuleDescriptor descriptor = (ModuleDescriptor) o;
                 addModuleDescriptor(descriptor);
-                log.info("Dynamically upgraded new module descriptor: "+descriptor.getCompleteKey());
+                log.info("Dynamically upgraded new module descriptor: " + descriptor.getCompleteKey());
             }
         }
 
-        public void removedService(ServiceReference serviceReference, Object o)
+        public void removedService(final ServiceReference serviceReference, final Object o)
         {
             if (serviceReference.getBundle() == bundle)
             {
-                ModuleDescriptor descriptor = (ModuleDescriptor) o;
+                final ModuleDescriptor descriptor = (ModuleDescriptor) o;
                 removeModuleDescriptor(descriptor.getKey());
-                log.info("Dynamically removed module descriptor: "+descriptor.getCompleteKey());
+                log.info("Dynamically removed module descriptor: " + descriptor.getCompleteKey());
             }
         }
     }
@@ -374,35 +411,32 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
          * Turns any {@link UnrecognisedModuleDescriptor} modules that can be handled by the new factory into real
          * modules
          */
-        public Object addingService(ServiceReference serviceReference)
+        public Object addingService(final ServiceReference serviceReference)
         {
-            ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) bundle.getBundleContext().getService(serviceReference);
-            for (UnrecognisedModuleDescriptor deferred : getModuleDescriptorsByDescriptorClass(UnrecognisedModuleDescriptor.class))
+            final ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) bundle.getBundleContext().getService(serviceReference);
+            for (final UnrecognisedModuleDescriptor deferred : getModuleDescriptorsByDescriptorClass(UnrecognisedModuleDescriptor.class))
             {
-                Element source = moduleElements.get(deferred.getKey());
-                if (source != null && factory.hasModuleDescriptor(source.getName()))
+                final Element source = moduleElements.get(deferred.getKey());
+                if ((source != null) && factory.hasModuleDescriptor(source.getName()))
                 {
                     try
                     {
-                        ModuleDescriptor descriptor = factory.getModuleDescriptor(source.getName());
+                        final ModuleDescriptor descriptor = factory.getModuleDescriptor(source.getName());
                         descriptor.init(deferred.getPlugin(), source);
                         addModuleDescriptor(descriptor);
-                        log.info("Turned plugin module "+descriptor.getCompleteKey()+" into module "+descriptor);
+                        log.info("Turned plugin module " + descriptor.getCompleteKey() + " into module " + descriptor);
                     }
-                    catch (IllegalAccessException e)
+                    catch (final IllegalAccessException e)
                     {
-                        log.error("Unable to transform "+deferred.getKey()+" into actual plugin module using factory "+
-                            factory, e);
+                        log.error("Unable to transform " + deferred.getKey() + " into actual plugin module using factory " + factory, e);
                     }
-                    catch (InstantiationException e)
+                    catch (final InstantiationException e)
                     {
-                        log.error("Unable to transform "+deferred.getKey()+" into actual plugin module using factory "+
-                            factory, e);
+                        log.error("Unable to transform " + deferred.getKey() + " into actual plugin module using factory " + factory, e);
                     }
-                    catch (ClassNotFoundException e)
+                    catch (final ClassNotFoundException e)
                     {
-                        log.error("Unable to transform "+deferred.getKey()+" into actual plugin module using factory "+
-                            factory, e);
+                        log.error("Unable to transform " + deferred.getKey() + " into actual plugin module using factory " + factory, e);
                     }
                 }
             }
@@ -412,7 +446,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         /**
          * Updates any local module descriptors that were created from the modified factory
          */
-        public void modifiedService(ServiceReference serviceReference, Object o)
+        public void modifiedService(final ServiceReference serviceReference, final Object o)
         {
             removedService(serviceReference, o);
             addingService(serviceReference);
@@ -422,21 +456,21 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
          * Reverts any current module descriptors that were provided from the factory being removed into {@link
          * UnrecognisedModuleDescriptor} instances.
          */
-        public void removedService(ServiceReference serviceReference, Object o)
+        public void removedService(final ServiceReference serviceReference, final Object o)
         {
-            ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) o;
-            for (Class<ModuleDescriptor<?>> moduleDescriptorClass : factory.getModuleDescriptorClasses())
+            final ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) o;
+            for (final Class<ModuleDescriptor<?>> moduleDescriptorClass : factory.getModuleDescriptorClasses())
             {
-                for (ModuleDescriptor<?> descriptor : getModuleDescriptorsByDescriptorClass(moduleDescriptorClass))
+                for (final ModuleDescriptor<?> descriptor : getModuleDescriptorsByDescriptorClass(moduleDescriptorClass))
                 {
-                    UnrecognisedModuleDescriptor deferred = new UnrecognisedModuleDescriptor();
-                    Element source = moduleElements.get(descriptor.getKey());
+                    final UnrecognisedModuleDescriptor deferred = new UnrecognisedModuleDescriptor();
+                    final Element source = moduleElements.get(descriptor.getKey());
                     if (source != null)
                     {
                         deferred.init(OsgiPlugin.this, source);
                         deferred.setErrorText(UnrecognisedModuleDescriptorFallbackFactory.DESCRIPTOR_TEXT);
                         addModuleDescriptor(deferred);
-                        log.info("Removed plugin module "+deferred.getCompleteKey()+" as its factory was uninstalled");
+                        log.info("Removed plugin module " + deferred.getCompleteKey() + " as its factory was uninstalled");
                     }
                 }
             }

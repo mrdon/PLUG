@@ -2,16 +2,17 @@ package com.atlassian.plugin.classloader;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.Set;
-import java.util.HashSet;
 
 /**
  *
@@ -19,20 +20,20 @@ import java.util.HashSet;
 public class PluginsClassLoader extends AbstractClassLoader
 {
     private static final Log log = LogFactory.getLog(PluginsClassLoader.class);
-    private final PluginAccessor pluginAccessor;
+    private final PluginAccessor<?> pluginAccessor;
 
-    private final Map<String,Plugin> pluginResourceIndex = new HashMap<String,Plugin>();
-    private final Map<String,Plugin> pluginClassIndex = new HashMap<String,Plugin>();
+    private final Map<String, Plugin> pluginResourceIndex = new HashMap<String, Plugin>();
+    private final Map<String, Plugin> pluginClassIndex = new HashMap<String, Plugin>();
 
     private final Set<String> missedPluginResource = new HashSet<String>();
     private final Set<String> missedPluginClass = new HashSet<String>();
 
-    public PluginsClassLoader(PluginAccessor pluginAccessor)
+    public PluginsClassLoader(final PluginAccessor<?> pluginAccessor)
     {
-        this(null,pluginAccessor);
+        this(null, pluginAccessor);
     }
 
-    public PluginsClassLoader(ClassLoader parent, PluginAccessor pluginAccessor)
+    public PluginsClassLoader(final ClassLoader parent, final PluginAccessor<?> pluginAccessor)
     {
         super(parent);
         if (pluginAccessor == null)
@@ -42,12 +43,13 @@ public class PluginsClassLoader extends AbstractClassLoader
         this.pluginAccessor = pluginAccessor;
     }
 
+    @Override
     protected URL findResource(final String name)
     {
         final Plugin indexedPlugin;
         synchronized (this)
         {
-             indexedPlugin = pluginResourceIndex.get(name);
+            indexedPlugin = pluginResourceIndex.get(name);
         }
         final URL result;
         if (isPluginEnabled(indexedPlugin))
@@ -65,7 +67,8 @@ public class PluginsClassLoader extends AbstractClassLoader
         return result;
     }
 
-    protected Class findClass(String className) throws ClassNotFoundException
+    @Override
+    protected Class<?> findClass(final String className) throws ClassNotFoundException
     {
         final Plugin indexedPlugin;
         synchronized (this)
@@ -73,7 +76,7 @@ public class PluginsClassLoader extends AbstractClassLoader
             indexedPlugin = pluginClassIndex.get(className);
         }
 
-        final Class result;
+        final Class<?> result;
         if (isPluginEnabled(indexedPlugin))
         {
             result = indexedPlugin.getClassLoader().loadClass(className);
@@ -96,7 +99,7 @@ public class PluginsClassLoader extends AbstractClassLoader
         }
     }
 
-    private Class loadClassFromPlugins(String className)
+    private Class<?> loadClassFromPlugins(final String className)
     {
         final boolean isMissedClassName;
         synchronized (this)
@@ -108,11 +111,11 @@ public class PluginsClassLoader extends AbstractClassLoader
             return null;
         }
         final Collection<Plugin> plugins = pluginAccessor.getEnabledPlugins();
-        for (Plugin plugin : plugins)
+        for (final Plugin plugin : plugins)
         {
             try
             {
-                Class result = plugin.getClassLoader().loadClass(className);
+                final Class<?> result = plugin.getClassLoader().loadClass(className);
                 //loadClass should never return null
                 synchronized (this)
                 {
@@ -120,7 +123,7 @@ public class PluginsClassLoader extends AbstractClassLoader
                 }
                 return result;
             }
-            catch (ClassNotFoundException e)
+            catch (final ClassNotFoundException e)
             {
                 // continue searching the other plugins
             }
@@ -132,7 +135,7 @@ public class PluginsClassLoader extends AbstractClassLoader
         return null;
     }
 
-    private URL getResourceFromPlugins(String name)
+    private URL getResourceFromPlugins(final String name)
     {
         final boolean isMissedResource;
         synchronized (this)
@@ -144,7 +147,7 @@ public class PluginsClassLoader extends AbstractClassLoader
             return null;
         }
         final Collection<Plugin> plugins = pluginAccessor.getEnabledPlugins();
-        for (Plugin plugin : plugins)
+        for (final Plugin plugin : plugins)
         {
             final URL resource = plugin.getClassLoader().getResource(name);
             if (resource != null)
@@ -163,27 +166,27 @@ public class PluginsClassLoader extends AbstractClassLoader
         return null;
     }
 
-    private boolean isPluginEnabled(Plugin plugin)
+    private boolean isPluginEnabled(final Plugin plugin)
     {
-        return plugin != null && pluginAccessor.isPluginEnabled(plugin.getKey());
+        return (plugin != null) && pluginAccessor.isPluginEnabled(plugin.getKey());
     }
 
-    public synchronized void notifyUninstallPlugin(Plugin plugin)
+    public synchronized void notifyUninstallPlugin(final Plugin plugin)
     {
         flushMissesCaches();
-        for (Iterator it = pluginResourceIndex.entrySet().iterator(); it.hasNext();)
+        for (final Iterator<Map.Entry<String, Plugin>> it = pluginResourceIndex.entrySet().iterator(); it.hasNext();)
         {
-            final Map.Entry resourceEntry = (Map.Entry) it.next();
-            final Plugin pluginForResource = (Plugin) resourceEntry.getValue();
+            final Map.Entry<String, Plugin> resourceEntry = it.next();
+            final Plugin pluginForResource = resourceEntry.getValue();
             if (plugin.getKey().equals(pluginForResource.getKey()))
             {
                 it.remove();
             }
         }
-        for (Iterator it = pluginClassIndex.entrySet().iterator(); it.hasNext();)
+        for (final Iterator<Map.Entry<String, Plugin>> it = pluginClassIndex.entrySet().iterator(); it.hasNext();)
         {
-            final Map.Entry pluginClassEntry = (Map.Entry) it.next();
-            final Plugin pluginForClass = (Plugin) pluginClassEntry.getValue();
+            final Map.Entry<String, Plugin> pluginClassEntry = it.next();
+            final Plugin pluginForClass = pluginClassEntry.getValue();
             if (plugin.getKey().equals(pluginForClass.getKey()))
             {
                 it.remove();

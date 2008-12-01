@@ -15,7 +15,7 @@ public class StaticPlugin extends AbstractPlugin
         return false;
     }
 
-    public Class<?> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
+    public <T> Class<T> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
     {
         return ClassLoaderUtils.loadClass(clazz, callingClass);
     }

@@ -37,11 +37,37 @@ public interface Plugin extends Resourced, Comparable<Plugin>
 
     void addModuleDescriptor(ModuleDescriptor<?> moduleDescriptor);
 
-    Collection<ModuleDescriptor<?>> getModuleDescriptors();
+    /**
+     * Get the {@link Collection} of {@link ModuleDescriptor descriptors}.
+     * <p>
+     * Note: The {@link ModuleDescriptor#getModule()} may throw {@link ClassCastException} if the expected type is incorrect.
+     * Normally this method would not be supplied with anything other than {@link Object} or &lt;?&gt;, unless you are
+     * confident in the super type of the module classes this {@link Plugin} provides.
+     * 
+     * @param <M> The expected module type of the returned ModuleDescriptor.
+     * @return the {@link ModuleDescriptor} of the expected type.
+     */
+    <M> Collection<ModuleDescriptor<M>> getModuleDescriptors();
 
-    ModuleDescriptor<?> getModuleDescriptor(String key);
+    /**
+     * Get the {@link ModuleDescriptor} for a particular key.
+     * <p>
+     * Note: The {@link ModuleDescriptor#getModule()} may throw {@link ClassCastException} if the expected type is incorrect.
+     * 
+     * @param <M> The expected module type of the returned {@link ModuleDescriptor}.
+     * @param key the {@link String} key.
+     * @return the {@link ModuleDescriptor} of the expected type.
+     */
+    <M> ModuleDescriptor<M> getModuleDescriptor(String key);
 
-    <T> List<ModuleDescriptor<T>> getModuleDescriptorsByModuleClass(Class<T> aClass);
+    /**
+     * Get the {@link ModuleDescriptor descriptors} whose module class implements or is assignable from the supplied {@link Class}.
+     * 
+     * @param <M> The expected module type of the returned {@link ModuleDescriptor descriptors}.
+     * @param moduleClass the {@link Class super class} the {@link ModuleDescriptor descriptors} return.
+     * @return the {@link List} of {@link ModuleDescriptordescriptors } of the expected type.
+     */
+    <M> List<ModuleDescriptor<M>> getModuleDescriptorsByModuleClass(Class<M> moduleClass);
 
     boolean isEnabledByDefault();
 
@@ -99,7 +125,7 @@ public interface Plugin extends Resourced, Comparable<Plugin>
      * @return The loaded class.
      * @throws ClassNotFoundException
      */
-    Class<?> loadClass(String clazz, Class<?> callingClass) throws ClassNotFoundException;
+    <T> Class<T> loadClass(String clazz, Class<?> callingClass) throws ClassNotFoundException;
 
     /**
      * Get the classloader for the plugin.

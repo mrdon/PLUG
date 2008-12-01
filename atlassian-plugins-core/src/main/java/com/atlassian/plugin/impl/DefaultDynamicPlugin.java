@@ -16,7 +16,7 @@ public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugi
     private boolean deletable = true;
     private boolean bundled = false;
 
-    public DefaultDynamicPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
+    public DefaultDynamicPlugin(final DeploymentUnit deploymentUnit, final PluginClassLoader loader)
     {
         if (loader == null)
         {
@@ -26,9 +26,11 @@ public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugi
         this.loader = loader;
     }
 
-    public Class<?> loadClass(String clazz, Class<?> callingClass) throws ClassNotFoundException
+    public <T> Class<T> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
     {
-        return loader.loadClass(clazz);
+        @SuppressWarnings("unchecked")
+        final Class<T> result = (Class<T>) loader.loadClass(clazz);
+        return result;
     }
 
     public boolean isUninstallable()
@@ -36,12 +38,12 @@ public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugi
         return true;
     }
 
-    public URL getResource(String name)
+    public URL getResource(final String name)
     {
         return loader.getResource(name);
     }
 
-    public InputStream getResourceAsStream(String name)
+    public InputStream getResourceAsStream(final String name)
     {
         return loader.getResourceAsStream(name);
     }
@@ -71,7 +73,7 @@ public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugi
         return deletable;
     }
 
-    public void setDeletable(boolean deletable)
+    public void setDeletable(final boolean deletable)
     {
         this.deletable = deletable;
     }
@@ -81,7 +83,7 @@ public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugi
         return bundled;
     }
 
-    public void setBundled(boolean bundled)
+    public void setBundled(final boolean bundled)
     {
         this.bundled = bundled;
     }

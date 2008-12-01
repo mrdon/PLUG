@@ -33,29 +33,29 @@ public class ClassLoaderUtils
      * @param callingClass The Class object of the calling object
      * @throws ClassNotFoundException If the class cannot be found anywhere.
      */
-    public static Class<?> loadClass(String className, Class<?> callingClass) throws ClassNotFoundException
+    public static <T> Class<T> loadClass(final String className, final Class<?> callingClass) throws ClassNotFoundException
     {
         try
         {
-            return Thread.currentThread().getContextClassLoader().loadClass(className);
+            return coerce(Thread.currentThread().getContextClassLoader().loadClass(className));
         }
-        catch (ClassNotFoundException e)
+        catch (final ClassNotFoundException e)
         {
             try
             {
-                return Class.forName(className);
+                return coerce(Class.forName(className));
             }
-            catch (ClassNotFoundException ex)
+            catch (final ClassNotFoundException ex)
             {
                 try
                 {
-                    return ClassLoaderUtils.class.getClassLoader().loadClass(className);
+                    return coerce(ClassLoaderUtils.class.getClassLoader().loadClass(className));
                 }
-                catch (ClassNotFoundException exc)
+                catch (final ClassNotFoundException exc)
                 {
-                    if (callingClass != null && callingClass.getClassLoader() != null)
+                    if ((callingClass != null) && (callingClass.getClassLoader() != null))
                     {
-                        return callingClass.getClassLoader().loadClass(className);
+                        return coerce(callingClass.getClassLoader().loadClass(className));
                     }
                     else
                     {
@@ -64,6 +64,13 @@ public class ClassLoaderUtils
                 }
             }
         }
+    }
+
+    private static <T> Class<T> coerce(final Class<?> klass)
+    {
+        @SuppressWarnings("unchecked")
+        final Class<T> result = (Class<T>) klass;
+        return result;
     }
 
     /**
@@ -79,7 +86,7 @@ public class ClassLoaderUtils
      * @param resourceName The name of the resource to load
      * @param callingClass The Class object of the calling object
      */
-    public static URL getResource(String resourceName, Class<?> callingClass)
+    public static URL getResource(final String resourceName, final Class<?> callingClass)
     {
         URL url = null;
 
@@ -97,20 +104,20 @@ public class ClassLoaderUtils
         return url;
     }
 
-     /**
-     * returns all found resources as java.net.URLs.
-     * <p>
-     * This method will try to load the resource using the following methods (in order):
-     * <ul>
-     *  <li>From {@link Thread#getContextClassLoader() Thread.currentThread().getContextClassLoader()}
-     *  <li>From {@link Class#getClassLoader() ClassLoaderUtil.class.getClassLoader()}
-     *  <li>From the {@link Class#getClassLoader() callingClass.getClassLoader() }
-     * </ul>
-     *
-     * @param resourceName The name of the resource to load
-     * @param callingClass The Class object of the calling object
-     */
-    public static Enumeration<URL> getResources(String resourceName, Class<?> callingClass) throws IOException
+    /**
+    * returns all found resources as java.net.URLs.
+    * <p>
+    * This method will try to load the resource using the following methods (in order):
+    * <ul>
+    *  <li>From {@link Thread#getContextClassLoader() Thread.currentThread().getContextClassLoader()}
+    *  <li>From {@link Class#getClassLoader() ClassLoaderUtil.class.getClassLoader()}
+    *  <li>From the {@link Class#getClassLoader() callingClass.getClassLoader() }
+    * </ul>
+    *
+    * @param resourceName The name of the resource to load
+    * @param callingClass The Class object of the calling object
+    */
+    public static Enumeration<URL> getResources(final String resourceName, final Class<?> callingClass) throws IOException
     {
         Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(resourceName);
         if (urls == null)
@@ -133,14 +140,14 @@ public class ClassLoaderUtils
      * @param resourceName The name of the resource to load
      * @param callingClass The Class object of the calling object
      */
-    public static InputStream getResourceAsStream(String resourceName, Class<?> callingClass)
+    public static InputStream getResourceAsStream(final String resourceName, final Class<?> callingClass)
     {
-        URL url = getResource(resourceName, callingClass);
+        final URL url = getResource(resourceName, callingClass);
         try
         {
             return url != null ? url.openStream() : null;
         }
-        catch (IOException e)
+        catch (final IOException e)
         {
             return null;
         }
@@ -158,7 +165,7 @@ public class ClassLoaderUtils
     /**
      * Prints the classloader hierarchy from a given classloader - useful for debugging.
      */
-    public static void printClassLoader(ClassLoader cl)
+    public static void printClassLoader(final ClassLoader cl)
     {
         System.out.println("ClassLoaderUtils.printClassLoader(cl = " + cl + ")");
         if (cl != null)

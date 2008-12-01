@@ -75,14 +75,25 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
      * Returns a copy of the module descriptors for this plugin
      * @return A copy of the internal list
      */
-    public Collection<ModuleDescriptor<?>> getModuleDescriptors()
+    public <M> Collection<ModuleDescriptor<M>> getModuleDescriptors()
     {
-        return new ArrayList<ModuleDescriptor<?>>(modules.values());
+        // generics hack
+        final Collection<ModuleDescriptor<?>> descriptors = modules.values();
+        final ArrayList<ModuleDescriptor<M>> result = new ArrayList<ModuleDescriptor<M>>(descriptors.size());
+        for (final ModuleDescriptor<?> moduleDescriptor : descriptors)
+        {
+            @SuppressWarnings("unchecked")
+            final ModuleDescriptor<M> typedDescriptor = (ModuleDescriptor<M>) moduleDescriptor;
+            result.add(typedDescriptor);
+        }
+        return result;
     }
 
-    public ModuleDescriptor<?> getModuleDescriptor(final String key)
+    public <M> ModuleDescriptor<M> getModuleDescriptor(final String key)
     {
-        return modules.get(key);
+        @SuppressWarnings("unchecked")
+        final ModuleDescriptor<M> moduleDescriptor = (ModuleDescriptor<M>) modules.get(key);
+        return moduleDescriptor;
     }
 
     public <T> List<ModuleDescriptor<T>> getModuleDescriptorsByModuleClass(final Class<T> aClass)

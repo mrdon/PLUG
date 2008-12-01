@@ -271,10 +271,6 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         return resources.getResourceLocation(type, name);
     }
 
-    /**
-     * @deprecated
-     */
-    @Deprecated
     public ResourceDescriptor getResourceDescriptor(final String type, final String name)
     {
         return resources.getResourceDescriptor(type, name);
