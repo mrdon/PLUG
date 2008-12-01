@@ -6,7 +6,6 @@ import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
@@ -53,10 +52,6 @@ public class ContainerManager
         servletModuleManager = new DefaultServletModuleManager(pluginEventManager);
 
         SimpleWebResourceIntegration webResourceIntegration = new SimpleWebResourceIntegration(servletContext);
-        PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(webResourceIntegration, null); //todo servlet context factory
-        PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
-
-        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration);
 
         DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
         List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
@@ -114,6 +109,10 @@ public class ContainerManager
             e.printStackTrace();
         }
 
+        PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(pluginManager, null); //todo servlet context factory
+        PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
+
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration);
         downloadStrategies = new ArrayList<DownloadStrategy>();
         downloadStrategies.add(pluginDownloadStrategy);
     }

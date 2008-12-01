@@ -20,13 +20,13 @@ public class TestPluginResource extends TestCase
 
     public void testGetUrl()
     {
-        SinglePluginResource resource = new SinglePluginResource("foo.css", "test.plugin.key", "");
+        SinglePluginResource resource = new SinglePluginResource("foo.css", "test.plugin.key", false);
         assertEquals("/download/resources/test.plugin.key/foo.css", resource.getUrl());
     }
 
     public void testRoundTrip()
     {
-        SinglePluginResource resource = new SinglePluginResource("foo.css", "test.plugin.key", "");
+        SinglePluginResource resource = new SinglePluginResource("foo.css", "test.plugin.key", false);
         String url = resource.getUrl();
         SinglePluginResource parsedResource = SinglePluginResource.parse(url);
         assertEquals(resource.getModuleCompleteKey(), parsedResource.getModuleCompleteKey());

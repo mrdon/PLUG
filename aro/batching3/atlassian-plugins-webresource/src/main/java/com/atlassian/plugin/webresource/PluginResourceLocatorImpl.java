@@ -20,22 +20,19 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 {
     private static final Log log = LogFactory.getLog(PluginResourceLocatorImpl.class);
 
-    static final String STATIC_RESOURCE_PREFIX = "s";
-    static final String STATIC_RESOURCE_SUFFIX = "_";
+    public static final String PLUGIN_WEBRESOURCE_BATCHING_OFF = "plugin.webresource.batching.off";
 
     private static final String DOWNLOAD_TYPE = "download";
 
-    private static String[] BATCH_PARAMS = new String[] { "ieonly", "media", "content-type" };
+    private static String[] BATCH_PARAMS = new String[] { "ieonly", "media", "content-type", "cache" };
 
-    private WebResourceIntegration webResourceIntegration;
-    private ServletContextFactory servletContextFactory;
     private PluginAccessor pluginAccessor;
+    private ServletContextFactory servletContextFactory;
 
-    public PluginResourceLocatorImpl(WebResourceIntegration webResourceIntegration, ServletContextFactory servletContextFactory)
+    public PluginResourceLocatorImpl(PluginAccessor pluginAccessor, ServletContextFactory servletContextFactory)
     {
-        this.webResourceIntegration = webResourceIntegration;
+        this.pluginAccessor = pluginAccessor;
         this.servletContextFactory = servletContextFactory;
-        this.pluginAccessor = webResourceIntegration.getPluginAccessor();
     }
 
     public boolean matches(String url)
@@ -45,26 +42,31 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     public DownloadableResource getDownloadableResource(String url, Map<String, String> queryParams)
     {
+        if(BatchPluginResource.matches(url))
+        {
+            BatchPluginResource batchResource = BatchPluginResource.parse(url, queryParams);
+            return locateBatchPluginResource(batchResource);
+        }
+
         if(SinglePluginResource.matches(url))
         {
             SinglePluginResource resource = SinglePluginResource.parse(url);
             return locatePluginResource(resource.getModuleCompleteKey(), resource.getResourceName());
         }
 
-        if(BatchPluginResource.matches(url))
-        {
-            BatchPluginResource batchResource = BatchPluginResource.parse(url, queryParams);
-            ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(batchResource.getModuleCompleteKey());
-            for(ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors(DOWNLOAD_TYPE))
-            {
-                if(isResourceInBatch(resourceDescriptor, batchResource))
-                    batchResource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
-            }
-            return batchResource;
-        }
-
         log.error("Cannot locate resource for unknown url: " + url);
         return null;
+    }
+
+    private DownloadableResource locateBatchPluginResource(BatchPluginResource batchResource)
+    {
+        ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(batchResource.getModuleCompleteKey());
+        for(ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors(DOWNLOAD_TYPE))
+        {
+            if(isResourceInBatch(resourceDescriptor, batchResource))
+                batchResource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
+        }
+        return batchResource;
     }
 
     private boolean isResourceInBatch(ResourceDescriptor resourceDescriptor, BatchPluginResource batchResource)
@@ -191,7 +193,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         return new DownloadableClasspathResource(plugin, resourceLocation, filePath);
     }
 
-    public List<PluginResource> getPluginResource(String moduleCompleteKey)
+    public List<PluginResource> getPluginResources(String moduleCompleteKey)
     {
         ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(moduleCompleteKey);
         if (moduleDescriptor == null || !(moduleDescriptor instanceof WebResourceModuleDescriptor))
@@ -200,19 +202,19 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             return Collections.EMPTY_LIST;
         }
 
-        boolean singleMode = Boolean.valueOf(System.getProperty("plugin.webresource.single.download"));
+        boolean singleMode = Boolean.valueOf(System.getProperty(PLUGIN_WEBRESOURCE_BATCHING_OFF));
         List<PluginResource> resources = new ArrayList<PluginResource>();
 
         for(ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors())
         {
-            String staticUrlPrefix = getUrlPrefix((WebResourceModuleDescriptor) moduleDescriptor, resourceDescriptor);
             if (singleMode)
             {
-                resources.add(new SinglePluginResource(resourceDescriptor.getName(), moduleDescriptor.getCompleteKey(), staticUrlPrefix));
+                boolean cache = !"false".equalsIgnoreCase(resourceDescriptor.getParameter("cache"));
+                resources.add(new SinglePluginResource(resourceDescriptor.getName(), moduleDescriptor.getCompleteKey(), cache));
             }
             else
             {
-                BatchPluginResource batchResource = createBatchResource(moduleDescriptor.getKey(), moduleDescriptor.getCompleteKey(),  resourceDescriptor, staticUrlPrefix);
+                BatchPluginResource batchResource = createBatchResource(moduleDescriptor.getCompleteKey(),  resourceDescriptor);
                 if(!resources.contains(batchResource))
                     resources.add(batchResource);
             }
@@ -220,7 +222,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         return resources;
     }
 
-    private BatchPluginResource createBatchResource(String batchName, String moduleCompleteKey, ResourceDescriptor resourceDescriptor, String staticUrlPrefix)
+    private BatchPluginResource createBatchResource(String moduleCompleteKey, ResourceDescriptor resourceDescriptor)
     {
         String name = resourceDescriptor.getName();
         String type = name.substring(name.lastIndexOf(".") + 1);
@@ -232,47 +234,12 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
                 params.put(param, value);
         }
 
-        return new BatchPluginResource(batchName, moduleCompleteKey, type, params, staticUrlPrefix);
+        return new BatchPluginResource(moduleCompleteKey, type, params);
     }
 
-    private String getUrlPrefix(WebResourceModuleDescriptor moduleDescriptor, ResourceDescriptor resourceDescriptor)
+    public String getResourceUrl(String moduleCompleteKey, String resourceName)
     {
-        if (!"false".equalsIgnoreCase(resourceDescriptor.getParameter("cache"))) //todo preserve for batching
-            return getStaticResourceUrlPrefix(String.valueOf(moduleDescriptor.getPlugin().getPluginsVersion()));
-
-        return "";
-    }
-
-    public String getStaticResourceUrlPrefix()
-    {
-        // "{base url}/s/{build num}/{system counter}/_"
-        return getStaticResourceUrlPrefix(null);
-    }
-
-    public String getStaticResourceUrlPrefix(String resourceCounter)
-    {
-        // "{base url}/s/{build num}/{system counter}/{resourceCounter}/_"
-        StringBuffer sb = new StringBuffer();
-        sb.append(webResourceIntegration.getBaseUrl()).append("/").
-            append(STATIC_RESOURCE_PREFIX).append("/").
-            append(webResourceIntegration.getSystemBuildNumber()).append("/").
-            append(webResourceIntegration.getSystemCounter()).append("/");
-
-        if(resourceCounter != null)
-            sb.append(resourceCounter).append("/");
-
-        sb.append(STATIC_RESOURCE_SUFFIX);
-        return sb.toString();
-    }
-
-    public String getStaticResourceUrl(String moduleCompleteKey, String resourceName)
-    {
-        ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(moduleCompleteKey);
-        if(moduleDescriptor == null)
-            return null;
-
-        String staticUrlPrefix = getStaticResourceUrlPrefix(String.valueOf(moduleDescriptor.getPlugin().getPluginsVersion()));
-        PluginResource pluginResource = new SinglePluginResource(resourceName, moduleCompleteKey, staticUrlPrefix);
+        PluginResource pluginResource = new SinglePluginResource(resourceName, moduleCompleteKey, false);
         return pluginResource.getUrl();
     }
 }

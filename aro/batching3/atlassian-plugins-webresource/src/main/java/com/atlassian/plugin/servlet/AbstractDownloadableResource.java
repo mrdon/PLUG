@@ -100,6 +100,9 @@ abstract class AbstractDownloadableResource implements DownloadableResource
         return resourceLocation.getContentType();
     }
 
+    /**
+     * Returns an {@link InputStream} to stream the resource from.
+     */
     protected abstract InputStream getResourceAsStream();
 
     protected String getLocation()

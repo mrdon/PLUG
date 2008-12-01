@@ -1,6 +1,7 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
 import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,11 +32,11 @@ public class WebResourceManagerImpl implements WebResourceManager
 {
     private static final Log log = LogFactory.getLog(WebResourceManagerImpl.class);
 
-    private static final String REQUEST_CACHE_RESOURCE_KEY = "plugin.webresource.names";
-    private static final String REQUEST_CACHE_MODE_KEY = "plugin.webresource.mode";
+    static final String STATIC_RESOURCE_PREFIX = "s";
+    static final String STATIC_RESOURCE_SUFFIX = "_";
 
-    private static final IncludeMode DEFAULT_INCLUDE_MODE = WebResourceManager.DELAYED_INCLUDE_MODE;
-
+    static final String REQUEST_CACHE_RESOURCE_KEY = "plugin.webresource.names";
+    
     protected final WebResourceIntegration webResourceIntegration;
     protected final PluginResourceLocator pluginResourceLocator;
     protected static final List<WebResourceFormatter> webResourceFormatters = Arrays.< WebResourceFormatter>asList(new CssWebResourceFormatter(), new JavascriptWebResourceFormatter());
@@ -85,7 +86,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void writeResourceTags(String resourceName, Writer writer)
     {
-        List<PluginResource> resources = pluginResourceLocator.getPluginResource(resourceName);
+        List<PluginResource> resources = pluginResourceLocator.getPluginResources(resourceName);
         if(resources == null)
         {
             writeContentAndSwallowErrors("<!-- Error loading resource \"" + resourceName + "\".  Resource not found -->\n", writer);
@@ -101,7 +102,13 @@ public class WebResourceManagerImpl implements WebResourceManager
                 continue;
             }
 
-            writeContentAndSwallowErrors(formatter.formatResource(resource.getUrl(), resource.getParams()), writer);
+            String url = resource.getUrl();
+            if(resource.isCacheSupported())
+            {
+                Plugin plugin = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resource.getModuleCompleteKey()).getPlugin();
+                url = getStaticResourcePrefix(String.valueOf(plugin.getPluginsVersion())) + url;
+            }
+            writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writer);
         }
     }
 
@@ -136,21 +143,41 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public String getStaticResourcePrefix()
     {
-        return pluginResourceLocator.getStaticResourceUrlPrefix();
+        // "{base url}/s/{build num}/{system counter}/_"
+        return getStaticResourcePrefix(null);
     }
 
     public String getStaticResourcePrefix(String resourceCounter)
     {
-        return pluginResourceLocator.getStaticResourceUrlPrefix(resourceCounter);
+        // "{base url}/s/{build num}/{system counter}/{resourceCounter}/_"
+        StringBuffer sb = new StringBuffer();
+        sb.append(webResourceIntegration.getBaseUrl()).append("/").
+            append(STATIC_RESOURCE_PREFIX).append("/").
+            append(webResourceIntegration.getSystemBuildNumber()).append("/").
+            append(webResourceIntegration.getSystemCounter()).append("/");
+
+        if(resourceCounter != null)
+            sb.append(resourceCounter).append("/");
+
+        sb.append(STATIC_RESOURCE_SUFFIX);
+        return sb.toString();
     }
 
     public String getStaticPluginResource(String moduleCompleteKey, String resourceName)
     {
-        return pluginResourceLocator.getStaticResourceUrl(moduleCompleteKey, resourceName);
+        ModuleDescriptor moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleCompleteKey);
+        if(moduleDescriptor == null)
+            return null;
+
+        String staticUrlPrefix = getStaticResourcePrefix(String.valueOf(moduleDescriptor.getPlugin().getPluginsVersion()));
+        return staticUrlPrefix + pluginResourceLocator.getResourceUrl(moduleCompleteKey, resourceName);
     }
 
     /* Deprecated methods */
 
+    /**
+     * @deprecated Since 2.2. Use {@link #getStaticPluginResource(String, String)} instead
+     */
     public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName)
     {
         return getStaticPluginResource(moduleDescriptor.getCompleteKey(), resourceName);
@@ -179,6 +206,16 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         return getStaticPluginResource(moduleDescriptor, resourceName);
     }
+
+    /**
+     * @deprecated Since 2.2
+     */
+    private static final String REQUEST_CACHE_MODE_KEY = "plugin.webresource.mode";
+
+    /**
+     * @deprecated Since 2.2
+     */
+    private static final IncludeMode DEFAULT_INCLUDE_MODE = WebResourceManager.DELAYED_INCLUDE_MODE;
 
     /**
      * @deprecated Since 2.2.

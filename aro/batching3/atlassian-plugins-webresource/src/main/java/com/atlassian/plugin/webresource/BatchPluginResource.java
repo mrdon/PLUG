@@ -31,20 +31,18 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      */
     static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + "batch";
 
-    private String resourceName;
     private String type;
     private String moduleCompleteKey;
     private Map<String, String> params;
-    private String staticUrlPrefix;
+    private String resourceName;
     private List<DownloadableResource> resources;
 
-    public BatchPluginResource(String batchName, String moduleCompleteKey, String type, Map<String, String> params, String staticUrlPrefix)
+    public BatchPluginResource(String moduleCompleteKey, String type, Map<String, String> params)
     {
         this.moduleCompleteKey = moduleCompleteKey;
         this.type = type;
         this.params = params;
-        this.staticUrlPrefix = staticUrlPrefix;
-        this.resourceName = batchName + "." + type;
+        this.resourceName = moduleCompleteKey + "." + type;
         this.resources = new ArrayList<DownloadableResource>();
     }
 
@@ -74,13 +72,28 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
 
     public String getContentType()
     {
-        //todo when content type specified in params
+        String contentType = params.get("content-type");
+        if(contentType != null)
+            return contentType;
+        
+        //todo - should it iterate through the list?
         return null;
     }
 
+    /**
+     * Parses the given url and query parameter map into a BatchPluginResource. Query paramters must be
+     * passed in through the map, any in the url String will be ignored.
+     * @param url the url to parse
+     * @param queryParams a map of String key and value pairs representing the query parameters in the url
+     */
     public static BatchPluginResource parse(String url, Map<String, String> queryParams)
     {
         int startIndex = url.indexOf(URL_PREFIX) + URL_PREFIX.length() + 1;
+
+        if(url.indexOf('?') != -1) // remove query parameters
+        {
+            url = url.substring(0, url.indexOf('?'));
+        }
 
         String typeAndModuleKey = url.substring(startIndex);
         String[] parts = typeAndModuleKey.split("/");
@@ -90,9 +103,12 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
 
         String type = parts[0];
         String moduleKey = parts[1];
-        String batchName = parts.length >= 3 ? parts[2] : "all." + type;
-        
-        return new BatchPluginResource(batchName, moduleKey, type, queryParams, url.substring(0, startIndex));
+        if(moduleKey.endsWith("." + type))
+        {
+            moduleKey = moduleKey.substring(0, moduleKey.lastIndexOf("." + type));
+        }
+
+        return new BatchPluginResource(moduleKey, type, queryParams);
     }
 
     public static boolean matches(String url)
@@ -100,13 +116,16 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         return url.indexOf(URL_PREFIX) != -1;
     }
 
+    /**
+     * Returns a url string in the format: /download/batch/TYPE/MODULE_COMPLETE_KEY.TYPE?PARAMS
+     *
+     * e.g. /download/batch/css/example.plugin:webresources.css?ie=true
+     */
     public String getUrl()
     {
-        // e.g. /download/batch/css/example.plugin:webresources/webresources.css?ie=true
-        StringBuffer sb = new StringBuffer(staticUrlPrefix);
+        StringBuffer sb = new StringBuffer();
         sb.append(URL_PREFIX).append(PATH_SEPARATOR)
             .append(type).append(PATH_SEPARATOR)
-            .append(moduleCompleteKey).append(PATH_SEPARATOR)
             .append(resourceName);
 
         if(params.size() > 0 )
@@ -126,6 +145,10 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         return sb.toString();
     }
 
+    /**
+     * Returns the resource name in the format moduleCompleteKey.type
+     * For example: test.plugin:resources.js
+     */
     public String getResourceName()
     {
         return resourceName;
@@ -139,6 +162,11 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
     public String getModuleCompleteKey()
     {
         return moduleCompleteKey;
+    }
+
+    public boolean isCacheSupported()
+    {
+        return !"false".equals(params.get("cache"));
     }
 
     public String getType()

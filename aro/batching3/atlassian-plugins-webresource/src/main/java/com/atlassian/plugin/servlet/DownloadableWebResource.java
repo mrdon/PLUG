@@ -6,6 +6,9 @@ import com.atlassian.plugin.elements.ResourceLocation;
 import javax.servlet.ServletContext;
 import java.io.InputStream;
 
+/**
+ * A {@link DownloadableResource} that will serve the resource via the web application's {@link ServletContext}.
+ */
 public class DownloadableWebResource extends AbstractDownloadableResource
 {
     private ServletContext servletContext;
