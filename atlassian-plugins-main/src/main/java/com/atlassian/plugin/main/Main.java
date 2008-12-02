@@ -1,5 +1,8 @@
 package com.atlassian.plugin.main;
 
+import static com.atlassian.plugin.main.PackageScannerConfigurationBuilder.packageScannerConfiguration;
+import static com.atlassian.plugin.main.PluginsConfigurationBuilder.pluginsConfiguration;
+
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -18,22 +21,17 @@ import java.util.Properties;
 public class Main
 {
 
-    public static void main(String[] args)
+    public static void main(final String[] args)
     {
         initialiseLogger();
-        File pluginDir = new File("plugins");
+        final File pluginDir = new File("plugins");
         pluginDir.mkdir();
         System.out.println("Created plugins directory " + pluginDir.getAbsolutePath());
 
-
-        PluginsConfiguration config = new PluginsConfigurationBuilder()
-                .setPluginDirectory(pluginDir)
-                .setPackagesToInclude("org.apache.*", "com.atlassian.*", "org.dom4j*")
-                .setPackagesVersions(Collections.singletonMap("org.apache.log4j", "1.2.15"))
-                .build();
+        final PluginsConfiguration config = pluginsConfiguration().pluginDirectory(pluginDir).packageScannerConfiguration(
+            packageScannerConfiguration().packagesToInclude("org.apache.*", "com.atlassian.*", "org.dom4j*").packagesVersions(
+                Collections.singletonMap("org.apache.log4j", "1.2.15")).build()).build();
         final AtlassianPlugins plugins = new AtlassianPlugins(config);
-
-
 
         Runtime.getRuntime().addShutdownHook(new Thread()
         {
@@ -47,7 +45,7 @@ public class Main
 
         plugins.start();
 
-        Thread hotDeploy = new Thread("Hot Deploy")
+        final Thread hotDeploy = new Thread("Hot Deploy")
         {
             @Override
             public void run()
@@ -60,9 +58,9 @@ public class Main
                     {
                         Thread.sleep(5000);
                     }
-                    catch (InterruptedException e)
+                    catch (final InterruptedException e)
                     {
-                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                        e.printStackTrace(); //To change body of catch statement use File | Settings | File Templates.
                         break;
                     }
                 }
@@ -73,7 +71,7 @@ public class Main
 
     private static void initialiseLogger()
     {
-        Properties logProperties = new Properties();
+        final Properties logProperties = new Properties();
 
         InputStream in;
         try
@@ -83,7 +81,7 @@ public class Main
             PropertyConfigurator.configure(logProperties);
             Logger.getLogger(Main.class).info("Logging initialized.");
         }
-        catch (IOException e)
+        catch (final IOException e)
         {
             throw new RuntimeException("Unable to load logging");
         }

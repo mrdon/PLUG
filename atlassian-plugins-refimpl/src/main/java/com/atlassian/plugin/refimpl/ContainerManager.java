@@ -1,11 +1,15 @@
 package com.atlassian.plugin.refimpl;
 
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
+import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.PluginController;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.hostcontainer.HostContainerAccessor;
+import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
 import com.atlassian.plugin.hostcontainer.SingletonHostContainerAccessor;
-import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.main.AtlassianPlugins;
 import com.atlassian.plugin.main.PluginsConfiguration;
 import com.atlassian.plugin.main.PluginsConfigurationBuilder;
@@ -14,19 +18,28 @@ import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfigurati
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
-import com.atlassian.plugin.servlet.*;
-import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
-import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
-import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
+import com.atlassian.plugin.servlet.ContentTypeResolver;
+import com.atlassian.plugin.servlet.DefaultServletModuleManager;
+import com.atlassian.plugin.servlet.DownloadStrategy;
+import com.atlassian.plugin.servlet.PluginResourceDownload;
+import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.descriptors.ServletContextListenerModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.webresource.WebResourceIntegration;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
 import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
 
-import javax.servlet.ServletContext;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletContext;
 
 /**
  * A simple class that behaves like Spring's ContianerManager class.
@@ -40,25 +53,25 @@ public class ContainerManager
     private final PluginAccessor pluginAccessor;
     private final HostComponentProvider hostComponentProvider;
     private final DefaultModuleDescriptorFactory moduleDescriptorFactory;
-    private final Map<Class,Object> publicContainer;
+    private final Map<Class<?>, Object> publicContainer;
     private final AtlassianPlugins plugins;
     private final HostContainer hostContainer;
 
     private static ContainerManager instance;
-    private List<DownloadStrategy> downloadStrategies;
+    private final List<DownloadStrategy> downloadStrategies;
 
-    public ContainerManager(ServletContext servletContext)
+    public ContainerManager(final ServletContext servletContext)
     {
         instance = this;
         webResourceIntegration = new SimpleWebResourceIntegration(servletContext);
         webResourceManager = new WebResourceManagerImpl(webResourceIntegration);
 
-        File pluginDir = new File(servletContext.getRealPath("/WEB-INF/plugins"));
+        final File pluginDir = new File(servletContext.getRealPath("/WEB-INF/plugins"));
         if (!pluginDir.exists())
         {
             pluginDir.mkdirs();
         }
-        File bundlesDir = new File(servletContext.getRealPath("/WEB-INF/framework-bundles"));
+        final File bundlesDir = new File(servletContext.getRealPath("/WEB-INF/framework-bundles"));
         if (!bundlesDir.exists())
         {
             bundlesDir.mkdirs();
@@ -68,12 +81,12 @@ public class ContainerManager
         // until later
         HostContainerAccessor.setHostContainerAccessor(new SingletonHostContainerAccessor(new HostContainer()
         {
-            public <T> T create(Class<T> moduleClass) throws IllegalArgumentException
+            public <T> T create(final Class<T> moduleClass) throws IllegalArgumentException
             {
                 return hostContainer.create(moduleClass);
             }
 
-            public <T> T getInstance(Class<T> moduleClass)
+            public <T> T getInstance(final Class<T> moduleClass)
             {
                 return hostContainer.getInstance(moduleClass);
             }
@@ -81,34 +94,29 @@ public class ContainerManager
 
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory(HostContainerAccessor.getHostContainer());
 
-
         moduleDescriptorFactory.addModuleDescriptor("servlet", ServletModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("servlet-filter", ServletFilterModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("servlet-context-param", ServletContextParamModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("servlet-context-listener", ServletContextListenerModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("web-resource", WebResourceModuleDescriptor.class);
 
-        DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
-        List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
+        final DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
+        final List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
         packageIncludes.add("org.bouncycastle*");
         scannerConfig.setPackageIncludes(packageIncludes);
         hostComponentProvider = new SimpleHostComponentProvider();
 
-        PluginsConfiguration config = new PluginsConfigurationBuilder()
-                .setPluginDirectory(pluginDir)
-                .setModuleDescriptorFactory(moduleDescriptorFactory)
-                .setPackageScannerConfiguration(scannerConfig)
-                .setHostComponentProvider(hostComponentProvider)
-                .setFrameworkBundlesDirectory(bundlesDir)
-                .build();
+        final PluginsConfiguration config = new PluginsConfigurationBuilder().pluginDirectory(pluginDir).moduleDescriptorFactory(
+            moduleDescriptorFactory).packageScannerConfiguration(scannerConfig).hostComponentProvider(hostComponentProvider).frameworkBundlesDirectory(
+            bundlesDir).build();
         plugins = new AtlassianPlugins(config);
 
-        PluginEventManager pluginEventManager = plugins.getPluginEventManager();
+        final PluginEventManager pluginEventManager = plugins.getPluginEventManager();
         osgiContainerManager = plugins.getOsgiContainerManager();
 
         servletModuleManager = new DefaultServletModuleManager(pluginEventManager);
 
-        publicContainer = new HashMap<Class,Object>();
+        publicContainer = new HashMap<Class<?>, Object>();
 
         pluginAccessor = plugins.getPluginAccessor();
         publicContainer.put(PluginController.class, plugins.getPluginController());
@@ -119,23 +127,24 @@ public class ContainerManager
 
         hostContainer = new SimpleConstructorHostContainer(publicContainer);
 
-        try {
+        try
+        {
             plugins.start();
         }
-        catch (PluginParseException e)
+        catch (final PluginParseException e)
         {
             e.printStackTrace();
         }
 
         downloadStrategies = new ArrayList<DownloadStrategy>();
-        PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload();
+        final PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload();
         pluginDownloadStrategy.setPluginAccessor(pluginAccessor);
         pluginDownloadStrategy.setContentTypeResolver(new SimpleContentTypeResolver());
         pluginDownloadStrategy.setCharacterEncoding("UTF-8");
         downloadStrategies.add(pluginDownloadStrategy);
     }
 
-    public static synchronized void setInstance(ContainerManager mgr)
+    public static synchronized void setInstance(final ContainerManager mgr)
     {
         instance = mgr;
     }
@@ -174,7 +183,7 @@ public class ContainerManager
     {
         return downloadStrategies;
     }
-    
+
     public WebResourceManager getWebResourceManager()
     {
         return webResourceManager;
@@ -199,23 +208,24 @@ public class ContainerManager
 
         SimpleContentTypeResolver()
         {
-            Map<String, String> types = new HashMap<String, String>();
+            final Map<String, String> types = new HashMap<String, String>();
             types.put("js", "application/x-javascript");
             types.put("css", "text/css");
             mimeTypes = Collections.unmodifiableMap(types);
         }
 
-        public String getContentType(String requestUrl)
+        public String getContentType(final String requestUrl)
         {
-            String extension = requestUrl.substring(requestUrl.lastIndexOf('.'));
+            final String extension = requestUrl.substring(requestUrl.lastIndexOf('.'));
             return mimeTypes.get(extension);
         }
     }
 
     private class SimpleHostComponentProvider implements HostComponentProvider
     {
-        public void provide(ComponentRegistrar componentRegistrar) {
-            for (Map.Entry<Class,Object> entry : publicContainer.entrySet())
+        public void provide(final ComponentRegistrar componentRegistrar)
+        {
+            for (final Map.Entry<Class<?>, Object> entry : publicContainer.entrySet())
             {
                 String name = entry.getKey().getSimpleName();
                 name = Character.toLowerCase(name.charAt(0)) + name.substring(1);

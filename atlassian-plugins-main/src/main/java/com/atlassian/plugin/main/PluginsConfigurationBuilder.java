@@ -1,25 +1,35 @@
 package com.atlassian.plugin.main;
 
+import static com.atlassian.plugin.util.Assertions.isTrue;
+import static com.atlassian.plugin.util.Assertions.notNull;
+
+import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.PluginStateStore;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
-import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
-import com.atlassian.plugin.*;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
  * The builder for {@link PluginsConfiguration} instances that additionally performs validation and default creation.
  * For a usage example, see the package javadocs.
+ * <p>
+ * Not thread-safe. Instances of this class should be thread and preferably method local.
  */
 public class PluginsConfigurationBuilder
 {
+    public static PluginsConfigurationBuilder pluginsConfiguration()
+    {
+        return new PluginsConfigurationBuilder();
+    }
+
     private PackageScannerConfiguration packageScannerConfiguration;
     private HostComponentProvider hostComponentProvider;
     private File frameworkBundlesDirectory;
@@ -33,46 +43,14 @@ public class PluginsConfigurationBuilder
     private long hotDeployPollingPeriod;
 
     /**
-     * Sets the package scanner configuration instance that contains information about what packages to expose to plugins
+     * Sets the package scanner configuration instance that contains information about what packages to expose to plugins.
+     * 
      * @param packageScannerConfiguration The configuration instance
      * @return this
      */
-    public PluginsConfigurationBuilder setPackageScannerConfiguration(PackageScannerConfiguration packageScannerConfiguration)
+    public PluginsConfigurationBuilder packageScannerConfiguration(final PackageScannerConfiguration packageScannerConfiguration)
     {
-        this.packageScannerConfiguration = packageScannerConfiguration;
-        return this;
-    }
-
-    /**
-     * Sets a list of package expressions to expose to plugins.  Used as a shortcut for
-     * {@link #setPackageScannerConfiguration(PackageScannerConfiguration)}
-     *
-     * @param pkgs A list of package expressions, where the '*' character matches any character including subpackages
-     * @return this
-     */
-    public PluginsConfigurationBuilder setPackagesToInclude(String... pkgs)
-    {
-        if (packageScannerConfiguration == null)
-            this.packageScannerConfiguration = new DefaultPackageScannerConfiguration();
-
-        packageScannerConfiguration.getPackageIncludes().addAll(Arrays.asList(pkgs));
-        return this;
-    }
-
-    /**
-     * Sets which packages should be exposed as which versions.  Used as a shortcut for
-     * {@link #setPackageScannerConfiguration(PackageScannerConfiguration)}
-     *
-     * @param packageToVersion A map of package names to version names.  No wildcards allowed, and the version names
-     * must match the expected OSGi versioning scheme.
-     * @return this
-     */
-    public PluginsConfigurationBuilder setPackagesVersions(Map<String,String> packageToVersion)
-    {
-        if (packageScannerConfiguration == null)
-            this.packageScannerConfiguration = new DefaultPackageScannerConfiguration();
-
-        packageScannerConfiguration.getPackageVersions().putAll(packageToVersion);
+        this.packageScannerConfiguration = notNull("packageScannerConfiguration", packageScannerConfiguration);
         return this;
     }
 
@@ -83,9 +61,9 @@ public class PluginsConfigurationBuilder
      * @param hostComponentProvider The host component provider implementation
      * @return this
      */
-    public PluginsConfigurationBuilder setHostComponentProvider(HostComponentProvider hostComponentProvider)
+    public PluginsConfigurationBuilder hostComponentProvider(final HostComponentProvider hostComponentProvider)
     {
-        this.hostComponentProvider = hostComponentProvider;
+        this.hostComponentProvider = notNull("hostComponentProvider", hostComponentProvider);
         return this;
     }
 
@@ -96,7 +74,7 @@ public class PluginsConfigurationBuilder
      * @param frameworkBundlesDirectory A directory that exists
      * @return this
      */
-    public PluginsConfigurationBuilder setFrameworkBundlesDirectory(File frameworkBundlesDirectory)
+    public PluginsConfigurationBuilder frameworkBundlesDirectory(final File frameworkBundlesDirectory)
     {
         this.frameworkBundlesDirectory = frameworkBundlesDirectory;
         return this;
@@ -109,7 +87,7 @@ public class PluginsConfigurationBuilder
      * @param bundleCacheDirectory A directory that exists and is empty
      * @return this
      */
-    public PluginsConfigurationBuilder setBundleCacheDirectory(File bundleCacheDirectory)
+    public PluginsConfigurationBuilder bundleCacheDirectory(final File bundleCacheDirectory)
     {
         this.bundleCacheDirectory = bundleCacheDirectory;
         return this;
@@ -121,7 +99,7 @@ public class PluginsConfigurationBuilder
      * @param pluginDirectory A directory that exists
      * @return this
      */
-    public PluginsConfigurationBuilder setPluginDirectory(File pluginDirectory)
+    public PluginsConfigurationBuilder pluginDirectory(final File pluginDirectory)
     {
         this.pluginDirectory = pluginDirectory;
         return this;
@@ -129,12 +107,12 @@ public class PluginsConfigurationBuilder
 
     /**
      * Sets the URL to a ZIP file containing plugins that are to be started before any user plugins but after
-     * framework bundles.  Must be set if {@link #setBundledPluginCacheDirectory(java.io.File)} is set.
+     * framework bundles.  Must be set if {@link #bundledPluginCacheDirectory(java.io.File)} is set.
      *
      * @param bundledPluginUrl A URL to a ZIP of plugin JAR files
      * @return this
      */
-    public PluginsConfigurationBuilder setBundledPluginUrl(URL bundledPluginUrl)
+    public PluginsConfigurationBuilder bundledPluginUrl(final URL bundledPluginUrl)
     {
         this.bundledPluginUrl = bundledPluginUrl;
         return this;
@@ -142,12 +120,12 @@ public class PluginsConfigurationBuilder
 
     /**
      * Sets the directory to unzip bundled plugins into.  The directory will automatically be cleaned out if the
-     * framework detects any modification.  Must be set if {@link #setBundledPluginUrl(java.net.URL)} is set.
+     * framework detects any modification.  Must be set if {@link #bundledPluginUrl(java.net.URL)} is set.
      *
      * @param bundledPluginCacheDirectory A directory that exists
      * @return this
      */
-    public PluginsConfigurationBuilder setBundledPluginCacheDirectory(File bundledPluginCacheDirectory)
+    public PluginsConfigurationBuilder bundledPluginCacheDirectory(final File bundledPluginCacheDirectory)
     {
         this.bundledPluginCacheDirectory = bundledPluginCacheDirectory;
         return this;
@@ -159,7 +137,7 @@ public class PluginsConfigurationBuilder
      * @param pluginDescriptorFilename A valid file name
      * @return this
      */
-    public PluginsConfigurationBuilder setPluginDescriptorFilename(String pluginDescriptorFilename)
+    public PluginsConfigurationBuilder pluginDescriptorFilename(final String pluginDescriptorFilename)
     {
         this.pluginDescriptorFilename = pluginDescriptorFilename;
         return this;
@@ -173,7 +151,7 @@ public class PluginsConfigurationBuilder
      * @param moduleDescriptorFactory A module descriptor factory instance
      * @return this
      */
-    public PluginsConfigurationBuilder setModuleDescriptorFactory(ModuleDescriptorFactory moduleDescriptorFactory)
+    public PluginsConfigurationBuilder moduleDescriptorFactory(final ModuleDescriptorFactory moduleDescriptorFactory)
     {
         this.moduleDescriptorFactory = moduleDescriptorFactory;
         return this;
@@ -186,7 +164,7 @@ public class PluginsConfigurationBuilder
      * @param pluginStateStore The plugin state store implementation
      * @return this
      */
-    public PluginsConfigurationBuilder setPluginStateStore(PluginStateStore pluginStateStore)
+    public PluginsConfigurationBuilder pluginStateStore(final PluginStateStore pluginStateStore)
     {
         this.pluginStateStore = pluginStateStore;
         return this;
@@ -198,9 +176,9 @@ public class PluginsConfigurationBuilder
      * @param hotDeployPollingFrequency The quantity of time periods
      * @param timeUnit The units for the frequency
      */
-    public PluginsConfigurationBuilder setHotDeployPollingFrequency(long hotDeployPollingFrequency, TimeUnit timeUnit)
+    public PluginsConfigurationBuilder hotDeployPollingFrequency(final long hotDeployPollingFrequency, final TimeUnit timeUnit)
     {
-        this.hotDeployPollingPeriod = hotDeployPollingFrequency * timeUnit.toMillis(hotDeployPollingFrequency);
+        hotDeployPollingPeriod = hotDeployPollingFrequency * timeUnit.toMillis(hotDeployPollingFrequency);
         return this;
     }
 
@@ -212,28 +190,36 @@ public class PluginsConfigurationBuilder
      */
     public PluginsConfiguration build()
     {
-        if (this.pluginDirectory == null) throw new IllegalArgumentException("Plugin directory must be defined");
-        if (!this.pluginDirectory.exists()) throw new IllegalArgumentException("Plugin directory must exist");
+        notNull("Plugin directory must be defined", pluginDirectory);
+        isTrue("Plugin directory must exist", pluginDirectory.exists());
 
         if (packageScannerConfiguration == null)
-            packageScannerConfiguration = new DefaultPackageScannerConfiguration();
-
+        {
+            packageScannerConfiguration = new PackageScannerConfigurationBuilder().build();
+        }
         if (pluginDescriptorFilename == null)
-            pluginDescriptorFilename = PluginManager.PLUGIN_DESCRIPTOR_FILENAME;
+        {
+            pluginDescriptorFilename = PluginAccessor.Descriptor.FILENAME;
+        }
 
         if (hostComponentProvider == null)
         {
             hostComponentProvider = new HostComponentProvider()
             {
-                public void provide(ComponentRegistrar registrar) {}
+                public void provide(final ComponentRegistrar registrar)
+                {}
             };
         }
 
         if (pluginStateStore == null)
+        {
             pluginStateStore = new MemoryPluginStateStore();
+        }
 
         if (moduleDescriptorFactory == null)
+        {
             moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        }
 
         if (bundleCacheDirectory == null)
         {
@@ -242,14 +228,16 @@ public class PluginsConfigurationBuilder
                 bundleCacheDirectory = File.createTempFile("atlassian-plugins-bundle-cache", ".tmp");
                 bundleCacheDirectory.delete();
             }
-            catch (IOException e)
+            catch (final IOException e)
             {
                 throw new IllegalStateException("Should be able to create tmp files", e);
             }
             bundleCacheDirectory.mkdir();
         }
         if (!bundleCacheDirectory.exists())
+        {
             throw new IllegalArgumentException("Bundle cache directory should exist");
+        }
 
         if (frameworkBundlesDirectory == null)
         {
@@ -258,23 +246,50 @@ public class PluginsConfigurationBuilder
                 frameworkBundlesDirectory = File.createTempFile("atlassian-plugins-framework-bundles", ".tmp");
                 frameworkBundlesDirectory.delete();
             }
-            catch (IOException e)
+            catch (final IOException e)
             {
                 throw new IllegalStateException("Should be able to create tmp files", e);
             }
             frameworkBundlesDirectory.mkdir();
         }
-        if (!frameworkBundlesDirectory.exists())
-            throw new IllegalArgumentException("Framework bundles directory should exist");
+        isTrue("Framework bundles directory should exist", frameworkBundlesDirectory.exists());
 
-        if (bundledPluginCacheDirectory == null ^ bundledPluginUrl == null)
+        if ((bundledPluginCacheDirectory == null) ^ (bundledPluginUrl == null))
+        {
             throw new IllegalArgumentException("Both bundled plugin cache directory and bundle plugin URL must be defined or not at all.");
+        }
 
-        return new InternalPluginsConfiguration();
+        return new InternalPluginsConfiguration(this);
     }
 
-    private class InternalPluginsConfiguration implements PluginsConfiguration
+    private static class InternalPluginsConfiguration implements PluginsConfiguration
     {
+        private final PackageScannerConfiguration packageScannerConfiguration;
+        private final HostComponentProvider hostComponentProvider;
+        private final File frameworkBundlesDirectory;
+        private final File bundleCacheDirectory;
+        private final File pluginDirectory;
+        private final URL bundledPluginUrl;
+        private final File bundledPluginCacheDirectory;
+        private final String pluginDescriptorFilename;
+        private final ModuleDescriptorFactory moduleDescriptorFactory;
+        private final PluginStateStore pluginStateStore;
+        private final long hotDeployPollingPeriod;
+
+        InternalPluginsConfiguration(final PluginsConfigurationBuilder builder)
+        {
+            packageScannerConfiguration = builder.packageScannerConfiguration;
+            hostComponentProvider = builder.hostComponentProvider;
+            frameworkBundlesDirectory = builder.frameworkBundlesDirectory;
+            bundleCacheDirectory = builder.bundleCacheDirectory;
+            pluginDirectory = builder.pluginDirectory;
+            bundledPluginUrl = builder.bundledPluginUrl;
+            bundledPluginCacheDirectory = builder.bundledPluginCacheDirectory;
+            pluginDescriptorFilename = builder.pluginDescriptorFilename;
+            moduleDescriptorFactory = builder.moduleDescriptorFactory;
+            pluginStateStore = builder.pluginStateStore;
+            hotDeployPollingPeriod = builder.hotDeployPollingPeriod;
+        }
 
         public PackageScannerConfiguration getPackageScannerConfiguration()
         {
@@ -331,5 +346,4 @@ public class PluginsConfigurationBuilder
             return hotDeployPollingPeriod;
         }
     }
-
 }

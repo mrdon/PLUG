@@ -2,7 +2,15 @@ package com.atlassian.plugin.hostcontainer;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Constructs module instances, matching the constructor with the largest number of arguments first.  The objects to
@@ -13,11 +21,11 @@ import java.util.*;
  */
 public class SimpleConstructorHostContainer implements HostContainer
 {
-    private final Map<Class, Object> context;
+    private final Map<Class<?>, Object> context;
 
-    public SimpleConstructorHostContainer(Map<Class, Object> context)
+    public SimpleConstructorHostContainer(final Map<Class<?>, Object> context)
     {
-        Map<Class, Object> tmp = new HashMap<Class, Object>(context);
+        final Map<Class<?>, Object> tmp = new HashMap<Class<?>, Object>(context);
         tmp.put(HostContainer.class, this);
         this.context = Collections.unmodifiableMap(tmp);
     }
@@ -29,12 +37,12 @@ public class SimpleConstructorHostContainer implements HostContainer
      * @return The instance
      * @throws IllegalArgumentException Wraps any exceptions thrown during the constructor call
      */
-    public <T> T create(Class<T> moduleClass) throws IllegalArgumentException
+    public <T> T create(final Class<T> moduleClass) throws IllegalArgumentException
     {
-        for (Constructor<T> constructor : findConstructorsLargestFirst(moduleClass))
+        for (final Constructor<T> constructor : findConstructorsLargestFirst(moduleClass))
         {
-            List<Object> params = new ArrayList<Object>();
-            for (Class paramType : constructor.getParameterTypes())
+            final List<Object> params = new ArrayList<Object>();
+            for (final Class<?> paramType : constructor.getParameterTypes())
             {
                 if (context.containsKey(paramType))
                 {
@@ -50,15 +58,15 @@ public class SimpleConstructorHostContainer implements HostContainer
             {
                 return constructor.newInstance(params.toArray());
             }
-            catch (InstantiationException e)
+            catch (final InstantiationException e)
             {
                 throw new IllegalArgumentException(e);
             }
-            catch (IllegalAccessException e)
+            catch (final IllegalAccessException e)
             {
                 throw new IllegalArgumentException(e);
             }
-            catch (InvocationTargetException e)
+            catch (final InvocationTargetException e)
             {
                 throw new IllegalArgumentException(e);
             }
@@ -73,28 +81,25 @@ public class SimpleConstructorHostContainer implements HostContainer
      * @param moduleClass The object class
      * @return The object instance.  May be null.
      */
-    public <T> T getInstance(Class<T> moduleClass)
+    @SuppressWarnings("unchecked")
+    public <T> T getInstance(final Class<T> moduleClass)
     {
         return (T) context.get(moduleClass);
     }
 
-    private <T> Collection<Constructor<T>> findConstructorsLargestFirst(Class<T> moduleClass)
+    private <T> Collection<Constructor<T>> findConstructorsLargestFirst(final Class<T> moduleClass)
     {
-        Set<Constructor<T>> constructors = new TreeSet<Constructor<T>>(new Comparator<Constructor<T>>()
+        final Set<Constructor<T>> constructors = new TreeSet<Constructor<T>>(new Comparator<Constructor<T>>()
         {
-            public int compare(Constructor<T> first, Constructor<T> second)
+            public int compare(final Constructor<T> first, final Constructor<T> second)
             {
+                // @TODO this only sorts via largest, and therefore it also causes any of the same length to get dropped from the set, see TreeSet for more details
                 return Integer.valueOf(second.getParameterTypes().length).compareTo(first.getParameterTypes().length);
             }
-
-            public boolean equals(Constructor o)
-            {
-                return false;
-            }
         });
-        for (Constructor constructor : moduleClass.getConstructors())
+        for (final Constructor<T> constructor : moduleClass.getConstructors())
         {
-            constructors.add((Constructor<T>) constructor);
+            constructors.add(constructor);
         }
         return constructors;
     }
