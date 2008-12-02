@@ -16,6 +16,9 @@ import java.io.File;
 import java.util.List;
 import java.util.Collection;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -67,6 +70,72 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertEquals(1, pluginManager.getEnabledPlugins().size());
         assertEquals(2, pluginManager.getPlugin("test.plugin").getModuleDescriptors().size());
         assertEquals("Test 2", pluginManager.getPlugin("test.plugin").getName());
+    }
+
+    public void testUpgradeWithNoAutoDisable() throws Exception
+    {
+        DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory();
+        factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
+        initPluginManager(new HostComponentProvider(){
+            public void provide(ComponentRegistrar registrar)
+            {
+                registrar.register(SomeInterface.class).forInstance(new SomeInterface(){});
+                registrar.register(AnotherInterface.class).forInstance(new AnotherInterface(){});
+            }
+        }, factory);
+
+        File pluginJar = new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component-import key='comp1' interface='com.atlassian.plugin.osgi.SomeInterface' />",
+                        "    <dummy key='dum1'/>",
+                        "</atlassian-plugin>")
+                .build();
+        final File pluginJar2 = new PluginJarBuilder("second")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component-import key='comp1' interface='com.atlassian.plugin.osgi.SomeInterface' />",
+                        "    <dummy key='dum1'/>",
+                        "    <dummy key='dum2'/>",
+                        "</atlassian-plugin>")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        assertTrue(pluginManager.isPluginEnabled("test.plugin"));
+
+        final Lock lock = new ReentrantLock();
+        Thread upgradeThread = new Thread()
+        {
+            public void run()
+            {
+                lock.lock();
+                pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+                lock.unlock();
+            }
+        };
+
+
+        Thread isEnabledThread = new Thread()
+        {
+            public void run()
+            {
+                while (!lock.tryLock())
+                    pluginManager.isPluginEnabled("test.plugin");
+            }
+        };
+        upgradeThread.start();
+        isEnabledThread.start();
+
+        upgradeThread.join();
+
+        assertTrue(pluginManager.isPluginEnabled("test.plugin"));
+
     }
 
 

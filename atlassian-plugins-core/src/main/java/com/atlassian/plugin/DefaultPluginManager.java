@@ -17,6 +17,7 @@ import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import com.atlassian.plugin.util.WaitUntil;
 import com.atlassian.plugin.util.PluginUtils;
+import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
@@ -25,6 +26,8 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -945,8 +948,7 @@ public class DefaultPluginManager implements PluginManager
     }
 
     /**
-     * This method checks to see if the plugin should be enabled based on the state manager.  It also detects if the
-     * state manager state doesn't match the actual plugin state, and if so, disables the plugin
+     * This method checks to see if the plugin should be enabled based on the state manager and the plugin.
      *
      * @param key The plugin key
      * @return True if the plugin is enabled
@@ -955,18 +957,7 @@ public class DefaultPluginManager implements PluginManager
     {
         Plugin plugin = plugins.get(key);
 
-        boolean shouldBeEnabled = plugin != null && getState().isEnabled(plugin);
-
-        // Detect if the plugin state is out of sync with the plugin state store
-        if (shouldBeEnabled && !plugin.isEnabled())
-        {
-            log.warn("Plugin "+key+" is out of sync with the plugin system, disabling");
-            // Just changing the state in the store to prevent a stack overflow as disabling modules requires the
-            // plugin to be enabled, thus calling this method in a infinite loop.
-            disablePluginState(plugin, getStore());
-            shouldBeEnabled = false;
-        }
-        return shouldBeEnabled;
+        return plugin != null && getState().isEnabled(plugin) && plugin.isEnabled();
     }
 
     public InputStream getDynamicResourceAsStream(String name)
