@@ -87,6 +87,7 @@ public class SimpleConstructorHostContainer implements HostContainer
         return (T) context.get(moduleClass);
     }
 
+    @SuppressWarnings("unchecked")
     private <T> Collection<Constructor<T>> findConstructorsLargestFirst(final Class<T> moduleClass)
     {
         final Set<Constructor<T>> constructors = new TreeSet<Constructor<T>>(new Comparator<Constructor<T>>()
@@ -97,9 +98,9 @@ public class SimpleConstructorHostContainer implements HostContainer
                 return Integer.valueOf(second.getParameterTypes().length).compareTo(first.getParameterTypes().length);
             }
         });
-        for (final Constructor<T> constructor : moduleClass.getConstructors())
+        for (final Constructor<?> constructor : moduleClass.getConstructors())
         {
-            constructors.add(constructor);
+            constructors.add((Constructor<T>) constructor);
         }
         return constructors;
     }
