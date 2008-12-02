@@ -11,7 +11,6 @@ import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.factories.XmlDynamicPluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
-import com.atlassian.plugin.mock.MockAnimal;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
@@ -81,7 +80,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
                 assertEquals("Test Class Loaded Plugin", plugin.getName());
                 assertEquals("test.atlassian.plugin.classloaded", plugin.getKey());
                 assertEquals(1, plugin.getModuleDescriptors().size());
-                final MockAnimalModuleDescriptor paddingtonDescriptor = (MockAnimalModuleDescriptor) plugin.<MockAnimal> getModuleDescriptor("paddington");
+                final MockAnimalModuleDescriptor paddingtonDescriptor = (MockAnimalModuleDescriptor) plugin.getModuleDescriptor("paddington");
                 paddingtonDescriptor.enabled();
                 assertEquals("Paddington Bear", paddingtonDescriptor.getName());
                 final MockBear paddington = (MockBear) paddingtonDescriptor.getModule();
@@ -92,7 +91,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
                 assertEquals("Test Class Loaded Plugin 2", plugin.getName());
                 assertEquals("test.atlassian.plugin.classloaded2", plugin.getKey());
                 assertEquals(1, plugin.getModuleDescriptors().size());
-                final MockAnimalModuleDescriptor poohDescriptor = (MockAnimalModuleDescriptor) plugin.<MockAnimal> getModuleDescriptor("pooh");
+                final MockAnimalModuleDescriptor poohDescriptor = (MockAnimalModuleDescriptor) plugin.getModuleDescriptor("pooh");
                 poohDescriptor.enabled();
                 assertEquals("Pooh Bear", poohDescriptor.getName());
                 final MockBear pooh = (MockBear) poohDescriptor.getModule();

@@ -548,7 +548,10 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     }
 
     /**
-     * Get the all the module descriptors from the given collection of plugins
+     * Get the all the module descriptors from the given collection of plugins.
+     * <p>
+     * Be careful, this does not actually return a list of ModuleDescriptors that are M, it returns all 
+     * ModuleDescriptors of all types, you must further filter the list as required.
      *
      * @param plugins a collection of {@link Plugin}s
      * @return a collection of {@link ModuleDescriptor}s
@@ -559,7 +562,13 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         final List<ModuleDescriptor<M>> moduleDescriptors = new LinkedList<ModuleDescriptor<M>>();
         for (final Plugin plugin : plugins)
         {
-            moduleDescriptors.addAll(plugin.<M> getModuleDescriptors());
+            final Collection<ModuleDescriptor<?>> descriptors = plugin.getModuleDescriptors();
+            for (final ModuleDescriptor<?> moduleDescriptor : descriptors)
+            {
+                @SuppressWarnings("unchecked")
+                final ModuleDescriptor<M> typedDescriptor = (ModuleDescriptor<M>) moduleDescriptor;
+                moduleDescriptors.add(typedDescriptor);
+            }
         }
         return moduleDescriptors;
     }
@@ -596,7 +605,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         return getPlugin(pluginKey);
     }
 
-    public <M> ModuleDescriptor<M> getPluginModule(final String completeKey)
+    public ModuleDescriptor<?> getPluginModule(final String completeKey)
     {
         final ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
         final Plugin plugin = getPlugin(key.getPluginKey());
@@ -605,10 +614,10 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         {
             return null;
         }
-        return plugin.<M> getModuleDescriptor(key.getModuleKey());
+        return plugin.getModuleDescriptor(key.getModuleKey());
     }
 
-    public <M> ModuleDescriptor<M> getEnabledPluginModule(final String completeKey)
+    public ModuleDescriptor<?> getEnabledPluginModule(final String completeKey)
     {
         final ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
 
@@ -618,7 +627,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             return null;
         }
 
-        return getEnabledPlugin(key.getPluginKey()).<M> getModuleDescriptor(key.getModuleKey());
+        return getEnabledPlugin(key.getPluginKey()).getModuleDescriptor(key.getModuleKey());
     }
 
     /**
@@ -668,7 +677,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         return toList(moduleDescriptors);
     }
 
-    public <M, D extends ModuleDescriptor<M>> List<D> getEnabledModuleDescriptorsByClass(final Class<? extends D> descriptorClazz)
+    public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<? extends D> descriptorClazz)
     {
         return getEnabledModuleDescriptorsByClass(descriptorClazz, false);
     }
@@ -680,7 +689,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      *
      * @see PluginAccessor#getEnabledModuleDescriptorsByClass(Class)
      */
-    public <M, D extends ModuleDescriptor<M>> List<D> getEnabledModuleDescriptorsByClass(final Class<? extends D> descriptorClazz, final boolean verbose)
+    public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<? extends D> descriptorClazz, final boolean verbose)
     {
         final List<D> result = new LinkedList<D>();
         for (final Plugin plugin : plugins.values())
@@ -1098,7 +1107,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     private UnloadablePlugin replacePluginWithUnloadablePlugin(final Plugin plugin, final ModuleDescriptor<?> descriptor, final Throwable throwable)
     {
-        final UnloadableModuleDescriptor<?> unloadableDescriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin,
+        final UnloadableModuleDescriptor unloadableDescriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin,
             descriptor, throwable);
         final UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin, unloadableDescriptor);
 

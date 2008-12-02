@@ -9,12 +9,12 @@ import org.dom4j.Element;
  * Instances of this class represent a module which <i>could not be loaded</i>, not a module
  * which <i>can be unloaded</i>.
  */
-public class UnloadableModuleDescriptor<T> extends AbstractModuleDescriptor<T>
+public class UnloadableModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
     private String errorText;
 
     @Override
-    public T getModule()
+    public Void getModule()
     {
         return null;
     }

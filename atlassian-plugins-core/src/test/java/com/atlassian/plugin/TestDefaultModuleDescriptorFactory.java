@@ -1,8 +1,6 @@
 package com.atlassian.plugin;
 
-import com.atlassian.plugin.mock.MockAnimal;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
-import com.atlassian.plugin.mock.MockMineral;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 
 import java.util.ArrayList;
@@ -54,8 +52,8 @@ public class TestDefaultModuleDescriptorFactory extends TestCase
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
-        assertTrue(moduleDescriptorFactory.<MockAnimal> getModuleDescriptor("animal") instanceof MockAnimalModuleDescriptor);
-        assertTrue(moduleDescriptorFactory.<MockMineral> getModuleDescriptor("mineral") instanceof MockMineralModuleDescriptor);
+        assertTrue(moduleDescriptorFactory.getModuleDescriptor("animal") instanceof MockAnimalModuleDescriptor);
+        assertTrue(moduleDescriptorFactory.getModuleDescriptor("mineral") instanceof MockMineralModuleDescriptor);
 
         assertTrue(moduleDescriptorFactory.hasModuleDescriptor("animal"));
         assertTrue(moduleDescriptorFactory.hasModuleDescriptor("mineral"));
@@ -69,7 +67,7 @@ public class TestDefaultModuleDescriptorFactory extends TestCase
 
         // Ensure the other one is still there
         assertTrue(moduleDescriptorFactory.hasModuleDescriptor("animal"));
-        assertTrue(moduleDescriptorFactory.<MockAnimal> getModuleDescriptor("animal") instanceof MockAnimalModuleDescriptor);
+        assertTrue(moduleDescriptorFactory.getModuleDescriptor("animal") instanceof MockAnimalModuleDescriptor);
     }
 
     // PLUG-5

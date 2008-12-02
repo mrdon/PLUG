@@ -9,12 +9,12 @@ import org.dom4j.Element;
 
 import java.util.Collections;
 
-public class UnrecognisedModuleDescriptor<T> extends AbstractModuleDescriptor<T>
+public final class UnrecognisedModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
     private String errorText;
 
     @Override
-    public T getModule()
+    public Void getModule()
     {
         return null;
     }

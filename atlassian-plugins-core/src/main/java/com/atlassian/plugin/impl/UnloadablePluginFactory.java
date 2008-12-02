@@ -33,7 +33,7 @@ public final class UnloadablePluginFactory
      * @param unloadableDescriptor the ModuleDescriptor containing the error
      * @return UnloadablePlugin instance
      */
-    public static UnloadablePlugin createUnloadablePlugin(final Plugin oldPlugin, final UnloadableModuleDescriptor<?> unloadableDescriptor)
+    public static UnloadablePlugin createUnloadablePlugin(final Plugin oldPlugin, final UnloadableModuleDescriptor unloadableDescriptor)
     {
         final UnloadablePlugin newPlugin = new UnloadablePlugin();
 

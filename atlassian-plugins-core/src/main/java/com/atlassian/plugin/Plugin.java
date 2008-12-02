@@ -47,7 +47,7 @@ public interface Plugin extends Resourced, Comparable<Plugin>
      * @param <M> The expected module type of the returned ModuleDescriptor.
      * @return the {@link ModuleDescriptor} of the expected type.
      */
-    <M> Collection<ModuleDescriptor<M>> getModuleDescriptors();
+    Collection<ModuleDescriptor<?>> getModuleDescriptors();
 
     /**
      * Get the {@link ModuleDescriptor} for a particular key.
@@ -58,7 +58,7 @@ public interface Plugin extends Resourced, Comparable<Plugin>
      * @param key the {@link String} key.
      * @return the {@link ModuleDescriptor} of the expected type.
      */
-    <M> ModuleDescriptor<M> getModuleDescriptor(String key);
+    ModuleDescriptor<?> getModuleDescriptor(String key);
 
     /**
      * Get the {@link ModuleDescriptor descriptors} whose module class implements or is assignable from the supplied {@link Class}.

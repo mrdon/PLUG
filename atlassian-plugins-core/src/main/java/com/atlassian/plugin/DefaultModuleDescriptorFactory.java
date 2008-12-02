@@ -31,21 +31,19 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
         this.hostContainer = hostContainer;
     }
 
-    public <M, D extends ModuleDescriptor<M>> Class<D> getModuleDescriptorClass(final String type)
+    public Class<? extends ModuleDescriptor<?>> getModuleDescriptorClass(final String type)
     {
-        @SuppressWarnings("unchecked")
-        final Class<D> result = (Class<D>) moduleDescriptorClasses.get(type);
-        return result;
+        return moduleDescriptorClasses.get(type);
     }
 
-    public <M> ModuleDescriptor<M> getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
+    public ModuleDescriptor<?> getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
     {
         if (shouldSkipModuleOfType(type))
         {
             return null;
         }
 
-        final Class<ModuleDescriptor<M>> moduleDescriptorClazz = this.<M, ModuleDescriptor<M>> getModuleDescriptorClass(type);
+        final Class<? extends ModuleDescriptor<?>> moduleDescriptorClazz = getModuleDescriptorClass(type);
 
         if (moduleDescriptorClazz == null)
         {

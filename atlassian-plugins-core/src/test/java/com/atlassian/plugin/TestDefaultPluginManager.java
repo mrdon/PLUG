@@ -759,7 +759,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         final DefaultPluginManager manager = makeClassLoadingPluginManager();
         assertEquals(2, manager.getPlugins().size());
-        final MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.<MockAnimal> getPluginModule("test.atlassian.plugin.classloaded:paddington");
+        final MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
         assertFalse(moduleDescriptor.disabled);
         final PassListener disabledListener = new PassListener(PluginDisabledEvent.class);
         pluginEventManager.register(disabledListener);
@@ -809,7 +809,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginToRemove.setDeletable(false);
 
         // Disable plugin module before uninstall
-        final MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.<MockAnimal> getPluginModule("test.atlassian.plugin.classloaded:paddington");
+        final MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
         assertFalse(moduleDescriptor.disabled);
 
         manager.uninstall(pluginToRemove);

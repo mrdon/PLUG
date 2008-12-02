@@ -17,13 +17,13 @@ public class ChainModuleDescriptorFactory implements ModuleDescriptorFactory
         this.factories = factories;
     }
 
-    public <M> ModuleDescriptor<M> getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
+    public ModuleDescriptor<?> getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
     {
         for (final ModuleDescriptorFactory factory : factories)
         {
             if (factory.hasModuleDescriptor(type))
             {
-                return factory.<M> getModuleDescriptor(type);
+                return factory.getModuleDescriptor(type);
             }
         }
         return null;
@@ -41,11 +41,11 @@ public class ChainModuleDescriptorFactory implements ModuleDescriptorFactory
         return false;
     }
 
-    public <M, D extends ModuleDescriptor<M>> Class<D> getModuleDescriptorClass(final String type)
+    public Class<? extends ModuleDescriptor<?>> getModuleDescriptorClass(final String type)
     {
         for (final ModuleDescriptorFactory factory : factories)
         {
-            final Class<D> descriptorClass = factory.<M, D> getModuleDescriptorClass(type);
+            final Class<? extends ModuleDescriptor<?>> descriptorClass = factory.getModuleDescriptorClass(type);
             if (descriptorClass != null)
             {
                 return descriptorClass;

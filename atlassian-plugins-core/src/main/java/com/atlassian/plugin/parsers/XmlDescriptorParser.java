@@ -148,22 +148,22 @@ public class XmlDescriptorParser implements DescriptorParser
         return document.getRootElement();
     }
 
-    protected <M> ModuleDescriptor<M> createModuleDescriptor(final Plugin plugin, final Element element, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    protected ModuleDescriptor<?> createModuleDescriptor(final Plugin plugin, final Element element, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         final String name = element.getName();
 
-        ModuleDescriptor<M> moduleDescriptorDescriptor;
+        ModuleDescriptor<?> moduleDescriptorDescriptor;
 
         // Try to retrieve the module descriptor
         try
         {
-            moduleDescriptorDescriptor = moduleDescriptorFactory.<M> getModuleDescriptor(name);
+            moduleDescriptorDescriptor = moduleDescriptorFactory.getModuleDescriptor(name);
         }
         // When there's a problem loading a module, return an UnrecognisedModuleDescriptor with error
         catch (final Throwable e)
         {
-            final UnrecognisedModuleDescriptor<M> descriptor = UnrecognisedModuleDescriptorFactory.<M, ModuleDescriptor<M>> createUnrecognisedModuleDescriptor(
-                plugin, element, e, moduleDescriptorFactory);
+            final UnrecognisedModuleDescriptor descriptor = UnrecognisedModuleDescriptorFactory.createUnrecognisedModuleDescriptor(plugin, element,
+                e, moduleDescriptorFactory);
 
             log.error("There were problems loading the module '" + name + "' in plugin '" + plugin.getName() + "'. The module has been disabled.");
             log.error(descriptor.getErrorText(), e);
@@ -186,8 +186,8 @@ public class XmlDescriptorParser implements DescriptorParser
         // If it fails, return a dummy module that contains the error
         catch (final Exception e)
         {
-            final UnloadableModuleDescriptor<M> descriptor = UnloadableModuleDescriptorFactory.<M, ModuleDescriptor<M>> createUnloadableModuleDescriptor(
-                plugin, element, e, moduleDescriptorFactory);
+            final UnloadableModuleDescriptor descriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin, element, e,
+                moduleDescriptorFactory);
 
             log.error("There were problems loading the module '" + name + "'. The module and its plugin have been disabled.");
             log.error(descriptor.getErrorText(), e);

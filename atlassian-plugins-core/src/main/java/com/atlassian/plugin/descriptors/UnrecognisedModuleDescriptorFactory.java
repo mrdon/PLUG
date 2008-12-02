@@ -26,13 +26,13 @@ public final class UnrecognisedModuleDescriptorFactory
      * @return a new UnloadableModuleDescriptor instance
      * @throws com.atlassian.plugin.PluginParseException if there was a problem constructing the UnloadableModuleDescriptor
      */
-    public static <M, D extends ModuleDescriptor<M>> UnrecognisedModuleDescriptor<M> createUnrecognisedModuleDescriptor(final Plugin plugin, final Element element, final Throwable e, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public static UnrecognisedModuleDescriptor createUnrecognisedModuleDescriptor(final Plugin plugin, final Element element, final Throwable e, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        final UnrecognisedModuleDescriptor<M> descriptor = new UnrecognisedModuleDescriptor<M>();
+        final UnrecognisedModuleDescriptor descriptor = new UnrecognisedModuleDescriptor();
         descriptor.init(plugin, element);
 
         final String name = element.getName();
-        final Class<D> descriptorClass = moduleDescriptorFactory.<M, D> getModuleDescriptorClass(name);
+        final Class<? extends ModuleDescriptor<?>> descriptorClass = moduleDescriptorFactory.getModuleDescriptorClass(name);
         String descriptorClassName;
 
         if (descriptorClass == null)

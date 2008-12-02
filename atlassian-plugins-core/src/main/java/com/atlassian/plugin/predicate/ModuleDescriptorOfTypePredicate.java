@@ -8,8 +8,9 @@ import com.atlassian.plugin.ModuleDescriptorFactory;
  */
 public class ModuleDescriptorOfTypePredicate<M> extends ModuleDescriptorOfClassPredicate<M>
 {
+    @SuppressWarnings("unchecked")
     public ModuleDescriptorOfTypePredicate(final ModuleDescriptorFactory moduleDescriptorFactory, final String moduleDescriptorType)
     {
-        super(moduleDescriptorFactory.<M, ModuleDescriptor<M>> getModuleDescriptorClass(moduleDescriptorType));
+        super((Class<? extends ModuleDescriptor<? extends M>>) moduleDescriptorFactory.getModuleDescriptorClass(moduleDescriptorType));
     }
 }

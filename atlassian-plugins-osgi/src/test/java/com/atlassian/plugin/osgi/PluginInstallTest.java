@@ -92,7 +92,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
         final ServiceTracker tracker = osgiContainerManager.getServiceTracker("java.util.concurrent.Callable");
         for (final Object svc : tracker.getServices())
         {
-            final Callable callable = (Callable) svc;
+            final Callable<String> callable = (Callable<String>) svc;
             assertEquals("hi", callable.call());
         }
 
@@ -100,7 +100,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
         for (final Object svc : tracker.getServices())
         {
-            final Callable callable = (Callable) svc;
+            final Callable<String> callable = (Callable) svc;
             assertEquals("hi", callable.call());
         }
         assertEquals(2, pluginManager.getEnabledPlugins().size());
@@ -116,7 +116,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertEquals(2, pluginManager.getEnabledPlugins().size());
         for (final Object svc : tracker.getServices())
         {
-            final Callable callable = (Callable) svc;
+            final Callable<String> callable = (Callable) svc;
             assertEquals("bob", callable.call());
         }
     }
@@ -231,9 +231,9 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
-        final Collection<ModuleDescriptor<Object>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
+        final Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
         assertEquals(1, descriptors.size());
-        final ModuleDescriptor<Object> descriptor = descriptors.iterator().next();
+        final ModuleDescriptor<?> descriptor = descriptors.iterator().next();
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
     }
 
@@ -257,9 +257,9 @@ public class PluginInstallTest extends PluginInContainerTestBase
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
         Thread.sleep(5000);
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
-        final Collection<ModuleDescriptor<Object>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
+        final Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
         assertEquals(1, descriptors.size());
-        final ModuleDescriptor<Object> descriptor = descriptors.iterator().next();
+        final ModuleDescriptor<?> descriptor = descriptors.iterator().next();
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
     }
 
@@ -283,9 +283,9 @@ public class PluginInstallTest extends PluginInContainerTestBase
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
         Thread.sleep(5000);
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        Collection<ModuleDescriptor<Object>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
+        Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
         assertEquals(1, descriptors.size());
-        ModuleDescriptor<Object> descriptor = descriptors.iterator().next();
+        ModuleDescriptor<?> descriptor = descriptors.iterator().next();
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
 
         pluginManager.uninstall(pluginManager.getPlugin("test.plugin.module"));
@@ -318,9 +318,9 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
         Thread.sleep(5000);
-        final Collection<ModuleDescriptor<Object>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
+        final Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
         assertEquals(1, descriptors.size());
-        final ModuleDescriptor<Object> descriptor = descriptors.iterator().next();
+        final ModuleDescriptor<?> descriptor = descriptors.iterator().next();
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
     }
 
@@ -334,9 +334,9 @@ public class PluginInstallTest extends PluginInContainerTestBase
         final BundleContext ctx = ((OsgiPlugin) pluginManager.getPlugin("test.plugin")).getBundle().getBundleContext();
         final ServiceRegistration reg = ctx.registerService(ModuleDescriptor.class.getName(), new DummyWebItemModuleDescriptor(), null);
 
-        final Collection<ModuleDescriptor<Object>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
+        final Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
         assertEquals(1, descriptors.size());
-        final ModuleDescriptor<Object> descriptor = descriptors.iterator().next();
+        final ModuleDescriptor<?> descriptor = descriptors.iterator().next();
         assertEquals("DummyWebItemModuleDescriptor", descriptor.getClass().getSimpleName());
         List<WebItemModuleDescriptor> list = pluginManager.getEnabledModuleDescriptorsByClass(WebItemModuleDescriptor.class);
         assertEquals(1, list.size());
@@ -360,7 +360,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
         final BundleContext ctx2 = ((OsgiPlugin) pluginManager.getPlugin("test.plugin2")).getBundle().getBundleContext();
         final ServiceRegistration reg2 = ctx2.registerService(ModuleDescriptor.class.getName(), new DummyWebItemModuleDescriptor(), null);
 
-        Collection<ModuleDescriptor<Object>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
+        Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
         assertEquals(1, descriptors.size());
         final ModuleDescriptor<?> descriptor = descriptors.iterator().next();
         assertEquals("DummyWebItemModuleDescriptor", descriptor.getClass().getSimpleName());
@@ -401,7 +401,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
             "</atlassian-plugin>").addFormattedJava("second.MyServlet", "package second;",
             "public class MyServlet extends javax.servlet.http.HttpServlet implements first.MyInterface {}").build(pluginsDir);
 
-        initPluginManager(null, new SingleModuleDescriptorFactory("servlet", StubServletModuleDescriptor.class));
+        initPluginManager(null, new SingleModuleDescriptorFactory<StubServletModuleDescriptor>("servlet", StubServletModuleDescriptor.class));
 
         assertEquals(2, pluginManager.getEnabledPlugins().size());
         assertTrue(pluginManager.getPlugin("first").isEnabled());
@@ -410,10 +410,10 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
     public void testLotsOfHostComponents() throws Exception
     {
-        final File pluginJar = new PluginJarBuilder("first").addFormattedResource("atlassian-plugin.xml",
+        new PluginJarBuilder("first").addFormattedResource("atlassian-plugin.xml",
             "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>", "    <plugin-info>", "        <version>1.0</version>",
             "    </plugin-info>", "    <dummy key='dum1'/>", "</atlassian-plugin>").build(pluginsDir);
-        final File pluginJar2 = new PluginJarBuilder("second").addFormattedResource("atlassian-plugin.xml",
+        new PluginJarBuilder("second").addFormattedResource("atlassian-plugin.xml",
             "<atlassian-plugin name='Test 2' key='test.plugin2' pluginsVersion='2'>", "    <plugin-info>", "        <version>1.0</version>",
             "    </plugin-info>", "    <dummy key='dum1'/>", "    <dummy key='dum2'/>", "</atlassian-plugin>").build(pluginsDir);
 

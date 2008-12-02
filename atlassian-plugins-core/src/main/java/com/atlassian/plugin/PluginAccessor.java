@@ -81,12 +81,12 @@ public interface PluginAccessor
      * <p>
      * Note: the module may or may not be disabled.
      */
-    <M> ModuleDescriptor<M> getPluginModule(String completeKey);
+    ModuleDescriptor<?> getPluginModule(String completeKey);
 
     /**
      * Retrieve an enabled plugin module by complete module key.
      */
-    <M> ModuleDescriptor<M> getEnabledPluginModule(String completeKey);
+    ModuleDescriptor<?> getEnabledPluginModule(String completeKey);
 
     /**
      * Whether or not a given plugin is currently enabled.
@@ -137,7 +137,7 @@ public interface PluginAccessor
      * @param descriptorClazz module descriptor class
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
      */
-    <M, D extends ModuleDescriptor<M>> List<D> getEnabledModuleDescriptorsByClass(Class<? extends D> descriptorClazz);
+    <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(Class<? extends D> descriptorClazz);
 
     /**
      * Get all enabled module descriptors that have a specific descriptor class.
@@ -146,7 +146,7 @@ public interface PluginAccessor
      * @param verbose         log verbose messages flag
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
      */
-    <M, D extends ModuleDescriptor<M>> List<D> getEnabledModuleDescriptorsByClass(Class<? extends D> descriptorClazz, boolean verbose);
+    <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(Class<? extends D> descriptorClazz, boolean verbose);
 
     /**
      * Get all enabled module descriptors that have a specific descriptor type.

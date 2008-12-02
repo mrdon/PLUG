@@ -26,13 +26,13 @@ public final class UnloadableModuleDescriptorFactory
      * @return a new UnloadableModuleDescriptor instance
      * @throws PluginParseException if there was a problem constructing the UnloadableModuleDescriptor
      */
-    public static <M, D extends ModuleDescriptor<M>> UnloadableModuleDescriptor<M> createUnloadableModuleDescriptor(final Plugin plugin, final Element element, final Throwable e, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public static UnloadableModuleDescriptor createUnloadableModuleDescriptor(final Plugin plugin, final Element element, final Throwable e, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        final UnloadableModuleDescriptor<M> descriptor = new UnloadableModuleDescriptor<M>();
+        final UnloadableModuleDescriptor descriptor = new UnloadableModuleDescriptor();
         descriptor.init(plugin, element);
 
         final String name = element.getName();
-        final Class<D> descriptorClass = moduleDescriptorFactory.<M, D> getModuleDescriptorClass(name);
+        final Class<? extends ModuleDescriptor<?>> descriptorClass = moduleDescriptorFactory.getModuleDescriptorClass(name);
         String descriptorClassName;
 
         if (descriptorClass == null)
@@ -61,9 +61,9 @@ public final class UnloadableModuleDescriptorFactory
      * @param e the Throwable
      * @return a new UnloadableModuleDescriptor instance
      */
-    public static <T> UnloadableModuleDescriptor<T> createUnloadableModuleDescriptor(final Plugin plugin, final ModuleDescriptor<?> descriptor, final Throwable e)
+    public static UnloadableModuleDescriptor createUnloadableModuleDescriptor(final Plugin plugin, final ModuleDescriptor<?> descriptor, final Throwable e)
     {
-        final UnloadableModuleDescriptor<T> unloadableDescriptor = new UnloadableModuleDescriptor<T>();
+        final UnloadableModuleDescriptor unloadableDescriptor = new UnloadableModuleDescriptor();
         unloadableDescriptor.setName(descriptor.getName());
         unloadableDescriptor.setKey(descriptor.getKey());
         unloadableDescriptor.setPlugin(plugin);

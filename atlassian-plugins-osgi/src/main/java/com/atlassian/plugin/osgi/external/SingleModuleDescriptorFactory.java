@@ -1,13 +1,10 @@
 package com.atlassian.plugin.osgi.external;
 
-import com.atlassian.plugin.*;
-import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.beans.BeansException;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.PluginParseException;
 
-import java.util.Set;
 import java.util.Collections;
+import java.util.Set;
 
 /**
  * Single module descriptor factory for plugins to use when they want to expose just one plugin. Does not support
@@ -15,18 +12,18 @@ import java.util.Collections;
  *
  * @since 2.1
  */
-public class SingleModuleDescriptorFactory<T extends ModuleDescriptor> implements ListableModuleDescriptorFactory
+public class SingleModuleDescriptorFactory<T extends ModuleDescriptor<?>> implements ListableModuleDescriptorFactory
 {
     private final String type;
     private final Class<T> moduleDescriptorClass;
 
-    public SingleModuleDescriptorFactory(String type, Class<T> moduleDescriptorClass)
+    public SingleModuleDescriptorFactory(final String type, final Class<T> moduleDescriptorClass)
     {
         this.moduleDescriptorClass = moduleDescriptorClass;
         this.type = type;
     }
 
-    public ModuleDescriptor getModuleDescriptor(String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
+    public ModuleDescriptor getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
     {
         T result = null;
         if (this.type.equals(type))
@@ -38,18 +35,20 @@ public class SingleModuleDescriptorFactory<T extends ModuleDescriptor> implement
         return result;
     }
 
-    public boolean hasModuleDescriptor(String type)
+    public boolean hasModuleDescriptor(final String type)
     {
         return (this.type.equals(type));
     }
 
-    public Class<? extends ModuleDescriptor> getModuleDescriptorClass(String type)
+    @SuppressWarnings("unchecked")
+    public Class<? extends ModuleDescriptor<?>> getModuleDescriptorClass(final String type)
     {
         return (this.type.equals(type) ? moduleDescriptorClass : null);
     }
 
+    @SuppressWarnings("unchecked")
     public Set<Class<ModuleDescriptor<?>>> getModuleDescriptorClasses()
     {
-        return Collections.singleton((Class<ModuleDescriptor<?>>)moduleDescriptorClass);
+        return Collections.singleton((Class<ModuleDescriptor<?>>) moduleDescriptorClass);
     }
 }
