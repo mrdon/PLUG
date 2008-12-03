@@ -643,7 +643,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     @Deprecated
-    public <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>>[] descriptorClasses, final Class<? extends M> moduleClass)
+    public <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>>[] descriptorClasses, final Class<M> moduleClass)
     {
         final Iterable<ModuleDescriptor<M>> moduleDescriptors = filterModuleDescriptors(getEnabledModuleDescriptorsByModuleClass(moduleClass),
             new ModuleDescriptorOfClassPredicate<M>(descriptorClasses));
@@ -656,7 +656,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     @Deprecated
-    public <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<? extends ModuleDescriptor<M>> descriptorClass, final Class<? extends M> moduleClass)
+    public <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>> descriptorClass, final Class<M> moduleClass)
     {
         final Iterable<ModuleDescriptor<M>> moduleDescriptors = getEnabledModuleDescriptorsByModuleClass(moduleClass);
         return getModules(filterModuleDescriptors(moduleDescriptors, new ModuleDescriptorOfClassPredicate<M>(descriptorClass)));
@@ -668,7 +668,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      * @param moduleClass the class of the module within the module descriptor.
      * @return a collection of {@link ModuleDescriptor}s
      */
-    private <M> Collection<ModuleDescriptor<M>> getEnabledModuleDescriptorsByModuleClass(final Class<? extends M> moduleClass)
+    private <M> Collection<ModuleDescriptor<M>> getEnabledModuleDescriptorsByModuleClass(final Class<M> moduleClass)
     {
         Iterable<ModuleDescriptor<M>> moduleDescriptors = getModuleDescriptorsList(getEnabledPlugins());
         moduleDescriptors = filterModuleDescriptors(moduleDescriptors, new ModuleOfClassPredicate<M>(moduleClass));
@@ -677,7 +677,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         return toList(moduleDescriptors);
     }
 
-    public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<? extends D> descriptorClazz)
+    public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz)
     {
         return getEnabledModuleDescriptorsByClass(descriptorClazz, false);
     }
@@ -689,7 +689,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      *
      * @see PluginAccessor#getEnabledModuleDescriptorsByClass(Class)
      */
-    public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<? extends D> descriptorClazz, final boolean verbose)
+    public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz, final boolean verbose)
     {
         final List<D> result = new LinkedList<D>();
         for (final Plugin plugin : plugins.values())

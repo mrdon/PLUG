@@ -117,7 +117,7 @@ public interface PluginAccessor
      * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     @Deprecated
-    <M> List<M> getEnabledModulesByClassAndDescriptor(Class<ModuleDescriptor<M>>[] descriptorClazz, Class<? extends M> moduleClass);
+    <M> List<M> getEnabledModulesByClassAndDescriptor(Class<ModuleDescriptor<M>>[] descriptorClazz, Class<M> moduleClass);
 
     /**
      * Retrieve all plugin modules that implement or extend a specific class, and has a descriptor class
@@ -129,7 +129,7 @@ public interface PluginAccessor
      * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
      */
     @Deprecated
-    <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<? extends ModuleDescriptor<M>> descriptorClass, final Class<? extends M> moduleClass);
+    <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>> descriptorClass, final Class<M> moduleClass);
 
     /**
      * Get all enabled module descriptors that have a specific descriptor class.
@@ -137,7 +137,7 @@ public interface PluginAccessor
      * @param descriptorClazz module descriptor class
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
      */
-    <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(Class<? extends D> descriptorClazz);
+    <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(Class<D> descriptorClazz);
 
     /**
      * Get all enabled module descriptors that have a specific descriptor class.
@@ -146,7 +146,7 @@ public interface PluginAccessor
      * @param verbose         log verbose messages flag
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
      */
-    <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(Class<? extends D> descriptorClazz, boolean verbose);
+    <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(Class<D> descriptorClazz, boolean verbose);
 
     /**
      * Get all enabled module descriptors that have a specific descriptor type.
