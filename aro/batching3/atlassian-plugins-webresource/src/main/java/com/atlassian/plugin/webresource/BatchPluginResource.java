@@ -51,11 +51,11 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         resources.add(resource);
     }
 
-    public boolean checkResourceNotModified(HttpServletRequest request, HttpServletResponse response)
+    public boolean isResourceModified(HttpServletRequest request, HttpServletResponse response)
     {
-        for(DownloadableResource resource : resources)
+        for (DownloadableResource resource : resources)
         {
-            if(resource.checkResourceNotModified(request, response))
+            if (resource.isResourceModified(request, response))
                 return true;
         }
         return false;
@@ -64,7 +64,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
     public void serveResource(HttpServletRequest request, HttpServletResponse response) throws DownloadException
     {
         log.info("Start to serve batch " + toString());
-        for(DownloadableResource resource : resources)
+        for (DownloadableResource resource : resources)
         {
             resource.serveResource(request, response);
         }
@@ -73,7 +73,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
     public String getContentType()
     {
         String contentType = params.get("content-type");
-        if(contentType != null)
+        if (contentType != null)
             return contentType;
         
         //todo - should it iterate through the list?
@@ -90,7 +90,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
     {
         int startIndex = url.indexOf(URL_PREFIX) + URL_PREFIX.length() + 1;
 
-        if(url.indexOf('?') != -1) // remove query parameters
+        if (url.indexOf('?') != -1) // remove query parameters
         {
             url = url.substring(0, url.indexOf('?'));
         }
@@ -103,7 +103,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
 
         String type = parts[0];
         String moduleKey = parts[1];
-        if(moduleKey.endsWith("." + type))
+        if (moduleKey.endsWith("." + type))
         {
             moduleKey = moduleKey.substring(0, moduleKey.lastIndexOf("." + type));
         }

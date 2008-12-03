@@ -179,4 +179,19 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
         assertTrue(resource instanceof BatchPluginResource);
     }
+
+    public void testSplitLastPathPart()
+    {
+        final String[] parts = pluginResourceLocator.splitLastPathPart("http://localhost:8080/confluence/download/foo/bar/baz");
+        assertEquals(2, parts.length);
+        assertEquals("http://localhost:8080/confluence/download/foo/bar/", parts[0]);
+        assertEquals("baz", parts[1]);
+
+        final String[] anotherParts = pluginResourceLocator.splitLastPathPart(parts[0]);
+        assertEquals(2, anotherParts.length);
+        assertEquals("http://localhost:8080/confluence/download/foo/", anotherParts[0]);
+        assertEquals("bar/", anotherParts[1]);
+
+        assertNull(pluginResourceLocator.splitLastPathPart("noslashes"));
+    }
 }

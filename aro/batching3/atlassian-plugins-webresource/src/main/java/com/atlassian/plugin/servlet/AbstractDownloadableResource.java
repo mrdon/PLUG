@@ -88,7 +88,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
      * If this method returns true, don't do any more processing on the request -- the response code has already been
      * set to "304 Not Modified" for you, and you don't need to serve the file.
      */
-    public boolean checkResourceNotModified(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
+    public boolean isResourceModified(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
     {
         Date resourceLastModifiedDate = (plugin.getDateLoaded() == null) ? new Date() : plugin.getDateLoaded();
         LastModifiedHandler lastModifiedHandler = new LastModifiedHandler(resourceLastModifiedDate);

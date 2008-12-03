@@ -17,7 +17,7 @@ public interface DownloadableResource
      *
      * If the resource has been modified, the resource shouldn't be served. 
      */
-    boolean checkResourceNotModified(HttpServletRequest request, HttpServletResponse response);
+    boolean isResourceModified(HttpServletRequest request, HttpServletResponse response);
 
     /**
      * Writes the resource content out into the response.

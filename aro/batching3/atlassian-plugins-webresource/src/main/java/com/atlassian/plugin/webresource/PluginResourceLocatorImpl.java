@@ -42,13 +42,13 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     public DownloadableResource getDownloadableResource(String url, Map<String, String> queryParams)
     {
-        if(BatchPluginResource.matches(url))
+        if (BatchPluginResource.matches(url))
         {
             BatchPluginResource batchResource = BatchPluginResource.parse(url, queryParams);
             return locateBatchPluginResource(batchResource);
         }
 
-        if(SinglePluginResource.matches(url))
+        if (SinglePluginResource.matches(url))
         {
             SinglePluginResource resource = SinglePluginResource.parse(url);
             return locatePluginResource(resource.getModuleCompleteKey(), resource.getResourceName());
@@ -61,9 +61,9 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
     private DownloadableResource locateBatchPluginResource(BatchPluginResource batchResource)
     {
         ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(batchResource.getModuleCompleteKey());
-        for(ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors(DOWNLOAD_TYPE))
+        for (ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors(DOWNLOAD_TYPE))
         {
-            if(isResourceInBatch(resourceDescriptor, batchResource))
+            if (isResourceInBatch(resourceDescriptor, batchResource))
                 batchResource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
         }
         return batchResource;
@@ -71,7 +71,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     private boolean isResourceInBatch(ResourceDescriptor resourceDescriptor, BatchPluginResource batchResource)
     {
-        if(!resourceDescriptor.getName().endsWith("." + batchResource.getType()))
+        if (!resourceDescriptor.getName().endsWith("." + batchResource.getType()))
             return false;
 
         for (String param : BATCH_PARAMS)
@@ -168,7 +168,8 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         return getResourceFromPlugin(plugin, nextParts[0], nextParts[1] + filePath);
     }
 
-    private String[] splitLastPathPart(String resourcePath)
+    // pacakge protected so we can test it
+    String[] splitLastPathPart(String resourcePath)
     {
         int indexOfSlash = resourcePath.lastIndexOf('/');
         if (resourcePath.endsWith("/")) // skip over the trailing slash
@@ -198,14 +199,14 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(moduleCompleteKey);
         if (moduleDescriptor == null || !(moduleDescriptor instanceof WebResourceModuleDescriptor))
         {
-            log.error("Error loading resource \"" + moduleDescriptor + "\". Resource is not a Web Resource Module");
+            log.error("Error loading resource \"" + moduleCompleteKey + "\". Resource is not a Web Resource Module");
             return Collections.EMPTY_LIST;
         }
 
         boolean singleMode = Boolean.valueOf(System.getProperty(PLUGIN_WEBRESOURCE_BATCHING_OFF));
         List<PluginResource> resources = new ArrayList<PluginResource>();
 
-        for(ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors())
+        for (ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors())
         {
             if (singleMode)
             {
@@ -215,7 +216,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             else
             {
                 BatchPluginResource batchResource = createBatchResource(moduleDescriptor.getCompleteKey(),  resourceDescriptor);
-                if(!resources.contains(batchResource))
+                if (!resources.contains(batchResource))
                     resources.add(batchResource);
             }
         }
@@ -227,10 +228,10 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         String name = resourceDescriptor.getName();
         String type = name.substring(name.lastIndexOf(".") + 1);
         Map<String, String> params = new TreeMap<String, String>();
-        for(String param : BATCH_PARAMS)
+        for (String param : BATCH_PARAMS)
         {
             String value = resourceDescriptor.getParameter(param);
-            if(StringUtils.isNotEmpty(value))
+            if (StringUtils.isNotEmpty(value))
                 params.put(param, value);
         }
 

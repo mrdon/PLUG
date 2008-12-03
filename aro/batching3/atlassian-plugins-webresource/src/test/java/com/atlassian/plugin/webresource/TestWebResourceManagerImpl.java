@@ -103,7 +103,7 @@ public class TestWebResourceManagerImpl extends TestCase
         // test requireResource() methods
         StringWriter requiredResourceWriter = new StringWriter();
         webResourceManager.requireResource(completeModuleKey);
-        webResourceManager.writeRequiredResources(requiredResourceWriter);
+        webResourceManager.includeResources(requiredResourceWriter);
         String requiredResourceResult = webResourceManager.getRequiredResources();
         assertEquals(requiredResourceResult, requiredResourceWriter.toString());
 

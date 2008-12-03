@@ -15,18 +15,27 @@ public interface WebResourceManager
 {
     /**
      * Indicates to that a given plugin web resource is required. All resources called via this method must be
-     * included when {@link #writeRequiredResources(Writer)} is called.
+     * included when {@link #includeResources(Writer)} is called.
      *
-     * @param webResourceName The fully qualified plugin web resource name (eg <code>jira.webresources:scriptaculous</code>)
-     * @see #writeRequiredResources(Writer)
+     * @param moduleCompleteKey The fully qualified plugin web resource module (eg <code>jira.webresources:scriptaculous</code>)
+     * @see #includeResources(Writer)
      */
-    public void requireResource(String webResourceName);
+    public void requireResource(String moduleCompleteKey);
 
     /**
      * Writes out the resource tags to the previously required resources called via {@link #requireResource(String)}.
      * If you need it as a String to embed the tags in a template, use {@link #getRequiredResources()}.
+     *
+     * <p/>
+     * Example - if a 'javascript' resource has been required earlier with requireResource(), this method should output:
+     * <pre><code>
+     *  &lt;script type=&quot;text/javascript&quot; src=&quot;$contextPath/scripts/javascript.js&quot;&gt;&lt;/script&gt;
+     * </code></pre>
+     * Similarly for other supported resources
+     *
+     * @param writer The writer to write the links to
      */
-    public void writeRequiredResources(Writer writer);
+    public void includeResources(Writer writer);
 
     /**
      * @see {@link #writeRequiredResources(Writer)}
@@ -37,12 +46,12 @@ public interface WebResourceManager
      * Writes the resource tags of the specified resource to the writer.
      * If you need it as a String to embed the tags in a template, use {@link #getRequiredResources()}.
      */
-    public void writeResourceTags(String webResourceName, Writer writer);
+    public void writeResourceTags(String moduleCompleteKey, Writer writer);
 
     /**
      * @see {@link #writeResourceTags(String, Writer)}
      */
-    public String getResourceTags(String webResourceName);
+    public String getResourceTags(String moduleCompleteKey);
 
     /**
      * A helper method to return a prefix for 'system' static resources.  Generally the implementation will return
@@ -86,6 +95,19 @@ public interface WebResourceManager
     public String getStaticResourcePrefix(String resourceCounter);
 
     /**
+     * A helper method to return a url for 'plugin' resources.  Generally the implementation will return
+     * <p/>
+     * <pre><code>/s/{build num}/{system counter}/{plugin version}/_/download/resources/plugin.key:module.key/resource.name</code></pre>
+     * <p/>
+     * Note that the servlet context is prepended, and there is no trailing slash.
+     * <p/>
+     * <p/>
+     * Typical usage is to replace:
+     * <p/>
+     * <pre><code>&lt;%= request.getContextPath() %>/download/resources/plugin.key:module.key/resource.name</code></pre>
+     * with
+     * <pre><code>&lt;%= webResourceManager.getStaticPluginResource(descriptor, resourceName) %></code></pre>
+     *
      * @param moduleCompleteKey complete plugin module key
      * @return returns the url of this plugin resource
      */
@@ -108,21 +130,6 @@ public interface WebResourceManager
      * @deprecated Since 2.2. Use #writeResourceTags instead.
      */
     public void requireResource(String resourceName, Writer writer);
-
-    /**
-     * Include the resources that have already been specified by the request in the page.  This is done by including
-     * links to the resources that have been specified.
-     * <p/>
-     * Example - if a 'javascript' resource has been specified, this method should output:
-     * <pre><code>
-     *  &lt;script type=&quot;text/javascript&quot; src=&quot;$contextPath/scripts/javascript.js&quot;&gt;&lt;/script&gt;
-     * </code></pre>
-     * Similarly for other supported resources
-     *
-     * @param writer The writer to write the links to
-     * @deprecated Since 2.2. Use {@link #writeRequiredResources} instead.
-     */
-    public void includeResources(Writer writer);
 
     /**
      * @deprecated Use #getStaticPluginResource instead

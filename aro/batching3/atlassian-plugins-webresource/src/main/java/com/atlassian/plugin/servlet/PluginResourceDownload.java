@@ -51,12 +51,12 @@ public class PluginResourceDownload implements DownloadStrategy
 
             if (downloadableResource == null)
             {
-                log.info("Invalid resource path spec: " + request.getRequestURI());
+                log.info("Could not locate resource: " + request.getRequestURI());
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
 
-            if(downloadableResource.checkResourceNotModified(request, response))
+            if(downloadableResource.isResourceModified(request, response))
             {
                 log.info("Plugin Resource has been modified since plugin was loaded. Skipping: " + requestUri);
                 return;

@@ -57,13 +57,7 @@ public class SinglePluginResource implements PluginResource
      */
     public String getUrl()
     {
-        StringBuffer sb = new StringBuffer();
-        sb.append(URL_PREFIX).append(PATH_SEPARATOR)
-            .append(moduleCompleteKey).append(PATH_SEPARATOR)
-            .append(resourceName);
-
-        return sb.toString();
-
+        return URL_PREFIX + PATH_SEPARATOR + moduleCompleteKey + PATH_SEPARATOR + resourceName;
     }
 
     public static boolean matches(String url)
@@ -82,7 +76,7 @@ public class SinglePluginResource implements PluginResource
         int indexOfPrefix = url.indexOf(SinglePluginResource.URL_PREFIX);
         String libraryAndResource = url.substring(indexOfPrefix + SinglePluginResource.URL_PREFIX.length() + 1);
 
-        if(libraryAndResource.indexOf('?') != -1) // remove query parameters
+        if (libraryAndResource.indexOf('?') != -1) // remove query parameters
         {
             libraryAndResource = libraryAndResource.substring(0, libraryAndResource.indexOf('?'));
         }

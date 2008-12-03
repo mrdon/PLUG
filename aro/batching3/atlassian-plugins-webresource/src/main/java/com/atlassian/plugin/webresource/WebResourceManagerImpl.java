@@ -36,10 +36,13 @@ public class WebResourceManagerImpl implements WebResourceManager
     static final String STATIC_RESOURCE_SUFFIX = "_";
 
     static final String REQUEST_CACHE_RESOURCE_KEY = "plugin.webresource.names";
-    
+
     protected final WebResourceIntegration webResourceIntegration;
     protected final PluginResourceLocator pluginResourceLocator;
-    protected static final List<WebResourceFormatter> webResourceFormatters = Arrays.< WebResourceFormatter>asList(new CssWebResourceFormatter(), new JavascriptWebResourceFormatter());
+    protected static final List<WebResourceFormatter> webResourceFormatters = Arrays.< WebResourceFormatter>asList(
+        new CssWebResourceFormatter(),
+        new JavascriptWebResourceFormatter()
+    );
 
     public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration)
     {
@@ -47,9 +50,9 @@ public class WebResourceManagerImpl implements WebResourceManager
         this.webResourceIntegration = webResourceIntegration;
     }
 
-    public void requireResource(String resourceName)
+    public void requireResource(String moduleCompleteKey)
     {
-        log.info("Requiring resource: " + resourceName);
+        log.info("Requiring resource: " + moduleCompleteKey);
         Map cache = webResourceIntegration.getRequestCache();
         Collection webResourceNames = (Collection) cache.get(REQUEST_CACHE_RESOURCE_KEY);
         if (webResourceNames == null)
@@ -57,11 +60,11 @@ public class WebResourceManagerImpl implements WebResourceManager
             webResourceNames = new ListOrderedSet();
         }
 
-        webResourceNames.add(resourceName);
+        webResourceNames.add(moduleCompleteKey);
         cache.put(REQUEST_CACHE_RESOURCE_KEY, webResourceNames);
     }
 
-    public void writeRequiredResources(Writer writer)
+    public void includeResources(Writer writer)
     {
         Collection webResourceNames = (Collection) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_RESOURCE_KEY);
         if (webResourceNames == null || webResourceNames.isEmpty())
@@ -80,30 +83,30 @@ public class WebResourceManagerImpl implements WebResourceManager
     public String getRequiredResources()
     {
         StringWriter writer = new StringWriter();
-        writeRequiredResources(writer);
+        includeResources(writer);
         return writer.toString();
     }
 
-    public void writeResourceTags(String resourceName, Writer writer)
+    public void writeResourceTags(String moduleCompleteKey, Writer writer)
     {
-        List<PluginResource> resources = pluginResourceLocator.getPluginResources(resourceName);
-        if(resources == null)
+        List<PluginResource> resources = pluginResourceLocator.getPluginResources(moduleCompleteKey);
+        if (resources == null)
         {
-            writeContentAndSwallowErrors("<!-- Error loading resource \"" + resourceName + "\".  Resource not found -->\n", writer);
+            writeContentAndSwallowErrors("<!-- Error loading resource \"" + moduleCompleteKey + "\".  Resource not found -->\n", writer);
             return;
         }
 
-        for(PluginResource resource : resources)
+        for (PluginResource resource : resources)
         {
             WebResourceFormatter formatter = getWebResourceFormatter(resource.getResourceName());
-            if(formatter == null)
+            if (formatter == null)
             {
-                writeContentAndSwallowErrors("<!-- Error loading resource \"" + resourceName + "\".  Resource formatter not found -->\n", writer);
+                writeContentAndSwallowErrors("<!-- Error loading resource \"" + moduleCompleteKey + "\".  Resource formatter not found -->\n", writer);
                 continue;
             }
 
             String url = resource.getUrl();
-            if(resource.isCacheSupported())
+            if (resource.isCacheSupported())
             {
                 Plugin plugin = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resource.getModuleCompleteKey()).getPlugin();
                 url = getStaticResourcePrefix(String.valueOf(plugin.getPluginsVersion())) + url;
@@ -112,10 +115,10 @@ public class WebResourceManagerImpl implements WebResourceManager
         }
     }
 
-    public String getResourceTags(String resourceName)
+    public String getResourceTags(String moduleCompleteKey)
     {
         StringWriter writer = new StringWriter();
-        writeResourceTags(resourceName, writer);
+        writeResourceTags(moduleCompleteKey, writer);
         return writer.toString();
     }
 
@@ -133,9 +136,9 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     private WebResourceFormatter getWebResourceFormatter(String resourceName)
     {
-        for(WebResourceFormatter webResourceFormatter : webResourceFormatters)
+        for (WebResourceFormatter webResourceFormatter : webResourceFormatters)
         {
-            if(webResourceFormatter.matches(resourceName))
+            if (webResourceFormatter.matches(resourceName))
                 return webResourceFormatter;
         }
         return null;
@@ -181,14 +184,6 @@ public class WebResourceManagerImpl implements WebResourceManager
     public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName)
     {
         return getStaticPluginResource(moduleDescriptor.getCompleteKey(), resourceName);
-    }
-
-    /**
-     * @deprecated Since 2.2. Use {@link #writeRequiredResources} instead.
-     */
-    public void includeResources(Writer writer)
-    {
-        writeRequiredResources(writer);
     }
 
     /**
