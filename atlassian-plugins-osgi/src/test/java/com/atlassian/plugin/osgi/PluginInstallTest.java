@@ -196,7 +196,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
         }
     }
 
-    /* Not able to be implemented until packages used by component imports can be made non-optional
+    /* Not able to be implemented until packages used by component imports can be made non-optional */
     public void testUpgradeWithNewComponentImplementationWithInterfaceInPlugin() throws Exception
     {
         final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory();
@@ -250,7 +250,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertEquals("bob", svcTracker.getService().getClass().getMethod("call").invoke(svcTracker.getService()));
         assertEquals("bob", ((Callable) tracker.getService()).call());
     }
-    */
+
 
     public void testUpgradeTestingForCachedXml() throws Exception
     {

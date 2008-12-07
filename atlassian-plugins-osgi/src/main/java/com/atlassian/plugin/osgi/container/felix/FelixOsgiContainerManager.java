@@ -458,6 +458,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
         public Bundle install(final File path, final boolean uninstallOtherVersions) throws BundleException
         {
+            Bundle uninstalledBundle = null;
             if (uninstallOtherVersions)
             {
                 try
@@ -470,8 +471,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                         {
                             log.info("Uninstalling existing version " + oldBundle.getHeaders().get(Constants.BUNDLE_VERSION));
                             oldBundle.uninstall();
+                            uninstalledBundle = oldBundle;
 
-                            //packageAdmin.refreshPackages(new Bundle[]{oldBundle});
                         }
                     }
 
@@ -482,6 +483,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 }
             }
             final Bundle bundle = bundleContext.installBundle(path.toURI().toString());
+            if (uninstalledBundle != null)
+            {
+                packageAdmin.refreshPackages(new Bundle[]{uninstalledBundle, bundle});
+            }
             return bundle;
         }
 
