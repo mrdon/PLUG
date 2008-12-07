@@ -100,7 +100,14 @@ public class Scanner
         clear(removedFiles);
 
         // Checks for new files.
-        Collection<DeploymentUnit> result = new ArrayList();
+        Collection<DeploymentUnit> result = new TreeSet<DeploymentUnit>(new Comparator<DeploymentUnit>()
+        {
+            public int compare(DeploymentUnit o1, DeploymentUnit o2)
+            {
+                return o1.getPath().getName().compareTo(o2.getPath().getName());
+            }
+        });
+
         File files[] = libDir.listFiles(fileFilter);
         if (files == null)
         {

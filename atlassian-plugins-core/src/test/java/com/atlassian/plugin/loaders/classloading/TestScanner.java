@@ -19,8 +19,7 @@ public class TestScanner extends AbstractTestClassLoader
         assertEquals(2, deployedUnits.size());
 
         // put them into a list so we're sure we get them in the right order
-        Set orderedUnits = new TreeSet(deployedUnits);
-        Iterator iterator = orderedUnits.iterator();
+        Iterator iterator = deployedUnits.iterator();
         DeploymentUnit unit = (DeploymentUnit) iterator.next();
         assertEquals("paddington-test-plugin.jar", unit.getPath().getName());
 
