@@ -73,6 +73,11 @@ public class DefaultServletModuleManager implements ServletModuleManager
         {
             servletMapper.put(descriptor.getCompleteKey(), path);
         }
+        LazyLoadedReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
+        if (servletRef != null)
+        {
+            servletRef.get().destroy();
+        }
     }
 
     /* (non-Javadoc)
@@ -117,6 +122,11 @@ public class DefaultServletModuleManager implements ServletModuleManager
         for (String path : descriptor.getPaths())
         {
             filterMapper.put(descriptor.getCompleteKey(), path);
+        }
+        LazyLoadedReference<Filter> filterRef = filterRefs.remove(descriptor.getCompleteKey());
+        if (filterRef != null)
+        {
+            filterRef.get().destroy();
         }
     }
 
