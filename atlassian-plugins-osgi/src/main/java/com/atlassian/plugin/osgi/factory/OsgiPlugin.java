@@ -43,7 +43,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private Method nativeCreateBeanMethod;
     private Method nativeAutowireBeanMethod;
     private ServiceTracker moduleDescriptorTracker;
-    private ServiceTracker deferredModuleTracker;
+    private ServiceTracker unrecognisedModuleTracker;
     private final Map<String, Element> moduleElements = new HashMap<String, Element>();
 
     public OsgiPlugin(final Bundle bundle)
@@ -147,9 +147,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                     moduleDescriptorTracker = new ServiceTracker(bundle.getBundleContext(), ModuleDescriptor.class.getName(),
                         new RegisteringServiceTrackerCustomizer());
                     moduleDescriptorTracker.open();
-                    deferredModuleTracker = new ServiceTracker(bundle.getBundleContext(), ListableModuleDescriptorFactory.class.getName(),
-                        new DeferredServiceTrackerCustomizer());
-                    deferredModuleTracker.open();
+                    unrecognisedModuleTracker = new ServiceTracker(bundle.getBundleContext(), ListableModuleDescriptorFactory.class.getName(),
+                        new UnrecognisedServiceTrackerCustomizer());
+                    unrecognisedModuleTracker.open();
                 }
             }
         }
@@ -169,9 +169,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 {
                     moduleDescriptorTracker.close();
                 }
-                if (deferredModuleTracker != null)
+                if (unrecognisedModuleTracker != null)
                 {
-                    deferredModuleTracker.close();
+                    unrecognisedModuleTracker.close();
                 }
                 bundle.stop();
                 moduleDescriptorTracker = null;
@@ -404,7 +404,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
      *
      * @since 2.1.2
      */
-    private class DeferredServiceTrackerCustomizer implements ServiceTrackerCustomizer
+    private class UnrecognisedServiceTrackerCustomizer implements ServiceTrackerCustomizer
     {
 
         /**
@@ -414,29 +414,29 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         public Object addingService(final ServiceReference serviceReference)
         {
             final ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) bundle.getBundleContext().getService(serviceReference);
-            for (final UnrecognisedModuleDescriptor deferred : getModuleDescriptorsByDescriptorClass(UnrecognisedModuleDescriptor.class))
+            for (final UnrecognisedModuleDescriptor unrecognised : getModuleDescriptorsByDescriptorClass(UnrecognisedModuleDescriptor.class))
             {
-                final Element source = moduleElements.get(deferred.getKey());
+                final Element source = moduleElements.get(unrecognised.getKey());
                 if ((source != null) && factory.hasModuleDescriptor(source.getName()))
                 {
                     try
                     {
                         final ModuleDescriptor descriptor = factory.getModuleDescriptor(source.getName());
-                        descriptor.init(deferred.getPlugin(), source);
+                        descriptor.init(unrecognised.getPlugin(), source);
                         addModuleDescriptor(descriptor);
                         log.info("Turned plugin module " + descriptor.getCompleteKey() + " into module " + descriptor);
                     }
                     catch (final IllegalAccessException e)
                     {
-                        log.error("Unable to transform " + deferred.getKey() + " into actual plugin module using factory " + factory, e);
+                        log.error("Unable to transform " + unrecognised.getKey() + " into actual plugin module using factory " + factory, e);
                     }
                     catch (final InstantiationException e)
                     {
-                        log.error("Unable to transform " + deferred.getKey() + " into actual plugin module using factory " + factory, e);
+                        log.error("Unable to transform " + unrecognised.getKey() + " into actual plugin module using factory " + factory, e);
                     }
                     catch (final ClassNotFoundException e)
                     {
-                        log.error("Unable to transform " + deferred.getKey() + " into actual plugin module using factory " + factory, e);
+                        log.error("Unable to transform " + unrecognised.getKey() + " into actual plugin module using factory " + factory, e);
                     }
                 }
             }
@@ -463,14 +463,14 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             {
                 for (final ModuleDescriptor<?> descriptor : getModuleDescriptorsByDescriptorClass(moduleDescriptorClass))
                 {
-                    final UnrecognisedModuleDescriptor deferred = new UnrecognisedModuleDescriptor();
+                    final UnrecognisedModuleDescriptor unrecognisedModuleDescriptor = new UnrecognisedModuleDescriptor();
                     final Element source = moduleElements.get(descriptor.getKey());
                     if (source != null)
                     {
-                        deferred.init(OsgiPlugin.this, source);
-                        deferred.setErrorText(UnrecognisedModuleDescriptorFallbackFactory.DESCRIPTOR_TEXT);
-                        addModuleDescriptor(deferred);
-                        log.info("Removed plugin module " + deferred.getCompleteKey() + " as its factory was uninstalled");
+                        unrecognisedModuleDescriptor.init(OsgiPlugin.this, source);
+                        unrecognisedModuleDescriptor.setErrorText(UnrecognisedModuleDescriptorFallbackFactory.DESCRIPTOR_TEXT);
+                        addModuleDescriptor(unrecognisedModuleDescriptor);
+                        log.info("Removed plugin module " + unrecognisedModuleDescriptor.getCompleteKey() + " as its factory was uninstalled");
                     }
                 }
             }

@@ -25,6 +25,9 @@ public class OsgiPluginXmlDescriptorParser extends XmlDescriptorParser
     private HashSet<String> modulesToIgnore;
 
     /**
+     * @param source The XML descriptor source
+     * @param modulesToIgnore A list of module types to ignore
+     * 
      * @throws com.atlassian.plugin.PluginParseException
      *          if there is a problem reading the descriptor from the XML {@link java.io.InputStream}.
      */

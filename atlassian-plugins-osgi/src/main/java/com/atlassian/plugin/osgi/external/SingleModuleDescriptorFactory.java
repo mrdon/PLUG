@@ -2,13 +2,15 @@ package com.atlassian.plugin.osgi.external;
 
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.hostcontainer.HostContainer;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 
 import java.util.Collections;
 import java.util.Set;
 
 /**
- * Single module descriptor factory for plugins to use when they want to expose just one plugin. Does not support
- * autowiring module descriptors. 
+ * A single module descriptor factory for plugins to use when they want to expose just one plugin.  Uses
+ * {@link HostContainer} to optionally provide autowiring for new desciptor instances.
  *
  * @since 2.1
  */
@@ -16,11 +18,25 @@ public class SingleModuleDescriptorFactory<T extends ModuleDescriptor<?>> implem
 {
     private final String type;
     private final Class<T> moduleDescriptorClass;
+    private final HostContainer hostContainer;
 
     public SingleModuleDescriptorFactory(final String type, final Class<T> moduleDescriptorClass)
     {
+        this(new DefaultHostContainer(), type, moduleDescriptorClass);
+    }
+
+    /**
+     * Constructs an instance using a specific host container
+     * @param hostContainer The host container to use to create descriptor instances
+     * @param type The type of module
+     * @param moduleDescriptorClass The descriptor class
+     * @since 2.2.0
+     */
+    public SingleModuleDescriptorFactory(final HostContainer hostContainer, final String type, final Class<T> moduleDescriptorClass)
+    {
         this.moduleDescriptorClass = moduleDescriptorClass;
         this.type = type;
+        this.hostContainer = hostContainer;
     }
 
     public ModuleDescriptor getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
@@ -30,7 +46,7 @@ public class SingleModuleDescriptorFactory<T extends ModuleDescriptor<?>> implem
         {
             // We can't use an autowired bean factory to create the instance because it would be loaded by this class's
             // classloader, which will not have access to the spring instance in bundle space.
-            result = moduleDescriptorClass.newInstance();
+            result = hostContainer.create(moduleDescriptorClass);
         }
         return result;
     }

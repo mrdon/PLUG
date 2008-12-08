@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
  * module so be sure that this factory is last in a list of factories.
  *
  * @since 2.1.2
+ * @see {@link UnrecognisedModuleDescriptor}
  */
 class UnrecognisedModuleDescriptorFallbackFactory implements ModuleDescriptorFactory
 {
@@ -20,7 +21,7 @@ class UnrecognisedModuleDescriptorFallbackFactory implements ModuleDescriptorFac
 
     public UnrecognisedModuleDescriptor getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
     {
-        log.info("Unknown module descriptor of type " + type + " registered as a deferred descriptor.");
+        log.info("Unknown module descriptor of type " + type + " registered as a unrecognised descriptor.");
         final UnrecognisedModuleDescriptor descriptor = new UnrecognisedModuleDescriptor();
         descriptor.setErrorText(DESCRIPTOR_TEXT);
         return descriptor;
