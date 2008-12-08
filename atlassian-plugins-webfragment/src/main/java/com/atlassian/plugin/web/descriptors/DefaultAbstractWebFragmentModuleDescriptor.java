@@ -1,19 +1,20 @@
 package com.atlassian.plugin.web.descriptors;
 
-import com.atlassian.plugin.web.WebInterfaceManager;
-import com.atlassian.plugin.web.Condition;
-import com.atlassian.plugin.web.ContextProvider;
-import com.atlassian.plugin.web.model.WebLabel;
-import com.atlassian.plugin.web.model.WebParam;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
-import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
+import com.atlassian.plugin.web.Condition;
+import com.atlassian.plugin.web.ContextProvider;
+import com.atlassian.plugin.web.WebInterfaceManager;
+import com.atlassian.plugin.web.model.WebLabel;
+import com.atlassian.plugin.web.model.WebParam;
+
 import org.dom4j.Element;
 
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Wrapper for {@link WebFragmentModuleDescriptor}, so that it could be extended by application specific
@@ -21,11 +22,11 @@ import java.util.List;
  */
 public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, WebFragmentModuleDescriptor
 {
-    private WebFragmentModuleDescriptor decoratedDescriptor;
+    private final WebFragmentModuleDescriptor decoratedDescriptor;
 
-    public DefaultAbstractWebFragmentModuleDescriptor(WebFragmentModuleDescriptor abstractDescriptor)
+    public DefaultAbstractWebFragmentModuleDescriptor(final WebFragmentModuleDescriptor abstractDescriptor)
     {
-        this.decoratedDescriptor = abstractDescriptor;
+        decoratedDescriptor = abstractDescriptor;
     }
 
     public void enabled()
@@ -38,7 +39,7 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
         decoratedDescriptor.disabled();
     }
 
-    protected WebFragmentModuleDescriptor getDecoratedDescriptor() 
+    protected WebFragmentModuleDescriptor getDecoratedDescriptor()
     {
         return decoratedDescriptor;
     }
@@ -53,7 +54,7 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
         return decoratedDescriptor.getKey();
     }
 
-    public Object getModule()
+    public Void getModule()
     {
         return decoratedDescriptor.getModule();
     }
@@ -83,11 +84,12 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
         return decoratedDescriptor.getTooltip();
     }
 
-    public void setWebInterfaceManager(WebInterfaceManager webInterfaceManager)
+    public void setWebInterfaceManager(final WebInterfaceManager webInterfaceManager)
     {
         // bit of a hack but it works :)
-        if (decoratedDescriptor instanceof AbstractWebFragmentModuleDescriptor) {
-            AbstractWebFragmentModuleDescriptor abstractWebFragmentModuleDescriptor = (AbstractWebFragmentModuleDescriptor) decoratedDescriptor;
+        if (decoratedDescriptor instanceof AbstractWebFragmentModuleDescriptor)
+        {
+            final AbstractWebFragmentModuleDescriptor abstractWebFragmentModuleDescriptor = (AbstractWebFragmentModuleDescriptor) decoratedDescriptor;
             abstractWebFragmentModuleDescriptor.setWebInterfaceManager(webInterfaceManager);
         }
     }
@@ -128,12 +130,12 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
         return decoratedDescriptor.getDescription();
     }
 
-    public Class getModuleClass()
+    public Class<Void> getModuleClass()
     {
         return decoratedDescriptor.getModuleClass();
     }
 
-    public void init(Plugin plugin, Element element) throws PluginParseException
+    public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
         decoratedDescriptor.init(plugin, element);
     }
@@ -148,7 +150,7 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
         return decoratedDescriptor.isSystemModule();
     }
 
-    public void destroy(Plugin plugin)
+    public void destroy(final Plugin plugin)
     {
         decoratedDescriptor.destroy(plugin);
     }
@@ -163,28 +165,29 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
         return decoratedDescriptor.satisfiesMinJavaVersion();
     }
 
-    public Map getParams()
+    public Map<String, String> getParams()
     {
         return decoratedDescriptor.getParams();
     }
 
     //------------------------------------------------------------------------------------------------ Resourced methods
-    public List getResourceDescriptors()
+
+    public List<ResourceDescriptor> getResourceDescriptors()
     {
         return decoratedDescriptor.getResourceDescriptors();
     }
 
-    public List getResourceDescriptors(String type)
+    public List<ResourceDescriptor> getResourceDescriptors(final String type)
     {
         return decoratedDescriptor.getResourceDescriptors(type);
     }
 
-    public ResourceLocation getResourceLocation(String type, String name)
+    public ResourceLocation getResourceLocation(final String type, final String name)
     {
         return decoratedDescriptor.getResourceLocation(type, name);
     }
 
-    public ResourceDescriptor getResourceDescriptor(String type, String name)
+    public ResourceDescriptor getResourceDescriptor(final String type, final String name)
     {
         return decoratedDescriptor.getResourceDescriptor(type, name);
     }

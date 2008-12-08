@@ -1,10 +1,5 @@
 package com.atlassian.plugin.web.descriptors;
 
-import java.util.Iterator;
-import java.util.List;
-
-import org.dom4j.Element;
-
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
@@ -22,43 +17,47 @@ import com.atlassian.plugin.web.model.DefaultWebParam;
 import com.atlassian.plugin.web.model.WebLabel;
 import com.atlassian.plugin.web.model.WebParam;
 
+import org.dom4j.Element;
+
+import java.util.Iterator;
+import java.util.List;
+
 /**
  * An abstract convenience class for web fragment descriptors.
  */
-public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModuleDescriptor implements StateAware, WebFragmentModuleDescriptor
+public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModuleDescriptor<Void> implements StateAware, WebFragmentModuleDescriptor
 {
     protected WebInterfaceManager webInterfaceManager;
     protected Element element;
     protected int weight;
-    
+
     protected Condition condition;
     protected ContextProvider contextProvider;
     protected DefaultWebLabel label;
     protected DefaultWebLabel tooltip;
     protected WebParam params;
 
-    protected AbstractWebFragmentModuleDescriptor(WebInterfaceManager webInterfaceManager)
+    protected AbstractWebFragmentModuleDescriptor(final WebInterfaceManager webInterfaceManager)
     {
         this.webInterfaceManager = webInterfaceManager;
     }
 
     public AbstractWebFragmentModuleDescriptor()
-    {
-    }
+    {}
 
-    public void init(Plugin plugin, Element element) throws PluginParseException
+    @Override
+    public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
         super.init(plugin, element);
 
-        this.element = element; 
+        this.element = element;
         weight = 1000;
         try
         {
             weight = Integer.parseInt(element.attributeValue("weight"));
         }
-        catch (NumberFormatException e)
-        {
-        }
+        catch (final NumberFormatException e)
+        {}
     }
 
     /**
@@ -67,33 +66,33 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
      * @param type logical operator type {@link #getCompositeType}
      * @throws PluginParseException
      */
-    protected Condition makeConditions(Element element, int type) throws PluginParseException
+    protected Condition makeConditions(final Element element, final int type) throws PluginParseException
     {
         //make single conditions (all Anded together)
-        List singleConditionElements = element.elements("condition");
+        final List singleConditionElements = element.elements("condition");
         Condition singleConditions = null;
-        if (singleConditionElements != null && !singleConditionElements.isEmpty())
+        if ((singleConditionElements != null) && !singleConditionElements.isEmpty())
         {
             singleConditions = makeConditions(singleConditionElements, type);
         }
 
         //make composite conditions (logical operator can be specified by "type")
-        List nestedConditionsElements = element.elements("conditions");
+        final List nestedConditionsElements = element.elements("conditions");
         AbstractCompositeCondition nestedConditions = null;
-        if (nestedConditionsElements != null && !nestedConditionsElements.isEmpty())
+        if ((nestedConditionsElements != null) && !nestedConditionsElements.isEmpty())
         {
             nestedConditions = getCompositeCondition(type);
-            for (Iterator iterator = nestedConditionsElements.iterator(); iterator.hasNext();)
+            for (final Iterator iterator = nestedConditionsElements.iterator(); iterator.hasNext();)
             {
-                Element nestedElement = (Element) iterator.next();
+                final Element nestedElement = (Element) iterator.next();
                 nestedConditions.addCondition(makeConditions(nestedElement, getCompositeType(nestedElement.attributeValue("type"))));
             }
         }
 
-        if (singleConditions != null && nestedConditions != null)
+        if ((singleConditions != null) && (nestedConditions != null))
         {
             //Join together the single and composite conditions by this type
-            AbstractCompositeCondition compositeCondition = getCompositeCondition(type);
+            final AbstractCompositeCondition compositeCondition = getCompositeCondition(type);
             compositeCondition.addCondition(singleConditions);
             compositeCondition.addCondition(nestedConditions);
             return compositeCondition;
@@ -110,7 +109,7 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         return null;
     }
 
-    protected Condition makeConditions(List elements, int type) throws PluginParseException
+    protected Condition makeConditions(final List elements, final int type) throws PluginParseException
     {
         if (elements.size() == 0)
         {
@@ -122,10 +121,10 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         }
         else
         {
-            AbstractCompositeCondition compositeCondition = getCompositeCondition(type);
-            for (Iterator it = elements.iterator(); it.hasNext();)
+            final AbstractCompositeCondition compositeCondition = getCompositeCondition(type);
+            for (final Iterator it = elements.iterator(); it.hasNext();)
             {
-                Element element = (Element) it.next();
+                final Element element = (Element) it.next();
                 compositeCondition.addCondition(makeCondition(element));
             }
 
@@ -133,50 +132,50 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         }
     }
 
-    protected Condition makeCondition(Element element) throws PluginParseException
+    protected Condition makeCondition(final Element element) throws PluginParseException
     {
         try
         {
-            Condition condition = webInterfaceManager.getWebFragmentHelper().loadCondition(element.attributeValue("class"), plugin);
+            final Condition condition = webInterfaceManager.getWebFragmentHelper().loadCondition(element.attributeValue("class"), plugin);
             condition.init(LoaderUtils.getParams(element));
 
-            if (element.attribute("invert") != null && "true".equals(element.attributeValue("invert")))
+            if ((element.attribute("invert") != null) && "true".equals(element.attributeValue("invert")))
             {
                 return new InvertedCondition(condition);
             }
 
             return condition;
         }
-        catch (ClassCastException e)
+        catch (final ClassCastException e)
         {
             throw new PluginParseException("Configured condition class does not implement the Condition interface");
         }
-        catch (Throwable t)
+        catch (final Throwable t)
         {
             throw new PluginParseException(t);
         }
     }
 
-    protected ContextProvider makeContextProvider(Element element) throws PluginParseException
+    protected ContextProvider makeContextProvider(final Element element) throws PluginParseException
     {
         try
         {
-            ContextProvider context = webInterfaceManager.getWebFragmentHelper().loadContextProvider(element.attributeValue("class"), plugin);
+            final ContextProvider context = webInterfaceManager.getWebFragmentHelper().loadContextProvider(element.attributeValue("class"), plugin);
             context.init(LoaderUtils.getParams(element));
 
             return context;
         }
-        catch (ClassCastException e)
+        catch (final ClassCastException e)
         {
             throw new PluginParseException("Configured context-provider class does not implement the ContextProvider interface");
         }
-        catch (Throwable t)
+        catch (final Throwable t)
         {
             throw new PluginParseException(t);
         }
     }
 
-    private int getCompositeType(String type) throws PluginParseException
+    private int getCompositeType(final String type) throws PluginParseException
     {
         if ("or".equalsIgnoreCase(type))
         {
@@ -189,7 +188,7 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         throw new PluginParseException("Invalid condition type specified. type = " + type);
     }
 
-    private AbstractCompositeCondition getCompositeCondition(int type) throws PluginParseException
+    private AbstractCompositeCondition getCompositeCondition(final int type) throws PluginParseException
     {
         switch (type)
         {
@@ -205,6 +204,7 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         throw new PluginParseException("Invalid condition type specified. type = " + type);
     }
 
+    @Override
     public void enabled()
     {
         super.enabled();
@@ -216,33 +216,34 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
             {
                 contextProvider = makeContextProvider(element.element("context-provider"));
             }
-    
+
             if (element.element("label") != null)
             {
                 label = new DefaultWebLabel(element.element("label"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
             }
-    
+
             if (element.element("tooltip") != null)
             {
                 tooltip = new DefaultWebLabel(element.element("tooltip"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
             }
-    
+
             if (getParams() != null)
             {
                 params = new DefaultWebParam(getParams(), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
             }
-    
+
             condition = makeConditions(element, COMPOSITE_TYPE_AND);
         }
-        catch (PluginParseException e)
+        catch (final PluginParseException e)
         {
             // is there a better exception to throw?
             throw new RuntimeException("Unable to enable web fragment", e);
         }
-        
+
         webInterfaceManager.refresh();
     }
 
+    @Override
     public void disabled()
     {
         webInterfaceManager.refresh();
@@ -254,9 +255,16 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         return weight;
     }
 
-    public Object getModule()
+    @Override
+    public Void getModule()
     {
         return null;
+    }
+
+    @Override
+    public Class<Void> getModuleClass()
+    {
+        return Void.class;
     }
 
     public WebLabel getWebLabel()
@@ -269,7 +277,7 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
         return tooltip;
     }
 
-    public void setWebInterfaceManager(WebInterfaceManager webInterfaceManager)
+    public void setWebInterfaceManager(final WebInterfaceManager webInterfaceManager)
     {
         this.webInterfaceManager = webInterfaceManager;
     }

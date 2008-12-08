@@ -10,14 +10,12 @@ import com.atlassian.plugin.web.model.WebParam;
 /**
  * A convenience interface for web fragment descriptors
  */
-public interface WebFragmentModuleDescriptor extends ModuleDescriptor, WeightedDescriptor, StateAware
+public interface WebFragmentModuleDescriptor extends ModuleDescriptor<Void>, WeightedDescriptor, StateAware
 {
     int COMPOSITE_TYPE_OR = 0;
     int COMPOSITE_TYPE_AND = 1;
 
     int getWeight();
-
-    Object getModule();
 
     WebLabel getWebLabel();
 
