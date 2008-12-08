@@ -30,6 +30,9 @@ public class TestFelixOsgiContainerManager extends TestCase
         if (tmpdir.exists())
         {
             FileUtils.cleanDirectory(tmpdir);
+        } else
+        {
+            tmpdir.mkdir();
         }
         frameworkBundlesDir = new File(tmpdir, "framework-bundles-test");
 
@@ -193,7 +196,8 @@ public class TestFelixOsgiContainerManager extends TestCase
         Bundle bundleUpdate = felix.installBundle(pluginUpdate);
         assertEquals(2, felix.getBundles().length);
         assertEquals(Bundle.INSTALLED, bundleUpdate.getState());
-        bundle.start();
+        bundleUpdate.start();
+        assertEquals(Bundle.ACTIVE, bundleUpdate.getState());
         assertNull(bundleUpdate.getResource("foo.txt"));
         assertNotNull(bundleUpdate.getResource("bar.txt"));
     }

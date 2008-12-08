@@ -45,6 +45,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
 
 /**
@@ -143,7 +145,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
      * @throws com.atlassian.plugin.osgi.container.OsgiContainerException If the host version isn't supplied and the
      *  cache directory cannot be cleaned.
      */
-    public FelixOsgiContainerManager(final URL frameworkBundlesZip, final File frameworkBundlesDir, final PackageScannerConfiguration packageScannerConfig, final HostComponentProvider provider, final PluginEventManager eventManager, final File cacheDir) throws OsgiContainerException
+    public FelixOsgiContainerManager(final URL frameworkBundlesZip, final File frameworkBundlesDir,
+                                     final PackageScannerConfiguration packageScannerConfig,
+                                     final HostComponentProvider provider, final PluginEventManager eventManager,
+                                     final File cacheDir) throws OsgiContainerException
     {
         Validate.notNull(frameworkBundlesZip, "The framework bundles zip is required");
         Validate.notNull(frameworkBundlesDir, "The framework bundles directory must not be null");
@@ -458,7 +463,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
         public Bundle install(final File path, final boolean uninstallOtherVersions) throws BundleException
         {
-            Bundle uninstalledBundle = null;
+            boolean bundleUninstalled = false;
             if (uninstallOtherVersions)
             {
                 try
@@ -471,11 +476,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                         {
                             log.info("Uninstalling existing version " + oldBundle.getHeaders().get(Constants.BUNDLE_VERSION));
                             oldBundle.uninstall();
-                            uninstalledBundle = oldBundle;
-
+                            bundleUninstalled = true;
                         }
                     }
-
                 }
                 catch (final IOException e)
                 {
@@ -483,9 +486,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 }
             }
             final Bundle bundle = bundleContext.installBundle(path.toURI().toString());
-            if (uninstalledBundle != null)
+            if (bundleUninstalled)
             {
-                packageAdmin.refreshPackages(new Bundle[]{uninstalledBundle, bundle});
+                refreshPackages();
             }
             return bundle;
         }
@@ -547,6 +550,34 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             {
                 bundle.start();
             }
+        }
+
+        private void refreshPackages()
+        {
+            final CountDownLatch latch = new CountDownLatch(1);
+            FrameworkListener refreshListener = new FrameworkListener()
+            {
+
+                public void frameworkEvent(FrameworkEvent event)
+                {
+                    if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED)
+                    {
+                        log.info("Packages refreshed");
+                        latch.countDown();
+                    }
+                }
+            };
+            bundleContext.addFrameworkListener(refreshListener);
+            packageAdmin.refreshPackages(null);
+            try
+            {
+                latch.await(10, TimeUnit.SECONDS);
+            }
+            catch (InterruptedException e)
+            {
+                log.warn("Timeout exceeded waiting for package refresh");
+            }
+            bundleContext.removeFrameworkListener(refreshListener);
         }
     }
 
