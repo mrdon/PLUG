@@ -28,6 +28,7 @@ import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.predicate.PluginPredicate;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -69,7 +70,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         pluginStateStore = new MemoryPluginStateStore();
         pluginLoaders = new ArrayList<PluginLoader>();
-        moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
 
         manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, pluginEventManager);
     }

@@ -14,6 +14,7 @@ import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
 import com.atlassian.plugin.test.PluginJarBuilder;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 
 import org.apache.commons.io.FileUtils;
 
@@ -51,7 +52,7 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
 
         pluginStateStore = new MemoryPluginStateStore();
         pluginLoaders = new ArrayList<PluginLoader>();
-        moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
 
         manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
     }

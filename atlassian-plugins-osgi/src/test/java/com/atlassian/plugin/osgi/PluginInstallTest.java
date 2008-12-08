@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
@@ -32,7 +33,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
     public void testUpgradeWithNewComponentImports() throws Exception
     {
-        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory();
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
         initPluginManager(new HostComponentProvider()
         {
@@ -67,7 +68,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
     public void testUpgradeWithNoAutoDisable() throws Exception
     {
-        DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory();
+        DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
         initPluginManager(new HostComponentProvider(){
             public void provide(ComponentRegistrar registrar)
@@ -134,7 +135,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
     public void testUpgradeWithNewComponentImplementation() throws Exception
     {
-        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory();
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
         initPluginManager(new HostComponentProvider()
         {
@@ -199,7 +200,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
     /* Not able to be implemented until packages used by component imports can be made non-optional */
     public void testUpgradeWithNewComponentImplementationWithInterfaceInPlugin() throws Exception
     {
-        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory();
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
         initPluginManager(new HostComponentProvider()
         {
@@ -254,7 +255,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
     public void testUpgradeTestingForCachedXml() throws Exception
     {
-        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory();
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
         initPluginManager(new HostComponentProvider()
         {
@@ -492,7 +493,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
             "<atlassian-plugin name='Test 2' key='test.plugin2' pluginsVersion='2'>", "    <plugin-info>", "        <version>1.0</version>",
             "    </plugin-info>", "    <dummy key='dum1'/>", "    <dummy key='dum2'/>", "</atlassian-plugin>").build(pluginsDir);
 
-        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory();
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
         initPluginManager(new HostComponentProvider()
         {

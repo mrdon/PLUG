@@ -1,25 +1,24 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
-import com.atlassian.plugin.impl.UnloadablePlugin;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.mock.*;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 public class TestSinglePluginLoader extends TestCase
 {
     public void testSinglePluginLoader() throws Exception
     {
         SinglePluginLoader loader = new SinglePluginLoader("test-system-plugin.xml");
-        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
@@ -34,7 +33,7 @@ public class TestSinglePluginLoader extends TestCase
     public void testAtlassianPlugin() throws Exception
     {
         SinglePluginLoader loader = new SinglePluginLoader("test-atlassian-plugin.xml");
-        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
@@ -88,7 +87,7 @@ public class TestSinglePluginLoader extends TestCase
     public void testDisabledPlugin() throws PluginParseException
     {
         SinglePluginLoader loader = new SinglePluginLoader("test-disabled-plugin.xml");
-        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
         assertEquals(1, plugins.size());
@@ -103,7 +102,7 @@ public class TestSinglePluginLoader extends TestCase
     public void testPluginByUrl() throws PluginParseException
     {
         SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResourceAsStream("test-disabled-plugin.xml", SinglePluginLoader.class));
-        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
@@ -114,7 +113,7 @@ public class TestSinglePluginLoader extends TestCase
     public void testPluginsInOrder() throws PluginParseException
     {
         SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResourceAsStream("test-ordered-pluginmodules.xml", SinglePluginLoader.class));
-        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
         final Plugin plugin = (Plugin) plugins.iterator().next();
@@ -129,7 +128,7 @@ public class TestSinglePluginLoader extends TestCase
     public void testUnknownPluginModule() throws PluginParseException
     {
         SinglePluginLoader loader = new SinglePluginLoader("test-bad-plugin.xml");
-        Collection plugins = loader.loadAllPlugins(new DefaultModuleDescriptorFactory());
+        Collection plugins = loader.loadAllPlugins(new DefaultModuleDescriptorFactory(new DefaultHostContainer()));
         List pluginsList = new ArrayList(plugins);
 
         assertEquals(1, pluginsList.size());
@@ -147,7 +146,7 @@ public class TestSinglePluginLoader extends TestCase
         SinglePluginLoader loader = new SinglePluginLoader("test-atlassian-plugin.xml");
 
         // Define the module descriptor factory
-        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
@@ -175,7 +174,7 @@ public class TestSinglePluginLoader extends TestCase
         SinglePluginLoader loader = new SinglePluginLoader("test-atlassian-plugin.xml");
 
         // Define the module descriptor factory
-        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
 
         // Exclude mineral
@@ -213,7 +212,7 @@ public class TestSinglePluginLoader extends TestCase
     public void testNonUniqueKeysWithinAPlugin() throws PluginParseException
     {
         SinglePluginLoader loader = new SinglePluginLoader("test-bad-non-unique-keys-plugin.xml");
-        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 

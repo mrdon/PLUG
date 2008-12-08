@@ -10,7 +10,9 @@ package com.atlassian.plugin.hostcontainer;
 public interface HostContainer
 {
     /**
-     * Constructs an instance of a class, matching the constructor with the largest number of arguments first.
+     * Constructs an instance of a class, matching the constructor with the largest number of arguments first, and
+     * autowires as appropriate.  Actual method of autowiring may vary between implementations, though all should
+     * support constructor injection.
      *
      * @param moduleClass The class
      * @return An instance of the passed class
@@ -25,5 +27,4 @@ public interface HostContainer
      * @return The existing implementation
      */
     <T> T getInstance(Class<T> moduleClass);
-
 }

@@ -4,6 +4,7 @@ import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.DefaultPluginManager;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
@@ -80,12 +81,12 @@ public abstract class PluginInContainerTestBase extends TestCase
         {
             public void provide(final ComponentRegistrar registrar)
             {}
-        }, new DefaultModuleDescriptorFactory());
+        }, new DefaultModuleDescriptorFactory(new DefaultHostContainer()));
     }
 
     protected void initPluginManager(final HostComponentProvider hostComponentProvider) throws Exception
     {
-        initPluginManager(hostComponentProvider, new DefaultModuleDescriptorFactory());
+        initPluginManager(hostComponentProvider, new DefaultModuleDescriptorFactory(new DefaultHostContainer()));
     }
 
     protected void initPluginManager(final HostComponentProvider hostComponentProvider, final ModuleDescriptorFactory moduleDescriptorFactory) throws Exception

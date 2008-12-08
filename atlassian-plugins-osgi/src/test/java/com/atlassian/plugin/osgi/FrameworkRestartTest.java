@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.test.PluginJarBuilder;
@@ -17,7 +18,7 @@ public class FrameworkRestartTest extends PluginInContainerTestBase
         final int numHostComponents = 200;
         final int numPlugins = 50;
 
-        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory();
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
         final HostComponentProvider prov = new HostComponentProvider()
         {

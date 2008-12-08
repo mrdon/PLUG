@@ -2,6 +2,7 @@ package com.atlassian.plugin;
 
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,7 @@ public class TestDefaultModuleDescriptorFactory extends TestCase
     {
         super.setUp();
 
-        moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
     }
 
     public void testInvalidModuleDescriptorType()

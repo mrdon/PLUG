@@ -7,6 +7,7 @@ import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginStateStore;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
@@ -218,7 +219,7 @@ public class PluginsConfigurationBuilder
 
         if (moduleDescriptorFactory == null)
         {
-            moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+            moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         }
 
         if (bundleCacheDirectory == null)

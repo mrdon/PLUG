@@ -1,6 +1,7 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.hostcontainer.HostContainer;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 
@@ -13,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * Default implementation of a descriptor factory that allows filtering of descriptor keys
+ */
 public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
 {
     private static Log log = LogFactory.getLog(DefaultModuleDescriptorFactory.class);
@@ -21,11 +25,20 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
     private final List<String> permittedModuleKeys = new ArrayList<String>();
     private final HostContainer hostContainer;
 
+    /**
+     * @deprecated Since 2.2.0, use {@link #DefaultModuleDescriptorFactory(HostContainer)} instead
+     */
     public DefaultModuleDescriptorFactory()
     {
-        hostContainer = null;
+        this(new DefaultHostContainer());
     }
 
+    /**
+     * Instantiates a descriptor factory that uses the host container to create descriptors
+     *
+     * @param hostContainer The host container implementation for descriptor creation
+     * @since 2.2.0
+     */
     public DefaultModuleDescriptorFactory(final HostContainer hostContainer)
     {
         this.hostContainer = hostContainer;
@@ -50,11 +63,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
             throw new PluginParseException("Cannot find ModuleDescriptor class for plugin of type '" + type + "'.");
         }
 
-        if (hostContainer != null)
-        {
-            return hostContainer.create(moduleDescriptorClazz);
-        }
-        return moduleDescriptorClazz.newInstance();
+        return hostContainer.create(moduleDescriptorClazz);
     }
 
     protected boolean shouldSkipModuleOfType(final String type)

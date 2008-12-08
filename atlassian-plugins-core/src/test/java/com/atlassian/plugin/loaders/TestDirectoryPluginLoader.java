@@ -5,6 +5,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
@@ -45,7 +46,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     public void setUp() throws Exception
     {
         super.setUp();
-        moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         pluginEventManager = new DefaultPluginEventManager();
         createFillAndCleanTempPluginDirectory();
     }
