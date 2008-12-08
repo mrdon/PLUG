@@ -569,11 +569,16 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             };
             bundleContext.addFrameworkListener(refreshListener);
             packageAdmin.refreshPackages(null);
+            boolean refreshed = false;
             try
             {
-                latch.await(10, TimeUnit.SECONDS);
+                refreshed = latch.await(10, TimeUnit.SECONDS);
             }
             catch (InterruptedException e)
+            {
+                // ignore
+            }
+            if (!refreshed)
             {
                 log.warn("Timeout exceeded waiting for package refresh");
             }
