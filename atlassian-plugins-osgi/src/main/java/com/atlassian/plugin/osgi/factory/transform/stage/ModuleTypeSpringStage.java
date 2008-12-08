@@ -15,11 +15,12 @@ import java.util.List;
  */
 public class ModuleTypeSpringStage implements TransformStage
 {
+    /** The name of the generated Spring XML file for this stage */
     private static final String SPRING_XML = "META-INF/spring/atlassian-plugins-module-types.xml";
 
     public void execute(TransformContext context) throws PluginTransformationException
     {
-        if (context.getPluginJar().getEntry(SPRING_XML) == null)
+        if (SpringHelper.shouldGenerateFile(context, SPRING_XML))
         {
             Document doc = SpringHelper.createSpringDocument();
             Element root = doc.getRootElement();

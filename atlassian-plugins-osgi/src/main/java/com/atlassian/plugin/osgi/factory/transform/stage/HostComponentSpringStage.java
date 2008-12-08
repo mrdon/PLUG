@@ -27,11 +27,13 @@ import java.io.InputStream;
 public class HostComponentSpringStage implements TransformStage
 {
     private static final Log log = LogFactory.getLog(HostComponentSpringStage.class);
+
+    /** Path of generated Spring XML file */
     static final String SPRING_XML = "META-INF/spring/atlassian-plugins-host-components.xml";
 
     public void execute(TransformContext context) throws PluginTransformationException
     {
-        if (context.getPluginJar().getEntry(SPRING_XML) == null)
+        if (SpringHelper.shouldGenerateFile(context, SPRING_XML))
         {
             Document doc = SpringHelper.createSpringDocument();
             Set<String> hostComponentInterfaceNames = convertRegistrationsToSet(context.getHostComponentRegistrations());
@@ -51,9 +53,10 @@ public class HostComponentSpringStage implements TransformStage
             Element root = doc.getRootElement();
             if (context.getHostComponentRegistrations() != null)
             {
-                for (int x = 0; x < context.getHostComponentRegistrations().size(); x++)
+                int index = -1;
+                for (HostComponentRegistration reg : context.getHostComponentRegistrations())
                 {
-                    HostComponentRegistration reg = context.getHostComponentRegistrations().get(x);
+                    index++;
                     boolean found = false;
                     for (String name : reg.getMainInterfaces())
                     {
@@ -71,7 +74,7 @@ public class HostComponentSpringStage implements TransformStage
                     String beanName = reg.getProperties().get(PropertyBuilder.BEAN_NAME);
 
                     Element osgiService = root.addElement("osgi:reference");
-                    osgiService.addAttribute("id", determineId(context.getDescriptorDocument(), beanName, x));
+                    osgiService.addAttribute("id", determineId(context.getDescriptorDocument(), beanName, index));
 
                     if (beanName != null)
                     {
@@ -147,12 +150,9 @@ public class HostComponentSpringStage implements TransformStage
 
                     }
                 }
-                else
+                else if (path.endsWith(".jar") && innerJarPaths.contains(path))
                 {
-                    if (path.endsWith(".jar") && innerJarPaths.contains(path))
-                    {
-                        findUsedHostComponents(allHostComponents, matchedHostComponents, null, new UnclosableInputStream(zin));
-                    }
+                    findUsedHostComponents(allHostComponents, matchedHostComponents, null, new UnclosableInputStream(zin));
                 }
             }
         }
@@ -162,8 +162,7 @@ public class HostComponentSpringStage implements TransformStage
         }
     }
 
-    private List<String> findJarPaths(Manifest
-            mf)
+    private List<String> findJarPaths(Manifest mf)
     {
         List<String> paths = new ArrayList<String>();
         String cp = mf.getMainAttributes().getValue(Constants.BUNDLE_CLASSPATH);
@@ -172,20 +171,13 @@ public class HostComponentSpringStage implements TransformStage
             for (String entry : cp.split(","))
             {
                 entry = entry.trim();
-                if (entry.length() == 1)
+                if (entry.length() != 1 && entry.endsWith(".jar"))
                 {
-                    continue;
+                    paths.add(entry);
                 }
                 else
                 {
-                    if (entry.endsWith(".jar"))
-                    {
-                        paths.add(entry);
-                    }
-                    else
-                    {
-                        log.warn("Non-jar classpath elements not supported: " + entry);
-                    }
+                    log.warn("Non-jar classpath elements not supported: " + entry);
                 }
             }
         }

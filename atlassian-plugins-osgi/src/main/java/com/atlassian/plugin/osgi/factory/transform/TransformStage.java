@@ -5,14 +5,14 @@ package com.atlassian.plugin.osgi.factory.transform;
  *
  * @since 2.2.0
  */
-public interface TransformStage<T extends TransformContext>
+public interface TransformStage
 {
     /**
      * Transforms the jar by operating on the context
      * @param context The transform context to operate on
      * @throws PluginTransformationException If the stage cannot be performed and the whole operation should be aborted
      */
-    void execute(T context)
+    void execute(TransformContext context)
         throws PluginTransformationException;
 
 }

@@ -14,6 +14,7 @@ import com.atlassian.plugin.impl.UnloadablePluginFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.Validate;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -42,10 +43,7 @@ public class XmlDescriptorParser implements DescriptorParser
      */
     public XmlDescriptorParser(final InputStream source) throws PluginParseException
     {
-        if (source == null)
-        {
-            throw new IllegalArgumentException("source cannot be null");
-        }
+        Validate.notNull(source, "XML descriptor source cannot be null");
         document = createDocument(source);
     }
 
@@ -56,10 +54,7 @@ public class XmlDescriptorParser implements DescriptorParser
      */
     public XmlDescriptorParser(final Document source) throws PluginParseException
     {
-        if (source == null)
-        {
-            throw new IllegalArgumentException("source cannot be null");
-        }
+        Validate.notNull(source, "XML descriptor source document cannot be null");
         document = source;
     }
 

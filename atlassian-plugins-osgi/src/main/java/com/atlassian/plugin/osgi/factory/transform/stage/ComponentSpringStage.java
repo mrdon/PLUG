@@ -16,11 +16,12 @@ import java.util.ArrayList;
  */
 public class ComponentSpringStage implements TransformStage
 {
+    /** Path of generated Spring XML file */
     private static final String SPRING_XML = "META-INF/spring/atlassian-plugins-components.xml";
 
     public void execute(TransformContext context) throws PluginTransformationException
     {
-        if (context.getPluginJar().getEntry(SPRING_XML) == null)
+        if (SpringHelper.shouldGenerateFile(context, SPRING_XML))
         {
             Document springDoc = SpringHelper.createSpringDocument();
             Element root = springDoc.getRootElement();

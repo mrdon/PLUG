@@ -8,7 +8,7 @@ import org.dom4j.Element;
 import java.util.List;
 
 /**
- * Adds bundle instruction overrides from the plugin descriptor
+ * Adds bundle instruction overrides from the plugin descriptor to be later used in the manifest generation process.
  *
  * @since 2.2.0
  */

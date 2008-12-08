@@ -9,6 +9,7 @@ import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -51,8 +52,10 @@ public class DefaultPluginTransformer implements PluginTransformer
      */
     public DefaultPluginTransformer(String pluginDescriptorPath, List<TransformStage> stages)
     {
+        Validate.notNull(pluginDescriptorPath, "The plugin descriptor path is required");
+        Validate.notNull(stages, "A list of stages is required");
         this.pluginDescriptorPath = pluginDescriptorPath;
-        this.stages = stages;
+        this.stages = Collections.unmodifiableList(new ArrayList<TransformStage>(stages));
     }
 
     /**
@@ -83,7 +86,7 @@ public class DefaultPluginTransformer implements PluginTransformer
                 for (Map.Entry<String, byte[]> entry : context.getFileOverrides().entrySet())
                 {
                     sb.append("==").append(entry.getKey()).append("==\n");
-                    sb.append(new String(entry.getValue()));
+                    sb.append(String.valueOf(entry.getValue()));
                 }
                 log.debug(sb.toString());
             }

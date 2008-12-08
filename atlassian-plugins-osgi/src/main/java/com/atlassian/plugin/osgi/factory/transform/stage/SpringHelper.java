@@ -1,9 +1,11 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
+import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import org.dom4j.*;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
+import org.apache.log4j.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,6 +17,8 @@ import java.io.IOException;
  */
 class SpringHelper
 {
+
+    private static final Logger log = Logger.getLogger(SpringHelper.class);
 
     /**
      * Creates a basic spring document with the usual namespaces
@@ -59,5 +63,26 @@ class SpringHelper
         }
 
         return bout.toByteArray();
+    }
+
+    /**
+     * Determines if the file should be generated, based on whether it already exists in the context or not
+     *
+     * @param context The transformation context
+     * @param path The path of the file
+     * @return True if not present, false otherwise
+     */
+    static boolean shouldGenerateFile(TransformContext context, String path)
+    {
+        if (context.getPluginJar().getEntry(path) == null)
+        {
+            log.debug("File "+path+" not present, generating");
+            return true;
+        }
+        else
+        {
+            log.debug("File "+path+" already exists in jar, skipping generation");
+            return false;
+        }
     }
 }

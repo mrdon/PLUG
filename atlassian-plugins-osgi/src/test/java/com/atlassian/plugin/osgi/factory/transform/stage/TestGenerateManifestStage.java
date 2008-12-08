@@ -36,11 +36,22 @@ public class TestGenerateManifestStage extends TestCase
 
     public void testGenerateManifest() throws Exception
     {
-        final File file = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
-            "<atlassian-plugin key='com.atlassian.plugins.example' name='Example Plugin'>", "  <plugin-info>", "    <description>",
-            "      A sample plugin for demonstrating the file format.", "    </description>", "    <version>1.1</version>",
-            "    <vendor name='Atlassian Software Systems Pty Ltd' url='http://www.atlassian.com'/>", "  </plugin-info>", "</atlassian-plugin>").addFormattedJava(
-            "com.mycompany.myapp.Foo", "package com.mycompany.myapp; public class Foo {}").build();
+        final File file = new PluginJarBuilder()
+                .addFormattedResource(
+                        "atlassian-plugin.xml",
+                        "<atlassian-plugin key='com.atlassian.plugins.example' name='Example Plugin'>",
+                        "  <plugin-info>",
+                        "    <description>",
+                        "      A sample plugin for demonstrating the file format.",
+                        "    </description>",
+                        "    <version>1.1</version>",
+                        "    <vendor name='Atlassian Software Systems Pty Ltd' url='http://www.atlassian.com'/>",
+                        "  </plugin-info>",
+                        "</atlassian-plugin>")
+                .addFormattedJava(
+                        "com.mycompany.myapp.Foo",
+                        "package com.mycompany.myapp; public class Foo {}")
+                .build();
 
         final TransformContext context = new TransformContext(Collections.<HostComponentRegistration> emptyList(), file,
             PluginAccessor.Descriptor.FILENAME);
@@ -55,10 +66,11 @@ public class TestGenerateManifestStage extends TestCase
         assertEquals("com.mycompany.myapp", attrs.getValue(Constants.EXPORT_PACKAGE));
         assertEquals(".", attrs.getValue(Constants.BUNDLE_CLASSPATH));
         assertEquals("*;timeout:=60", attrs.getValue("Spring-Context"));
+        assertEquals("com.mycompany.myapp;resolution:=optional", attrs.getValue(Constants.IMPORT_PACKAGE));
 
     }
 
-    public void testGenerateManifestWithProperInferredImports() throws URISyntaxException, IOException, PluginParseException
+    public void testGenerateManifestWithProperInferredImports() throws Exception
     {
         final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0").build();
         final TransformContext context = new TransformContext(null, file, PluginAccessor.Descriptor.FILENAME);
@@ -71,9 +83,15 @@ public class TestGenerateManifestStage extends TestCase
 
     public void testGenerateManifestMergeHostComponentImportsWithExisting() throws Exception
     {
-        final File plugin = new PluginJarBuilder("plugin").addResource("META-INF/MANIFEST.MF",
-            "Manifest-Version: 1.0\n" + "Import-Package: javax.swing\n" + "Bundle-SymbolicName: my.foo.symbolicName\n" + "Bundle-ClassPath: .,foo\n").addPluginInformation(
-            "innerjarcp", "Some name", "1.0").addResource("foo/bar.txt", "Something").build();
+        final File plugin = new PluginJarBuilder("plugin")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0",
+                        "Import-Package: javax.swing",
+                        "Bundle-SymbolicName: my.foo.symbolicName",
+                        "Bundle-ClassPath: .,foo")
+                .addResource("foo/bar.txt", "Something")
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
 
         final TransformContext context = new TransformContext(null, plugin, PluginAccessor.Descriptor.FILENAME);
         context.getExtraImports().add(AttributeSet.class.getPackage().getName());
@@ -81,8 +99,7 @@ public class TestGenerateManifestStage extends TestCase
         assertEquals("my.foo.symbolicName", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals(".,foo", attrs.getValue(Constants.BUNDLE_CLASSPATH));
         final String importPackage = attrs.getValue(Constants.IMPORT_PACKAGE);
-        System.out.println("imports:" + importPackage);
-        assertTrue(importPackage.contains("javax.print.attribute,"));
+        assertTrue(importPackage.contains(AttributeSet.class.getPackage().getName()+","));
         assertTrue(importPackage.contains("javax.swing"));
 
     }
@@ -91,8 +108,11 @@ public class TestGenerateManifestStage extends TestCase
     {
         final File innerJar = new PluginJarBuilder("innerjar1").build();
         final File innerJar2 = new PluginJarBuilder("innerjar2").build();
-        final File plugin = new PluginJarBuilder("plugin").addFile("META-INF/lib/innerjar.jar", innerJar).addFile("META-INF/lib/innerjar2.jar",
-            innerJar2).addPluginInformation("innerjarcp", "Some name", "1.0").build();
+        final File plugin = new PluginJarBuilder("plugin")
+                .addFile("META-INF/lib/innerjar.jar", innerJar)
+                .addFile("META-INF/lib/innerjar2.jar", innerJar2)
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
 
         final TransformContext context = new TransformContext(null, plugin, PluginAccessor.Descriptor.FILENAME);
         final Attributes attrs = executeStage(context);
@@ -106,12 +126,20 @@ public class TestGenerateManifestStage extends TestCase
 
     public void testGenerateManifest_innerjarsInImports() throws Exception, PluginParseException, IOException
     {
-        final File innerJar = new PluginJarBuilder("innerjar").addJava("my.Foo",
-            "package my;import org.apache.log4j.Logger; public class Foo{Logger log;}").build();
+        final File innerJar = new PluginJarBuilder("innerjar")
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "import org.apache.log4j.Logger;",
+                        "public class Foo{",
+                        "   Logger log;",
+                        "}")
+                .build();
         assertNotNull(innerJar);
-        final File plugin = new PluginJarBuilder("plugin").addJava("my.Bar",
-            "package my;import org.apache.log4j.spi.Filter; public class Bar{Filter log;}").addFile("META-INF/lib/innerjar.jar", innerJar).addPluginInformation(
-            "innerjarcp", "Some name", "1.0").build();
+        final File plugin = new PluginJarBuilder("plugin")
+                .addJava("my.Bar", "package my;import org.apache.log4j.spi.Filter; public class Bar{Filter log;}")
+                .addFile("META-INF/lib/innerjar.jar", innerJar)
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
 
         final TransformContext context = new TransformContext(null, plugin, PluginAccessor.Descriptor.FILENAME);
         final Attributes attrs = executeStage(context);
@@ -132,8 +160,11 @@ public class TestGenerateManifestStage extends TestCase
 
     public void testGenerateManifestWithBundleInstructions() throws Exception
     {
-        final File plugin = new PluginJarBuilder("plugin").addPluginInformation("test.plugin", "test.plugin", "1.0").addJava("foo.MyClass",
-            "package foo; public class MyClass{}").addJava("foo.internal.MyPrivateClass", "package foo.internal; public class MyPrivateClass{}").build();
+        final File plugin = new PluginJarBuilder("plugin")
+                .addPluginInformation("test.plugin", "test.plugin", "1.0")
+                .addJava("foo.MyClass", "package foo; public class MyClass{}")
+                .addJava("foo.internal.MyPrivateClass", "package foo.internal; public class MyPrivateClass{}")
+                .build();
 
         final TransformContext context = new TransformContext(null, plugin, PluginAccessor.Descriptor.FILENAME);
         context.getBndInstructions().put("Export-Package", "!*.internal.*,*");

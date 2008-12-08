@@ -23,6 +23,9 @@ import java.util.List;
 
 import junit.framework.Assert;
 
+/**
+ * Executes a transformation stage and tests xpath expressions against it
+ */
 public class SpringTransformerTestHelper
 {
 

@@ -5,6 +5,7 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 import org.codehaus.classworlds.uberjar.protocol.jar.NonLockingJarHandler;
 import org.dom4j.Document;
+import org.apache.commons.lang.Validate;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +37,9 @@ public class TransformContext
 
     public TransformContext(List<HostComponentRegistration> regs, File pluginFile, String descriptorPath)
     {
+        Validate.notNull(pluginFile, "The plugin file must be specified");
+        Validate.notNull(descriptorPath, "The plugin descriptor path must be specified");
+
         this.regs = regs;
         this.pluginFile = pluginFile;
         try

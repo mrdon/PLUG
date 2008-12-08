@@ -24,8 +24,8 @@ import junit.framework.TestCase;
 public class TestHostComponentSpringStage extends TestCase
 {
 
-    HostComponentSpringStage transformer = new HostComponentSpringStage();
-    File jar;
+    private HostComponentSpringStage transformer = new HostComponentSpringStage();
+    private File jar;
 
     @Override
     public void setUp() throws Exception
