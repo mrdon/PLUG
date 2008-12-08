@@ -591,13 +591,13 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        final Collection<MockThing> bearModules = manager.getEnabledModulesByClassAndDescriptor(
+        final Collection<MockBear> bearModules = manager.getEnabledModulesByClassAndDescriptor(
             new Class[] { MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class }, MockBear.class);
         assertNotNull(bearModules);
         assertEquals(1, bearModules.size());
         assertTrue(bearModules.iterator().next() instanceof MockBear);
 
-        final Collection<MockThing> noModules = manager.getEnabledModulesByClassAndDescriptor(new Class[] {}, MockBear.class);
+        final Collection<MockBear> noModules = manager.getEnabledModulesByClassAndDescriptor(new Class[] {}, MockBear.class);
         assertNotNull(noModules);
         assertEquals(0, noModules.size());
 

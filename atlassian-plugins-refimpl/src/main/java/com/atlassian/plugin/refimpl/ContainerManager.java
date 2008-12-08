@@ -7,9 +7,8 @@ import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.hostcontainer.HostContainer;
-import com.atlassian.plugin.hostcontainer.HostContainerAccessor;
+import com.atlassian.plugin.servlet.util.ServletContextHostContainerAccessor;
 import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
-import com.atlassian.plugin.hostcontainer.SingletonHostContainerAccessor;
 import com.atlassian.plugin.main.AtlassianPlugins;
 import com.atlassian.plugin.main.PluginsConfiguration;
 import com.atlassian.plugin.main.PluginsConfigurationBuilder;
@@ -79,7 +78,7 @@ public class ContainerManager
 
         // Delegating host container since the real one requires the created object map, which won't be available
         // until later
-        HostContainerAccessor.setHostContainerAccessor(new SingletonHostContainerAccessor(new HostContainer()
+        HostContainer delegatingHostContainer = new HostContainer()
         {
             public <T> T create(final Class<T> moduleClass) throws IllegalArgumentException
             {
@@ -90,9 +89,10 @@ public class ContainerManager
             {
                 return hostContainer.getInstance(moduleClass);
             }
-        }));
+        };
+        ServletContextHostContainerAccessor.setHostContainer(servletContext, delegatingHostContainer);
 
-        moduleDescriptorFactory = new DefaultModuleDescriptorFactory(HostContainerAccessor.getHostContainer());
+        moduleDescriptorFactory = new DefaultModuleDescriptorFactory(delegatingHostContainer);
 
         moduleDescriptorFactory.addModuleDescriptor("servlet", ServletModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("servlet-filter", ServletFilterModuleDescriptor.class);

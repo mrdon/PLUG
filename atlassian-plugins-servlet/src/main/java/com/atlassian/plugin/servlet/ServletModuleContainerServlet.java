@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import com.atlassian.plugin.hostcontainer.HostContainerAccessor;
+import com.atlassian.plugin.servlet.util.ServletContextHostContainerAccessor;
 
 /**
  * Applications need to create a concrete subclass of this for use in their webapp.  This servlets responsiblity
@@ -64,11 +64,11 @@ public class ServletModuleContainerServlet extends HttpServlet
     }
 
     /**
-     * Retrieve the DefaultServletModuleManager from your container framework.  Uses the {@link com.atlassian.plugin.hostcontainer.HostContainerAccessor}
+     * @return the DefaultServletModuleManager from your container framework.  Uses the {@link com.atlassian.plugin.servlet.util.ServletContextHostContainerAccessor}
      * by default.
      */
     protected ServletModuleManager getServletModuleManager()
     {
-        return HostContainerAccessor.getHostContainer().getInstance(ServletModuleManager.class);
+        return ServletContextHostContainerAccessor.getHostContainer(getServletContext()).getInstance(ServletModuleManager.class);
     }
 }
