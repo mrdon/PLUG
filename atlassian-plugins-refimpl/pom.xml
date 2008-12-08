@@ -228,7 +228,7 @@
             <plugin>
                 <groupId>org.twdata.maven</groupId>
                 <artifactId>maven-itblast-plugin</artifactId>
-                <version>0.3</version>
+                <version>0.4</version>
                 <executions>
                     <execution>
                         <id>download-bundled-plugins</id>
@@ -237,7 +237,7 @@
                             <goal>execute</goal>
                         </goals>
                         <configuration>
-                            <containers>resin3x,tomcat5x,jboss42x</containers>
+                            <containers>resin3x,tomcat5x,tomcat6x,jboss42x</containers>
                         </configuration>
                     </execution>
                 </executions>
