@@ -16,6 +16,10 @@ import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.DownloadableWebResource;
 import com.atlassian.plugin.servlet.DownloadableClasspathResource;
 
+/**
+ * Default implementation of {@link PluginResourceLocator}.
+ * @since 2.2
+ */
 public class PluginResourceLocatorImpl implements PluginResourceLocator
 {
     private static final Log log = LogFactory.getLog(PluginResourceLocatorImpl.class);
@@ -26,8 +30,8 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     private static String[] BATCH_PARAMS = new String[] { "ieonly", "media", "content-type", "cache" };
 
-    private PluginAccessor pluginAccessor;
-    private ServletContextFactory servletContextFactory;
+    final private PluginAccessor pluginAccessor;
+    final private ServletContextFactory servletContextFactory;
 
     public PluginResourceLocatorImpl(PluginAccessor pluginAccessor, ServletContextFactory servletContextFactory)
     {

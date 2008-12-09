@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 
-public class CssWebResourceFormatter extends AbstractWebResourceFormatter
+class CssWebResourceFormatter extends AbstractWebResourceFormatter
 {
     private static final String CSS_EXTENSION = ".css";
     private static final List<String> HANDLED_PARAMETERS = Arrays.asList("title", "media", "charset");

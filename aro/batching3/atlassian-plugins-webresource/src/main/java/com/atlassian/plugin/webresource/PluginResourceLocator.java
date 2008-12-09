@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Assists in locating plugin resources. It is responsible for generating urls to plugin resources and also parsing
- * these urls back into plugin resources.
+ * Assists in locating plugin resources in different ways.  
+ * @since 2.2
  */
 public interface PluginResourceLocator
 {
@@ -36,5 +36,5 @@ public interface PluginResourceLocator
      * @param pluginModuleKey a plugin module's complete key
      * @param resourceName the name of the resource described in the module
      */
-    public String getResourceUrl(String pluginModuleKey, String resourceName);
+    String getResourceUrl(String pluginModuleKey, String resourceName);
 }

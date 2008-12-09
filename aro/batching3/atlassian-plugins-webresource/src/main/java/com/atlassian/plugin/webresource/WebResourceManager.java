@@ -45,11 +45,13 @@ public interface WebResourceManager
     /**
      * Writes the resource tags of the specified resource to the writer.
      * If you need it as a String to embed the tags in a template, use {@link #getRequiredResources()}.
+     * @since 2.2
      */
     public void writeResourceTags(String moduleCompleteKey, Writer writer);
 
     /**
      * @see {@link #writeResourceTags(String, Writer)}
+     * @since 2.2
      */
     public String getResourceTags(String moduleCompleteKey);
 

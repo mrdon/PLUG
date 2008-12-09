@@ -22,11 +22,13 @@ public interface DownloadableResource
     /**
      * Writes the resource content out into the response.
      * @throws DownloadException if there were errors writing to the response.
+     * @since 2.2
      */
     void serveResource(HttpServletRequest request, HttpServletResponse response) throws DownloadException;
 
     /**
      * Returns the content type for the resource. May return null if it cannot resolve its own content type.
+     * @since 2.2
      */
     String getContentType();
 }

@@ -11,6 +11,7 @@ import java.util.Collections;
  * Represents a single plugin resource.
  *
  * It provides methods to parse and generate urls to locate a single plugin resource.
+ * @since 2.2
  */
 public class SinglePluginResource implements PluginResource
 {
@@ -19,9 +20,9 @@ public class SinglePluginResource implements PluginResource
      */
     static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + RESOURCE_URL_PREFIX;
 
-    private String resourceName;
-    private String moduleCompleteKey;
-    private final boolean cached;
+    final private String resourceName;
+    final private String moduleCompleteKey;
+    final private boolean cached;
 
     public SinglePluginResource(String resourceName, String moduleCompleteKey, boolean cached)
     {

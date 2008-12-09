@@ -27,8 +27,8 @@ public class PluginResourceDownload implements DownloadStrategy
 {
     private static final Log log = LogFactory.getLog(PluginResourceDownload.class);
     private String characterEncoding = "UTF-8"; // default to sensible encoding
-    private PluginResourceLocator pluginResourceLocator;
-    private ContentTypeResolver contentTypeResolver;
+    final private PluginResourceLocator pluginResourceLocator;
+    final private ContentTypeResolver contentTypeResolver;
 
     public PluginResourceDownload(PluginResourceLocator pluginResourceLocator, ContentTypeResolver contentTypeResolver, String characterEncoding)
     {

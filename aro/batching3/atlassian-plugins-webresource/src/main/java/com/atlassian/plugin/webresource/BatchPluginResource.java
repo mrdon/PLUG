@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
  *
  * Note BatchPluginResource is also a type of {@link DownloadableResource}. The underlying implementation simply
  * keeps a list of {@link DownloadableResource} of which this batch represents and delegates method calls.
+ * @since 2.2
  */
 public class BatchPluginResource implements DownloadableResource, PluginResource
 {
@@ -31,11 +32,11 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      */
     static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + "batch";
 
-    private String type;
-    private String moduleCompleteKey;
-    private Map<String, String> params;
-    private String resourceName;
-    private List<DownloadableResource> resources;
+    final private String type;
+    final private String moduleCompleteKey;
+    final private Map<String, String> params;
+    final private String resourceName;
+    final private List<DownloadableResource> resources;
 
     public BatchPluginResource(String moduleCompleteKey, String type, Map<String, String> params)
     {
@@ -123,7 +124,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      */
     public String getUrl()
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(URL_PREFIX).append(PATH_SEPARATOR)
             .append(type).append(PATH_SEPARATOR)
             .append(resourceName);
