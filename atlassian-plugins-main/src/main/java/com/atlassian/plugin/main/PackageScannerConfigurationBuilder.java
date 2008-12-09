@@ -14,8 +14,20 @@ import java.util.Map;
 
 import javax.servlet.ServletContext;
 
+/**
+ * The builder for {@link PackageScannerConfiguration} instances that additionally performs validation and default creation.
+ * For a usage example, see the package javadocs.
+ * <p>
+ * Not thread-safe. Instances of this class should be thread and preferably method local.
+ * 
+ * @since 2.2
+ */
 public class PackageScannerConfigurationBuilder
 {
+    /**
+     * Static factory for creating a new builder.
+     * @return a new builder.
+     */
     public static PackageScannerConfigurationBuilder packageScannerConfiguration()
     {
         return new PackageScannerConfigurationBuilder();
@@ -152,11 +164,25 @@ public class PackageScannerConfigurationBuilder
         return this;
     }
 
+    /**
+     * Builds a {@link PackageScannerConfiguration} instance by processing the configuration that
+     * was previously set and setting any defaults where not explicitly specified.
+     *
+     * @return A valid {@link PackageScannerConfiguration} instance to pass to {@link AtlassianPlugins}
+     */
     public PackageScannerConfiguration build()
     {
         return new ImmutablePackageScannerConfiguration(this);
     }
 
+    //
+    // inner classes
+    //
+
+    /**
+     * Immutable and thread-safe implementation of the {@link PackageScannerConfiguration} returned by a 
+     * {@link PackageScannerConfigurationBuilder}
+     */
     private static final class ImmutablePackageScannerConfiguration implements PackageScannerConfiguration
     {
         private final String hostVersion;
@@ -167,11 +193,7 @@ public class PackageScannerConfigurationBuilder
         private final Map<String, String> packageVersions;
         private final ServletContext servletContext;
 
-        /**
-         * @since 2.2
-         * @param hostVersion The current host application version
-         */
-        public ImmutablePackageScannerConfiguration(final PackageScannerConfigurationBuilder builder)
+        ImmutablePackageScannerConfiguration(final PackageScannerConfigurationBuilder builder)
         {
             hostVersion = builder.hostVersion;
             jarIncludes = unmodifiableList(new ArrayList<String>(builder.jarIncludes));

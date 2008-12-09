@@ -7,7 +7,6 @@ import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.hostcontainer.HostContainer;
-import com.atlassian.plugin.servlet.util.ServletContextHostContainerAccessor;
 import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
 import com.atlassian.plugin.main.AtlassianPlugins;
 import com.atlassian.plugin.main.PluginsConfiguration;
@@ -26,6 +25,7 @@ import com.atlassian.plugin.servlet.descriptors.ServletContextListenerModuleDesc
 import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
+import com.atlassian.plugin.servlet.util.ServletContextHostContainerAccessor;
 import com.atlassian.plugin.webresource.WebResourceIntegration;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
@@ -41,7 +41,7 @@ import java.util.Map;
 import javax.servlet.ServletContext;
 
 /**
- * A simple class that behaves like Spring's ContianerManager class.
+ * A simple class that behaves like Spring's ContainerManager class.
  */
 public class ContainerManager
 {
@@ -78,7 +78,7 @@ public class ContainerManager
 
         // Delegating host container since the real one requires the created object map, which won't be available
         // until later
-        HostContainer delegatingHostContainer = new HostContainer()
+        final HostContainer delegatingHostContainer = new HostContainer()
         {
             public <T> T create(final Class<T> moduleClass) throws IllegalArgumentException
             {
@@ -106,9 +106,13 @@ public class ContainerManager
         scannerConfig.setPackageIncludes(packageIncludes);
         hostComponentProvider = new SimpleHostComponentProvider();
 
-        final PluginsConfiguration config = new PluginsConfigurationBuilder().pluginDirectory(pluginDir).moduleDescriptorFactory(
-            moduleDescriptorFactory).packageScannerConfiguration(scannerConfig).hostComponentProvider(hostComponentProvider).frameworkBundlesDirectory(
-            bundlesDir).build();
+        final PluginsConfiguration config = new PluginsConfigurationBuilder()
+            .pluginDirectory(pluginDir)
+            .moduleDescriptorFactory(moduleDescriptorFactory)
+            .packageScannerConfiguration(scannerConfig)
+            .hostComponentProvider(hostComponentProvider)
+            .frameworkBundlesDirectory(bundlesDir)
+            .build();
         plugins = new AtlassianPlugins(config);
 
         final PluginEventManager pluginEventManager = plugins.getPluginEventManager();

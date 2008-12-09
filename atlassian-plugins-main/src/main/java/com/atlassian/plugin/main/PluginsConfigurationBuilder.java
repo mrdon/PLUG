@@ -23,9 +23,15 @@ import java.util.concurrent.TimeUnit;
  * For a usage example, see the package javadocs.
  * <p>
  * Not thread-safe. Instances of this class should be thread and preferably method local.
+ * 
+ * @since 2.2
  */
 public class PluginsConfigurationBuilder
 {
+    /**
+     * Static factory for creating a new builder.
+     * @return a new builder.
+     */
     public static PluginsConfigurationBuilder pluginsConfiguration()
     {
         return new PluginsConfigurationBuilder();

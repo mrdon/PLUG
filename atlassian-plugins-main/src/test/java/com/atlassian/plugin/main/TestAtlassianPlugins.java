@@ -1,5 +1,7 @@
 package com.atlassian.plugin.main;
 
+import static com.atlassian.plugin.main.PluginsConfigurationBuilder.pluginsConfiguration;
+
 import com.atlassian.plugin.test.PluginJarBuilder;
 
 import org.apache.commons.io.FileUtils;
@@ -34,8 +36,9 @@ public class TestAtlassianPlugins extends TestCase
 
     public void testStart() throws Exception
     {
+        //tests
         new PluginJarBuilder().addPluginInformation("mykey", "mykey", "1.0").build(pluginDir);
-        final PluginsConfiguration config = new PluginsConfigurationBuilder().pluginDirectory(pluginDir).packageScannerConfiguration(
+        final PluginsConfiguration config = pluginsConfiguration().pluginDirectory(pluginDir).packageScannerConfiguration(
             new PackageScannerConfigurationBuilder().packagesToInclude("org.apache.*", "com.atlassian.*", "org.dom4j*").build()).build();
         plugins = new AtlassianPlugins(config);
         plugins.start();
