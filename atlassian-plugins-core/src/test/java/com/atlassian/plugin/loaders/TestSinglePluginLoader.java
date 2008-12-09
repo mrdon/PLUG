@@ -1,7 +1,7 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
+import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -29,6 +29,20 @@ public class TestSinglePluginLoader extends TestCase
         // test the plugin information
         Plugin plugin = (Plugin) plugins.iterator().next();
         assertTrue(plugin.isSystemPlugin());
+    }
+
+    public void testRejectOsgiPlugin() throws Exception
+    {
+        SinglePluginLoader loader = new SinglePluginLoader("test-osgi-plugin.xml");
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory();
+        Collection<Plugin> plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+
+        assertEquals(1, plugins.size());
+
+        // test the plugin information
+        Plugin plugin = plugins.iterator().next();
+        assertTrue(plugin instanceof UnloadablePlugin);
+        assertEquals("test.atlassian.plugin", plugin.getKey());
     }
 
     public void testAtlassianPlugin() throws Exception
