@@ -43,8 +43,6 @@ public class PackageScannerConfigurationBuilder
 
     /**
      * Default constructor. Uses a DefaultPackageScannerConfiguration as the template.
-     * 
-     * @param packageScannerConfiguration
      */
     public PackageScannerConfigurationBuilder()
     {

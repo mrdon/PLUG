@@ -13,8 +13,8 @@ import junit.framework.TestCase;
 
 public class TestAtlassianPlugins extends TestCase
 {
-    File pluginDir;
-    AtlassianPlugins plugins;
+    private File pluginDir;
+    private AtlassianPlugins plugins;
 
     @Override
     public void setUp()

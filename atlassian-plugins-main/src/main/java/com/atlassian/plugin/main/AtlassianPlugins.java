@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 /**
  * Facade interface to the Atlassian Plugins framework.  See the package Javadocs for usage information.
  */
@@ -31,6 +33,11 @@ public class AtlassianPlugins
     private DefaultPluginManager pluginManager;
     private PluginsConfiguration pluginsConfiguration;
     private HotDeployer hotDeployer;
+
+    private static final Logger log = Logger.getLogger(AtlassianPlugins.class);
+
+    /** Suffix for temporary directories which will be removed on shutdown */
+    public static final String TEMP_DIRECTORY_SUFFIX = ".tmp";
 
     /**
      * Constructs an instance of the plugin framework with the specified config.  No additional validation is performed
@@ -151,7 +158,7 @@ public class AtlassianPlugins
 
     private static void deleteDirIfTmp(File dir)
     {
-        if (dir.getName().endsWith(".tmp"))
+        if (dir.getName().endsWith(TEMP_DIRECTORY_SUFFIX))
         {
             try
             {
@@ -159,8 +166,7 @@ public class AtlassianPlugins
             }
             catch (IOException e)
             {
-                System.out.println("Unable to delete directory: " + dir.getAbsolutePath());
-                e.printStackTrace();
+                log.error("Unable to delete directory: " + dir.getAbsolutePath(), e);
             }
         }
     }

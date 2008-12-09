@@ -5,6 +5,7 @@ import static com.atlassian.plugin.main.PluginsConfigurationBuilder.pluginsConfi
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,7 +61,7 @@ public class Main
                     }
                     catch (final InterruptedException e)
                     {
-                        e.printStackTrace(); //To change body of catch statement use File | Settings | File Templates.
+                        // ignore
                         break;
                     }
                 }
@@ -73,7 +74,7 @@ public class Main
     {
         final Properties logProperties = new Properties();
 
-        InputStream in;
+        InputStream in = null;
         try
         {
             in = Main.class.getResourceAsStream("/log4j-standalone.properties");
@@ -84,6 +85,10 @@ public class Main
         catch (final IOException e)
         {
             throw new RuntimeException("Unable to load logging");
+        }
+        finally
+        {
+            IOUtils.closeQuietly(in);
         }
     }
 

@@ -232,7 +232,7 @@ public class PluginsConfigurationBuilder
         {
             try
             {
-                bundleCacheDirectory = File.createTempFile("atlassian-plugins-bundle-cache", ".tmp");
+                bundleCacheDirectory = File.createTempFile("atlassian-plugins-bundle-cache", AtlassianPlugins.TEMP_DIRECTORY_SUFFIX);
                 bundleCacheDirectory.delete();
             }
             catch (final IOException e)
@@ -250,7 +250,7 @@ public class PluginsConfigurationBuilder
         {
             try
             {
-                frameworkBundlesDirectory = File.createTempFile("atlassian-plugins-framework-bundles", ".tmp");
+                frameworkBundlesDirectory = File.createTempFile("atlassian-plugins-framework-bundles", AtlassianPlugins.TEMP_DIRECTORY_SUFFIX);
                 frameworkBundlesDirectory.delete();
             }
             catch (final IOException e)
