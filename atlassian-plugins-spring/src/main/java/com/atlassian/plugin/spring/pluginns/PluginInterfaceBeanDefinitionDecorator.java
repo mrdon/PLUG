@@ -69,7 +69,7 @@ public class PluginInterfaceBeanDefinitionDecorator implements BeanDefinitionDec
         Map<String,List<String>> interfaces;
         if (providerDef.getPropertyValues().contains("interfaces"))
         {
-            interfaces = (Map<String,List<String>>) providerDef.getPropertyValues().getPropertyValue("interfaces");
+            interfaces = (Map<String,List<String>>) providerDef.getPropertyValues().getPropertyValue("interfaces").getValue();
         }
         else
         {
