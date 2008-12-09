@@ -5,7 +5,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
 
 import java.io.InputStream;
+import java.io.IOException;
 import java.net.URL;
+import java.util.Enumeration;
 
 /**
  * A class loader that delegates to another class loader.
@@ -35,6 +37,12 @@ public class DelegationClassLoader extends ClassLoader
     public URL getResource(String name)
     {
         return delegateClassLoader.getResource(name);
+    }
+
+    @Override
+    public Enumeration<URL> getResources(String name) throws IOException
+    {
+        return delegateClassLoader.getResources(name);
     }
 
     public InputStream getResourceAsStream(String name)
