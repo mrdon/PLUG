@@ -7,6 +7,8 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.impl.StaticPlugin;
+import com.atlassian.plugin.impl.UnloadablePluginFactory;
+import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
@@ -90,7 +92,13 @@ public class SinglePluginLoader implements PluginLoader
         {
             final DescriptorParser parser = descriptorParserFactory.getInstance(source);
             plugin = parser.configurePlugin(moduleDescriptorFactory, getNewPlugin());
-            if (parser.isSystemPlugin())
+            if (plugin.getPluginsVersion() == 2)
+            {
+                UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin);
+                unloadablePlugin.setErrorText("OSGi plugins cannot be deployed via WEB-INF/lib.");
+                plugin = unloadablePlugin;
+            }
+            else if (parser.isSystemPlugin())
             {
                 plugin.setSystemPlugin(true);
             }
