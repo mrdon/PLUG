@@ -12,4 +12,9 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
        <plugin:interface>org.springframework.beans.factory.BeanFactoryAware</plugin:interface>
     </bean>
 
+    <bean name="fooMultipleInterface" class="com.atlassian.plugin.spring.FooableBean" plugin:available="true">
+       <plugin:interface>org.springframework.beans.factory.BeanFactoryAware</plugin:interface>
+       <plugin:interface>com.atlassian.plugin.spring.Barable</plugin:interface>
+    </bean>
+
 </beans>
