@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * An abstract convenience class for web fragment descriptors.
  */
-public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModuleDescriptor<Void> implements StateAware, WebFragmentModuleDescriptor
+public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractModuleDescriptor<T> implements StateAware, WebFragmentModuleDescriptor<T>
 {
     protected WebInterfaceManager webInterfaceManager;
     protected Element element;
@@ -136,7 +136,8 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     {
         try
         {
-            final Condition condition = webInterfaceManager.getWebFragmentHelper().loadCondition(element.attributeValue("class"), plugin);
+            final Condition condition = webInterfaceManager.getWebFragmentHelper()
+                .loadCondition(element.attributeValue("class"), plugin);
             condition.init(LoaderUtils.getParams(element));
 
             if ((element.attribute("invert") != null) && "true".equals(element.attributeValue("invert")))
@@ -160,7 +161,8 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     {
         try
         {
-            final ContextProvider context = webInterfaceManager.getWebFragmentHelper().loadContextProvider(element.attributeValue("class"), plugin);
+            final ContextProvider context = webInterfaceManager.getWebFragmentHelper()
+                .loadContextProvider(element.attributeValue("class"), plugin);
             context.init(LoaderUtils.getParams(element));
 
             return context;
@@ -253,18 +255,6 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     public int getWeight()
     {
         return weight;
-    }
-
-    @Override
-    public Void getModule()
-    {
-        return null;
-    }
-
-    @Override
-    public Class<Void> getModuleClass()
-    {
-        return Void.class;
     }
 
     public WebLabel getWebLabel()

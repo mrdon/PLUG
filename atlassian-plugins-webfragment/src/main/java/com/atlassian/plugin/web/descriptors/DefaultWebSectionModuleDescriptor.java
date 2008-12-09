@@ -3,16 +3,17 @@ package com.atlassian.plugin.web.descriptors;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.WebInterfaceManager;
+
 import org.dom4j.Element;
 
 /**
  * Represents a web section - that is a collection of web items.
  */
-public class DefaultWebSectionModuleDescriptor extends AbstractWebFragmentModuleDescriptor implements WebSectionModuleDescriptor
+public class DefaultWebSectionModuleDescriptor extends AbstractWebFragmentModuleDescriptor<Void> implements WebSectionModuleDescriptor<Void>
 {
     private String location;
 
-    public DefaultWebSectionModuleDescriptor(WebInterfaceManager webInterfaceManager)
+    public DefaultWebSectionModuleDescriptor(final WebInterfaceManager webInterfaceManager)
     {
         super(webInterfaceManager);
     }
@@ -22,7 +23,8 @@ public class DefaultWebSectionModuleDescriptor extends AbstractWebFragmentModule
 
     }
 
-    public void init(Plugin plugin, Element element) throws PluginParseException
+    @Override
+    public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
         super.init(plugin, element);
 
@@ -32,5 +34,17 @@ public class DefaultWebSectionModuleDescriptor extends AbstractWebFragmentModule
     public String getLocation()
     {
         return location;
+    }
+
+    @Override
+    public Class<Void> getModuleClass()
+    {
+        return Void.class;
+    }
+
+    @Override
+    public Void getModule()
+    {
+        return null;
     }
 }

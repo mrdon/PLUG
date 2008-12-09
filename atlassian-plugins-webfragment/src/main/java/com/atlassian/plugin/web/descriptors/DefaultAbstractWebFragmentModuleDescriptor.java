@@ -20,11 +20,11 @@ import java.util.Map;
  * Wrapper for {@link WebFragmentModuleDescriptor}, so that it could be extended by application specific
  * wrappers to provide additional methods.
  */
-public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, WebFragmentModuleDescriptor
+public class DefaultAbstractWebFragmentModuleDescriptor<T> implements StateAware, WebFragmentModuleDescriptor<T>
 {
-    private final WebFragmentModuleDescriptor decoratedDescriptor;
+    private final WebFragmentModuleDescriptor<T> decoratedDescriptor;
 
-    public DefaultAbstractWebFragmentModuleDescriptor(final WebFragmentModuleDescriptor abstractDescriptor)
+    public DefaultAbstractWebFragmentModuleDescriptor(final WebFragmentModuleDescriptor<T> abstractDescriptor)
     {
         decoratedDescriptor = abstractDescriptor;
     }
@@ -39,7 +39,7 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
         decoratedDescriptor.disabled();
     }
 
-    protected WebFragmentModuleDescriptor getDecoratedDescriptor()
+    protected WebFragmentModuleDescriptor<T> getDecoratedDescriptor()
     {
         return decoratedDescriptor;
     }
@@ -54,7 +54,7 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
         return decoratedDescriptor.getKey();
     }
 
-    public Void getModule()
+    public T getModule()
     {
         return decoratedDescriptor.getModule();
     }
@@ -89,7 +89,7 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
         // bit of a hack but it works :)
         if (decoratedDescriptor instanceof AbstractWebFragmentModuleDescriptor)
         {
-            final AbstractWebFragmentModuleDescriptor abstractWebFragmentModuleDescriptor = (AbstractWebFragmentModuleDescriptor) decoratedDescriptor;
+            final AbstractWebFragmentModuleDescriptor<T> abstractWebFragmentModuleDescriptor = (AbstractWebFragmentModuleDescriptor<T>) decoratedDescriptor;
             abstractWebFragmentModuleDescriptor.setWebInterfaceManager(webInterfaceManager);
         }
     }
@@ -130,7 +130,7 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
         return decoratedDescriptor.getDescription();
     }
 
-    public Class<Void> getModuleClass()
+    public Class<T> getModuleClass()
     {
         return decoratedDescriptor.getModuleClass();
     }

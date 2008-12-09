@@ -2,33 +2,34 @@ package com.atlassian.plugin.web.descriptors;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.web.WebInterfaceManager;
 import com.atlassian.plugin.web.model.DefaultWebIcon;
 import com.atlassian.plugin.web.model.DefaultWebLink;
 import com.atlassian.plugin.web.model.WebIcon;
 import com.atlassian.plugin.web.model.WebLink;
-import com.atlassian.plugin.web.WebInterfaceManager;
+
 import org.dom4j.Element;
 
 /**
  * Represents a pluggable link.
  */
-public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDescriptor implements WebItemModuleDescriptor
+public class DefaultWebItemModuleDescriptor<T> extends AbstractWebFragmentModuleDescriptor<T> implements WebItemModuleDescriptor<T>
 {
     private String section;
     private WebIcon icon;
     private DefaultWebLink link;
     private String styleClass;
 
-    public DefaultWebItemModuleDescriptor(WebInterfaceManager webInterfaceManager)
+    public DefaultWebItemModuleDescriptor(final WebInterfaceManager webInterfaceManager)
     {
         super(webInterfaceManager);
     }
 
     public DefaultWebItemModuleDescriptor()
-    {
-    }
+    {}
 
-    public void init(Plugin plugin, Element element) throws PluginParseException
+    @Override
+    public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
         super.init(plugin, element);
 
@@ -36,7 +37,8 @@ public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDes
 
         if (element.element("styleClass") != null)
         {
-            styleClass = element.element("styleClass").getTextTrim();
+            styleClass = element.element("styleClass")
+                .getTextTrim();
         }
         else
         {
@@ -64,6 +66,7 @@ public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDes
         return styleClass;
     }
 
+    @Override
     public void enabled()
     {
         super.enabled();
@@ -77,5 +80,11 @@ public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDes
         {
             link = new DefaultWebLink(element.element("link"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
         }
+    }
+
+    @Override
+    public T getModule()
+    {
+        return null;
     }
 }
