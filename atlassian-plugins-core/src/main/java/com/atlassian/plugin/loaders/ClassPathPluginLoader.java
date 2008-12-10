@@ -5,6 +5,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 
 import org.apache.commons.logging.Log;
@@ -58,12 +59,7 @@ public class ClassPathPluginLoader implements PluginLoader
             url = pluginDescriptorFiles.nextElement();
             try
             {
-                final SinglePluginLoader loader = new SinglePluginLoader(url.openConnection().getInputStream());
-                plugins.addAll(loader.loadAllPlugins(moduleDescriptorFactory));
-            }
-            catch (final IOException e)
-            {
-                log.error("IOException parsing inputstream for : " + url, e);
+                plugins.addAll(new SinglePluginLoader(url).loadAllPlugins(moduleDescriptorFactory));
             }
             catch (final PluginParseException e)
             {

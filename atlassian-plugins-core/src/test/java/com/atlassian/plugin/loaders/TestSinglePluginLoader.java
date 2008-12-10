@@ -116,18 +116,50 @@ public class TestSinglePluginLoader extends TestCase
 
     public void testPluginByUrl() throws PluginParseException
     {
-        SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResourceAsStream("test-disabled-plugin.xml", SinglePluginLoader.class));
+        SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResource("test-disabled-plugin.xml", SinglePluginLoader.class));
+        // URL created should be reentrant and create a different stream each time
+        assertNotSame(loader.getSource(), loader.getSource());
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
-        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        Collection<Plugin> plugins = loader.loadAllPlugins(moduleDescriptorFactory);
         assertEquals(1, plugins.size());
         assertFalse(((Plugin) plugins.iterator().next()).isEnabledByDefault());
     }
 
+    /**
+     * @deprecated testing deprecated behaviour
+     */
+    public void testPluginByInputStream() throws PluginParseException
+    {
+        SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResourceAsStream("test-disabled-plugin.xml", SinglePluginLoader.class));
+        DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        Collection<Plugin> plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        assertEquals(1, plugins.size());
+        assertFalse(((Plugin) plugins.iterator().next()).isEnabledByDefault());
+    }
+
+    /**
+     * @deprecated testing deprecated behaviour
+     */
+    public void testPluginByInputStreamNotReentrant() throws PluginParseException
+    {
+        SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResourceAsStream("test-disabled-plugin.xml", SinglePluginLoader.class));
+        loader.getSource();
+        try
+        {
+            loader.getSource();
+            fail("IllegalStateException expected");
+        }
+        catch (IllegalStateException expected)
+        {}
+    }
+
     public void testPluginsInOrder() throws PluginParseException
     {
-        SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResourceAsStream("test-ordered-pluginmodules.xml", SinglePluginLoader.class));
+        SinglePluginLoader loader = new SinglePluginLoader(ClassLoaderUtils.getResource("test-ordered-pluginmodules.xml", SinglePluginLoader.class));
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);

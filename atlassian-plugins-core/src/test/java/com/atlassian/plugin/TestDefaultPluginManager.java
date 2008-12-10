@@ -1125,11 +1125,6 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             super(resource);
         }
 
-        public SinglePluginLoaderWithRemoval(final InputStream is)
-        {
-            super(is);
-        }
-
         public boolean supportsRemoval()
         {
 
@@ -1209,11 +1204,6 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         {
             super(resource);
             this.key = key;
-        }
-
-        public DynamicSinglePluginLoader(final InputStream is)
-        {
-            super(is);
         }
 
         public String canLoad(final PluginArtifact pluginArtifact) throws PluginParseException

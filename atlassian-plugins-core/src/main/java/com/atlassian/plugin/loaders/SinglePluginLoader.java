@@ -7,16 +7,19 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.impl.StaticPlugin;
-import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
+import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Loads a single plugin from the descriptor provided, which can either be an InputStream
@@ -34,20 +37,47 @@ import java.util.Collections;
 public class SinglePluginLoader implements PluginLoader
 {
     protected Collection<Plugin> plugins;
-    protected final String resource;
-    protected final InputStream is;
+
+    /**
+     * to load the Stream from the classpath.
+     */
+    private final String resource;
+
+    /**
+     * to load the Stream directly.
+     */
+    private final URL url;
+
     private final DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
+
+    /**
+     * @deprecated use URL instead.
+     */
+    private final AtomicReference<InputStream> inputStreamRef;
+
 
     public SinglePluginLoader(final String resource)
     {
         this.resource = notNull("resource", resource);
-        is = null;
+        url = null;
+        inputStreamRef = new AtomicReference<InputStream>(null);
     }
 
+    public SinglePluginLoader(final URL url)
+    {
+        this.url = notNull("url", url);
+        resource = null;
+        inputStreamRef = new AtomicReference<InputStream>(null);
+    }
+
+    /**
+     * @deprecated since 2.2 use the version that passes a URL instead. Not used by the plugins system.
+     */
     public SinglePluginLoader(final InputStream is)
     {
-        this.is = notNull("inputStream", is);
+        inputStreamRef = new AtomicReference<InputStream>(notNull("inputStream", is));
         resource = null;
+        url = null;
     }
 
     public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
@@ -95,7 +125,14 @@ public class SinglePluginLoader implements PluginLoader
             if (plugin.getPluginsVersion() == 2)
             {
                 UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin);
-                unloadablePlugin.setErrorText("OSGi plugins cannot be deployed via WEB-INF/lib.");
+                final StringBuilder errorText = new StringBuilder("OSGi plugins cannot be deployed via the classpath, which is usually WEB-INF/lib.");
+                if (resource != null) {
+                    errorText.append(" Resource is: " + resource);
+                }
+                if (url != null) {
+                    errorText.append(" URL is: " + url);
+                }
+                unloadablePlugin.setErrorText(errorText.toString());
                 plugin = unloadablePlugin;
             }
             else if (parser.isSystemPlugin())
@@ -118,11 +155,28 @@ public class SinglePluginLoader implements PluginLoader
 
     protected InputStream getSource()
     {
-        if (resource == null)
+        if (resource != null)
         {
-            return is;
+            return ClassLoaderUtils.getResourceAsStream(resource, this.getClass());
         }
 
-        return ClassLoaderUtils.getResourceAsStream(resource, this.getClass());
+        if (url != null)
+        {
+            try
+            {
+                return url.openConnection().getInputStream();
+            }
+            catch (IOException e)
+            {
+                throw new PluginParseException(e);
+            }
+        }
+
+        final InputStream inputStream = inputStreamRef.getAndSet(null);
+        if (inputStream != null)
+        {
+            return inputStream;
+        }
+        throw new IllegalStateException("No defined method for getting an input stream.");
     }
 }
