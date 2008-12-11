@@ -25,5 +25,5 @@ public interface HostComponentRegistration
     /**
      * @return The list of interface classes
      */
-    Class[] getMainInterfaceClasses();
+    Class<?>[] getMainInterfaceClasses();
 }

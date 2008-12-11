@@ -39,7 +39,7 @@ public class TestSpringHostComponentProvider extends TestCase
         assertNotNull(list);
         assertEquals(1, list.size());
         assertEquals("bean", list.get(0).getProperties().get("bean-name"));
-        List<Class> ifs = Arrays.asList(list.get(0).getMainInterfaceClasses());
+        List<Class<?>> ifs = Arrays.asList(list.get(0).getMainInterfaceClasses());
 
         // Test locally declared interface
         assertTrue(ifs.contains(Fooable.class));
