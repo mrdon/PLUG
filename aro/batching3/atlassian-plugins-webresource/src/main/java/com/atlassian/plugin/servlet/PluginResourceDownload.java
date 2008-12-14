@@ -27,8 +27,12 @@ public class PluginResourceDownload implements DownloadStrategy
 {
     private static final Log log = LogFactory.getLog(PluginResourceDownload.class);
     private String characterEncoding = "UTF-8"; // default to sensible encoding
-    final private PluginResourceLocator pluginResourceLocator;
-    final private ContentTypeResolver contentTypeResolver;
+    private PluginResourceLocator pluginResourceLocator;
+    private ContentTypeResolver contentTypeResolver;
+
+    public PluginResourceDownload()
+    {
+    }
 
     public PluginResourceDownload(PluginResourceLocator pluginResourceLocator, ContentTypeResolver contentTypeResolver, String characterEncoding)
     {
@@ -69,6 +73,21 @@ public class PluginResourceDownload implements DownloadStrategy
         {
             throw new DownloadException(e);
         }
+    }
+
+    public void setCharacterEncoding(String characterEncoding)
+    {
+        this.characterEncoding = characterEncoding;
+    }
+
+    public void setContentTypeResolver(ContentTypeResolver contentTypeResolver)
+    {
+        this.contentTypeResolver = contentTypeResolver;
+    }
+
+    public void setPluginResourceLocator(PluginResourceLocator pluginResourceLocator)
+    {
+        this.pluginResourceLocator = pluginResourceLocator;
     }
 
     /**
