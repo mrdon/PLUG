@@ -19,4 +19,6 @@ public interface PluginTransformer
      * @throws PluginTransformationException If anything goes wrong
      */
     File transform(File pluginJar, List<HostComponentRegistration> regs) throws PluginTransformationException;
+
+    File transform(TransformContext context);
 }

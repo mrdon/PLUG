@@ -414,7 +414,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                 {
                     return "Plugins that have yet to start: " + pluginsThatShouldBeEnabled;
                 }
-            }, 60);
+            }, 10);
 
             // Disable any plugins that aren't enabled by now
             if (!pluginsThatShouldBeEnabled.isEmpty())

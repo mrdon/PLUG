@@ -70,7 +70,11 @@ public class DefaultPluginTransformer implements PluginTransformer
     {
         Validate.notNull(pluginJar, "The plugin jar is required");
         Validate.notNull(regs, "The host component registrations are required");
-        TransformContext context = new TransformContext(regs, pluginJar, pluginDescriptorPath);
+        return transform(new TransformContext(regs, pluginJar, pluginDescriptorPath));
+    }
+
+    public File transform(TransformContext context)
+    {
         for (TransformStage stage : stages)
         {
             stage.execute(context);
@@ -82,15 +86,15 @@ public class DefaultPluginTransformer implements PluginTransformer
             if (log.isDebugEnabled())
             {
                 StringBuilder sb = new StringBuilder();
-                sb.append("Overriding files in ").append(pluginJar.getName()).append(":\n");
+                sb.append("Overriding files in ").append(context.getPluginFile().getName()).append(":\n");
                 for (Map.Entry<String, byte[]> entry : context.getFileOverrides().entrySet())
                 {
                     sb.append("==").append(entry.getKey()).append("==\n");
-                    sb.append(String.valueOf(entry.getValue()));
+                    sb.append(new String(entry.getValue()));
                 }
                 log.debug(sb.toString());
             }
-            return addFilesToExistingZip(pluginJar, context.getFileOverrides());
+            return addFilesToExistingZip(context.getPluginFile(), context.getFileOverrides());
         }
         catch (IOException e)
         {

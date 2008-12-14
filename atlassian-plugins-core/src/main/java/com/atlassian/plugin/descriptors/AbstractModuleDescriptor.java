@@ -109,7 +109,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
                 moduleClass = loadedClass;
 
                 // Then instantiate the class, so we can see if there are any dependencies that aren't satisfied
-                try
+                /*try
                 {
                     final Constructor<T> noargConstructor = moduleClass.getConstructor(new Class[] {});
                     if (noargConstructor != null)
@@ -121,6 +121,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
                 {
                     // If there is no "noarg" constructor then don't do the check
                 }
+                */
             }
         }
         catch (final ClassNotFoundException e)

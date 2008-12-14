@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
  * @since 2.1.2
  * @see {@link UnrecognisedModuleDescriptor}
  */
-class UnrecognisedModuleDescriptorFallbackFactory implements ModuleDescriptorFactory
+public class UnrecognisedModuleDescriptorFallbackFactory implements ModuleDescriptorFactory
 {
     private static final Logger log = Logger.getLogger(UnrecognisedModuleDescriptorFallbackFactory.class);
     public static final String DESCRIPTOR_TEXT = "Support for this module is not currently installed.";

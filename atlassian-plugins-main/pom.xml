@@ -28,6 +28,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.atlassian.plugins</groupId>
+            <artifactId>atlassian-plugins-scripting</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.atlassian.plugins.test</groupId>
             <artifactId>atlassian-plugins-test</artifactId>
             <version>${project.version}</version>

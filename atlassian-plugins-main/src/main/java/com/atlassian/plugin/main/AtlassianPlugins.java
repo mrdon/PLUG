@@ -4,6 +4,7 @@ import com.atlassian.plugin.DefaultPluginManager;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.scripting.ScriptingOsgiPluginFactory;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.loaders.BundledPluginLoader;
@@ -63,9 +64,15 @@ public class AtlassianPlugins
                 osgiContainerManager);
         OsgiBundleFactory osgiBundleDeployer = new OsgiBundleFactory(osgiContainerManager);
 
+        ScriptingOsgiPluginFactory scriptingFactory = new ScriptingOsgiPluginFactory(
+            config.getPluginDescriptorFilename(),
+            osgiContainerManager
+        );
+
+
         pluginLoaders.add(new DirectoryPluginLoader(
                 config.getPluginDirectory(),
-                Arrays.asList(osgiPluginDeployer, osgiBundleDeployer),
+                Arrays.asList(osgiPluginDeployer, osgiBundleDeployer, scriptingFactory),
                 pluginEventManager));
 
         if (config.getBundledPluginUrl() != null)
@@ -73,7 +80,7 @@ public class AtlassianPlugins
             pluginLoaders.add(new BundledPluginLoader(
                     config.getBundledPluginUrl(),
                     config.getBundledPluginCacheDirectory(),
-                    Arrays.asList(osgiPluginDeployer, osgiBundleDeployer),
+                    Arrays.asList(osgiPluginDeployer, osgiBundleDeployer, scriptingFactory),
                     pluginEventManager));
         }
 

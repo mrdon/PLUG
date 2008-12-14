@@ -15,7 +15,7 @@ import java.io.IOException;
  *
  * @since 2.2.0
  */
-class SpringHelper
+public class SpringHelper
 {
 
     private static final Logger log = Logger.getLogger(SpringHelper.class);
@@ -46,7 +46,7 @@ class SpringHelper
      * @param doc The document
      * @return A byte array of the contents
      */
-    static byte[] documentToBytes(Document doc)
+    public static byte[] documentToBytes(Document doc)
     {
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream();

@@ -46,6 +46,7 @@
         <module>atlassian-plugins-webresource</module>
         <module>atlassian-plugins-webfragment</module>
         <module>atlassian-plugins-test-resources</module>
+        <module>atlassian-plugins-scripting</module>
         <module>atlassian-plugins-main</module>
     </modules>
 

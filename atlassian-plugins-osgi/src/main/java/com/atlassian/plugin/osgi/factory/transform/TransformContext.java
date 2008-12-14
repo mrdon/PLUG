@@ -5,7 +5,9 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 import org.codehaus.classworlds.uberjar.protocol.jar.NonLockingJarHandler;
 import org.dom4j.Document;
+import org.dom4j.DocumentFactory;
 import org.apache.commons.lang.Validate;
+import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,13 +34,12 @@ public class TransformContext
     private final List<HostComponentRegistration> regs;
     private final Map<String, byte[]> fileOverrides;
     private final Map<String, String> bndInstructions;
-    private final Document descriptorDocument;
     private final List<String> extraImports;
+    private final Document descriptorDocument;
 
     public TransformContext(List<HostComponentRegistration> regs, File pluginFile, String descriptorPath)
     {
         Validate.notNull(pluginFile, "The plugin file must be specified");
-        Validate.notNull(descriptorPath, "The plugin descriptor path must be specified");
 
         this.regs = regs;
         this.pluginFile = pluginFile;
@@ -53,35 +54,60 @@ public class TransformContext
         }
         fileOverrides = new HashMap<String, byte[]>();
         bndInstructions = new HashMap<String, String>();
-        this.descriptorDocument = retrieveDocFromJar(pluginFile, descriptorPath);
+        this.descriptorDocument = retrievePluginDescriptor(pluginFile, descriptorPath);
         this.extraImports = new ArrayList<String>();
     }
 
-    private Document retrieveDocFromJar(File pluginFile, String descriptorPath) throws PluginTransformationException
+    private static Document retrievePluginDescriptor(File jarFile, String descriptorPath) throws PluginTransformationException
+    {
+        Document descriptorDocument;
+        InputStream descriptorStream = null;
+        try
+        {
+            descriptorStream = retrieveStreamFromJar(jarFile, descriptorPath);
+            if (descriptorStream != null)
+            {
+                DocumentExposingDescriptorParser parser = new DocumentExposingDescriptorParser(descriptorStream);
+                descriptorDocument = parser.getDocument();
+            }
+            else
+            {
+                DocumentFactory factory = DocumentFactory.getInstance();
+                descriptorDocument = factory.createDocument(factory.createElement("atlassian-plugin"));
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PluginTransformationException("Unable to access descriptor " + descriptorPath, e);
+        }
+        finally
+        {
+            IOUtils.closeQuietly(descriptorStream);
+        }
+        return descriptorDocument;
+    }
+
+    public static InputStream retrieveStreamFromJar(File jarFile, String path) throws IOException
     {
         URL atlassianPluginsXmlUrl;
         try
         {
-            atlassianPluginsXmlUrl = new URL(new URL("jar:file:" + pluginFile.getAbsolutePath() + "!/"), descriptorPath, NonLockingJarHandler.getInstance());
+            atlassianPluginsXmlUrl = new URL(new URL("jar:file:" + jarFile.getAbsolutePath() + "!/"), path, NonLockingJarHandler.getInstance());
         }
         catch (MalformedURLException e)
         {
             throw new PluginTransformationException(e);
         }
 
-        Document descriptorDocument;
-        InputStream descriptorStream;
         try
         {
-            descriptorStream = atlassianPluginsXmlUrl.openStream();
-            DocumentExposingDescriptorParser parser = new DocumentExposingDescriptorParser(descriptorStream);
-            descriptorDocument = parser.getDocument();
+            return atlassianPluginsXmlUrl.openStream();
         }
-        catch (IOException e)
+        catch (IOException ex)
         {
-            throw new PluginTransformationException("Unable to access descriptor " + descriptorPath, e);
+            // file probably doesn't exist
+            return null;
         }
-        return descriptorDocument;
     }
 
     public File getPluginFile()

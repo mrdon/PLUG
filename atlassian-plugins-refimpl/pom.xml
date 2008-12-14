@@ -10,7 +10,6 @@
    <artifactId>atlassian-plugins-refimpl</artifactId>
    <packaging>war</packaging>
    <name>Atlassian Plugins - Reference Implementation</name>
-
     <dependencies>
 
         <dependency>
@@ -123,12 +122,14 @@
             <groupId>net.sourceforge.jwebunit</groupId>
             <artifactId>jwebunit-core</artifactId>
             <version>1.4.1</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>net.sourceforge.jwebunit</groupId>
             <artifactId>jwebunit-htmlunit-plugin</artifactId>
             <version>1.4.1</version>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <groupId>xom</groupId>
