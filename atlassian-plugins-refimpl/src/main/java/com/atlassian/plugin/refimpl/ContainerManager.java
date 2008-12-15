@@ -5,6 +5,7 @@ import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.util.Assertions;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
@@ -133,6 +134,11 @@ public class ContainerManager
 
         hostContainer = new SimpleConstructorHostContainer(publicContainer);
 
+        PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(pluginAccessor, new SimpleServletContextFactory(servletContext));
+        PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
+
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration);
+
         try
         {
             plugins.start();
@@ -142,10 +148,6 @@ public class ContainerManager
             e.printStackTrace();
         }
 
-        PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(pluginAccessor, new SimpleServletContextFactory(servletContext));
-        PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
-
-        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration);
         downloadStrategies = new ArrayList<DownloadStrategy>();
         downloadStrategies.add(pluginDownloadStrategy);
     }
@@ -231,6 +233,8 @@ public class ContainerManager
     {
         public void provide(final ComponentRegistrar componentRegistrar)
         {
+            Assertions.notNull("publicContainer", publicContainer);
+            Assertions.notNull("webResourceManager", webResourceManager);
             for (final Map.Entry<Class<?>, Object> entry : publicContainer.entrySet())
             {
                 String name = entry.getKey().getSimpleName();
