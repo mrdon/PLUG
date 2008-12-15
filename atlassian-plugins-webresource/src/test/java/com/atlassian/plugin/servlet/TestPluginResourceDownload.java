@@ -1,58 +1,85 @@
 package com.atlassian.plugin.servlet;
 
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.webresource.PluginResourceLocator;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 
-import java.io.IOException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestPluginResourceDownload extends TestCase
 {
-    private PluginResourceDownload resourceDownload;
+    private static final String SINGLE_RESOURCE = "/download/resources/com.atlassian.plugin:foo-resources/foo.js";
+    private static final String BATCH_RESOURCE = "/download/batch/js/com.atlassian.plugin:bar-resources.js";
+
+    private PluginResourceDownload pluginResourceDownload;
+    private Mock mockPluginResourceLocator;
+    private Mock mockContentTypeResolver;
 
     protected void setUp() throws Exception
     {
         super.setUp();
-        resourceDownload = new PluginResourceDownload();
+
+        mockPluginResourceLocator = new Mock(PluginResourceLocator.class);
+        mockContentTypeResolver = new Mock(ContentTypeResolver.class);
+
+        pluginResourceDownload = new PluginResourceDownload((PluginResourceLocator) mockPluginResourceLocator.proxy(),
+            (ContentTypeResolver) mockContentTypeResolver.proxy(), "UTF-8");
     }
 
-    public void testSplitLastPathPart()
+    protected void tearDown() throws Exception
     {
-        final String[] parts = resourceDownload.splitLastPathPart("http://localhost:8080/confluence/download/foo/bar/baz");
-        assertEquals(2, parts.length);
-        assertEquals("http://localhost:8080/confluence/download/foo/bar/", parts[0]);
-        assertEquals("baz", parts[1]);
-
-        final String[] anotherParts = resourceDownload.splitLastPathPart(parts[0]);
-        assertEquals(2, anotherParts.length);
-        assertEquals("http://localhost:8080/confluence/download/foo/", anotherParts[0]);
-        assertEquals("bar/", anotherParts[1]);
-
-        assertNull(resourceDownload.splitLastPathPart("noslashes"));
+        mockContentTypeResolver = null;
+        mockPluginResourceLocator = null;
+        pluginResourceDownload = null;
+        super.tearDown();
     }
 
-    public void testGetDownloadablePluginModule() throws IOException
+    public void testMatches()
     {
-        PluginResource pluginResource = new PluginResource("test.plugin:test-resource", "foo/bar/baz/test.css");
-        Mock pluginManager = new Mock(PluginAccessor.class);
-        Mock moduleDescriptor = new Mock(ModuleDescriptor.class);
-        resourceDownload.setPluginAccessor((PluginAccessor) pluginManager.proxy());
+        mockPluginResourceLocator.expectAndReturn("matches", C.args(C.eq(SINGLE_RESOURCE)), true);
+        assertTrue(pluginResourceDownload.matches(SINGLE_RESOURCE));
 
-        pluginManager.expectAndReturn("getPluginModule", C.args(C.eq(pluginResource.getModuleCompleteKey())), moduleDescriptor.proxy());
-        pluginManager.expectAndReturn("isPluginModuleEnabled", C.args(C.eq(pluginResource.getModuleCompleteKey())), true);
+        mockPluginResourceLocator.expectAndReturn("matches", C.args(C.eq(BATCH_RESOURCE)), true);
+        assertTrue(pluginResourceDownload.matches(BATCH_RESOURCE));
+    }
 
-        pluginManager.matchAndReturn("getPlugin", C.ANY_ARGS, null);
-        moduleDescriptor.matchAndReturn("getPluginKey", null);
-        moduleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq("foo/bar/baz/test.css")), null);
-        moduleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq("foo/bar/baz/")), null);
-        moduleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq("foo/bar/")), null);
-        moduleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq("foo/")), null);
+    public void testResourceNotFound() throws Exception
+    {
+        Mock mockRequest = new Mock(HttpServletRequest.class);
+        mockRequest.matchAndReturn("getRequestURI", SINGLE_RESOURCE);
+        mockRequest.expectAndReturn("getParameterMap", Collections.EMPTY_MAP);
 
-        resourceDownload.servePluginResource(pluginResource, null, null);
+        Mock mockResponse = new Mock(HttpServletResponse.class);
+        mockResponse.expect("sendError", C.args(C.eq(HttpServletResponse.SC_NOT_FOUND)));
+        mockPluginResourceLocator.expectAndReturn("getDownloadableResource", C.args(C.eq(SINGLE_RESOURCE), C.eq(Collections.EMPTY_MAP)), null);
 
-        moduleDescriptor.verify();
-        pluginManager.verify();
+        pluginResourceDownload.serveFile((HttpServletRequest) mockRequest.proxy(), (HttpServletResponse) mockResponse.proxy());
+    }
+
+    public void testServeFile() throws Exception
+    {
+        String jsContentType = "text/javascript";
+        Map<String, String[]> params = new HashMap<String, String[]>();
+        params.put("aaa", new String[] {"bbb"});
+
+        Mock mockRequest = new Mock(HttpServletRequest.class);
+        mockRequest.matchAndReturn("getRequestURI", SINGLE_RESOURCE);
+        mockRequest.expectAndReturn("getParameterMap", params);
+
+        Mock mockResponse = new Mock(HttpServletResponse.class);
+        mockResponse.expect("setContentType", C.args(C.eq(jsContentType)));
+
+        Mock mockDownloadableResource = new Mock(DownloadableResource.class);
+        mockDownloadableResource.expectAndReturn("isResourceModified", C.args(C.eq(mockRequest.proxy()), C.eq(mockResponse.proxy())), false);
+        mockDownloadableResource.expectAndReturn("getContentType", jsContentType);
+        mockDownloadableResource.expect("serveResource", C.args(C.eq(mockRequest.proxy()), C.eq(mockResponse.proxy())));
+        mockPluginResourceLocator.expectAndReturn("getDownloadableResource", C.ANY_ARGS, mockDownloadableResource.proxy());
+
+        pluginResourceDownload.serveFile((HttpServletRequest) mockRequest.proxy(), (HttpServletResponse) mockResponse.proxy());
     }
 }

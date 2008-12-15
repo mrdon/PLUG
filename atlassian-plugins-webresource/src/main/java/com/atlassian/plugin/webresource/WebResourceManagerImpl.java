@@ -1,20 +1,18 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.servlet.AbstractFileServerServlet;
+import com.atlassian.plugin.Plugin;
 import org.apache.commons.collections.set.ListOrderedSet;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.Writer;
-import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.net.URLEncoder;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -37,55 +35,24 @@ public class WebResourceManagerImpl implements WebResourceManager
     static final String STATIC_RESOURCE_PREFIX = "s";
     static final String STATIC_RESOURCE_SUFFIX = "_";
 
-    private static final String REQUEST_CACHE_RESOURCE_KEY = "plugin.webresource.names";
-    private static final String REQUEST_CACHE_MODE_KEY = "plugin.webresource.mode";
+    static final String REQUEST_CACHE_RESOURCE_KEY = "plugin.webresource.names";
 
-    private static final IncludeMode DEFAULT_INCLUDE_MODE = WebResourceManager.DELAYED_INCLUDE_MODE;
-    private static final WebResourceFormatter[] WEB_RESOURCE_FORMATTERS = new WebResourceFormatter[] {
+    protected final WebResourceIntegration webResourceIntegration;
+    protected final PluginResourceLocator pluginResourceLocator;
+    protected static final List<WebResourceFormatter> webResourceFormatters = Arrays.< WebResourceFormatter>asList(
         new CssWebResourceFormatter(),
-        new JavascriptWebResourceFormatter(),
-    };
+        new JavascriptWebResourceFormatter()
+    );
 
-    private final WebResourceIntegration webResourceIntegration;
-
-    public WebResourceManagerImpl(WebResourceIntegration webResourceIntegration)
+    public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration)
     {
-        this.webResourceIntegration = webResourceIntegration; //constructor for JIRA / Pico
+        this.pluginResourceLocator = pluginResourceLocator;
+        this.webResourceIntegration = webResourceIntegration;
     }
 
-    public void requireResource(String resourceName)
+    public void requireResource(String moduleCompleteKey)
     {
-        if (WebResourceManager.DELAYED_INCLUDE_MODE.equals(getIncludeMode()))
-        {
-            requireDelayedResource(resourceName);
-        }
-        else
-        {
-            throw new IllegalStateException("Require Writer for Inline mode.");
-        }
-    }
-
-    public void requireResource(String resourceName, Writer writer)
-    {
-        if (WebResourceManager.DELAYED_INCLUDE_MODE.equals(getIncludeMode()))
-        {
-            requireDelayedResource(resourceName);
-        }
-        else
-        {
-            try
-            {
-                includeResource(resourceName, writer);
-            }
-            catch (IOException e)
-            {
-                log.error(e);
-            }
-        }
-    }
-
-    private void requireDelayedResource(String resourceName)
-    {
+        log.info("Requiring resource: " + moduleCompleteKey);
         Map cache = webResourceIntegration.getRequestCache();
         Collection webResourceNames = (Collection) cache.get(REQUEST_CACHE_RESOURCE_KEY);
         if (webResourceNames == null)
@@ -93,88 +60,86 @@ public class WebResourceManagerImpl implements WebResourceManager
             webResourceNames = new ListOrderedSet();
         }
 
-        webResourceNames.add(resourceName);
+        webResourceNames.add(moduleCompleteKey);
         cache.put(REQUEST_CACHE_RESOURCE_KEY, webResourceNames);
     }
 
     public void includeResources(Writer writer)
     {
+        Collection webResourceNames = (Collection) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_RESOURCE_KEY);
+        if (webResourceNames == null || webResourceNames.isEmpty())
+        {
+            log.info("No resources required to write");
+            return;
+        }
+
+        for (Object webResourceName : webResourceNames)
+        {
+            String resourceName = (String) webResourceName;
+            requireResource(resourceName, writer);
+        }
+    }
+
+    public String getRequiredResources()
+    {
+        StringWriter writer = new StringWriter();
+        includeResources(writer);
+        return writer.toString();
+    }
+
+    public void requireResource(String moduleCompleteKey, Writer writer)
+    {
+        List<PluginResource> resources = pluginResourceLocator.getPluginResources(moduleCompleteKey);
+        if (resources == null)
+        {
+            writeContentAndSwallowErrors("<!-- Error loading resource \"" + moduleCompleteKey + "\".  Resource not found -->\n", writer);
+            return;
+        }
+
+        for (PluginResource resource : resources)
+        {
+            WebResourceFormatter formatter = getWebResourceFormatter(resource.getResourceName());
+            if (formatter == null)
+            {
+                writeContentAndSwallowErrors("<!-- Error loading resource \"" + moduleCompleteKey + "\".  Resource formatter not found -->\n", writer);
+                continue;
+            }
+
+            String url = resource.getUrl();
+            if (resource.isCacheSupported())
+            {
+                Plugin plugin = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resource.getModuleCompleteKey()).getPlugin();
+                url = getStaticResourcePrefix(String.valueOf(plugin.getPluginsVersion())) + url;
+            }
+            writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writer);
+        }
+    }
+
+    public String getResourceTags(String moduleCompleteKey)
+    {
+        StringWriter writer = new StringWriter();
+        requireResource(moduleCompleteKey, writer);
+        return writer.toString();
+    }
+
+    private void writeContentAndSwallowErrors(String content, Writer writer)
+    {
         try
         {
-            if (WebResourceManager.DELAYED_INCLUDE_MODE.equals(getIncludeMode()))
-            {
-                includeDelayedResources(writer);
-            }
+            writer.write(content);
         }
         catch (IOException e)
         {
             log.error(e);
         }
-
     }
 
-    private void includeDelayedResources(Writer writer) throws IOException
+    private WebResourceFormatter getWebResourceFormatter(String resourceName)
     {
-        Collection webResourceNames = (Collection) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_RESOURCE_KEY);
-        if (webResourceNames == null || webResourceNames.isEmpty())
+        for (WebResourceFormatter webResourceFormatter : webResourceFormatters)
         {
-            return;
-        }
-
-        for (Iterator iterator = webResourceNames.iterator(); iterator.hasNext();)
-        {
-            String resourceName = (String) iterator.next();
-            includeResource(resourceName, writer);
-        }
-    }
-
-    private void includeResource(String resourceName, Writer writer) throws IOException
-    {
-        ModuleDescriptor descriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resourceName);
-        if (descriptor == null)
-        {
-            writer.write("<!-- Error loading resource \"" + resourceName + "\".  Resource not found -->\n");
-            return;
-        }
-        else if (!(descriptor instanceof WebResourceModuleDescriptor))
-        {
-            writer.write("<!-- Error loading resource \"" + descriptor + "\". Resource is not a WebResourceModule -->\n");
-            return;
-        }
-
-        for (ResourceDescriptor resourceDescriptor : descriptor.getResourceDescriptors())
-        {
-            String name = resourceDescriptor.getName();
-            final String linkToResource;
-            if ("false".equalsIgnoreCase(resourceDescriptor.getParameter("cache")))
-            {
-                linkToResource = webResourceIntegration.getBaseUrl() + getResourceUrl(descriptor, name);
-            }
-            else
-            {
-                linkToResource = getStaticPluginResource(descriptor, name);
-            }
-
-            WebResourceFormatter webResourceFormatter = getWebResourceFormatter(name);
-            if (webResourceFormatter != null)
-            {
-                writer.write(webResourceFormatter.formatResource(name, linkToResource, resourceDescriptor.getParameters()));
-            }
-            else
-            {
-                writer.write("<!-- Error loading resource \"" + descriptor + "\". Type " + resourceDescriptor.getType() + " is not handled -->\n");
-            }
-        }
-    }
-
-    private WebResourceFormatter getWebResourceFormatter(String name)
-    {
-        for (WebResourceFormatter webResourceFormatter : WEB_RESOURCE_FORMATTERS)
-        {
-            if (webResourceFormatter.matches(name))
-            {
+            if (webResourceFormatter.matches(resourceName))
                 return webResourceFormatter;
-            }
         }
         return null;
     }
@@ -200,11 +165,12 @@ public class WebResourceManagerImpl implements WebResourceManager
                 STATIC_RESOURCE_SUFFIX;
     }
 
-    /**
-     * @deprecated Use {@link #getStaticPluginResource(com.atlassian.plugin.ModuleDescriptor, String)} instead
-     */
-    public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, String resourceName)
+    public String getStaticPluginResource(String moduleCompleteKey, String resourceName)
     {
+        ModuleDescriptor moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleCompleteKey);
+        if(moduleDescriptor == null)
+            return null;
+
         return getStaticPluginResource(moduleDescriptor, resourceName);
     }
 
@@ -214,43 +180,34 @@ public class WebResourceManagerImpl implements WebResourceManager
     public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName)
     {
         // "{base url}/s/{build num}/{system counter}/{plugin version}/_"
-        String prefix = getStaticResourcePrefix(moduleDescriptor.getPlugin().getPluginInformation().getVersion());
-
+        String staticUrlPrefix = getStaticResourcePrefix(String.valueOf(moduleDescriptor.getPlugin().getPluginsVersion()));
         // "/download/resources/plugin.key:module.key/resource.name"
-        String suffix = getResourceUrl(moduleDescriptor, resourceName);
-        return prefix + suffix;
+        return staticUrlPrefix + pluginResourceLocator.getResourceUrl(moduleDescriptor.getCompleteKey(), resourceName);
     }
 
-    // "/download/resources/plugin.key:module.key/resource.name"
-    String getResourceUrl(ModuleDescriptor moduleDescriptor, String resourceName)
+    /* Deprecated methods */
+
+    /**
+     * @deprecated Use {@link #getStaticPluginResource(com.atlassian.plugin.ModuleDescriptor, String)} instead
+     */
+    public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, String resourceName)
     {
-        String encodedDescriptorKey;
-        String encodedResourceName;
-        try
-        {
-            encodedDescriptorKey = URLEncoder.encode(moduleDescriptor.getCompleteKey(), "UTF-8");
-            String[] resourceNameComponents = resourceName.split("/");
-            String[] encodedResourceNameComponents = new String[resourceNameComponents.length]; 
-            for (int i = 0; i < resourceNameComponents.length; i++)
-            {
-                encodedResourceNameComponents[i] = URLEncoder.encode(resourceNameComponents[i], "UTF-8");
-            }
-            encodedResourceName = StringUtils.join(encodedResourceNameComponents, '/');
-        } catch (UnsupportedEncodingException e)
-        {
-            // Should never happen
-            throw new RuntimeException("Unable to encode URL as UTF-8", e);
-        }
-
-        return "/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/"
-                + encodedDescriptorKey + "/" + encodedResourceName;
+        return getStaticPluginResource(moduleDescriptor, resourceName);
     }
 
-    public String getStaticPluginResource(String pluginModuleKey, String resourceName)
-    {
-        return getStaticPluginResource(webResourceIntegration.getPluginAccessor().getEnabledPluginModule(pluginModuleKey), resourceName);
-    }
+    /**
+     * @deprecated Since 2.2
+     */
+    private static final String REQUEST_CACHE_MODE_KEY = "plugin.webresource.mode";
 
+    /**
+     * @deprecated Since 2.2
+     */
+    private static final IncludeMode DEFAULT_INCLUDE_MODE = WebResourceManager.DELAYED_INCLUDE_MODE;
+
+    /**
+     * @deprecated Since 2.2.
+     */
     public void setIncludeMode(IncludeMode includeMode)
     {
         webResourceIntegration.getRequestCache().put(REQUEST_CACHE_MODE_KEY, includeMode);

@@ -28,9 +28,8 @@ public class TestJavascriptWebResourceFormatter extends TestCase
 
     public void testFormatResource()
     {
-        final String resourceName = "atlassian.js";
         final String url = "/confluence/download/resources/confluence.web.resources:ajs/atlassian.js";
         assertEquals("<script type=\"text/javascript\" src=\"" + url + "\" ></script>\n",
-                     javascriptWebResourceFormatter.formatResource(resourceName, url, new HashMap()));
+                     javascriptWebResourceFormatter.formatResource(url, new HashMap()));
     }
 }

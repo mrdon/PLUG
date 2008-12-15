@@ -16,6 +16,7 @@ import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfigurati
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
+import com.atlassian.plugin.refimpl.servlet.SimpleServletContextFactory;
 import com.atlassian.plugin.servlet.ContentTypeResolver;
 import com.atlassian.plugin.servlet.DefaultServletModuleManager;
 import com.atlassian.plugin.servlet.DownloadStrategy;
@@ -30,6 +31,8 @@ import com.atlassian.plugin.webresource.WebResourceIntegration;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
 import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
+import com.atlassian.plugin.webresource.PluginResourceLocatorImpl;
+import com.atlassian.plugin.webresource.PluginResourceLocator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -63,7 +66,6 @@ public class ContainerManager
     {
         instance = this;
         webResourceIntegration = new SimpleWebResourceIntegration(servletContext);
-        webResourceManager = new WebResourceManagerImpl(webResourceIntegration);
 
         final File pluginDir = new File(servletContext.getRealPath("/WEB-INF/plugins"));
         if (!pluginDir.exists())
@@ -140,11 +142,11 @@ public class ContainerManager
             e.printStackTrace();
         }
 
+        PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(pluginAccessor, new SimpleServletContextFactory(servletContext));
+        PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
+
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration);
         downloadStrategies = new ArrayList<DownloadStrategy>();
-        final PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload();
-        pluginDownloadStrategy.setPluginAccessor(pluginAccessor);
-        pluginDownloadStrategy.setContentTypeResolver(new SimpleContentTypeResolver());
-        pluginDownloadStrategy.setCharacterEncoding("UTF-8");
         downloadStrategies.add(pluginDownloadStrategy);
     }
 

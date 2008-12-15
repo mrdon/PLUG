@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * A formatter to format web resources into HTML.
  * <p/>
- * The {@link #matches(String)} method should be called before calling {@link #formatResource(String, String, Map)},
+ * The {@link #matches(String)} method should be called before calling {@link #formatResource(String, Map)},
  * to ensure correct formatting of the resource.
  */
 interface WebResourceFormatter
@@ -20,10 +20,9 @@ interface WebResourceFormatter
 
     /**
      * Returns a formatted resource string.
-     * @param name name of the resource
      * @param url url path to the resource
      * @param parameters a {@link Map} of resource parameters
      * @return a formatted resource {@link String}.
      */
-    String formatResource(String name, String url, Map parameters);
+    String formatResource(String url, Map<String, String> parameters);
 }
