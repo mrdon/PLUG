@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.net.URL;
 
 import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 import com.atlassian.plugin.scripting.variables.JsScript;
@@ -82,14 +83,14 @@ public class ScriptManager
         }
     }
 
-    public JsScript run(ClassLoader classLoader, String path, Map<String,Object> variables) throws IOException
+    public JsScript run(URL url, Map<String,Object> variables) throws IOException
     {
 
         InputStream in = null;
         try
         {
-            in = classLoader.getResourceAsStream(path);
-            return run(path, classLoader.getResourceAsStream(path), variables);
+            in = url.openStream();
+            return run(url.toExternalForm(), in, variables);
         }
         finally
         {

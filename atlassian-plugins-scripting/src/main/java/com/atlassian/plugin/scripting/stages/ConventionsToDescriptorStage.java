@@ -1,10 +1,12 @@
-package com.atlassian.plugin.scripting;
+package com.atlassian.plugin.scripting.stages;
 
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.stage.SpringHelper;
 import com.atlassian.plugin.scripting.variables.JsScript;
+import com.atlassian.plugin.scripting.ScriptingTransformContext;
+import com.atlassian.plugin.scripting.ScriptManager;
 
 import java.util.Properties;
 import java.util.Collections;
@@ -19,6 +21,7 @@ import java.io.*;
 import org.apache.commons.io.IOUtils;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
+import org.osgi.framework.BundleActivator;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.Filter;
@@ -40,6 +43,8 @@ public class ConventionsToDescriptorStage implements TransformStage
     }};
     public void execute(TransformContext context) throws PluginTransformationException
     {
+        context.getBndInstructions().put("Spring-Context", "");
+        context.getBndInstructions().put("Export-Package", "");
         ScriptingTransformContext ctx = (ScriptingTransformContext) context;
         ScriptManager scriptManager = ctx.getScriptManager();
 
@@ -75,18 +80,38 @@ public class ConventionsToDescriptorStage implements TransformStage
                 while ((entry = zipInputStream.getNextEntry()) != null)
                 {
                     String name = entry.getName();
-                    Matcher m = moduleNamePattern.matcher(name);
-                    if (m.matches())
+                    if (name.equals("atlassian-plugin.js"))
                     {
-                        String type = m.group(1);
                         JsScript script = scriptManager.run(name, zipInputStream, Collections.<String, Object>emptyMap());
                         if (script.getConfig() != null)
                         {
-                            root.add(script.getConfig().getRootElement().createCopy());
+                            root = script.getConfig().getRootElement().createCopy();
+                            context.getDescriptorDocument().setRootElement(root);
                         }
-                        else
+                        if (script.getResult() instanceof BundleActivator)
                         {
-                            root.add(defaultConfigBuilders.get(type).getDefault(m.group(2), name));
+                            ctx.getBundleActivators().add((BundleActivator) script.getResult());
+                        }
+                    }
+                    else
+                    {
+                        Matcher m = moduleNamePattern.matcher(name);
+                        if (m.matches())
+                        {
+                            String type = m.group(1);
+                            JsScript script = scriptManager.run(name, zipInputStream, Collections.<String, Object>emptyMap());
+                            if (type.equals("activator"))
+                            {
+                                ctx.getBundleActivators().add((BundleActivator) script.getResult());
+                            }
+                            else if (script.getConfig() != null)
+                            {
+                                root.add(script.getConfig().getRootElement().createCopy());
+                            }
+                            else
+                            {
+                                root.add(defaultConfigBuilders.get(type).getDefault(m.group(2), name));
+                            }
                         }
                     }
                 }

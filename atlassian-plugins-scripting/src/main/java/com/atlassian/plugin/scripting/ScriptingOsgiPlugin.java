@@ -1,6 +1,7 @@
 package com.atlassian.plugin.scripting;
 
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
+import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.scripting.variables.JsScript;
 import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 import org.objectweb.asm.ClassWriter;
@@ -11,6 +12,7 @@ import org.osgi.framework.Bundle;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.net.URL;
 
 /**
  * Created by IntelliJ IDEA.
@@ -75,7 +77,10 @@ public class ScriptingOsgiPlugin extends OsgiPlugin
                     JsScript script;
                     try
                     {
-                        script = scriptManager.run(this, className, Collections.<String, Object>emptyMap());
+                        URL url = getResource(className);
+                        if (url == null)
+                            return super.findClass(className);
+                        script = scriptManager.run(url, Collections.<String, Object>emptyMap());
                     }
                     catch (IOException e)
                     {

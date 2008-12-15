@@ -5,8 +5,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.io.IOUtils;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.framework.BundleListener;
+import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
+import org.osgi.framework.BundleActivator;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformer;
@@ -15,15 +17,15 @@ import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.stage.*;
 import com.atlassian.plugin.osgi.factory.OsgiPluginXmlDescriptorParserFactory;
-import com.atlassian.plugin.osgi.factory.OsgiPlugin;
-import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
 import com.atlassian.plugin.osgi.factory.UnrecognisedModuleDescriptorFallbackFactory;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.DescriptorParser;
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.parsers.XmlDescriptorParser;
+import com.atlassian.plugin.*;
+import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
+import com.atlassian.plugin.scripting.stages.ConventionsToDescriptorStage;
+import com.atlassian.plugin.scripting.stages.ComponentsToServicesStage;
+import com.atlassian.plugin.scripting.variables.JsScript;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.descriptors.ChainModuleDescriptorFactory;
@@ -33,10 +35,7 @@ import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import java.io.InputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Properties;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -53,6 +52,9 @@ public class ScriptingOsgiPluginFactory implements PluginFactory
     private final PluginTransformer pluginTransformer;
     private final String pluginDescriptorFileName;
     private final DescriptorParserFactory descriptorParserFactory;
+    private final Map<Long,ScriptManager> scriptManagers;
+    private final Map<Long,List<BundleActivator>> bundleActivators;
+    private boolean listenerAdded = false;
 
     private ServiceTracker moduleDescriptorFactoryTracker;
 
@@ -64,15 +66,16 @@ public class ScriptingOsgiPluginFactory implements PluginFactory
         pluginTransformer = new DefaultPluginTransformer(pluginDescriptorFileName, Arrays.asList(
             new ConventionsToDescriptorStage(),
             new AddBundleOverridesStage(),
-            new ComponentImportSpringStage(),
-            new ComponentSpringStage(),
-            new HostComponentSpringStage(),
-            new ModuleTypeSpringStage(),
+            // new ComponentImportSpringStage(),
+            new ComponentsToServicesStage(),
+            // new ModuleTypeSpringStage(),
             new GenerateManifestStage()
         ));
         this.osgi = osgi;
         this.pluginDescriptorFileName = pluginDescriptorFileName;
         this.descriptorParserFactory = new OsgiPluginXmlDescriptorParserFactory();
+        this.scriptManagers = CopyOnWriteMap.newHashMap();
+        this.bundleActivators = CopyOnWriteMap.newHashMap();
     }
 
     public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException
@@ -96,13 +99,17 @@ public class ScriptingOsgiPluginFactory implements PluginFactory
             else
             {
                 IOUtils.closeQuietly(descriptorStream);
-                descriptorStream = pluginArtifact.getResourceAsStream("atlassian-plugin.properties");
+                descriptorStream = pluginArtifact.getResourceAsStream("atlassian-plugin.js");
 
                 if (descriptorStream != null)
                 {
-                    Properties props = new Properties();
-                    props.load(descriptorStream);
-                    pluginKey = props.getProperty("key");
+                    ScriptManager mgr = new ScriptManager();
+                    JsScript script = mgr.run("atlassian-plugin.js", descriptorStream, Collections.<String, Object>emptyMap());
+                    final DescriptorParser descriptorParser = new XmlDescriptorParser(script.getConfig());
+                    if (descriptorParser.getPluginsVersion() == 3)
+                        pluginKey = descriptorParser.getKey();
+                    else
+                        return null;
                 }
             }
         }
@@ -121,14 +128,70 @@ public class ScriptingOsgiPluginFactory implements PluginFactory
         Validate.notNull(deploymentUnit, "The plugin deployment unit is required");
         Validate.notNull(moduleDescriptorFactory, "The module descriptor factory is required");
 
+        if (!listenerAdded)
+        {
+            osgi.getBundles()[0].getBundleContext().addBundleListener(new BundleListener()
+            {
+                public void bundleChanged(BundleEvent event)
+                {
+                    final long bundleId = event.getBundle().getBundleId();
+                    if (event.getType() == BundleEvent.STARTED)
+                    {
+                        if (scriptManagers.containsKey(bundleId))
+                        {
+
+                            try
+                            {
+                                List<BundleActivator> activators = bundleActivators.get(bundleId);
+                                for (BundleActivator activator : activators)
+                                {
+                                    activator.start(event.getBundle().getBundleContext());
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                throw new PluginException(e);
+                            }
+                        }
+                    }
+                    else if (event.getType() == BundleEvent.STOPPED)
+                    {
+                        if (bundleActivators.containsKey(bundleId))
+                        {
+
+                            try
+                            {
+                                List<BundleActivator> activators = bundleActivators.get(bundleId);
+                                if (activators != null)
+                                {
+                                    for (BundleActivator activator : activators)
+                                    {
+                                        activator.stop(event.getBundle().getBundleContext());
+                                    }
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                throw new PluginException(e);
+                            }
+                        }
+                    }
+
+                }
+            });
+            listenerAdded = true;
+        }
         Plugin plugin = null;
         File transformedFile = null;
         try
         {
             ScriptManager scriptManager = new ScriptManager();
-            TransformContext context = new ScriptingTransformContext(osgi.getHostComponentRegistrations(), deploymentUnit.getPath(), pluginDescriptorFileName, scriptManager);
+            ScriptingTransformContext context = new ScriptingTransformContext(osgi.getHostComponentRegistrations(), deploymentUnit.getPath(), pluginDescriptorFileName, scriptManager);
             transformedFile = pluginTransformer.transform(context);
-            plugin = new ScriptingOsgiPlugin(osgi.installBundle(transformedFile), scriptManager);
+            Bundle bundle = osgi.installBundle(transformedFile);
+            bundleActivators.put(bundle.getBundleId(), context.getBundleActivators());
+            scriptManagers.put(bundle.getBundleId(), scriptManager);
+            plugin = new ScriptingOsgiPlugin(bundle, scriptManager);
         } catch (OsgiContainerException e)
         {
             return reportUnloadablePlugin(transformedFile, e);
