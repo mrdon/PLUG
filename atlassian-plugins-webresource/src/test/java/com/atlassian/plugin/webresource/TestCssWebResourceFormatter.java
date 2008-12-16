@@ -29,16 +29,14 @@ public class TestCssWebResourceFormatter extends TestCase
 
     public void testFormatResource()
     {
-        final String resourceName = "master.css";
         final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master.css";
 
         assertEquals("<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" media=\"all\"/>\n",
-                    cssWebResourceFormatter.formatResource(resourceName, url, new HashMap()));
+                    cssWebResourceFormatter.formatResource(url, new HashMap()));
     }
 
     public void testFormatResourceWithParameters()
     {
-        final String resourceName = "master.css";
         final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master.css";
         HashMap params = new HashMap();
         params.put("title", "Confluence Master CSS");
@@ -47,13 +45,12 @@ public class TestCssWebResourceFormatter extends TestCase
 
         assertEquals("<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" title=\"Confluence Master CSS\"" +
                     " charset=\"utf-8\" media=\"all\"/>\n",
-                    cssWebResourceFormatter.formatResource(resourceName, url, params));
+                    cssWebResourceFormatter.formatResource(url, params));
 
     }
 
     public void testFormatIEResource()
     {
-        final String resourceName = "master-ie.css";
         final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master-ie.css";
 
         Map params = new HashMap();
@@ -62,6 +59,6 @@ public class TestCssWebResourceFormatter extends TestCase
         assertEquals("<!--[if IE]>\n" +
                     "<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" media=\"screen\"/>\n" +
                     "<![endif]-->\n",
-                    cssWebResourceFormatter.formatResource(resourceName, url, params));
+                    cssWebResourceFormatter.formatResource(url, params));
     }
 }

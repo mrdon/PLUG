@@ -3,6 +3,8 @@ package com.atlassian.plugin.osgi.factory;
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
+import com.atlassian.plugin.util.resource.AlternativeResourceLoader;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
@@ -45,11 +47,14 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private ServiceTracker moduleDescriptorTracker;
     private ServiceTracker unrecognisedModuleTracker;
     private final Map<String, Element> moduleElements = new HashMap<String, Element>();
+    private final ClassLoader bundleClassLoader;
 
     public OsgiPlugin(final Bundle bundle)
     {
         Validate.notNull(bundle, "The bundle is required");
         this.bundle = bundle;
+        this.bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
+
     }
 
     public Bundle getBundle()
@@ -74,17 +79,17 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
 
     public URL getResource(final String name)
     {
-        return BundleClassLoaderAccessor.getResource(bundle, name);
+        return bundleClassLoader.getResource(name);
     }
 
     public InputStream getResourceAsStream(final String name)
     {
-        return BundleClassLoaderAccessor.getResourceAsStream(bundle, name);
+        return bundleClassLoader.getResourceAsStream(name);
     }
 
     public ClassLoader getClassLoader()
     {
-        return BundleClassLoaderAccessor.getClassLoader(bundle);
+        return bundleClassLoader;
     }
 
     /**

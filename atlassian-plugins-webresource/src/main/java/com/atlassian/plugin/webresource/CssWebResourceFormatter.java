@@ -10,32 +10,32 @@ import java.util.Arrays;
 class CssWebResourceFormatter extends AbstractWebResourceFormatter
 {
     private static final String CSS_EXTENSION = ".css";
-    private static final List/*<String>*/ HANDLED_PARAMETERS = Arrays.asList(new String[] {"title", "media", "charset"});
+    private static final List<String> HANDLED_PARAMETERS = Arrays.asList("title", "media", "charset");
 
     public boolean matches(String name)
     {
         return name != null && name.endsWith(CSS_EXTENSION);
     }
-    
-    public String formatResource(String name, String url, Map params)
+
+    public String formatResource(String url, Map<String, String> params)
     {
         StringBuffer buffer = new StringBuffer();
         buffer.append("<link type=\"text/css\" rel=\"stylesheet\" href=\"").append(url).append("\"");
         List attributes = getParametersAsAttributes(params);
-        if(attributes!=null && attributes.size()>0)
+        if (attributes != null && attributes.size() > 0)
         {
             buffer.append(" ").append(StringUtils.join(attributes.iterator(), " "));
         }
 
         // default media to all
-        if(!params.containsKey("media"))
+        if (!params.containsKey("media"))
         {
             buffer.append(" media=\"all\"");
         }
         buffer.append("/>\n");
 
         // ie conditional commment
-        if(BooleanUtils.toBoolean((String) params.get("ieonly")))
+        if(BooleanUtils.toBoolean(params.get("ieonly")))
         {
             buffer.insert(0, "<!--[if IE]>\n");
             buffer.append("<![endif]-->\n");
@@ -44,7 +44,7 @@ class CssWebResourceFormatter extends AbstractWebResourceFormatter
         return buffer.toString();
     }
 
-    protected List/*<String>*/ getAttributeParameters()
+    protected List<String> getAttributeParameters()
     {
         return HANDLED_PARAMETERS;
     }

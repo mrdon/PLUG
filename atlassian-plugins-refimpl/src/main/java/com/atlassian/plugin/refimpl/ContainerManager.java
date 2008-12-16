@@ -5,6 +5,7 @@ import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.util.Assertions;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
@@ -16,6 +17,7 @@ import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfigurati
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
+import com.atlassian.plugin.refimpl.servlet.SimpleServletContextFactory;
 import com.atlassian.plugin.servlet.ContentTypeResolver;
 import com.atlassian.plugin.servlet.DefaultServletModuleManager;
 import com.atlassian.plugin.servlet.DownloadStrategy;
@@ -30,6 +32,8 @@ import com.atlassian.plugin.webresource.WebResourceIntegration;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
 import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
+import com.atlassian.plugin.webresource.PluginResourceLocatorImpl;
+import com.atlassian.plugin.webresource.PluginResourceLocator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -63,7 +67,6 @@ public class ContainerManager
     {
         instance = this;
         webResourceIntegration = new SimpleWebResourceIntegration(servletContext);
-        webResourceManager = new WebResourceManagerImpl(webResourceIntegration);
 
         final File pluginDir = new File(servletContext.getRealPath("/WEB-INF/plugins"));
         if (!pluginDir.exists())
@@ -131,6 +134,11 @@ public class ContainerManager
 
         hostContainer = new SimpleConstructorHostContainer(publicContainer);
 
+        PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(pluginAccessor, new SimpleServletContextFactory(servletContext));
+        PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
+
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration);
+
         try
         {
             plugins.start();
@@ -141,10 +149,6 @@ public class ContainerManager
         }
 
         downloadStrategies = new ArrayList<DownloadStrategy>();
-        final PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload();
-        pluginDownloadStrategy.setPluginAccessor(pluginAccessor);
-        pluginDownloadStrategy.setContentTypeResolver(new SimpleContentTypeResolver());
-        pluginDownloadStrategy.setCharacterEncoding("UTF-8");
         downloadStrategies.add(pluginDownloadStrategy);
     }
 
@@ -229,6 +233,8 @@ public class ContainerManager
     {
         public void provide(final ComponentRegistrar componentRegistrar)
         {
+            Assertions.notNull("publicContainer", publicContainer);
+            Assertions.notNull("webResourceManager", webResourceManager);
             for (final Map.Entry<Class<?>, Object> entry : publicContainer.entrySet())
             {
                 String name = entry.getKey().getSimpleName();

@@ -14,7 +14,7 @@ public class TestBundleClassLoaderAccessor extends TestCase
         Mock mockBundle = new Mock(Bundle.class);
         mockBundle.expectAndReturn("getResource", C.args(C.eq("/foo.txt")), getClass().getResource("/foo.txt"));
 
-        BundleClassLoaderAccessor.getResourceAsStream((Bundle) mockBundle.proxy(), "/foo.txt");
+        BundleClassLoaderAccessor.getClassLoader((Bundle) mockBundle.proxy(), null).getResourceAsStream("/foo.txt");
         byte[] buffer = new byte[1024];
         assertTrue(buffer.length > 0);
 

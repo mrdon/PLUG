@@ -2,6 +2,7 @@ package com.atlassian.plugin.servlet;
 
 /**
  * Identifies a resource in the plugin system. Normally generated from a request URL.
+ * @deprecated since 2.2
  */
 class PluginResource
 {

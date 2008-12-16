@@ -2,34 +2,25 @@ package com.atlassian.plugin.servlet;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.elements.ResourceLocation;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import javax.servlet.ServletContext;
+import java.io.InputStream;
 
+/**
+ * A {@link DownloadableResource} that will serve the resource via the web application's {@link ServletContext}.
+ */
 public class DownloadableWebResource extends AbstractDownloadableResource
 {
-    private static final Log log = LogFactory.getLog(DownloadableWebResource.class);
+    private final ServletContext servletContext;
 
-    public DownloadableWebResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath, ContentTypeResolver contentTypeResolver)
+    public DownloadableWebResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath, ServletContext servletContext)
     {
-        super(plugin, resourceLocation, extraPath, contentTypeResolver);
+        super(plugin, resourceLocation, extraPath);
+        this.servletContext = servletContext;
     }
 
-    public void serveResource(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException
+    protected InputStream getResourceAsStream()
     {
-        try
-        {
-            httpServletResponse.setContentType(getContentType()); // this will be used if content-type is not set by the forward handler, e.g. for webapp content in Tomcat
-            httpServletRequest.getRequestDispatcher(getLocation()).forward(httpServletRequest, httpServletResponse);
-        }
-        catch (ServletException e)
-        {
-            log.error(e);
-            throw new IOException(e.getMessage());
-        }
+        return servletContext.getResourceAsStream(getLocation());
     }
 }

@@ -1,17 +1,16 @@
 package com.atlassian.plugin;
 
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
-import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
 /**
  * Tests that the plugin manager properly notifies StateAware plugin modules of state
@@ -22,7 +21,7 @@ public class TestStateAware extends TestCase
     private Mock mockEnabling;
     private Mock mockDisabled;
     private Mock mockThwarted;
-    private PluginManager manager;
+    private DefaultPluginManager manager;
     private Plugin plugin1;
 
     interface Combination extends StateAware, ModuleDescriptor{};

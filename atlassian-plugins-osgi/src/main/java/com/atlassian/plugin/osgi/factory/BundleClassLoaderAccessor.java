@@ -6,10 +6,12 @@ import org.apache.log4j.Logger;
 import org.osgi.framework.Bundle;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
+
+import com.atlassian.plugin.util.resource.AlternativeResourceLoader;
+import com.atlassian.plugin.util.resource.NoOpAlternativeResourceLoader;
 
 /**
  * Utility methods for accessing a bundle as if it was a classloader.
@@ -18,9 +20,9 @@ class BundleClassLoaderAccessor
 {
     private static final Logger log = Logger.getLogger(BundleClassLoaderAccessor.class);
 
-    static ClassLoader getClassLoader(final Bundle bundle)
+    static ClassLoader getClassLoader(final Bundle bundle, AlternativeResourceLoader alternativeResourceLoader)
     {
-        return new BundleClassLoader(bundle);
+        return new BundleClassLoader(bundle, alternativeResourceLoader);
     }
 
     static <T> Class<T> loadClass(final Bundle bundle, final String name, final Class<?> callingClass) throws ClassNotFoundException
@@ -31,31 +33,6 @@ class BundleClassLoaderAccessor
         return loadedClass;
     }
 
-    static URL getResource(final Bundle bundle, final String name)
-    {
-        Validate.notNull(bundle, "The bundle is required");
-        return bundle.getResource(name);
-    }
-
-    static InputStream getResourceAsStream(final Bundle bundle, final String name)
-    {
-        Validate.notNull(bundle, "The bundle is required");
-        final URL url = getResource(bundle, name);
-        if (url != null)
-        {
-            try
-            {
-                return url.openStream();
-            }
-            catch (final IOException e)
-            {
-                log.debug("Unable to load resource from bundle: " + bundle.getSymbolicName(), e);
-            }
-        }
-
-        return null;
-    }
-
     ///CLOVER:OFF
     /**
      * Fake classloader that delegates to a bundle
@@ -63,11 +40,18 @@ class BundleClassLoaderAccessor
     private static class BundleClassLoader extends ClassLoader
     {
         private final Bundle bundle;
+        private final AlternativeResourceLoader altResourceLoader;
 
-        public BundleClassLoader(final Bundle bundle)
+        public BundleClassLoader(final Bundle bundle, AlternativeResourceLoader altResourceLoader)
         {
             Validate.notNull(bundle, "The bundle must not be null");
+            if (altResourceLoader == null)
+            {
+                altResourceLoader = new NoOpAlternativeResourceLoader();
+            }
+            this.altResourceLoader = altResourceLoader;
             this.bundle = bundle;
+
         }
 
         @Override
@@ -98,7 +82,12 @@ class BundleClassLoaderAccessor
         @Override
         public URL findResource(final String name)
         {
-            return bundle.getResource(name);
+            URL url = altResourceLoader.getResource(name);
+            if (url == null)
+            {
+                url = bundle.getResource(name);
+            }
+            return url;
         }
     }
 
