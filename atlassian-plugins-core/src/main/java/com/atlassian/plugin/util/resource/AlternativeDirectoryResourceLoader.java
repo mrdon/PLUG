@@ -100,5 +100,10 @@ public class AlternativeDirectoryResourceLoader implements AlternativeResourceLo
         return null;
     }
 
+    public List<File> getResourceDirectories()
+    {
+        return resourceDirectories;
+    }
+
 
 }
