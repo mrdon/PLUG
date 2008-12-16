@@ -86,7 +86,7 @@ public class DefaultPluginTransformer implements PluginTransformer
                 for (Map.Entry<String, byte[]> entry : context.getFileOverrides().entrySet())
                 {
                     sb.append("==").append(entry.getKey()).append("==\n");
-                    sb.append(String.valueOf(entry.getValue()));
+                    sb.append(new String(entry.getValue()));
                 }
                 log.debug(sb.toString());
             }
