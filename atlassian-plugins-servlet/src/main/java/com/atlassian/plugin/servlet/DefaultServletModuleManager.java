@@ -49,7 +49,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
 {
     PathMapper servletMapper = new DefaultPathMapper();
     Map<String, ServletModuleDescriptor> servletDescriptors = new HashMap<String, ServletModuleDescriptor>();
-    ConcurrentMap<String, LazyLoadedReference<HttpServlet>> servletRefs = new ConcurrentHashMap<String, LazyLoadedReference<HttpServlet>>();
+    //ConcurrentMap<String, LazyLoadedReference<HttpServlet>> servletRefs = new ConcurrentHashMap<String, LazyLoadedReference<HttpServlet>>();
 
     PathMapper filterMapper = new DefaultPathMapper();
     Map<String, ServletFilterModuleDescriptor> filterDescriptors = new HashMap<String, ServletFilterModuleDescriptor>();
@@ -73,11 +73,12 @@ public class DefaultServletModuleManager implements ServletModuleManager
         {
             servletMapper.put(descriptor.getCompleteKey(), path);
         }
-        LazyLoadedReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
+        /*LazyLoadedReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
         if (servletRef != null)
         {
             servletRef.get().destroy();
         }
+        */
     }
 
     /* (non-Javadoc)
@@ -108,11 +109,12 @@ public class DefaultServletModuleManager implements ServletModuleManager
         servletDescriptors.remove(descriptor.getCompleteKey());
         servletMapper.put(descriptor.getCompleteKey(), null);
 
-        LazyLoadedReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
+        /*LazyLoadedReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
         if (servletRef != null)
         {
             servletRef.get().destroy();
         }
+        */
     }
 
     public void addFilterModule(ServletFilterModuleDescriptor descriptor)
@@ -216,6 +218,19 @@ public class DefaultServletModuleManager implements ServletModuleManager
      */
     private HttpServlet getServlet(final ServletModuleDescriptor descriptor, final ServletConfig servletConfig)
     {
+        // if there isn't an existing reference, create one.
+            ServletContext servletContext = getWrappedContext(descriptor.getPlugin(), servletConfig.getServletContext());
+        HttpServlet servlet = new DelegatingPluginServlet(descriptor);
+        try
+        {
+            servlet.init(new PluginServletConfig(descriptor, servletContext));
+        }
+        catch (ServletException e)
+        {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        return servlet;
+        /*
         // check for an existing reference, if there is one it's either in the process of loading, in which case
         // servletRef.get() below will block until it's available, otherwise we go about creating a new ref to use
         LazyLoadedReference<HttpServlet> servletRef = servletRefs.get(descriptor.getCompleteKey());
@@ -233,6 +248,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
             }
         }
         return servletRef.get();
+        */
     }
     
     /**

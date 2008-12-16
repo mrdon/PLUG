@@ -23,6 +23,7 @@ import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
+import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
 import com.atlassian.plugin.scripting.stages.ConventionsToDescriptorStage;
 import com.atlassian.plugin.scripting.stages.ComponentsToServicesStage;
 import com.atlassian.plugin.scripting.variables.JsScript;
@@ -57,6 +58,7 @@ public class ScriptingOsgiPluginFactory implements PluginFactory
     private boolean listenerAdded = false;
 
     private ServiceTracker moduleDescriptorFactoryTracker;
+    private final AlternativeDirectoryResourceLoader altResourceLoader;
 
     public ScriptingOsgiPluginFactory(String pluginDescriptorFileName, OsgiContainerManager osgi)
     {
@@ -76,6 +78,7 @@ public class ScriptingOsgiPluginFactory implements PluginFactory
         this.descriptorParserFactory = new OsgiPluginXmlDescriptorParserFactory();
         this.scriptManagers = CopyOnWriteMap.newHashMap();
         this.bundleActivators = CopyOnWriteMap.newHashMap();
+        this.altResourceLoader = new AlternativeDirectoryResourceLoader();
     }
 
     public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException
@@ -103,7 +106,7 @@ public class ScriptingOsgiPluginFactory implements PluginFactory
 
                 if (descriptorStream != null)
                 {
-                    ScriptManager mgr = new ScriptManager();
+                    ScriptManager mgr = new ScriptManager(!altResourceLoader.getResourceDirectories().isEmpty());
                     JsScript script = mgr.run("atlassian-plugin.js", descriptorStream, Collections.<String, Object>emptyMap());
                     final DescriptorParser descriptorParser = new XmlDescriptorParser(script.getConfig());
                     if (descriptorParser.getPluginsVersion() == 3)
@@ -185,7 +188,7 @@ public class ScriptingOsgiPluginFactory implements PluginFactory
         File transformedFile = null;
         try
         {
-            ScriptManager scriptManager = new ScriptManager();
+            ScriptManager scriptManager = new ScriptManager(!altResourceLoader.getResourceDirectories().isEmpty());
             ScriptingTransformContext context = new ScriptingTransformContext(osgi.getHostComponentRegistrations(), deploymentUnit.getPath(), pluginDescriptorFileName, scriptManager);
             transformedFile = pluginTransformer.transform(context);
             Bundle bundle = osgi.installBundle(transformedFile);

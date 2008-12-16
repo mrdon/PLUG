@@ -6,9 +6,7 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.apache.commons.io.IOUtils;
 
-import java.io.InputStreamReader;
-import java.io.InputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
@@ -27,17 +25,19 @@ import com.atlassian.plugin.PluginException;
  */
 public class ScriptManager
 {
-    private final Scriptable sharedScope;
+    private Scriptable sharedScope;
     private final Map<String,Script> scripts = CopyOnWriteMap.newHashMap();
+    private final boolean cachingDisabled;
 
-    public ScriptManager()
+    public ScriptManager(boolean disableCaching)
     {
-        this.sharedScope = buildSharedScope();
+        this.cachingDisabled = disableCaching;
+        resetSharedScope();
     }
 
     void ensureCompiled(String path, InputStream in) throws IOException
     {
-        if (!scripts.containsKey(path))
+        if (cachingDisabled || !scripts.containsKey(path))
         {
             Context cx = Context.enter();
             try
@@ -53,16 +53,44 @@ public class ScriptManager
         }
     }
 
-    Scriptable buildSharedScope()
+    void resetSharedScope()
     {
         Context cx = Context.enter();
         try
         {
-            return cx.initStandardObjects();
+            sharedScope = cx.initStandardObjects();
         }
         finally
         {
             Context.exit();
+        }
+    }
+
+    void resetSharedScope(File sharedDir)
+    {
+        resetSharedScope();
+        for (File file : sharedDir.listFiles(new FilenameFilter()
+                {
+                    public boolean accept(File dir, String name)
+                    {
+                        return name.endsWith(".js");
+                    }
+                }))
+        {
+            InputStream in = null;
+            try
+            {
+                in = new FileInputStream(file);
+                runInSharedScope(file.getAbsolutePath(), in);
+            }
+            catch (FileNotFoundException e)
+            {
+                throw new PluginException("Unable to find file", e);
+            }
+            finally
+            {
+                IOUtils.closeQuietly(in);
+            }
         }
     }
 
