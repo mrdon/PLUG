@@ -72,7 +72,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         }
 
         // if batch is empty, check if we can locate a plugin resource
-        if(batchResource.isEmpty())
+        if (batchResource.isEmpty())
         {
             DownloadableResource resource = locatePluginResource(batchResource.getModuleCompleteKey(), batchResource.getResourceName());
             if (resource != null)
@@ -85,6 +85,9 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
     private boolean isResourceInBatch(ResourceDescriptor resourceDescriptor, BatchPluginResource batchResource)
     {
         if (!resourceDescriptor.getName().endsWith("." + batchResource.getType()))
+            return false;
+
+        if (skipBatch(resourceDescriptor))
             return false;
 
         for (String param : BATCH_PARAMS)
@@ -221,7 +224,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
         for (ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors())
         {
-            if (singleMode || "false".equalsIgnoreCase(resourceDescriptor.getParameter("batch")))
+            if (singleMode || skipBatch(resourceDescriptor))
             {
                 boolean cache = !"false".equalsIgnoreCase(resourceDescriptor.getParameter("cache"));
                 resources.add(new SinglePluginResource(resourceDescriptor.getName(), moduleDescriptor.getCompleteKey(), cache));
@@ -234,6 +237,11 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             }
         }
         return resources;
+    }
+
+    private boolean skipBatch(ResourceDescriptor resourceDescriptor)
+    {
+        return "false".equalsIgnoreCase(resourceDescriptor.getParameter("batch"));
     }
 
     private BatchPluginResource createBatchResource(String moduleCompleteKey, ResourceDescriptor resourceDescriptor)
