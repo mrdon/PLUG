@@ -110,8 +110,8 @@ public class TestWebResourceManagerImpl extends TestCase
         String staticBase = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX  + "/" + SYSTEM_BUILD_NUMBER
             + "/" + SYSTEM_COUNTER + "/" + pluginVersion + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
 
-        assertTrue(requiredResourceResult.contains("href=\"" + staticBase + "/css/" + completeModuleKey + ".css"));
-        assertTrue(requiredResourceResult.contains("src=\"" + staticBase + "/js/" + completeModuleKey + ".js"));
+        assertTrue(requiredResourceResult.contains("href=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".css"));
+        assertTrue(requiredResourceResult.contains("src=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".js"));
 
         // test resourceTag() methods
         StringWriter resourceTagsWriter = new StringWriter();

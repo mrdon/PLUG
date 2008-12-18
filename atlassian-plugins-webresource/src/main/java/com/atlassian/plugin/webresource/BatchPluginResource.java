@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,13 +39,36 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
     final private String resourceName;
     final private List<DownloadableResource> resources;
 
+    /**
+     * A constructor that creates a default resource name for the batch in the format: moduleCompleteKey.type
+     * For example: test.plugin:resources.js
+     * <p/>
+     * Note that name of the batch does not identify what the batch includes and could have been static e.g. batch.js
+     */
     public BatchPluginResource(String moduleCompleteKey, String type, Map<String, String> params)
     {
+        this(moduleCompleteKey + "." + type, moduleCompleteKey, type, params);
+    }
+
+    /**
+     * This constructor should only ever be used internally within this class. It does not ensure that the resourceName's
+     * file extension is the same as the given type. It is up to the calling code to ensure this.
+     */
+    private BatchPluginResource(String resourceName, String moduleCompleteKey, String type, Map<String, String> params)
+    {
+        this.resourceName = resourceName;
         this.moduleCompleteKey = moduleCompleteKey;
         this.type = type;
         this.params = params;
-        this.resourceName = moduleCompleteKey + "." + type;
         this.resources = new ArrayList<DownloadableResource>();
+    }
+
+    /**
+     * @return true if there are no resources included in this batch
+     */
+    public boolean isEmpty()
+    {
+        return resources.isEmpty();
     }
 
     public void add(DownloadableResource resource)
@@ -96,19 +120,16 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         }
 
         String typeAndModuleKey = url.substring(startIndex);
-        String[] parts = typeAndModuleKey.split("/");
+        String[] parts = typeAndModuleKey.split("/", 2);
 
         if (parts.length < 2)
             return null;
 
-        String type = parts[0];
-        String moduleKey = parts[1];
-        if (moduleKey.endsWith("." + type))
-        {
-            moduleKey = moduleKey.substring(0, moduleKey.lastIndexOf("." + type));
-        }
+        String moduleKey = parts[0];
+        String resourceName = parts[1];
+        String type = resourceName.substring(resourceName.lastIndexOf('.') + 1);
 
-        return new BatchPluginResource(moduleKey, type, queryParams);
+        return new BatchPluginResource(resourceName, moduleKey, type, queryParams);
     }
 
     public static boolean matches(String url)
@@ -117,15 +138,20 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
     }
 
     /**
-     * Returns a url string in the format: /download/batch/TYPE/MODULE_COMPLETE_KEY.TYPE?PARAMS
+     * Returns a url string in the format: /download/batch/MODULE_COMPLETE_KEY/resourceName?PARAMS
      *
-     * e.g. /download/batch/css/example.plugin:webresources.css?ie=true
+     * e.g. /download/batch/example.plugin:webresources/example.plugin:webresources.css?ie=true
+     * <p/>
+     * It is important for the url structure to be:
+     * 1. the same number of sectioned paths as the SinglePluginResource
+     * 2. include the module completey key in the path before the resource name
+     * This is due to css resources referencing other resources such as images in relative path forms.
      */
     public String getUrl()
     {
         StringBuilder sb = new StringBuilder();
         sb.append(URL_PREFIX).append(PATH_SEPARATOR)
-            .append(type).append(PATH_SEPARATOR)
+            .append(moduleCompleteKey).append(PATH_SEPARATOR)
             .append(resourceName);
 
         if(params.size() > 0 )
@@ -145,10 +171,6 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         return sb.toString();
     }
 
-    /**
-     * Returns the resource name in the format moduleCompleteKey.type
-     * For example: test.plugin:resources.js
-     */
     public String getResourceName()
     {
         return resourceName;
@@ -156,7 +178,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
 
     public Map<String, String> getParams()
     {
-        return params;
+        return Collections.unmodifiableMap(params);
     }
 
     public String getModuleCompleteKey()

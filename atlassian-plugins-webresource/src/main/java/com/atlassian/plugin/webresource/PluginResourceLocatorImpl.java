@@ -70,6 +70,15 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             if (isResourceInBatch(resourceDescriptor, batchResource))
                 batchResource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
         }
+
+        // if batch is empty, check if we can locate a plugin resource
+        if(batchResource.isEmpty())
+        {
+            DownloadableResource resource = locatePluginResource(batchResource.getModuleCompleteKey(), batchResource.getResourceName());
+            if (resource != null)
+                return resource;
+        }
+
         return batchResource;
     }
 
@@ -212,7 +221,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
         for (ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors())
         {
-            if (singleMode)
+            if (singleMode || "false".equalsIgnoreCase(resourceDescriptor.getParameter("batch")))
             {
                 boolean cache = !"false".equalsIgnoreCase(resourceDescriptor.getParameter("cache"));
                 resources.add(new SinglePluginResource(resourceDescriptor.getName(), moduleDescriptor.getCompleteKey(), cache));

@@ -4,6 +4,9 @@ import com.atlassian.plugin.elements.ResourceDescriptor;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Collections;
+import java.util.TreeMap;
 
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -22,13 +25,24 @@ public class TestUtils
 
     static ResourceDescriptor createResourceDescriptor(String resourceName) throws DocumentException
     {
+        return createResourceDescriptor(resourceName, new TreeMap<String, String>());
+    }
+
+    static ResourceDescriptor createResourceDescriptor(String resourceName, Map<String, String> parameters) throws DocumentException
+    {
         String xml = "<resource type=\"download\" name=\"" + resourceName + "\" location=\"/includes/css/" + resourceName + "\">\n" +
                             "<param name=\"source\" value=\"webContext\"/>\n";
 
         if(resourceName.indexOf("ie") != -1)
-           xml += "<param name=\"ieonly\" value=\"true\"/>\n";
+            parameters.put("ieonly", "true");
 
+        for(String key : parameters.keySet())
+        {
+            xml += "<param name=\"" + key + "\" value=\"" + parameters.get(key) + "\"/>\n";
+        }
+        
         xml += "</resource>";
         return new ResourceDescriptor(DocumentHelper.parseText(xml).getRootElement());
+
     }
 }

@@ -6,22 +6,22 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Collections;
 
-public class TestBatchResource extends TestCase
+public class TestBatchPluginResource extends TestCase
 {
     public void testIsCacheSupported()
     {
-        BatchPluginResource resource = BatchPluginResource.parse("/download/batch/css/test.plugin:webresources.css", Collections.EMPTY_MAP);
+        BatchPluginResource resource = BatchPluginResource.parse("/download/batch/test.plugin:webresources/test.plugin:webresources.css", Collections.EMPTY_MAP);
         assertTrue(resource.isCacheSupported());
 
         Map queryParams = new TreeMap<String, String>();
         queryParams.put("cache", "false");
-        BatchPluginResource resource2 = BatchPluginResource.parse("/download/batch/css/test.plugin:webresources.css", queryParams);
+        BatchPluginResource resource2 = BatchPluginResource.parse("/download/batch/test.plugin:webresources/test.plugin:webresources.css", queryParams);
         assertFalse(resource2.isCacheSupported());
     }
 
     public void testParse()
     {
-        BatchPluginResource resource = BatchPluginResource.parse("/download/batch/css/test.plugin:webresources.css", Collections.EMPTY_MAP);
+        BatchPluginResource resource = BatchPluginResource.parse("/download/batch/test.plugin:webresources/test.plugin:webresources.css", Collections.EMPTY_MAP);
         assertEquals("css", resource.getType());
         assertEquals("test.plugin:webresources", resource.getModuleCompleteKey());
 
@@ -36,7 +36,7 @@ public class TestBatchResource extends TestCase
         queryParams.put("ieonly", "true");
         queryParams.put("foo", "bar");
 
-        BatchPluginResource resource = BatchPluginResource.parse("/download/batch/css/test.plugin:webresources.css", queryParams);
+        BatchPluginResource resource = BatchPluginResource.parse("/download/batch/test.plugin:webresources/test.plugin:webresources.css", queryParams);
         assertEquals("css", resource.getType());
         assertEquals("test.plugin:webresources", resource.getModuleCompleteKey());
 
@@ -50,7 +50,7 @@ public class TestBatchResource extends TestCase
     public void testGetUrl()
     {
         BatchPluginResource resource = new BatchPluginResource("test.plugin:webresources", "js", Collections.EMPTY_MAP);
-        assertEquals("/download/batch/js/test.plugin:webresources.js", resource.getUrl());
+        assertEquals("/download/batch/test.plugin:webresources/test.plugin:webresources.js", resource.getUrl());
     }
 
     public void testGetUrlWithParams()
@@ -60,7 +60,7 @@ public class TestBatchResource extends TestCase
         params.put("moo", "cow");
 
         BatchPluginResource resource = new BatchPluginResource("test.plugin:webresources", "js", params);
-        assertEquals("/download/batch/js/test.plugin:webresources.js?foo=bar&moo=cow", resource.getUrl());
+        assertEquals("/download/batch/test.plugin:webresources/test.plugin:webresources.js?foo=bar&moo=cow", resource.getUrl());
     }
 
     public void testRoundTrip()

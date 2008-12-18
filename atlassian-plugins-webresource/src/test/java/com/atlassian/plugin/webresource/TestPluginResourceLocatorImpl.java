@@ -67,12 +67,10 @@ public class TestPluginResourceLocatorImpl extends TestCase
             {
                 return TEST_MODULE_COMPLETE_KEY;
             }
-
             public List getResourceDescriptors()
             {
                 return resourceDescriptors;
             }
-
             public Plugin getPlugin()
             {
                 return (Plugin) mockPlugin.proxy();
@@ -104,12 +102,10 @@ public class TestPluginResourceLocatorImpl extends TestCase
             {
                 return TEST_MODULE_COMPLETE_KEY;
             }
-
             public List getResourceDescriptors()
             {
                 return resourceDescriptors;
             }
-
             public Plugin getPlugin()
             {
                 return (Plugin) mockPlugin.proxy();
@@ -131,6 +127,46 @@ public class TestPluginResourceLocatorImpl extends TestCase
         assertEquals(TEST_MODULE_COMPLETE_KEY, batch.getModuleCompleteKey());
         assertEquals("css", batch.getType());
         assertEquals(0, batch.getParams().size());
+    }
+
+    public void testGetPluginResourcesWithBatchParameter() throws Exception
+    {
+        final Mock mockPlugin = new Mock(Plugin.class);
+        mockPlugin.matchAndReturn("getPluginsVersion", 1);
+
+        final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("master.css", "comments.css");
+        Map<String, String> nonBatchParams = new TreeMap<String, String>();
+        nonBatchParams.put("batch", "false");
+        resourceDescriptors.add(TestUtils.createResourceDescriptor("nonbatch.css", nonBatchParams));
+
+        WebResourceModuleDescriptor moduleDescriptor = new WebResourceModuleDescriptor() {
+            public String getCompleteKey()
+            {
+                return TEST_MODULE_COMPLETE_KEY;
+            }
+            public List getResourceDescriptors()
+            {
+                return resourceDescriptors;
+            }
+            public Plugin getPlugin()
+            {
+                return (Plugin) mockPlugin.proxy();
+            }
+        };
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), moduleDescriptor);
+
+        List<PluginResource> resources = pluginResourceLocator.getPluginResources(TEST_MODULE_COMPLETE_KEY);
+        assertEquals(2, resources.size());
+
+                
+        BatchPluginResource batch = (BatchPluginResource) resources.get(0);
+        assertEquals(TEST_MODULE_COMPLETE_KEY, batch.getModuleCompleteKey());
+        assertEquals("css", batch.getType());
+        assertEquals(0, batch.getParams().size());
+
+        SinglePluginResource single = (SinglePluginResource) resources.get(1);
+        assertEquals(TEST_MODULE_COMPLETE_KEY, single.getModuleCompleteKey());
     }
 
     public void testGetDownloadableClasspathResource() throws Exception
@@ -155,7 +191,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
     public void testGetDownloadableBatchResource() throws Exception
     {
-        String url = "/download/batch/css/" + TEST_MODULE_COMPLETE_KEY + "/all.css";
+        String url = "/download/batch/" + TEST_MODULE_COMPLETE_KEY + "/all.css";
         String ieResourceName = "master-ie.css";
         Map<String, String> params = new TreeMap<String, String>();
         params.put("ieonly", "true");
@@ -178,6 +214,29 @@ public class TestPluginResourceLocatorImpl extends TestCase
         DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, params);
 
         assertTrue(resource instanceof BatchPluginResource);
+    }
+
+    public void testGetDownloadableBatchResourceFallbacksToSingle() throws Exception
+    {
+        String resourceName = "images/foo.png";
+        String url = "/download/batch/" + TEST_MODULE_COMPLETE_KEY + "/" + resourceName;
+
+        Mock mockPlugin = new Mock(Plugin.class);
+        Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
+        mockModuleDescriptor.expectAndReturn("getPluginKey", TEST_PLUGIN_KEY);
+        mockModuleDescriptor.expectAndReturn("getCompleteKey", TEST_MODULE_COMPLETE_KEY);
+        mockModuleDescriptor.expectAndReturn("getResourceDescriptors", C.args(C.eq("download")), Collections.EMPTY_LIST);
+        mockModuleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq(resourceName)),
+            new ResourceLocation("", resourceName, "download", "text/css", "", Collections.EMPTY_MAP));
+
+        mockPluginAccessor.matchAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
+        mockPluginAccessor.matchAndReturn("getPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
+        mockPluginAccessor.matchAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), mockPlugin.proxy());
+
+        DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
+
+        assertTrue(resource instanceof DownloadableClasspathResource);
     }
 
     public void testSplitLastPathPart()
