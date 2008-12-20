@@ -38,12 +38,12 @@ public class ServletModuleContainerServlet extends HttpServlet
             return;
         }
 
-        HttpServlet servlet = getServletModuleManager().getServlet(request.getPathInfo(), servletConfig);
+        HttpServlet servlet = getServletModuleManager().getServlet(getPathInfo(request), servletConfig);
 
         if (servlet == null)
         {
-            log.debug("No servlet found for: " + request.getRequestURI());
-            response.sendError(404, "Could not find servlet for: " + request.getRequestURI());
+            log.debug("No servlet found for: " + getRequestURI(request));
+            response.sendError(404, "Could not find servlet for: " + getRequestURI(request));
             return;
         }
 
@@ -70,5 +70,31 @@ public class ServletModuleContainerServlet extends HttpServlet
     protected ServletModuleManager getServletModuleManager()
     {
         return ServletContextHostContainerAccessor.getHostContainer(getServletContext()).getInstance(ServletModuleManager.class);
+    }
+
+    private String getPathInfo(HttpServletRequest request)
+    {
+        String pathInfo = (String) request.getAttribute(RequestAttributes.PATH_INFO);
+        if (pathInfo == null)
+        {
+            pathInfo = request.getPathInfo();
+        }
+        return pathInfo;
+    }
+
+    private String getRequestURI(HttpServletRequest request)
+    {
+        String requestURI = (String) request.getAttribute(RequestAttributes.REQUEST_URI);
+        if (requestURI == null)
+        {
+            requestURI = request.getRequestURI();
+        }
+        return requestURI;
+    }
+
+    private static class RequestAttributes
+    {
+        static final String PATH_INFO = "javax.servlet.include.path_info";
+        static final String REQUEST_URI = "javax.servlet.include.request_uri";
     }
 }
