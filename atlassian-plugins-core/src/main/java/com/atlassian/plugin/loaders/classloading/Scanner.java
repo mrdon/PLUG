@@ -1,12 +1,22 @@
 package com.atlassian.plugin.loaders.classloading;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
-import java.net.MalformedURLException;
-import java.util.*;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Scans the filesystem for changed or added plugin jars and stores a map of the currently known ones.
@@ -23,12 +33,12 @@ public class Scanner
     /**
      * Tracks the classloading
      */
-    private File libDir;
+    private final File libDir;
 
     /**
      * A Map of {@link String} absolute file paths to {@link DeploymentUnit}s.
      */
-    private Map<String,DeploymentUnit> scannedDeploymentUnits = new HashMap<String,DeploymentUnit>();
+    private final Map<String,DeploymentUnit> scannedDeploymentUnits = new HashMap<String,DeploymentUnit>();
 
 
     /**
@@ -36,17 +46,17 @@ public class Scanner
      *
      * @param libDir
      */
-    public Scanner(File libDir)
+    public Scanner(final File libDir)
     {
         this.libDir = libDir;
     }
 
-    private DeploymentUnit createAndStoreDeploymentUnit(File file) throws MalformedURLException
+    private DeploymentUnit createAndStoreDeploymentUnit(final File file)
     {
         if (isScanned(file))
             return null;
 
-        DeploymentUnit unit = new DeploymentUnit(file);
+        final DeploymentUnit unit = new DeploymentUnit(file);
         scannedDeploymentUnits.put(file.getAbsolutePath(), unit);
 
         return unit;
@@ -57,7 +67,7 @@ public class Scanner
      * @param file a jar file.
      * @return the stored deploymentUnit matching the file or null if none exists.
      */
-    public DeploymentUnit locateDeploymentUnit(File file)
+    public DeploymentUnit locateDeploymentUnit(final File file)
     {
         return scannedDeploymentUnits.get(file.getAbsolutePath());
     }
@@ -65,7 +75,7 @@ public class Scanner
     /**
      * Finds whether the given file has been scanned already.
      */
-    private boolean isScanned(File file)
+    private boolean isScanned(final File file)
     {
         return locateDeploymentUnit(file) != null;
     }
@@ -76,7 +86,7 @@ public class Scanner
      *
      * @param file a file that may have already been scanned.
      */
-    public void clear(File file)
+    public void clear(final File file)
     {
         scannedDeploymentUnits.remove(file.getAbsolutePath());
     }
@@ -89,8 +99,8 @@ public class Scanner
     public Collection<DeploymentUnit> scan()
     {
         // Checks to see if we have deleted any of the deployment units.
-        List<File> removedFiles = new ArrayList<File>();
-        for (DeploymentUnit unit : scannedDeploymentUnits.values())
+        final List<File> removedFiles = new ArrayList<File>();
+        for (final DeploymentUnit unit : scannedDeploymentUnits.values())
         {
             if (!unit.getPath().exists() || !unit.getPath().canRead())
             {
@@ -100,58 +110,105 @@ public class Scanner
         clear(removedFiles);
 
         // Checks for new files.
-        Collection<DeploymentUnit> result = new TreeSet<DeploymentUnit>(new Comparator<DeploymentUnit>()
+        final Collection<DeploymentUnit> result = new TreeSet<DeploymentUnit>(new Comparator<DeploymentUnit>()
         {
-            public int compare(DeploymentUnit o1, DeploymentUnit o2)
+            public int compare(final DeploymentUnit o1, final DeploymentUnit o2)
             {
                 return o1.getPath().getName().compareTo(o2.getPath().getName());
             }
         });
 
-        File files[] = libDir.listFiles(fileFilter);
+        final File files[] = libDir.listFiles(fileFilter);
         if (files == null)
         {
             log.error("listFiles returned null for directory " + libDir.getAbsolutePath());
         }
         else
         {
-            for (File file : files)
+            for (final File file : files)
             {
-                try
+                if (isScanned(file) && isModified(file))
                 {
-                    if (isScanned(file) && isModified(file))
-                    {
-                        clear(file);
-                        DeploymentUnit unit = createAndStoreDeploymentUnit(file);
-                        if (unit != null)
-                            result.add(unit);
-                    } else if (!isScanned(file))
-                    {
-                        DeploymentUnit unit = createAndStoreDeploymentUnit(file);
-                        if (unit != null)
-                            result.add(unit);
-                    }
-                }
-                catch (MalformedURLException e)
+                    clear(file);
+                    final DeploymentUnit unit = createAndStoreDeploymentUnit(file);
+                    if (unit != null)
+                        result.add(unit);
+                } else if (!isScanned(file))
                 {
-                    log.error("Error deploying plugin " + file.getAbsolutePath(), e);
+                    final DeploymentUnit unit = createAndStoreDeploymentUnit(file);
+                    if (unit != null)
+                        result.add(unit);
                 }
             }
         }
         return result;
     }
 
-    private boolean isModified(File file)
+    private boolean isModified(final File file)
     {
-        DeploymentUnit unit = locateDeploymentUnit(file);
+        final DeploymentUnit unit = locateDeploymentUnit(file);
         return file.lastModified() > unit.lastModified();
     }
 
-    private void clear(List<File> toUndeploy)
+    private void clear(final List<File> toUndeploy)
     {
-        for (File aToUndeploy : toUndeploy)
+        for (final File aToUndeploy : toUndeploy)
         {
             clear( aToUndeploy);
+        }
+    }
+
+    LoadingOrderComparator loadingOrderComparator;
+
+    LoadingOrderComparator getLoadingOrderComparator()
+    {
+        if (loadingOrderComparator == null)
+        {
+            loadingOrderComparator = new LoadingOrderComparator(new File(libDir, "loadingorder.txt"));
+        }
+        return loadingOrderComparator;
+    }
+
+    private class LoadingOrderComparator implements Comparator<DeploymentUnit>
+    {
+        private final List<String> pluginOrder = new ArrayList<String>();
+
+        public LoadingOrderComparator(final File file)
+        {
+            if (file.exists() && file.canRead())
+            {
+                BufferedReader in = null;
+                try
+                {
+                    in = new BufferedReader(new FileReader(file));
+                    String str;
+                    while ((str = in.readLine()) != null)
+                    {
+                        pluginOrder.add(str);
+                    }
+                } catch (final IOException e)
+                {
+                    log.debug("Error reading loadingorder.txt file", e);
+                } finally
+                {
+                    IOUtils.closeQuietly(in);
+                }
+            }
+        }
+
+        public int compare(final DeploymentUnit o1, final DeploymentUnit o2)
+        {
+            final String name1 = o1.getPath().getName();
+            final String name2 = o2.getPath().getName();
+
+            final int index1 = pluginOrder.indexOf(name1);
+            final int index2 = pluginOrder.indexOf(name2);
+            if (index1 == -1)
+                return 1;
+            if (index2 == -1)
+                return -1;
+
+            return index1 < index2 ? -1 : index1 > index2 ? 1 : 0;
         }
     }
 
@@ -162,7 +219,10 @@ public class Scanner
      */
     public Collection<DeploymentUnit> getDeploymentUnits()
     {
-        return Collections.unmodifiableCollection(scannedDeploymentUnits.values());
+        final List<DeploymentUnit> list = new ArrayList<DeploymentUnit>(scannedDeploymentUnits.values());
+        Collections.sort(list, getLoadingOrderComparator());
+        log.debug("Plugin loading order: " + list);
+        return Collections.unmodifiableCollection(list);
     }
 
     /**
@@ -178,7 +238,7 @@ public class Scanner
      */
     static class JarFileFilter implements FileFilter
     {
-        public boolean accept(File file)
+        public boolean accept(final File file)
         {
             return file.getName().endsWith(".jar");
         }

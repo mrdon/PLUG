@@ -1,0 +1,2 @@
+pooh-test-plugin.jar
+paddington-test-plugin.jar
