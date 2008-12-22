@@ -1,34 +1,46 @@
 package com.atlassian.plugin;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import junit.framework.TestCase;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
-import com.atlassian.plugin.impl.DynamicPlugin;
-import com.atlassian.plugin.impl.StaticPlugin;
-import com.atlassian.plugin.impl.AbstractPlugin;
-import com.atlassian.plugin.loaders.*;
-import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
-import com.atlassian.plugin.mock.*;
-import com.atlassian.plugin.parsers.DescriptorParser;
-import com.atlassian.plugin.parsers.DescriptorParserFactory;
-import com.atlassian.plugin.predicate.PluginPredicate;
-import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
-import com.atlassian.plugin.store.MemoryPluginStateStore;
-import com.atlassian.plugin.test.PluginBuilder;
-import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.factories.PluginFactory;
+import com.atlassian.plugin.impl.DynamicPlugin;
+import com.atlassian.plugin.impl.StaticPlugin;
+import com.atlassian.plugin.loaders.DirectoryPluginLoader;
+import com.atlassian.plugin.loaders.DynamicPluginLoader;
+import com.atlassian.plugin.loaders.PluginLoader;
+import com.atlassian.plugin.loaders.SinglePluginLoader;
+import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
+import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
+import com.atlassian.plugin.mock.MockBear;
+import com.atlassian.plugin.mock.MockMineral;
+import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
+import com.atlassian.plugin.mock.MockThing;
+import com.atlassian.plugin.parsers.DescriptorParser;
+import com.atlassian.plugin.parsers.DescriptorParserFactory;
+import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
+import com.atlassian.plugin.predicate.PluginPredicate;
+import com.atlassian.plugin.repositories.FilePluginInstaller;
+import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.atlassian.plugin.test.PluginBuilder;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
-import junit.framework.TestCase;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
 /**
  * Testing {@link DefaultPluginManager}
@@ -48,6 +60,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     private PluginEventManager pluginEventManager;
 
 
+    @Override
     protected void setUp() throws Exception
     {
         super.setUp();
@@ -60,6 +73,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
     }
 
+    @Override
     protected void tearDown() throws Exception
     {
         manager = null;
@@ -93,10 +107,10 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testEnableFailed() throws PluginParseException
     {
-        Mock mockPluginLoader = new Mock(PluginLoader.class);
-        Plugin plugin = new StaticPlugin() {
+        final Mock mockPluginLoader = new Mock(PluginLoader.class);
+        final Plugin plugin = new StaticPlugin() {
             @Override
-            public void setEnabled(boolean enabled) {
+            public void setEnabled(final boolean enabled) {
                 // do nothing
             }
         };
@@ -201,7 +215,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             manager.init();
             fail("Should have died with duplicate key exception.");
         }
-        catch (PluginParseException e)
+        catch (final PluginParseException e)
         {
             assertEquals("Duplicate plugin found (installed version is the same or older) and could not be unloaded: 'test.disabled.plugin'", e.getMessage());
         }
@@ -230,7 +244,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             manager.init();
             fail("Should have died with duplicate key exception.");
         }
-        catch (PluginParseException e)
+        catch (final PluginParseException e)
         {
             assertEquals("Duplicate plugin found (installed version is the same or older) and could not be unloaded: 'test.atlassian.plugin'", e.getMessage());
         }
@@ -244,13 +258,13 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin.xml"));
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
 
-        PluginManagerState state = pluginStateStore.loadPluginState();
+        final PluginManagerState state = pluginStateStore.loadPluginState();
         state.setState("test.atlassian.plugin", Boolean.FALSE);
         pluginStateStore.savePluginState(state);
 
         manager.init();
 
-        Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        final Plugin plugin = manager.getPlugin("test.atlassian.plugin");
         assertEquals("1.1", plugin.getPluginInformation().getVersion());
         assertFalse(manager.isPluginEnabled("test.atlassian.plugin"));
     }
@@ -263,13 +277,13 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin.xml"));
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
 
-        PluginManagerState state = pluginStateStore.loadPluginState();
+        final PluginManagerState state = pluginStateStore.loadPluginState();
         state.setState("test.atlassian.plugin:bear", Boolean.FALSE);
         pluginStateStore.savePluginState(state);
 
         manager.init();
 
-        Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        final Plugin plugin = manager.getPlugin("test.atlassian.plugin");
         assertEquals("1.1", plugin.getPluginInformation().getVersion());
         assertFalse(manager.isPluginModuleEnabled("test.atlassian.plugin:bear"));
         assertTrue(manager.isPluginModuleEnabled("test.atlassian.plugin:gold"));
@@ -285,7 +299,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        final Plugin plugin = manager.getPlugin("test.atlassian.plugin");
         assertEquals("Test Plugin (Changed)", plugin.getName());
     }
 
@@ -451,11 +465,11 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        final Plugin plugin = manager.getPlugin("test.atlassian.plugin");
         assertNotNull(plugin);
         assertEquals("Test Plugin", plugin.getName());
 
-        ModuleDescriptor bear = plugin.getModuleDescriptor("bear");
+        final ModuleDescriptor bear = plugin.getModuleDescriptor("bear");
         assertEquals(bear, manager.getPluginModule("test.atlassian.plugin:bear"));
     }
 
@@ -490,22 +504,22 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        Collection bearModules = manager.getEnabledModulesByClassAndDescriptor(new Class[]{MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class}, MockBear.class);
+        final Collection bearModules = manager.getEnabledModulesByClassAndDescriptor(new Class[]{MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class}, MockBear.class);
         assertNotNull(bearModules);
         assertEquals(1, bearModules.size());
         assertTrue(bearModules.iterator().next() instanceof MockBear);
 
-        Collection noModules = manager.getEnabledModulesByClassAndDescriptor(new Class[]{}, MockBear.class);
+        final Collection noModules = manager.getEnabledModulesByClassAndDescriptor(new Class[]{}, MockBear.class);
         assertNotNull(noModules);
         assertEquals(0, noModules.size());
 
-        Collection mockThings = manager.getEnabledModulesByClassAndDescriptor(new Class[]{MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class}, MockThing.class);
+        final Collection mockThings = manager.getEnabledModulesByClassAndDescriptor(new Class[]{MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class}, MockThing.class);
         assertNotNull(mockThings);
         assertEquals(2, mockThings.size());
         assertTrue(mockThings.iterator().next() instanceof MockThing);
         assertTrue(mockThings.iterator().next() instanceof MockThing);
 
-        Collection mockThingsFromMineral = manager.getEnabledModulesByClassAndDescriptor(new Class[]{MockMineralModuleDescriptor.class}, MockThing.class);
+        final Collection mockThingsFromMineral = manager.getEnabledModulesByClassAndDescriptor(new Class[]{MockMineralModuleDescriptor.class}, MockThing.class);
         assertNotNull(mockThingsFromMineral);
         assertEquals(1, mockThingsFromMineral.size());
         final Object o = mockThingsFromMineral.iterator().next();
@@ -551,7 +565,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         {
             manager.getEnabledModuleDescriptorsByType("foobar");
         }
-        catch (IllegalArgumentException e)
+        catch (final IllegalArgumentException e)
         {
             fail("Shouldn't have thrown exception.");
         }
@@ -561,9 +575,9 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         createFillAndCleanTempPluginDirectory();
 
-        DefaultPluginManager manager = makeClassLoadingPluginManager();
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
 
-        InputStream is = manager.getPluginResourceAsStream("test.atlassian.plugin.classloaded", "atlassian-plugin.xml");
+        final InputStream is = manager.getPluginResourceAsStream("test.atlassian.plugin.classloaded", "atlassian-plugin.xml");
         assertNotNull(is);
         IOUtils.closeQuietly(is);
     }
@@ -572,12 +586,12 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         createFillAndCleanTempPluginDirectory();
 
-        DefaultPluginManager manager = makeClassLoadingPluginManager();
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
         try
         {
             manager.getDynamicPluginClass("com.atlassian.plugin.mock.MockPooh");
         }
-        catch (ClassNotFoundException e)
+        catch (final ClassNotFoundException e)
         {
             fail(e.getMessage());
         }
@@ -588,10 +602,10 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         createFillAndCleanTempPluginDirectory();
 
         //delete paddington for the timebeing
-        File paddington = new File(pluginsTestDir, PADDINGTON_JAR);
+        final File paddington = new File(pluginsTestDir, PADDINGTON_JAR);
         paddington.delete();
 
-        DefaultPluginManager manager = makeClassLoadingPluginManager();
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
 
         assertEquals(1, manager.getPlugins().size());
         assertNotNull(manager.getPlugin("test.atlassian.plugin.classloaded2"));
@@ -626,9 +640,9 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         createFillAndCleanTempPluginDirectory();
 
-        DefaultPluginManager manager = makeClassLoadingPluginManager();
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
         assertEquals(2, manager.getPlugins().size());
-        MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
+        final MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
         assertFalse(moduleDescriptor.disabled);
         manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded"));
         assertTrue("Module must have had disable() called before being removed", moduleDescriptor.disabled);
@@ -638,7 +652,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         assertEquals(1, manager.getPlugins().size());
         assertNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
-        assertEquals(1, pluginsTestDir.listFiles().length);
+        assertEquals(1, pluginsTestDir.listFiles(new JarFileFilter()).length);
     }
 
     public void testNonRemovablePlugins() throws PluginParseException
@@ -650,7 +664,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        final Plugin plugin = manager.getPlugin("test.atlassian.plugin");
         assertFalse(plugin.isUninstallable());
         assertNotNull(plugin.getResourceAsStream("test-atlassian-plugin.xml"));
 
@@ -659,7 +673,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             manager.uninstall(plugin);
             fail("Where was the exception?");
         }
-        catch (PluginException p)
+        catch (final PluginException p)
         {
         }
     }
@@ -668,15 +682,15 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         createFillAndCleanTempPluginDirectory();
 
-        DefaultPluginManager manager = makeClassLoadingPluginManager();
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
         assertEquals(2, manager.getPlugins().size());
 
         // Set plugin file can't be deleted.
-        DynamicPlugin pluginToRemove = (DynamicPlugin) manager.getPlugin("test.atlassian.plugin.classloaded");
+        final DynamicPlugin pluginToRemove = (DynamicPlugin) manager.getPlugin("test.atlassian.plugin.classloaded");
         pluginToRemove.setDeletable(false);
 
         // Disable plugin module before uninstall
-        MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
+        final MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
         assertFalse(moduleDescriptor.disabled);
 
         manager.uninstall(pluginToRemove);
@@ -684,15 +698,15 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertTrue("Module must have had disable() called before being removed", moduleDescriptor.disabled);
         assertEquals(1, manager.getPlugins().size());
         assertNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
-        assertEquals(2, pluginsTestDir.listFiles().length);
+        assertEquals(2, pluginsTestDir.listFiles(new JarFileFilter()).length);
     }
 
     // These methods test the plugin compareTo() function, which compares plugins based on their version numbers.
     public void testComparePluginNewer()
     {
 
-        Plugin p1 = createPluginWithVersion("1.1");
-        Plugin p2 = createPluginWithVersion("1.0");
+        final Plugin p1 = createPluginWithVersion("1.1");
+        final Plugin p2 = createPluginWithVersion("1.0");
         assertTrue(p1.compareTo(p2) == 1);
 
         p1.getPluginInformation().setVersion("1.10");
@@ -715,8 +729,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     public void testComparePluginOlder()
     {
 
-        Plugin p1 = createPluginWithVersion("1.0");
-        Plugin p2 = createPluginWithVersion("1.1");
+        final Plugin p1 = createPluginWithVersion("1.0");
+        final Plugin p2 = createPluginWithVersion("1.1");
         assertTrue(p1.compareTo(p2) == -1);
 
         p1.getPluginInformation().setVersion("1.2");
@@ -739,8 +753,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     public void testComparePluginEqual()
     {
 
-        Plugin p1 = createPluginWithVersion("1.0");
-        Plugin p2 = createPluginWithVersion("1.0");
+        final Plugin p1 = createPluginWithVersion("1.0");
+        final Plugin p2 = createPluginWithVersion("1.0");
         assertTrue(p1.compareTo(p2) == 0);
 
         p1.getPluginInformation().setVersion("1.1.0.0");
@@ -756,8 +770,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     public void testComparePluginNoVersion()
     {
 
-        Plugin p1 = createPluginWithVersion("1.0");
-        Plugin p2 = createPluginWithVersion("#$%");
+        final Plugin p1 = createPluginWithVersion("1.0");
+        final Plugin p2 = createPluginWithVersion("#$%");
         assertEquals(-1, p1.compareTo(p2));
 
         p1.getPluginInformation().setVersion("#$%");
@@ -769,8 +783,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     public void testComparePluginBadPlugin()
     {
 
-        Plugin p1 = createPluginWithVersion("1.0");
-        Plugin p2 = createPluginWithVersion("1.0");
+        final Plugin p1 = createPluginWithVersion("1.0");
+        final Plugin p2 = createPluginWithVersion("1.0");
 
         // Compare against something with a different key
         p2.setKey("bad.key");
@@ -782,7 +796,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         createFillAndCleanTempPluginDirectory();
 
-        DefaultPluginManager manager = makeClassLoadingPluginManager();
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
 
         checkResources(manager, true, true);
         manager.disablePlugin("test.atlassian.plugin.classloaded");
@@ -802,15 +816,15 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testValidatePlugin() throws PluginParseException
     {
-        DefaultPluginManager manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
-        Mock mockLoader = new Mock(DynamicPluginLoader.class);
+        final DefaultPluginManager manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
+        final Mock mockLoader = new Mock(DynamicPluginLoader.class);
         pluginLoaders.add((PluginLoader) mockLoader.proxy());
 
-        Mock mockPluginJar = new Mock(PluginArtifact.class);
-        PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
+        final Mock mockPluginJar = new Mock(PluginArtifact.class);
+        final PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
         mockLoader.expectAndReturn("canLoad", C.args(C.eq(pluginArtifact)), "foo");
 
-        String key = manager.validatePlugin(pluginArtifact);
+        final String key = manager.validatePlugin(pluginArtifact);
         assertEquals("foo", key);
         mockLoader.verify();
 
@@ -818,18 +832,18 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testValidatePluginWithNoDynamicLoaders() throws PluginParseException
     {
-        DefaultPluginManager manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
-        Mock mockLoader = new Mock(PluginLoader.class);
+        final DefaultPluginManager manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
+        final Mock mockLoader = new Mock(PluginLoader.class);
         pluginLoaders.add((PluginLoader) mockLoader.proxy());
 
-        Mock mockPluginJar = new Mock(PluginArtifact.class);
-        PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
+        final Mock mockPluginJar = new Mock(PluginArtifact.class);
+        final PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
         try
         {
             manager.validatePlugin(pluginArtifact);
             fail("Should have thrown exception");
         }
-        catch (IllegalStateException ex)
+        catch (final IllegalStateException ex)
         {
             // test passed
         }
@@ -839,7 +853,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         createFillAndCleanTempPluginDirectory();
 
-        DefaultPluginManager manager = makeClassLoadingPluginManager();
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
 
         checkClasses(manager, true);
         manager.disablePlugin("test.atlassian.plugin.classloaded");
@@ -856,25 +870,25 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testInstallPlugin() throws Exception
     {
-        Mock mockPluginStateStore = new Mock(PluginStateStore.class);
-        Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
-        Mock mockPluginLoader = new Mock(DynamicPluginLoader.class);
-        Mock mockDescriptorParserFactory = new Mock(DescriptorParserFactory.class);
-        Mock mockDescriptorParser = new Mock(DescriptorParser.class);
-        Mock mockPluginJar = new Mock(PluginArtifact.class);
-        Mock mockRepository = new Mock(PluginInstaller.class);
-        Mock mockPlugin = new Mock(Plugin.class);
+        final Mock mockPluginStateStore = new Mock(PluginStateStore.class);
+        final Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
+        final Mock mockPluginLoader = new Mock(DynamicPluginLoader.class);
+        final Mock mockDescriptorParserFactory = new Mock(DescriptorParserFactory.class);
+        final Mock mockDescriptorParser = new Mock(DescriptorParser.class);
+        final Mock mockPluginJar = new Mock(PluginArtifact.class);
+        final Mock mockRepository = new Mock(PluginInstaller.class);
+        final Mock mockPlugin = new Mock(Plugin.class);
 
-        ModuleDescriptorFactory moduleDescriptorFactory = (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy();
+        final ModuleDescriptorFactory moduleDescriptorFactory = (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy();
 
-        DefaultPluginManager pluginManager = new DefaultPluginManager(
+        final DefaultPluginManager pluginManager = new DefaultPluginManager(
                 (PluginStateStore) mockPluginStateStore.proxy(),
                 Collections.<PluginLoader>singletonList((PluginLoader) mockPluginLoader.proxy()),
                 moduleDescriptorFactory, new DefaultPluginEventManager()
         );
 
-        Plugin plugin = (Plugin) mockPlugin.proxy();
-        PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
+        final Plugin plugin = (Plugin) mockPlugin.proxy();
+        final PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
 
         mockPluginStateStore.expectAndReturn("loadPluginState", new PluginManagerState());
         mockPluginStateStore.expectAndReturn("loadPluginState", new PluginManagerState());
@@ -908,7 +922,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPluginStateStore.verify();
     }
 
-    private void checkResources(PluginAccessor manager, boolean canGetGlobal, boolean canGetModule) throws IOException
+    private void checkResources(final PluginAccessor manager, final boolean canGetGlobal, final boolean canGetModule) throws IOException
     {
         InputStream is = manager.getDynamicResourceAsStream("icon.gif");
         assertEquals(canGetGlobal, is != null);
@@ -918,7 +932,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         IOUtils.closeQuietly(is);
     }
 
-    private void checkClasses(PluginAccessor manager, boolean canGet)
+    private void checkClasses(final PluginAccessor manager, final boolean canGet)
     {
         try
         {
@@ -928,7 +942,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
                 fail("Class in plugin was successfully loaded");
             }
         }
-        catch (ClassNotFoundException e)
+        catch (final ClassNotFoundException e)
         {
             if (canGet)
             {
@@ -942,7 +956,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         createFillAndCleanTempPluginDirectory();
 
         FileUtils.cleanDirectory(pluginsTestDir);
-        File plugin = File.createTempFile("plugin", ".jar");
+        final File plugin = File.createTempFile("plugin", ".jar");
         new PluginBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
@@ -953,7 +967,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         final DefaultPluginManager manager = makeClassLoadingPluginManager();
         manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
 
-        String pluginKey = manager.installPlugin(new JarPluginArtifact(plugin));
+        final String pluginKey = manager.installPlugin(new JarPluginArtifact(plugin));
 
         assertTrue(new File(pluginsTestDir,plugin.getName()).exists());
 
@@ -967,7 +981,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             installedPlugin.getClassLoader().loadClass("my.MyNewClass");
             fail("Expected ClassNotFoundException for unknown class");
         }
-        catch (ClassNotFoundException e)
+        catch (final ClassNotFoundException e)
         {
             // expected
         }
@@ -983,7 +997,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
                 .renameTo(plugin);
 
         // reinstall the plugin
-        String pluginKey2 = manager.installPlugin(new JarPluginArtifact(plugin));
+        final String pluginKey2 = manager.installPlugin(new JarPluginArtifact(plugin));
 
         assertTrue(new File(pluginsTestDir,plugin.getName()).exists());
 
@@ -998,7 +1012,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             installedPlugin2.getClassLoader().loadClass("my.MyClass");
             fail("Expected ClassNotFoundException for unknown class");
         }
-        catch (ClassNotFoundException e)
+        catch (final ClassNotFoundException e)
         {
             // expected
         }
@@ -1009,7 +1023,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         createFillAndCleanTempPluginDirectory();
 
         FileUtils.cleanDirectory(pluginsTestDir);
-        File plugin1 = new PluginBuilder("plugin")
+        final File plugin1 = new PluginBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
                 .addJava("my.MyClass", "package my; public class MyClass {}")
@@ -1018,7 +1032,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         final DefaultPluginManager manager = makeClassLoadingPluginManager();
         manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
 
-        String pluginKey = manager.installPlugin(new JarPluginArtifact(plugin1));
+        final String pluginKey = manager.installPlugin(new JarPluginArtifact(plugin1));
 
         assertTrue(new File(pluginsTestDir,plugin1.getName()).exists());
 
@@ -1032,7 +1046,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             installedPlugin.getClassLoader().loadClass("my.MyNewClass");
             fail("Expected ClassNotFoundException for unknown class");
         }
-        catch (ClassNotFoundException e)
+        catch (final ClassNotFoundException e)
         {
             // expected
         }
@@ -1040,14 +1054,14 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         // sleep to ensure the new plugin is picked up
         Thread.currentThread().sleep(1000);
 
-        File plugin2 = new PluginBuilder("plugin")
+        final File plugin2 = new PluginBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("bar.txt", "bar")
                 .addJava("my.MyNewClass", "package my; public class MyNewClass {}")
                 .build();
 
         // reinstall the plugin
-        String pluginKey2 = manager.installPlugin(new JarPluginArtifact(plugin2));
+        final String pluginKey2 = manager.installPlugin(new JarPluginArtifact(plugin2));
 
         assertFalse(new File(pluginsTestDir,plugin1.getName()).exists());
         assertTrue(new File(pluginsTestDir,plugin2.getName()).exists());
@@ -1063,7 +1077,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             installedPlugin2.getClassLoader().loadClass("my.MyClass");
             fail("Expected ClassNotFoundException for unknown class");
         }
-        catch (ClassNotFoundException e)
+        catch (final ClassNotFoundException e)
         {
             // expected
         }
@@ -1071,8 +1085,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testAddPluginsWithDependencyIssues() throws Exception
     {
-        Plugin servicePlugin = new EnableInPassPlugin("service.plugin", 2);
-        Plugin clientPlugin = new EnableInPassPlugin("client.plugin", 1);
+        final Plugin servicePlugin = new EnableInPassPlugin("service.plugin", 2);
+        final Plugin clientPlugin = new EnableInPassPlugin("client.plugin", 1);
 
         manager.addPlugins(null, Arrays.asList(servicePlugin, clientPlugin));
 
@@ -1082,8 +1096,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testAddPluginsWithDependencyIssuesNoResolution() throws Exception
     {
-        Plugin servicePlugin = new EnableInPassPlugin("service.plugin", 4);
-        Plugin clientPlugin = new EnableInPassPlugin("client.plugin", 1);
+        final Plugin servicePlugin = new EnableInPassPlugin("service.plugin", 4);
+        final Plugin clientPlugin = new EnableInPassPlugin("client.plugin", 1);
 
         manager.addPlugins(null, Arrays.asList(servicePlugin, clientPlugin));
 
@@ -1091,11 +1105,11 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertFalse(servicePlugin.isEnabled());
     }
 
-    public Plugin createPluginWithVersion(String version)
+    public Plugin createPluginWithVersion(final String version)
     {
-        Plugin p = new StaticPlugin();
+        final Plugin p = new StaticPlugin();
         p.setKey("test.default.plugin");
-        PluginInformation pInfo = p.getPluginInformation();
+        final PluginInformation pInfo = p.getPluginInformation();
         pInfo.setVersion(version);
         return p;
     }
@@ -1104,13 +1118,13 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         private int pass;
 
-        public EnableInPassPlugin(String key, int pass)
+        public EnableInPassPlugin(final String key, final int pass)
         {
             this.pass = pass;
             setKey(key);
         }
         @Override
-        public void setEnabled(boolean val) { super.setEnabled((--pass) <= 0); }
+        public void setEnabled(final boolean val) { super.setEnabled((--pass) <= 0); }
     }
 
     /**
@@ -1119,31 +1133,35 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
      */
     private static class SinglePluginLoaderWithRemoval extends SinglePluginLoader
     {
-        public SinglePluginLoaderWithRemoval(String resource)
+        public SinglePluginLoaderWithRemoval(final String resource)
         {
             super(resource);
         }
 
-        public SinglePluginLoaderWithRemoval(InputStream is)
+        public SinglePluginLoaderWithRemoval(final InputStream is)
         {
             super(is);
         }
 
+        @Override
         public boolean supportsRemoval()
         {
 
             return true;
         }
 
-        public void removePlugin(Plugin plugin) throws PluginException
+        @Override
+        public void removePlugin(final Plugin plugin) throws PluginException
         {
             plugins = Collections.emptyList();
         }
 
+        @Override
         protected StaticPlugin getNewPlugin()
         {
             return new StaticPlugin()
             {
+                @Override
                 public boolean isUninstallable()
                 {
                     return true;
@@ -1158,17 +1176,17 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     {
         private final String[] descriptorPaths;
 
-        public MultiplePluginLoader(String... descriptorPaths)
+        public MultiplePluginLoader(final String... descriptorPaths)
         {
             this.descriptorPaths = descriptorPaths;
         }
 
-        public Collection<Plugin> loadAllPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+        public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
         {
-            List<Plugin> result = new ArrayList<Plugin>(descriptorPaths.length);
-            for (String path : descriptorPaths)
+            final List<Plugin> result = new ArrayList<Plugin>(descriptorPaths.length);
+            for (final String path : descriptorPaths)
             {
-                SinglePluginLoader loader = new SinglePluginLoader(path);
+                final SinglePluginLoader loader = new SinglePluginLoader(path);
                 result.addAll(loader.loadAllPlugins(moduleDescriptorFactory));
             }
             return result;
@@ -1184,14 +1202,25 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             return false;
         }
 
-        public Collection<Plugin> addFoundPlugins(ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+        public Collection<Plugin> addFoundPlugins(final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
         {
             throw new UnsupportedOperationException("This PluginLoader does not support addition.");
         }
 
-        public void removePlugin(Plugin plugin) throws PluginException
+        public void removePlugin(final Plugin plugin) throws PluginException
         {
             throw new UnsupportedOperationException("This PluginLoader does not support addition.");
+        }
+    }
+
+    /**
+     * Reinvents the wheel and lets only files ending in .jar pass through.
+     */
+    static class JarFileFilter implements FileFilter
+    {
+        public boolean accept(final File file)
+        {
+            return file.getName().endsWith(".jar");
         }
     }
 }
