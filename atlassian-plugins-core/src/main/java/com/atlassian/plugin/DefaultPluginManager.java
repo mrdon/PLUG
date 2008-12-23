@@ -435,7 +435,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             if (plugin.isEnabled())
             {
                 // This method enables the plugin modules
-                notifyPluginEnabled(plugin);
+                enablePluginModules(plugin);
+                pluginEventManager.broadcast(new PluginEnabledEvent(plugin));
             }
         }
     }
@@ -819,6 +820,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     protected void notifyPluginEnabled(final Plugin plugin)
     {
+        plugin.setEnabled(true);
         classLoader.notifyPluginOrModuleEnabled();
         enablePluginModules(plugin);
         pluginEventManager.broadcast(new PluginEnabledEvent(plugin));
