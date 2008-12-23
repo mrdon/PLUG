@@ -388,10 +388,13 @@ public class DefaultPluginManager implements PluginManager
         }
 
         for (Plugin plugin : pluginsToAdd)
+        {
             if (plugin.isEnabled())
-                // This method enables the plugin modules
-                notifyPluginEnabled(plugin);
-
+            {
+                enablePluginModules(plugin);
+                pluginEventManager.broadcast(new PluginEnabledEvent(plugin));
+            }
+        }
     }
 
     /**
@@ -750,6 +753,7 @@ public class DefaultPluginManager implements PluginManager
      */
     protected void notifyPluginEnabled(Plugin plugin)
     {
+        plugin.setEnabled(true);
         classLoader.notifyPluginOrModuleEnabled();
         enablePluginModules(plugin);
         pluginEventManager.broadcast(new PluginEnabledEvent(plugin));
