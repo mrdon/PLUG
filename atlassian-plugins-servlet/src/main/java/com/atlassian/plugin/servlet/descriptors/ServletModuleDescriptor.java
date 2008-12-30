@@ -1,17 +1,17 @@
 package com.atlassian.plugin.servlet.descriptors;
 
-import javax.servlet.http.HttpServlet;
-
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 
+import javax.servlet.http.HttpServlet;
+
 /**
- * A module descriptor that allows plugin developers to define servlets. Developers can define what urls the 
+ * A module descriptor that allows plugin developers to define servlets. Developers can define what urls the
  * servlet should be serve by defining one or more &lt;url-pattern&gt; elements.
  */
-public class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpServlet> implements StateAware
+public class ServletModuleDescriptor<T extends HttpServlet> extends BaseServletModuleDescriptor<T> implements StateAware
 {
     private final ServletModuleManager servletModuleManager;
     private final HostContainer hostContainer;
@@ -49,24 +49,26 @@ public class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpSer
         super.disabled();
     }
 
-    public HttpServlet getModule()
+    public T getModule()
     {
-        HttpServlet obj = null;
+        T servlet = null;
         try
         {
             // Give the plugin a go first
             if (plugin instanceof AutowireCapablePlugin)
-                obj = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
+            {
+                servlet = ((AutowireCapablePlugin) plugin).autowire(getModuleClass());
+            }
             else
             {
                 if (hostContainer != null)
                 {
-                    obj = hostContainer.create(getModuleClass());
+                    servlet = hostContainer.create(getModuleClass());
                 }
                 else
                 {
-                    obj = getModuleClass().newInstance();
-                    autowireObject(obj);
+                    servlet = getModuleClass().newInstance();
+                    autowireObject(servlet);
                 }
             }
         }
@@ -78,7 +80,7 @@ public class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpSer
         {
             log.error("Error accessing: " + getModuleClass(), e);
         }
-        return obj;
+        return servlet;
     }
 
     /**
