@@ -47,24 +47,21 @@ import com.atlassian.plugin.servlet.util.PathMapper;
  */
 public class DefaultServletModuleManager implements ServletModuleManager
 {
-    PathMapper servletMapper = new DefaultPathMapper();
-    Map<String, ServletModuleDescriptor> servletDescriptors = new HashMap<String, ServletModuleDescriptor>();
-    ConcurrentMap<String, LazyLoadedReference<HttpServlet>> servletRefs = new ConcurrentHashMap<String, LazyLoadedReference<HttpServlet>>();
+    private final PathMapper servletMapper = new DefaultPathMapper();
+    private final Map<String, ServletModuleDescriptor> servletDescriptors = new HashMap<String, ServletModuleDescriptor>();
+    private final ConcurrentMap<String, LazyLoadedReference<HttpServlet>> servletRefs = new ConcurrentHashMap<String, LazyLoadedReference<HttpServlet>>();
 
-    PathMapper filterMapper = new DefaultPathMapper();
-    Map<String, ServletFilterModuleDescriptor> filterDescriptors = new HashMap<String, ServletFilterModuleDescriptor>();
-    ConcurrentMap<String, LazyLoadedReference<Filter>> filterRefs = new ConcurrentHashMap<String, LazyLoadedReference<Filter>>();
+    private final PathMapper filterMapper = new DefaultPathMapper();
+    private final Map<String, ServletFilterModuleDescriptor> filterDescriptors = new HashMap<String, ServletFilterModuleDescriptor>();
+    private final ConcurrentMap<String, LazyLoadedReference<Filter>> filterRefs = new ConcurrentHashMap<String, LazyLoadedReference<Filter>>();
     
-    ConcurrentMap<Plugin, LazyLoadedReference<ServletContext>> pluginContextRefs = new ConcurrentHashMap<Plugin, LazyLoadedReference<ServletContext>>();
+    private final ConcurrentMap<Plugin, LazyLoadedReference<ServletContext>> pluginContextRefs = new ConcurrentHashMap<Plugin, LazyLoadedReference<ServletContext>>();
     
     public DefaultServletModuleManager(PluginEventManager pluginEventManager)
     {
         pluginEventManager.register(this);
     }
 
-    /* (non-Javadoc)
-     * @see com.atlassian.plugin.servlet.ServletModuleManager#addModule(com.atlassian.plugin.servlet.ServletModuleDescriptor)
-     */
     public void addServletModule(ServletModuleDescriptor descriptor)
     {
         servletDescriptors.put(descriptor.getCompleteKey(), descriptor);
@@ -80,9 +77,6 @@ public class DefaultServletModuleManager implements ServletModuleManager
         }
     }
 
-    /* (non-Javadoc)
-     * @see com.atlassian.plugin.servlet.ServletModuleManager#getServlet(java.lang.String, javax.servlet.ServletConfig)
-     */
     public HttpServlet getServlet(String path, final ServletConfig servletConfig) throws ServletException
     {
         String completeKey = servletMapper.get(path);
@@ -100,9 +94,6 @@ public class DefaultServletModuleManager implements ServletModuleManager
         return getServlet(descriptor, servletConfig);
     }
 
-    /* (non-Javadoc)
-     * @see com.atlassian.plugin.servlet.ServletModuleManager#removeModule(com.atlassian.plugin.servlet.ServletModuleDescriptor)
-     */
     public void removeServletModule(ServletModuleDescriptor descriptor)
     {
         servletDescriptors.remove(descriptor.getCompleteKey());
@@ -130,9 +121,6 @@ public class DefaultServletModuleManager implements ServletModuleManager
         }
     }
 
-    /* (non-Javadoc)
-     * @see com.atlassian.plugin.servlet.ServletModuleManager#getFilters(com.atlassian.plugin.servlet.FilterLocation, java.lang.String, javax.servlet.FilterConfig)
-     */
     public Iterable<Filter> getFilters(FilterLocation location, String path, final FilterConfig filterConfig) throws ServletException
     {
         List<ServletFilterModuleDescriptor> matchingFilterDescriptors = new ArrayList<ServletFilterModuleDescriptor>();
