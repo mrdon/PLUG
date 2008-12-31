@@ -1,16 +1,16 @@
 package com.atlassian.plugin.servlet.descriptors;
 
-import javax.servlet.http.HttpServlet;
-
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 
+import javax.servlet.http.HttpServlet;
+
 /**
- * A module descriptor that allows plugin developers to define servlets. Developers can define what urls the 
+ * A module descriptor that allows plugin developers to define servlets. Developers can define what urls the
  * servlet should be serve by defining one or more &lt;url-pattern&gt; elements.
  */
-public abstract class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpServlet> implements StateAware
+public abstract class ServletModuleDescriptor<T extends HttpServlet> extends BaseServletModuleDescriptor<T> implements StateAware
 {
     public void enabled()
     {
@@ -24,14 +24,16 @@ public abstract class ServletModuleDescriptor extends BaseServletModuleDescripto
         super.disabled();
     }
 
-    public HttpServlet getModule()
+    public T getModule()
     {
-        HttpServlet obj = null;
+        T obj = null;
         try
         {
             // Give the plugin a go first
             if (plugin instanceof AutowireCapablePlugin)
-                obj = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
+            {
+                obj = ((AutowireCapablePlugin) plugin).autowire(getModuleClass());
+            }
             else
             {
                 obj = getModuleClass().newInstance();
@@ -52,7 +54,7 @@ public abstract class ServletModuleDescriptor extends BaseServletModuleDescripto
     /**
      * @deprecated Since 2.0.0, use {@link #getModule}
      */
-    public HttpServlet getServlet()
+    public T getServlet()
     {
         return getModule();
     }
