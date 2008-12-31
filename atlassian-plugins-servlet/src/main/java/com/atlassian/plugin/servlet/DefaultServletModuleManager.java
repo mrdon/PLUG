@@ -66,7 +66,9 @@ public class DefaultServletModuleManager implements ServletModuleManager
     {
         servletDescriptors.put(descriptor.getCompleteKey(), descriptor);
 
-        for (String path : descriptor.getPaths())
+        @SuppressWarnings("unchecked") // for some reason the JDK complains about getPaths not returning a List<String> ?!?!?
+        final List<String> paths = descriptor.getPaths();
+        for (String path : paths)
         {
             servletMapper.put(descriptor.getCompleteKey(), path);
         }

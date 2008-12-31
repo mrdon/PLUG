@@ -32,7 +32,7 @@ public final class UnloadableModuleDescriptorFactory
         descriptor.init(plugin, element);
 
         final String name = element.getName();
-        final Class<? extends ModuleDescriptor<?>> descriptorClass = moduleDescriptorFactory.getModuleDescriptorClass(name);
+        final Class<? extends ModuleDescriptor> descriptorClass = moduleDescriptorFactory.getModuleDescriptorClass(name);
         String descriptorClassName;
 
         if (descriptorClass == null)

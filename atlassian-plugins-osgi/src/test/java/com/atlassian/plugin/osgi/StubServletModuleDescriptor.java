@@ -5,7 +5,9 @@ import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.DefaultServletModuleManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 
-public class StubServletModuleDescriptor extends ServletModuleDescriptor
+import javax.servlet.http.HttpServlet;
+
+public class StubServletModuleDescriptor<T extends HttpServlet> extends ServletModuleDescriptor<T>
 {
     protected void autowireObject(Object obj)
     {

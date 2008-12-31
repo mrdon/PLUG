@@ -41,11 +41,11 @@ public class ChainModuleDescriptorFactory implements ModuleDescriptorFactory
         return false;
     }
 
-    public Class<? extends ModuleDescriptor<?>> getModuleDescriptorClass(final String type)
+    public Class<? extends ModuleDescriptor> getModuleDescriptorClass(final String type)
     {
         for (final ModuleDescriptorFactory factory : factories)
         {
-            final Class<? extends ModuleDescriptor<?>> descriptorClass = factory.getModuleDescriptorClass(type);
+            final Class<? extends ModuleDescriptor> descriptorClass = factory.getModuleDescriptorClass(type);
             if (descriptorClass != null)
             {
                 return descriptorClass;

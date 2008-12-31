@@ -10,15 +10,6 @@ import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
-
-import java.io.File;
-import java.util.List;
-import java.util.Collection;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
@@ -27,6 +18,8 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class PluginInstallTest extends PluginInContainerTestBase
 {
@@ -485,7 +478,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
             "</atlassian-plugin>").addFormattedJava("second.MyServlet", "package second;",
             "public class MyServlet extends javax.servlet.http.HttpServlet implements first.MyInterface {}").build(pluginsDir);
 
-        initPluginManager(null, new SingleModuleDescriptorFactory<StubServletModuleDescriptor>("servlet", StubServletModuleDescriptor.class));
+        initPluginManager(null, new SingleModuleDescriptorFactory("servlet", StubServletModuleDescriptor.class));
 
         assertEquals(2, pluginManager.getEnabledPlugins().size());
         assertTrue(pluginManager.getPlugin("first").isEnabled());

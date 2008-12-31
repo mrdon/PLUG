@@ -21,7 +21,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
 {
     private static Log log = LogFactory.getLog(DefaultModuleDescriptorFactory.class);
 
-    private final Map<String, Class<? extends ModuleDescriptor<?>>> moduleDescriptorClasses = CopyOnWriteMap.newHashMap();
+    private final Map<String, Class<? extends ModuleDescriptor>> moduleDescriptorClasses = CopyOnWriteMap.newHashMap();
     private final List<String> permittedModuleKeys = new ArrayList<String>();
     private final HostContainer hostContainer;
 
@@ -44,7 +44,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
         this.hostContainer = hostContainer;
     }
 
-    public Class<? extends ModuleDescriptor<?>> getModuleDescriptorClass(final String type)
+    public Class<? extends ModuleDescriptor> getModuleDescriptorClass(final String type)
     {
         return moduleDescriptorClasses.get(type);
     }
@@ -56,7 +56,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
             return null;
         }
 
-        final Class<? extends ModuleDescriptor<?>> moduleDescriptorClazz = getModuleDescriptorClass(type);
+        final Class<? extends ModuleDescriptor> moduleDescriptorClazz = getModuleDescriptorClass(type);
 
         if (moduleDescriptorClazz == null)
         {
@@ -116,7 +116,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
         return moduleDescriptorClasses.containsKey(type);
     }
 
-    public void addModuleDescriptor(final String type, final Class<? extends ModuleDescriptor<?>> moduleDescriptorClass)
+    public void addModuleDescriptor(final String type, final Class<? extends ModuleDescriptor> moduleDescriptorClass)
     {
         moduleDescriptorClasses.put(type, moduleDescriptorClass);
     }
@@ -126,7 +126,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
         moduleDescriptorClasses.remove(type);
     }
 
-    protected Map<String, Class<? extends ModuleDescriptor<?>>> getDescriptorClassesMap()
+    protected Map<String, Class<? extends ModuleDescriptor>> getDescriptorClassesMap()
     {
         return Collections.unmodifiableMap(moduleDescriptorClasses);
     }
