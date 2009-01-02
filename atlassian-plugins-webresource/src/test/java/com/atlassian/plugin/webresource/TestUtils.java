@@ -5,7 +5,6 @@ import com.atlassian.plugin.elements.ResourceDescriptor;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Collections;
 import java.util.TreeMap;
 
 import org.dom4j.DocumentException;
@@ -38,11 +37,15 @@ public class TestUtils
 
         for(String key : parameters.keySet())
         {
-            xml += "<param name=\"" + key + "\" value=\"" + parameters.get(key) + "\"/>\n";
+            xml += "<param name=\"" + escapeXMLCharacters(key) + "\" value=\"" + escapeXMLCharacters(parameters.get(key)) + "\"/>\n";
         }
         
         xml += "</resource>";
         return new ResourceDescriptor(DocumentHelper.parseText(xml).getRootElement());
+    }
 
+    private static String escapeXMLCharacters(String input)
+    {
+        return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt");
     }
 }
