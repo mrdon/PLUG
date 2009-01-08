@@ -87,10 +87,11 @@ public class WebResourceManagerImpl implements WebResourceManager
                 }
                 else
                 {
+                    List<String> dependencies = ((WebResourceModuleDescriptor) moduleDescriptor).getDependencies();
+                    log.info("About to add resource [" + resource + "] and its dependencies: " + dependencies);
+                    
                     resourcesToBeAdded.add(resource);
-                    addResourcesToCache(((WebResourceModuleDescriptor) moduleDescriptor).getDependencies(),
-                        resourceCache,
-                        resourcesToBeAdded);
+                    addResourcesToCache(dependencies, resourceCache, resourcesToBeAdded);
                     resourceCache.add(resource);
                     resourcesToBeAdded.remove(resource);
                 }
