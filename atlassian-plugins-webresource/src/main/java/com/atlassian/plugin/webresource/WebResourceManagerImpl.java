@@ -9,10 +9,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -60,8 +57,45 @@ public class WebResourceManagerImpl implements WebResourceManager
             webResourceNames = new ListOrderedSet();
         }
 
-        webResourceNames.add(moduleCompleteKey);
+        addResourcesToCache(Collections.singletonList(moduleCompleteKey), webResourceNames, new ArrayList<String>());
         cache.put(REQUEST_CACHE_RESOURCE_KEY, webResourceNames);
+    }
+
+    /**
+     * Adds the resources as well as its dependencies in order to the given resource cache. This method uses recursion
+     * to add a resouce's dependent resources also to the cache. You should call this method with an new list passed in
+     * as resourcesToBeAdded.
+     *
+     * @param resources a list of web resources module complete keys to be added to the resourceCache
+     * @param resourceCache a collection to where the resources are added in order
+     * @param resourcesToBeAdded a list of resources to help keep track cyclic dependencies during recursive calls
+     */
+    private void addResourcesToCache(List<String> resources, Collection resourceCache, List<String> resourcesToBeAdded)
+    {
+        for(String resource : resources)
+        {
+            if(!resourceCache.contains(resource))
+            {
+                ModuleDescriptor moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resource);
+                if (moduleDescriptor == null || !(moduleDescriptor instanceof WebResourceModuleDescriptor))
+                {
+                    log.warn("Cannot find web resource module for: " + resource);
+                }
+                else if(resourcesToBeAdded.contains(resource))
+                {
+                    log.warn("Cyclic dependency has been detected with: " + resource);
+                }
+                else
+                {
+                    resourcesToBeAdded.add(resource);
+                    addResourcesToCache(((WebResourceModuleDescriptor) moduleDescriptor).getDependencies(),
+                        resourceCache,
+                        resourcesToBeAdded);
+                    resourceCache.add(resource);
+                    resourcesToBeAdded.remove(resource);
+                }
+            }
+        }
     }
 
     public void includeResources(Writer writer)

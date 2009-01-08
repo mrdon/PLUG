@@ -9,10 +9,7 @@ import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.io.StringWriter;
 
 public class TestWebResourceManagerImpl extends TestCase
@@ -57,6 +54,13 @@ public class TestWebResourceManagerImpl extends TestCase
         String resource1 = "test.atlassian:cool-stuff";
         String resource2 = "test.atlassian:hot-stuff";
 
+        Mock mockPlugin = new Mock(Plugin.class);
+        Plugin p = (Plugin) mockPlugin.proxy();
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource1)),
+            createWebResourceModuleDescriptor(resource1, p, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource2)),
+            createWebResourceModuleDescriptor(resource2, p, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
+
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
         webResourceManager.requireResource(resource1);
@@ -67,6 +71,99 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(2, resources.size());
         assertTrue(resources.contains(resource1));
         assertTrue(resources.contains(resource2));
+    }
+
+    public void testRequireResourcesWithDependencies()
+    {
+        String resource = "test.atlassian:cool-stuff";
+        String dependencyResource = "test.atlassian:hot-stuff";
+
+        Mock mockPlugin = new Mock(Plugin.class);
+        Plugin p = (Plugin) mockPlugin.proxy();
+
+        // cool-stuff depends on hot-stuff
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource)),
+            createWebResourceModuleDescriptor(resource, p, Collections.EMPTY_LIST, Collections.singletonList(dependencyResource)));
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(dependencyResource)),
+            createWebResourceModuleDescriptor(dependencyResource, p, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
+
+        Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
+        webResourceManager.requireResource(resource);
+
+        Collection resources = (Collection) requestCache.get(WebResourceManagerImpl.REQUEST_CACHE_RESOURCE_KEY);
+        assertEquals(2, resources.size());
+        Object[] resourceArray = resources.toArray();
+        assertEquals(dependencyResource, resourceArray[0]);
+        assertEquals(resource, resourceArray[1]);
+    }
+
+    public void testRequireResourcesWithCyclicDependency()
+    {
+        String resource1 = "test.atlassian:cool-stuff";
+        String resource2 = "test.atlassian:hot-stuff";
+
+        Mock mockPlugin = new Mock(Plugin.class);
+        Plugin p = (Plugin) mockPlugin.proxy();
+
+        // cool-stuff and hot-stuff depend on each other
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource1)),
+            createWebResourceModuleDescriptor(resource1, p, Collections.EMPTY_LIST, Collections.singletonList(resource2)));
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource2)),
+            createWebResourceModuleDescriptor(resource2, p, Collections.EMPTY_LIST, Collections.singletonList(resource1)));
+
+        Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
+        webResourceManager.requireResource(resource1);
+
+        Collection resources = (Collection) requestCache.get(WebResourceManagerImpl.REQUEST_CACHE_RESOURCE_KEY);
+        assertEquals(2, resources.size());
+        Object[] resourceArray = resources.toArray();
+        assertEquals(resource2, resourceArray[0]);
+        assertEquals(resource1, resourceArray[1]);
+    }
+
+    public void testRequireResourcesWithManyDependencies()
+    {
+        String resourceA = "test.atlassian:a";
+        String resourceB = "test.atlassian:b";
+        String resourceC = "test.atlassian:c";
+        String resourceD = "test.atlassian:d";
+        String resourceE = "test.atlassian:e";
+
+        Mock mockPlugin = new Mock(Plugin.class);
+        Plugin p = (Plugin) mockPlugin.proxy();
+
+        // A depends on B, C
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceA)),
+            createWebResourceModuleDescriptor(resourceA, p, Collections.EMPTY_LIST, Arrays.asList(resourceB, resourceC)));
+        // B depends on D
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)),
+            createWebResourceModuleDescriptor(resourceB, p, Collections.EMPTY_LIST, Collections.singletonList(resourceD)));
+        // C has no dependencies
+            mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceC)),
+                createWebResourceModuleDescriptor(resourceC, p, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
+        // D depends on E, A (cyclic dependency)
+            mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceD)),
+                createWebResourceModuleDescriptor(resourceD, p, Collections.EMPTY_LIST, Arrays.asList(resourceE, resourceA)));
+        // E has no dependencies
+            mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceE)),
+                createWebResourceModuleDescriptor(resourceE, p, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
+
+        Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
+        webResourceManager.requireResource(resourceA);
+        // requiring a resource already included by A's dependencies shouldn't change the order
+        webResourceManager.requireResource(resourceD);
+
+        Collection resources = (Collection) requestCache.get(WebResourceManagerImpl.REQUEST_CACHE_RESOURCE_KEY);
+        assertEquals(5, resources.size());
+        Object[] resourceArray = resources.toArray();
+        assertEquals(resourceE, resourceArray[0]);
+        assertEquals(resourceD, resourceArray[1]);
+        assertEquals(resourceB, resourceArray[2]);
+        assertEquals(resourceC, resourceArray[3]);
+        assertEquals(resourceA, resourceArray[4]);
     }
 
     public void testRequireResourceAndResourceTagMethods() throws Exception
@@ -83,22 +180,8 @@ public class TestWebResourceManagerImpl extends TestCase
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
 
-        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)), new WebResourceModuleDescriptor() {
-            public String getCompleteKey()
-            {
-                return completeModuleKey;
-            }
-
-            public List getResourceDescriptors()
-            {
-                return resourceDescriptors1;
-            }
-
-            public Plugin getPlugin()
-            {
-                return (Plugin) mockPlugin.proxy();
-            }
-        });
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
+            createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(), resourceDescriptors1, Collections.EMPTY_LIST));
 
         // test requireResource() methods
         StringWriter requiredResourceWriter = new StringWriter();
@@ -146,19 +229,8 @@ public class TestWebResourceManagerImpl extends TestCase
         animalPlugin.setKey("confluence.extra.animal");
         animalPlugin.setPluginsVersion(Integer.parseInt(ANIMAL_PLUGIN_VERSION));
 
-        WebResourceModuleDescriptor moduleDescriptor = new WebResourceModuleDescriptor() {
-            public String getCompleteKey()
-            {
-                return moduleKey;
-            }
-
-            public Plugin getPlugin()
-            {
-                return animalPlugin;
-            }
-        };
-
-        mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(moduleKey)), moduleDescriptor);
+        mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(moduleKey)),
+            createWebResourceModuleDescriptor(moduleKey, animalPlugin, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
 
         String resourceName = "foo.js";
         String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER +
@@ -166,5 +238,31 @@ public class TestWebResourceManagerImpl extends TestCase
             .SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleKey + "/" + resourceName;
 
         assertEquals(expectedPrefix, webResourceManager.getStaticPluginResource(moduleKey, resourceName));
+    }
+
+    private WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
+        final Plugin p, final List<ResourceDescriptor> resourceDescriptors, final List<String> dependencies)
+    {
+        return new WebResourceModuleDescriptor() {
+            public String getCompleteKey()
+            {
+                return completeKey;
+            }
+
+            public List getResourceDescriptors()
+            {
+                return resourceDescriptors;
+            }
+
+            public Plugin getPlugin()
+            {
+                return p;
+            }
+
+            public List<String> getDependencies()
+            {
+                return dependencies;
+            }
+        };
     }
 }
