@@ -57,9 +57,9 @@ public class TestWebResourceManagerImpl extends TestCase
         Mock mockPlugin = new Mock(Plugin.class);
         Plugin p = (Plugin) mockPlugin.proxy();
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource1)),
-            createWebResourceModuleDescriptor(resource1, p, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
+            TestUtils.createWebResourceModuleDescriptor(resource1, p));
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource2)),
-            createWebResourceModuleDescriptor(resource2, p, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
+            TestUtils.createWebResourceModuleDescriptor(resource2, p));
 
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
@@ -83,9 +83,9 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // cool-stuff depends on hot-stuff
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource)),
-            createWebResourceModuleDescriptor(resource, p, Collections.EMPTY_LIST, Collections.singletonList(dependencyResource)));
+            TestUtils.createWebResourceModuleDescriptor(resource, p, Collections.EMPTY_LIST, Collections.singletonList(dependencyResource)));
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(dependencyResource)),
-            createWebResourceModuleDescriptor(dependencyResource, p, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
+            TestUtils.createWebResourceModuleDescriptor(dependencyResource, p));
 
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
@@ -108,9 +108,9 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // cool-stuff and hot-stuff depend on each other
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource1)),
-            createWebResourceModuleDescriptor(resource1, p, Collections.EMPTY_LIST, Collections.singletonList(resource2)));
+            TestUtils.createWebResourceModuleDescriptor(resource1, p, Collections.EMPTY_LIST, Collections.singletonList(resource2)));
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource2)),
-            createWebResourceModuleDescriptor(resource2, p, Collections.EMPTY_LIST, Collections.singletonList(resource1)));
+            TestUtils.createWebResourceModuleDescriptor(resource2, p, Collections.EMPTY_LIST, Collections.singletonList(resource1)));
 
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
@@ -136,19 +136,19 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // A depends on B, C
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceA)),
-            createWebResourceModuleDescriptor(resourceA, p, Collections.EMPTY_LIST, Arrays.asList(resourceB, resourceC)));
+            TestUtils.createWebResourceModuleDescriptor(resourceA, p, Collections.EMPTY_LIST, Arrays.asList(resourceB, resourceC)));
         // B depends on D
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)),
-            createWebResourceModuleDescriptor(resourceB, p, Collections.EMPTY_LIST, Collections.singletonList(resourceD)));
+            TestUtils.createWebResourceModuleDescriptor(resourceB, p, Collections.EMPTY_LIST, Collections.singletonList(resourceD)));
         // C has no dependencies
-            mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceC)),
-                createWebResourceModuleDescriptor(resourceC, p, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
-        // D depends on E, A (cyclic dependency)
-            mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceD)),
-                createWebResourceModuleDescriptor(resourceD, p, Collections.EMPTY_LIST, Arrays.asList(resourceE, resourceA)));
-        // E has no dependencies
-            mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceE)),
-                createWebResourceModuleDescriptor(resourceE, p, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceC)),
+            TestUtils.createWebResourceModuleDescriptor(resourceC, p));
+    // D depends on E, A (cyclic dependency)
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceD)),
+            TestUtils.createWebResourceModuleDescriptor(resourceD, p, Collections.EMPTY_LIST, Arrays.asList(resourceE, resourceA)));
+    // E has no dependencies
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceE)),
+            TestUtils.createWebResourceModuleDescriptor(resourceE, p));
 
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
@@ -181,7 +181,7 @@ public class TestWebResourceManagerImpl extends TestCase
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
 
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
-            createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(), resourceDescriptors1, Collections.EMPTY_LIST));
+            TestUtils.createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(), resourceDescriptors1));
 
         // test requireResource() methods
         StringWriter requiredResourceWriter = new StringWriter();
@@ -230,7 +230,7 @@ public class TestWebResourceManagerImpl extends TestCase
         animalPlugin.setPluginsVersion(Integer.parseInt(ANIMAL_PLUGIN_VERSION));
 
         mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(moduleKey)),
-            createWebResourceModuleDescriptor(moduleKey, animalPlugin, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
+            TestUtils.createWebResourceModuleDescriptor(moduleKey, animalPlugin));
 
         String resourceName = "foo.js";
         String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER +
@@ -238,31 +238,5 @@ public class TestWebResourceManagerImpl extends TestCase
             .SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleKey + "/" + resourceName;
 
         assertEquals(expectedPrefix, webResourceManager.getStaticPluginResource(moduleKey, resourceName));
-    }
-
-    private WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
-        final Plugin p, final List<ResourceDescriptor> resourceDescriptors, final List<String> dependencies)
-    {
-        return new WebResourceModuleDescriptor() {
-            public String getCompleteKey()
-            {
-                return completeKey;
-            }
-
-            public List getResourceDescriptors()
-            {
-                return resourceDescriptors;
-            }
-
-            public Plugin getPlugin()
-            {
-                return p;
-            }
-
-            public List<String> getDependencies()
-            {
-                return dependencies;
-            }
-        };
     }
 }

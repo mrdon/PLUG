@@ -15,6 +15,7 @@ import com.atlassian.plugin.servlet.ServletContextFactory;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.DownloadableWebResource;
 import com.atlassian.plugin.servlet.DownloadableClasspathResource;
+import com.atlassian.plugin.servlet.ForwardableResource;
 
 /**
  * Default implementation of {@link PluginResourceLocator}.
@@ -32,6 +33,8 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     final private PluginAccessor pluginAccessor;
     final private ServletContextFactory servletContextFactory;
+    private static final String RESOURCE_SOURCE_PARAM = "source";
+    private static final String RESOURCE_BATCH_PARAM = "batch";
 
     public PluginResourceLocatorImpl(PluginAccessor pluginAccessor, ServletContextFactory servletContextFactory)
     {
@@ -203,8 +206,14 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     private DownloadableResource getDownloadablePluginResource(Plugin plugin, ResourceLocation resourceLocation, String filePath)
     {
+        String sourceParam = resourceLocation.getParameter(RESOURCE_SOURCE_PARAM);
+
+        // allows for the resource to be served by forwarding the request to the location
+        if("forward".equalsIgnoreCase(sourceParam))
+            return new ForwardableResource(resourceLocation);
+
         // this allows plugins that are loaded from the web to be served
-        if ("webContext".equalsIgnoreCase(resourceLocation.getParameter("source")))
+        if ("webContext".equalsIgnoreCase(sourceParam))
             return new DownloadableWebResource(plugin, resourceLocation, filePath, servletContextFactory.getServletContext());
 
         return new DownloadableClasspathResource(plugin, resourceLocation, filePath);
@@ -241,7 +250,8 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     private boolean skipBatch(ResourceDescriptor resourceDescriptor)
     {
-        return "false".equalsIgnoreCase(resourceDescriptor.getParameter("batch"));
+        return "false".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_BATCH_PARAM)) ||
+            "forward".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_SOURCE_PARAM)); // you can't batch forwarded requests
     }
 
     private BatchPluginResource createBatchResource(String moduleCompleteKey, ResourceDescriptor resourceDescriptor)
