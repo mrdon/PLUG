@@ -14,6 +14,7 @@ import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
 abstract class AbstractDownloadableResource implements DownloadableResource
 {
@@ -46,7 +47,11 @@ abstract class AbstractDownloadableResource implements DownloadableResource
             return;
         }
 
-        response.setContentType(getContentType());
+        if(StringUtils.isNotBlank(getContentType()))
+        {
+            response.setContentType(getContentType());
+        }
+
         OutputStream out;
         try
         {
