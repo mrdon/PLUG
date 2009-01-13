@@ -34,30 +34,15 @@ public class TestWebResourceModuleDescriptor extends TestCase
     public void testInitWithDependencies() throws Exception
     {
         String xml = "<web-resource key=\"test-resources\">\n" +
-                        "<dependency>jquery</dependency>\n" +
-                        "<dependency>ajs</dependency>\n" +
+                        "<dependency>atlassian.test.plugin:jquery</dependency>\n" +
+                        "<dependency>atlassian.test.plugin:ajs</dependency>\n" +
                     "</web-resource>";
 
         descriptor.init((Plugin) mockPlugin.proxy(), DocumentHelper.parseText(xml).getRootElement());
 
         List<String> dependencies = descriptor.getDependencies();
         assertEquals(2, dependencies.size());
-        assertEquals(TEST_PLUGIN_KEY + ":jquery", dependencies.get(0));
-        assertEquals(TEST_PLUGIN_KEY + ":ajs", dependencies.get(1));
-    }
-
-    public void testInitWithOtherPluginDependencies() throws Exception
-    {
-        String xml = "<web-resource key=\"test-resources\">\n" +
-                        "<dependency>jquery</dependency>\n" +
-                        "<dependency plugin=\"atlassian.confluence.foo\">bar</dependency>\n" +
-                    "</web-resource>";
-
-        descriptor.init((Plugin) mockPlugin.proxy(), DocumentHelper.parseText(xml).getRootElement());
-
-        List<String> dependencies = descriptor.getDependencies();
-        assertEquals(2, dependencies.size());
-        assertEquals(TEST_PLUGIN_KEY + ":jquery", dependencies.get(0));
-        assertEquals("atlassian.confluence.foo:bar", dependencies.get(1));
+        assertEquals("atlassian.test.plugin:jquery", dependencies.get(0));
+        assertEquals("atlassian.test.plugin:ajs", dependencies.get(1));
     }
 }

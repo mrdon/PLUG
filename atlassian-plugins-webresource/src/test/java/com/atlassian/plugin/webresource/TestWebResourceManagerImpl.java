@@ -123,7 +123,7 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(resource1, resourceArray[1]);
     }
 
-    public void testRequireResourcesWithManyDependencies()
+    public void testRequireResourcesWithComplexCyclicDependency()
     {
         String resourceA = "test.atlassian:a";
         String resourceB = "test.atlassian:b";
@@ -143,10 +143,10 @@ public class TestWebResourceManagerImpl extends TestCase
         // C has no dependencies
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceC)),
             TestUtils.createWebResourceModuleDescriptor(resourceC, p));
-    // D depends on E, A (cyclic dependency)
+        // D depends on E, A (cyclic dependency)
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceD)),
             TestUtils.createWebResourceModuleDescriptor(resourceD, p, Collections.EMPTY_LIST, Arrays.asList(resourceE, resourceA)));
-    // E has no dependencies
+        // E has no dependencies
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceE)),
             TestUtils.createWebResourceModuleDescriptor(resourceE, p));
 
@@ -164,6 +164,48 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(resourceB, resourceArray[2]);
         assertEquals(resourceC, resourceArray[3]);
         assertEquals(resourceA, resourceArray[4]);
+    }
+
+    public void testRequireResourceWithDuplicateDependencies()
+    {
+        String resourceA = "test.atlassian:a";
+        String resourceB = "test.atlassian:b";
+        String resourceC = "test.atlassian:c";
+        String resourceD = "test.atlassian:d";
+        String resourceE = "test.atlassian:e";
+
+        Mock mockPlugin = new Mock(Plugin.class);
+        Plugin p = (Plugin) mockPlugin.proxy();
+
+        // A depends on B, C
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceA)),
+            TestUtils.createWebResourceModuleDescriptor(resourceA, p, Collections.EMPTY_LIST, Arrays.asList(resourceB, resourceC)));
+        // B depends on D
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)),
+            TestUtils.createWebResourceModuleDescriptor(resourceB, p, Collections.EMPTY_LIST, Collections.singletonList(resourceD)));
+        // C depends on E
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceC)),
+            TestUtils.createWebResourceModuleDescriptor(resourceC, p, Collections.EMPTY_LIST, Collections.singletonList(resourceE)));
+        // D depends on C
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceD)),
+            TestUtils.createWebResourceModuleDescriptor(resourceD, p, Collections.EMPTY_LIST, Collections.singletonList(resourceC)));
+        // E has no dependencies
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceE)),
+            TestUtils.createWebResourceModuleDescriptor(resourceE, p));
+
+        Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
+        webResourceManager.requireResource(resourceA);
+
+        Collection resources = (Collection) requestCache.get(WebResourceManagerImpl.REQUEST_CACHE_RESOURCE_KEY);
+        assertEquals(5, resources.size());
+        Object[] resourceArray = resources.toArray();
+        assertEquals(resourceE, resourceArray[0]);
+        assertEquals(resourceC, resourceArray[1]);
+        assertEquals(resourceD, resourceArray[2]);
+        assertEquals(resourceB, resourceArray[3]);
+        assertEquals(resourceA, resourceArray[4]);
+
     }
 
     public void testRequireResourceAndResourceTagMethods() throws Exception

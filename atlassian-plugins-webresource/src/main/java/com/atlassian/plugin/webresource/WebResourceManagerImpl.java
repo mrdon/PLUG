@@ -57,46 +57,54 @@ public class WebResourceManagerImpl implements WebResourceManager
             webResourceNames = new ListOrderedSet();
         }
 
-        addResourcesToCache(Collections.singletonList(moduleCompleteKey), webResourceNames, new ArrayList<String>());
+        ListOrderedSet resources = new ListOrderedSet();
+        addResourceWithDependencies(moduleCompleteKey, resources, new Stack<String>());
+        webResourceNames.addAll(resources);
         cache.put(REQUEST_CACHE_RESOURCE_KEY, webResourceNames);
     }
 
     /**
-     * Adds the resources as well as its dependencies in order to the given resource cache. This method uses recursion
-     * to add a resouce's dependent resources also to the cache. You should call this method with an new list passed in
-     * as resourcesToBeAdded.
+     * Adds the resources as well as its dependencies in order to the given set. This method uses recursion
+     * to add a resouce's dependent resources also to the set. You should call this method with a new stack
+     * passed to the last parameter.
      *
-     * @param resources a list of web resources module complete keys to be added to the resourceCache
-     * @param resourceCache a collection to where the resources are added in order
-     * @param resourcesToBeAdded a list of resources to help keep track cyclic dependencies during recursive calls
+     * @param moduleKey the module complete key to add as well as its dependencies
+     * @param orderedResourceKeys an ordered list set where the resources are added in order
+     * @param stack where we are in the dependency tree
      */
-    private void addResourcesToCache(List<String> resources, Collection resourceCache, List<String> resourcesToBeAdded)
+    private void addResourceWithDependencies(String moduleKey, ListOrderedSet orderedResourceKeys, Stack<String> stack)
     {
-        for(String resource : resources)
+        if (stack.contains(moduleKey))
         {
-            if(!resourceCache.contains(resource))
+            log.warn("Cyclic plugin resource dependency has been detected with: " + moduleKey + "\n" +
+                "Stack trace: " + stack);
+            return;
+        }
+
+        ModuleDescriptor moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleKey);
+        if (!(moduleDescriptor instanceof WebResourceModuleDescriptor))
+        {
+            log.warn("Cannot find web resource module for: " + moduleKey);
+            return;
+        }
+
+        List<String> dependencies = ((WebResourceModuleDescriptor) moduleDescriptor).getDependencies();
+        log.info("About to add resource [" + moduleKey + "] and its dependencies: " + dependencies);
+
+        stack.push(moduleKey);
+        try
+        {
+            for (String dependency : dependencies)
             {
-                ModuleDescriptor moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resource);
-                if (moduleDescriptor == null || !(moduleDescriptor instanceof WebResourceModuleDescriptor))
-                {
-                    log.warn("Cannot find web resource module for: " + resource);
-                }
-                else if(resourcesToBeAdded.contains(resource))
-                {
-                    log.warn("Cyclic dependency has been detected with: " + resource);
-                }
-                else
-                {
-                    List<String> dependencies = ((WebResourceModuleDescriptor) moduleDescriptor).getDependencies();
-                    log.info("About to add resource [" + resource + "] and its dependencies: " + dependencies);
-                    
-                    resourcesToBeAdded.add(resource);
-                    addResourcesToCache(dependencies, resourceCache, resourcesToBeAdded);
-                    resourceCache.add(resource);
-                    resourcesToBeAdded.remove(resource);
-                }
+                if (!orderedResourceKeys.contains(dependency))
+                    addResourceWithDependencies(dependency, orderedResourceKeys, stack);
             }
         }
+        finally
+        {
+            stack.pop();
+        }
+        orderedResourceKeys.add(moduleKey);
     }
 
     public void includeResources(Writer writer)

@@ -4,7 +4,6 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import org.dom4j.Element;
-import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -27,16 +26,7 @@ public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
         List<Element> dependencyElements = element.elements("dependency");
         for (Element dependency : dependencyElements)
         {
-            String webResourceKey = dependency.getTextTrim();
-            String pluginKey = dependency.attributeValue("plugin");
-
-            // assume dependency on a web resource module in the same plugin if not specified
-            if(StringUtils.isBlank(pluginKey))
-            {
-                pluginKey = plugin.getKey();
-            }
-
-            dependencies.add(pluginKey + ":" + webResourceKey);
+            dependencies.add(dependency.getTextTrim());
         }
     }
 
