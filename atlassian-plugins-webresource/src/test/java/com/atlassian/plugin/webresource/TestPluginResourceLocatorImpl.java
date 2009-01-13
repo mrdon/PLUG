@@ -136,7 +136,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
         final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("master.css", "comments.css");
         Map<String, String> params = new TreeMap<String, String>();
-        params.put("source", "forward");
+        params.put("source", "webContext");
         resourceDescriptors.add(TestUtils.createResourceDescriptor("forward.css", params));
 
         mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)),
@@ -160,7 +160,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         String resourceName = "test.css";
         String url = "/download/resources/" + TEST_MODULE_COMPLETE_KEY + "/" + resourceName;
         Map<String, String> params = new TreeMap<String, String>();
-        params.put("source", "forward");
+        params.put("source", "webContext");
 
         Mock mockPlugin = new Mock(Plugin.class);
         Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);

@@ -208,12 +208,12 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
     {
         String sourceParam = resourceLocation.getParameter(RESOURCE_SOURCE_PARAM);
 
-        // allows for the resource to be served by forwarding the request to the location
-        if("forward".equalsIgnoreCase(sourceParam))
+        // serve by forwarding the request to the location - batching not supported
+        if("webContext".equalsIgnoreCase(sourceParam))
             return new ForwardableResource(resourceLocation);
 
-        // this allows plugins that are loaded from the web to be served
-        if ("webContext".equalsIgnoreCase(sourceParam))
+        // serve static resources from the web application - batching supported
+        if ("webContextStatic".equalsIgnoreCase(sourceParam))
             return new DownloadableWebResource(plugin, resourceLocation, filePath, servletContextFactory.getServletContext());
 
         return new DownloadableClasspathResource(plugin, resourceLocation, filePath);
@@ -251,7 +251,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
     private boolean skipBatch(ResourceDescriptor resourceDescriptor)
     {
         return "false".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_BATCH_PARAM)) ||
-            "forward".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_SOURCE_PARAM)); // you can't batch forwarded requests
+            "webContext".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_SOURCE_PARAM)); // you can't batch forwarded requests
     }
 
     private BatchPluginResource createBatchResource(String moduleCompleteKey, ResourceDescriptor resourceDescriptor)

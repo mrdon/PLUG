@@ -69,7 +69,7 @@ public class TestUtils
     static ResourceDescriptor createResourceDescriptor(String resourceName, Map<String, String> parameters) throws DocumentException
     {
         String xml = "<resource type=\"download\" name=\"" + resourceName + "\" location=\"/includes/css/" + resourceName + "\">\n" +
-                            "<param name=\"source\" value=\"webContext\"/>\n";
+                            "<param name=\"source\" value=\"webContextStatic\"/>\n";
 
         if(resourceName.indexOf("ie") != -1)
             parameters.put("ieonly", "true");
