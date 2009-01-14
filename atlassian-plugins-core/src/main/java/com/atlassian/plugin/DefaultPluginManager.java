@@ -51,6 +51,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
@@ -71,7 +72,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     private final PluginStateStore store;
     private final ModuleDescriptorFactory moduleDescriptorFactory;
     private final PluginsClassLoader classLoader;
-    private final Map<String, Plugin> plugins = new HashMap<String, Plugin>();
+    private final Map<String, Plugin> plugins = new ConcurrentHashMap<String, Plugin>();
     private final PluginEventManager pluginEventManager;
 
     /**
