@@ -50,6 +50,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
 import java.util.*;
+import java.util.zip.ZipEntry;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
@@ -58,6 +59,9 @@ import java.util.jar.JarInputStream;
  * This is copied from Classwords 1.1 org.codehaus.classworlds.uberjar.protocol.jar.JarURLConnection
  * so that an additional dependency does not need to be added to plugins.  The formatting is left as is to reduce
  * the diff.
+ *
+ * The setupPathedInputStream() method has been modified to improve the speed of
+ * resource lookups. It now uses a ZipEntry to get random access to entries in the JAR.
  */
 public class NonLockingJarUrlConnection
     extends JarURLConnection
@@ -214,15 +218,65 @@ public class NonLockingJarUrlConnection
     protected void setupPathedInputStream()
         throws IOException
     {
-        InputStream curIn = getBaseResource().openStream();
+        final JarFile jar = getJarFile();
+        String segment = segments[0].substring(1);
+        final ZipEntry zipEntry = jar.getEntry(segment);
 
-        for ( int i = 0; i < this.segments.length; ++i )
+        if (zipEntry == null)
         {
-            curIn = getSegmentInputStream( curIn,
-                                           segments[i] );
+            throw new IOException( "unable to locate segment: " + segment );
         }
 
-        this.in = curIn;
+        final InputStream delegate = jar.getInputStream(zipEntry);
+        this.in = new InputStream() {
+
+            public int read() throws IOException
+            {
+                return delegate.read();
+            }
+
+            public int read(byte b[]) throws IOException
+            {
+                return delegate.read(b);
+            }
+
+            public int read(byte b[], int off, int len) throws IOException
+            {
+                return delegate.read(b, off, len);
+            }
+
+            public long skip(long n) throws IOException
+            {
+                return delegate.skip(n);
+            }
+
+            public int available() throws IOException
+            {
+                return delegate.available();
+            }
+
+            public void close() throws IOException
+            {
+                // close the stream and the plugin JAR file
+                delegate.close();
+                jar.close();
+            }
+
+            public synchronized void mark(int readlimit)
+            {
+                delegate.mark(readlimit);
+            }
+
+            public synchronized void reset() throws IOException
+            {
+                delegate.reset();
+            }
+
+            public boolean markSupported()
+            {
+                return delegate.markSupported();
+            }
+        };
     }
 
     /**
@@ -283,7 +337,7 @@ public class NonLockingJarUrlConnection
 
         if ( url.startsWith( "file:/" ) )
         {
-            url = url.substring( 6 );
+            url = url.substring( 5 );
         }
 
         return new JarFile( URLDecoder.decode( url, "UTF-8" ) );

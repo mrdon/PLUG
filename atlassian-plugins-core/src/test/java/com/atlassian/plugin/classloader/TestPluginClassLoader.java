@@ -7,7 +7,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
@@ -28,7 +28,8 @@ public class TestPluginClassLoader extends TestCase
         tmpDir.mkdirs();
 
         URL url = getClass().getClassLoader().getResource(PluginTestUtils.SIMPLE_TEST_JAR);
-        assertNotNull("Can't find test resource", url);
+        assertNotNull("Can't find test resource -- see class Javadoc, and " +
+            "be sure to set the 'project.version' system property!", url);
         pluginClassLoader = new PluginClassLoader(new File(url.getFile()), getClass().getClassLoader(), tmpDir);
     }
 
@@ -68,7 +69,7 @@ public class TestPluginClassLoader extends TestCase
             assertNotNull(pluginClassLoader.getResource("innerresource.txt").openStream());
             fail("underlying extracted inner jar was deleted and should throw FileNotFoundException");
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             // expected exception because we deleted the jar
         }
