@@ -19,12 +19,7 @@ import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Plugin loader that delegates the detection of plugins to a Scanner instance. The scanner may monitor the contents
@@ -68,7 +63,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
         Validate.notNull(pluginEventManager, "The event manager must be specified");
         Validate.notNull(scanner, "The scanner must be specified");
 
-        plugins = new HashMap<DeploymentUnit, Plugin>();
+        plugins = new TreeMap<DeploymentUnit, Plugin>();
 
         this.pluginArtifactFactory = pluginArtifactFactory;
         this.scanner = scanner;

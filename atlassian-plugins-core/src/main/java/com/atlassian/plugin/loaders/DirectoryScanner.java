@@ -5,7 +5,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.util.*;
 
 import com.atlassian.plugin.loaders.classloading.*;
@@ -28,7 +27,7 @@ class DirectoryScanner implements com.atlassian.plugin.loaders.classloading.Scan
     /**
      * A Map of {@link String} absolute file paths to {@link DeploymentUnit}s.
      */
-    private Map<String,DeploymentUnit> scannedDeploymentUnits = new HashMap<String,DeploymentUnit>();
+    private Map<String,DeploymentUnit> scannedDeploymentUnits = new TreeMap<String,DeploymentUnit>();
 
 
     /**
@@ -42,7 +41,7 @@ class DirectoryScanner implements com.atlassian.plugin.loaders.classloading.Scan
         this.pluginsDirectory = pluginsDirectory;
     }
 
-    private DeploymentUnit createAndStoreDeploymentUnit(File file) throws MalformedURLException
+    private DeploymentUnit createAndStoreDeploymentUnit(File file)
     {
         if (isScanned(file))
             return null;
@@ -106,30 +105,24 @@ class DirectoryScanner implements com.atlassian.plugin.loaders.classloading.Scan
         if (files == null)
         {
             log.error("listFiles returned null for directory " + pluginsDirectory.getAbsolutePath());
+            return result;
         }
-        else
+
+        Arrays.sort(files); // sorts by filename for deterministic load order
+        for (File file : files)
         {
-            for (File file : files)
+            if (isScanned(file) && isModified(file))
             {
-                try
-                {
-                    if (isScanned(file) && isModified(file))
-                    {
-                        clear(file);
-                        DeploymentUnit unit = createAndStoreDeploymentUnit(file);
-                        if (unit != null)
-                            result.add(unit);
-                    } else if (!isScanned(file))
-                    {
-                        DeploymentUnit unit = createAndStoreDeploymentUnit(file);
-                        if (unit != null)
-                            result.add(unit);
-                    }
-                }
-                catch (MalformedURLException e)
-                {
-                    log.error("Error deploying plugin " + file.getAbsolutePath(), e);
-                }
+                clear(file);
+                DeploymentUnit unit = createAndStoreDeploymentUnit(file);
+                if (unit != null)
+                    result.add(unit);
+            }
+            else if (!isScanned(file))
+            {
+                DeploymentUnit unit = createAndStoreDeploymentUnit(file);
+                if (unit != null)
+                    result.add(unit);
             }
         }
         return result;

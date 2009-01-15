@@ -5,8 +5,6 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
-import java.util.TreeSet;
 
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.loaders.classloading.Scanner;
@@ -14,7 +12,6 @@ import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 
 public class TestDirectoryScanner extends AbstractTestClassLoader
 {
-
     protected void setUp() throws Exception
     {
         super.setUp();
@@ -30,9 +27,8 @@ public class TestDirectoryScanner extends AbstractTestClassLoader
         Collection<DeploymentUnit> deployedUnits = scanner.getDeploymentUnits();
         assertEquals(2, deployedUnits.size());
 
-        // put them into a list so we're sure we get them in the right order
-        Set<DeploymentUnit> orderedUnits = new TreeSet<DeploymentUnit>(deployedUnits);
-        Iterator iterator = orderedUnits.iterator();
+        // units should be returned ordered alphabetically
+        Iterator iterator = deployedUnits.iterator();
         DeploymentUnit unit = (DeploymentUnit) iterator.next();
         assertEquals("paddington-test-plugin.jar", unit.getPath().getName());
 
