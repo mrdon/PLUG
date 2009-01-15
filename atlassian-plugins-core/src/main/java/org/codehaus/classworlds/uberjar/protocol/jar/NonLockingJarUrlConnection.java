@@ -59,9 +59,13 @@ import java.util.jar.JarInputStream;
  * This is copied from Classwords 1.1 org.codehaus.classworlds.uberjar.protocol.jar.JarURLConnection
  * so that an additional dependency does not need to be added to plugins.  The formatting is left as is to reduce
  * the diff.
- *
- * The setupPathedInputStream() method has been modified to improve the speed of
- * resource lookups. It now uses a ZipEntry to get random access to entries in the JAR.
+ * <p/>
+ * The setupPathedInputStream() method has been modified to improve the speed of resource lookups. It now
+ * uses a ZipEntry to get random access to entries in the JAR.
+ * <p/>
+ * This change removes the ability for this connection class to load resources from JARs nested inside the outer
+ * JAR. This is not used in atlassian-plugin because the inner JAR loading is handled by
+ * {@link com.atlassian.plugin.classloader.PluginClassLoader}.
  */
 public class NonLockingJarUrlConnection
     extends JarURLConnection
