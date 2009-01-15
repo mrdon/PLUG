@@ -4,6 +4,8 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.listeners.PassListener;
+import com.atlassian.plugin.event.listeners.FailListener;
 import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.event.events.PluginEnabledEvent;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
@@ -39,11 +41,7 @@ import com.mockobjects.dynamic.Mock;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Testing {@link DefaultPluginManager}
@@ -425,18 +423,21 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testGetPluginModulesWithModuleMatchingPredicate() throws Exception
     {
-        final Object module = new Object();
+        final MockThing module = new MockThing(){};
         final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         @SuppressWarnings("unchecked")
         final ModuleDescriptor<MockThing> moduleDescriptor = (ModuleDescriptor<MockThing>) mockModuleDescriptor.proxy();
         mockModuleDescriptor.expectAndReturn("getModule", module);
+        mockModuleDescriptor.matchAndReturn("getCompleteKey", "some-plugin-key:module");
+        mockModuleDescriptor.matchAndReturn("isEnabledByDefault", true);
 
         final Mock mockPlugin = new Mock(Plugin.class);
         mockPlugin.matchAndReturn("getKey", "some-plugin-key");
         mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(moduleDescriptor));
+        mockPlugin.matchAndReturn("getModuleDescriptor", "module", moduleDescriptor);
         mockPlugin.matchAndReturn("hashCode", 12);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
-        mockPlugin.expectAndReturn("isEnabledByDefault", true);
+        mockPlugin.matchAndReturn("isEnabledByDefault", true);
         mockPlugin.matchAndReturn("isEnabled", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
@@ -457,22 +458,25 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testGetPluginModulesWithModuleNotMatchingPredicate() throws Exception
     {
-        final Mock mockModule = new Mock(ModuleDescriptor.class);
+        final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         @SuppressWarnings("unchecked")
-        final ModuleDescriptor<MockThing> module = (ModuleDescriptor<MockThing>) mockModule.proxy();
+        final ModuleDescriptor<MockThing> moduleDescriptor = (ModuleDescriptor<MockThing>) mockModuleDescriptor.proxy();
+        mockModuleDescriptor.matchAndReturn("getCompleteKey", "some-plugin-key:module");
+        mockModuleDescriptor.matchAndReturn("isEnabledByDefault", true);
 
         final Mock mockPlugin = new Mock(Plugin.class);
         mockPlugin.matchAndReturn("getKey", "some-plugin-key");
-        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(module));
+        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(moduleDescriptor));
+        mockPlugin.matchAndReturn("getModuleDescriptor", "module", moduleDescriptor);
         mockPlugin.matchAndReturn("hashCode", 12);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
-        mockPlugin.expectAndReturn("isEnabledByDefault", true);
+        mockPlugin.matchAndReturn("isEnabledByDefault", true);
         mockPlugin.matchAndReturn("isEnabled", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockModulePredicate = new Mock(ModuleDescriptorPredicate.class);
-        mockModulePredicate.expectAndReturn("matches", C.eq(module), false);
+        mockModulePredicate.expectAndReturn("matches", C.eq(moduleDescriptor), false);
 
         manager.addPlugins(null, Collections.singletonList(plugin));
         @SuppressWarnings("unchecked")
@@ -489,13 +493,16 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         @SuppressWarnings("unchecked")
         final ModuleDescriptor<MockThing> moduleDescriptor = (ModuleDescriptor) mockModuleDescriptor.proxy();
+        mockModuleDescriptor.matchAndReturn("getCompleteKey", "some-plugin-key:module");
+        mockModuleDescriptor.matchAndReturn("isEnabledByDefault", true);
 
         final Mock mockPlugin = new Mock(Plugin.class);
         mockPlugin.matchAndReturn("getKey", "some-plugin-key");
         mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(moduleDescriptor));
+        mockPlugin.matchAndReturn("getModuleDescriptor", "module", moduleDescriptor);
         mockPlugin.matchAndReturn("hashCode", 12);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
-        mockPlugin.expectAndReturn("isEnabledByDefault", true);
+        mockPlugin.matchAndReturn("isEnabledByDefault", true);
         mockPlugin.matchAndReturn("isEnabled", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
@@ -516,22 +523,25 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testGetPluginModuleDescriptorsWithModuleNotMatchingPredicate() throws Exception
     {
-        final Mock mockModule = new Mock(ModuleDescriptor.class);
+        final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         @SuppressWarnings("unchecked")
-        final ModuleDescriptor<MockThing> module = (ModuleDescriptor<MockThing>) mockModule.proxy();
+        final ModuleDescriptor<MockThing> moduleDescriptor = (ModuleDescriptor<MockThing>) mockModuleDescriptor.proxy();
+        mockModuleDescriptor.matchAndReturn("getCompleteKey", "some-plugin-key:module");
+        mockModuleDescriptor.matchAndReturn("isEnabledByDefault", true);
 
         final Mock mockPlugin = new Mock(Plugin.class);
         mockPlugin.matchAndReturn("getKey", "some-plugin-key");
-        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(module));
+        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(moduleDescriptor));
+        mockPlugin.matchAndReturn("getModuleDescriptor", "module", moduleDescriptor);
         mockPlugin.matchAndReturn("hashCode", 12);
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
-        mockPlugin.expectAndReturn("isEnabledByDefault", true);
+        mockPlugin.matchAndReturn("isEnabledByDefault", true);
         mockPlugin.matchAndReturn("isEnabled", true);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockModulePredicate = new Mock(ModuleDescriptorPredicate.class);
-        mockModulePredicate.expectAndReturn("matches", C.eq(module), false);
+        mockModulePredicate.expectAndReturn("matches", C.eq(moduleDescriptor), false);
 
         manager.addPlugins(null, Collections.singletonList(plugin));
         @SuppressWarnings("unchecked")
@@ -1238,59 +1248,5 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         public void disabled()
         {}
-    }
-
-    public static class FailListener
-    {
-        private final Class<?> clazz;
-
-        private FailListener(final Class<?> clazz)
-        {
-            this.clazz = clazz;
-        }
-
-        public void channel(final Object o)
-        {
-            if (clazz.isInstance(o))
-            {
-                fail("Event thrown of type " + clazz.getName());
-            }
-        }
-    }
-
-    public static class PassListener
-    {
-        private final Class<?> clazz;
-        private int called = 0;
-
-        private PassListener(final Class<?> clazz)
-        {
-            this.clazz = clazz;
-        }
-
-        public void channel(final Object o)
-        {
-            if (clazz.isInstance(o))
-            {
-                called++;
-            }
-        }
-
-        public void assertCalled()
-        {
-            assertTrue("Event not thrown " + clazz.getName(), called > 0);
-            reset();
-        }
-
-        public void assertCalled(final int times)
-        {
-            assertEquals("Event not thrown " + clazz.getName(), times, called);
-            reset();
-        }
-
-        public void reset()
-        {
-            called = 0;
-        }
     }
 }

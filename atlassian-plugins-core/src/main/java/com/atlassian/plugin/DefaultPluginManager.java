@@ -8,11 +8,7 @@ import com.atlassian.plugin.classloader.PluginsClassLoader;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.event.events.PluginDisabledEvent;
-import com.atlassian.plugin.event.events.PluginEnabledEvent;
-import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
-import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
-import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
+import com.atlassian.plugin.event.events.*;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.loaders.DynamicPluginLoader;
@@ -31,9 +27,6 @@ import com.atlassian.plugin.util.collect.CollectionUtil;
 import com.atlassian.plugin.util.collect.Function;
 import com.atlassian.plugin.util.collect.Predicate;
 
-import com.atlassian.plugin.util.PluginUtils;
-import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
-import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,9 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -557,7 +548,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     /**
      * Get the all the module descriptors from the given collection of plugins.
      * <p>
-     * Be careful, this does not actually return a list of ModuleDescriptors that are M, it returns all 
+     * Be careful, this does not actually return a list of ModuleDescriptors that are M, it returns all
      * ModuleDescriptors of all types, you must further filter the list as required.
      *
      * @param plugins a collection of {@link Plugin}s
@@ -836,15 +827,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     {
         for (final ModuleDescriptor<?> descriptor : plugin.getModuleDescriptors())
         {
-            if (!(descriptor instanceof StateAware))
-            {
-                if (log.isDebugEnabled())
-                {
-                    log.debug("ModuleDescriptor '" + descriptor.getName() + "' is not StateAware. No need to enable.");
-                }
-                continue;
-            }
-
             if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
             {
                 if (log.isDebugEnabled())
@@ -856,11 +838,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
             try
             {
-                if (log.isDebugEnabled())
-                {
-                    log.debug("Enabling " + descriptor.getKey());
-                }
-                ((StateAware) descriptor).enabled();
+                notifyModuleEnabled(descriptor);
             }
             catch (final Throwable exception) // catch any errors and insert an UnloadablePlugin (PLUG-7)
             {
@@ -910,35 +888,18 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         stateStore.savePluginState(currentState);
     }
 
-    protected List<String> getEnabledStateAwareModuleKeys(final Plugin plugin)
-    {
-        final List<String> keys = new ArrayList<String>();
-        final List<ModuleDescriptor<?>> moduleDescriptors = new ArrayList<ModuleDescriptor<?>>(plugin.getModuleDescriptors());
-        Collections.reverse(moduleDescriptors);
-        for (final ModuleDescriptor<?> md : moduleDescriptors)
-        {
-            if (md instanceof StateAware)
-            {
-                if (isPluginModuleEnabled(md.getCompleteKey()))
-                {
-                    keys.add(md.getCompleteKey());
-                }
-            }
-        }
-        return keys;
-    }
-
     protected void notifyPluginDisabled(final Plugin plugin)
     {
-        final List<String> keysToDisable = getEnabledStateAwareModuleKeys(plugin);
+        final List<ModuleDescriptor<?>> moduleDescriptors = new ArrayList<ModuleDescriptor<?>>(plugin.getModuleDescriptors());
+        Collections.reverse(moduleDescriptors); // disable in reverse order
 
-        for (final String key : keysToDisable)
+        for (ModuleDescriptor<?> md : moduleDescriptors)
         {
-            final StateAware descriptor = (StateAware) getPluginModule(key);
-            descriptor.disabled();
+            if (isPluginModuleEnabled(md.getCompleteKey()))
+                notifyModuleDisabled(md);
         }
 
-        // This needs to happen after modules are disabled to prevent errors 
+        // This needs to happen after modules are disabled to prevent errors
         plugin.setEnabled(false);
         pluginEventManager.broadcast(new PluginDisabledEvent(plugin));
     }
@@ -982,10 +943,13 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void notifyModuleDisabled(final ModuleDescriptor<?> module)
     {
+        if (log.isDebugEnabled())
+            log.debug("Enabling " + module.getKey());
         if (module instanceof StateAware)
         {
             ((StateAware) module).disabled();
         }
+        pluginEventManager.broadcast(new PluginModuleDisabledEvent(module));
     }
 
     public void enablePluginModule(final String completeKey)
@@ -1033,11 +997,14 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void notifyModuleEnabled(final ModuleDescriptor<?> module)
     {
+        if (log.isDebugEnabled())
+            log.debug("Enabling " + module.getKey());
         classLoader.notifyPluginOrModuleEnabled();
         if (module instanceof StateAware)
         {
             ((StateAware) module).enabled();
         }
+        pluginEventManager.broadcast(new PluginModuleEnabledEvent(module));
     }
 
     public boolean isPluginModuleEnabled(final String completeKey)
