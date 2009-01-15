@@ -223,12 +223,12 @@ public class NonLockingJarUrlConnection
         throws IOException
     {
         final JarFile jar = getJarFile();
-        String segment = segments[0].substring(1);
-        final ZipEntry zipEntry = jar.getEntry(segment);
+        String entryName = segments[0].substring(1); // remove leading slash
+        final ZipEntry zipEntry = jar.getEntry(entryName);
 
         if (zipEntry == null)
         {
-            throw new IOException( "unable to locate segment: " + segment );
+            throw new IOException("Unable to locate entry: " + entryName + ", in JAR file: " + jar.getName());
         }
 
         final InputStream delegate = jar.getInputStream(zipEntry);
