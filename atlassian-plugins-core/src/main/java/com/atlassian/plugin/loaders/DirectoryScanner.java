@@ -27,7 +27,7 @@ class DirectoryScanner implements com.atlassian.plugin.loaders.classloading.Scan
     /**
      * A Map of {@link String} absolute file paths to {@link DeploymentUnit}s.
      */
-    private Map<String,DeploymentUnit> scannedDeploymentUnits = new TreeMap<String,DeploymentUnit>();
+    private final Map<String,DeploymentUnit> scannedDeploymentUnits = new TreeMap<String,DeploymentUnit>();
 
 
     /**
