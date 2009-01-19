@@ -893,10 +893,13 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         final List<ModuleDescriptor<?>> moduleDescriptors = new ArrayList<ModuleDescriptor<?>>(plugin.getModuleDescriptors());
         Collections.reverse(moduleDescriptors); // disable in reverse order
 
-        for (ModuleDescriptor<?> md : moduleDescriptors)
+        for (ModuleDescriptor<?> module : moduleDescriptors)
         {
-            if (isPluginModuleEnabled(md.getCompleteKey()))
-                notifyModuleDisabled(md);
+            // don't actually disable the module, just fire the events because its plugin is being disabled
+            // if the module was actually disabled, you'd have to reenable each one when enabling the plugin
+
+            if (isPluginModuleEnabled(module.getCompleteKey()))
+                publishModuleDisabledEvents(module);
         }
 
         // This needs to happen after modules are disabled to prevent errors
@@ -943,12 +946,17 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void notifyModuleDisabled(final ModuleDescriptor<?> module)
     {
+        publishModuleDisabledEvents(module);
+    }
+
+    private void publishModuleDisabledEvents(ModuleDescriptor<?> module)
+    {
         if (log.isDebugEnabled())
-            log.debug("Enabling " + module.getKey());
+            log.debug("Disabling " + module.getKey());
+
         if (module instanceof StateAware)
-        {
             ((StateAware) module).disabled();
-        }
+
         pluginEventManager.broadcast(new PluginModuleDisabledEvent(module));
     }
 
