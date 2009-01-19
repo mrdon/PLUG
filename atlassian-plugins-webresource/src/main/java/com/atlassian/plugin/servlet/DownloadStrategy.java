@@ -7,12 +7,14 @@ public interface DownloadStrategy
 {
     /**
      * Returns true if the DownloadStrategy is supported for the given url path.
+     *
+     * @param requestUri the result of {@link HttpServletRequest#getRequestURI()} converted to lowercase
      */
-    boolean matches(String urlPath);
+    boolean matches(String requestUri);
 
     /**
      * Serves the file for the given request and response.
      * @throws DownloadException if there was an error during serving of the file.
      */
-    void serveFile(HttpServletRequest req, HttpServletResponse resp) throws DownloadException;
+    void serveFile(HttpServletRequest request, HttpServletResponse response) throws DownloadException;
 }
