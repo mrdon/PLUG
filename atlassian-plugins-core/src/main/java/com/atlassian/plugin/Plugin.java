@@ -38,34 +38,34 @@ public interface Plugin extends Resourced, Comparable<Plugin>
     void addModuleDescriptor(ModuleDescriptor<?> moduleDescriptor);
 
     /**
-     * Get the {@link Collection} of {@link ModuleDescriptor descriptors}.
-     * <p>
-     * Note: The {@link ModuleDescriptor#getModule()} may throw {@link ClassCastException} if the expected type is incorrect.
-     * Normally this method would not be supplied with anything other than {@link Object} or &lt;?&gt;, unless you are
-     * confident in the super type of the module classes this {@link Plugin} provides.
-     * 
-     * @param <M> The expected module type of the returned ModuleDescriptor.
-     * @return the {@link ModuleDescriptor} of the expected type.
+     * Get the {@link Collection} of {@link ModuleDescriptor descriptors}. The iteration order of the collection is
+     * the order that the modules will be enabled, and should be the same order that the modules appear in the
+     * plugin descriptor.
+     *
+     * @return the modules contained by this plugin in the order they are to be enabled
      */
     Collection<ModuleDescriptor<?>> getModuleDescriptors();
 
     /**
-     * Get the {@link ModuleDescriptor} for a particular key.
+     * Get the {@link ModuleDescriptor} for a particular key. Returns <tt>null</tt> if the plugin does not exist.
      * <p>
      * Note: The {@link ModuleDescriptor#getModule()} may throw {@link ClassCastException} if the expected type is incorrect.
      * 
-     * @param <M> The expected module type of the returned {@link ModuleDescriptor}.
-     * @param key the {@link String} key.
+     * @param key the {@link String} complete key of the module, in the form "org.example.plugin:module-key".
      * @return the {@link ModuleDescriptor} of the expected type.
      */
     ModuleDescriptor<?> getModuleDescriptor(String key);
 
     /**
      * Get the {@link ModuleDescriptor descriptors} whose module class implements or is assignable from the supplied {@link Class}.
-     * 
+     * <p>
+     * Note: The {@link ModuleDescriptor#getModule()} may throw {@link ClassCastException} if the expected type is incorrect.
+     * Normally this method would not be supplied with anything other than {@link Object} or &lt;?&gt;, unless you are
+     * confident in the super type of the module classes this {@link Plugin} provides.
+     *
      * @param <M> The expected module type of the returned {@link ModuleDescriptor descriptors}.
      * @param moduleClass the {@link Class super class} the {@link ModuleDescriptor descriptors} return.
-     * @return the {@link List} of {@link ModuleDescriptordescriptors } of the expected type.
+     * @return the {@link List} of {@link ModuleDescriptor descriptors} of the expected type.
      */
     <M> List<ModuleDescriptor<M>> getModuleDescriptorsByModuleClass(Class<M> moduleClass);
 
