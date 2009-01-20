@@ -152,7 +152,7 @@ public class WebResourceManagerImpl implements WebResourceManager
             if (resource.isCacheSupported())
             {
                 Plugin plugin = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resource.getModuleCompleteKey()).getPlugin();
-                url = getStaticResourcePrefix(String.valueOf(plugin.getPluginsVersion())) + url;
+                url = getStaticResourcePrefix(plugin.getPluginInformation().getVersion()) + url;
             }
             writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writer);
         }

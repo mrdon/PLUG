@@ -2,6 +2,7 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.servlet.AbstractFileServerServlet;
@@ -215,9 +216,11 @@ public class TestWebResourceManagerImpl extends TestCase
 
         final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.css", "more-cool.css", "cool.js");
 
-        final int pluginVersion = 1;
+        final String pluginVersion = "1";
         final Mock mockPlugin = new Mock(Plugin.class);
-        mockPlugin.matchAndReturn("getPluginsVersion", pluginVersion);
+        PluginInformation pluginInfo = new PluginInformation();
+        pluginInfo.setVersion(pluginVersion);
+        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
 
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
