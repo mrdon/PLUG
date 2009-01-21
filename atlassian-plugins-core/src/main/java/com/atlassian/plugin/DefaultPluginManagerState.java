@@ -41,7 +41,7 @@ public class DefaultPluginManagerState implements Serializable, PluginManagerSta
     }
 
     /* (non-Javadoc)
-     * @see com.atlassian.plugin.PluginManagerStateAccessor#getState(java.lang.String)
+     * @see com.atlassian.plugin.PluginManagerState#getState(java.lang.String)
      */
     public Boolean getState(final String key)
     {
@@ -49,7 +49,7 @@ public class DefaultPluginManagerState implements Serializable, PluginManagerSta
     }
 
     /* (non-Javadoc)
-     * @see com.atlassian.plugin.PluginManagerStateAccessor#getMap()
+     * @see com.atlassian.plugin.PluginManagerState#getMap()
      */
     public Map<String, Boolean> getMap()
     {
@@ -57,7 +57,7 @@ public class DefaultPluginManagerState implements Serializable, PluginManagerSta
     }
 
     /* (non-Javadoc)
-     * @see com.atlassian.plugin.PluginManagerStateAccessor#isEnabled(com.atlassian.plugin.Plugin)
+     * @see com.atlassian.plugin.PluginManagerState#isEnabled(com.atlassian.plugin.Plugin)
      */
     public boolean isEnabled(final Plugin plugin)
     {
@@ -66,7 +66,7 @@ public class DefaultPluginManagerState implements Serializable, PluginManagerSta
     }
 
     /* (non-Javadoc)
-     * @see com.atlassian.plugin.PluginManagerStateAccessor#isEnabled(com.atlassian.plugin.ModuleDescriptor)
+     * @see com.atlassian.plugin.PluginManagerState#isEnabled(com.atlassian.plugin.ModuleDescriptor)
      */
     public boolean isEnabled(final ModuleDescriptor<?> pluginModule)
     {
@@ -113,7 +113,7 @@ public class DefaultPluginManagerState implements Serializable, PluginManagerSta
     }
 
     /* (non-Javadoc)
-     * @see com.atlassian.plugin.PluginManagerStateAccessor#getPluginStateMap(com.atlassian.plugin.Plugin)
+     * @see com.atlassian.plugin.PluginManagerState#getPluginStateMap(com.atlassian.plugin.Plugin)
      */
     public Map<String, Boolean> getPluginStateMap(final Plugin plugin)
     {
