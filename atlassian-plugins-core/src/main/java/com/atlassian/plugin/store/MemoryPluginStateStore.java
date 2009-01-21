@@ -1,5 +1,6 @@
 package com.atlassian.plugin.store;
 
+import com.atlassian.plugin.DefaultPluginManagerState;
 import com.atlassian.plugin.PluginManagerState;
 import com.atlassian.plugin.PluginStateStore;
 
@@ -8,7 +9,7 @@ import com.atlassian.plugin.PluginStateStore;
  */
 public class MemoryPluginStateStore implements PluginStateStore
 {
-    private final PluginManagerState state = new PluginManagerState();
+    private final DefaultPluginManagerState state = new DefaultPluginManagerState();
 
     public void savePluginState(final PluginManagerState state)
     {
@@ -17,6 +18,6 @@ public class MemoryPluginStateStore implements PluginStateStore
 
     public PluginManagerState loadPluginState()
     {
-        return new PluginManagerState(state);
+        return state;
     }
 }

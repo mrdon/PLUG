@@ -241,7 +241,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void removeStateFromStore(final PluginStateStore stateStore, final Plugin plugin)
     {
-        final PluginManagerState currentState = stateStore.loadPluginState();
+        final DefaultPluginManagerState currentState = getMutableState(stateStore);
         currentState.removeState(plugin.getKey());
         for (final ModuleDescriptor<?> moduleDescriptor : plugin.getModuleDescriptors())
         {
@@ -309,6 +309,11 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     protected PluginManagerState getState()
     {
         return getStore().loadPluginState();
+    }
+    
+    private DefaultPluginManagerState getMutableState(final PluginStateStore stateStore)
+    {
+        return new DefaultPluginManagerState(stateStore.loadPluginState());
     }
 
     /**
@@ -486,7 +491,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         });
 
         // Restore the configuration
-        final PluginManagerState currentState = getState();
+        final DefaultPluginManagerState currentState = getMutableState(getStore());
         currentState.addState(oldPluginState);
         getStore().savePluginState(currentState);
     }
@@ -790,7 +795,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void enablePluginState(final Plugin plugin, final PluginStateStore stateStore)
     {
-        final PluginManagerState currentState = stateStore.loadPluginState();
+        final DefaultPluginManagerState currentState = getMutableState(stateStore);
         final String key = plugin.getKey();
         if (!plugin.isEnabledByDefault())
         {
@@ -876,7 +881,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     protected void disablePluginState(final Plugin plugin, final PluginStateStore stateStore)
     {
         final String key = plugin.getKey();
-        final PluginManagerState currentState = stateStore.loadPluginState();
+        final DefaultPluginManagerState currentState = getMutableState(stateStore);
         if (plugin.isEnabledByDefault())
         {
             currentState.setState(key, Boolean.FALSE);
@@ -932,7 +937,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     protected void disablePluginModuleState(final ModuleDescriptor<?> module, final PluginStateStore stateStore)
     {
         final String completeKey = module.getCompleteKey();
-        final PluginManagerState currentState = stateStore.loadPluginState();
+        final DefaultPluginManagerState currentState = getMutableState(stateStore);
         if (module.isEnabledByDefault())
         {
             currentState.setState(completeKey, Boolean.FALSE);
@@ -991,7 +996,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     protected void enablePluginModuleState(final ModuleDescriptor<?> module, final PluginStateStore stateStore)
     {
         final String completeKey = module.getCompleteKey();
-        final PluginManagerState currentState = stateStore.loadPluginState();
+        final DefaultPluginManagerState currentState = getMutableState(stateStore);
         if (!module.isEnabledByDefault())
         {
             currentState.setState(completeKey, Boolean.TRUE);

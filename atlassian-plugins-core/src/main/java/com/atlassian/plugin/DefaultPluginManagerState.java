@@ -21,43 +21,43 @@ import java.util.Map;
  * <p>
  * Please note that this method is not threadsafe.  Access to instances should be synchronised.
  */
-public class PluginManagerState implements Serializable
+public class DefaultPluginManagerState implements Serializable, PluginManagerState
 {
     private final Map<String, Boolean> map;
 
-    public PluginManagerState()
+    public DefaultPluginManagerState()
     {
         map = CopyOnWriteMap.newHashMap();
     }
 
-    public PluginManagerState(final Map<String, Boolean> map)
+    public DefaultPluginManagerState(final Map<String, Boolean> map)
     {
         this.map = CopyOnWriteMap.newHashMap(map);
     }
 
-    public PluginManagerState(final PluginManagerState state)
+    public DefaultPluginManagerState(final PluginManagerState state)
     {
         map = CopyOnWriteMap.newHashMap(state.getMap());
     }
 
-    /**
-     * Get the state of a given plugin.
+    /* (non-Javadoc)
+     * @see com.atlassian.plugin.PluginManagerStateAccessor#getState(java.lang.String)
      */
     public Boolean getState(final String key)
     {
         return map.get(key);
     }
 
-    /**
-     * Get the map of all states.
+    /* (non-Javadoc)
+     * @see com.atlassian.plugin.PluginManagerStateAccessor#getMap()
      */
     public Map<String, Boolean> getMap()
     {
         return Collections.unmodifiableMap(map);
     }
 
-    /**
-     * Whether or not a plugin is enabled, calculated from it's current state AND default state.
+    /* (non-Javadoc)
+     * @see com.atlassian.plugin.PluginManagerStateAccessor#isEnabled(com.atlassian.plugin.Plugin)
      */
     public boolean isEnabled(final Plugin plugin)
     {
@@ -65,8 +65,8 @@ public class PluginManagerState implements Serializable
         return (bool == null) ? plugin.isEnabledByDefault() : bool.booleanValue();
     }
 
-    /**
-     * Whether or not a given plugin module is enabled in this state, calculated from it's current state AND default state.
+    /* (non-Javadoc)
+     * @see com.atlassian.plugin.PluginManagerStateAccessor#isEnabled(com.atlassian.plugin.ModuleDescriptor)
      */
     public boolean isEnabled(final ModuleDescriptor<?> pluginModule)
     {
@@ -112,6 +112,9 @@ public class PluginManagerState implements Serializable
         map.remove(key);
     }
 
+    /* (non-Javadoc)
+     * @see com.atlassian.plugin.PluginManagerStateAccessor#getPluginStateMap(com.atlassian.plugin.Plugin)
+     */
     public Map<String, Boolean> getPluginStateMap(final Plugin plugin)
     {
         final Map<String, Boolean> state = new HashMap<String, Boolean>(getMap());

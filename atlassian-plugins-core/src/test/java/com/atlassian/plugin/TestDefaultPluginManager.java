@@ -329,7 +329,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin.xml"));
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
 
-        final PluginManagerState state = pluginStateStore.loadPluginState();
+        final DefaultPluginManagerState state = new DefaultPluginManagerState(pluginStateStore.loadPluginState());
         state.setState("test.atlassian.plugin", Boolean.FALSE);
         pluginStateStore.savePluginState(state);
 
@@ -350,7 +350,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin.xml"));
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
 
-        final PluginManagerState state = pluginStateStore.loadPluginState();
+        final DefaultPluginManagerState state = new DefaultPluginManagerState(pluginStateStore.loadPluginState());
         state.setState("test.atlassian.plugin:bear", Boolean.FALSE);
         pluginStateStore.savePluginState(state);
 
@@ -1022,8 +1022,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         final Plugin plugin = (Plugin) mockPlugin.proxy();
         final PluginArtifact pluginArtifact = (PluginArtifact) mockPluginJar.proxy();
 
-        mockPluginStateStore.expectAndReturn("loadPluginState", new PluginManagerState());
-        mockPluginStateStore.expectAndReturn("loadPluginState", new PluginManagerState());
+        mockPluginStateStore.expectAndReturn("loadPluginState", new DefaultPluginManagerState());
+        mockPluginStateStore.expectAndReturn("loadPluginState", new DefaultPluginManagerState());
         mockDescriptorParser.matchAndReturn("getKey", "test");
         mockRepository.expect("installPlugin", C.args(C.eq("test"), C.eq(pluginArtifact)));
         mockPluginLoader.expectAndReturn("loadAllPlugins", C.eq(moduleDescriptorFactory), Collections.emptyList());
