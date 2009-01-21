@@ -1,9 +1,23 @@
 package com.atlassian.plugin.refimpl;
 
-import com.atlassian.plugin.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletContext;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.PluginController;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.hostcontainer.HostContainer;
-import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
 import com.atlassian.plugin.main.AtlassianPlugins;
 import com.atlassian.plugin.main.PluginsConfiguration;
 import com.atlassian.plugin.main.PluginsConfigurationBuilder;
@@ -13,19 +27,24 @@ import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.refimpl.servlet.SimpleServletContextFactory;
 import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
-import com.atlassian.plugin.servlet.*;
+import com.atlassian.plugin.servlet.ContentTypeResolver;
+import com.atlassian.plugin.servlet.DefaultServletModuleManager;
+import com.atlassian.plugin.servlet.DownloadStrategy;
+import com.atlassian.plugin.servlet.PluginResourceDownload;
+import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.descriptors.ServletContextListenerModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.servlet.util.ServletContextHostContainerAccessor;
 import com.atlassian.plugin.util.Assertions;
-import com.atlassian.plugin.webresource.*;
-import org.apache.commons.lang.StringUtils;
-
-import javax.servlet.ServletContext;
-import java.io.File;
-import java.util.*;
+import com.atlassian.plugin.web.descriptors.DefaultWebItemModuleDescriptor;
+import com.atlassian.plugin.webresource.PluginResourceLocator;
+import com.atlassian.plugin.webresource.PluginResourceLocatorImpl;
+import com.atlassian.plugin.webresource.WebResourceIntegration;
+import com.atlassian.plugin.webresource.WebResourceManager;
+import com.atlassian.plugin.webresource.WebResourceManagerImpl;
+import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
 
 /**
  * A simple class that behaves like Spring's ContainerManager class.
@@ -42,7 +61,7 @@ public class ContainerManager
     private final Map<Class<?>, Object> publicContainer;
     private final AtlassianPlugins plugins;
     private final HostContainer hostContainer;
-
+    
     private static ContainerManager instance;
     private final List<DownloadStrategy> downloadStrategies;
 
@@ -73,6 +92,7 @@ public class ContainerManager
         moduleDescriptorFactory.addModuleDescriptor("servlet-context-param", ServletContextParamModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("servlet-context-listener", ServletContextListenerModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("web-resource", WebResourceModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("web-item", DefaultWebItemModuleDescriptor.class);
 
         final DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
         final List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
@@ -101,7 +121,7 @@ public class ContainerManager
         PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
 
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration);
-
+        
         publicContainer = new HashMap<Class<?>, Object>();
         publicContainer.put(PluginController.class, plugins.getPluginController());
         publicContainer.put(PluginAccessor.class, pluginAccessor);
@@ -110,7 +130,7 @@ public class ContainerManager
         publicContainer.put(WebResourceManager.class, webResourceManager);
         publicContainer.put(Map.class, publicContainer);
 
-        hostContainer = new SimpleConstructorHostContainer(publicContainer);
+        hostContainer = new RefimplHostContainer(publicContainer, osgiContainerManager);
 
         try
         {
@@ -123,8 +143,6 @@ public class ContainerManager
 
         downloadStrategies = new ArrayList<DownloadStrategy>();
         downloadStrategies.add(pluginDownloadStrategy);
-
-
     }
 
     private File makeSureDirectoryExists(ServletContext servletContext, String relativePath)
