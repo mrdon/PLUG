@@ -10,6 +10,16 @@ import javax.servlet.ServletContext;
  */
 public class SpringAwarePackageScannerConfiguration extends DefaultPackageScannerConfiguration implements ServletContextAware
 {
+    public SpringAwarePackageScannerConfiguration()
+    {
+        super();
+    }
+
+    public SpringAwarePackageScannerConfiguration(String hostVersion)
+    {
+        super(hostVersion);
+    }
+
     @Override
     public void setServletContext(ServletContext servletContext)
     {
