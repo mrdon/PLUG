@@ -14,6 +14,7 @@ import java.util.Map;
 public class DefaultWebLink extends AbstractWebItem implements WebLink
 {
     String url;
+    boolean absoluteUrl;
     String accessKey;
     String id;
 
@@ -23,6 +24,7 @@ public class DefaultWebLink extends AbstractWebItem implements WebLink
         this.url = linkEl.getTextTrim();
         this.accessKey = linkEl.attributeValue("accessKey");
         this.id = linkEl.attributeValue("linkId");
+        this.absoluteUrl = "true".equals(linkEl.attributeValue("absolute"));
     }
 
     public String getRenderedUrl(Map<String,Object> context)
@@ -33,7 +35,7 @@ public class DefaultWebLink extends AbstractWebItem implements WebLink
 
     private boolean isRelativeUrl(String url)
     {
-        return !(url.startsWith("http://") || url.startsWith("https://"));
+        return !(absoluteUrl || url.startsWith("http://") || url.startsWith("https://"));
     }
 
     public String getDisplayableUrl(HttpServletRequest req, Map<String,Object> context)
