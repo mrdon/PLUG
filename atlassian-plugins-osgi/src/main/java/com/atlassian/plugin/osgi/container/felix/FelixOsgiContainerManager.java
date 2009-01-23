@@ -536,12 +536,12 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             final List<Bundle> bundles = new ArrayList<Bundle>();
             com.atlassian.plugin.util.FileUtils.conditionallyExtractZipFile(frameworkBundlesUrl, frameworkBundlesDir);
             for (final File bundleFile : frameworkBundlesDir.listFiles(new FilenameFilter()
-            {
-                public boolean accept(final File file, final String s)
                 {
-                    return s.endsWith(".jar");
-                }
-            }))
+                    public boolean accept(final File file, final String s)
+                    {
+                        return s.endsWith(".jar");
+                    }
+                }))
             {
                 bundles.add(install(bundleFile, false));
             }

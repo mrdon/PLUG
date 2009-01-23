@@ -44,7 +44,7 @@ public abstract class PluginInContainerTestBase extends TestCase
     @Override
     public void setUp() throws Exception
     {
-        tmpDir = new File("target/plugin-temp");
+        tmpDir = new File("target/plugin-temp").getAbsoluteFile();
         if (tmpDir.exists())
         {
             FileUtils.cleanDirectory(tmpDir);
