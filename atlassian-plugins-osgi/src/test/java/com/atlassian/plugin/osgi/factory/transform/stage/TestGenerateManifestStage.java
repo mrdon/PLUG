@@ -2,6 +2,7 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.test.PluginJarBuilder;
@@ -53,7 +54,7 @@ public class TestGenerateManifestStage extends TestCase
                         "package com.mycompany.myapp; public class Foo {}")
                 .build();
 
-        final TransformContext context = new TransformContext(Collections.<HostComponentRegistration> emptyList(), file,
+        final TransformContext context = new TransformContext(Collections.<HostComponentRegistration> emptyList(), new JarPluginArtifact(file),
             PluginAccessor.Descriptor.FILENAME);
 
         final Attributes attrs = executeStage(context);
@@ -63,17 +64,17 @@ public class TestGenerateManifestStage extends TestCase
         assertEquals("A sample plugin for demonstrating the file format.", attrs.getValue(Constants.BUNDLE_DESCRIPTION));
         assertEquals("Atlassian Software Systems Pty Ltd", attrs.getValue(Constants.BUNDLE_VENDOR));
         assertEquals("http://www.atlassian.com", attrs.getValue(Constants.BUNDLE_DOCURL));
-        assertEquals("com.mycompany.myapp", attrs.getValue(Constants.EXPORT_PACKAGE));
+        assertEquals(null, attrs.getValue(Constants.EXPORT_PACKAGE));
         assertEquals(".", attrs.getValue(Constants.BUNDLE_CLASSPATH));
         assertEquals("*;timeout:=60", attrs.getValue("Spring-Context"));
-        assertEquals("com.mycompany.myapp;resolution:=optional", attrs.getValue(Constants.IMPORT_PACKAGE));
+        assertEquals(null, attrs.getValue(Constants.IMPORT_PACKAGE));
 
     }
 
     public void testGenerateManifestWithProperInferredImports() throws Exception
     {
         final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0").build();
-        final TransformContext context = new TransformContext(null, file, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, new JarPluginArtifact(file), PluginAccessor.Descriptor.FILENAME);
         context.getExtraImports().add(AttributeSet.class.getPackage().getName());
         final Attributes attrs = executeStage(context);
 
@@ -93,7 +94,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
-        final TransformContext context = new TransformContext(null, plugin, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, new JarPluginArtifact(plugin), PluginAccessor.Descriptor.FILENAME);
         context.getExtraImports().add(AttributeSet.class.getPackage().getName());
         final Attributes attrs = executeStage(context);
         assertEquals("my.foo.symbolicName", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
@@ -114,7 +115,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
-        final TransformContext context = new TransformContext(null, plugin, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, new JarPluginArtifact(plugin), PluginAccessor.Descriptor.FILENAME);
         final Attributes attrs = executeStage(context);
 
         final Collection classpathEntries = Arrays.asList(attrs.getValue(Constants.BUNDLE_CLASSPATH).split(","));
@@ -141,7 +142,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
-        final TransformContext context = new TransformContext(null, plugin, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, new JarPluginArtifact(plugin), PluginAccessor.Descriptor.FILENAME);
         final Attributes attrs = executeStage(context);
 
         assertEquals("1.0", attrs.getValue(Constants.BUNDLE_VERSION));
@@ -153,7 +154,7 @@ public class TestGenerateManifestStage extends TestCase
         assertTrue(classpathEntries.contains("META-INF/lib/innerjar.jar"));
 
         final Collection imports = Arrays.asList(attrs.getValue("Import-Package").split(","));
-        assertEquals(3, imports.size());
+        assertEquals(2, imports.size());
         assertTrue(imports.contains(Logger.class.getPackage().getName() + ";resolution:=optional"));
         assertTrue(imports.contains(Filter.class.getPackage().getName() + ";resolution:=optional"));
     }
@@ -166,7 +167,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addJava("foo.internal.MyPrivateClass", "package foo.internal; public class MyPrivateClass{}")
                 .build();
 
-        final TransformContext context = new TransformContext(null, plugin, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, new JarPluginArtifact(plugin), PluginAccessor.Descriptor.FILENAME);
         context.getBndInstructions().put("Export-Package", "!*.internal.*,*");
         final Attributes attrs = executeStage(context);
         assertEquals("test.plugin", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));

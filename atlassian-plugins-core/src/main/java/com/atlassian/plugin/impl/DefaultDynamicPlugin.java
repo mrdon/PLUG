@@ -2,6 +2,8 @@ package com.atlassian.plugin.impl;
 
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.JarPluginArtifact;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -11,18 +13,23 @@ import java.net.URL;
  */
 public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugin
 {
-    private final DeploymentUnit deploymentUnit;
+    private final PluginArtifact pluginArtifact;
     private final PluginClassLoader loader;
     private boolean deletable = true;
     private boolean bundled = false;
 
     public DefaultDynamicPlugin(final DeploymentUnit deploymentUnit, final PluginClassLoader loader)
     {
+        this(new JarPluginArtifact(deploymentUnit.getPath()), loader);
+    }
+
+    public DefaultDynamicPlugin(final PluginArtifact pluginArtifact, final PluginClassLoader loader)
+    {
         if (loader == null)
         {
             throw new IllegalArgumentException("PluginClassLoader must not be null");
         }
-        this.deploymentUnit = deploymentUnit;
+        this.pluginArtifact = pluginArtifact;
         this.loader = loader;
     }
 
@@ -63,9 +70,20 @@ public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugi
         return true;
     }
 
+    /**
+     * @deprecated Since 2.2.0, use {@link #getPluginArtifact()} instead
+     */
     public DeploymentUnit getDeploymentUnit()
     {
-        return deploymentUnit;
+        return new DeploymentUnit(pluginArtifact.toFile());
+    }
+
+    /**
+     * @since 2.2.0
+     */
+    public PluginArtifact getPluginArtifact()
+    {
+        return pluginArtifact;
     }
 
     public boolean isDeleteable()

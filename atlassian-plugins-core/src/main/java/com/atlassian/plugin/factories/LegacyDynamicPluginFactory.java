@@ -1,9 +1,6 @@
 package com.atlassian.plugin.factories;
 
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
@@ -44,31 +41,40 @@ public class LegacyDynamicPluginFactory implements PluginFactory
     }
 
     /**
-     * Deploys the plugin jar
-     * @param deploymentUnit the jar to deploy
-     * @param moduleDescriptorFactory The factory for plugin modules
-     * @return The instantiated and populated plugin
-     * @throws PluginParseException If the descriptor cannot be parsed
+     * @deprecated Since 2.2.0, use {@link #create(PluginArtifact,ModuleDescriptorFactory)} instead
      */
     public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        Validate.notNull(deploymentUnit, "The deployment unit must not be null");
+        return create(new JarPluginArtifact(deploymentUnit.getPath()), moduleDescriptorFactory);
+    }
+
+    /**
+     * Deploys the plugin artifact
+     * @param pluginArtifact the plugin artifact to deploy
+     * @param moduleDescriptorFactory The factory for plugin modules
+     * @return The instantiated and populated plugin
+     * @throws PluginParseException If the descriptor cannot be parsed
+     * @since 2.2.0
+     */
+    public Plugin create(PluginArtifact pluginArtifact, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    {
+        Validate.notNull(pluginArtifact, "The deployment unit must not be null");
         Validate.notNull(moduleDescriptorFactory, "The module descriptor factory must not be null");
 
+        File file = pluginArtifact.toFile();
         Plugin plugin = null;
         InputStream pluginDescriptor = null;
         PluginClassLoader loader = null;
         try
         {
-            loader = new PluginClassLoader(deploymentUnit.getPath(), Thread.currentThread().getContextClassLoader(), tempDirectory);
-            URL pluginDescriptorUrl = loader.getLocalResource(pluginDescriptorFileName);
-            if (pluginDescriptorUrl == null)
-                throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);
+            pluginDescriptor = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
+            if (pluginDescriptor == null)
+                throw new PluginParseException("No descriptor found in classloader for : " + file);
 
-            pluginDescriptor = pluginDescriptorUrl.openStream();
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
-            plugin = parser.configurePlugin(moduleDescriptorFactory, createPlugin(deploymentUnit, loader));
+            loader = new PluginClassLoader(file, Thread.currentThread().getContextClassLoader(), tempDirectory);
+            plugin = parser.configurePlugin(moduleDescriptorFactory, createPlugin(pluginArtifact, loader));
         }
         // Under normal conditions, the deployer would be closed when the plugins are undeployed. However,
         // these are not normal conditions, so we need to make sure that we close them explicitly.
@@ -86,11 +92,6 @@ public class LegacyDynamicPluginFactory implements PluginFactory
         {
             if (loader != null) loader.close();
             throw e;
-        }
-        catch (IOException e)
-        {
-            if (loader != null) loader.close();
-            throw new PluginParseException(e);
         } finally
         {
             IOUtils.closeQuietly(pluginDescriptor);
@@ -99,14 +100,23 @@ public class LegacyDynamicPluginFactory implements PluginFactory
     }
 
     /**
-     * Creates the plugin.  Override to use a different Plugin class
-     * @param deploymentUnit The deployment unit
-     * @param loader The plugin loader
-     * @return The plugin instance
+     * @deprecated Since 2.2.0, use {@link #createPlugin(PluginArtifact,PluginClassLoader)} instead
      */
     protected DynamicPlugin createPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
     {
-        return new DefaultDynamicPlugin(deploymentUnit, loader);
+        return createPlugin(new JarPluginArtifact(deploymentUnit.getPath()), loader);
+    }
+
+    /**
+     * Creates the plugin.  Override to use a different Plugin class
+     * @param pluginArtifact The plugin artifact
+     * @param loader The plugin loader
+     * @return The plugin instance
+     * @since 2.2.0
+     */
+    protected DynamicPlugin createPlugin(PluginArtifact pluginArtifact, PluginClassLoader loader)
+    {
+        return new DefaultDynamicPlugin(pluginArtifact, loader);
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.SomeInterface;
 import com.atlassian.plugin.osgi.factory.transform.FooChild;
 import com.atlassian.plugin.osgi.factory.transform.StubHostComponentRegistration;
@@ -64,7 +65,7 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, jar, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, new JarPluginArtifact(jar), PluginAccessor.Descriptor.FILENAME);
         transformer.execute(context);
         assertTrue(context.getExtraImports().contains("javax.swing.event"));
 
@@ -82,7 +83,7 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, jar, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, new JarPluginArtifact(jar), PluginAccessor.Descriptor.FILENAME);
         transformer.execute(context);
         assertTrue(context.getExtraImports().contains(SomeClass.class.getPackage().getName()));
 

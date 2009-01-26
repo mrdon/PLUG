@@ -469,14 +469,32 @@ public class PluginInstallTest extends PluginInContainerTestBase
     public void testPluginWithServletDependentOnPackageImport() throws Exception
     {
         final PluginJarBuilder firstBuilder = new PluginJarBuilder("first");
-        firstBuilder.addPluginInformation("first", "Some name", "1.0").addFormattedJava("first.MyInterface", "package first;",
-            "public interface MyInterface {}").build(pluginsDir);
+        firstBuilder
+                .addPluginInformation("first", "Some name", "1.0")
+                .addFormattedJava("first.MyInterface",
+                        "package first;",
+                        "public interface MyInterface {}")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                    "Manifest-Version: 1.0",
+                    "Bundle-SymbolicName: foo",
+                    "Export-Package: first",
+                    "")
+                .build(pluginsDir);
 
-        new PluginJarBuilder("asecond", firstBuilder.getClassLoader()).addFormattedResource("atlassian-plugin.xml",
-            "<atlassian-plugin name='Test' key='asecond' pluginsVersion='2'>", "    <plugin-info>", "        <version>1.0</version>",
-            "    </plugin-info>", "    <servlet key='foo' class='second.MyServlet'>", "       <url-pattern>/foo</url-pattern>", "    </servlet>",
-            "</atlassian-plugin>").addFormattedJava("second.MyServlet", "package second;",
-            "public class MyServlet extends javax.servlet.http.HttpServlet implements first.MyInterface {}").build(pluginsDir);
+        new PluginJarBuilder("asecond", firstBuilder.getClassLoader())
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test' key='asecond' pluginsVersion='2'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "    </plugin-info>",
+                    "    <servlet key='foo' class='second.MyServlet'>",
+                    "       <url-pattern>/foo</url-pattern>",
+                    "    </servlet>",
+                    "</atlassian-plugin>")
+                .addFormattedJava("second.MyServlet",
+                    "package second;",
+                    "public class MyServlet extends javax.servlet.http.HttpServlet implements first.MyInterface {}")
+                .build(pluginsDir);
 
         initPluginManager(null, new SingleModuleDescriptorFactory("servlet", StubServletModuleDescriptor.class));
 

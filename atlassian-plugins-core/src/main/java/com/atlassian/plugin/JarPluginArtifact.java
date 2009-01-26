@@ -1,6 +1,7 @@
 package com.atlassian.plugin;
 
 import org.apache.commons.lang.Validate;
+import org.apache.commons.io.IOUtils;
 
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -20,6 +21,20 @@ public class JarPluginArtifact implements PluginArtifact
     {
         Validate.notNull(jarFile);
         this.jarFile = jarFile;
+    }
+
+    public boolean doesResourceExist(String name)
+    {
+        InputStream in = null;
+        try
+        {
+            in = getResourceAsStream(name);
+            return (in != null);
+        }
+        finally
+        {
+            IOUtils.closeQuietly(in);
+        }
     }
 
     /**
@@ -84,5 +99,10 @@ public class JarPluginArtifact implements PluginArtifact
         {
             throw new RuntimeException("Could not open JAR file for reading: " + jarFile, e);
         }
+    }
+
+    public File toFile()
+    {
+        return jarFile;
     }
 }

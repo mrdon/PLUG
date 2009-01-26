@@ -48,6 +48,7 @@ public class ComponentSpringStage implements TransformStage
                     Element interfaces = osgiService.addElement("osgi:interfaces");
                     for (String name : interfaceNames)
                     {
+                        ensureExported(name, context);
                         Element e = interfaces.addElement("beans:value");
                         e.setText(name);
                     }
@@ -59,4 +60,19 @@ public class ComponentSpringStage implements TransformStage
             }
         }
     }
+
+    void ensureExported(String className, TransformContext context)
+    {
+        String pkg = className.substring(0, className.lastIndexOf('.'));
+        if (!context.getExtraExports().contains(pkg))
+        {
+            String fileName = className.replace('.','/') + ".class";
+            
+            if (context.getPluginArtifact().doesResourceExist(fileName))
+            {
+                context.getExtraExports().add(pkg);
+            }
+        }
+    }
+
 }

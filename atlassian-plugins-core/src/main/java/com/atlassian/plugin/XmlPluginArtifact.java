@@ -17,6 +17,14 @@ public class XmlPluginArtifact implements PluginArtifact
     }
 
     /**
+     * Always returns false, since it doesn't make sense for an XML artifact
+     */
+    public boolean doesResourceExist(String name)
+    {
+        return false;
+    }
+
+    /**
      * Always returns null, since it doesn't make sense for an XML artifact
      */
     public InputStream getResourceAsStream(String name) throws PluginParseException
@@ -43,5 +51,10 @@ public class XmlPluginArtifact implements PluginArtifact
         {
             throw new RuntimeException("Could not find XML file for eading: " + xmlFile, e);
         }
+    }
+
+    public File toFile()
+    {
+        return xmlFile;
     }
 }

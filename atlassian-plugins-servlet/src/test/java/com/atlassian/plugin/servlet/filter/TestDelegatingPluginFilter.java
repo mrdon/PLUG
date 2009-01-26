@@ -1,6 +1,7 @@
 package com.atlassian.plugin.servlet.filter;
 
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
@@ -108,7 +109,7 @@ public class TestDelegatingPluginFilter extends TestCase
                 .addFile("atlassian-plugin.xml", getFileForResource("com/atlassian/plugin/servlet/filter/atlassian-plugin-filter.xml"))
                 .build();
         final PluginClassLoader loader = new PluginClassLoader(pluginFile);
-        Plugin plugin = new DefaultDynamicPlugin(null, loader);
+        Plugin plugin = new DefaultDynamicPlugin((PluginArtifact) null, loader);
         FilterAdapter testFilter = new FilterAdapter()
         {
             @Override

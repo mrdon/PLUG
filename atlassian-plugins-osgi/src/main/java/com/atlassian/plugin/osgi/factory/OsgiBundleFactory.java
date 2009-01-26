@@ -1,9 +1,6 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
@@ -51,7 +48,12 @@ public class OsgiBundleFactory implements PluginFactory
                 } catch (IOException e) {
                     throw new PluginParseException("Unable to parse manifest", e);
                 }
-                pluginKey = mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+                String symName = mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+                if (symName != null)
+                {
+                    pluginKey = getPluginKey(mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME),
+                        mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
+                }
             }
             return pluginKey;
         }
@@ -61,19 +63,37 @@ public class OsgiBundleFactory implements PluginFactory
         }
     }
 
-    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException {
-        Validate.notNull(deploymentUnit, "The plugin deployment unit is required");
+    /**
+     * @deprecated Since 2.2.0, use {@link #create(PluginArtifact,ModuleDescriptorFactory)} instead
+     */
+    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    {
+        return create(new JarPluginArtifact(deploymentUnit.getPath()), moduleDescriptorFactory);
+    }
+    /**
+     * Deploys the plugin artifact
+     * @param pluginArtifact the plugin artifact to deploy
+     * @param moduleDescriptorFactory The factory for plugin modules
+     * @return The instantiated and populated plugin
+     * @throws PluginParseException If the descriptor cannot be parsed
+     * @since 2.2.0
+     */
+    public Plugin create(PluginArtifact pluginArtifact, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    {
+        Validate.notNull(pluginArtifact, "The plugin artifact is required");
         Validate.notNull(moduleDescriptorFactory, "The module descriptor factory is required");
-        
+
+        File file = pluginArtifact.toFile();
         Bundle bundle;
         try
         {
-            bundle = osgi.installBundle(deploymentUnit.getPath());
+            bundle = osgi.installBundle(file);
         } catch (OsgiContainerException ex)
         {
-            return reportUnloadablePlugin(deploymentUnit.getPath(), ex);
+            return reportUnloadablePlugin(file, ex);
         }
-        return new OsgiBundlePlugin(bundle);
+        String key = getPluginKey(bundle.getSymbolicName(), (String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
+        return new OsgiBundlePlugin(bundle, key);
     }
 
     private Plugin reportUnloadablePlugin(File file, Exception e)
@@ -83,5 +103,10 @@ public class OsgiBundleFactory implements PluginFactory
         UnloadablePlugin plugin = new UnloadablePlugin();
         plugin.setErrorText("Unable to load plugin: "+e.getMessage());
         return plugin;
+    }
+
+    private String getPluginKey(String symbolicName, String version)
+    {
+        return symbolicName + "-" + version;
     }
 }

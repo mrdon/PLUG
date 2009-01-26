@@ -1,9 +1,6 @@
 package com.atlassian.plugin.factories;
 
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.impl.XmlDynamicPlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.parsers.DescriptorParser;
@@ -32,22 +29,31 @@ public class XmlDynamicPluginFactory implements PluginFactory
     }
 
     /**
-     * Deploys the plugin XML
-     * @param deploymentUnit the XML file to deploy
-     * @param moduleDescriptorFactory The factory for plugin modules
-     * @return The instantiated and populated plugin
-     * @throws com.atlassian.plugin.PluginParseException If the descriptor cannot be parsed
+     * @deprecated Since 2.2.0, use {@link #create(PluginArtifact,ModuleDescriptorFactory)} instead
      */
     public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        Validate.notNull(deploymentUnit, "The deployment unit must not be null");
+        return create(new XmlPluginArtifact(deploymentUnit.getPath()), moduleDescriptorFactory);
+    }
+
+    /**
+     * Deploys the plugin artifact
+     * @param pluginArtifact the plugin artifact to deploy
+     * @param moduleDescriptorFactory The factory for plugin modules
+     * @return The instantiated and populated plugin
+     * @throws PluginParseException If the descriptor cannot be parsed
+     * @since 2.2.0
+     */
+    public Plugin create(PluginArtifact pluginArtifact, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    {
+        Validate.notNull(pluginArtifact, "The deployment unit must not be null");
         Validate.notNull(moduleDescriptorFactory, "The module descriptor factory must not be null");
 
         Plugin plugin = null;
         InputStream pluginDescriptor = null;
         try
         {
-            pluginDescriptor = new FileInputStream(deploymentUnit.getPath());
+            pluginDescriptor = new FileInputStream(pluginArtifact.toFile());
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
             plugin = parser.configurePlugin(moduleDescriptorFactory, new XmlDynamicPlugin());

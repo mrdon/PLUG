@@ -52,7 +52,10 @@ public class GenerateManifestStage implements TransformStage
                 properties.put("Spring-Context", "*;timeout:=60");
                 properties.put(Analyzer.BUNDLE_SYMBOLICNAME, parser.getKey());
                 properties.put(Analyzer.IMPORT_PACKAGE, "*;resolution:=optional");
-                properties.put(Analyzer.EXPORT_PACKAGE, "*");
+
+                // Don't export anything by default
+                //properties.put(Analyzer.EXPORT_PACKAGE, "*");
+
                 properties.put(Analyzer.BUNDLE_VERSION, info.getVersion());
 
                 // remove the verbose Include-Resource entry from generated manifest
@@ -81,6 +84,12 @@ public class GenerateManifestStage implements TransformStage
 
                 // Add extra imports to the imports list
                 properties.put(Analyzer.IMPORT_PACKAGE, addExtraImports(properties.getProperty(Analyzer.IMPORT_PACKAGE), context.getExtraImports()));
+
+                // Add extra exports to the exports list
+                if (!properties.containsKey(Analyzer.EXPORT_PACKAGE))
+                {
+                    properties.put(Analyzer.EXPORT_PACKAGE, addExtraExports(context.getExtraExports()));
+                }
                 builder.setProperties(properties);
             }
 
@@ -95,6 +104,21 @@ public class GenerateManifestStage implements TransformStage
         {
             throw new PluginParseException("Unable to process plugin to generate OSGi manifest", t);
         }
+    }
+
+    private String addExtraExports(List<String> extraExports)
+    {
+        StringBuilder result = new StringBuilder();
+        for (String exp : extraExports)
+        {
+            result.append(exp).append(",");
+        }
+        if (result.length() > 0)
+        {
+            result.deleteCharAt(result.length() - 1);
+        }
+
+        return result.toString();
     }
 
     private boolean isOsgiBundle(Manifest manifest) throws IOException

@@ -1,15 +1,23 @@
 package com.atlassian.plugin;
 
 import java.io.InputStream;
+import java.io.File;
 
 /**
  * Allows the retrieval of files and/or an input stream of a plugin artifact. Implementations
  * must allow multiple calls to {@link #getInputStream()}.
  *
  * @see PluginController
+ * @since 2.0.0
  */
 public interface PluginArtifact
 {
+    /**
+     * @return true if the resource exists in this artifact, otherwise false
+     * @since 2.2.0
+     */
+    boolean doesResourceExist(String name);
+
     /**
      * @return an input stream of the resource specified inside the artifact.  Null if the resource cannot be found.
      * @throws PluginParseException if the there was an exception retrieving the resource from the artifact
@@ -23,8 +31,14 @@ public interface PluginArtifact
     String getName();
 
     /**
-     * Returns an InputStream for the entire plugin artifact. Calling this
+     * @return an InputStream for the entire plugin artifact. Calling this
      * multiple times will return a fresh input stream each time.
      */
     InputStream getInputStream();
+
+    /**
+     * @return the artifact as a file, or its underlying file if it is already one
+     * @since 2.2.0
+     */
+    File toFile();
 }

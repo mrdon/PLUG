@@ -2,6 +2,8 @@ package com.atlassian.plugin.osgi.factory.transform;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.factory.transform.stage.*;
+import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.PluginArtifact;
 import org.apache.commons.lang.Validate;
 import org.apache.log4j.Logger;
 
@@ -68,9 +70,22 @@ public class DefaultPluginTransformer implements PluginTransformer
      */
     public File transform(File pluginJar, List<HostComponentRegistration> regs) throws PluginTransformationException
     {
-        Validate.notNull(pluginJar, "The plugin jar is required");
+        return transform(new JarPluginArtifact(pluginJar), regs);
+    }
+
+    /**
+     * Transforms the file into an OSGi bundle
+     *
+     * @param pluginArtifact The plugin artifact, usually a jar
+     * @param regs      The list of registered host components
+     * @return The new OSGi-enabled plugin jar
+     * @throws PluginTransformationException If anything goes wrong
+     */
+    public File transform(PluginArtifact pluginArtifact, List<HostComponentRegistration> regs) throws PluginTransformationException
+    {
+        Validate.notNull(pluginArtifact, "The plugin artifact is required");
         Validate.notNull(regs, "The host component registrations are required");
-        TransformContext context = new TransformContext(regs, pluginJar, pluginDescriptorPath);
+        TransformContext context = new TransformContext(regs, pluginArtifact, pluginDescriptorPath);
         for (TransformStage stage : stages)
         {
             stage.execute(context);
@@ -82,7 +97,7 @@ public class DefaultPluginTransformer implements PluginTransformer
             if (log.isDebugEnabled())
             {
                 StringBuilder sb = new StringBuilder();
-                sb.append("Overriding files in ").append(pluginJar.getName()).append(":\n");
+                sb.append("Overriding files in ").append(pluginArtifact.toString()).append(":\n");
                 for (Map.Entry<String, byte[]> entry : context.getFileOverrides().entrySet())
                 {
                     sb.append("==").append(entry.getKey()).append("==\n");
@@ -90,7 +105,7 @@ public class DefaultPluginTransformer implements PluginTransformer
                 }
                 log.debug(sb.toString());
             }
-            return addFilesToExistingZip(pluginJar, context.getFileOverrides());
+            return addFilesToExistingZip(pluginArtifact.toFile(), context.getFileOverrides());
         }
         catch (IOException e)
         {

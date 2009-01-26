@@ -1,7 +1,6 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.descriptors.ChainModuleDescriptorFactory;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -74,25 +73,40 @@ public class OsgiPluginFactory implements PluginFactory
         return pluginKey;
     }
 
-    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException {
-        Validate.notNull(deploymentUnit, "The plugin deployment unit is required");
+    /**
+     * @deprecated Since 2.2.0, use {@link #create(PluginArtifact,ModuleDescriptorFactory)} instead
+     */
+    public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    {
+        return create(new JarPluginArtifact(deploymentUnit.getPath()), moduleDescriptorFactory);
+    }
+
+    /**
+     * Deploys the plugin artifact
+     * @param pluginArtifact the plugin artifact to deploy
+     * @param moduleDescriptorFactory The factory for plugin modules
+     * @return The instantiated and populated plugin
+     * @throws PluginParseException If the descriptor cannot be parsed
+     * @since 2.2.0
+     */
+    public Plugin create(PluginArtifact pluginArtifact, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    {
+        Validate.notNull(pluginArtifact, "The plugin deployment unit is required");
         Validate.notNull(moduleDescriptorFactory, "The module descriptor factory is required");
 
         Plugin plugin = null;
         InputStream pluginDescriptor = null;
-        PluginClassLoader loader = new PluginClassLoader(deploymentUnit.getPath());
-
-        if (loader.getResource(pluginDescriptorFileName) == null)
-            throw new PluginParseException("No descriptor found in classloader for : " + deploymentUnit);
-
         try
         {
+            pluginDescriptor = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
+            if (pluginDescriptor == null)
+                throw new PluginParseException("No descriptor found in classloader for : " + pluginArtifact);
+
             ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
-            pluginDescriptor = loader.getResourceAsStream(pluginDescriptorFileName);
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
 
-            Bundle existingBundle = findBundle(parser.getKey(), parser.getPluginInformation().getVersion(), deploymentUnit);
+            Bundle existingBundle = findBundle(parser.getKey(), parser.getPluginInformation().getVersion(), pluginArtifact.toFile());
             Plugin osgiPlugin;
             if (existingBundle != null)
             {
@@ -101,7 +115,7 @@ public class OsgiPluginFactory implements PluginFactory
             }
             else
             {
-                osgiPlugin = createOsgiPlugin(deploymentUnit.getPath());
+                osgiPlugin = createOsgiPlugin(pluginArtifact);
             }
                 
             plugin = parser.configurePlugin(combinedFactory, osgiPlugin);
@@ -154,27 +168,27 @@ public class OsgiPluginFactory implements PluginFactory
 
     }
 
-    private Plugin createOsgiPlugin(File file)
+    private Plugin createOsgiPlugin(PluginArtifact pluginArtifact)
     {
         try
         {
-            File transformedFile = pluginTransformer.transform(file, osgi.getHostComponentRegistrations());
+            File transformedFile = pluginTransformer.transform(pluginArtifact, osgi.getHostComponentRegistrations());
             return new OsgiPlugin(osgi.installBundle(transformedFile));
         } catch (OsgiContainerException e)
         {
-            return reportUnloadablePlugin(file, e);
+            return reportUnloadablePlugin(pluginArtifact.toFile(), e);
         } catch (PluginTransformationException ex)
         {
-            return reportUnloadablePlugin(file, ex);
+            return reportUnloadablePlugin(pluginArtifact.toFile(), ex);
         }
     }
 
-    private Bundle findBundle(String key, String version, DeploymentUnit deploymentUnit)
+    private Bundle findBundle(String key, String version, File pluginFile)
     {
         for (Bundle bundle : osgi.getBundles())
         {
             if (key.equals(bundle.getSymbolicName()) && version.equals(bundle.getHeaders().get(Constants.BUNDLE_VERSION))
-                    && deploymentUnit.lastModified() < bundle.getLastModified())
+                    && pluginFile.lastModified() < bundle.getLastModified())
             {
                 return bundle;
             }

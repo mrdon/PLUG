@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.test.PluginJarBuilder;
@@ -20,7 +21,7 @@ public class TestAddBundleOverridesStage extends TestCase
             "    </plugin-info>", "</atlassian-plugin>").build();
 
         final AddBundleOverridesStage stage = new AddBundleOverridesStage();
-        final TransformContext context = new TransformContext(Collections.<HostComponentRegistration> emptyList(), plugin,
+        final TransformContext context = new TransformContext(Collections.<HostComponentRegistration> emptyList(), new JarPluginArtifact(plugin),
             PluginAccessor.Descriptor.FILENAME);
         stage.execute(context);
         assertEquals("!*.internal.*,*", context.getBndInstructions().get("Export-Package"));

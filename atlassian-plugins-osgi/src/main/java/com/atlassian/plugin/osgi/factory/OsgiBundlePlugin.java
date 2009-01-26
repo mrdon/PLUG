@@ -18,14 +18,16 @@ public class OsgiBundlePlugin extends OsgiPlugin
     private Bundle bundle;
     private PluginInformation pluginInformation;
     private Date dateLoaded;
+    private String key;
 
-    public OsgiBundlePlugin(Bundle bundle)
+    public OsgiBundlePlugin(Bundle bundle, String key)
     {
         super(bundle);
         this.bundle = bundle;
         this.pluginInformation = new PluginInformation();
         pluginInformation.setDescription((String) bundle.getHeaders().get(Constants.BUNDLE_DESCRIPTION));
         pluginInformation.setVersion((String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
+        this.key = key;
         this.dateLoaded = new Date();
     }
     
@@ -52,7 +54,7 @@ public class OsgiBundlePlugin extends OsgiPlugin
 
     public String getI18nNameKey()
     {
-        return bundle.getSymbolicName();
+        return key;
     }
 
     public void setI18nNameKey(String i18nNameKey)
@@ -62,7 +64,7 @@ public class OsgiBundlePlugin extends OsgiPlugin
 
     public String getKey()
     {
-        return bundle.getSymbolicName();
+        return key;
     }
 
     public void setKey(String aPackage)

@@ -119,7 +119,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
                 pluginKey = factory.canCreate(artifact);
                 if (pluginKey != null)
                 {
-                    plugin = factory.create(deploymentUnit, moduleDescriptorFactory);
+                    plugin = factory.create(artifact, moduleDescriptorFactory);
                     if (plugin != null)
                     {
                         break;

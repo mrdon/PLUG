@@ -5,10 +5,7 @@ import java.net.URL;
 
 import junit.framework.TestCase;
 
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginInformation;
-import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
 import com.atlassian.plugin.util.ClassLoaderUtils;
@@ -33,7 +30,7 @@ public class TestXmlDescriptorParser extends TestCase
         mockFactory.expect("getModuleDescriptorClass", "unknown-plugin");
 
         // create a Plugin for testing
-        Plugin testPlugin = new DefaultDynamicPlugin(null, classLoader);
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) null, classLoader);
 
         try
         {
@@ -72,7 +69,7 @@ public class TestXmlDescriptorParser extends TestCase
         mockFactory.expect("getModuleDescriptorClass", "unknown-plugin");
 
         // create a Plugin for testing
-        Plugin testPlugin = new DefaultDynamicPlugin(null, classLoader);
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) null, classLoader);
         parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
         assertEquals(2, testPlugin.getPluginsVersion());
     }

@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
@@ -43,14 +44,10 @@ public class SpringTransformerTestHelper
     {
         if (pluginJar == null)
         {
-            final StringWriter swriter = new StringWriter();
-            final OutputFormat outformat = OutputFormat.createPrettyPrint();
-            final XMLWriter writer = new XMLWriter(swriter, outformat);
-            writer.write(pluginRoot.getDocument());
-            writer.flush();
-            pluginJar = new PluginJarBuilder().addResource(PluginAccessor.Descriptor.FILENAME, swriter.toString()).build();
+            final String swriter = elementToString(pluginRoot);
+            pluginJar = new PluginJarBuilder().addResource(PluginAccessor.Descriptor.FILENAME, swriter).build();
         }
-        final TransformContext context = new TransformContext(regs, pluginJar, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, new JarPluginArtifact(pluginJar), PluginAccessor.Descriptor.FILENAME);
 
         transformer.execute(context);
 
@@ -90,6 +87,17 @@ public class SpringTransformerTestHelper
             }
         }
         return springRoot;
+    }
+
+    static String elementToString(Element pluginRoot)
+            throws IOException
+    {
+        final StringWriter swriter = new StringWriter();
+        final OutputFormat outformat = OutputFormat.createPrettyPrint();
+        final XMLWriter writer = new XMLWriter(swriter, outformat);
+        writer.write(pluginRoot.getDocument());
+        writer.flush();
+        return swriter.toString();
     }
 
     private static void printDocument(final Document springDoc) throws IOException

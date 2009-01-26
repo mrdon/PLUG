@@ -3,9 +3,11 @@ package com.atlassian.plugin.factories;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 
 import com.mockobjects.dynamic.Mock;
+import com.mockobjects.dynamic.C;
 
 import java.io.File;
 
@@ -17,10 +19,12 @@ public class TestLegacyDynamicPluginFactory extends TestCase
     {
         final LegacyDynamicPluginFactory factory = new LegacyDynamicPluginFactory(PluginAccessor.Descriptor.FILENAME);
         final Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
-        final DeploymentUnit unit = new DeploymentUnit(new File("some crap file"));
         try
         {
-            factory.create(unit, (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy());
+            Mock mockArtifact = new Mock(PluginArtifact.class);
+            mockArtifact.expectAndReturn("getResourceAsStream", C.ANY_ARGS, null);
+            mockArtifact.expectAndReturn("toFile", new File("sadfasdf"));
+            factory.create((PluginArtifact) mockArtifact.proxy(), (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy());
             fail("Should have thrown an exception");
         }
         catch (final PluginParseException ex)
