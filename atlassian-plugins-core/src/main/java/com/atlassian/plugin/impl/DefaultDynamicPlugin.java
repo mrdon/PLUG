@@ -4,6 +4,7 @@ import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.PluginState;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -17,6 +18,7 @@ public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugi
     private final PluginClassLoader loader;
     private boolean deletable = true;
     private boolean bundled = false;
+    private boolean closed = false;
 
     public DefaultDynamicPlugin(final DeploymentUnit deploymentUnit, final PluginClassLoader loader)
     {
@@ -109,5 +111,12 @@ public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugi
     public void close()
     {
         loader.close();
+        closed = true;
+    }
+
+    @Override
+    public PluginState getPluginState()
+    {
+        return (closed ? PluginState.CLOSED : super.getPluginState());
     }
 }

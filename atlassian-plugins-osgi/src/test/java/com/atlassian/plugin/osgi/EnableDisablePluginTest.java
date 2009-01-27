@@ -22,7 +22,7 @@ public class EnableDisablePluginTest extends PluginInContainerTestBase
         assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
         pluginManager.disablePlugin("enabledisable");
         pluginManager.enablePlugin("enabledisable");
-        Thread.sleep(3000);
+        Thread.sleep(5000);
         plugin = pluginManager.getPlugin("enabledisable");
         assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
     }

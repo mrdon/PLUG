@@ -39,7 +39,7 @@ public abstract class PluginInContainerTestBase extends TestCase
     protected File pluginsDir;
     protected ModuleDescriptorFactory moduleDescriptorFactory;
     protected DefaultPluginManager pluginManager;
-    private PluginEventManager pluginEventManager;
+    protected PluginEventManager pluginEventManager;
 
     @Override
     public void setUp() throws Exception
@@ -80,7 +80,9 @@ public abstract class PluginInContainerTestBase extends TestCase
         initPluginManager(new HostComponentProvider()
         {
             public void provide(final ComponentRegistrar registrar)
-            {}
+            {
+                registrar.register(PluginEventManager.class).forInstance(pluginEventManager);
+            }
         }, new DefaultModuleDescriptorFactory(new DefaultHostContainer()));
     }
 
@@ -99,11 +101,23 @@ public abstract class PluginInContainerTestBase extends TestCase
         this.moduleDescriptorFactory = moduleDescriptorFactory;
         final PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration(version);
         scannerConfig.getPackageIncludes().add("com.atlassian.plugin*");
+        scannerConfig.getPackageIncludes().add("javax.servlet*");
         pluginEventManager = new DefaultPluginEventManager();
-        osgiContainerManager = new FelixOsgiContainerManager(frameworkBundlesDir, scannerConfig, hostComponentProvider, pluginEventManager, cacheDir);
+        HostComponentProvider requiredWrappingProvider = new HostComponentProvider()
+        {
+            public void provide(ComponentRegistrar registrar)
+            {
+                registrar.register(PluginEventManager.class).forInstance(pluginEventManager);
+                if (hostComponentProvider != null)
+                {
+                    hostComponentProvider.provide(registrar);
+                }
+            }
+        };
+        osgiContainerManager = new FelixOsgiContainerManager(frameworkBundlesDir, scannerConfig, requiredWrappingProvider, pluginEventManager, cacheDir);
 
         final LegacyDynamicPluginFactory legacyFactory = new LegacyDynamicPluginFactory(PluginAccessor.Descriptor.FILENAME, tmpDir);
-        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
+        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, osgiContainerManager, pluginEventManager);
 
         final DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Arrays.asList(legacyFactory, osgiPluginDeployer),
             new DefaultPluginEventManager());

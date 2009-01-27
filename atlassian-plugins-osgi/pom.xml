@@ -163,6 +163,18 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>copy-internal-framework-bundles</id>
+                        <phase>generate-sources</phase>
+
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${frameworkBundleDirectory}</outputDirectory>
+                            <includeArtifactIds>atlassian-plugins-osgi-bridge</includeArtifactIds>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <phase>generate-test-resources</phase>
                         <goals>
                             <goal>copy-dependencies</goal>
@@ -221,6 +233,12 @@
             <groupId>com.atlassian.plugins</groupId>
             <artifactId>atlassian-plugins-core</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugins</groupId>
+            <artifactId>atlassian-plugins-osgi-bridge</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>biz.aQute</groupId>
@@ -357,8 +375,6 @@
     <properties>
         <!-- This should use ${project.build.directory} instead of target, but Maven < 2.0.9 fails to interpolate. -->
         <frameworkBundleDirectory>target/framework-bundles</frameworkBundleDirectory>
-        <springDmVersion>1.1.2</springDmVersion>
-        <springVersion>2.5.5</springVersion>
     </properties>
 </project>
 

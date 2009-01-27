@@ -165,7 +165,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(1, manager.getPlugins().size());
         assertEquals(0, manager.getEnabledPlugins().size());
         plugin = manager.getPlugin("foo");
-        assertFalse(plugin.isEnabled());
+        assertFalse(plugin.getPluginState() == PluginState.ENABLED);
         assertTrue(plugin instanceof UnloadablePlugin);
     }
 
@@ -187,10 +187,10 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(1, manager.getPlugins().size());
         assertEquals(1, manager.getEnabledPlugins().size());
         plugin = manager.getPlugin("foo");
-        assertTrue(plugin.isEnabled());
+        assertTrue(plugin.getPluginState() == PluginState.ENABLED);
         assertTrue(manager.isPluginEnabled("foo"));
         plugin.setEnabled(false);
-        assertFalse(plugin.isEnabled());
+        assertFalse(plugin.getPluginState() == PluginState.ENABLED);
         assertFalse(manager.isPluginEnabled("foo"));
     }
 
@@ -387,6 +387,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
         mockPlugin.matchAndReturn("isEnabled", true);
+        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -410,6 +411,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
         mockPlugin.matchAndReturn("isEnabled", true);
+        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -441,6 +443,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.matchAndReturn("isEnabledByDefault", true);
         mockPlugin.matchAndReturn("isEnabled", true);
+        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -474,6 +477,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.matchAndReturn("isEnabledByDefault", true);
         mockPlugin.matchAndReturn("isEnabled", true);
+        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -506,6 +510,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.matchAndReturn("isEnabledByDefault", true);
         mockPlugin.matchAndReturn("isEnabled", true);
+        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -539,6 +544,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.matchAndReturn("isEnabledByDefault", true);
         mockPlugin.matchAndReturn("isEnabled", true);
+        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -1042,6 +1048,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.expect("setEnabled", C.args(C.IS_TRUE));
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
         mockPlugin.matchAndReturn("isEnabled", true);
+        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
 
         pluginManager.setPluginInstaller((PluginInstaller) mockRepository.proxy());
         pluginManager.init();
@@ -1097,7 +1104,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.addPlugins(null, Arrays.asList(plugin));
 
-        assertFalse(plugin.isEnabled());
+        assertFalse(plugin.getPluginState() == PluginState.ENABLED);
     }
 
     public void testUninstallPluginClearsState() throws IOException

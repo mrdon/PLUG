@@ -79,6 +79,16 @@ public interface Plugin extends Resourced, Comparable<Plugin>
 
     void setResources(Resourced resources);
 
+    /**
+     * @return the current state of the plugin
+     * @since 2.2.0
+     */
+    PluginState getPluginState();
+
+    /**
+     * @deprecated since 2.2.0, use {@link #getPluginState()} instead
+     * @return
+     */
     boolean isEnabled();
 
     void setEnabled(boolean enabled);

@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
@@ -20,9 +21,9 @@ public class OsgiBundlePlugin extends OsgiPlugin
     private Date dateLoaded;
     private String key;
 
-    public OsgiBundlePlugin(Bundle bundle, String key)
+    public OsgiBundlePlugin(Bundle bundle, String key, PluginEventManager pluginEventManager)
     {
-        super(bundle);
+        super(bundle, pluginEventManager);
         this.bundle = bundle;
         this.pluginInformation = new PluginInformation();
         pluginInformation.setDescription((String) bundle.getHeaders().get(Constants.BUNDLE_DESCRIPTION));

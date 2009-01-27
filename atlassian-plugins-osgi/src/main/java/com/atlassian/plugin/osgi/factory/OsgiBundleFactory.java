@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
@@ -26,11 +27,13 @@ public class OsgiBundleFactory implements PluginFactory
     private static final Log log = LogFactory.getLog(OsgiBundleFactory.class);
 
     private final OsgiContainerManager osgi;
+    private final PluginEventManager pluginEventManager;
 
-    public OsgiBundleFactory(OsgiContainerManager osgi)
+    public OsgiBundleFactory(OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
         Validate.notNull(osgi, "The osgi container is required");
         this.osgi = osgi;
+        this.pluginEventManager = pluginEventManager;
     }
 
     public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException {
@@ -93,7 +96,7 @@ public class OsgiBundleFactory implements PluginFactory
             return reportUnloadablePlugin(file, ex);
         }
         String key = getPluginKey(bundle.getSymbolicName(), (String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
-        return new OsgiBundlePlugin(bundle, key);
+        return new OsgiBundlePlugin(bundle, key, pluginEventManager);
     }
 
     private Plugin reportUnloadablePlugin(File file, Exception e)

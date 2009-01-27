@@ -97,11 +97,11 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
 
         assertEquals(1, manager.getPlugins().size());
         assertEquals(0, manager.getEnabledPlugins().size());
-        assertFalse(plugin.isEnabled());
+        assertFalse(plugin.getPluginState() == PluginState.ENABLED);
         manager.enablePlugin("foo");
         assertEquals(1, manager.getPlugins().size());
         assertEquals(0, manager.getEnabledPlugins().size());
-        assertFalse(plugin.isEnabled());
+        assertFalse(plugin.getPluginState() == PluginState.ENABLED);
     }
 
     private DefaultPluginManager makeClassLoadingPluginManager() throws PluginParseException
@@ -233,17 +233,6 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         }
     }
 
-    public void testAddPluginsWithDependencyIssues() throws Exception
-    {
-        final Plugin servicePlugin = new EnableInPassPlugin("service.plugin", 2);
-        final Plugin clientPlugin = new EnableInPassPlugin("client.plugin", 1);
-
-        manager.addPlugins(null, Arrays.asList(servicePlugin, clientPlugin));
-
-        assertTrue(clientPlugin.isEnabled());
-        assertTrue(servicePlugin.isEnabled());
-    }
-
     public void testAddPluginsWithDependencyIssuesNoResolution() throws Exception
     {
         final Plugin servicePlugin = new EnableInPassPlugin("service.plugin", 4);
@@ -251,8 +240,8 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
 
         manager.addPlugins(null, Arrays.asList(servicePlugin, clientPlugin));
 
-        assertTrue(clientPlugin.isEnabled());
-        assertFalse(servicePlugin.isEnabled());
+        assertTrue(clientPlugin.getPluginState() == PluginState.ENABLED);
+        assertFalse(servicePlugin.getPluginState() == PluginState.ENABLED);
     }
 
     public Plugin createPluginWithVersion(final String version)

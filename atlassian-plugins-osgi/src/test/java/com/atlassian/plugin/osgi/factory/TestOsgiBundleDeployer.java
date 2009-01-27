@@ -1,6 +1,8 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
@@ -26,7 +28,7 @@ public class TestOsgiBundleDeployer extends TestCase {
     public void setUp() throws IOException, URISyntaxException
     {
         mockOsgi = new Mock(OsgiContainerManager.class);
-        deployer = new OsgiBundleFactory((OsgiContainerManager) mockOsgi.proxy());
+        deployer = new OsgiBundleFactory((OsgiContainerManager) mockOsgi.proxy(), new DefaultPluginEventManager());
     }
 
     @Override

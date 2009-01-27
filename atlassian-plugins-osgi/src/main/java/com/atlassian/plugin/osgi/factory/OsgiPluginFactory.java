@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.descriptors.ChainModuleDescriptorFactory;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -36,10 +37,11 @@ public class OsgiPluginFactory implements PluginFactory
     private final PluginTransformer pluginTransformer;
     private final String pluginDescriptorFileName;
     private final DescriptorParserFactory descriptorParserFactory;
+    private final PluginEventManager pluginEventManager;
 
     private ServiceTracker moduleDescriptorFactoryTracker;
 
-    public OsgiPluginFactory(String pluginDescriptorFileName, OsgiContainerManager osgi)
+    public OsgiPluginFactory(String pluginDescriptorFileName, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
         Validate.notNull(pluginDescriptorFileName, "Plugin descriptor is required");
         Validate.notNull(osgi, "The OSGi container is required");
@@ -48,6 +50,7 @@ public class OsgiPluginFactory implements PluginFactory
         this.osgi = osgi;
         this.pluginDescriptorFileName = pluginDescriptorFileName;
         this.descriptorParserFactory = new OsgiPluginXmlDescriptorParserFactory();
+        this.pluginEventManager = pluginEventManager;
     }
 
     public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException {
@@ -110,7 +113,7 @@ public class OsgiPluginFactory implements PluginFactory
             Plugin osgiPlugin;
             if (existingBundle != null)
             {
-                osgiPlugin = new OsgiPlugin(existingBundle);
+                osgiPlugin = new OsgiPlugin(existingBundle, pluginEventManager);
                 log.info("OSGi bundle "+parser.getKey()+" found already installed.");
             }
             else
@@ -173,7 +176,7 @@ public class OsgiPluginFactory implements PluginFactory
         try
         {
             File transformedFile = pluginTransformer.transform(pluginArtifact, osgi.getHostComponentRegistrations());
-            return new OsgiPlugin(osgi.installBundle(transformedFile));
+            return new OsgiPlugin(osgi.installBundle(transformedFile), pluginEventManager);
         } catch (OsgiContainerException e)
         {
             return reportUnloadablePlugin(pluginArtifact.toFile(), e);

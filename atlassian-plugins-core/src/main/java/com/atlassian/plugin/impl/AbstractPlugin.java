@@ -2,11 +2,7 @@ package com.atlassian.plugin.impl;
 
 import static com.atlassian.plugin.util.concurrent.CopyOnWriteMap.newLinkedMap;
 
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginInformation;
-import com.atlassian.plugin.Resourced;
-import com.atlassian.plugin.Resources;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.util.VersionStringComparator;
@@ -99,6 +95,11 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
             }
         }
         return result;
+    }
+
+    public PluginState getPluginState()
+    {
+        return (isEnabled() ? PluginState.ENABLED : PluginState.DISABLED);
     }
 
     public boolean isEnabledByDefault()

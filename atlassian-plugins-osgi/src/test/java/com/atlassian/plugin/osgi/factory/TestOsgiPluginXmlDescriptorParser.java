@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 import org.dom4j.tree.DefaultElement;
@@ -24,8 +25,9 @@ public class TestOsgiPluginXmlDescriptorParser extends TestCase
         Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
         mockModuleDescriptorFactory.expectAndReturn("getModuleDescriptor", C.args(C.eq("bar")), mockModuleDescriptor.proxy());
         Mock mockBundle = new Mock(Bundle.class);
-        assertNull(parser.createModuleDescriptor(new OsgiPlugin((Bundle) mockBundle.proxy()), new DefaultElement("foo"), null));
-        assertNotNull(parser.createModuleDescriptor(new OsgiPlugin((Bundle) mockBundle.proxy()), new DefaultElement("bar"), (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy()));
+        assertNull(parser.createModuleDescriptor(new OsgiPlugin((Bundle) mockBundle.proxy(), new DefaultPluginEventManager()), new DefaultElement("foo"), null));
+        assertNotNull(parser.createModuleDescriptor(new OsgiPlugin((Bundle) mockBundle.proxy(), new DefaultPluginEventManager()), new DefaultElement("bar"),
+                (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy()));
 
         mockModuleDescriptor.verify();
         mockModuleDescriptorFactory.verify();

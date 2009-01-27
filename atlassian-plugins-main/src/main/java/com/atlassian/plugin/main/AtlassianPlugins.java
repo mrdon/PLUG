@@ -60,8 +60,8 @@ public class AtlassianPlugins
 
         OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(
                 config.getPluginDescriptorFilename(),
-                osgiContainerManager);
-        OsgiBundleFactory osgiBundleDeployer = new OsgiBundleFactory(osgiContainerManager);
+                osgiContainerManager, pluginEventManager);
+        OsgiBundleFactory osgiBundleDeployer = new OsgiBundleFactory(osgiContainerManager, pluginEventManager);
 
         pluginLoaders.add(new DirectoryPluginLoader(
                 config.getPluginDirectory(),

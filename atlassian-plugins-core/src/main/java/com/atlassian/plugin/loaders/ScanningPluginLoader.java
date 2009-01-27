@@ -1,12 +1,6 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.DefaultPluginArtifactFactory;
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginArtifactFactory;
-import com.atlassian.plugin.PluginException;
-import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
@@ -196,7 +190,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
      */
     public void removePlugin(final Plugin plugin) throws PluginException
     {
-        if (plugin.isEnabled())
+        if (plugin.getPluginState() == PluginState.ENABLED)
         {
             throw new PluginException("Cannot remove an enabled plugin");
         }

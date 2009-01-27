@@ -341,7 +341,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     protected void addPlugins(final PluginLoader loader, final Collection<Plugin> pluginsToAdd) throws PluginParseException
     {
-        final Set<Plugin> pluginsThatShouldBeEnabled = new HashSet<Plugin>();
+        final Set<Plugin> pluginsInEnablingState = new HashSet<Plugin>();
         for (final Plugin plugin : new TreeSet<Plugin>(pluginsToAdd))
         {
             // testing to make sure plugin keys are unique
@@ -378,7 +378,10 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                 try
                 {
                     plugin.setEnabled(true);
-                    pluginsThatShouldBeEnabled.add(plugin);
+                    if (plugin.getPluginState() == PluginState.ENABLING)
+                    {
+                        pluginsInEnablingState.add(plugin);
+                    }
                 }
                 catch (final RuntimeException ex)
                 {
@@ -396,28 +399,28 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             {
                 public boolean isFinished()
                 {
-                    for (final Iterator<Plugin> i = pluginsThatShouldBeEnabled.iterator(); i.hasNext();)
+                    for (final Iterator<Plugin> i = pluginsInEnablingState.iterator(); i.hasNext();)
                     {
                         final Plugin plugin = i.next();
-                        if (plugin.isEnabled())
+                        if (plugin.getPluginState() != PluginState.ENABLING)
                         {
                             i.remove();
                         }
                     }
-                    return pluginsThatShouldBeEnabled.isEmpty();
+                    return pluginsInEnablingState.isEmpty();
                 }
 
                 public String getWaitMessage()
                 {
-                    return "Plugins that have yet to start: " + pluginsThatShouldBeEnabled;
+                    return "Plugins that have yet to start: " + pluginsInEnablingState;
                 }
             }, 60);
 
             // Disable any plugins that aren't enabled by now
-            if (!pluginsThatShouldBeEnabled.isEmpty())
+            if (!pluginsInEnablingState.isEmpty())
             {
                 final StringBuilder sb = new StringBuilder();
-                for (final Plugin plugin : pluginsThatShouldBeEnabled)
+                for (final Plugin plugin : pluginsInEnablingState)
                 {
                     sb.append(plugin.getKey()).append(',');
                     disablePlugin(plugin.getKey());
@@ -429,7 +432,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
         for (final Plugin plugin : pluginsToAdd)
         {
-            if (plugin.isEnabled())
+            if (plugin.getPluginState() == PluginState.ENABLED)
             {
                 // This method enables the plugin modules
                 enablePluginModules(plugin);
@@ -1011,7 +1014,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     {
         final Plugin plugin = plugins.get(key);
 
-        return plugin != null && getState().isEnabled(plugin) && plugin.isEnabled();
+        return plugin != null && getState().isEnabled(plugin) && plugin.getPluginState() == PluginState.ENABLED;
     }
 
     public InputStream getDynamicResourceAsStream(final String name)
@@ -1088,7 +1091,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
         public boolean isFinished()
         {
-            return plugin.isEnabled();
+            return plugin.getPluginState() == PluginState.ENABLED;
         }
 
         public String getWaitMessage()

@@ -4,6 +4,10 @@ import junit.framework.TestCase;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 import com.atlassian.plugin.AutowireCapablePlugin;
+import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import org.osgi.framework.*;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -32,7 +36,7 @@ public class TestOsgiPlugin extends TestCase
         mockBundle.matchAndReturn("getHeaders", dict);
         mockBundleContext = new Mock(BundleContext.class);
 
-        plugin = new OsgiPlugin((Bundle) mockBundle.proxy());
+        plugin = new OsgiPlugin((Bundle) mockBundle.proxy(), new DefaultPluginEventManager());
     }
 
     @Override
@@ -80,12 +84,11 @@ public class TestOsgiPlugin extends TestCase
 
         Mock mockBundle = new Mock(Bundle.class);
         Mock mockBundleContext = new Mock(BundleContext.class);
-        mockBundleContext.expectAndReturn("getServiceReferences", C.ANY_ARGS, new ServiceReference[1]);
-        mockBundleContext.expectAndReturn("getService", C.ANY_ARGS, new GenericApplicationContext(autowireBf));
         mockBundle.expectAndReturn("getBundleContext", mockBundleContext.proxy());
-        mockBundle.expectAndReturn("getSymbolicName", "foo");
 
-        OsgiPlugin plugin = new OsgiPlugin((Bundle) mockBundle.proxy());
+        OsgiPlugin plugin = new OsgiPlugin((Bundle) mockBundle.proxy(), new DefaultPluginEventManager());
+        plugin.setKey("foo");
+        plugin.onSpringContextRefresh(new PluginContainerRefreshedEvent(new GenericApplicationContext(autowireBf), "foo"));
         SetterInjectedBean bean = new SetterInjectedBean();
         plugin.autowire(bean, AutowireCapablePlugin.AutowireStrategy.AUTOWIRE_BY_NAME);
         assertNotNull(bean.getChild());
