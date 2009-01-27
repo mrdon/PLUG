@@ -11,9 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Represents a configuration state for plugins and plugin modules. The configuration state (enabled
- * or disabled) is separate from the plugins and modules themselves because a plugin may have multiple
- * states depending on the context.
  * <p/>
  * <p>The state stored in this object represents only the <i>differences</i> between the desired state
  * and the default state configured in the plugin. So if "getPluginState()" or "getPluginModuleState()" return
@@ -79,12 +76,25 @@ public class DefaultPluginManagerState implements Serializable, PluginManagerSta
         return (bool == null) ? pluginModule.isEnabledByDefault() : bool.booleanValue();
     }
 
-    /**
-     * Set a plugins state.
-     */
-    public void setState(final String key, final Boolean enabled)
+    public void setEnabled(final ModuleDescriptor<?> pluginModule, boolean isEnabled)
     {
-        map.put(key, enabled);
+        setEnabled(pluginModule.getCompleteKey(), pluginModule.isEnabledByDefault(), isEnabled);
+    }
+
+    public void setEnabled(final Plugin plugin, boolean isEnabled)
+    {
+        setEnabled(plugin.getKey(), plugin.isEnabledByDefault(), isEnabled);
+    }
+    
+    private void setEnabled(final String completeKey, boolean enabledByDefault, boolean isEnabled)
+    {
+        if (enabledByDefault ^ isEnabled)
+        {
+            map.put(completeKey, Boolean.valueOf(isEnabled));
+        } else
+        {
+            map.remove(completeKey);
+        }
     }
 
     /**

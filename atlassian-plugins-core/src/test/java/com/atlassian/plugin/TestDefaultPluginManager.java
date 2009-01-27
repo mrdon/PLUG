@@ -327,14 +327,15 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
 
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin.xml"));
-        pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
+        manager.init();
 
         final DefaultPluginManagerState state = new DefaultPluginManagerState(pluginStateStore.loadPluginState());
-        state.setState("test.atlassian.plugin", Boolean.FALSE);
+        state.setEnabled(manager.getPlugin("test.atlassian.plugin"), false);
         pluginStateStore.savePluginState(state);
 
         assertFalse(manager.isPluginEnabled("test.atlassian.plugin"));
 
+        pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
         manager.init();
 
         final Plugin plugin = manager.getPlugin("test.atlassian.plugin");
@@ -348,12 +349,13 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
 
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin.xml"));
-        pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
+        manager.init();
 
         final DefaultPluginManagerState state = new DefaultPluginManagerState(pluginStateStore.loadPluginState());
-        state.setState("test.atlassian.plugin:bear", Boolean.FALSE);
+        state.setEnabled(manager.getPluginModule("test.atlassian.plugin:bear"), false);
         pluginStateStore.savePluginState(state);
 
+        pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
         manager.init();
 
         final Plugin plugin = manager.getPlugin("test.atlassian.plugin");
@@ -774,13 +776,15 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertFalse(moduleDescriptor.disabled);
         final PassListener disabledListener = new PassListener(PluginDisabledEvent.class);
         pluginEventManager.register(disabledListener);
-        manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded"));
+        Plugin plugin = manager.getPlugin("test.atlassian.plugin.classloaded");
+        manager.uninstall(plugin);
         assertTrue("Module must have had disable() called before being removed", moduleDescriptor.disabled);
 
         // uninstalling a plugin should remove it's state completely from the state store - PLUG-13
-        assertNull(pluginStateStore.loadPluginState().getState("test.atlassian.plugin.classloaded"));
+        assertTrue(pluginStateStore.loadPluginState().getPluginStateMap(plugin).isEmpty());
 
         assertEquals(1, manager.getPlugins().size());
+        // plugin is no longer available though the plugin manager
         assertNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
         assertEquals(1, pluginsTestDir.listFiles().length);
         disabledListener.assertCalled();
@@ -1111,8 +1115,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertFalse(manager.isPluginModuleEnabled(module.getCompleteKey()));
         manager.uninstall(plugin);
         assertFalse(manager.isPluginModuleEnabled(module.getCompleteKey()));
-        assertTrue(pluginStateStore.loadPluginState().getState(plugin.getKey()) == null);
-        assertTrue(pluginStateStore.loadPluginState().getState(module.getCompleteKey()) == null);
+        assertTrue(pluginStateStore.loadPluginState().getPluginStateMap(plugin).isEmpty());
     }
 
     public Plugin createPluginWithVersion(final String version)
