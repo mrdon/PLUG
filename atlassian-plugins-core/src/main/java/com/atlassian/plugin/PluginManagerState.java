@@ -3,9 +3,7 @@ package com.atlassian.plugin;
 import java.util.Map;
 
 /**
- * Interface that represents a state of plugins and its modules in the system (enabled/disabled).
- * 
- * Represents a configuration state for plugins and plugin modules. The configuration state (enabled
+ * Interface that represents a configuration state for plugins and plugin modules. The configuration state (enabled
  * or disabled) is separate from the plugins and modules themselves because a plugin may have multiple
  * states depending on the context.
  * @author anatoli

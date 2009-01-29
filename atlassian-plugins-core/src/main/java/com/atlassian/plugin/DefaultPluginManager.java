@@ -267,7 +267,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void removeStateFromStore(final PluginStateStore stateStore, final Plugin plugin)
     {
-        final DefaultPluginManagerState currentState = getMutableState(stateStore);
+        final DefaultPluginManagerState currentState = new DefaultPluginManagerState(stateStore.loadPluginState());
         currentState.removeState(plugin.getKey());
         for (final ModuleDescriptor<?> moduleDescriptor : plugin.getModuleDescriptors())
         {
@@ -337,11 +337,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         return getStore().loadPluginState();
     }
     
-    private DefaultPluginManagerState getMutableState(final PluginStateStore stateStore)
-    {
-        return new DefaultPluginManagerState(stateStore.loadPluginState());
-    }
-
     /**
      * @deprecated Since 2.0.2, use {@link #addPlugins(PluginLoader,Collection<Plugin>...)} instead
      */
@@ -520,7 +515,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         });
 
         // Restore the configuration
-        final DefaultPluginManagerState currentState = getMutableState(getStore());
+        final DefaultPluginManagerState currentState = new DefaultPluginManagerState(getStore().loadPluginState());
         currentState.addState(oldPluginState);
         getStore().savePluginState(currentState);
     }
@@ -824,7 +819,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void enablePluginState(final Plugin plugin, final PluginStateStore stateStore)
     {
-        final DefaultPluginManagerState currentState = getMutableState(stateStore);
+        final DefaultPluginManagerState currentState = new DefaultPluginManagerState(stateStore.loadPluginState());
         currentState.setEnabled(plugin, true);
         stateStore.savePluginState(currentState);
     }
@@ -901,7 +896,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void disablePluginState(final Plugin plugin, final PluginStateStore stateStore)
     {
-        final DefaultPluginManagerState currentState = getMutableState(stateStore);
+        final DefaultPluginManagerState currentState = new DefaultPluginManagerState(stateStore.loadPluginState());
         currentState.setEnabled(plugin, false);
         stateStore.savePluginState(currentState);
     }
@@ -949,7 +944,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void disablePluginModuleState(final ModuleDescriptor<?> module, final PluginStateStore stateStore)
     {
-        final DefaultPluginManagerState currentState = getMutableState(stateStore);
+        final DefaultPluginManagerState currentState = new DefaultPluginManagerState(stateStore.loadPluginState());
         currentState.setEnabled(module, false);
         stateStore.savePluginState(currentState);
     }
@@ -1000,7 +995,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void enablePluginModuleState(final ModuleDescriptor<?> module, final PluginStateStore stateStore)
     {
-        final DefaultPluginManagerState currentState = getMutableState(stateStore);
+        final DefaultPluginManagerState currentState = new DefaultPluginManagerState(stateStore.loadPluginState());
         currentState.setEnabled(module, true);
         stateStore.savePluginState(currentState);
     }

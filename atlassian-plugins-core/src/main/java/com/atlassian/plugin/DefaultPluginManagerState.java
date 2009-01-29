@@ -88,12 +88,13 @@ public class DefaultPluginManagerState implements Serializable, PluginManagerSta
     
     private void setEnabled(final String completeKey, boolean enabledByDefault, boolean isEnabled)
     {
-        if (enabledByDefault ^ isEnabled)
-        {
-            map.put(completeKey, Boolean.valueOf(isEnabled));
-        } else
+        if (isEnabled == enabledByDefault)
         {
             map.remove(completeKey);
+        }
+        else
+        {
+            map.put(completeKey, Boolean.valueOf(isEnabled));
         }
     }
 
