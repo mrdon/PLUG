@@ -8,6 +8,7 @@ import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
 import com.atlassian.plugin.event.events.PluginContainerFailedEvent;
+import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.impl.AbstractPlugin;
@@ -19,10 +20,7 @@ import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Element;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.*;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -44,14 +42,13 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private static final Log log = LogFactory.getLog(OsgiPlugin.class);
     private boolean deletable = true;
     private boolean bundled = false;
-    private volatile Object nativeBeanFactory;
-    private Method nativeCreateBeanMethod;
-    private Method nativeAutowireBeanMethod;
+    private volatile SpringContextAccessor springContextAccessor;
     private ServiceTracker moduleDescriptorTracker;
     private ServiceTracker unrecognisedModuleTracker;
     private final Map<String, Element> moduleElements = new HashMap<String, Element>();
     private final ClassLoader bundleClassLoader;
-    private Throwable enablingFailureCause;
+    private final PluginEventManager pluginEventManager;
+    private volatile boolean treatSpringBeanFactoryCreationAsRefresh = false;
 
     public OsgiPlugin(final Bundle bundle, final PluginEventManager pluginEventManager)
     {
@@ -59,7 +56,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         this.bundle = bundle;
         this.bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
         pluginEventManager.register(this);
-
+        this.pluginEventManager = pluginEventManager;
     }
 
     public Bundle getBundle()
@@ -122,7 +119,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     }
 
     @PluginEventListener
-    public synchronized void onSpringContextFailed(PluginContainerFailedEvent event)
+    public void onSpringContextFailed(PluginContainerFailedEvent event)
     {
         if (getKey() == null)
         {
@@ -130,13 +127,14 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
         if (getKey().equals(event.getPluginKey()))
         {
-            enablingFailureCause = event.getCause();
+            // TODO: do something with the exception more than logging
+            log.error("Unable to start the Spring context for plugin "+getKey(), event.getCause());
             setEnabled(false);
         }
     }
 
     @PluginEventListener
-    public synchronized void onSpringContextRefresh(PluginContainerRefreshedEvent event)
+    public void onSpringContextRefresh(PluginContainerRefreshedEvent event)
     {
         if (getKey() == null)
         {
@@ -144,42 +142,17 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
         if (getKey().equals(event.getPluginKey()))
         {
-            final BundleContext ctx = bundle.getBundleContext();
-            if (ctx == null)
-            {
-                throw new IllegalStateException("no bundle context - we are screwed");
-            }
+            springContextAccessor = new SpringContextAccessor(event.getContainer());
 
-            final Object applicationContext = event.getContainer();
-            try
-            {
-                final Method m = applicationContext.getClass().getMethod("getAutowireCapableBeanFactory");
-                nativeBeanFactory = m.invoke(applicationContext);
-            }
-            catch (final NoSuchMethodException e)
-            {
-                // Should never happen
-                throw new PluginException("Cannot find createBean method on registered bean factory: " + nativeBeanFactory, e);
-            }
-            catch (final IllegalAccessException e)
-            {
-                // Should never happen
-                throw new PluginException("Cannot access createBean method", e);
-            }
-            catch (final InvocationTargetException e)
-            {
-                handleSpringMethodInvocationError(e);
-            }
 
-            try
+            // Only send refresh event on second creation
+            if (treatSpringBeanFactoryCreationAsRefresh)
             {
-                nativeCreateBeanMethod = nativeBeanFactory.getClass().getMethod("createBean", Class.class, int.class, boolean.class);
-                nativeAutowireBeanMethod = nativeBeanFactory.getClass().getMethod("autowireBeanProperties", Object.class, int.class, boolean.class);
+                pluginEventManager.broadcast(new PluginRefreshedEvent(this));
             }
-            catch (final NoSuchMethodException e)
+            else
             {
-                // Should never happen
-                throw new PluginException("Cannot find createBean method on registered bean factory: " + nativeBeanFactory, e);
+                treatSpringBeanFactoryCreationAsRefresh = true;
             }
         }
     }
@@ -189,14 +162,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         this.bundled = bundled;
     }
 
-    public synchronized PluginState getPluginState()
+    public PluginState getPluginState()
     {
-        if (enablingFailureCause != null)
-        {
-            enablingFailureCause = null;
-            throw new PluginException("Unable to create Spring context", enablingFailureCause);
-        }
-        else if (Bundle.ACTIVE == bundle.getState() && shouldHaveSpringContext() && nativeBeanFactory == null)
+        if (Bundle.ACTIVE == bundle.getState() && shouldHaveSpringContext() && springContextAccessor == null)
         {
             return PluginState.ENABLING;
         }
@@ -207,13 +175,13 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     }
 
     @Override
-    public synchronized boolean isEnabled()
+    public boolean isEnabled()
     {
-        return (Bundle.ACTIVE == bundle.getState()) && (!shouldHaveSpringContext() || nativeBeanFactory != null);
+        return (Bundle.ACTIVE == bundle.getState()) && (!shouldHaveSpringContext() || springContextAccessor != null);
     }
 
     @Override
-    public synchronized void setEnabled(final boolean enabled) throws OsgiContainerException
+    public void setEnabled(final boolean enabled) throws OsgiContainerException
     {
         if (enabled)
         {
@@ -234,12 +202,26 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 bundle.start();
                 if (bundle.getBundleContext() != null)
                 {
-                    moduleDescriptorTracker = new ServiceTracker(bundle.getBundleContext(), ModuleDescriptor.class.getName(),
+                    final BundleContext ctx = bundle.getBundleContext();
+                    moduleDescriptorTracker = new ServiceTracker(ctx, ModuleDescriptor.class.getName(),
                         new RegisteringServiceTrackerCustomizer());
                     moduleDescriptorTracker.open();
-                    unrecognisedModuleTracker = new ServiceTracker(bundle.getBundleContext(), ListableModuleDescriptorFactory.class.getName(),
+                    unrecognisedModuleTracker = new ServiceTracker(ctx, ListableModuleDescriptorFactory.class.getName(),
                         new UnrecognisedServiceTrackerCustomizer());
                     unrecognisedModuleTracker.open();
+
+                    // ensure the bean factory is removed when the bundle is stopped
+                    // Do we need to unregister this?
+                    ctx.addBundleListener(new BundleListener()
+                    {
+                        public void bundleChanged(BundleEvent bundleEvent)
+                        {
+                            if (bundleEvent.getBundle() == bundle && bundleEvent.getType() == BundleEvent.STOPPED)
+                            {
+                                springContextAccessor = null;
+                            }
+                        }
+                    });
                 }
             }
         }
@@ -265,8 +247,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 }
                 bundle.stop();
                 moduleDescriptorTracker = null;
-                nativeBeanFactory = null;
-                nativeCreateBeanMethod = null;
+                unrecognisedModuleTracker = null;
             }
         }
         catch (final BundleException e)
@@ -275,8 +256,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
     }
 
-    public synchronized void close() throws OsgiContainerException
+    public void close() throws OsgiContainerException
     {
+        pluginEventManager.unregister(this);
         try
         {
             if (bundle.getState() != Bundle.UNINSTALLED)
@@ -300,27 +282,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return autowire(clazz, AutowireStrategy.AUTOWIRE_AUTODETECT);
     }
 
-    public synchronized <T> T autowire(final Class<T> clazz, final AutowireStrategy autowireStrategy)
+    public <T> T autowire(final Class<T> clazz, final AutowireStrategy autowireStrategy)
     {
-        if (nativeBeanFactory == null)
-        {
-            return null;
-        }
-
-        try
-        {
-            return (T) nativeCreateBeanMethod.invoke(nativeBeanFactory, clazz, autowireStrategy.ordinal(), false);
-        }
-        catch (final IllegalAccessException e)
-        {
-            // Should never happen
-            throw new PluginException("Unable to access createBean method", e);
-        }
-        catch (final InvocationTargetException e)
-        {
-            handleSpringMethodInvocationError(e);
-            return null;
-        }
+        return (springContextAccessor != null ? springContextAccessor.createBean(clazz, autowireStrategy) : null);
     }
 
     public void autowire(final Object instance)
@@ -330,40 +294,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
 
     public void autowire(final Object instance, final AutowireStrategy autowireStrategy)
     {
-        if (nativeBeanFactory == null)
+        if  (springContextAccessor != null)
         {
-            return;
-        }
-
-        try
-        {
-            nativeAutowireBeanMethod.invoke(nativeBeanFactory, instance, autowireStrategy.ordinal(), false);
-        }
-        catch (final IllegalAccessException e)
-        {
-            // Should never happen
-            throw new PluginException("Unable to access createBean method", e);
-        }
-        catch (final InvocationTargetException e)
-        {
-            handleSpringMethodInvocationError(e);
-        }
-    }
-
-    private void handleSpringMethodInvocationError(final InvocationTargetException e)
-    {
-        if (e.getCause() instanceof Error)
-        {
-            throw (Error) e.getCause();
-        }
-        else if (e.getCause() instanceof RuntimeException)
-        {
-            throw (RuntimeException) e.getCause();
-        }
-        else
-        {
-            // Should never happen as Spring methods only throw runtime exceptions
-            throw new PluginException("Unable to invoke createBean", e.getCause());
+            springContextAccessor.createBean(instance, autowireStrategy);
         }
     }
 
@@ -386,6 +319,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
         return result;
     }
+    
 
     /**
      * Tracks module descriptors registered as services, then updates the descriptors map accordingly
@@ -505,4 +439,115 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             }
         }
     }
+
+    /**
+     * Manages spring context access, including autowiring.
+     *
+     * @since 2.2.0
+     */
+    private static final class SpringContextAccessor
+    {
+        private final Object nativeBeanFactory;
+        private final Method nativeCreateBeanMethod;
+        private final Method nativeAutowireBeanMethod;
+
+        public SpringContextAccessor(Object applicationContext)
+        {
+            Object beanFactory = null;
+            try
+            {
+                final Method m = applicationContext.getClass().getMethod("getAutowireCapableBeanFactory");
+                beanFactory = m.invoke(applicationContext);
+            }
+            catch (final NoSuchMethodException e)
+            {
+                // Should never happen
+                throw new PluginException("Cannot find createBean method on registered bean factory: " + beanFactory, e);
+            }
+            catch (final IllegalAccessException e)
+            {
+                // Should never happen
+                throw new PluginException("Cannot access createBean method", e);
+            }
+            catch (final InvocationTargetException e)
+            {
+                handleSpringMethodInvocationError(e);
+            }
+
+            nativeBeanFactory = beanFactory;
+            try
+            {
+                nativeCreateBeanMethod = beanFactory.getClass().getMethod("createBean", Class.class, int.class, boolean.class);
+                nativeAutowireBeanMethod = beanFactory.getClass().getMethod("autowireBeanProperties", Object.class, int.class, boolean.class);
+            }
+            catch (final NoSuchMethodException e)
+            {
+                // Should never happen
+                throw new PluginException("Cannot find createBean method on registered bean factory: " + nativeBeanFactory, e);
+            }
+        }
+
+        private void handleSpringMethodInvocationError(final InvocationTargetException e)
+        {
+            if (e.getCause() instanceof Error)
+            {
+                throw (Error) e.getCause();
+            }
+            else if (e.getCause() instanceof RuntimeException)
+            {
+                throw (RuntimeException) e.getCause();
+            }
+            else
+            {
+                // Should never happen as Spring methods only throw runtime exceptions
+                throw new PluginException("Unable to invoke createBean", e.getCause());
+            }
+        }
+
+        public <T> T createBean(final Class<T> clazz, final AutowireStrategy autowireStrategy)
+        {
+            if (nativeBeanFactory == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                return (T) nativeCreateBeanMethod.invoke(nativeBeanFactory, clazz, autowireStrategy.ordinal(), false);
+            }
+            catch (final IllegalAccessException e)
+            {
+                // Should never happen
+                throw new PluginException("Unable to access createBean method", e);
+            }
+            catch (final InvocationTargetException e)
+            {
+                handleSpringMethodInvocationError(e);
+                return null;
+            }
+        }
+
+        public void createBean(final Object instance, final AutowireStrategy autowireStrategy)
+        {
+            if (nativeBeanFactory == null)
+            {
+                return;
+            }
+
+            try
+            {
+                nativeAutowireBeanMethod.invoke(nativeBeanFactory, instance, autowireStrategy.ordinal(), false);
+            }
+            catch (final IllegalAccessException e)
+            {
+                // Should never happen
+                throw new PluginException("Unable to access createBean method", e);
+            }
+            catch (final InvocationTargetException e)
+            {
+                handleSpringMethodInvocationError(e);
+            }
+        }
+    }
+
 }

@@ -8,6 +8,7 @@ import com.atlassian.plugin.classloader.PluginsClassLoader;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.events.*;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
@@ -98,6 +99,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         this.store = store;
         this.moduleDescriptorFactory = moduleDescriptorFactory;
         this.pluginEventManager = pluginEventManager;
+        this.pluginEventManager.register(this);
         classLoader = new PluginsClassLoader(this);
     }
 
@@ -133,6 +135,30 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     {
         log.info("Shutting down the plugin system");
         pluginEventManager.broadcast(new PluginFrameworkShutdownEvent(this, this));
+    }
+
+    @PluginEventListener
+    public void onPluginRefresh(PluginRefreshedEvent event)
+    {
+        Plugin plugin = event.getPlugin();
+
+        // disable the plugin, shamefully copied from notifyPluginDisabled()
+        final List<ModuleDescriptor<?>> moduleDescriptors = new ArrayList<ModuleDescriptor<?>>(plugin.getModuleDescriptors());
+        Collections.reverse(moduleDescriptors); // disable in reverse order
+
+        for (ModuleDescriptor<?> module : moduleDescriptors)
+        {
+            // don't actually disable the module, just fire the events because its plugin is being disabled
+            // if the module was actually disabled, you'd have to reenable each one when enabling the plugin
+
+            if (isPluginModuleEnabled(module.getCompleteKey()))
+                publishModuleDisabledEvents(module);
+        }
+
+        // enable the plugin, shamefully copied from notifyPluginEnabled()
+        classLoader.notifyPluginOrModuleEnabled();
+        enablePluginModules(plugin);
+        pluginEventManager.broadcast(new PluginEnabledEvent(plugin));
     }
 
     /**

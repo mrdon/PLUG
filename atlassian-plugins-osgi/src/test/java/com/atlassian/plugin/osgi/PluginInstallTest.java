@@ -4,22 +4,33 @@ import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.util.WaitUntil;
+import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
+import com.atlassian.plugin.servlet.DefaultServletModuleManager;
+import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
+import com.mockobjects.dynamic.Mock;
+import com.mockobjects.dynamic.C;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
+import javax.servlet.ServletContext;
+import javax.servlet.ServletConfig;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Collections;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -222,6 +233,13 @@ public class PluginInstallTest extends PluginInContainerTestBase
                 .build();
 
         pluginManager.installPlugin(new JarPluginArtifact(updatedJar));
+        WaitUntil.invoke(new AbstractWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getEnabledPlugins().size() == 2;
+            }
+        });
         assertEquals(2, pluginManager.getEnabledPlugins().size());
         for (final Object svc : tracker.getServices())
         {
@@ -281,6 +299,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
         pluginManager.installPlugin(new JarPluginArtifact(updatedJar));
         assertEquals("bob", svcTracker.getService().getClass().getMethod("call").invoke(svcTracker.getService()));
+        tracker.waitForService(5000);
         assertEquals("bob", ((Callable) tracker.getService()).call());
     }
 
@@ -642,6 +661,112 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertEquals(2, pluginManager.getEnabledPlugins().size());
         assertTrue(pluginManager.getPlugin("first").getPluginState() == PluginState.ENABLED);
         assertNotNull(pluginManager.getPlugin("asecond").getPluginState() == PluginState.ENABLED);
+    }
+
+    public void testPluginWithServletRefreshedAfterOtherPluginUpgraded() throws Exception
+    {
+        final PluginJarBuilder firstBuilder = new PluginJarBuilder("first");
+        firstBuilder
+                .addPluginInformation("first", "Some name", "1.0")
+                .addFormattedJava("first.MyInterface",
+                        "package first;",
+                        "public interface MyInterface {}")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                    "Manifest-Version: 1.0",
+                    "Bundle-SymbolicName: foo",
+                    "Export-Package: first",
+                    "")
+                .build(pluginsDir);
+
+        new PluginJarBuilder("asecond", firstBuilder.getClassLoader())
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test' key='asecond' pluginsVersion='2'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "    </plugin-info>",
+                    "    <servlet key='foo' class='second.MyServlet'>",
+                    "       <url-pattern>/foo</url-pattern>",
+                    "    </servlet>",
+                    "</atlassian-plugin>")
+                .addFormattedJava("second.MyServlet",
+                    "package second;",
+                    "import com.atlassian.plugin.osgi.Callable2;",
+                    "public class MyServlet extends javax.servlet.http.HttpServlet implements first.MyInterface {",
+                    "   private Callable2 callable;",
+                    "   public MyServlet(Callable2 cal) { this.callable = cal; }",
+                    "   public String getServletInfo(){",
+                    "       return callable.call() + ' bob';",
+                    "   }",
+                    "}")
+                .build(pluginsDir);
+
+        HostComponentProvider prov = new HostComponentProvider()
+        {
+
+            public void provide(ComponentRegistrar registrar)
+            {
+                registrar.register(Callable2.class).forInstance(new Callable2()
+                {
+                    public String call()
+                    {
+                        return "hi";
+                    }
+                });
+
+            }
+        };
+
+        Mock mockServletContext = new Mock(ServletContext.class);
+        mockServletContext.expectAndReturn("getInitParameterNames", Collections.enumeration(Collections.emptyList()));
+        mockServletContext.expect("log", C.ANY_ARGS);
+        mockServletContext.expect("log", C.ANY_ARGS);
+        mockServletContext.expect("log", C.ANY_ARGS);
+        Mock mockServletConfig = new Mock(ServletConfig.class);
+        mockServletConfig.matchAndReturn("getServletContext", mockServletContext.proxy());
+
+        ServletModuleManager mgr = new DefaultServletModuleManager(pluginEventManager);
+        Mock mockHostContainer = new Mock(HostContainer.class);
+        mockHostContainer.matchAndReturn("create", C.args(C.eq(ServletModuleDescriptor.class)), new StubServletModuleDescriptor(mgr));
+        initPluginManager(prov, new SingleModuleDescriptorFactory(
+                (HostContainer) mockHostContainer.proxy(),
+                "servlet",
+                ServletModuleDescriptor.class));
+
+        assertEquals(2, pluginManager.getEnabledPlugins().size());
+        assertTrue(pluginManager.getPlugin("first").getPluginState() == PluginState.ENABLED);
+        assertNotNull(pluginManager.getPlugin("asecond").getPluginState() == PluginState.ENABLED);
+        assertEquals("hi bob", mgr.getServlet("/foo", (ServletConfig) mockServletConfig.proxy()).getServletInfo());
+
+
+
+        final File updatedJar = new PluginJarBuilder("first-updated")
+                .addPluginInformation("first", "Some name", "1.0")
+                .addFormattedJava("first.MyInterface",
+                        "package first;",
+                        "public interface MyInterface {}")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                    "Manifest-Version: 1.0",
+                    "Bundle-SymbolicName: foo",
+                    "Export-Package: first",
+                    "")
+                .build();
+        pluginManager.installPlugin(new JarPluginArtifact(updatedJar));
+
+        Thread.sleep(5000);
+        WaitUntil.invoke(new WaitUntil.WaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.isPluginEnabled("asecond");
+            }
+
+            public String getWaitMessage()
+            {
+                return null;
+            }
+        }, 10, TimeUnit.SECONDS, 2);
+
+        assertEquals("hi bob", mgr.getServlet("/foo", (ServletConfig) mockServletConfig.proxy()).getServletInfo());
     }
 
     public void testLotsOfHostComponents() throws Exception

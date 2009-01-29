@@ -222,7 +222,8 @@ public class DefaultServletModuleManager implements ServletModuleManager
                 servletRef = servletRefs.get(descriptor.getCompleteKey());
             }
         }
-        return servletRef.get();
+        HttpServlet servlet = servletRef.get();
+        return servlet;
     }
     
     /**

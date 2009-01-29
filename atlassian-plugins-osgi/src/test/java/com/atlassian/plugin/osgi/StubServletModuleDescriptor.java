@@ -9,12 +9,24 @@ import javax.servlet.http.HttpServlet;
 
 public class StubServletModuleDescriptor<T extends HttpServlet> extends ServletModuleDescriptor<T>
 {
+    private final ServletModuleManager mgr;
+
+    public StubServletModuleDescriptor()
+    {
+        this.mgr = new DefaultServletModuleManager(new DefaultPluginEventManager());
+    }
+
+    public StubServletModuleDescriptor(ServletModuleManager mgr)
+    {
+        this.mgr = mgr;
+    }
+
     protected void autowireObject(Object obj)
     {
     }
 
     protected ServletModuleManager getServletModuleManager()
     {
-        return new DefaultServletModuleManager(new DefaultPluginEventManager());
+        return mgr;
     }
 }

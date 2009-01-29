@@ -568,6 +568,14 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 }
             };
             bundleContext.addFrameworkListener(refreshListener);
+            bundleContext.addBundleListener(new BundleListener()
+            {
+                public void bundleChanged(BundleEvent bundleEvent)
+                {
+                    //To change body of implemented methods use File | Settings | File Templates.
+                }
+            });
+
             packageAdmin.refreshPackages(null);
             boolean refreshed = false;
             try

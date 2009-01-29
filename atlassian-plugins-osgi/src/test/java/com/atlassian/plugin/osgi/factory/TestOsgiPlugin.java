@@ -84,7 +84,6 @@ public class TestOsgiPlugin extends TestCase
 
         Mock mockBundle = new Mock(Bundle.class);
         Mock mockBundleContext = new Mock(BundleContext.class);
-        mockBundle.expectAndReturn("getBundleContext", mockBundleContext.proxy());
 
         OsgiPlugin plugin = new OsgiPlugin((Bundle) mockBundle.proxy(), new DefaultPluginEventManager());
         plugin.setKey("foo");

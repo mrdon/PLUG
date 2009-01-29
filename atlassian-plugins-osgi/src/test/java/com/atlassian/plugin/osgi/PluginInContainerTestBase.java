@@ -55,6 +55,7 @@ public abstract class PluginInContainerTestBase extends TestCase
         frameworkBundlesDir.mkdir();
         pluginsDir = new File(tmpDir, "plugins");
         pluginsDir.mkdir();
+        this.pluginEventManager = new DefaultPluginEventManager();
     }
 
     @Override
@@ -102,7 +103,6 @@ public abstract class PluginInContainerTestBase extends TestCase
         final PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration(version);
         scannerConfig.getPackageIncludes().add("com.atlassian.plugin*");
         scannerConfig.getPackageIncludes().add("javax.servlet*");
-        pluginEventManager = new DefaultPluginEventManager();
         HostComponentProvider requiredWrappingProvider = new HostComponentProvider()
         {
             public void provide(ComponentRegistrar registrar)

@@ -332,5 +332,6 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     public void disabled()
     {
         enabled = false;
+        moduleClass = null;
     }
 }
