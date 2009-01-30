@@ -168,7 +168,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         {
             cacheDir.mkdir();
         }
-        else if (packageScannerConfig.getCurrentHostVersion() == null)
+        else //if (packageScannerConfig.getCurrentHostVersion() == null)
         {
             try
             {
