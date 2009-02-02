@@ -2,7 +2,6 @@ package com.atlassian.plugin.loaders.classloading;
 
 import com.atlassian.plugin.PluginException;
 
-import java.io.File;
 import java.util.Collection;
 
 /**
