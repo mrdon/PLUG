@@ -1,16 +1,5 @@
 package com.atlassian.plugin.refimpl;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.ServletContext;
-
-import org.apache.commons.lang.StringUtils;
-
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
@@ -45,12 +34,26 @@ import com.atlassian.plugin.webresource.WebResourceIntegration;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
 import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
+import org.apache.commons.lang.StringUtils;
+
+import javax.servlet.ServletContext;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A simple class that behaves like Spring's ContainerManager class.
  */
 public class ContainerManager
 {
+    /**
+     * the name of the bundled plugins zip file to use
+     */
+    private static final String BUNDLED_PLUGINS_ZIP = "/atlassian-bundled-plugins.zip";
+
     private final ServletModuleManager servletModuleManager;
     private final SimpleWebResourceIntegration webResourceIntegration;
     private final WebResourceManager webResourceManager;
@@ -60,8 +63,8 @@ public class ContainerManager
     private final DefaultModuleDescriptorFactory moduleDescriptorFactory;
     private final Map<Class<?>, Object> publicContainer;
     private final AtlassianPlugins plugins;
+
     private final HostContainer hostContainer;
-    
     private static ContainerManager instance;
     private final List<DownloadStrategy> downloadStrategies;
 
@@ -103,6 +106,8 @@ public class ContainerManager
         hostComponentProvider = new SimpleHostComponentProvider();
 
         final PluginsConfiguration config = new PluginsConfigurationBuilder()
+                .bundledPluginUrl(this.getClass().getResource(BUNDLED_PLUGINS_ZIP))
+                .bundledPluginCacheDirectory(makeSureDirectoryExists(servletContext, "/WEB-INF/bundled-plugins"))
                 .pluginDirectory(makeSureDirectoryExists(servletContext, "/WEB-INF/plugins"))
                 .moduleDescriptorFactory(moduleDescriptorFactory)
                 .packageScannerConfiguration(scannerConfig)
@@ -121,7 +126,7 @@ public class ContainerManager
         PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
 
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration);
-        
+
         publicContainer = new HashMap<Class<?>, Object>();
         publicContainer.put(PluginController.class, plugins.getPluginController());
         publicContainer.put(PluginAccessor.class, pluginAccessor);

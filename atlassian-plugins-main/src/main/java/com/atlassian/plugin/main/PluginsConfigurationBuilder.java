@@ -1,8 +1,5 @@
 package com.atlassian.plugin.main;
 
-import static com.atlassian.plugin.util.Assertions.isTrue;
-import static com.atlassian.plugin.util.Assertions.notNull;
-
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
@@ -12,6 +9,7 @@ import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
+import static com.atlassian.plugin.util.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +21,6 @@ import java.util.concurrent.TimeUnit;
  * For a usage example, see the package javadocs.
  * <p>
  * Not thread-safe. Instances of this class should be thread and preferably method local.
- * 
  * @since 2.2
  */
 public class PluginsConfigurationBuilder
@@ -51,7 +48,6 @@ public class PluginsConfigurationBuilder
 
     /**
      * Sets the package scanner configuration instance that contains information about what packages to expose to plugins.
-     * 
      * @param packageScannerConfiguration The configuration instance
      * @return this
      */
@@ -64,7 +60,6 @@ public class PluginsConfigurationBuilder
     /**
      * Sets the host component provider instance, used for registering application services as OSGi services so that
      * they can be automatically available to plugins
-     *
      * @param hostComponentProvider The host component provider implementation
      * @return this
      */
@@ -77,7 +72,6 @@ public class PluginsConfigurationBuilder
     /**
      * Sets caching directory to extract framework bundles into.  Doesn't have to be preserved and will be automatically
      * cleaned out if it detects any modification.
-     *
      * @param frameworkBundlesDirectory A directory that exists
      * @return this
      */
@@ -90,7 +84,6 @@ public class PluginsConfigurationBuilder
     /**
      * Sets the directory to use for the OSGi framework's bundle cache.  Doesn't have to be preserved across restarts
      * but shouldn't be externally modified at runtime.
-     *
      * @param bundleCacheDirectory A directory that exists and is empty
      * @return this
      */
@@ -102,7 +95,6 @@ public class PluginsConfigurationBuilder
 
     /**
      * Sets the directory that contains the plugins and will be used to store installed plugins.
-     *
      * @param pluginDirectory A directory that exists
      * @return this
      */
@@ -115,7 +107,6 @@ public class PluginsConfigurationBuilder
     /**
      * Sets the URL to a ZIP file containing plugins that are to be started before any user plugins but after
      * framework bundles.  Must be set if {@link #bundledPluginCacheDirectory(java.io.File)} is set.
-     *
      * @param bundledPluginUrl A URL to a ZIP of plugin JAR files
      * @return this
      */
@@ -128,7 +119,6 @@ public class PluginsConfigurationBuilder
     /**
      * Sets the directory to unzip bundled plugins into.  The directory will automatically be cleaned out if the
      * framework detects any modification.  Must be set if {@link #bundledPluginUrl(java.net.URL)} is set.
-     *
      * @param bundledPluginCacheDirectory A directory that exists
      * @return this
      */
@@ -140,7 +130,6 @@ public class PluginsConfigurationBuilder
 
     /**
      * Sets the plugin descriptor file name to expect in a plugin JAR artifact
-     *
      * @param pluginDescriptorFilename A valid file name
      * @return this
      */
@@ -154,7 +143,6 @@ public class PluginsConfigurationBuilder
      * Sets the module descriptor factory that will be used to create instances of discovered module descriptors.
      * Usually, the {@link DefaultModuleDescriptorFactory} is what is used, which takes class instances of module
      * descriptors to instantiate.
-     *
      * @param moduleDescriptorFactory A module descriptor factory instance
      * @return this
      */
@@ -167,7 +155,6 @@ public class PluginsConfigurationBuilder
     /**
      * Sets the plugin state store implementation used for persisting which plugins and modules are enabled or disabled
      * across restarts.
-     *
      * @param pluginStateStore The plugin state store implementation
      * @return this
      */
@@ -179,7 +166,6 @@ public class PluginsConfigurationBuilder
 
     /**
      * Sets the polling frequency for scanning for new plugins
-     *
      * @param hotDeployPollingFrequency The quantity of time periods
      * @param timeUnit The units for the frequency
      */
@@ -192,7 +178,6 @@ public class PluginsConfigurationBuilder
     /**
      * Builds a {@link com.atlassian.plugin.main.PluginsConfiguration} instance by processing the configuration that
      * was previously set, validating the input, and setting any defaults where not explicitly specified.
-     *
      * @return A valid {@link PluginsConfiguration} instance to pass to {@link AtlassianPlugins}
      */
     public PluginsConfiguration build()
@@ -214,7 +199,8 @@ public class PluginsConfigurationBuilder
             hostComponentProvider = new HostComponentProvider()
             {
                 public void provide(final ComponentRegistrar registrar)
-                {}
+                {
+                }
             };
         }
 
@@ -230,16 +216,7 @@ public class PluginsConfigurationBuilder
 
         if (bundleCacheDirectory == null)
         {
-            try
-            {
-                bundleCacheDirectory = File.createTempFile("atlassian-plugins-bundle-cache", AtlassianPlugins.TEMP_DIRECTORY_SUFFIX);
-                bundleCacheDirectory.delete();
-            }
-            catch (final IOException e)
-            {
-                throw new IllegalStateException("Should be able to create tmp files", e);
-            }
-            bundleCacheDirectory.mkdir();
+            bundleCacheDirectory = createTempDir("atlassian-plugins-bundle-cache");
         }
         if (!bundleCacheDirectory.exists())
         {
@@ -248,25 +225,31 @@ public class PluginsConfigurationBuilder
 
         if (frameworkBundlesDirectory == null)
         {
-            try
-            {
-                frameworkBundlesDirectory = File.createTempFile("atlassian-plugins-framework-bundles", AtlassianPlugins.TEMP_DIRECTORY_SUFFIX);
-                frameworkBundlesDirectory.delete();
-            }
-            catch (final IOException e)
-            {
-                throw new IllegalStateException("Should be able to create tmp files", e);
-            }
-            frameworkBundlesDirectory.mkdir();
+            frameworkBundlesDirectory = createTempDir("atlassian-plugins-framework-bundles");
         }
         isTrue("Framework bundles directory should exist", frameworkBundlesDirectory.exists());
 
-        if ((bundledPluginCacheDirectory == null) ^ (bundledPluginUrl == null))
+        if (bundledPluginUrl != null && bundledPluginCacheDirectory == null)
         {
-            throw new IllegalArgumentException("Both bundled plugin cache directory and bundle plugin URL must be defined or not at all.");
+            throw new IllegalArgumentException("Bundled plugin cache directory MUST be defined when bundled plugin URL is defined");
         }
 
         return new InternalPluginsConfiguration(this);
+    }
+
+    private File createTempDir(final String prefix)
+    {
+        try
+        {
+            final File directory = File.createTempFile(prefix, AtlassianPlugins.TEMP_DIRECTORY_SUFFIX);
+            directory.delete();
+            directory.mkdir();
+            return directory;
+        }
+        catch (final IOException e)
+        {
+            throw new IllegalStateException("Was not able to create temp file with prefix <" + prefix + ">", e);
+        }
     }
 
     private static class InternalPluginsConfiguration implements PluginsConfiguration
