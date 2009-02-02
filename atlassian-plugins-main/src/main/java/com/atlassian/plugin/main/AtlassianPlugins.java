@@ -9,6 +9,7 @@ import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.loaders.BundledPluginLoader;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
+import com.atlassian.plugin.loaders.ClassPathPluginLoader;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
@@ -48,7 +49,6 @@ public class AtlassianPlugins
      */
     public AtlassianPlugins(PluginsConfiguration config)
     {
-        List<PluginLoader> pluginLoaders = new ArrayList<PluginLoader>();
         pluginEventManager = new DefaultPluginEventManager();
 
         osgiContainerManager = new FelixOsgiContainerManager(
@@ -63,11 +63,18 @@ public class AtlassianPlugins
                 osgiContainerManager, pluginEventManager);
         OsgiBundleFactory osgiBundleDeployer = new OsgiBundleFactory(osgiContainerManager, pluginEventManager);
 
+        final List<PluginLoader> pluginLoaders = new ArrayList<PluginLoader>();
+
+        // classpath plugins
+        pluginLoaders.add(new ClassPathPluginLoader());
+
+        // osgi/v2 plugins
         pluginLoaders.add(new DirectoryPluginLoader(
                 config.getPluginDirectory(),
                 Arrays.asList(osgiPluginDeployer, osgiBundleDeployer),
                 pluginEventManager));
 
+        // bundled plugins
         if (config.getBundledPluginUrl() != null)
         {
             pluginLoaders.add(new BundledPluginLoader(
