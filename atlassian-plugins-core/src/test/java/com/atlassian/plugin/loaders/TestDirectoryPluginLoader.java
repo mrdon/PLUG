@@ -230,11 +230,10 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     {
         FileUtils.cleanDirectory(pluginsTestDir);
         File plugin = new File(pluginsTestDir, "some-plugin.jar");
-        new PluginBuilder("plugin")
+        FileUtils.copyFile(new PluginBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
-                .build()
-                .renameTo(plugin);
+                .build(), plugin);
 
         loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
 
@@ -246,11 +245,10 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         // sleep to ensure the new plugin is picked up
         Thread.currentThread().sleep(1000);
         
-        new PluginBuilder("plugin")
+        FileUtils.copyFile(new PluginBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("bar.txt", "bar")
-                .build()
-                .renameTo(plugin);
+                .build(), plugin);
         plugins = loader.addFoundPlugins(moduleDescriptorFactory);
         assertEquals(1, plugins.size());
         assertNull(((Plugin)plugins.iterator().next()).getResource("foo.txt"));

@@ -957,12 +957,11 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         FileUtils.cleanDirectory(pluginsTestDir);
         final File plugin = File.createTempFile("plugin", ".jar");
-        new PluginBuilder("plugin")
+        FileUtils.copyFile(new PluginBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
                 .addJava("my.MyClass", "package my; public class MyClass {}")
-                .build()
-                .renameTo(plugin);
+                .build(), plugin);
 
         final DefaultPluginManager manager = makeClassLoadingPluginManager();
         manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
@@ -989,12 +988,11 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         // sleep to ensure the new plugin is picked up
         Thread.currentThread().sleep(1000);
 
-        new PluginBuilder("plugin")
+        FileUtils.copyFile(new PluginBuilder("plugin")
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("bar.txt", "bar")
                 .addJava("my.MyNewClass", "package my; public class MyNewClass {}")
-                .build()
-                .renameTo(plugin);
+                .build(), plugin);
 
         // reinstall the plugin
         final String pluginKey2 = manager.installPlugin(new JarPluginArtifact(plugin));
