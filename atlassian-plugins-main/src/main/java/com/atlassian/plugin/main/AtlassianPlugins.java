@@ -6,23 +6,23 @@ import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
+import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.loaders.BundledPluginLoader;
+import com.atlassian.plugin.loaders.ClassPathPluginLoader;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
-import com.atlassian.plugin.loaders.ClassPathPluginLoader;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import org.apache.log4j.Logger;
 
 /**
  * Facade interface to the Atlassian Plugins framework.  See the package Javadocs for usage information.
@@ -58,10 +58,10 @@ public class AtlassianPlugins
                 pluginEventManager,
                 config.getBundleCacheDirectory());
 
-        OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(
-                config.getPluginDescriptorFilename(),
-                osgiContainerManager, pluginEventManager);
-        OsgiBundleFactory osgiBundleDeployer = new OsgiBundleFactory(osgiContainerManager, pluginEventManager);
+        // plugin factories/deployers
+        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(config.getPluginDescriptorFilename(), osgiContainerManager, pluginEventManager);
+        final OsgiBundleFactory osgiBundleDeployer = new OsgiBundleFactory(osgiContainerManager, pluginEventManager);
+        final LegacyDynamicPluginFactory dynamicPluginDeployer = new LegacyDynamicPluginFactory(config.getPluginDescriptorFilename());
 
         final List<PluginLoader> pluginLoaders = new ArrayList<PluginLoader>();
 
@@ -80,10 +80,9 @@ public class AtlassianPlugins
             pluginLoaders.add(new BundledPluginLoader(
                     config.getBundledPluginUrl(),
                     config.getBundledPluginCacheDirectory(),
-                    Arrays.asList(osgiPluginDeployer, osgiBundleDeployer),
+                    Arrays.asList(osgiPluginDeployer, osgiBundleDeployer, dynamicPluginDeployer),
                     pluginEventManager));
         }
-
 
         pluginManager = new DefaultPluginManager(
                 config.getPluginStateStore(),
