@@ -249,7 +249,7 @@
 
     
     <properties>
-        <pluginBundleDirectory>target/bundled-plugins</pluginBundleDirectory>
+        <pluginBundleDirectory>${project.build.directory}/bundled-plugins</pluginBundleDirectory>
     </properties>
 
 
