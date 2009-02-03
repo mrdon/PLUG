@@ -6,6 +6,7 @@ import java.util.Map;
  * Interface that represents a configuration state for plugins and plugin modules. The configuration state (enabled
  * or disabled) is separate from the plugins and modules themselves because a plugin may have multiple
  * states depending on the context.
+ * @since 2.2.0
  * @author anatoli
  *
  */
