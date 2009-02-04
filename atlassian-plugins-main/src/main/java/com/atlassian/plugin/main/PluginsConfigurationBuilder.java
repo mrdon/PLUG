@@ -45,6 +45,7 @@ public class PluginsConfigurationBuilder
     private ModuleDescriptorFactory moduleDescriptorFactory;
     private PluginStateStore pluginStateStore;
     private long hotDeployPollingPeriod;
+    private boolean useLegacyDynamicPluginDeployer = false;
 
     /**
      * Sets the package scanner configuration instance that contains information about what packages to expose to plugins.
@@ -168,10 +169,22 @@ public class PluginsConfigurationBuilder
      * Sets the polling frequency for scanning for new plugins
      * @param hotDeployPollingFrequency The quantity of time periods
      * @param timeUnit The units for the frequency
+     * @return {@code this}
      */
     public PluginsConfigurationBuilder hotDeployPollingFrequency(final long hotDeployPollingFrequency, final TimeUnit timeUnit)
     {
         hotDeployPollingPeriod = hotDeployPollingFrequency * timeUnit.toMillis(hotDeployPollingFrequency);
+        return this;
+    }
+
+    /**
+     * Defines whether ther legacy plugin deployer should be used or not.
+     * @param useLegacyDynamicPluginDeployer {@code true} if the legacy plugin deployer should be used.
+     * @return {@code this}
+     */
+    public PluginsConfigurationBuilder useLegacyDynamicPluginDeployer(final boolean useLegacyDynamicPluginDeployer)
+    {
+        this.useLegacyDynamicPluginDeployer = useLegacyDynamicPluginDeployer;
         return this;
     }
 
@@ -265,6 +278,7 @@ public class PluginsConfigurationBuilder
         private final ModuleDescriptorFactory moduleDescriptorFactory;
         private final PluginStateStore pluginStateStore;
         private final long hotDeployPollingPeriod;
+        private final boolean useLegacyDynamicPluginDeployer;
 
         InternalPluginsConfiguration(final PluginsConfigurationBuilder builder)
         {
@@ -279,6 +293,7 @@ public class PluginsConfigurationBuilder
             moduleDescriptorFactory = builder.moduleDescriptorFactory;
             pluginStateStore = builder.pluginStateStore;
             hotDeployPollingPeriod = builder.hotDeployPollingPeriod;
+            useLegacyDynamicPluginDeployer = builder.useLegacyDynamicPluginDeployer;
         }
 
         public PackageScannerConfiguration getPackageScannerConfiguration()
@@ -334,6 +349,11 @@ public class PluginsConfigurationBuilder
         public long getHotDeployPollingPeriod()
         {
             return hotDeployPollingPeriod;
+        }
+
+        public boolean isUseLegacyDynamicPluginDeployer()
+        {
+            return useLegacyDynamicPluginDeployer;
         }
     }
 }

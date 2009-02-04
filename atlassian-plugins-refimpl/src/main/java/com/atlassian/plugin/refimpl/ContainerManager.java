@@ -106,6 +106,7 @@ public class ContainerManager
         hostComponentProvider = new SimpleHostComponentProvider();
 
         final PluginsConfiguration config = new PluginsConfigurationBuilder()
+                .useLegacyDynamicPluginDeployer(true)
                 .bundledPluginUrl(this.getClass().getResource(BUNDLED_PLUGINS_ZIP))
                 .bundledPluginCacheDirectory(makeSureDirectoryExists(servletContext, "/WEB-INF/bundled-plugins"))
                 .pluginDirectory(makeSureDirectoryExists(servletContext, "/WEB-INF/plugins"))

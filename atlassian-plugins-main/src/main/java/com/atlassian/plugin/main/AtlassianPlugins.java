@@ -7,6 +7,7 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
+import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.loaders.BundledPluginLoader;
 import com.atlassian.plugin.loaders.ClassPathPluginLoader;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
@@ -22,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -37,14 +39,15 @@ public class AtlassianPlugins
 
     private static final Logger log = Logger.getLogger(AtlassianPlugins.class);
 
-    /** Suffix for temporary directories which will be removed on shutdown */
+    /**
+     * Suffix for temporary directories which will be removed on shutdown
+     */
     public static final String TEMP_DIRECTORY_SUFFIX = ".tmp";
 
     /**
      * Constructs an instance of the plugin framework with the specified config.  No additional validation is performed
      * on the configuration, so it is recommended you use the {@link PluginsConfigurationBuilder} class to create
      * a configuration instance.
-     *
      * @param config The plugins configuration to use
      */
     public AtlassianPlugins(PluginsConfiguration config)
@@ -61,7 +64,11 @@ public class AtlassianPlugins
         // plugin factories/deployers
         final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(config.getPluginDescriptorFilename(), osgiContainerManager, pluginEventManager);
         final OsgiBundleFactory osgiBundleDeployer = new OsgiBundleFactory(osgiContainerManager, pluginEventManager);
-        final LegacyDynamicPluginFactory dynamicPluginDeployer = new LegacyDynamicPluginFactory(config.getPluginDescriptorFilename());
+        final List<PluginFactory> pluginDeployers = new LinkedList<PluginFactory>(Arrays.asList(osgiPluginDeployer, osgiBundleDeployer));
+        if (config.isUseLegacyDynamicPluginDeployer())
+        {
+            pluginDeployers.add(new LegacyDynamicPluginFactory(config.getPluginDescriptorFilename()));
+        }
 
         final List<PluginLoader> pluginLoaders = new ArrayList<PluginLoader>();
 
@@ -69,19 +76,12 @@ public class AtlassianPlugins
         pluginLoaders.add(new ClassPathPluginLoader());
 
         // osgi/v2 plugins
-        pluginLoaders.add(new DirectoryPluginLoader(
-                config.getPluginDirectory(),
-                Arrays.asList(osgiPluginDeployer, osgiBundleDeployer),
-                pluginEventManager));
+        pluginLoaders.add(new DirectoryPluginLoader(config.getPluginDirectory(), pluginDeployers, pluginEventManager));
 
         // bundled plugins
         if (config.getBundledPluginUrl() != null)
         {
-            pluginLoaders.add(new BundledPluginLoader(
-                    config.getBundledPluginUrl(),
-                    config.getBundledPluginCacheDirectory(),
-                    Arrays.asList(osgiPluginDeployer, osgiBundleDeployer, dynamicPluginDeployer),
-                    pluginEventManager));
+            pluginLoaders.add(new BundledPluginLoader(config.getBundledPluginUrl(), config.getBundledPluginCacheDirectory(), pluginDeployers, pluginEventManager));
         }
 
         pluginManager = new DefaultPluginManager(
@@ -89,8 +89,8 @@ public class AtlassianPlugins
                 pluginLoaders,
                 config.getModuleDescriptorFactory(),
                 pluginEventManager);
-        pluginManager.setPluginInstaller(new FilePluginInstaller(
-                config.getPluginDirectory()));
+
+        pluginManager.setPluginInstaller(new FilePluginInstaller(config.getPluginDirectory()));
 
         if (config.getHotDeployPollingPeriod() > 0)
         {
@@ -104,7 +104,6 @@ public class AtlassianPlugins
     /**
      * Starts the plugins framework.  Will return once the plugins have all been loaded and started.  Should only be
      * called once.
-     *
      * @throws PluginParseException If there was any problems parsing any of the plugins
      */
     public void start() throws PluginParseException

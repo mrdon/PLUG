@@ -68,4 +68,9 @@ public interface PluginsConfiguration
      * @return the number of milliseconds between polling.  Zero to disable.
      */
     long getHotDeployPollingPeriod();
+
+    /**
+     * @return wether to use the legacy plugin deployer or not.
+     */
+    boolean isUseLegacyDynamicPluginDeployer();
 }
