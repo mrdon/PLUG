@@ -206,7 +206,37 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(resourceD, resourceArray[2]);
         assertEquals(resourceB, resourceArray[3]);
         assertEquals(resourceA, resourceArray[4]);
+    }
 
+    public void testRequireSingleResourceGetsDeps() throws Exception
+    {
+        String resourceA = "test.atlassian:a";
+        String resourceB = "test.atlassian:b";
+
+        final String pluginVersion = "1";
+        final Mock mockPlugin = new Mock(Plugin.class);
+        PluginInformation pluginInfo = new PluginInformation();
+        pluginInfo.setVersion(pluginVersion);
+        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
+
+        Plugin p = (Plugin) mockPlugin.proxy();
+
+        final List<ResourceDescriptor> resourceDescriptorsA = TestUtils.createResourceDescriptors("resourceA.css");
+        final List<ResourceDescriptor> resourceDescriptorsB = TestUtils.createResourceDescriptors("resourceB.css", "resourceB-more.css");
+
+        // A depends on B
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceA)),
+            TestUtils.createWebResourceModuleDescriptor(resourceA, p, resourceDescriptorsA, Collections.singletonList(resourceB)));
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)),
+            TestUtils.createWebResourceModuleDescriptor(resourceB, p, resourceDescriptorsB, Collections.EMPTY_LIST));
+
+        String s = webResourceManager.getResourceTags(resourceA);
+        int indexA = s.indexOf(resourceA);
+        int indexB = s.indexOf(resourceB);
+
+        assertNotSame(-1, indexA);
+        assertNotSame(-1, indexB);
+        assertTrue(indexB < indexA);
     }
 
     public void testRequireResourceAndResourceTagMethods() throws Exception

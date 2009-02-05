@@ -119,7 +119,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         for (Object webResourceName : webResourceNames)
         {
             String resourceName = (String) webResourceName;
-            requireResource(resourceName, writer);
+            writeResourceTag(resourceName, writer);
         }
     }
 
@@ -132,7 +132,19 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void requireResource(String moduleCompleteKey, Writer writer)
     {
+        ListOrderedSet resourcesWithDeps = new ListOrderedSet();
+        addResourceWithDependencies(moduleCompleteKey, resourcesWithDeps, new Stack<String>());
+
+        for (Object resource : resourcesWithDeps)
+        {
+            writeResourceTag((String) resource, writer);
+        }
+    }
+
+    private void writeResourceTag(String moduleCompleteKey, Writer writer)
+    {
         List<PluginResource> resources = pluginResourceLocator.getPluginResources(moduleCompleteKey);
+
         if (resources == null)
         {
             writeContentAndSwallowErrors("<!-- Error loading resource \"" + moduleCompleteKey + "\".  Resource not found -->\n", writer);
