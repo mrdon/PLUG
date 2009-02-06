@@ -131,7 +131,6 @@ public class ContainerManager
         publicContainer = new HashMap<Class<?>, Object>();
         publicContainer.put(PluginController.class, plugins.getPluginController());
         publicContainer.put(PluginAccessor.class, pluginAccessor);
-        publicContainer.put(PluginEventManager.class, pluginEventManager);
         publicContainer.put(ServletModuleManager.class, servletModuleManager);
         publicContainer.put(WebResourceManager.class, webResourceManager);
         publicContainer.put(Map.class, publicContainer);
