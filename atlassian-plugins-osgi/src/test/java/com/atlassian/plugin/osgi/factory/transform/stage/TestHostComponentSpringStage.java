@@ -31,10 +31,19 @@ public class TestHostComponentSpringStage extends TestCase
     @Override
     public void setUp() throws Exception
     {
-        jar = new PluginJarBuilder().addFormattedJava("my.Foo", "package my;", "public class Foo {",
-            "  public Foo(com.atlassian.plugin.osgi.SomeInterface bar) {}", "}").addPluginInformation("my.plugin", "my.plugin", "1.0").addResource(
-            "META-INF/MANIFEST.MF",
-            "Manifest-Version: 1.0\n" + "Bundle-Version: 1.0\n" + "Bundle-SymbolicName: my.server\n" + "Bundle-ManifestVersion: 2\n").build();
+        jar = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  public Foo(com.atlassian.plugin.osgi.SomeInterface bar) {}",
+                        "}")
+                .addPluginInformation("my.plugin", "my.plugin", "1.0")
+                .addResource("META-INF/MANIFEST.MF",
+                    "Manifest-Version: 1.0\n" +
+                    "Bundle-Version: 1.0\n" +
+                    "Bundle-SymbolicName: my.server\n" +
+                    "Bundle-ManifestVersion: 2\n")
+                .build();
     }
 
     public void testTransform() throws IOException, DocumentException
@@ -148,12 +157,24 @@ public class TestHostComponentSpringStage extends TestCase
         }, null, "osgi:reference[@id='foo']");
     }
 
-    public void testTransformWithExistingComponentImport() throws Exception, DocumentException
+    public void testTransformWithExistingComponentImportName() throws Exception, DocumentException
     {
-        jar = new PluginJarBuilder().addFormattedJava("my.Foo", "package my;", "public class Foo {",
-            "  public Foo(com.atlassian.plugin.osgi.SomeInterface bar) {}", "}").addFormattedResource("atlassian-plugin.xml", "<atlassian-plugin>",
-            "  <component-import key='foo' />", "</atlassian-plugin>").addResource("META-INF/MANIFEST.MF",
-            "Manifest-Version: 1.0\n" + "Bundle-Version: 1.0\n" + "Bundle-SymbolicName: my.server\n" + "Bundle-ManifestVersion: 2\n").build();
+        jar = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  public Foo(com.atlassian.plugin.osgi.SomeInterface bar) {}",
+                        "}")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin>",
+                        "  <component-import key='foo' />",
+                        "</atlassian-plugin>")
+                .addResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0\n" +
+                        "Bundle-Version: 1.0\n" +
+                        "Bundle-SymbolicName: my.server\n" +
+                        "Bundle-ManifestVersion: 2\n")
+                .build();
 
         SpringTransformerTestHelper.transform(
             transformer,
@@ -167,5 +188,40 @@ public class TestHostComponentSpringStage extends TestCase
             },
             null,
             "osgi:reference[@id='foo0' and @filter='(&(bean-name=foo)(plugins-host=true))']/osgi:interfaces/beans:value/text()='" + SomeInterface.class.getName() + "'");
+    }
+
+    public void testTransformWithExistingComponentImportInterface() throws Exception, DocumentException
+    {
+        jar = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  public Foo(com.atlassian.plugin.osgi.SomeInterface bar) {}",
+                        "}")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin>",
+                        "  <component-import key='foobar'>",
+                        "    <interface>com.atlassian.plugin.osgi.SomeInterface</interface>",
+                        "  </component-import>",
+                        "</atlassian-plugin>")
+                .addResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0\n" +
+                        "Bundle-Version: 1.0\n" +
+                        "Bundle-SymbolicName: my.server\n" +
+                        "Bundle-ManifestVersion: 2\n")
+                .build();
+
+        SpringTransformerTestHelper.transform(
+            transformer,
+            jar,
+            new ArrayList<HostComponentRegistration>()
+            {
+                {
+                    assertTrue(add(new StubHostComponentRegistration("foo", new SomeInterface()
+                    {}, SomeInterface.class)));
+                }
+            },
+            null,
+            "not(osgi:reference[@id='foo' and @filter='(&(bean-name=foo)(plugins-host=true))']/osgi:interfaces/beans:value/text()='" + SomeInterface.class.getName() + "')");
     }
 }

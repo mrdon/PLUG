@@ -3,9 +3,11 @@ package com.atlassian.plugin.osgi.factory.transform;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.factory.transform.model.ComponentImport;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 import org.codehaus.classworlds.uberjar.protocol.jar.NonLockingJarHandler;
 import org.dom4j.Document;
+import org.dom4j.Element;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.io.IOUtils;
 
@@ -14,10 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
@@ -37,6 +36,7 @@ public class TransformContext
     private final List<String> extraImports;
     private final List<String> extraExports;
     private final PluginArtifact pluginArtifact;
+    private final Map<String, ComponentImport> componentImports;
 
     public TransformContext(List<HostComponentRegistration> regs, PluginArtifact pluginArtifact, String descriptorPath)
     {
@@ -59,6 +59,20 @@ public class TransformContext
         this.descriptorDocument = retrieveDocFromJar(pluginArtifact, descriptorPath);
         this.extraImports = new ArrayList<String>();
         this.extraExports = new ArrayList<String>();
+
+        this.componentImports = Collections.unmodifiableMap(parseComponentImports(descriptorDocument));
+    }
+
+    private Map<String, ComponentImport> parseComponentImports(Document descriptorDocument)
+    {
+        Map<String,ComponentImport> componentImports = new HashMap<String,ComponentImport>();
+        List<Element> elements = descriptorDocument.getRootElement().elements("component-import");
+        for (Element component : elements)
+        {
+            ComponentImport ci = new ComponentImport(component);
+            componentImports.put(ci.getKey(), ci);
+        }
+        return componentImports;
     }
 
     private Document retrieveDocFromJar(PluginArtifact pluginArtifact, String descriptorPath) throws PluginTransformationException
@@ -130,6 +144,11 @@ public class TransformContext
     public List<String> getExtraExports()
     {
         return extraExports;
+    }
+
+    public Map<String, ComponentImport> getComponentImports()
+    {
+        return componentImports;
     }
 
     private static class DocumentExposingDescriptorParser extends XmlDescriptorParser

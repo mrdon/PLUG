@@ -26,7 +26,7 @@ public class TestComponentImportSpringStage extends TestCase
         Element component = pluginRoot.addElement("component-import");
         component.addAttribute("key", "foo");
         component.addAttribute("interface", "my.Foo");
-        SpringTransformerTestHelper.transform(stage, pluginRoot, "osgi:reference[@id='foo' and @interface='my.Foo']");
+        SpringTransformerTestHelper.transform(stage, pluginRoot, "osgi:reference[@id='foo']/osgi:interfaces/beans:value/text()='my.Foo'");
 
         // interface as element
         pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");

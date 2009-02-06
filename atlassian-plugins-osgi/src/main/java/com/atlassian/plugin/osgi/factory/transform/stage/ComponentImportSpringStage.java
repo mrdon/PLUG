@@ -3,11 +3,13 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
+import com.atlassian.plugin.osgi.factory.transform.model.ComponentImport;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Transforms component imports into a Spring XML file
@@ -25,35 +27,18 @@ public class ComponentImportSpringStage implements TransformStage
         {
             Document springDoc = SpringHelper.createSpringDocument();
             Element root = springDoc.getRootElement();
-            List<Element> elements = context.getDescriptorDocument().getRootElement().elements("component-import");
-            for (Element component : elements)
+
+            for (ComponentImport comp: context.getComponentImports().values())
             {
                 Element osgiReference = root.addElement("osgi:reference");
-                osgiReference.addAttribute("id", component.attributeValue("key"));
-                String infName = component.attributeValue("interface");
-                if (infName != null)
+                osgiReference.addAttribute("id", comp.getKey());
+                Element interfaces = osgiReference.addElement("osgi:interfaces");
+                for (String infName : comp.getInterfaces())
                 {
-                    osgiReference.addAttribute("interface", infName);
                     context.getExtraImports().add(infName.substring(0, infName.lastIndexOf('.')));
-                }
+                    Element e = interfaces.addElement("beans:value");
+                    e.setText(infName);
 
-
-                List<Element> compInterfaces = component.elements("interface");
-                if (compInterfaces.size() > 0)
-                {
-                    List<String> interfaceNames = new ArrayList<String>();
-                    for (Element inf : compInterfaces)
-                    {
-                        interfaceNames.add(inf.getTextTrim());
-                    }
-
-                    Element interfaces = osgiReference.addElement("osgi:interfaces");
-                    for (String name : interfaceNames)
-                    {
-                        Element e = interfaces.addElement("beans:value");
-                        e.setText(name);
-                        context.getExtraImports().add(name.substring(0, name.lastIndexOf('.')));
-                    }
                 }
             }
             if (root.elements().size() > 0)

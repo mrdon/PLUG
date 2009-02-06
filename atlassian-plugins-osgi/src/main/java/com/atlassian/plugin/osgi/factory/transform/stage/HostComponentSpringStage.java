@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
+import com.atlassian.plugin.osgi.factory.transform.model.ComponentImport;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
@@ -48,7 +49,6 @@ public class HostComponentSpringStage implements TransformStage
                 throw new PluginParseException("Unable to scan for host components in plugin classes", e);
             }
 
-
             List<HostComponentRegistration> matchedRegistrations = new ArrayList<HostComponentRegistration>();
             Element root = doc.getRootElement();
             if (context.getHostComponentRegistrations() != null)
@@ -65,6 +65,16 @@ public class HostComponentSpringStage implements TransformStage
                             found = true;
                         }
                     }
+                    Set<String> regInterfaces = new HashSet<String>(Arrays.asList(reg.getMainInterfaces()));
+                    for (ComponentImport compImport : context.getComponentImports().values())
+                    {
+                        if (compImport.getInterfaces().equals(regInterfaces))
+                        {
+                            found = false;
+                            break;
+                        }
+                    }
+
                     if (!found)
                     {
                         continue;
@@ -74,7 +84,7 @@ public class HostComponentSpringStage implements TransformStage
                     String beanName = reg.getProperties().get(PropertyBuilder.BEAN_NAME);
 
                     Element osgiService = root.addElement("osgi:reference");
-                    osgiService.addAttribute("id", determineId(context.getDescriptorDocument(), beanName, index));
+                    osgiService.addAttribute("id", determineId(context.getComponentImports().keySet(), beanName, index));
 
                     if (beanName != null)
                     {
@@ -122,6 +132,20 @@ public class HostComponentSpringStage implements TransformStage
             }
         }
         return interfaceNames;
+    }
+
+    private Set<Set<String>> convertRegistrationsToSetOfSets(List<HostComponentRegistration> regs)
+    {
+        Set<Set<String>> regInterfaceNames = new HashSet<Set<String>>();
+        if (regs != null)
+        {
+            for (HostComponentRegistration reg : regs)
+            {
+                HashSet<String> names = new HashSet<String>(Arrays.asList(reg.getMainInterfaces()));
+                regInterfaceNames.add(names);
+            }
+        }
+        return regInterfaceNames;
     }
 
     private void findUsedHostComponents(Set<String> allHostComponents, Set<String> matchedHostComponents, List<String> innerJarPaths, InputStream
@@ -208,7 +232,7 @@ public class HostComponentSpringStage implements TransformStage
         }
     }
 
-    private String determineId(Document pluginDoc, String beanName, int iteration)
+    private String determineId(Set<String> hostComponentNames, String beanName, int iteration)
     {
         String id = beanName;
         if (id == null)
@@ -218,15 +242,11 @@ public class HostComponentSpringStage implements TransformStage
 
         id = id.replaceAll("#", "LB");
 
-        for (Object element : pluginDoc.getRootElement().elements("component-import"))
+        if (hostComponentNames.contains(id))
         {
-            String key = ((Element) element).attributeValue("key");
-            if (id.equals(key))
-            {
-                id += iteration;
-                break;
-            }
+            id += iteration;
         }
         return id;
     }
+
 }
