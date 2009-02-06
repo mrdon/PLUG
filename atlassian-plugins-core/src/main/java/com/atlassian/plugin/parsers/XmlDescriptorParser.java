@@ -33,29 +33,46 @@ import java.util.Iterator;
  */
 public class XmlDescriptorParser implements DescriptorParser
 {
-    private static Log log = LogFactory.getLog(XmlDescriptorParser.class);
+    private static final Log log = LogFactory.getLog(XmlDescriptorParser.class);
 
-    boolean recogniseSystemPlugins = false;
     private final Document document;
+    private final String applicationKey;
 
     /**
      * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
+     * @deprecated Since 2.2.0, use {@link #XmlDescriptorParser(InputStream,String)} instead
      */
+    @Deprecated
     public XmlDescriptorParser(final InputStream source) throws PluginParseException
     {
-        Validate.notNull(source, "XML descriptor source cannot be null");
-        document = createDocument(source);
+        this(source, null);
     }
 
     /**
      * Constructs a parser with an already-constructed document
+     * @param source the source document
+     * @param applicationKey the application key to filter modules with, null for everything
      * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
      * @since 2.2.0
      */
-    public XmlDescriptorParser(final Document source) throws PluginParseException
+    public XmlDescriptorParser(final Document source, String applicationKey) throws PluginParseException
     {
         Validate.notNull(source, "XML descriptor source document cannot be null");
         document = source;
+        this.applicationKey = applicationKey;
+    }
+
+    /**
+     * Constructs a parser with a stream of an XML document for a specific application
+     * @param source The descriptor stream
+     * @param applicationKey the application key to filter modules with, null for everything
+     * @since 2.2.0
+     */
+    public XmlDescriptorParser(InputStream source, String applicationKey)
+    {
+        Validate.notNull(source, "XML descriptor source cannot be null");
+        document = createDocument(source);
+        this.applicationKey = applicationKey;
     }
 
     protected Document createDocument(final InputStream source) throws PluginParseException
@@ -146,6 +163,18 @@ public class XmlDescriptorParser implements DescriptorParser
     protected ModuleDescriptor<?> createModuleDescriptor(final Plugin plugin, final Element element, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         final String name = element.getName();
+
+        // Determine if this module descriptor is applicable for the current application
+        if (applicationKey != null)
+        {
+
+            String targetAppKey = element.attributeValue("application");
+            if (targetAppKey != null && !targetAppKey.equals(applicationKey))
+            {
+                log.debug("Ignoring module descriptor for target application '"+targetAppKey+"'");
+                return null;
+            }
+        }
 
         ModuleDescriptor<?> moduleDescriptorDescriptor;
 

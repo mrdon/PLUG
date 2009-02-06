@@ -62,7 +62,11 @@ public class AtlassianPlugins
                 config.getBundleCacheDirectory());
 
         // plugin factories/deployers
-        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(config.getPluginDescriptorFilename(), osgiContainerManager, pluginEventManager);
+        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(
+                config.getPluginDescriptorFilename(),
+                config.getApplicationKey(),
+                osgiContainerManager,
+                pluginEventManager);
         final OsgiBundleFactory osgiBundleDeployer = new OsgiBundleFactory(osgiContainerManager, pluginEventManager);
         final List<PluginFactory> pluginDeployers = new LinkedList<PluginFactory>(Arrays.asList(osgiPluginDeployer, osgiBundleDeployer));
         if (config.isUseLegacyDynamicPluginDeployer())

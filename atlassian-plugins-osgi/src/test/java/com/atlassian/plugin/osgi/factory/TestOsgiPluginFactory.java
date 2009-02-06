@@ -39,7 +39,7 @@ public class TestOsgiPluginFactory extends TestCase
     public void setUp() throws IOException, URISyntaxException
     {
         mockOsgi = new Mock(OsgiContainerManager.class);
-        factory = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, (OsgiContainerManager) mockOsgi.proxy(), new DefaultPluginEventManager());
+        factory = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, null, (OsgiContainerManager) mockOsgi.proxy(), new DefaultPluginEventManager());
         jar = new PluginJarBuilder("someplugin").addPluginInformation("plugin.key", "My Plugin", "1.0").build();
 
         mockBundle = new Mock(Bundle.class);

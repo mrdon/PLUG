@@ -17,7 +17,7 @@ public class TestOsgiPluginXmlDescriptorParser extends TestCase
 {
     public void testCreateModuleDescriptor() throws PluginParseException
     {
-        OsgiPluginXmlDescriptorParser parser = new OsgiPluginXmlDescriptorParser(new ByteArrayInputStream("<foo/>".getBytes()), "foo");
+        OsgiPluginXmlDescriptorParser parser = new OsgiPluginXmlDescriptorParser(new ByteArrayInputStream("<foo/>".getBytes()), null, "foo");
 
         Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         mockModuleDescriptor.expect("init", C.ANY_ARGS);

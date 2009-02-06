@@ -23,8 +23,8 @@ import java.net.URL;
  */
 public class LegacyDynamicPluginFactory implements PluginFactory
 {
-    private DescriptorParserFactory descriptorParserFactory;
-    private String pluginDescriptorFileName;
+    private final DescriptorParserFactory descriptorParserFactory;
+    private final String pluginDescriptorFileName;
     private final File tempDirectory;
 
     public LegacyDynamicPluginFactory(String pluginDescriptorFileName)
@@ -72,7 +72,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
                 throw new PluginParseException("No descriptor found in classloader for : " + file);
 
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
-            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
+            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, null);
             loader = new PluginClassLoader(file, Thread.currentThread().getContextClassLoader(), tempDirectory);
             plugin = parser.configurePlugin(moduleDescriptorFactory, createPlugin(pluginArtifact, loader));
         }
@@ -135,7 +135,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
         {
             try
             {
-                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
+                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, null);
 
                 // Only recognize version 1 plugins
                 if (descriptorParser.getPluginsVersion() <= 1)

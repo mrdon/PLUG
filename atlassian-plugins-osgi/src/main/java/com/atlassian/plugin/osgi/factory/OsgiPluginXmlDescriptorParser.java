@@ -26,14 +26,15 @@ public class OsgiPluginXmlDescriptorParser extends XmlDescriptorParser
 
     /**
      * @param source The XML descriptor source
+     * @param applicationKey The application key to limit modules to, null for everything
      * @param modulesToIgnore A list of module types to ignore
      * 
      * @throws com.atlassian.plugin.PluginParseException
      *          if there is a problem reading the descriptor from the XML {@link java.io.InputStream}.
      */
-    public OsgiPluginXmlDescriptorParser(InputStream source, String... modulesToIgnore) throws PluginParseException
+    public OsgiPluginXmlDescriptorParser(InputStream source, String applicationKey, String... modulesToIgnore) throws PluginParseException
     {
-        super(source);
+        super(source, applicationKey);
         Validate.notNull(source, "The descriptor source must not be null");
         this.modulesToIgnore = new HashSet<String>(Arrays.asList(modulesToIgnore));
     }

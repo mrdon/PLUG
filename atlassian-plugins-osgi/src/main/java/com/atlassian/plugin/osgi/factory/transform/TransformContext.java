@@ -159,7 +159,8 @@ public class TransformContext
          */
         public DocumentExposingDescriptorParser(InputStream source) throws PluginParseException
         {
-            super(source);
+            // A null application key is fine here as we are only interested in the parsed document
+            super(source, null);
         }
 
         @Override

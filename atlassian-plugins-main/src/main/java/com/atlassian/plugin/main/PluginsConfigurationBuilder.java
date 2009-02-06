@@ -46,6 +46,7 @@ public class PluginsConfigurationBuilder
     private PluginStateStore pluginStateStore;
     private long hotDeployPollingPeriod;
     private boolean useLegacyDynamicPluginDeployer = false;
+    private String applicationKey;
 
     /**
      * Sets the package scanner configuration instance that contains information about what packages to expose to plugins.
@@ -189,6 +190,17 @@ public class PluginsConfigurationBuilder
     }
 
     /**
+     * Sets the current application key to use when filtering modules in a plugin
+     * @param applicationKey the current application identifier
+     * @return {@code this}
+     */
+    public PluginsConfigurationBuilder applicationKey(final String applicationKey)
+    {
+        this.applicationKey = applicationKey;
+        return this;
+    }
+
+    /**
      * Builds a {@link com.atlassian.plugin.main.PluginsConfiguration} instance by processing the configuration that
      * was previously set, validating the input, and setting any defaults where not explicitly specified.
      * @return A valid {@link PluginsConfiguration} instance to pass to {@link AtlassianPlugins}
@@ -279,6 +291,7 @@ public class PluginsConfigurationBuilder
         private final PluginStateStore pluginStateStore;
         private final long hotDeployPollingPeriod;
         private final boolean useLegacyDynamicPluginDeployer;
+        private final String applicationKey;
 
         InternalPluginsConfiguration(final PluginsConfigurationBuilder builder)
         {
@@ -294,6 +307,7 @@ public class PluginsConfigurationBuilder
             pluginStateStore = builder.pluginStateStore;
             hotDeployPollingPeriod = builder.hotDeployPollingPeriod;
             useLegacyDynamicPluginDeployer = builder.useLegacyDynamicPluginDeployer;
+            applicationKey = builder.applicationKey;
         }
 
         public PackageScannerConfiguration getPackageScannerConfiguration()
@@ -354,6 +368,11 @@ public class PluginsConfigurationBuilder
         public boolean isUseLegacyDynamicPluginDeployer()
         {
             return useLegacyDynamicPluginDeployer;
+        }
+
+        public String getApplicationKey()
+        {
+            return applicationKey;
         }
     }
 }

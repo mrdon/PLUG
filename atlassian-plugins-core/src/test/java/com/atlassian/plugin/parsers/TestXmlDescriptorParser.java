@@ -7,10 +7,12 @@ import java.util.Collections;
 import junit.framework.TestCase;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.mockobjects.dynamic.Mock;
+import com.mockobjects.dynamic.C;
 
 public class TestXmlDescriptorParser extends TestCase
 {
@@ -35,7 +37,7 @@ public class TestXmlDescriptorParser extends TestCase
 
         try
         {
-            XmlDescriptorParser parser = new XmlDescriptorParser(new FileInputStream(getTestFile(MISSING_INFO_TEST_FILE)));
+            XmlDescriptorParser parser = new XmlDescriptorParser(new FileInputStream(getTestFile(MISSING_INFO_TEST_FILE)), null);
             parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
             
             PluginInformation info = testPlugin.getPluginInformation();
@@ -54,7 +56,7 @@ public class TestXmlDescriptorParser extends TestCase
 
     public void testPluginsApplicationVersionMinMax()
     {
-        XmlDescriptorParser parser = parse(
+        XmlDescriptorParser parser = parse(null,
                 "<atlassian-plugin key='foo'>",
                 "  <plugin-info>",
                 "    <application-version min='3' max='4' />",
@@ -66,7 +68,7 @@ public class TestXmlDescriptorParser extends TestCase
 
     public void testPluginsApplicationVersionMinMaxWithOnlyMin()
     {
-        XmlDescriptorParser parser = parse(
+        XmlDescriptorParser parser = parse(null,
                 "<atlassian-plugin key='foo'>",
                 "  <plugin-info>",
                 "    <application-version min='3' />",
@@ -78,7 +80,7 @@ public class TestXmlDescriptorParser extends TestCase
 
     public void testPluginsApplicationVersionMinMaxWithOnlyMax()
     {
-        XmlDescriptorParser parser = parse(
+        XmlDescriptorParser parser = parse(null,
                 "<atlassian-plugin key='foo'>",
                 "  <plugin-info>",
                 "    <application-version max='3' />",
@@ -93,13 +95,13 @@ public class TestXmlDescriptorParser extends TestCase
     public void testPluginsVersion()
     {
         String xml = "<atlassian-plugin key=\"foo\" pluginsVersion=\"2\" />";
-        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()));
+        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()), null);
         assertEquals(2, parser.getPluginsVersion());
     }
 
     public void testPluginsVersionAfterConfigure()
     {
-        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream("<atlassian-plugin key=\"foo\" plugins-version=\"2\" />".getBytes()));
+        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream("<atlassian-plugin key=\"foo\" plugins-version=\"2\" />".getBytes()), null);
         // mock up some supporting objects
         PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
         Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
@@ -111,17 +113,70 @@ public class TestXmlDescriptorParser extends TestCase
         assertEquals(2, testPlugin.getPluginsVersion());
     }
 
+    public void testPluginWithModules()
+    {
+        XmlDescriptorParser parser = parse(null,
+                 "<atlassian-plugin key='foo'>",
+                "  <animal key='bear' />",
+                "</atlassian-plugin>");
+        // mock up some supporting objects
+        PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
+        Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
+        mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), MockAnimalModuleDescriptor.class);
+
+        // create a Plugin for testing
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) null, classLoader);
+        parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
+        assertNotNull(testPlugin.getModuleDescriptor("bear"));
+    }
+
+    public void testPluginWithModulesNoApplicationKey()
+    {
+        XmlDescriptorParser parser = parse(null,
+                 "<atlassian-plugin key='foo'>",
+                "  <animal key='bear' application='foo'/>",
+                "</atlassian-plugin>");
+        // mock up some supporting objects
+        PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
+        Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
+        mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), MockAnimalModuleDescriptor.class);
+
+        // create a Plugin for testing
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) null, classLoader);
+        parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
+        assertNotNull(testPlugin.getModuleDescriptor("bear"));
+    }
+
+    public void testPluginWithSomeNonApplicationModules()
+    {
+        XmlDescriptorParser parser = parse("myapp",
+                 "<atlassian-plugin key='foo'>",
+                "  <animal key='bear' application='myapp'/>",
+                "  <animal key='bear2' application='otherapp'/>",
+                "</atlassian-plugin>");
+        // mock up some supporting objects
+        PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
+        Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
+        mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), MockAnimalModuleDescriptor.class);
+
+        // create a Plugin for testing
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) null, classLoader);
+        parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
+        assertNotNull(testPlugin.getModuleDescriptor("bear"));
+        assertNull(testPlugin.getModuleDescriptor("bear2"));
+    }
+
     public void testPluginsVersionWithDash()
     {
         String xml = "<atlassian-plugin key=\"foo\" plugins-version=\"2\" />";
-        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()));
+        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()), null);
         assertEquals(2, parser.getPluginsVersion());
     }
 
     public void testPluginsVersionMissing()
     {
         String xml = "<atlassian-plugin key=\"foo\" />";
-        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()));
+        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()), null);
         assertEquals(1, parser.getPluginsVersion());
     }
     
@@ -132,7 +187,7 @@ public class TestXmlDescriptorParser extends TestCase
         return url.getFile();
     }
 
-    private static XmlDescriptorParser parse(String... lines)
+    private static XmlDescriptorParser parse(String applicationKey, String... lines)
     {
         StringBuffer sb = new StringBuffer();
         for (String line : lines)
@@ -140,6 +195,6 @@ public class TestXmlDescriptorParser extends TestCase
             sb.append(line.replace('\'', '"')).append('\n');
         }
         InputStream in = new ByteArrayInputStream(sb.toString().getBytes());
-        return new XmlDescriptorParser(in);
+        return new XmlDescriptorParser(in, applicationKey);
     }
 }

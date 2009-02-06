@@ -21,11 +21,25 @@ import java.io.InputStream;
  */
 public class XmlDynamicPluginFactory implements PluginFactory
 {
-    private DescriptorParserFactory descriptorParserFactory;
+    private final DescriptorParserFactory descriptorParserFactory;
+    private final String applicationKey;
 
+    /**
+     * @deprecated Since 2.2.0, use {@link XmlDynamicPluginFactory(String)} instead
+     */
     public XmlDynamicPluginFactory()
     {
+        this(null);
+    }
+
+    /**
+     * @param applicationKey The application key to use to choose modules
+     * @since 2.2.0
+     */
+    public XmlDynamicPluginFactory(String applicationKey)
+    {
         this.descriptorParserFactory = new XmlDescriptorParserFactory();
+        this.applicationKey = applicationKey;
     }
 
     /**
@@ -55,7 +69,7 @@ public class XmlDynamicPluginFactory implements PluginFactory
         {
             pluginDescriptor = new FileInputStream(pluginArtifact.toFile());
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
-            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
+            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKey);
             plugin = parser.configurePlugin(moduleDescriptorFactory, new XmlDynamicPlugin());
         }
         catch (RuntimeException e)
@@ -88,7 +102,7 @@ public class XmlDynamicPluginFactory implements PluginFactory
         {
             try
             {
-                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
+                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, applicationKey);
                 pluginKey = descriptorParser.getKey();
             } catch (PluginParseException ex)
             {

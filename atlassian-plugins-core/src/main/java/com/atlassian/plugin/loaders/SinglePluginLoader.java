@@ -120,7 +120,7 @@ public class SinglePluginLoader implements PluginLoader
         Plugin plugin;
         try
         {
-            final DescriptorParser parser = descriptorParserFactory.getInstance(source);
+            final DescriptorParser parser = descriptorParserFactory.getInstance(source, null);
             plugin = parser.configurePlugin(moduleDescriptorFactory, getNewPlugin());
             if (plugin.getPluginsVersion() == 2)
             {

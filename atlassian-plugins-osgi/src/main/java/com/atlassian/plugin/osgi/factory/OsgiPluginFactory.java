@@ -38,10 +38,11 @@ public class OsgiPluginFactory implements PluginFactory
     private final String pluginDescriptorFileName;
     private final DescriptorParserFactory descriptorParserFactory;
     private final PluginEventManager pluginEventManager;
+    private final String applicationKey;
 
     private ServiceTracker moduleDescriptorFactoryTracker;
 
-    public OsgiPluginFactory(String pluginDescriptorFileName, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
+    public OsgiPluginFactory(String pluginDescriptorFileName, String applicationKey, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
         Validate.notNull(pluginDescriptorFileName, "Plugin descriptor is required");
         Validate.notNull(osgi, "The OSGi container is required");
@@ -51,6 +52,7 @@ public class OsgiPluginFactory implements PluginFactory
         this.pluginDescriptorFileName = pluginDescriptorFileName;
         this.descriptorParserFactory = new OsgiPluginXmlDescriptorParserFactory();
         this.pluginEventManager = pluginEventManager;
+        this.applicationKey = applicationKey;
     }
 
     public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException {
@@ -64,7 +66,7 @@ public class OsgiPluginFactory implements PluginFactory
 
             if (descriptorStream != null)
             {
-                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
+                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, applicationKey);
                 if (descriptorParser.getPluginsVersion() == 2)
                     pluginKey = descriptorParser.getKey();
             }
@@ -107,7 +109,7 @@ public class OsgiPluginFactory implements PluginFactory
 
             ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
-            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
+            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKey);
 
             Bundle existingBundle = findBundle(parser.getKey(), parser.getPluginInformation().getVersion(), pluginArtifact.toFile());
             Plugin osgiPlugin;

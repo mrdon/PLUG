@@ -117,7 +117,7 @@ public abstract class PluginInContainerTestBase extends TestCase
         osgiContainerManager = new FelixOsgiContainerManager(frameworkBundlesDir, scannerConfig, requiredWrappingProvider, pluginEventManager, cacheDir);
 
         final LegacyDynamicPluginFactory legacyFactory = new LegacyDynamicPluginFactory(PluginAccessor.Descriptor.FILENAME, tmpDir);
-        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, osgiContainerManager, pluginEventManager);
+        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, null, osgiContainerManager, pluginEventManager);
 
         final DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Arrays.asList(legacyFactory, osgiPluginDeployer),
             new DefaultPluginEventManager());

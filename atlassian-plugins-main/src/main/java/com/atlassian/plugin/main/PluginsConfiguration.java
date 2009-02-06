@@ -70,7 +70,12 @@ public interface PluginsConfiguration
     long getHotDeployPollingPeriod();
 
     /**
-     * @return wether to use the legacy plugin deployer or not.
+     * @return whether to use the legacy plugin deployer or not.
      */
     boolean isUseLegacyDynamicPluginDeployer();
+
+    /**
+     * @return the application key to use to filter modules in the descriptor 
+     */
+    String getApplicationKey();
 }
