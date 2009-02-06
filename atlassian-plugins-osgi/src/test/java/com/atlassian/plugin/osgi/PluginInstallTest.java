@@ -771,12 +771,25 @@ public class PluginInstallTest extends PluginInContainerTestBase
 
     public void testLotsOfHostComponents() throws Exception
     {
-        new PluginJarBuilder("first").addFormattedResource("atlassian-plugin.xml",
-            "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>", "    <plugin-info>", "        <version>1.0</version>",
-            "    </plugin-info>", "    <dummy key='dum1'/>", "</atlassian-plugin>").build(pluginsDir);
-        new PluginJarBuilder("second").addFormattedResource("atlassian-plugin.xml",
-            "<atlassian-plugin name='Test 2' key='test.plugin2' pluginsVersion='2'>", "    <plugin-info>", "        <version>1.0</version>",
-            "    </plugin-info>", "    <dummy key='dum1'/>", "    <dummy key='dum2'/>", "</atlassian-plugin>").build(pluginsDir);
+        new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <dummy key='dum1'/>",
+                        "</atlassian-plugin>")
+                .build(pluginsDir);
+        new PluginJarBuilder("second")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test.plugin2' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <dummy key='dum1'/>",
+                        "    <dummy key='dum2'/>",
+                        "</atlassian-plugin>")
+                .build(pluginsDir);
 
         final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
@@ -795,6 +808,48 @@ public class PluginInstallTest extends PluginInContainerTestBase
         }, factory);
 
         assertEquals(2, pluginManager.getEnabledPlugins().size());
+    }
+
+    public void testInstallWithStrangePath() throws Exception
+    {
+        File strangeDir = new File(tmpDir, "20%time");
+        strangeDir.mkdir();
+        File oldTmp = tmpDir;
+        try
+        {
+            tmpDir = strangeDir;
+            cacheDir = new File(tmpDir, "felix-cache");
+            cacheDir.mkdir();
+            frameworkBundlesDir = new File(tmpDir, "framework-bundles");
+            frameworkBundlesDir.mkdir();
+            pluginsDir = new File(tmpDir, "plugins");
+            pluginsDir.mkdir();
+
+
+            new PluginJarBuilder("strangePath")
+                    .addFormattedResource("atlassian-plugin.xml",
+                            "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                            "    <plugin-info>",
+                            "        <version>1.0</version>",
+                            "    </plugin-info>",
+                            "</atlassian-plugin>")
+                    .build(pluginsDir);
+
+            final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
+            factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
+            initPluginManager(new HostComponentProvider()
+            {
+                public void provide(final ComponentRegistrar registrar)
+                {
+                }
+            }, factory);
+
+            assertEquals(1, pluginManager.getEnabledPlugins().size());
+        }
+        finally
+        {
+            tmpDir = oldTmp;
+        }
     }
 
     public static class Callable3Aware
