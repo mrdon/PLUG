@@ -7,6 +7,7 @@ import org.dom4j.Element;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Represents a single "href", with a variety of permutations.
@@ -29,8 +30,9 @@ public class DefaultWebLink extends AbstractWebItem implements WebLink
 
     public String getRenderedUrl(Map<String,Object> context)
     {
-        context.putAll(getContextMap(context));
-        return getWebFragmentHelper().renderVelocityFragment(url, context);
+        Map<String,Object> tmpContext = new HashMap<String,Object>(context);
+        tmpContext.putAll(getContextMap(tmpContext));
+        return getWebFragmentHelper().renderVelocityFragment(url, tmpContext);
     }
 
     private boolean isRelativeUrl(String url)

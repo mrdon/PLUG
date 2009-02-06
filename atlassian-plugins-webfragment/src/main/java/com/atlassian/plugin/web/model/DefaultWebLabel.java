@@ -45,14 +45,15 @@ public class DefaultWebLabel extends DefaultWebParam implements WebLabel
         return noKeyValue;
     }
 
-    public String getDisplayableLabel(HttpServletRequest req, Map<String,Object> context)
+    public String getDisplayableLabel(HttpServletRequest req, Map<String,Object> origContext)
     {
-        context.putAll(getContextMap(context));
+        Map<String,Object> tmpContext = new HashMap<String,Object>(origContext);
+        tmpContext.putAll(getContextMap(tmpContext));
         if (key != null)
         {
             if (params == null || params.isEmpty())
             {
-                return getWebFragmentHelper().getI18nValue(key, null, context);
+                return getWebFragmentHelper().getI18nValue(key, null, tmpContext);
             }
             else
             {
@@ -63,15 +64,15 @@ public class DefaultWebLabel extends DefaultWebParam implements WebLabel
                 {
                     String key = (String) iterator.next();
                     if (key.startsWith("param"))
-                        arguments.add(getWebFragmentHelper().renderVelocityFragment((String) params.get(key), context));
+                        arguments.add(getWebFragmentHelper().renderVelocityFragment(params.get(key), tmpContext));
                 }
 
-                return getWebFragmentHelper().getI18nValue(key, arguments, context);
+                return getWebFragmentHelper().getI18nValue(key, arguments, tmpContext);
             }
         }
         else
         {
-            return getWebFragmentHelper().renderVelocityFragment(noKeyValue, context);
+            return getWebFragmentHelper().renderVelocityFragment(noKeyValue, tmpContext);
         }
     }
 }
