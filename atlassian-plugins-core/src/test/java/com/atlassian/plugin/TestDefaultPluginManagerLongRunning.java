@@ -121,8 +121,14 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
 
         FileUtils.cleanDirectory(pluginsTestDir);
         final File plugin = File.createTempFile("plugin", ".jar");
-        new PluginJarBuilder("plugin").addPluginInformation("some.key", "My name", "1.0", 1).addResource("foo.txt", "foo").addJava("my.MyClass",
-            "package my; public class MyClass {}").build().renameTo(plugin);
+        plugin.delete();
+        File jar = new PluginJarBuilder("plugin")
+                .addPluginInformation("some.key", "My name", "1.0", 1)
+                .addResource("foo.txt", "foo")
+                .addJava("my.MyClass",
+                    "package my; public class MyClass {}")
+                .build();
+        FileUtils.moveFile(jar, plugin);
 
         final DefaultPluginManager manager = makeClassLoadingPluginManager();
         manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
@@ -149,8 +155,14 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         // sleep to ensure the new plugin is picked up
         Thread.sleep(1000);
 
-        new PluginJarBuilder("plugin").addPluginInformation("some.key", "My name", "1.0", 1).addResource("bar.txt", "bar").addJava("my.MyNewClass",
-            "package my; public class MyNewClass {}").build().renameTo(plugin);
+        File jartmp = new PluginJarBuilder("plugin")
+                .addPluginInformation("some.key", "My name", "1.0", 1)
+                .addResource("bar.txt", "bar")
+                .addJava("my.MyNewClass",
+                        "package my; public class MyNewClass {}")
+                .build();
+        plugin.delete();
+        FileUtils.moveFile(jartmp, plugin);
 
         // reinstall the plugin
         final String pluginKey2 = manager.installPlugin(new JarPluginArtifact(plugin));
