@@ -74,11 +74,17 @@ public class PluginInformation
         this.minVersion = minVersion;
     }
 
+    /**
+     * @return the configured max application version, 0 if undefined
+     */
     public float getMaxVersion()
     {
         return maxVersion;
     }
 
+    /**
+     * @return the configured min application version, 0 if undefined
+     */
     public float getMinVersion()
     {
         return minVersion;

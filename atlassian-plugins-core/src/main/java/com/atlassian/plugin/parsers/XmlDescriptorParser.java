@@ -232,8 +232,15 @@ public class XmlDescriptorParser implements DescriptorParser
 
         if (element.element("application-version") != null)
         {
-            pluginInfo.setMaxVersion(Float.parseFloat(element.element("application-version").attributeValue("max")));
-            pluginInfo.setMinVersion(Float.parseFloat(element.element("application-version").attributeValue("min")));
+            Element ver = element.element("application-version");
+            if (ver.attribute("max") != null)
+            {
+                pluginInfo.setMaxVersion(Float.parseFloat(ver.attributeValue("max")));
+            }
+            if (ver.attribute("min") != null)
+            {
+                pluginInfo.setMinVersion(Float.parseFloat(ver.attributeValue("min")));
+            }
         }
 
         if (element.element("java-version") != null)

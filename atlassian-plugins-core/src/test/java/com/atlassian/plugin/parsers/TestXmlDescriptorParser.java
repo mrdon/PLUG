@@ -2,6 +2,7 @@ package com.atlassian.plugin.parsers;
 
 import java.io.*;
 import java.net.URL;
+import java.util.Collections;
 
 import junit.framework.TestCase;
 
@@ -51,6 +52,42 @@ public class TestXmlDescriptorParser extends TestCase
         }
     }
 
+    public void testPluginsApplicationVersionMinMax()
+    {
+        XmlDescriptorParser parser = parse(
+                "<atlassian-plugin key='foo'>",
+                "  <plugin-info>",
+                "    <application-version min='3' max='4' />",
+                "  </plugin-info>",
+                "</atlassian-plugin>");
+        assertEquals(3, (int)parser.getPluginInformation().getMinVersion());
+        assertEquals(4, (int)parser.getPluginInformation().getMaxVersion());
+    }
+
+    public void testPluginsApplicationVersionMinMaxWithOnlyMin()
+    {
+        XmlDescriptorParser parser = parse(
+                "<atlassian-plugin key='foo'>",
+                "  <plugin-info>",
+                "    <application-version min='3' />",
+                "  </plugin-info>",
+                "</atlassian-plugin>");
+        assertEquals(3, (int)parser.getPluginInformation().getMinVersion());
+        assertEquals(0, (int)parser.getPluginInformation().getMaxVersion());
+    }
+
+    public void testPluginsApplicationVersionMinMaxWithOnlyMax()
+    {
+        XmlDescriptorParser parser = parse(
+                "<atlassian-plugin key='foo'>",
+                "  <plugin-info>",
+                "    <application-version max='3' />",
+                "  </plugin-info>",
+                "</atlassian-plugin>");
+        assertEquals(3, (int)parser.getPluginInformation().getMaxVersion());
+        assertEquals(0, (int)parser.getPluginInformation().getMinVersion());
+    }
+
     // Also CONF-12680 test for missing "essential metadata"
 
     public void testPluginsVersion()
@@ -93,5 +130,16 @@ public class TestXmlDescriptorParser extends TestCase
     {
         final URL url = ClassLoaderUtils.getResource(filename, this.getClass());
         return url.getFile();
+    }
+
+    private static XmlDescriptorParser parse(String... lines)
+    {
+        StringBuffer sb = new StringBuffer();
+        for (String line : lines)
+        {
+            sb.append(line.replace('\'', '"')).append('\n');
+        }
+        InputStream in = new ByteArrayInputStream(sb.toString().getBytes());
+        return new XmlDescriptorParser(in);
     }
 }
