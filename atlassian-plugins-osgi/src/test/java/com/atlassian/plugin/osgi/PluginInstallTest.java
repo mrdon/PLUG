@@ -636,7 +636,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
                         "public interface MyInterface {}")
                 .addFormattedResource("META-INF/MANIFEST.MF",
                     "Manifest-Version: 1.0",
-                    "Bundle-SymbolicName: foo",
+                    "Bundle-SymbolicName: first",
                     "Export-Package: first",
                     "")
                 .build(pluginsDir);
@@ -673,7 +673,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
                         "public interface MyInterface {}")
                 .addFormattedResource("META-INF/MANIFEST.MF",
                     "Manifest-Version: 1.0",
-                    "Bundle-SymbolicName: foo",
+                    "Bundle-SymbolicName: first",
                     "Export-Package: first",
                     "")
                 .build(pluginsDir);

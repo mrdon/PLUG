@@ -67,6 +67,29 @@ public class TestOsgiPlugin extends TestCase
         mockBundle.verify();
     }
 
+    public void testSetKey()
+    {
+        mockBundle.expectAndReturn("getSymbolicName", "foo");
+        plugin.setKey("foo");
+        assertEquals("foo", plugin.getKey());
+        mockBundle.verify();
+    }
+
+    public void testSetKeyWithMismatchedName()
+    {
+        mockBundle.expectAndReturn("getSymbolicName", "foo");
+        try
+        {
+            plugin.setKey("bar");
+            fail("Should have thrown exception");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            // test passed
+        }
+        mockBundle.verify();
+    }
+
     public void testisEnabled() {
         mockBundle.expectAndReturn("getState", Bundle.ACTIVE);
         assertTrue(plugin.isEnabled());
@@ -86,6 +109,7 @@ public class TestOsgiPlugin extends TestCase
         Mock mockBundleContext = new Mock(BundleContext.class);
 
         OsgiPlugin plugin = new OsgiPlugin((Bundle) mockBundle.proxy(), new DefaultPluginEventManager());
+        mockBundle.expectAndReturn("getSymbolicName", "foo");
         plugin.setKey("foo");
         plugin.onSpringContextRefresh(new PluginContainerRefreshedEvent(new GenericApplicationContext(autowireBf), "foo"));
         SetterInjectedBean bean = new SetterInjectedBean();

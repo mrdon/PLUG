@@ -58,6 +58,7 @@ public class TestOsgiPluginFactory extends TestCase
 
     public void testCreateOsgiPlugin() throws PluginParseException
     {
+        mockBundle.expectAndReturn("getSymbolicName", "plugin.key");
         mockOsgi.expectAndReturn("installBundle", C.ANY_ARGS, mockBundle.proxy());
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
         mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
