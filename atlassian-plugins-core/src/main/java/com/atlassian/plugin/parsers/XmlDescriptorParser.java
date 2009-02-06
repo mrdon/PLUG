@@ -66,9 +66,10 @@ public class XmlDescriptorParser implements DescriptorParser
      * Constructs a parser with a stream of an XML document for a specific application
      * @param source The descriptor stream
      * @param applicationKey the application key to filter modules with, null for everything
+     * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
      * @since 2.2.0
      */
-    public XmlDescriptorParser(InputStream source, String applicationKey)
+    public XmlDescriptorParser(InputStream source, String applicationKey) throws PluginParseException
     {
         Validate.notNull(source, "XML descriptor source cannot be null");
         document = createDocument(source);
