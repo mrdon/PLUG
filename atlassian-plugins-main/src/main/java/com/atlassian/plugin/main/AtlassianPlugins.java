@@ -16,6 +16,8 @@ import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 import org.apache.log4j.Logger;
 
@@ -57,7 +59,7 @@ public class AtlassianPlugins
         osgiContainerManager = new FelixOsgiContainerManager(
                 config.getFrameworkBundlesDirectory(),
                 config.getPackageScannerConfiguration(),
-                config.getHostComponentProvider(),
+                new CriticalHostComponentProvider(config.getHostComponentProvider(), pluginEventManager),
                 pluginEventManager,
                 config.getBundleCacheDirectory());
 
@@ -177,6 +179,24 @@ public class AtlassianPlugins
             {
                 log.error("Unable to delete directory: " + dir.getAbsolutePath(), e);
             }
+        }
+    }
+
+    private static class CriticalHostComponentProvider implements HostComponentProvider
+    {
+        private final HostComponentProvider delegate;
+        private final PluginEventManager pluginEventManager;
+
+        public CriticalHostComponentProvider(HostComponentProvider delegate, PluginEventManager pluginEventManager)
+        {
+            this.delegate = delegate;
+            this.pluginEventManager = pluginEventManager;
+        }
+
+        public void provide(ComponentRegistrar registrar)
+        {
+            registrar.register(PluginEventManager.class).forInstance(pluginEventManager);
+            delegate.provide(registrar);
         }
     }
 }
