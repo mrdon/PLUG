@@ -7,7 +7,8 @@ atlassian-plugins_new.ipr
 atlassian-plugins_new.iws
 maven.log
 target
-velocity.log
+*.log
+*~
 xdocs
 *.iml
 *.ipr
