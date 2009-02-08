@@ -1,6 +1,9 @@
 package com.atlassian.plugin.test;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URI;
 
@@ -27,5 +30,20 @@ public class PluginTestUtils
     public static File getFileForResource(final String resourceName) throws URISyntaxException
     {
         return new File(new URI(PluginTestUtils.class.getClassLoader().getResource(resourceName).toString()));
+    }
+
+    public static File createTempDirectory(Class source) throws IOException
+    {
+        return createTempDirectory(source.getName());
+    }
+    public static File createTempDirectory(String name) throws IOException
+    {
+        File tmpDir = new File("target" + File.separator + "tmp" + File.separator + name).getAbsoluteFile();
+        if (tmpDir.exists())
+        {
+            FileUtils.cleanDirectory(tmpDir);
+        }
+        tmpDir.mkdirs();
+        return tmpDir;
     }
 }

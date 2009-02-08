@@ -2,7 +2,9 @@ package com.atlassian.plugin.osgi.container.felix;
 
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
+import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.test.PluginJarBuilder;
+import com.atlassian.plugin.test.PluginTestUtils;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
@@ -20,24 +22,14 @@ public class TestFelixOsgiContainerManager extends TestCase
     private File tmpdir;
     private FelixOsgiContainerManager felix;
     private URL frameworkBundlesUrl = getClass().getResource("/nothing.zip");
-    private File frameworkBundlesDir;
 
     @Override
     public void setUp() throws Exception
     {
         super.setUp();
-        tmpdir = new File("target/plugin-temp");
-        if (tmpdir.exists())
-        {
-            FileUtils.cleanDirectory(tmpdir);
-        } else
-        {
-            tmpdir.mkdir();
-        }
-        frameworkBundlesDir = new File(tmpdir, "framework-bundles-test");
-
-        felix = new FelixOsgiContainerManager(frameworkBundlesUrl, frameworkBundlesDir, new DefaultPackageScannerConfiguration(),
-                null, new DefaultPluginEventManager(), tmpdir);
+        tmpdir = PluginTestUtils.createTempDirectory(TestFelixOsgiContainerManager.class);
+        felix = new FelixOsgiContainerManager(frameworkBundlesUrl, new DefaultOsgiPersistentCache(tmpdir), new DefaultPackageScannerConfiguration(),
+                null, new DefaultPluginEventManager());
     }
 
     @Override
@@ -58,7 +50,6 @@ public class TestFelixOsgiContainerManager extends TestCase
             felix.stop();
         felix = null;
         tmpdir = null;
-        FileUtils.deleteDirectory(frameworkBundlesDir);
         super.tearDown();
     }
 

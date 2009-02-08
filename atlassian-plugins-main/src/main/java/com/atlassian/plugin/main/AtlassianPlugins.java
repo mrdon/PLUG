@@ -13,6 +13,7 @@ import com.atlassian.plugin.loaders.ClassPathPluginLoader;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
@@ -57,16 +58,16 @@ public class AtlassianPlugins
         pluginEventManager = new DefaultPluginEventManager();
 
         osgiContainerManager = new FelixOsgiContainerManager(
-                config.getFrameworkBundlesDirectory(),
+                config.getOsgiPersistentCache(),
                 config.getPackageScannerConfiguration(),
                 new CriticalHostComponentProvider(config.getHostComponentProvider(), pluginEventManager),
-                pluginEventManager,
-                config.getBundleCacheDirectory());
+                pluginEventManager);
 
         // plugin factories/deployers
         final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(
                 config.getPluginDescriptorFilename(),
                 config.getApplicationKey(),
+                config.getOsgiPersistentCache(),
                 osgiContainerManager,
                 pluginEventManager);
         final OsgiBundleFactory osgiBundleDeployer = new OsgiBundleFactory(osgiContainerManager, pluginEventManager);
@@ -131,8 +132,6 @@ public class AtlassianPlugins
             hotDeployer.stop();
         }
         pluginManager.shutdown();
-        deleteDirIfTmp(pluginsConfiguration.getBundleCacheDirectory());
-        deleteDirIfTmp(pluginsConfiguration.getFrameworkBundlesDirectory());
     }
 
     /**
@@ -165,21 +164,6 @@ public class AtlassianPlugins
     public PluginAccessor getPluginAccessor()
     {
         return pluginManager;
-    }
-
-    private static void deleteDirIfTmp(File dir)
-    {
-        if (dir.getName().endsWith(TEMP_DIRECTORY_SUFFIX))
-        {
-            try
-            {
-                org.apache.commons.io.FileUtils.deleteDirectory(dir);
-            }
-            catch (IOException e)
-            {
-                log.error("Unable to delete directory: " + dir.getAbsolutePath(), e);
-            }
-        }
     }
 
     private static class CriticalHostComponentProvider implements HostComponentProvider

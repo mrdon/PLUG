@@ -7,6 +7,8 @@ import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
+import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
+import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
@@ -60,10 +62,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private static final String OSGI_BOOTDELEGATION = "org.osgi.framework.bootdelegation";
     private static final String ATLASSIAN_PREFIX = "atlassian.";
 
-    private final File cacheDirectory;
+    private final OsgiPersistentCache persistentCache;
     private final URL frameworkBundlesUrl;
     private final PackageScannerConfiguration packageScannerConfig;
-    private final File frameworkBundlesDir;
     private final HostComponentProvider hostComponentProvider;
     private final Set<ServiceTracker> trackers;
     private final ExportsBuilder exportsBuilder;
@@ -90,7 +91,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
      * @param provider The host component provider.  May be null.
      * @param eventManager The plugin event manager to register for init and shutdown events
      * @deprecated Since 2.2.0, use
-     *   {@link #FelixOsgiContainerManager(File,PackageScannerConfiguration,HostComponentProvider,PluginEventManager,File)} instead
+     *   {@link #FelixOsgiContainerManager(OsgiPersistentCache,PackageScannerConfiguration,HostComponentProvider,PluginEventManager)} instead
      */
     @Deprecated
     public FelixOsgiContainerManager(final File frameworkBundlesDir, final PackageScannerConfiguration packageScannerConfig, final HostComponentProvider provider, final PluginEventManager eventManager)
@@ -107,68 +108,67 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
      * @param provider The host component provider.  May be null.
      * @param eventManager The plugin event manager to register for init and shutdown events
      * @deprecated Since 2.2.0, use
-     *   {@link #FelixOsgiContainerManager(URL, File,PackageScannerConfiguration,HostComponentProvider,PluginEventManager,File)} instead
+     *   {@link #FelixOsgiContainerManager(URL, OsgiPersistentCache,PackageScannerConfiguration,HostComponentProvider,PluginEventManager)} instead
      */
     @Deprecated
     public FelixOsgiContainerManager(final URL frameworkBundlesZip, final File frameworkBundlesDir, final PackageScannerConfiguration packageScannerConfig, final HostComponentProvider provider, final PluginEventManager eventManager)
     {
-        this(frameworkBundlesZip, frameworkBundlesDir, packageScannerConfig, provider, eventManager, new File(frameworkBundlesDir.getParentFile(),
-            "osgi-cache"));
+        this(frameworkBundlesZip, new DefaultOsgiPersistentCache(new File(frameworkBundlesDir.getParentFile(),
+            "osgi-cache"), frameworkBundlesDir, null), packageScannerConfig, provider, eventManager);
     }
 
     /**
      * Constructs the container manager using the framework bundles zip file located in this library
-     * @param frameworkBundlesDir The directory to unzip the framework bundles into.
+     * @param persistentCache The persistent cache configuration.
      * @param packageScannerConfig The configuration for package scanning
      * @param provider The host component provider.  May be null.
      * @param eventManager The plugin event manager to register for init and shutdown events
-     * @param cacheDir The directory to use for the felix cache
      *
      * @since 2.2.0
      */
-    public FelixOsgiContainerManager(final File frameworkBundlesDir, final PackageScannerConfiguration packageScannerConfig, final HostComponentProvider provider, final PluginEventManager eventManager, final File cacheDir)
+    public FelixOsgiContainerManager(final OsgiPersistentCache persistentCache, final PackageScannerConfiguration packageScannerConfig, final HostComponentProvider provider, final PluginEventManager eventManager)
     {
-        this(ClassLoaderUtils.getResource(OSGI_FRAMEWORK_BUNDLES_ZIP, FelixOsgiContainerManager.class), frameworkBundlesDir, packageScannerConfig,
-            provider, eventManager, cacheDir);
+        this(ClassLoaderUtils.getResource(OSGI_FRAMEWORK_BUNDLES_ZIP, FelixOsgiContainerManager.class), persistentCache, packageScannerConfig,
+            provider, eventManager);
     }
 
     /**
      * Constructs the container manager
      * @param frameworkBundlesZip The location of the zip file containing framework bundles
-     * @param frameworkBundlesDir The directory to unzip the framework bundles into.
+     * @param persistentCache The persistent cache to use for the framework and framework bundles
      * @param packageScannerConfig The configuration for package scanning
      * @param provider The host component provider.  May be null.
      * @param eventManager The plugin event manager to register for init and shutdown events
-     * @param cacheDir The directory to use for the felix cache
      *
      * @since 2.2.0
      * @throws com.atlassian.plugin.osgi.container.OsgiContainerException If the host version isn't supplied and the
      *  cache directory cannot be cleaned.
      */
-    public FelixOsgiContainerManager(final URL frameworkBundlesZip, final File frameworkBundlesDir,
+    public FelixOsgiContainerManager(final URL frameworkBundlesZip, OsgiPersistentCache persistentCache,
                                      final PackageScannerConfiguration packageScannerConfig,
-                                     final HostComponentProvider provider, final PluginEventManager eventManager,
-                                     final File cacheDir) throws OsgiContainerException
+                                     final HostComponentProvider provider, final PluginEventManager eventManager)
+                                     throws OsgiContainerException
     {
         Validate.notNull(frameworkBundlesZip, "The framework bundles zip is required");
-        Validate.notNull(frameworkBundlesDir, "The framework bundles directory must not be null");
+        Validate.notNull(persistentCache, "The framework bundles directory must not be null");
         Validate.notNull(packageScannerConfig, "The package scanner configuration must not be null");
         Validate.notNull(eventManager, "The plugin event manager is required");
 
         frameworkBundlesUrl = frameworkBundlesZip;
         this.packageScannerConfig = packageScannerConfig;
-        this.frameworkBundlesDir = frameworkBundlesDir;
+        this.persistentCache = persistentCache;
         hostComponentProvider = provider;
         trackers = Collections.synchronizedSet(new HashSet<ServiceTracker>());
         eventManager.register(this);
         felixLogger = new FelixLoggerBridge(log);
         exportsBuilder = new ExportsBuilder();
-        cacheDirectory = cacheDir;
+
+        File cacheDir = persistentCache.getOsgiBundleCache();
         if (!cacheDir.exists())
         {
             cacheDir.mkdir();
         }
-        else //if (packageScannerConfig.getCurrentHostVersion() == null)
+        else 
         {
             try
             {
@@ -221,10 +221,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         // Add the bundle provided service interface package and the core OSGi
         // packages to be exported from the class path via the system bundle.
         configMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES, exportsBuilder.determineExports(registrar.getRegistry(), packageScannerConfig,
-            cacheDirectory));
+            persistentCache.getOsgiBundleCache()));
 
         // Explicitly specify the directory to use for caching bundles.
-        configMap.put(BundleCache.CACHE_PROFILE_DIR_PROP, cacheDirectory.getAbsolutePath());
+        configMap.put(BundleCache.CACHE_PROFILE_DIR_PROP, persistentCache.getOsgiBundleCache().getAbsolutePath());
 
         configMap.put(FelixConstants.LOG_LEVEL_PROP, String.valueOf(felixLogger.getLogLevel()));
         String bootDelegation = getAtlassianSpecificOsgiSystemProperty(OSGI_BOOTDELEGATION);
@@ -242,7 +242,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         try
         {
             // Create host activator;
-            registration = new BundleRegistration(frameworkBundlesUrl, frameworkBundlesDir, registrar);
+            registration = new BundleRegistration(frameworkBundlesUrl, persistentCache.getFrameworkBundleCache(), registrar);
             final List<BundleActivator> list = new ArrayList<BundleActivator>();
             list.add(registration);
 

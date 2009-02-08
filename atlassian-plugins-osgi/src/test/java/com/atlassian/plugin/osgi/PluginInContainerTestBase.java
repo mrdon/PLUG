@@ -12,8 +12,10 @@ import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
+import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
+import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
@@ -35,7 +37,6 @@ public abstract class PluginInContainerTestBase extends TestCase
     protected OsgiContainerManager osgiContainerManager;
     protected File tmpDir;
     protected File cacheDir;
-    protected File frameworkBundlesDir;
     protected File pluginsDir;
     protected ModuleDescriptorFactory moduleDescriptorFactory;
     protected DefaultPluginManager pluginManager;
@@ -50,9 +51,8 @@ public abstract class PluginInContainerTestBase extends TestCase
             FileUtils.cleanDirectory(tmpDir);
         }
         tmpDir.mkdirs();
-        cacheDir = new File(tmpDir, "felix-cache");
-        frameworkBundlesDir = new File(tmpDir, "framework-bundles");
-        frameworkBundlesDir.mkdir();
+        cacheDir = new File(tmpDir, "cache");
+        cacheDir.mkdir();
         pluginsDir = new File(tmpDir, "plugins");
         pluginsDir.mkdir();
         this.pluginEventManager = new DefaultPluginEventManager();
@@ -65,11 +65,9 @@ public abstract class PluginInContainerTestBase extends TestCase
         {
             osgiContainerManager.stop();
         }
-        FileUtils.deleteDirectory(frameworkBundlesDir);
-        FileUtils.deleteDirectory(pluginsDir);
+        FileUtils.deleteDirectory(tmpDir);
         osgiContainerManager = null;
         tmpDir = null;
-        frameworkBundlesDir = null;
         pluginsDir = null;
         moduleDescriptorFactory = null;
         pluginManager = null;
@@ -114,10 +112,11 @@ public abstract class PluginInContainerTestBase extends TestCase
                 }
             }
         };
-        osgiContainerManager = new FelixOsgiContainerManager(frameworkBundlesDir, scannerConfig, requiredWrappingProvider, pluginEventManager, cacheDir);
+        OsgiPersistentCache cache = new DefaultOsgiPersistentCache(cacheDir);
+        osgiContainerManager = new FelixOsgiContainerManager(cache, scannerConfig, requiredWrappingProvider, pluginEventManager);
 
         final LegacyDynamicPluginFactory legacyFactory = new LegacyDynamicPluginFactory(PluginAccessor.Descriptor.FILENAME, tmpDir);
-        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, null, osgiContainerManager, pluginEventManager);
+        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, null, cache, osgiContainerManager, pluginEventManager);
 
         final DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Arrays.asList(legacyFactory, osgiPluginDeployer),
             new DefaultPluginEventManager());

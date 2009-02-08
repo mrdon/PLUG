@@ -10,10 +10,14 @@ import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
+import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.test.PluginJarBuilder;
+import com.atlassian.plugin.test.PluginTestUtils;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.apache.commons.io.FileUtils;
 
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
@@ -31,6 +35,7 @@ public class TestOsgiPluginFactory extends TestCase
 {
     OsgiPluginFactory factory;
 
+    private File tmpDir;
     private File jar;
     Mock mockOsgi;
     private Mock mockBundle;
@@ -38,8 +43,9 @@ public class TestOsgiPluginFactory extends TestCase
     @Override
     public void setUp() throws IOException, URISyntaxException
     {
+        tmpDir = PluginTestUtils.createTempDirectory(TestOsgiPluginFactory.class);
         mockOsgi = new Mock(OsgiContainerManager.class);
-        factory = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, null, (OsgiContainerManager) mockOsgi.proxy(), new DefaultPluginEventManager());
+        factory = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, null, new DefaultOsgiPersistentCache(tmpDir), (OsgiContainerManager) mockOsgi.proxy(), new DefaultPluginEventManager());
         jar = new PluginJarBuilder("someplugin").addPluginInformation("plugin.key", "My Plugin", "1.0").build();
 
         mockBundle = new Mock(Bundle.class);
@@ -50,9 +56,10 @@ public class TestOsgiPluginFactory extends TestCase
     }
 
     @Override
-    public void tearDown()
+    public void tearDown() throws IOException
     {
         factory = null;
+        FileUtils.cleanDirectory(tmpDir);
         jar.delete();
     }
 
