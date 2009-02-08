@@ -27,6 +27,7 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
         osgiBundleCache = new File(baseDir, "felix");
         frameworkBundleCache = new File(baseDir, "framework-bundles");
         transformedPluginCache = new File(baseDir, "transformed-plugins");
+        validate();
     }
 
     public DefaultOsgiPersistentCache(File osgiBundleCache, File frameworkBundleCache, File transformedPluginCache)
@@ -34,6 +35,7 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
         this.osgiBundleCache = osgiBundleCache;
         this.frameworkBundleCache = frameworkBundleCache;
         this.transformedPluginCache = transformedPluginCache;
+        validate();
     }
 
 
@@ -63,6 +65,26 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
         catch (IOException e)
         {
             throw new OsgiContainerException("Unable to clear OSGi caches", e);
+        }
+    }
+
+    private void validate()
+    {
+        ensureDirectoryExists(frameworkBundleCache);
+        ensureDirectoryExists(osgiBundleCache);
+        ensureDirectoryExists(transformedPluginCache);
+    }
+
+    private void ensureDirectoryExists(File dir)
+    {
+        if (dir.exists() && !dir.isDirectory())
+        {
+            throw new IllegalArgumentException("Directory '"+dir+"' is incorrectly a file");
+        }
+
+        if (!dir.exists() && !dir.mkdir())
+        {
+            throw new IllegalArgumentException("Directory '"+dir+"' cannot be created");
         }
     }
 }

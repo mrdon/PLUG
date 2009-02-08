@@ -63,7 +63,6 @@ public class DefaultPluginTransformer implements PluginTransformer
         this.pluginDescriptorPath = pluginDescriptorPath;
         this.stages = Collections.unmodifiableList(new ArrayList<TransformStage>(stages));
         this.bundleCache = cache.getTransformedPluginCache();
-        this.bundleCache.mkdir();
 
     }
 

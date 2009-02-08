@@ -164,20 +164,13 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         exportsBuilder = new ExportsBuilder();
 
         File cacheDir = persistentCache.getOsgiBundleCache();
-        if (!cacheDir.exists())
+        try
         {
-            cacheDir.mkdir();
+            FileUtils.cleanDirectory(cacheDir);
         }
-        else 
+        catch (final IOException e)
         {
-            try
-            {
-                FileUtils.cleanDirectory(cacheDir);
-            }
-            catch (final IOException e)
-            {
-                throw new OsgiContainerException("Unable to clean the cache directory: " + cacheDir, e);
-            }
+            throw new OsgiContainerException("Unable to clean the cache directory: " + cacheDir, e);
         }
         log.debug("Using cache directory :" + cacheDir.getAbsolutePath());
     }

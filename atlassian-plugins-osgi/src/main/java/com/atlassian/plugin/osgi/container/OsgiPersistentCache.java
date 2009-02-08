@@ -3,7 +3,8 @@ package com.atlassian.plugin.osgi.container;
 import java.io.File;
 
 /**
- * Access to persistent cache locations used throughout the OSGi plugin system
+ * Access to persistent cache locations used throughout the OSGi plugin system.  Implementations are responsible for
+ * ensuring the directories are not null and do exist.
  *
  * @since 2.2.0
  */

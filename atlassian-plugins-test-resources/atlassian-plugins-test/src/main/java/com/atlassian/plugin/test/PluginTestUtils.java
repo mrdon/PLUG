@@ -43,7 +43,10 @@ public class PluginTestUtils
         {
             FileUtils.cleanDirectory(tmpDir);
         }
-        tmpDir.mkdirs();
+        else
+        {
+            tmpDir.mkdirs();
+        }
         return tmpDir;
     }
 }
