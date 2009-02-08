@@ -820,6 +820,8 @@ public class PluginInstallTest extends PluginInContainerTestBase
             tmpDir = strangeDir;
             cacheDir = new File(tmpDir, "felix-cache");
             cacheDir.mkdir();
+            frameworkBundlesDir = new File(tmpDir, "framework-bundles");
+            frameworkBundlesDir.mkdir();
             pluginsDir = new File(tmpDir, "plugins");
             pluginsDir.mkdir();
 

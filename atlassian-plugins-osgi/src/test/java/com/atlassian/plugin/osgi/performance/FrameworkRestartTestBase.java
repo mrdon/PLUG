@@ -68,10 +68,7 @@ public abstract class FrameworkRestartTestBase extends PluginInContainerTestBase
 
     public void testMultiplePlugins() throws Exception
     {
-        for (int x=0; x<5; x++)
-        {
         startPluginFramework();
         pluginManager.shutdown();
-        }
     }
 }

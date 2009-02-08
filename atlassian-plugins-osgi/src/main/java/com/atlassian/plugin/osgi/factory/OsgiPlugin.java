@@ -103,7 +103,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     {
         if (!bundle.getSymbolicName().equals(aPackage))
         {
-            throw new IllegalArgumentException("The plugin key '"+aPackage+"' must match the OSGi bundle symbolic name (Bundle-SymbolicName)");
+            throw new IllegalArgumentException("The plugin key must match the OSGi bundle symbolic name (Bundle-SymbolicName)");
         }
         super.setKey(aPackage);
     }

@@ -2,7 +2,6 @@ package com.atlassian.plugin.osgi.factory.transform;
 
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
-import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.test.PluginTestUtils;
 
@@ -23,24 +22,6 @@ import junit.framework.TestCase;
 
 public class TestDefaultPluginTransformer extends TestCase
 {
-    private DefaultPluginTransformer transformer;
-    private File tmpDir;
-
-    @Override
-    protected void setUp() throws Exception
-    {
-        super.setUp();
-        tmpDir = PluginTestUtils.createTempDirectory("plugin-transformer");
-        transformer = new DefaultPluginTransformer(new DefaultOsgiPersistentCache(tmpDir), PluginAccessor.Descriptor.FILENAME);
-    }
-
-    @Override
-    protected void tearDown() throws Exception
-    {
-        super.tearDown();
-        tmpDir = null;
-        transformer = null;
-    }
 
     public void testAddFilesToZip() throws URISyntaxException, IOException
     {
@@ -52,7 +33,7 @@ public class TestDefaultPluginTransformer extends TestCase
                 put("foo", "bar".getBytes());
             }
         };
-        final File copy = transformer.addFilesToExistingZip(file, files);
+        final File copy = DefaultPluginTransformer.addFilesToExistingZip(file, files);
         assertNotNull(copy);
         assertTrue(!copy.getName().equals(file.getName()));
         assertTrue(copy.length() != file.length());
@@ -67,6 +48,7 @@ public class TestDefaultPluginTransformer extends TestCase
         final File file = new PluginJarBuilder().addFormattedJava("my.Foo", "package my;", "public class Foo {",
             "  com.atlassian.plugin.osgi.factory.transform.Fooable bar;", "}").addPluginInformation("foo", "foo", "1.1").build();
 
+        final DefaultPluginTransformer transformer = new DefaultPluginTransformer(PluginAccessor.Descriptor.FILENAME);
         final File copy = transformer.transform(file, new ArrayList<HostComponentRegistration>()
         {
             {
@@ -75,8 +57,6 @@ public class TestDefaultPluginTransformer extends TestCase
         });
 
         assertNotNull(copy);
-        assertEquals(file.getName()+"_"+file.lastModified(), copy.getName());
-        assertEquals(tmpDir.getAbsolutePath(), copy.getParentFile().getParentFile().getAbsolutePath());
         final JarFile jar = new JarFile(copy);
         final Attributes attrs = jar.getManifest().getMainAttributes();
 

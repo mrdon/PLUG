@@ -3,7 +3,6 @@ package com.atlassian.plugin.main;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginStateStore;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
-import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 
 import java.io.File;
@@ -26,9 +25,14 @@ public interface PluginsConfiguration
     HostComponentProvider getHostComponentProvider();
 
     /**
-     * @return the persistent cache configuration
+     * @return the framework bundles directory
      */
-    OsgiPersistentCache getOsgiPersistentCache();
+    File getFrameworkBundlesDirectory();
+
+    /**
+     * @return the directory to use for the osgi framework bundles cache
+     */
+    File getBundleCacheDirectory();
 
     /**
      * @return the name of the plugin descriptor file

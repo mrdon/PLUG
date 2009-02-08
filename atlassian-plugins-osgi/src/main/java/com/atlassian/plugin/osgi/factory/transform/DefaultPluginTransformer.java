@@ -2,11 +2,9 @@ package com.atlassian.plugin.osgi.factory.transform;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.factory.transform.stage.*;
-import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginArtifact;
 import org.apache.commons.lang.Validate;
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -27,17 +25,16 @@ public class DefaultPluginTransformer implements PluginTransformer
 
     private final String pluginDescriptorPath;
     private final List<TransformStage> stages;
-    private final File bundleCache;
+
     /**
      * Constructs a transformer with the default stages
      *
-     * @param cache The OSGi cache configuration for transformed plugins
      * @param pluginDescriptorPath The path to the plugin descriptor
      * @since 2.2.0
      */
-    public DefaultPluginTransformer(OsgiPersistentCache cache, String pluginDescriptorPath)
+    public DefaultPluginTransformer(String pluginDescriptorPath)
     {
-        this(cache, pluginDescriptorPath, new ArrayList<TransformStage>()
+        this(pluginDescriptorPath, new ArrayList<TransformStage>()
         {{
             add(new AddBundleOverridesStage());
             add(new ComponentImportSpringStage());
@@ -51,19 +48,16 @@ public class DefaultPluginTransformer implements PluginTransformer
     /**
      * Constructs a transformer and its stages
      *
-     * @param cache The OSGi cache configuration for transformed plugins
      * @param pluginDescriptorPath The descriptor path
      * @param stages A set of stages
      * @since 2.2.0
      */
-    public DefaultPluginTransformer(OsgiPersistentCache cache, String pluginDescriptorPath, List<TransformStage> stages)
+    public DefaultPluginTransformer(String pluginDescriptorPath, List<TransformStage> stages)
     {
         Validate.notNull(pluginDescriptorPath, "The plugin descriptor path is required");
         Validate.notNull(stages, "A list of stages is required");
         this.pluginDescriptorPath = pluginDescriptorPath;
         this.stages = Collections.unmodifiableList(new ArrayList<TransformStage>(stages));
-        this.bundleCache = cache.getTransformedPluginCache();
-
     }
 
     /**
@@ -91,16 +85,6 @@ public class DefaultPluginTransformer implements PluginTransformer
     {
         Validate.notNull(pluginArtifact, "The plugin artifact is required");
         Validate.notNull(regs, "The host component registrations are required");
-
-        File artifactFile = pluginArtifact.toFile();
-
-        // Look in cache first
-        File cachedPlugin = getFromCache(artifactFile);
-        if (cachedPlugin != null)
-        {
-            return cachedPlugin;
-        }
-
         TransformContext context = new TransformContext(regs, pluginArtifact, pluginDescriptorPath);
         for (TransformStage stage : stages)
         {
@@ -121,28 +105,12 @@ public class DefaultPluginTransformer implements PluginTransformer
                 }
                 log.debug(sb.toString());
             }
-            return addFilesToExistingZip(artifactFile, context.getFileOverrides());
+            return addFilesToExistingZip(pluginArtifact.toFile(), context.getFileOverrides());
         }
         catch (IOException e)
         {
             throw new PluginTransformationException("Unable to add files to plugin jar");
         }
-    }
-
-    private File getFromCache(File artifact)
-    {
-        String name = generateCacheName(artifact);
-        for (File child : bundleCache.listFiles())
-        {
-            if (child.getName().equals(name))
-                return child;
-        }
-        return null;
-    }
-
-    private static String generateCacheName(File file)
-    {
-        return file.getName()+"_"+file.lastModified();
     }
 
 
@@ -154,11 +122,11 @@ public class DefaultPluginTransformer implements PluginTransformer
      * @return The new zip
      * @throws IOException If there are any problems processing the streams
      */
-    File addFilesToExistingZip(File zipFile,
+    static File addFilesToExistingZip(File zipFile,
                                       Map<String, byte[]> files) throws IOException
     {
         // get a temp file
-        File tempFile = new File(bundleCache, generateCacheName(zipFile));
+        File tempFile = File.createTempFile(zipFile.getName(), null);
         // delete it, otherwise you cannot rename your existing zip to it.
         byte[] buf = new byte[1024];
 

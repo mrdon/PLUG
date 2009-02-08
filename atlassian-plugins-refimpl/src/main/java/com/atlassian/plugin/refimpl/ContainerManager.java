@@ -113,7 +113,7 @@ public class ContainerManager
                 .moduleDescriptorFactory(moduleDescriptorFactory)
                 .packageScannerConfiguration(scannerConfig)
                 .hostComponentProvider(hostComponentProvider)
-                .osgiPersistentCache(makeSureDirectoryExists(servletContext, "/WEB-INF/osg-cache"))
+                .frameworkBundlesDirectory(makeSureDirectoryExists(servletContext, "/WEB-INF/framework-bundles"))
                 .build();
         plugins = new AtlassianPlugins(config);
 
