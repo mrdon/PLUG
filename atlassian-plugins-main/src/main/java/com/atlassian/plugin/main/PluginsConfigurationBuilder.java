@@ -6,6 +6,8 @@ import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginStateStore;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
+import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
+import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
@@ -36,8 +38,7 @@ public class PluginsConfigurationBuilder
 
     private PackageScannerConfiguration packageScannerConfiguration;
     private HostComponentProvider hostComponentProvider;
-    private File frameworkBundlesDirectory;
-    private File bundleCacheDirectory;
+    private File osgiPersistentCache;
     private File pluginDirectory;
     private URL bundledPluginUrl;
     private File bundledPluginCacheDirectory;
@@ -72,26 +73,14 @@ public class PluginsConfigurationBuilder
     }
 
     /**
-     * Sets caching directory to extract framework bundles into.  Doesn't have to be preserved and will be automatically
-     * cleaned out if it detects any modification.
-     * @param frameworkBundlesDirectory A directory that exists
+     * Sets the set of persistent caching directories the OSGi classes will use.  This includes the caching directory
+     * to extract framework bundles into, the container bundle cache, and the transformed plugin cache.
+     * @param osgiPersistentCache A directory that exists
      * @return this
      */
-    public PluginsConfigurationBuilder frameworkBundlesDirectory(final File frameworkBundlesDirectory)
+    public PluginsConfigurationBuilder osgiPersistentCache(final File osgiPersistentCache)
     {
-        this.frameworkBundlesDirectory = frameworkBundlesDirectory;
-        return this;
-    }
-
-    /**
-     * Sets the directory to use for the OSGi framework's bundle cache.  Doesn't have to be preserved across restarts
-     * but shouldn't be externally modified at runtime.
-     * @param bundleCacheDirectory A directory that exists and is empty
-     * @return this
-     */
-    public PluginsConfigurationBuilder bundleCacheDirectory(final File bundleCacheDirectory)
-    {
-        this.bundleCacheDirectory = bundleCacheDirectory;
+        this.osgiPersistentCache = osgiPersistentCache;
         return this;
     }
 
@@ -239,20 +228,10 @@ public class PluginsConfigurationBuilder
             moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         }
 
-        if (bundleCacheDirectory == null)
+        if (osgiPersistentCache == null)
         {
-            bundleCacheDirectory = createTempDir("atlassian-plugins-bundle-cache");
+            osgiPersistentCache = createTempDir("atlassian-plugins-osgi-cache");
         }
-        if (!bundleCacheDirectory.exists())
-        {
-            throw new IllegalArgumentException("Bundle cache directory should exist");
-        }
-
-        if (frameworkBundlesDirectory == null)
-        {
-            frameworkBundlesDirectory = createTempDir("atlassian-plugins-framework-bundles");
-        }
-        isTrue("Framework bundles directory should exist", frameworkBundlesDirectory.exists());
 
         if (bundledPluginUrl != null && bundledPluginCacheDirectory == null)
         {
@@ -281,8 +260,7 @@ public class PluginsConfigurationBuilder
     {
         private final PackageScannerConfiguration packageScannerConfiguration;
         private final HostComponentProvider hostComponentProvider;
-        private final File frameworkBundlesDirectory;
-        private final File bundleCacheDirectory;
+        private final OsgiPersistentCache osgiPersistentCache;
         private final File pluginDirectory;
         private final URL bundledPluginUrl;
         private final File bundledPluginCacheDirectory;
@@ -297,8 +275,7 @@ public class PluginsConfigurationBuilder
         {
             packageScannerConfiguration = builder.packageScannerConfiguration;
             hostComponentProvider = builder.hostComponentProvider;
-            frameworkBundlesDirectory = builder.frameworkBundlesDirectory;
-            bundleCacheDirectory = builder.bundleCacheDirectory;
+            osgiPersistentCache = new DefaultOsgiPersistentCache(builder.osgiPersistentCache);
             pluginDirectory = builder.pluginDirectory;
             bundledPluginUrl = builder.bundledPluginUrl;
             bundledPluginCacheDirectory = builder.bundledPluginCacheDirectory;
@@ -318,16 +295,6 @@ public class PluginsConfigurationBuilder
         public HostComponentProvider getHostComponentProvider()
         {
             return hostComponentProvider;
-        }
-
-        public File getFrameworkBundlesDirectory()
-        {
-            return frameworkBundlesDirectory;
-        }
-
-        public File getBundleCacheDirectory()
-        {
-            return bundleCacheDirectory;
         }
 
         public String getPluginDescriptorFilename()
@@ -373,6 +340,11 @@ public class PluginsConfigurationBuilder
         public String getApplicationKey()
         {
             return applicationKey;
+        }
+
+        public OsgiPersistentCache getOsgiPersistentCache()
+        {
+            return osgiPersistentCache;
         }
     }
 }

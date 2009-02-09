@@ -201,11 +201,7 @@ public class HostComponentSpringStage implements TransformStage
                 }
                 else
                 {
-                    // Do not warn on dot, it is a legitimate value.
-                    if (!entry.equals("."))
-                    {
-                        log.warn("Non-jar classpath elements not supported: '" + entry + "'.");
-                    }
+                    log.warn("Non-jar classpath elements not supported: " + entry);
                 }
             }
         }

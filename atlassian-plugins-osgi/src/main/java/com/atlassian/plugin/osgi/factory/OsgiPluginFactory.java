@@ -8,6 +8,7 @@ import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.osgi.factory.transform.DefaultPluginTransformer;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformer;
@@ -42,12 +43,12 @@ public class OsgiPluginFactory implements PluginFactory
 
     private ServiceTracker moduleDescriptorFactoryTracker;
 
-    public OsgiPluginFactory(String pluginDescriptorFileName, String applicationKey, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
+    public OsgiPluginFactory(String pluginDescriptorFileName, String applicationKey, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
         Validate.notNull(pluginDescriptorFileName, "Plugin descriptor is required");
         Validate.notNull(osgi, "The OSGi container is required");
 
-        pluginTransformer = new DefaultPluginTransformer(pluginDescriptorFileName);
+        pluginTransformer = new DefaultPluginTransformer(persistentCache, pluginDescriptorFileName);
         this.osgi = osgi;
         this.pluginDescriptorFileName = pluginDescriptorFileName;
         this.descriptorParserFactory = new OsgiPluginXmlDescriptorParserFactory();
