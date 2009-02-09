@@ -23,6 +23,7 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
 
     public DefaultOsgiPersistentCache(File baseDir)
     {
+        Validate.notNull(baseDir, "The base directory for OSGi caches cannot be null");
         Validate.isTrue(baseDir.exists(), "The base directory for OSGi persistent caches should exist");
         osgiBundleCache = new File(baseDir, "felix");
         frameworkBundleCache = new File(baseDir, "framework-bundles");
@@ -32,6 +33,9 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
 
     public DefaultOsgiPersistentCache(File osgiBundleCache, File frameworkBundleCache, File transformedPluginCache)
     {
+        Validate.notNull(osgiBundleCache, "The OSGi bundle cache directory cannot be null");
+        Validate.notNull(frameworkBundleCache, "The framework bundle cache directory cannot be null");
+        Validate.notNull(transformedPluginCache, "The transformed plugin cache directory cannot be null");
         this.osgiBundleCache = osgiBundleCache;
         this.frameworkBundleCache = frameworkBundleCache;
         this.transformedPluginCache = transformedPluginCache;
@@ -79,7 +83,7 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
     {
         if (dir.exists() && !dir.isDirectory())
         {
-            throw new IllegalArgumentException("Directory '"+dir+"' is incorrectly a file");
+            throw new IllegalArgumentException("'"+dir+"' is not a directory");
         }
 
         if (!dir.exists() && !dir.mkdir())
