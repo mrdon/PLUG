@@ -281,6 +281,26 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(requiredResourceResult, resourceTagsResult);
     }
 
+    public void testRequireResourceWithCacheParameter() throws Exception
+    {
+        final String moduleKey = "no-cache-resources";
+        final String completeModuleKey = "test.atlassian:" + moduleKey;
+
+        final Mock mockPlugin = new Mock(Plugin.class);
+
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("cache", "false");
+        ResourceDescriptor resourceDescriptor = TestUtils.createResourceDescriptor("no-cache.js", params);
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
+                TestUtils.createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(),
+                Collections.singletonList(resourceDescriptor)));
+
+        String resourceTagsResult = webResourceManager.getResourceTags(completeModuleKey);
+        assertTrue(resourceTagsResult.contains("src=\"" + BASEURL + BatchPluginResource.URL_PREFIX + "/"
+            + completeModuleKey + "/" + completeModuleKey + ".js?cache=false"));
+    }
+
     public void testGetStaticResourcePrefix()
     {
         String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" +

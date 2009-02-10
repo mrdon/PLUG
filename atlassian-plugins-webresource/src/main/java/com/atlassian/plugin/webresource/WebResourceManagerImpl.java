@@ -166,6 +166,10 @@ public class WebResourceManagerImpl implements WebResourceManager
                 Plugin plugin = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resource.getModuleCompleteKey()).getPlugin();
                 url = getStaticResourcePrefix(plugin.getPluginInformation().getVersion()) + url;
             }
+            else
+            {
+                url = webResourceIntegration.getBaseUrl() + url;
+            }
             writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writer);
         }
     }
