@@ -13,6 +13,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.HierarchicalBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.BeansException;
+import org.apache.commons.lang.ClassUtils;
 
 /**
  * Host component provider that uses <code>plugin:available="true"</code> attributes in Spring XML bean configuration
@@ -68,7 +69,7 @@ public class SpringXmlHostComponentProvider implements HostComponentProvider, Be
     Class[] findInterfaces(Class cls)
     {
         List<Class> validInterfaces = new ArrayList<Class>();
-        Class[] allInterfaces = cls.getInterfaces();
+        List<Class> allInterfaces = ClassUtils.getAllInterfaces(cls);
         for (Class inf : allInterfaces)
         {
             if (!inf.getName().startsWith("org.springframework") && !inf.getName().startsWith("java."))

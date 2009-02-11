@@ -12,6 +12,7 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 
 import java.util.List;
 import java.util.Arrays;
+import java.util.HashSet;
 
 public class TestSpringXmlHostComponentProvider extends TestCase
 {
@@ -30,8 +31,9 @@ public class TestSpringXmlHostComponentProvider extends TestCase
         assertNotNull(list);
         assertEquals(1, list.size());
         assertEquals("foo", list.get(0).getProperties().get("bean-name"));
-        assertEquals(1, list.get(0).getMainInterfaces().length);
-        assertEquals(Fooable.class.getName(), list.get(0).getMainInterfaces()[0]);
+        assertEquals(2, list.get(0).getMainInterfaces().length);
+        assertEquals(new HashSet(Arrays.asList(Fooable.class, Barable.class)),
+                new HashSet(Arrays.asList(list.get(0).getMainInterfaceClasses())));
     }
 
     public void testProvideWithCustomInterface()
@@ -51,6 +53,26 @@ public class TestSpringXmlHostComponentProvider extends TestCase
         assertEquals("foo", list.get(0).getProperties().get("bean-name"));
         assertEquals(1, list.get(0).getMainInterfaces().length);
         assertEquals(BeanFactoryAware.class.getName(), list.get(0).getMainInterfaces()[0]);
+    }
+
+    public void testProvideWithInterfaceOnSuperclass()
+    {
+        XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("com/atlassian/plugin/spring/pluginns/plugins-spring-test-super-interface.xml"));
+
+        SpringXmlHostComponentProvider provider = (SpringXmlHostComponentProvider) factory.getBean(SpringXmlHostComponentProvider.HOST_COMPONENT_PROVIDER);
+        assertNotNull(provider);
+
+
+        DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+        provider.provide(registrar);
+
+        List<HostComponentRegistration> list = registrar.getRegistry();
+        assertNotNull(list);
+        assertEquals(1, list.size());
+        assertEquals("foobarable", list.get(0).getProperties().get("bean-name"));
+        assertEquals(2, list.get(0).getMainInterfaces().length);
+        assertEquals(new HashSet(Arrays.asList(Fooable.class, Barable.class)),
+                new HashSet(Arrays.asList(list.get(0).getMainInterfaceClasses())));
     }
 
     public void testProvideWithMultipleCustomInterfaces()
