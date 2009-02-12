@@ -102,6 +102,7 @@ public abstract class PluginInContainerTestBase extends TestCase
         final PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration(version);
         scannerConfig.getPackageIncludes().add("com.atlassian.plugin*");
         scannerConfig.getPackageIncludes().add("javax.servlet*");
+        scannerConfig.getPackageIncludes().add("com_cenqua_clover");
         HostComponentProvider requiredWrappingProvider = new HostComponentProvider()
         {
             public void provide(ComponentRegistrar registrar)
