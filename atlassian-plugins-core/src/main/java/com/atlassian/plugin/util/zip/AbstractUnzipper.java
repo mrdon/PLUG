@@ -8,9 +8,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 
 public abstract class AbstractUnzipper implements Unzipper
 {
@@ -47,6 +45,7 @@ public abstract class AbstractUnzipper implements Unzipper
                 IOUtils.closeQuietly(fos);
             }
         }
+        file.setLastModified(entry.getTime());
 
         return file;
     }
@@ -74,18 +73,18 @@ public abstract class AbstractUnzipper implements Unzipper
 
     public void conditionalUnzip() throws IOException
     {
-        List zipContents = new ArrayList();
+        Map<String,Long> zipContentsAndLastModified = new HashMap<String,Long>();
 
         ZipEntry[] zipEntries = entries();
         for (int i = 0; i < zipEntries.length; i++)
         {
-            zipContents.add(zipEntries[i].getName());
+            zipContentsAndLastModified.put(zipEntries[i].getName(), zipEntries[i].getTime());
         }
 
         // If the jar contents of the directory does not match the contents of the zip
         // The we will nuke the bundled plugins directory and re-extract.
-        List targetDirContents = getContentsOfTargetDir(destDir);
-        if (!targetDirContents.equals(zipContents))
+        Map<String,Long> targetDirContents = getContentsOfTargetDir(destDir);
+        if (!targetDirContents.equals(zipContentsAndLastModified))
         {
             FileUtils.deleteDirectory(destDir);
             unzip();
@@ -97,7 +96,7 @@ public abstract class AbstractUnzipper implements Unzipper
         }
     }
 
-    protected List getContentsOfTargetDir(File dir)
+    private Map<String,Long> getContentsOfTargetDir(File dir)
     {
         // Create filter that lists only jars
         FilenameFilter filter = new FilenameFilter()
@@ -108,26 +107,22 @@ public abstract class AbstractUnzipper implements Unzipper
             }
         };
 
-        String[] children = dir.list(filter);
 
-        if (children == null)
+        if (!dir.isDirectory())
         {
-            // No files, return empty array
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
 
-        ArrayList targetDirContents = new ArrayList();
-
-        if (log.isDebugEnabled() && children.length > 0)
-            log.debug("Listing JAR files in " + dir.getAbsolutePath());
-
-        for (int i = 0; i < children.length; i++)
+        Map<String,Long> targetDirContents = new HashMap<String,Long>();
+        for (File child : dir.listFiles())
         {
             if (log.isDebugEnabled())
-                log.debug(children[i]);
-            targetDirContents.add(children[i]);
-
+            {
+                log.debug("Examining entry in zip: "+child);
+            }
+            targetDirContents.put(child.getName(), child.lastModified());
         }
+
         return targetDirContents;
     }
 }
