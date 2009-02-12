@@ -4,15 +4,32 @@ import aQute.lib.header.OSGiHeader;
 
 import java.util.Map;
 
+/**
+ * Encapsulates the package exports from the system bundle
+ *
+ * @since 2.2.0
+ */
 public class SystemExports
 {
     private final Map<String, Map<String,String>> exports;
 
+    /**
+     * Constructs an instance by parsing the exports line from the manifest
+     *
+     * @param exportsLine The Export-Package header value
+     */
     public SystemExports(String exportsLine)
     {
         this.exports = OSGiHeader.parseHeader(exportsLine);
     }
 
+    /**
+     * Constructs a package export, taking into account any attributes on the system export, including the version.
+     * The version is handled special, in that is added as an exact match, i.e. [1.0,1.0].
+     *
+     * @param pkg The java package
+     * @return The full export line to use for a host component import
+     */
     public String getFullExport(String pkg)
     {
         String fullPkg = pkg;
