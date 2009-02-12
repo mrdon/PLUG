@@ -4,6 +4,7 @@ import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.model.ComponentImport;
+import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
@@ -99,7 +100,7 @@ public class HostComponentSpringStage implements TransformStage
                     }
                 }
             }
-            addImportsForMatchedHostComponents(matchedRegistrations, context.getExtraImports());
+            addImportsForMatchedHostComponents(matchedRegistrations, context.getSystemExports(), context.getExtraImports());
             if (root.elements().size() > 0)
             {
                 context.getFileOverrides().put(SPRING_XML, SpringHelper.documentToBytes(doc));
@@ -107,12 +108,20 @@ public class HostComponentSpringStage implements TransformStage
         }
     }
 
-    private void addImportsForMatchedHostComponents(List<HostComponentRegistration> matchedRegistrations, List<String> extraImports)
+    private void addImportsForMatchedHostComponents(List<HostComponentRegistration> matchedRegistrations,
+                                                    SystemExports systemExports, List<String> extraImports)
     {
         try
         {
             String list = OsgiHeaderUtil.findReferredPackages(matchedRegistrations);
-            extraImports.addAll(Arrays.asList(list.split(",")));
+            if (list.length() > 0)
+            {
+                String[] packages = list.split(",");
+                for (String pkg : packages)
+                {
+                    extraImports.add(systemExports.getFullExport(pkg));
+                }
+            }
         }
         catch (IOException e)
         {

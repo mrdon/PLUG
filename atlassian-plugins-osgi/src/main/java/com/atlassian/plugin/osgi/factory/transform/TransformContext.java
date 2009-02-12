@@ -4,6 +4,7 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.factory.transform.model.ComponentImport;
+import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 import org.codehaus.classworlds.uberjar.protocol.jar.NonLockingJarHandler;
 import org.dom4j.Document;
@@ -37,13 +38,16 @@ public class TransformContext
     private final List<String> extraExports;
     private final PluginArtifact pluginArtifact;
     private final Map<String, ComponentImport> componentImports;
+    private final SystemExports systemExports;
 
-    public TransformContext(List<HostComponentRegistration> regs, PluginArtifact pluginArtifact, String descriptorPath)
+    public TransformContext(List<HostComponentRegistration> regs, SystemExports systemExports,
+                            PluginArtifact pluginArtifact, String descriptorPath)
     {
         Validate.notNull(pluginArtifact, "The plugin artifact must be specified");
         Validate.notNull(descriptorPath, "The plugin descriptor path must be specified");
 
         this.regs = regs;
+        this.systemExports = systemExports;
         this.pluginArtifact = pluginArtifact;
         try
         {
@@ -149,6 +153,11 @@ public class TransformContext
     public Map<String, ComponentImport> getComponentImports()
     {
         return componentImports;
+    }
+
+    public SystemExports getSystemExports()
+    {
+        return systemExports;
     }
 
     private static class DocumentExposingDescriptorParser extends XmlDescriptorParser

@@ -141,7 +141,7 @@ public class GenerateManifestStage implements TransformStage
         }
         else
         {
-            imports = referrers.substring(0, referrers.length() - 1);
+            imports = referrers.toString();
         }
         return imports;
     }

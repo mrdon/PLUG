@@ -39,6 +39,7 @@ public class TestOsgiPluginFactory extends TestCase
     private File jar;
     Mock mockOsgi;
     private Mock mockBundle;
+    private Mock mockSystemBundle;
 
     @Override
     public void setUp() throws IOException, URISyntaxException
@@ -53,6 +54,14 @@ public class TestOsgiPluginFactory extends TestCase
         dict.put(Constants.BUNDLE_DESCRIPTION, "desc");
         dict.put(Constants.BUNDLE_VERSION, "1.0");
         mockBundle.matchAndReturn("getHeaders", dict);
+
+        mockSystemBundle = new Mock(Bundle.class);
+        final Dictionary<String, String> sysDict = new Hashtable<String, String>();
+        sysDict.put(Constants.BUNDLE_DESCRIPTION, "desc");
+        sysDict.put(Constants.BUNDLE_VERSION, "1.0");
+        mockSystemBundle.matchAndReturn("getHeaders", sysDict);
+        mockSystemBundle.matchAndReturn("getLastModified", System.currentTimeMillis());
+        mockSystemBundle.matchAndReturn("getSymbolicName", "system.bundle");
     }
 
     @Override
@@ -69,7 +78,7 @@ public class TestOsgiPluginFactory extends TestCase
         mockOsgi.expectAndReturn("installBundle", C.ANY_ARGS, mockBundle.proxy());
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
         mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
-        mockOsgi.expectAndReturn("getBundles", new Bundle[] {});
+        mockOsgi.matchAndReturn("getBundles", new Bundle[] {(Bundle) mockSystemBundle.proxy()});
         final Plugin plugin = factory.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiPlugin);
@@ -82,7 +91,7 @@ public class TestOsgiPluginFactory extends TestCase
         mockOsgi.expectAndThrow("installBundle", C.ANY_ARGS, new OsgiContainerException("Bad install"));
         mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
-        mockOsgi.expectAndReturn("getBundles", new Bundle[] {});
+        mockOsgi.matchAndReturn("getBundles", new Bundle[] {(Bundle) mockSystemBundle.proxy()});
         final Plugin plugin = factory.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof UnloadablePlugin);

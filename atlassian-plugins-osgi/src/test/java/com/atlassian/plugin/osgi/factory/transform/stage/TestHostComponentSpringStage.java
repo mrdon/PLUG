@@ -6,6 +6,7 @@ import com.atlassian.plugin.osgi.SomeInterface;
 import com.atlassian.plugin.osgi.factory.transform.FooChild;
 import com.atlassian.plugin.osgi.factory.transform.StubHostComponentRegistration;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
+import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.factory.transform.test.SomeClass;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.table.TableModel;
+import javax.servlet.Servlet;
 
 import junit.framework.TestCase;
 
@@ -27,6 +29,7 @@ public class TestHostComponentSpringStage extends TestCase
 
     private HostComponentSpringStage transformer = new HostComponentSpringStage();
     private File jar;
+    private SystemExports systemExports;
 
     @Override
     public void setUp() throws Exception
@@ -44,6 +47,7 @@ public class TestHostComponentSpringStage extends TestCase
                     "Bundle-SymbolicName: my.server\n" +
                     "Bundle-ManifestVersion: 2\n")
                 .build();
+        systemExports = new SystemExports("javax.servlet;version=\"2.3\",javax.servlet.http;version=\"2.3\"");
     }
 
     public void testTransform() throws IOException, DocumentException
@@ -74,9 +78,33 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, new JarPluginArtifact(jar), PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), PluginAccessor.Descriptor.FILENAME);
         transformer.execute(context);
         assertTrue(context.getExtraImports().contains("javax.swing.event"));
+
+    }
+
+    public void testTransformWithProperNestedVersionedInferredImports() throws Exception
+    {
+        jar = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  public Foo(javax.servlet.Servlet servlet) {}",
+                        "}")
+                .addPluginInformation("my.plugin", "my.plugin", "1.0")
+                .build();
+
+        final List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>()
+        {
+            {
+                add(new MockRegistration("foo", Servlet.class));
+            }
+        };
+
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), PluginAccessor.Descriptor.FILENAME);
+        transformer.execute(context);
+        assertTrue(context.getExtraImports().contains("javax.servlet;version=\"[2.3,2.3]\""));
 
     }
 
@@ -92,7 +120,7 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, new JarPluginArtifact(jar), PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), PluginAccessor.Descriptor.FILENAME);
         transformer.execute(context);
         assertTrue(context.getExtraImports().contains(SomeClass.class.getPackage().getName()));
 

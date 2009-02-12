@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.factory.transform;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
+import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.test.PluginTestUtils;
 
@@ -31,7 +32,7 @@ public class TestDefaultPluginTransformer extends TestCase
     {
         super.setUp();
         tmpDir = PluginTestUtils.createTempDirectory("plugin-transformer");
-        transformer = new DefaultPluginTransformer(new DefaultOsgiPersistentCache(tmpDir), PluginAccessor.Descriptor.FILENAME);
+        transformer = new DefaultPluginTransformer(new DefaultOsgiPersistentCache(tmpDir), new SystemExports(""), PluginAccessor.Descriptor.FILENAME);
     }
 
     @Override

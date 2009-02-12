@@ -44,7 +44,7 @@ public class TestComponentImportSpringStage extends TestCase
         final File jar = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml", "<atlassian-plugin>",
             "  <component-import key='foo' interface='com.atlassian.plugin.osgi.SomeInterface' />", "</atlassian-plugin>").build();
 
-        final TransformContext context = new TransformContext(null, new JarPluginArtifact(jar), PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, null, new JarPluginArtifact(jar), PluginAccessor.Descriptor.FILENAME);
         stage.execute(context);
         assertTrue(context.getExtraImports().contains(SomeInterface.class.getPackage().getName()));
 

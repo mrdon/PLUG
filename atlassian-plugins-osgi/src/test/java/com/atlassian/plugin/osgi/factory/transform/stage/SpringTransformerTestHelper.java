@@ -4,6 +4,7 @@ import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
+import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.test.PluginJarBuilder;
 
@@ -47,7 +48,7 @@ public class SpringTransformerTestHelper
             final String swriter = elementToString(pluginRoot);
             pluginJar = new PluginJarBuilder().addResource(PluginAccessor.Descriptor.FILENAME, swriter).build();
         }
-        final TransformContext context = new TransformContext(regs, new JarPluginArtifact(pluginJar), PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, new SystemExports(""), new JarPluginArtifact(pluginJar), PluginAccessor.Descriptor.FILENAME);
 
         transformer.execute(context);
 

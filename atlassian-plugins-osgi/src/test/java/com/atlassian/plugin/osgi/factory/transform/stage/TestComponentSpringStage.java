@@ -68,7 +68,7 @@ public class TestComponentSpringStage extends TestCase
         mockPluginArtifact.expectAndReturn("getResourceAsStream", C.args(C.eq("foo")),
                 new ByteArrayInputStream(SpringTransformerTestHelper.elementToString(pluginRoot).getBytes()));
         mockPluginArtifact.expectAndReturn("doesResourceExist", C.args(C.eq("my/IFoo.class")), true);
-        TransformContext ctx = new TransformContext(null, (PluginArtifact) mockPluginArtifact.proxy(), "foo");
+        TransformContext ctx = new TransformContext(null, null, (PluginArtifact) mockPluginArtifact.proxy(), "foo");
         transformer.execute(ctx);
 
         assertTrue(ctx.getExtraExports().contains("my"));
@@ -91,7 +91,7 @@ public class TestComponentSpringStage extends TestCase
         mockPluginArtifact.expectAndReturn("getResourceAsStream", C.args(C.eq("foo")),
                 new ByteArrayInputStream(SpringTransformerTestHelper.elementToString(pluginRoot).getBytes()));
         mockPluginArtifact.expectAndReturn("doesResourceExist", C.args(C.eq("my/IFoo.class")), false);
-        TransformContext ctx = new TransformContext(null, (PluginArtifact) mockPluginArtifact.proxy(), "foo");
+        TransformContext ctx = new TransformContext(null, null, (PluginArtifact) mockPluginArtifact.proxy(), "foo");
         transformer.execute(ctx);
 
         assertFalse(ctx.getExtraExports().contains("my"));
@@ -113,7 +113,7 @@ public class TestComponentSpringStage extends TestCase
         mockPluginArtifact.matchAndReturn("toFile", new PluginJarBuilder().build());
         mockPluginArtifact.expectAndReturn("getResourceAsStream", C.args(C.eq("foo")),
                 new ByteArrayInputStream(SpringTransformerTestHelper.elementToString(pluginRoot).getBytes()));
-        TransformContext ctx = new TransformContext(null, (PluginArtifact) mockPluginArtifact.proxy(), "foo");
+        TransformContext ctx = new TransformContext(null, null, (PluginArtifact) mockPluginArtifact.proxy(), "foo");
         ctx.getExtraExports().add("my");
         transformer.execute(ctx);
 

@@ -12,6 +12,7 @@ import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.osgi.factory.transform.DefaultPluginTransformer;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformer;
+import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import org.apache.commons.io.IOUtils;
@@ -26,6 +27,9 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+
+import aQute.lib.header.OSGiHeader;
 
 /**
  * Plugin loader that starts an OSGi container and loads plugins into it, wrapped as OSGi bundles.
@@ -35,11 +39,13 @@ public class OsgiPluginFactory implements PluginFactory
     private static final Log log = LogFactory.getLog(OsgiPluginFactory.class);
 
     private final OsgiContainerManager osgi;
-    private final PluginTransformer pluginTransformer;
     private final String pluginDescriptorFileName;
     private final DescriptorParserFactory descriptorParserFactory;
     private final PluginEventManager pluginEventManager;
     private final String applicationKey;
+    private final OsgiPersistentCache persistentCache;
+
+    private volatile  PluginTransformer pluginTransformer;
 
     private ServiceTracker moduleDescriptorFactoryTracker;
 
@@ -48,12 +54,23 @@ public class OsgiPluginFactory implements PluginFactory
         Validate.notNull(pluginDescriptorFileName, "Plugin descriptor is required");
         Validate.notNull(osgi, "The OSGi container is required");
 
-        pluginTransformer = new DefaultPluginTransformer(persistentCache, pluginDescriptorFileName);
         this.osgi = osgi;
         this.pluginDescriptorFileName = pluginDescriptorFileName;
         this.descriptorParserFactory = new OsgiPluginXmlDescriptorParserFactory();
         this.pluginEventManager = pluginEventManager;
         this.applicationKey = applicationKey;
+        this.persistentCache = persistentCache;
+    }
+
+    private PluginTransformer getPluginTransformer()
+    {
+        if (pluginTransformer == null)
+        {
+            String exportString = (String) osgi.getBundles()[0].getHeaders().get(Constants.EXPORT_PACKAGE);
+            SystemExports exports = new SystemExports(exportString);
+            pluginTransformer = new DefaultPluginTransformer(persistentCache, exports, pluginDescriptorFileName);
+        }
+        return pluginTransformer;
     }
 
     public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException {
@@ -178,7 +195,7 @@ public class OsgiPluginFactory implements PluginFactory
     {
         try
         {
-            File transformedFile = pluginTransformer.transform(pluginArtifact, osgi.getHostComponentRegistrations());
+            File transformedFile = getPluginTransformer().transform(pluginArtifact, osgi.getHostComponentRegistrations());
             return new OsgiPlugin(osgi.installBundle(transformedFile), pluginEventManager);
         } catch (OsgiContainerException e)
         {

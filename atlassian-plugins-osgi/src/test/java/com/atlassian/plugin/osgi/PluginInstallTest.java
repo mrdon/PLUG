@@ -25,6 +25,8 @@ import org.osgi.util.tracker.ServiceTracker;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletConfig;
+import javax.servlet.Servlet;
+import javax.servlet.http.HttpServlet;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -610,14 +612,72 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertEquals(1, descriptors.size());
     }
 
-    public void testPluginDependentOnPackageImport() throws Exception
+    public void testPluginDependentOnPackageImporttestPluginWithHostComponentUsingOldPackageImport() throws Exception
+    {
+        HostComponentProvider prov = new HostComponentProvider()
+        {
+            public void provide(final ComponentRegistrar registrar)
+            {
+                registrar.register(ServletConfig.class).forInstance(new HttpServlet() {});
+            }
+        };
+        File servletJar =  new PluginJarBuilder("first")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                        "Export-Package: javax.servlet.http;version='4.0.0',javax.servlet;version='4.0.0'",
+                        "Import-Package: javax.servlet.http;version='4.0.0',javax.servlet;version='4.0.0'",
+                        "Bundle-SymbolicName: first",
+                        "Bundle-Version: 4.0.0",
+                        "Manifest-Version: 1.0",
+                        "")
+                .addFormattedJava("javax.servlet.Servlet",
+                        "package javax.servlet;",
+                        "public interface Servlet {}")
+                .addFormattedJava("javax.servlet.http.HttpServlet",
+                        "package javax.servlet.http;",
+                        "public abstract class HttpServlet implements javax.servlet.Servlet{}")
+                .build();
+
+        File pluginJar = new PluginJarBuilder("asecond")
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test' key='second' pluginsVersion='2'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "        <bundle-instructions><Import-Package>javax.servlet.http;version='[2.3,2.3]',javax.servlet;version='[2.3,2.3]',*</Import-Package></bundle-instructions>",
+                    "    </plugin-info>",
+                    "</atlassian-plugin>")
+                .addFormattedJava("second.MyImpl",
+                        "package second;",
+                        "public class MyImpl {",
+                        "    public MyImpl(javax.servlet.ServletConfig config) {",
+                        "    }",
+                        "}")
+                .build();
+
+        initPluginManager(prov);
+        pluginManager.installPlugin(new JarPluginArtifact(servletJar));
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+
+        assertEquals(2, pluginManager.getEnabledPlugins().size());
+        assertNotNull(pluginManager.getPlugin("first-4.0.0"));
+        assertNotNull(pluginManager.getPlugin("second"));
+    }
+
+    public void testPluginWithHostComponentUsingOldPackageImport() throws Exception
     {
         final PluginJarBuilder firstBuilder = new PluginJarBuilder("first");
-        firstBuilder.addPluginInformation("first", "Some name", "1.0").addFormattedJava("first.MyInterface", "package first;",
-            "public interface MyInterface {}").build(pluginsDir);
+        firstBuilder
+                .addPluginInformation("first", "Some name", "1.0")
+                .addFormattedJava("first.MyInterface",
+                        "package first;",
+                        "public interface MyInterface {}")
+                .build(pluginsDir);
 
-        new PluginJarBuilder("asecond", firstBuilder.getClassLoader()).addPluginInformation("second", "Some name", "1.0").addFormattedJava(
-            "second.MyImpl", "package second;", "public class MyImpl implements first.MyInterface {}").build(pluginsDir);
+        new PluginJarBuilder("asecond", firstBuilder.getClassLoader())
+                .addPluginInformation("second", "Some name", "1.0")
+                .addFormattedJava("second.MyImpl",
+                        "package second;",
+                        "public class MyImpl implements first.MyInterface {}")
+                .build(pluginsDir);
 
         initPluginManager();
 

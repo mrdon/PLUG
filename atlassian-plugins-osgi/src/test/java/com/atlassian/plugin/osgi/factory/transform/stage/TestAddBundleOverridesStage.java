@@ -21,7 +21,7 @@ public class TestAddBundleOverridesStage extends TestCase
             "    </plugin-info>", "</atlassian-plugin>").build();
 
         final AddBundleOverridesStage stage = new AddBundleOverridesStage();
-        final TransformContext context = new TransformContext(Collections.<HostComponentRegistration> emptyList(), new JarPluginArtifact(plugin),
+        final TransformContext context = new TransformContext(Collections.<HostComponentRegistration> emptyList(), null, new JarPluginArtifact(plugin),
             PluginAccessor.Descriptor.FILENAME);
         stage.execute(context);
         assertEquals("!*.internal.*,*", context.getBndInstructions().get("Export-Package"));
