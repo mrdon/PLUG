@@ -236,7 +236,8 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             if (singleMode || skipBatch(resourceDescriptor))
             {
                 boolean cache = !"false".equalsIgnoreCase(resourceDescriptor.getParameter("cache"));
-                resources.add(new SinglePluginResource(resourceDescriptor.getName(), moduleDescriptor.getCompleteKey(), cache));
+                resources.add(new SinglePluginResource(resourceDescriptor.getName(), moduleDescriptor.getCompleteKey(),
+                                                        cache, resourceDescriptor.getParameters()));
             }
             else
             {

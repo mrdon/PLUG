@@ -11,6 +11,9 @@ import java.util.Collections;
  * Represents a single plugin resource.
  *
  * It provides methods to parse and generate urls to locate a single plugin resource.
+ *
+ * Note: This PluginResource does not use it's parameters in generating the url. 
+ *
  * @since 2.2
  */
 public class SinglePluginResource implements PluginResource
@@ -20,15 +23,22 @@ public class SinglePluginResource implements PluginResource
      */
     static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + RESOURCE_URL_PREFIX;
 
-    final private String resourceName;
-    final private String moduleCompleteKey;
-    final private boolean cached;
+    private final String resourceName;
+    private final String moduleCompleteKey;
+    private final boolean cached;
+    private final Map<String, String> params;
 
     public SinglePluginResource(String resourceName, String moduleCompleteKey, boolean cached)
+    {
+        this(resourceName, moduleCompleteKey, cached, Collections.EMPTY_MAP);
+    }
+
+    public SinglePluginResource(String resourceName, String moduleCompleteKey, boolean cached, Map<String, String> params)
     {
         this.resourceName = resourceName;
         this.moduleCompleteKey = moduleCompleteKey;
         this.cached = cached;
+        this.params = params;
     }
 
     public String getResourceName()
@@ -43,7 +53,7 @@ public class SinglePluginResource implements PluginResource
 
     public Map<String, String> getParams()
     {
-        return Collections.EMPTY_MAP;
+        return Collections.unmodifiableMap(params);
     }
 
     public boolean isCacheSupported()
@@ -67,10 +77,9 @@ public class SinglePluginResource implements PluginResource
     }
 
     /**
-     * Parses the given url and query parameter map into a SinglePluginResource. Query paramters must be
-     * passed in through the map, any in the url String will be ignored.
+     * Parses the given url into a SinglePluginResource.
+     *
      * @param url the url to parse
-     * @param queryParams a map of String key and value pairs representing the query parameters in the url
      */
     public static SinglePluginResource parse(String url)
     {

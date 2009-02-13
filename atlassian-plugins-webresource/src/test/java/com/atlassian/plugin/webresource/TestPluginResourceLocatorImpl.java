@@ -71,6 +71,14 @@ public class TestPluginResourceLocatorImpl extends TestCase
         {
             List<PluginResource> resources = pluginResourceLocator.getPluginResources(TEST_MODULE_COMPLETE_KEY);
             assertEquals(3, resources.size());
+            // ensure the resources still have their parameters
+            for (PluginResource resource : resources)
+            {
+                if (resource.getResourceName().contains("ie"))
+                    assertEquals("true", resource.getParams().get("ieonly"));
+                else
+                    assertNull(resource.getParams().get("ieonly"));
+            }
         }
         finally
         {
