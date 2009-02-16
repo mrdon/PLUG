@@ -165,7 +165,7 @@
 
     <properties>
         <jdkLevel>1.5</jdkLevel>
-        <springDmVersion>1.1.2</springDmVersion>
+        <springDmVersion>1.1.3</springDmVersion>
         <springVersion>2.5.5</springVersion>
     </properties>
 
