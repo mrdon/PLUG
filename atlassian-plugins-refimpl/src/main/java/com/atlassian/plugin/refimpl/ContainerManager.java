@@ -100,7 +100,7 @@ public class ContainerManager
         final DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
         final List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
         packageIncludes.add("org.bouncycastle*");
-        packageIncludes.add("org.dom4j.*");
+        packageIncludes.add("org.dom4j*");
 
         scannerConfig.setPackageIncludes(packageIncludes);
         hostComponentProvider = new SimpleHostComponentProvider();
