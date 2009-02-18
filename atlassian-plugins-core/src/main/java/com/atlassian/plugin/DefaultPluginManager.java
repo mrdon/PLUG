@@ -7,9 +7,16 @@ import static com.atlassian.plugin.util.collect.CollectionUtil.transform;
 import com.atlassian.plugin.classloader.PluginsClassLoader;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
-import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.PluginEventListener;
-import com.atlassian.plugin.event.events.*;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginDisabledEvent;
+import com.atlassian.plugin.event.events.PluginEnabledEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
+import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
+import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
+import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.loaders.DynamicPluginLoader;
@@ -60,12 +67,21 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DefaultPluginManager implements PluginController, PluginAccessor, PluginSystemLifecycle, PluginManager
 {
     private static final Log log = LogFactory.getLog(DefaultPluginManager.class);
+
+    // here so we can track the state of any particular PluginManager
+    enum State
+    {
+        NOT_STARTED, STARTED, SHUTDOWN;
+    }
+
     private final List<PluginLoader> pluginLoaders;
     private final PluginStateStore store;
     private final ModuleDescriptorFactory moduleDescriptorFactory;
     private final PluginsClassLoader classLoader;
     private final Map<String, Plugin> plugins = new ConcurrentHashMap<String, Plugin>();
     private final PluginEventManager pluginEventManager;
+
+    private State state = State.NOT_STARTED;
 
     /**
      * Installer used for storing plugins. Used by {@link #installPlugin(PluginArtifact)}.
@@ -123,6 +139,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             addPlugins(loader, loader.loadAllPlugins(moduleDescriptorFactory));
         }
         pluginEventManager.broadcast(new PluginFrameworkStartedEvent(this, this));
+        state = State.STARTED;
         final long end = System.currentTimeMillis();
         log.info("Plugin system started in " + (end - start) + "ms");
     }
@@ -135,24 +152,32 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     {
         log.info("Shutting down the plugin system");
         pluginEventManager.broadcast(new PluginFrameworkShutdownEvent(this, this));
+        state = State.SHUTDOWN;
+    }
+
+    State getPluginManagerState()
+    {
+        return state;
     }
 
     @PluginEventListener
-    public void onPluginRefresh(PluginRefreshedEvent event)
+    public void onPluginRefresh(final PluginRefreshedEvent event)
     {
-        Plugin plugin = event.getPlugin();
+        final Plugin plugin = event.getPlugin();
 
         // disable the plugin, shamefully copied from notifyPluginDisabled()
         final List<ModuleDescriptor<?>> moduleDescriptors = new ArrayList<ModuleDescriptor<?>>(plugin.getModuleDescriptors());
         Collections.reverse(moduleDescriptors); // disable in reverse order
 
-        for (ModuleDescriptor<?> module : moduleDescriptors)
+        for (final ModuleDescriptor<?> module : moduleDescriptors)
         {
             // don't actually disable the module, just fire the events because its plugin is being disabled
             // if the module was actually disabled, you'd have to reenable each one when enabling the plugin
 
             if (isPluginModuleEnabled(module.getCompleteKey()))
+            {
                 publishModuleDisabledEvents(module);
+            }
         }
 
         // enable the plugin, shamefully copied from notifyPluginEnabled()
@@ -336,7 +361,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     {
         return getStore().loadPluginState();
     }
-    
+
     /**
      * @deprecated Since 2.0.2, use {@link #addPlugins(PluginLoader,Collection<Plugin>...)} instead
      */
@@ -906,13 +931,15 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         final List<ModuleDescriptor<?>> moduleDescriptors = new ArrayList<ModuleDescriptor<?>>(plugin.getModuleDescriptors());
         Collections.reverse(moduleDescriptors); // disable in reverse order
 
-        for (ModuleDescriptor<?> module : moduleDescriptors)
+        for (final ModuleDescriptor<?> module : moduleDescriptors)
         {
             // don't actually disable the module, just fire the events because its plugin is being disabled
             // if the module was actually disabled, you'd have to reenable each one when enabling the plugin
 
             if (isPluginModuleEnabled(module.getCompleteKey()))
+            {
                 publishModuleDisabledEvents(module);
+            }
         }
 
         // This needs to happen after modules are disabled to prevent errors
@@ -954,13 +981,17 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         publishModuleDisabledEvents(module);
     }
 
-    private void publishModuleDisabledEvents(ModuleDescriptor<?> module)
+    private void publishModuleDisabledEvents(final ModuleDescriptor<?> module)
     {
         if (log.isDebugEnabled())
+        {
             log.debug("Disabling " + module.getKey());
+        }
 
         if (module instanceof StateAware)
+        {
             ((StateAware) module).disabled();
+        }
 
         pluginEventManager.broadcast(new PluginModuleDisabledEvent(module));
     }
@@ -1003,7 +1034,9 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     protected void notifyModuleEnabled(final ModuleDescriptor<?> module)
     {
         if (log.isDebugEnabled())
+        {
             log.debug("Enabling " + module.getKey());
+        }
         classLoader.notifyPluginOrModuleEnabled();
         if (module instanceof StateAware)
         {
@@ -1035,7 +1068,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     {
         final Plugin plugin = plugins.get(key);
 
-        return plugin != null && getState().isEnabled(plugin) && plugin.getPluginState() == PluginState.ENABLED;
+        return (plugin != null) && getState().isEnabled(plugin) && (plugin.getPluginState() == PluginState.ENABLED);
     }
 
     public InputStream getDynamicResourceAsStream(final String name)
