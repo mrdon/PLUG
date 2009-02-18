@@ -3,9 +3,7 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.SomeInterface;
-import com.atlassian.plugin.osgi.factory.transform.FooChild;
-import com.atlassian.plugin.osgi.factory.transform.StubHostComponentRegistration;
-import com.atlassian.plugin.osgi.factory.transform.TransformContext;
+import com.atlassian.plugin.osgi.factory.transform.*;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.factory.transform.test.SomeClass;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
@@ -251,5 +249,45 @@ public class TestHostComponentSpringStage extends TestCase
             },
             null,
             "not(osgi:reference[@id='foo' and @filter='(&(bean-name=foo)(plugins-host=true))']/osgi:interfaces/beans:value/text()='" + SomeInterface.class.getName() + "')");
+    }
+
+    public void testTransformWithExistingComponentImportInterfacePartialMatch() throws Exception, DocumentException
+    {
+        jar = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  public Foo(com.atlassian.plugin.osgi.factory.transform.Barable bar) {}",
+                        "}")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin>",
+                        "  <component-import key='foobar'>",
+                        "    <interface>com.atlassian.plugin.osgi.factory.transform.Barable</interface>",
+                        "  </component-import>",
+                        "</atlassian-plugin>")
+                .addResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0\n" +
+                        "Bundle-Version: 1.0\n" +
+                        "Bundle-SymbolicName: my.server\n" +
+                        "Bundle-ManifestVersion: 2\n")
+                .build();
+
+        SpringTransformerTestHelper.transform(
+            transformer,
+            jar,
+            new ArrayList<HostComponentRegistration>()
+            {
+                {
+                    assertTrue(add(new StubHostComponentRegistration("foo", new Fooable()
+                    {
+                        public SomeClass getSomeClass()
+                        {
+                            return null;  //To change body of implemented methods use File | Settings | File Templates.
+                        }
+                    }, Barable.class, Fooable.class)));
+                }
+            },
+            null,
+            "not(osgi:reference[@id='foo' and @filter='(&(bean-name=foo)(plugins-host=true))']/osgi:interfaces/beans:value/text()='" + Fooable.class.getName() + "')");
     }
 }

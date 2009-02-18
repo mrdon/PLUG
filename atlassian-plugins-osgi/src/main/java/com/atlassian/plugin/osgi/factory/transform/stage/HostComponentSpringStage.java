@@ -69,7 +69,7 @@ public class HostComponentSpringStage implements TransformStage
                     Set<String> regInterfaces = new HashSet<String>(Arrays.asList(reg.getMainInterfaces()));
                     for (ComponentImport compImport : context.getComponentImports().values())
                     {
-                        if (compImport.getInterfaces().equals(regInterfaces))
+                        if (regInterfaces.containsAll(compImport.getInterfaces()))
                         {
                             found = false;
                             break;
