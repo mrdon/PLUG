@@ -13,6 +13,7 @@ import junit.framework.TestCase;
 
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 
@@ -21,12 +22,16 @@ public class TestServletModuleContainerServlet extends TestCase
     // ensure that an UnavailableException thrown in the plugin servlet doesn't unload this servlet
     public void testServletDoesntUnloadItself() throws IOException, ServletException
     {
-        ServletModuleDescriptor servletModuleDescriptor = new ServletModuleDescriptor()
+        Mock mockServletModuleManager = new Mock(ServletModuleManager.class);
+        ServletModuleDescriptor servletModuleDescriptor = new ServletModuleDescriptor(new DefaultHostContainer()
         {
-            protected void autowireObject(Object obj) {}
-            protected ServletModuleManager getServletModuleManager() { return null; }
-            public HttpServlet getModule() { return null; }
-        };
+            @Override
+            public <T> T create(Class<T> moduleClass) throws IllegalArgumentException
+            {
+                return null;
+            }
+        }, (ServletModuleManager) mockServletModuleManager.proxy());
+
 
         final DelegatingPluginServlet delegatingPluginServlet = new DelegatingPluginServlet(servletModuleDescriptor)
         {

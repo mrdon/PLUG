@@ -3,7 +3,9 @@ package com.atlassian.plugin.servlet.descriptors;
 import javax.servlet.ServletContextListener;
 
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.servlet.PluginBuilder;
+import com.atlassian.plugin.servlet.ServletModuleManager;
 
 public class ServletContextListenerModuleDescriptorBuilder
 {
@@ -47,6 +49,7 @@ public class ServletContextListenerModuleDescriptorBuilder
             String key,
             ServletContextListener listener)
         {
+            super(new DefaultHostContainer());
             this.plugin = plugin;
             this.key = key;
             this.listener = listener;
@@ -69,9 +72,6 @@ public class ServletContextListenerModuleDescriptorBuilder
         {
             return key;
         }
-
-        @Override
-        protected void autowireObject(Object obj) {}
 
         @Override
         public ServletContextListener getModule()

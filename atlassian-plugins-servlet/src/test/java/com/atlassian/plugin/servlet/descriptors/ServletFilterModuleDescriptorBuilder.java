@@ -8,9 +8,11 @@ import java.util.List;
 import javax.servlet.Filter;
 
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.servlet.PluginBuilder;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
+import com.mockobjects.dynamic.Mock;
 
 public class ServletFilterModuleDescriptorBuilder
 {
@@ -20,7 +22,7 @@ public class ServletFilterModuleDescriptorBuilder
     private FilterLocation location = FilterLocation.BEFORE_DISPATCH;
     private int weight = 100;
     private List<String> paths = new LinkedList<String>();
-    private ServletModuleManager servletModuleManager;
+    private ServletModuleManager servletModuleManager = (ServletModuleManager) new Mock(ServletModuleManager.class).proxy();
     
     public ServletFilterModuleDescriptorBuilder with(Plugin plugin)
     {
@@ -87,6 +89,7 @@ public class ServletFilterModuleDescriptorBuilder
             List<String> paths,
             ServletModuleManager servletModuleManager)
         {
+            super(new DefaultHostContainer(), servletModuleManager);
             this.plugin = plugin;
             this.key = key;
             this.filter = filter;
@@ -115,9 +118,6 @@ public class ServletFilterModuleDescriptorBuilder
         }
 
         @Override
-        protected void autowireObject(Object obj) {}
-
-        @Override
         public Filter getModule()
         {
             return filter;
@@ -141,11 +141,6 @@ public class ServletFilterModuleDescriptorBuilder
             return paths;
         }
 
-        @Override
-        protected ServletModuleManager getServletModuleManager()
-        {
-            return servletModuleManager;
-        }
     }
 
 }

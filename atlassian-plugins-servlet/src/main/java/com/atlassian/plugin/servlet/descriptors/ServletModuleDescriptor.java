@@ -7,6 +7,8 @@ import com.atlassian.plugin.servlet.ServletModuleManager;
 
 import javax.servlet.http.HttpServlet;
 
+import org.apache.commons.lang.Validate;
+
 /**
  * A module descriptor that allows plugin developers to define servlets. Developers can define what urls the
  * servlet should be serve by defining one or more &lt;url-pattern&gt; elements.
@@ -17,15 +19,6 @@ public class ServletModuleDescriptor<T extends HttpServlet> extends BaseServletM
     private final HostContainer hostContainer;
 
     /**
-     * @deprecated Since 2.2.0, don't extend and use {@link #ServletModuleDescriptor(com.atlassian.plugin.hostcontainer.HostContainer ,ServletModuleManager)} instead
-     */
-    @Deprecated
-    public ServletModuleDescriptor()
-    {
-        this(null, null);
-    }
-
-    /**
      * Creates a descriptor that uses a module factory to create instances
      *
      * @param hostContainer The module factory
@@ -33,6 +26,8 @@ public class ServletModuleDescriptor<T extends HttpServlet> extends BaseServletM
      */
     public ServletModuleDescriptor(HostContainer hostContainer, ServletModuleManager servletModuleManager)
     {
+        Validate.notNull(hostContainer);
+        Validate.notNull(servletModuleManager);
         this.hostContainer = hostContainer;
         this.servletModuleManager = servletModuleManager;
     }
@@ -40,45 +35,26 @@ public class ServletModuleDescriptor<T extends HttpServlet> extends BaseServletM
     public void enabled()
     {
         super.enabled();
-        getServletModuleManager().addServletModule(this);
+        servletModuleManager.addServletModule(this);
     }
 
     public void disabled()
     {
-        getServletModuleManager().removeServletModule(this);
+        servletModuleManager.removeServletModule(this);
         super.disabled();
     }
 
     public T getModule()
     {
-        T servlet = null;
-        try
+        T servlet;
+        // Give the plugin a go first
+        if (plugin instanceof AutowireCapablePlugin)
         {
-            // Give the plugin a go first
-            if (plugin instanceof AutowireCapablePlugin)
-            {
-                servlet = ((AutowireCapablePlugin) plugin).autowire(getModuleClass());
-            }
-            else
-            {
-                if (hostContainer != null)
-                {
-                    servlet = hostContainer.create(getModuleClass());
-                }
-                else
-                {
-                    servlet = getModuleClass().newInstance();
-                    autowireObject(servlet);
-                }
-            }
+            servlet = ((AutowireCapablePlugin) plugin).autowire(getModuleClass());
         }
-        catch (InstantiationException e)
+        else
         {
-            log.error("Error instantiating: " + getModuleClass(), e);
-        }
-        catch (IllegalAccessException e)
-        {
-            log.error("Error accessing: " + getModuleClass(), e);
+            servlet = hostContainer.create(getModuleClass());
         }
         return servlet;
     }
@@ -89,28 +65,5 @@ public class ServletModuleDescriptor<T extends HttpServlet> extends BaseServletM
     public HttpServlet getServlet()
     {
         return getModule();
-    }
-
-    /**
-     * @deprecated Since 2.2.0, don't extend and use a {@link com.atlassian.plugin.hostcontainer.HostContainer} instead
-     */
-    @Deprecated
-    protected void autowireObject(Object obj)
-    {
-        throw new UnsupportedOperationException("This method must be overridden if a HostContainer is not used");
-    }
-
-    /**
-     * @deprecated Since 2.2.0, don't extend and use a {@link com.atlassian.plugin.hostcontainer.HostContainer} instead
-     */
-    @Deprecated
-    protected ServletModuleManager getServletModuleManager()
-    {
-        if (servletModuleManager == null)
-        {
-            throw new IllegalStateException("This method must be implemented if a HostContainer is not used");
-        }
-
-        return servletModuleManager;
     }
 }

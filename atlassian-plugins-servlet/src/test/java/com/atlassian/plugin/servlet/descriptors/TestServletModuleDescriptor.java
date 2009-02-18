@@ -9,8 +9,10 @@ import org.dom4j.dom.DOMElement;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.servlet.ServletModuleManager;
+import com.mockobjects.dynamic.Mock;
 
 public class TestServletModuleDescriptor extends TestCase
 {
@@ -19,11 +21,7 @@ public class TestServletModuleDescriptor extends TestCase
     @Override
     public void setUp()
     {
-        descriptor = new ServletModuleDescriptor()
-        {
-            protected void autowireObject(Object obj) {throw new UnsupportedOperationException(); }
-            protected ServletModuleManager getServletModuleManager() { return null; }
-        };
+        descriptor = new ServletModuleDescriptor(new DefaultHostContainer(), (ServletModuleManager) new Mock(ServletModuleManager.class).proxy());
     }
 
     @Override

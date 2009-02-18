@@ -5,6 +5,7 @@ import java.util.Comparator;
 import javax.servlet.Filter;
 
 import org.dom4j.Element;
+import org.apache.commons.lang.Validate;
 
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.hostcontainer.HostContainer;
@@ -44,15 +45,6 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
     private final HostContainer hostContainer;
 
     /**
-     * @deprecated Since 2.2.0, don't extend and use {@link #ServletFilterModuleDescriptor(com.atlassian.plugin.hostcontainer.HostContainer ,ServletModuleManager)} instead
-     */
-    @Deprecated
-    public ServletFilterModuleDescriptor()
-    {
-        this(null, null);
-    }
-
-    /**
      * Creates a descriptor that uses a module factory to create instances
      *
      * @param hostContainer The module factory
@@ -60,6 +52,8 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
      */
     public ServletFilterModuleDescriptor(HostContainer hostContainer, ServletModuleManager servletModuleManager)
     {
+        Validate.notNull(hostContainer);
+        Validate.notNull(servletModuleManager);
         this.hostContainer = hostContainer;
         this.servletModuleManager = servletModuleManager;
     }
@@ -89,12 +83,12 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
     public void enabled()
     {
         super.enabled();
-        getServletModuleManager().addFilterModule(this);
+        servletModuleManager.addFilterModule(this);
     }
 
     public void disabled()
     {
-        getServletModuleManager().removeFilterModule(this);
+       servletModuleManager.removeFilterModule(this);
         super.disabled();
     }
 
@@ -102,31 +96,12 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
     public Filter getModule()
     {
         Filter filter = null;
-        try
+        // Give the plugin a go first
+        if (plugin instanceof AutowireCapablePlugin)
+            filter = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
+        else
         {
-            // Give the plugin a go first
-            if (plugin instanceof AutowireCapablePlugin)
-                filter = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
-            else
-            {
-                if (hostContainer != null)
-                {
-                    filter = hostContainer.create(getModuleClass());
-                }
-                else
-                {
-                    filter = getModuleClass().newInstance();
-                    autowireObject(filter);
-                }
-            }
-        }
-        catch (InstantiationException e)
-        {
-            log.error("Error instantiating: " + getModuleClass(), e);
-        }
-        catch (IllegalAccessException e)
-        {
-            log.error("Error accessing: " + getModuleClass(), e);
+            filter = hostContainer.create(getModuleClass());
         }
         return filter;
     }
@@ -139,29 +114,6 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
     public int getWeight()
     {
         return weight;
-    }
-
-    /**
-     * @deprecated Since 2.2.0, don't extend and use a {@link com.atlassian.plugin.hostcontainer.HostContainer} instead
-     */
-    @Deprecated
-    protected void autowireObject(Object obj)
-    {
-        throw new UnsupportedOperationException("This method must be overridden if a HostContainer is not used");
-    }
-
-    /**
-     * @deprecated Since 2.2.0, don't extend and use a {@link com.atlassian.plugin.hostcontainer.HostContainer} instead
-     */
-    @Deprecated
-    protected ServletModuleManager getServletModuleManager()
-    {
-        if (servletModuleManager == null)
-        {
-            throw new IllegalStateException("This method must be implemented if a HostContainer is not used");
-        }
-
-        return servletModuleManager;
     }
 
 }

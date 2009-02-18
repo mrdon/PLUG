@@ -10,8 +10,10 @@ import java.util.Map;
 import javax.servlet.http.HttpServlet;
 
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.servlet.PluginBuilder;
 import com.atlassian.plugin.servlet.ServletModuleManager;
+import com.mockobjects.dynamic.Mock;
 
 public class ServletModuleDescriptorBuilder
 {
@@ -19,7 +21,7 @@ public class ServletModuleDescriptorBuilder
     private String key = "test.servlet";
     private HttpServlet servlet;
     private List<String> paths = new LinkedList<String>();
-    private ServletModuleManager servletModuleManager;
+    private ServletModuleManager servletModuleManager = (ServletModuleManager) new Mock(ServletModuleManager.class).proxy();
     private Map<String, String> initParams = new HashMap<String, String>();
     
     public ServletModuleDescriptorBuilder with(Plugin plugin)
@@ -93,6 +95,7 @@ public class ServletModuleDescriptorBuilder
             Map<String, String> initParams,
             ServletModuleManager servletModuleManager)
         {
+            super(new DefaultHostContainer(), servletModuleManager);
             this.plugin = plugin;
             this.key = key;
             this.servlet = servlet;
@@ -120,9 +123,6 @@ public class ServletModuleDescriptorBuilder
         }
 
         @Override
-        protected void autowireObject(Object obj) {}
-
-        @Override
         public HttpServlet getModule()
         {
             return servlet;
@@ -141,11 +141,6 @@ public class ServletModuleDescriptorBuilder
             return initParams;
         }
 
-        @Override
-        protected ServletModuleManager getServletModuleManager()
-        {
-            return servletModuleManager;
-        }
     }
 
 }

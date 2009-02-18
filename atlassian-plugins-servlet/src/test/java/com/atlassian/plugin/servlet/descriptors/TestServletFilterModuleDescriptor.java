@@ -7,10 +7,12 @@ import org.dom4j.dom.DOMElement;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
 import com.atlassian.plugin.servlet.filter.FilterTestUtils.FilterAdapter;
+import com.mockobjects.dynamic.Mock;
 
 public class TestServletFilterModuleDescriptor extends TestCase
 {
@@ -19,11 +21,7 @@ public class TestServletFilterModuleDescriptor extends TestCase
     @Override
     public void setUp()
     {
-        descriptor = new ServletFilterModuleDescriptor()
-        {
-            protected void autowireObject(Object obj) {throw new UnsupportedOperationException(); }
-            protected ServletModuleManager getServletModuleManager() { return null; }
-        };
+        descriptor = new ServletFilterModuleDescriptor(new DefaultHostContainer(), (ServletModuleManager) new Mock(ServletModuleManager.class).proxy());
     }
 
     @Override

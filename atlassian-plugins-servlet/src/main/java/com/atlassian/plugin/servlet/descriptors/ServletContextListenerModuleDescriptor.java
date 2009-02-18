@@ -4,6 +4,7 @@ import javax.servlet.ServletContextListener;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.Validate;
 
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.hostcontainer.HostContainer;
@@ -23,15 +24,6 @@ public class ServletContextListenerModuleDescriptor extends AbstractModuleDescri
     protected final HostContainer hostContainer;
 
     /**
-     * @deprecated Since 2.2.0, don't extend and use {@link #ServletContextListenerModuleDescriptor(com.atlassian.plugin.hostcontainer.HostContainer)} instead
-     */
-    @Deprecated
-    public ServletContextListenerModuleDescriptor()
-    {
-        this(null);
-    }
-
-    /**
      * Creates a descriptor that uses a module factory to create instances
      *
      * @param hostContainer The module factory
@@ -39,49 +31,22 @@ public class ServletContextListenerModuleDescriptor extends AbstractModuleDescri
      */
     public ServletContextListenerModuleDescriptor(HostContainer hostContainer)
     {
+        Validate.notNull(hostContainer);
         this.hostContainer = hostContainer;
     }
 
     @Override
     public ServletContextListener getModule()
     {
-        ServletContextListener obj = null;
-        try
+        ServletContextListener obj;
+        // Give the plugin a go first
+        if (plugin instanceof AutowireCapablePlugin)
+            obj = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
+        else
         {
-            // Give the plugin a go first
-            if (plugin instanceof AutowireCapablePlugin)
-                obj = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
-            else
-            {
-                if (hostContainer != null)
-                {
-                    obj = hostContainer.create(getModuleClass());
-                }
-                else
-                {
-                    obj = getModuleClass().newInstance();
-                    autowireObject(obj);
-                }
-            }
-        }
-        catch (InstantiationException e)
-        {
-            log.error("Error instantiating: " + getModuleClass(), e);
-        }
-        catch (IllegalAccessException e)
-        {
-            log.error("Error accessing: " + getModuleClass(), e);
+            obj = hostContainer.create(getModuleClass());
         }
         return obj;
-    }
-
-    /**
-     * @deprecated Since 2.2.0, don't extend and use a {@link com.atlassian.plugin.hostcontainer.HostContainer} instead
-     */
-    @Deprecated
-    protected void autowireObject(Object obj)
-    {
-        throw new UnsupportedOperationException("This method must be overridden if a HostContainer is not used");
     }
 
 }
