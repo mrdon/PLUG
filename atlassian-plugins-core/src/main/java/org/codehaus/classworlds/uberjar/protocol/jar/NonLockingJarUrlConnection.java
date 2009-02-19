@@ -339,7 +339,7 @@ public class NonLockingJarUrlConnection
     {
         String url = baseResource.toExternalForm();
 
-        if ( url.startsWith( "file:/" ) )
+        if ( url.startsWith( "file:" ) )
         {
             url = url.substring( 5 );
         }
