@@ -25,6 +25,10 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
     private final String applicationVersion;
     private Logger log = Logger.getLogger(DefaultOsgiPersistentCache.class);
 
+    /**
+     * @deprecated
+     */
+    @Deprecated
     public DefaultOsgiPersistentCache(File baseDir)
     {
         this(baseDir, null);
