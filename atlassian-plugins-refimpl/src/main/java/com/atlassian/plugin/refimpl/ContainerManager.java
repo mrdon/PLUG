@@ -25,7 +25,6 @@ import com.atlassian.plugin.servlet.descriptors.ServletContextListenerModuleDesc
 import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
-import com.atlassian.plugin.servlet.util.ServletContextHostContainerAccessor;
 import com.atlassian.plugin.util.Assertions;
 import com.atlassian.plugin.web.descriptors.DefaultWebItemModuleDescriptor;
 import com.atlassian.plugin.webresource.PluginResourceLocator;
@@ -86,7 +85,6 @@ public class ContainerManager
                 return hostContainer.getInstance(moduleClass);
             }
         };
-        ServletContextHostContainerAccessor.setHostContainer(servletContext, delegatingHostContainer);
 
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory(delegatingHostContainer);
 
@@ -120,7 +118,7 @@ public class ContainerManager
         final PluginEventManager pluginEventManager = plugins.getPluginEventManager();
         osgiContainerManager = plugins.getOsgiContainerManager();
 
-        servletModuleManager = new DefaultServletModuleManager(pluginEventManager);
+        servletModuleManager = new DefaultServletModuleManager(servletContext, pluginEventManager);
         pluginAccessor = plugins.getPluginAccessor();
 
         PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(pluginAccessor, new SimpleServletContextFactory(servletContext));

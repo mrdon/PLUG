@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServlet;
 
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginDisabledEvent;
@@ -35,10 +36,7 @@ import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.servlet.filter.DelegatingPluginFilter;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
 import com.atlassian.plugin.servlet.filter.PluginFilterConfig;
-import com.atlassian.plugin.servlet.util.ClassLoaderStack;
-import com.atlassian.plugin.servlet.util.DefaultPathMapper;
-import com.atlassian.plugin.servlet.util.LazyLoadedReference;
-import com.atlassian.plugin.servlet.util.PathMapper;
+import com.atlassian.plugin.servlet.util.*;
 
 /**
  * A simple servletModuleManager to track and retrieve the loaded servlet plugin modules.
@@ -56,7 +54,27 @@ public class DefaultServletModuleManager implements ServletModuleManager
     private final ConcurrentMap<String, LazyLoadedReference<Filter>> filterRefs = new ConcurrentHashMap<String, LazyLoadedReference<Filter>>();
     
     private final ConcurrentMap<Plugin, LazyLoadedReference<ServletContext>> pluginContextRefs = new ConcurrentHashMap<Plugin, LazyLoadedReference<ServletContext>>();
-    
+
+    /**
+     * Constructor that sets itself in the servlet context for later use in dispatching servlets and filters.
+     *
+     * @param servletContext The servlet context to store itself in
+     * @param pluginEventManager The plugin event manager
+     * @since 2.2.0
+     */
+    public DefaultServletModuleManager(ServletContext servletContext, PluginEventManager pluginEventManager)
+    {
+        this(pluginEventManager);
+        ServletContextServletModuleManagerAccessor.setServletModuleManager(servletContext, this);
+    }
+
+    /**
+     * Creates the servlet module manager, but assumes you will be calling
+     * {@link com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor#setServletModuleManager(javax.servlet.ServletContext, ServletModuleManager)}
+     * yourself if you don't extend the dispatching servlet and filter classes to provide the servlet module manager instance.
+     *
+     * @param pluginEventManager The plugin event manager
+     */
     public DefaultServletModuleManager(PluginEventManager pluginEventManager)
     {
         pluginEventManager.register(this);

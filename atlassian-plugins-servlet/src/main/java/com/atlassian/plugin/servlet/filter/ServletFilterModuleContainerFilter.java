@@ -1,7 +1,7 @@
 package com.atlassian.plugin.servlet.filter;
 
 import com.atlassian.plugin.servlet.ServletModuleManager;
-import com.atlassian.plugin.servlet.util.ServletContextHostContainerAccessor;
+import com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -60,12 +60,12 @@ public class ServletFilterModuleContainerFilter implements Filter
     }
 
     /**
-     * Retrieve the DefaultServletModuleManager from your container framework.  Uses the {@link com.atlassian.plugin.servlet.util.ServletContextHostContainerAccessor}
+     * Retrieve the DefaultServletModuleManager from your container framework.  Uses the {@link com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor}
      * by default.
      */
     protected ServletModuleManager getServletModuleManager()
     {
-        return ServletContextHostContainerAccessor.getHostContainer(filterConfig.getServletContext()).getInstance(ServletModuleManager.class);
+        return ServletContextServletModuleManagerAccessor.getServletModuleManager(filterConfig.getServletContext());
     }
 
     protected final FilterConfig getFilterConfig()
