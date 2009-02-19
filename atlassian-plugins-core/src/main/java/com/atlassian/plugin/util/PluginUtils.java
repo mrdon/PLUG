@@ -42,6 +42,7 @@ public class PluginUtils
      * @param element The module element
      * @param keys The set of application keys
      * @return True if it should apply, false otherwise
+     * @since 2.2.0
      */
     public static boolean doesModuleElementApplyToApplication(Element element, Set<String> keys)
     {
