@@ -46,7 +46,7 @@ public class TestOsgiPluginFactory extends TestCase
     {
         tmpDir = PluginTestUtils.createTempDirectory(TestOsgiPluginFactory.class);
         mockOsgi = new Mock(OsgiContainerManager.class);
-        factory = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, null, new DefaultOsgiPersistentCache(tmpDir, "1.0"), (OsgiContainerManager) mockOsgi.proxy(), new DefaultPluginEventManager());
+        factory = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, (String) null, new DefaultOsgiPersistentCache(tmpDir, "1.0"), (OsgiContainerManager) mockOsgi.proxy(), new DefaultPluginEventManager());
         jar = new PluginJarBuilder("someplugin").addPluginInformation("plugin.key", "My Plugin", "1.0").build();
 
         mockBundle = new Mock(Bundle.class);

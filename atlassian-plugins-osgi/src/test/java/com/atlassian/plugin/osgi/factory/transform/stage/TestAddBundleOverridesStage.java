@@ -22,7 +22,7 @@ public class TestAddBundleOverridesStage extends TestCase
 
         final AddBundleOverridesStage stage = new AddBundleOverridesStage();
         final TransformContext context = new TransformContext(Collections.<HostComponentRegistration> emptyList(), null, new JarPluginArtifact(plugin),
-            PluginAccessor.Descriptor.FILENAME);
+            null, PluginAccessor.Descriptor.FILENAME);
         stage.execute(context);
         assertEquals("!*.internal.*,*", context.getBndInstructions().get("Export-Package"));
     }

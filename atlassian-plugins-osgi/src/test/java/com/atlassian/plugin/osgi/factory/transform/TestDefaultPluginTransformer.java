@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.factory.transform;
 
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
@@ -32,7 +33,7 @@ public class TestDefaultPluginTransformer extends TestCase
     {
         super.setUp();
         tmpDir = PluginTestUtils.createTempDirectory("plugin-transformer");
-        transformer = new DefaultPluginTransformer(new DefaultOsgiPersistentCache(tmpDir, "1.0"), new SystemExports(""), PluginAccessor.Descriptor.FILENAME);
+        transformer = new DefaultPluginTransformer(new DefaultOsgiPersistentCache(tmpDir, "1.0"), new SystemExports(""), null, PluginAccessor.Descriptor.FILENAME);
     }
 
     @Override
@@ -68,7 +69,7 @@ public class TestDefaultPluginTransformer extends TestCase
         final File file = new PluginJarBuilder().addFormattedJava("my.Foo", "package my;", "public class Foo {",
             "  com.atlassian.plugin.osgi.factory.transform.Fooable bar;", "}").addPluginInformation("foo", "foo", "1.1").build();
 
-        final File copy = transformer.transform(file, new ArrayList<HostComponentRegistration>()
+        final File copy = transformer.transform(new JarPluginArtifact(file), new ArrayList<HostComponentRegistration>()
         {
             {
                 add(new StubHostComponentRegistration(Fooable.class));

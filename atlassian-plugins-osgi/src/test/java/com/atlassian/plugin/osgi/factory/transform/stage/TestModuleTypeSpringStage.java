@@ -25,6 +25,25 @@ public class TestModuleTypeSpringStage extends TestCase
                 "osgi:service[@id='moduleType-foo_osgiService' and @auto-export='interfaces']");
     }
 
+    public void testTransformForOneApp() throws IOException, DocumentException
+    {
+        Element pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
+        Element moduleType = pluginRoot.addElement("module-type");
+        moduleType.addAttribute("key", "foo");
+        moduleType.addAttribute("class", "my.FooDescriptor");
+        moduleType.addAttribute("application", "bar");
+        SpringTransformerTestHelper.transform(new ModuleTypeSpringStage(), pluginRoot,
+                "not(beans:bean[@id='moduleType-foo' and @class='" + SingleModuleDescriptorFactory.class.getName()+"'])");
+
+        pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
+        moduleType = pluginRoot.addElement("module-type");
+        moduleType.addAttribute("key", "foo");
+        moduleType.addAttribute("class", "my.FooDescriptor");
+        moduleType.addAttribute("application", "foo");
+        SpringTransformerTestHelper.transform(new ModuleTypeSpringStage(), pluginRoot,
+                "beans:bean[@id='moduleType-foo' and @class='"+ SingleModuleDescriptorFactory.class.getName()+"']");
+    }
+
     public void testTransformOfBadElement() throws IOException, DocumentException
     {
         Element pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");

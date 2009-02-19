@@ -20,8 +20,7 @@ import org.dom4j.io.XMLWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import junit.framework.Assert;
 
@@ -48,7 +47,8 @@ public class SpringTransformerTestHelper
             final String swriter = elementToString(pluginRoot);
             pluginJar = new PluginJarBuilder().addResource(PluginAccessor.Descriptor.FILENAME, swriter).build();
         }
-        final TransformContext context = new TransformContext(regs, new SystemExports(""), new JarPluginArtifact(pluginJar), PluginAccessor.Descriptor.FILENAME);
+        Set<String> keys = new HashSet<String>(Arrays.asList("foo"));
+        final TransformContext context = new TransformContext(regs, new SystemExports(""), new JarPluginArtifact(pluginJar), keys, PluginAccessor.Descriptor.FILENAME);
 
         transformer.execute(context);
 

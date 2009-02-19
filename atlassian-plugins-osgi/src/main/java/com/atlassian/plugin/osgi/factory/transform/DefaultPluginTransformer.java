@@ -11,10 +11,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -30,6 +27,8 @@ public class DefaultPluginTransformer implements PluginTransformer
     private final List<TransformStage> stages;
     private final File bundleCache;
     private final SystemExports systemExports;
+    private final Set<String> applicationKeys;
+
     /**
      * Constructs a transformer with the default stages
      *
@@ -38,9 +37,9 @@ public class DefaultPluginTransformer implements PluginTransformer
      * @param pluginDescriptorPath The path to the plugin descriptor
      * @since 2.2.0
      */
-    public DefaultPluginTransformer(OsgiPersistentCache cache, SystemExports systemExports, String pluginDescriptorPath)
+    public DefaultPluginTransformer(OsgiPersistentCache cache, SystemExports systemExports, Set<String> applicationKeys, String pluginDescriptorPath)
     {
-        this(cache, systemExports, pluginDescriptorPath, new ArrayList<TransformStage>()
+        this(cache, systemExports, applicationKeys, pluginDescriptorPath, new ArrayList<TransformStage>()
         {{
             add(new AddBundleOverridesStage());
             add(new ComponentImportSpringStage());
@@ -60,7 +59,7 @@ public class DefaultPluginTransformer implements PluginTransformer
      * @param stages A set of stages
      * @since 2.2.0
      */
-    public DefaultPluginTransformer(OsgiPersistentCache cache, SystemExports systemExports, String pluginDescriptorPath, List<TransformStage> stages)
+    public DefaultPluginTransformer(OsgiPersistentCache cache, SystemExports systemExports, Set<String> applicationKeys, String pluginDescriptorPath, List<TransformStage> stages)
     {
         Validate.notNull(pluginDescriptorPath, "The plugin descriptor path is required");
         Validate.notNull(stages, "A list of stages is required");
@@ -68,6 +67,7 @@ public class DefaultPluginTransformer implements PluginTransformer
         this.stages = Collections.unmodifiableList(new ArrayList<TransformStage>(stages));
         this.bundleCache = cache.getTransformedPluginCache();
         this.systemExports = systemExports;
+        this.applicationKeys = applicationKeys;
 
     }
 
@@ -106,7 +106,7 @@ public class DefaultPluginTransformer implements PluginTransformer
             return cachedPlugin;
         }
 
-        TransformContext context = new TransformContext(regs, systemExports, pluginArtifact, pluginDescriptorPath);
+        TransformContext context = new TransformContext(regs, systemExports, pluginArtifact, applicationKeys, pluginDescriptorPath);
         for (TransformStage stage : stages)
         {
             stage.execute(context);

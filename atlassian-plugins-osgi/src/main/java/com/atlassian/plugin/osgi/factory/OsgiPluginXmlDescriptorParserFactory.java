@@ -5,6 +5,7 @@ import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.PluginParseException;
 
 import java.io.InputStream;
+import java.util.Set;
 
 import org.apache.commons.lang.Validate;
 
@@ -33,9 +34,9 @@ public class OsgiPluginXmlDescriptorParserFactory implements DescriptorParserFac
      * @throws PluginParseException
      * @since 2.2.0
      */
-    public DescriptorParser getInstance(InputStream source, String applicationKey) throws PluginParseException
+    public DescriptorParser getInstance(InputStream source, Set<String> applicationKeys) throws PluginParseException
     {
         Validate.notNull(source, "The descriptor source must not be null");
-        return new OsgiPluginXmlDescriptorParser(source, applicationKey, "component", "component-import", "bean", "spring", "module-type");
+        return new OsgiPluginXmlDescriptorParser(source, applicationKeys, "component", "component-import", "bean", "spring", "module-type");
     }
 }

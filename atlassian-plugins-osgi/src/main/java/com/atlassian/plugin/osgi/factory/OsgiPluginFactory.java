@@ -25,9 +25,7 @@ import org.osgi.framework.Constants;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 
 import aQute.lib.header.OSGiHeader;
 
@@ -42,7 +40,7 @@ public class OsgiPluginFactory implements PluginFactory
     private final String pluginDescriptorFileName;
     private final DescriptorParserFactory descriptorParserFactory;
     private final PluginEventManager pluginEventManager;
-    private final String applicationKey;
+    private final Set<String> applicationKeys;
     private final OsgiPersistentCache persistentCache;
 
     private volatile  PluginTransformer pluginTransformer;
@@ -51,6 +49,10 @@ public class OsgiPluginFactory implements PluginFactory
 
     public OsgiPluginFactory(String pluginDescriptorFileName, String applicationKey, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
+        this(pluginDescriptorFileName, new HashSet<String>(Arrays.asList(applicationKey)), persistentCache, osgi, pluginEventManager);
+    }
+    public OsgiPluginFactory(String pluginDescriptorFileName, Set<String> applicationKeys, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
+    {
         Validate.notNull(pluginDescriptorFileName, "Plugin descriptor is required");
         Validate.notNull(osgi, "The OSGi container is required");
 
@@ -58,7 +60,7 @@ public class OsgiPluginFactory implements PluginFactory
         this.pluginDescriptorFileName = pluginDescriptorFileName;
         this.descriptorParserFactory = new OsgiPluginXmlDescriptorParserFactory();
         this.pluginEventManager = pluginEventManager;
-        this.applicationKey = applicationKey;
+        this.applicationKeys = applicationKeys;
         this.persistentCache = persistentCache;
     }
 
@@ -68,7 +70,7 @@ public class OsgiPluginFactory implements PluginFactory
         {
             String exportString = (String) osgi.getBundles()[0].getHeaders().get(Constants.EXPORT_PACKAGE);
             SystemExports exports = new SystemExports(exportString);
-            pluginTransformer = new DefaultPluginTransformer(persistentCache, exports, pluginDescriptorFileName);
+            pluginTransformer = new DefaultPluginTransformer(persistentCache, exports, applicationKeys, pluginDescriptorFileName);
         }
         return pluginTransformer;
     }
@@ -84,7 +86,7 @@ public class OsgiPluginFactory implements PluginFactory
 
             if (descriptorStream != null)
             {
-                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, applicationKey);
+                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, applicationKeys);
                 if (descriptorParser.getPluginsVersion() == 2)
                     pluginKey = descriptorParser.getKey();
             }
@@ -127,7 +129,7 @@ public class OsgiPluginFactory implements PluginFactory
 
             ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
-            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKey);
+            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys);
 
             Bundle existingBundle = findBundle(parser.getKey(), parser.getPluginInformation().getVersion(), pluginArtifact.toFile());
             Plugin osgiPlugin;

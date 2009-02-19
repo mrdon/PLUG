@@ -6,6 +6,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Resources;
+import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
@@ -22,6 +23,8 @@ import org.dom4j.io.SAXReader;
 
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.Collections;
 
 /**
  * Provides access to the descriptor information retrieved from an XML InputStream.
@@ -36,11 +39,11 @@ public class XmlDescriptorParser implements DescriptorParser
     private static final Log log = LogFactory.getLog(XmlDescriptorParser.class);
 
     private final Document document;
-    private final String applicationKey;
+    private final Set<String> applicationKeys;
 
     /**
      * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
-     * @deprecated Since 2.2.0, use {@link #XmlDescriptorParser(InputStream,String)} instead
+     * @deprecated Since 2.2.0, use {@link #XmlDescriptorParser(InputStream,Set<String>)} instead
      */
     @Deprecated
     public XmlDescriptorParser(final InputStream source) throws PluginParseException
@@ -51,29 +54,37 @@ public class XmlDescriptorParser implements DescriptorParser
     /**
      * Constructs a parser with an already-constructed document
      * @param source the source document
-     * @param applicationKey the application key to filter modules with, null for everything
+     * @param applicationKeys the application key to filter modules with, null for all unspecified
      * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
      * @since 2.2.0
      */
-    public XmlDescriptorParser(final Document source, String applicationKey) throws PluginParseException
+    public XmlDescriptorParser(final Document source, Set<String> applicationKeys) throws PluginParseException
     {
         Validate.notNull(source, "XML descriptor source document cannot be null");
         document = source;
-        this.applicationKey = applicationKey;
+        if (applicationKeys == null)
+        {
+            applicationKeys = Collections.emptySet();
+        }
+        this.applicationKeys = applicationKeys;
     }
 
     /**
      * Constructs a parser with a stream of an XML document for a specific application
      * @param source The descriptor stream
-     * @param applicationKey the application key to filter modules with, null for everything
+     * @param applicationKeys the application key to filter modules with, null for all unspecified
      * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
      * @since 2.2.0
      */
-    public XmlDescriptorParser(InputStream source, String applicationKey) throws PluginParseException
+    public XmlDescriptorParser(InputStream source, Set<String> applicationKeys) throws PluginParseException
     {
         Validate.notNull(source, "XML descriptor source cannot be null");
         document = createDocument(source);
-        this.applicationKey = applicationKey;
+        if (applicationKeys == null)
+        {
+            applicationKeys = Collections.emptySet();
+        }
+        this.applicationKeys = applicationKeys;
     }
 
     protected Document createDocument(final InputStream source) throws PluginParseException
@@ -166,15 +177,10 @@ public class XmlDescriptorParser implements DescriptorParser
         final String name = element.getName();
 
         // Determine if this module descriptor is applicable for the current application
-        if (applicationKey != null)
+        if (!PluginUtils.doesModuleElementApplyToApplication(element, applicationKeys))
         {
-
-            String targetAppKey = element.attributeValue("application");
-            if (targetAppKey != null && !targetAppKey.equals(applicationKey))
-            {
-                log.debug("Ignoring module descriptor for target application '"+targetAppKey+"'");
-                return null;
-            }
+            log.debug("Ignoring module descriptor for this application: "+element.attributeValue("key"));
+            return null;
         }
 
         ModuleDescriptor<?> moduleDescriptorDescriptor;

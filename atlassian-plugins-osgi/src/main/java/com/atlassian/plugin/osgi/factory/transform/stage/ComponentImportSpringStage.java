@@ -7,6 +7,7 @@ import com.atlassian.plugin.osgi.factory.transform.model.ComponentImport;
 import com.atlassian.plugin.util.validation.ValidatePattern;
 import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
 import static com.atlassian.plugin.util.validation.ValidatePattern.test;
+import com.atlassian.plugin.util.PluginUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
@@ -33,6 +34,10 @@ public class ComponentImportSpringStage implements TransformStage
 
             for (ComponentImport comp: context.getComponentImports().values())
             {
+                if (!PluginUtils.doesModuleElementApplyToApplication(comp.getSource(), context.getApplicationKeys()))
+                {
+                    continue;
+                }
                 Element osgiReference = root.addElement("osgi:reference");
                 osgiReference.addAttribute("id", comp.getKey());
                 Element interfaces = osgiReference.addElement("osgi:interfaces");

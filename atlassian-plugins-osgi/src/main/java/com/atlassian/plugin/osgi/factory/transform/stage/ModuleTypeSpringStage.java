@@ -6,6 +6,7 @@ import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
 import static com.atlassian.plugin.util.validation.ValidatePattern.test;
 import com.atlassian.plugin.util.validation.ValidatePattern;
+import com.atlassian.plugin.util.PluginUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
@@ -45,6 +46,10 @@ public class ModuleTypeSpringStage implements TransformStage
                             test("@class").withError("The class is required"));
                 for (Element e : elements)
                 {
+                    if (!PluginUtils.doesModuleElementApplyToApplication(e, context.getApplicationKeys()))
+                    {
+                        continue;
+                    }
                     validation.evaluate(e);
                     Element bean = root.addElement("beans:bean");
                     bean.addAttribute("id", getBeanId(e));

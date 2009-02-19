@@ -4,6 +4,11 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 
+import java.util.Set;
+
+import org.dom4j.Element;
+import org.apache.commons.lang.Validate;
+
 /**
  * General plugin utility methods
  *
@@ -29,5 +34,20 @@ public class PluginUtils
             }
         }
         return false;
+    }
+
+    /**
+     * Determines if a module element applies to the current application by matching the 'application' attribute
+     * to the set of keys.  If the application is specified, but isn't in the set, we return false
+     * @param element The module element
+     * @param keys The set of application keys
+     * @return True if it should apply, false otherwise
+     */
+    public static boolean doesModuleElementApplyToApplication(Element element, Set<String> keys)
+    {
+        Validate.notNull(keys);
+        Validate.notNull(element);
+        String key = element.attributeValue("application");
+        return !(key != null && !keys.contains(key));
     }
 }

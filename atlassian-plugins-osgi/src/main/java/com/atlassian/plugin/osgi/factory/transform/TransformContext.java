@@ -39,9 +39,10 @@ public class TransformContext
     private final PluginArtifact pluginArtifact;
     private final Map<String, ComponentImport> componentImports;
     private final SystemExports systemExports;
+    private final Set<String> applicationKeys;
 
     public TransformContext(List<HostComponentRegistration> regs, SystemExports systemExports,
-                            PluginArtifact pluginArtifact, String descriptorPath)
+                            PluginArtifact pluginArtifact, Set<String> applicationKeys, String descriptorPath)
     {
         Validate.notNull(pluginArtifact, "The plugin artifact must be specified");
         Validate.notNull(descriptorPath, "The plugin descriptor path must be specified");
@@ -49,6 +50,8 @@ public class TransformContext
         this.regs = regs;
         this.systemExports = systemExports;
         this.pluginArtifact = pluginArtifact;
+        this.applicationKeys = (applicationKeys == null ? Collections.<String>emptySet() : applicationKeys);
+
         try
         {
             this.pluginJar = new JarFile(pluginArtifact.toFile());
@@ -158,6 +161,11 @@ public class TransformContext
     public SystemExports getSystemExports()
     {
         return systemExports;
+    }
+
+    public Set<String> getApplicationKeys()
+    {
+        return applicationKeys;
     }
 
     private static class DocumentExposingDescriptorParser extends XmlDescriptorParser

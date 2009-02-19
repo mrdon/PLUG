@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Set;
 
 import org.dom4j.Element;
 import org.apache.commons.lang.Validate;
@@ -26,15 +27,15 @@ public class OsgiPluginXmlDescriptorParser extends XmlDescriptorParser
 
     /**
      * @param source The XML descriptor source
-     * @param applicationKey The application key to limit modules to, null for everything
+     * @param applicationKeys The application key to limit modules to, null for only unspecified
      * @param modulesToIgnore A list of module types to ignore
      * 
      * @throws com.atlassian.plugin.PluginParseException
      *          if there is a problem reading the descriptor from the XML {@link java.io.InputStream}.
      */
-    public OsgiPluginXmlDescriptorParser(InputStream source, String applicationKey, String... modulesToIgnore) throws PluginParseException
+    public OsgiPluginXmlDescriptorParser(InputStream source, Set<String> applicationKeys, String... modulesToIgnore) throws PluginParseException
     {
-        super(source, applicationKey);
+        super(source, applicationKeys);
         Validate.notNull(source, "The descriptor source must not be null");
         this.modulesToIgnore = new HashSet<String>(Arrays.asList(modulesToIgnore));
     }

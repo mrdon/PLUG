@@ -19,6 +19,7 @@ public class ComponentImport
 {
     private final String key;
     private final Set<String> interfaces;
+    private final Element source;
 
     public ComponentImport(Element element) throws PluginParseException
     {
@@ -30,6 +31,7 @@ public class ComponentImport
                                     "attribute or child 'interface' elements")).
                 evaluate(element);
 
+        this.source = element;
         this.key = element.attributeValue("key");
         this.interfaces = new HashSet<String>();
         if (element.attribute("interface") != null)
@@ -45,11 +47,6 @@ public class ComponentImport
             }
         }
     }
-    public ComponentImport(String key, Set<String> interfaces)
-    {
-        this.key = key;
-        this.interfaces = interfaces;
-    }
 
     public String getKey()
     {
@@ -59,5 +56,10 @@ public class ComponentImport
     public Set<String> getInterfaces()
     {
         return interfaces;
+    }
+
+    public Element getSource()
+    {
+        return source;
     }
 }

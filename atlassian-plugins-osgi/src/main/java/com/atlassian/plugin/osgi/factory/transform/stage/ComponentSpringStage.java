@@ -6,6 +6,7 @@ import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException
 import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
 import static com.atlassian.plugin.util.validation.ValidatePattern.test;
 import com.atlassian.plugin.util.validation.ValidatePattern;
+import com.atlassian.plugin.util.PluginUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
@@ -38,6 +39,10 @@ public class ComponentSpringStage implements TransformStage
 
             for (Element component : elements)
             {
+                if (!PluginUtils.doesModuleElementApplyToApplication(component, context.getApplicationKeys()))
+                {
+                    continue;
+                }
                 validation.evaluate(component);
 
                 Element bean = root.addElement("beans:bean");

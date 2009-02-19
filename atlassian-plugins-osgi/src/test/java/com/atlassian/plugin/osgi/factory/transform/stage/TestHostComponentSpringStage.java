@@ -76,7 +76,7 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
         transformer.execute(context);
         assertTrue(context.getExtraImports().contains("javax.swing.event"));
 
@@ -100,7 +100,7 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
         transformer.execute(context);
         assertTrue(context.getExtraImports().contains("javax.servlet;version=\"[2.3,2.3]\""));
 
@@ -118,7 +118,7 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
         transformer.execute(context);
         assertTrue(context.getExtraImports().contains(SomeClass.class.getPackage().getName()));
 

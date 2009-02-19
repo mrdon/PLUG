@@ -13,6 +13,9 @@ import org.dom4j.DocumentException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
+import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * Deploys plugins that consist of an XML descriptor file.
@@ -22,14 +25,14 @@ import java.io.InputStream;
 public class XmlDynamicPluginFactory implements PluginFactory
 {
     private final DescriptorParserFactory descriptorParserFactory;
-    private final String applicationKey;
+    private final Set<String> applicationKeys;
 
     /**
      * @deprecated Since 2.2.0, use {@link XmlDynamicPluginFactory(String)} instead
      */
     public XmlDynamicPluginFactory()
     {
-        this(null);
+        this((Set<String>) null);
     }
 
     /**
@@ -38,8 +41,17 @@ public class XmlDynamicPluginFactory implements PluginFactory
      */
     public XmlDynamicPluginFactory(String applicationKey)
     {
+        this(new HashSet<String>(Arrays.asList(applicationKey)));
+    }
+
+    /**
+     * @param applicationKeys The application key to use to choose modules
+     * @since 2.2.0
+     */
+    public XmlDynamicPluginFactory(Set<String> applicationKeys)
+    {
         this.descriptorParserFactory = new XmlDescriptorParserFactory();
-        this.applicationKey = applicationKey;
+        this.applicationKeys = applicationKeys;
     }
 
     /**
@@ -69,7 +81,7 @@ public class XmlDynamicPluginFactory implements PluginFactory
         {
             pluginDescriptor = new FileInputStream(pluginArtifact.toFile());
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
-            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKey);
+            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys);
             plugin = parser.configurePlugin(moduleDescriptorFactory, new XmlDynamicPlugin());
         }
         catch (RuntimeException e)
@@ -102,7 +114,7 @@ public class XmlDynamicPluginFactory implements PluginFactory
         {
             try
             {
-                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, applicationKey);
+                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, applicationKeys);
                 pluginKey = descriptorParser.getKey();
             } catch (PluginParseException ex)
             {

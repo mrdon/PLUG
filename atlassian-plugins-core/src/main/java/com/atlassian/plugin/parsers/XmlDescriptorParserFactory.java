@@ -3,6 +3,7 @@ package com.atlassian.plugin.parsers;
 import com.atlassian.plugin.PluginParseException;
 
 import java.io.InputStream;
+import java.util.Set;
 
 /**
  * Creates XML descriptor parser instances.
@@ -25,14 +26,14 @@ public class XmlDescriptorParserFactory implements DescriptorParserFactory
      *
      * @param source the stream of data which represents the descriptor. The stream will
      * only be read once, so it need not be resettable.
-     * @param applicationKey the identifier of the current application to use to match modules, if specified.  Null to
+     * @param applicationKeys the identifier of the current application to use to match modules, if specified.  Null to
      * match everything.
      * @return
      * @throws PluginParseException
      * @since 2.2.0
      */
-    public DescriptorParser getInstance(InputStream source, String applicationKey) throws PluginParseException
+    public DescriptorParser getInstance(InputStream source, Set<String> applicationKeys) throws PluginParseException
     {
-        return new XmlDescriptorParser(source, applicationKey);
+        return new XmlDescriptorParser(source, applicationKeys);
     }
 }

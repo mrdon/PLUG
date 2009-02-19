@@ -3,6 +3,8 @@ package com.atlassian.plugin.parsers;
 import java.io.*;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Arrays;
+import java.util.HashSet;
 
 import junit.framework.TestCase;
 
@@ -144,7 +146,7 @@ public class TestXmlDescriptorParser extends TestCase
         // create a Plugin for testing
         Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) null, classLoader);
         parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
-        assertNotNull(testPlugin.getModuleDescriptor("bear"));
+        assertNull(testPlugin.getModuleDescriptor("bear"));
     }
 
     public void testPluginWithSomeNonApplicationModules()
@@ -195,6 +197,6 @@ public class TestXmlDescriptorParser extends TestCase
             sb.append(line.replace('\'', '"')).append('\n');
         }
         InputStream in = new ByteArrayInputStream(sb.toString().getBytes());
-        return new XmlDescriptorParser(in, applicationKey);
+        return new XmlDescriptorParser(in, new HashSet<String>(Arrays.asList(applicationKey)));
     }
 }
