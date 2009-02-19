@@ -37,6 +37,30 @@ public class TestValidatePattern extends TestCase
 
     }
 
+    /*public void testSuccessPerfTest()
+    {
+        ValidatePattern ptn = createPattern().
+                rule(".",
+                        test("child").withError("Child is required"),
+                        test("not(baz)").withError("Baz should not exist")).
+                rule("child[1]",
+                        test(".[@some = 'thing']").withError("Need some attribute"));
+
+        for (int x=0; x<1000; x++)
+        {
+            ptn.evaluate(root);
+        }
+
+        long start = System.currentTimeMillis();
+        for (int x=0; x<5000; x++)
+        {
+            ptn.evaluate(root);
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("Time elapsed: "+(end-start)+" ms");
+
+    }*/
+
     public void testErrorMessageWithEmptyList()
     {
         try
