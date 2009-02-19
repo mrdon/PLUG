@@ -1,5 +1,7 @@
 package com.atlassian.plugin.servlet;
 
+import java.io.OutputStream;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -27,7 +29,16 @@ public interface DownloadableResource
     void serveResource(HttpServletRequest request, HttpServletResponse response) throws DownloadException;
 
     /**
+     * Write the resource to the supplied OutputStream. Note that the OutputStream will not be closed by this method.
+     * 
+     * @param out the stream to write to
+     * @since 2.2
+     */
+    void streamResource(OutputStream out);
+
+    /**
      * Returns the content type for the resource. May return null if it cannot resolve its own content type.
+     * 
      * @since 2.2
      */
     String getContentType();

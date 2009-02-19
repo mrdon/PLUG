@@ -6,6 +6,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * A DownloadableResource that simply forwards the request to the given location.
@@ -40,6 +41,14 @@ public class ForwardableResource implements DownloadableResource
         {
             throw new DownloadException(ioe.getMessage());
         }
+    }
+
+    /**
+     * Not implemented by a <code>ForwardableResource</code>. The supplied OutputStream will not be modified.
+     */
+    public void streamResource(OutputStream out)
+    {
+        return;
     }
 
     public String getContentType()

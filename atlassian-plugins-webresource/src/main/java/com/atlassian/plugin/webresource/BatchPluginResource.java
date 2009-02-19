@@ -7,6 +7,8 @@ import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PAT
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import java.io.OutputStream;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
@@ -94,6 +96,14 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
             resource.serveResource(request, response);
         }
     }
+    
+    public void streamResource(OutputStream out)
+    {
+        for (DownloadableResource resource : resources)
+        {
+            resource.streamResource(out);
+        }
+    }    
 
     public String getContentType()
     {

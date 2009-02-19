@@ -62,9 +62,34 @@ abstract class AbstractDownloadableResource implements DownloadableResource
             throw new DownloadException(e);
         }
 
+        streamResource(resourceStream, out);
+        log.info("Serving file done.");
+    }
+
+    public void streamResource(OutputStream out)
+    {
+        InputStream resourceStream = getResourceAsStream();
+        if (resourceStream == null)
+        {
+            log.warn("Resource not found: " + this);
+            return;
+        }
+
+        streamResource(resourceStream, out);
+    }
+
+    /**
+     * Copy from the supplied OutputStream to the supplied InputStream. Note that the InputStream will be closed on
+     * completion.
+     * 
+     * @param in the stream to read from
+     * @param out the stream to write to
+     */
+    private void streamResource(InputStream in, OutputStream out)
+    {
         try
         {
-            IOUtils.copy(resourceStream, out);
+            IOUtils.copy(in, out);
         }
         catch (IOException e)
         {
@@ -72,7 +97,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
         }
         finally
         {
-            IOUtils.closeQuietly(resourceStream);
+            IOUtils.closeQuietly(in);
             try
             {
                 out.flush();
@@ -81,8 +106,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
             {
                 log.warn("Error flushing output stream", e);
             }
-        }
-        log.info("Serving file done.");
+        }        
     }
 
     /**
