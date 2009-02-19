@@ -13,8 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 /**
- * Default implementation of persistent cache.  Of the two constructors, {@link #DefaultOsgiPersistentCache(File)} is
- * recommended to help standardize cache directory names
+ * Default implementation of persistent cache.  Handles clearing of directories if an upgrade has been detected.
  *
  * @since 2.2.0
  */
@@ -26,6 +25,11 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
     private final String applicationVersion;
     private Logger log = Logger.getLogger(DefaultOsgiPersistentCache.class);
 
+    public DefaultOsgiPersistentCache(File baseDir)
+    {
+        this(baseDir, null);
+    }
+    
     public DefaultOsgiPersistentCache(File baseDir, String applicationVersion)
     {
         Validate.notNull(baseDir, "The base directory for OSGi caches cannot be null");
