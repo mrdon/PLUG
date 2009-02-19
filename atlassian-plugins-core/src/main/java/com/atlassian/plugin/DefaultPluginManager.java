@@ -4,6 +4,7 @@ import static com.atlassian.plugin.util.collect.CollectionUtil.filter;
 import static com.atlassian.plugin.util.collect.CollectionUtil.toList;
 import static com.atlassian.plugin.util.collect.CollectionUtil.transform;
 
+import com.atlassian.plugin.StateTracker.State;
 import com.atlassian.plugin.classloader.PluginsClassLoader;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
@@ -68,12 +69,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 {
     private static final Log log = LogFactory.getLog(DefaultPluginManager.class);
 
-    // here so we can track the state of any particular PluginManager
-    enum State
-    {
-        NOT_STARTED, STARTED, SHUTDOWN;
-    }
-
     private final List<PluginLoader> pluginLoaders;
     private final PluginStateStore store;
     private final ModuleDescriptorFactory moduleDescriptorFactory;
@@ -81,7 +76,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     private final Map<String, Plugin> plugins = new ConcurrentHashMap<String, Plugin>();
     private final PluginEventManager pluginEventManager;
 
-    private State state = State.NOT_STARTED;
+    private final StateTracker tracker = new StateTracker();
 
     /**
      * Installer used for storing plugins. Used by {@link #installPlugin(PluginArtifact)}.
@@ -126,6 +121,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     public void init() throws PluginParseException
     {
+        tracker.setState(State.STARTING);
         final long start = System.currentTimeMillis();
         log.info("Initialising the plugin system");
         pluginEventManager.broadcast(new PluginFrameworkStartingEvent(this, this));
@@ -139,9 +135,9 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             addPlugins(loader, loader.loadAllPlugins(moduleDescriptorFactory));
         }
         pluginEventManager.broadcast(new PluginFrameworkStartedEvent(this, this));
-        state = State.STARTED;
         final long end = System.currentTimeMillis();
         log.info("Plugin system started in " + (end - start) + "ms");
+        tracker.setState(State.STARTED);
     }
 
     /**
@@ -150,14 +146,10 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     public void shutdown()
     {
+        tracker.setState(State.SHUTTING_DOWN);
         log.info("Shutting down the plugin system");
         pluginEventManager.broadcast(new PluginFrameworkShutdownEvent(this, this));
-        state = State.SHUTDOWN;
-    }
-
-    State getPluginManagerState()
-    {
-        return state;
+        tracker.setState(State.SHUTDOWN);
     }
 
     @PluginEventListener

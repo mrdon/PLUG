@@ -4,13 +4,14 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.event.listeners.PassListener;
-import com.atlassian.plugin.event.listeners.FailListener;
 import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.event.events.PluginEnabledEvent;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
+import com.atlassian.plugin.event.listeners.FailListener;
+import com.atlassian.plugin.event.listeners.PassListener;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.factories.XmlDynamicPluginFactory;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -30,7 +31,6 @@ import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.predicate.PluginPredicate;
 import com.atlassian.plugin.store.MemoryPluginStateStore;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -41,7 +41,11 @@ import com.mockobjects.dynamic.Mock;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Testing {@link DefaultPluginManager}
@@ -334,6 +338,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginStateStore.savePluginState(state);
 
         assertFalse(manager.isPluginEnabled("test.atlassian.plugin"));
+        manager.shutdown();
 
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
         manager.init();
@@ -354,6 +359,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         final DefaultPluginManagerState state = new DefaultPluginManagerState(pluginStateStore.loadPluginState());
         state.setEnabled(manager.getPluginModule("test.atlassian.plugin:bear"), false);
         pluginStateStore.savePluginState(state);
+
+        manager.shutdown();
 
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
         manager.init();
@@ -427,7 +434,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testGetPluginModulesWithModuleMatchingPredicate() throws Exception
     {
-        final MockThing module = new MockThing(){};
+        final MockThing module = new MockThing()
+        {};
         final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         @SuppressWarnings("unchecked")
         final ModuleDescriptor<MockThing> moduleDescriptor = (ModuleDescriptor<MockThing>) mockModuleDescriptor.proxy();
@@ -782,7 +790,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertFalse(moduleDescriptor.disabled);
         final PassListener disabledListener = new PassListener(PluginDisabledEvent.class);
         pluginEventManager.register(disabledListener);
-        Plugin plugin = manager.getPlugin("test.atlassian.plugin.classloaded");
+        final Plugin plugin = manager.getPlugin("test.atlassian.plugin.classloaded");
         manager.uninstall(plugin);
         assertTrue("Module must have had disable() called before being removed", moduleDescriptor.disabled);
 
@@ -1218,7 +1226,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     private static class DynamicSinglePluginLoader extends SinglePluginLoader implements DynamicPluginLoader
     {
-        private String key;
+        private final String key;
 
         public DynamicSinglePluginLoader(final String key, final String resource)
         {
