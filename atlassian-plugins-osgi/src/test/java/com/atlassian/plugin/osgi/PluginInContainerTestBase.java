@@ -114,7 +114,7 @@ public abstract class PluginInContainerTestBase extends TestCase
                 }
             }
         };
-        OsgiPersistentCache cache = new DefaultOsgiPersistentCache(cacheDir);
+        OsgiPersistentCache cache = new DefaultOsgiPersistentCache(cacheDir, "1.0");
         osgiContainerManager = new FelixOsgiContainerManager(cache, scannerConfig, requiredWrappingProvider, pluginEventManager);
 
         final LegacyDynamicPluginFactory legacyFactory = new LegacyDynamicPluginFactory(PluginAccessor.Descriptor.FILENAME, tmpDir);

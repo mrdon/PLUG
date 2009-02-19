@@ -114,7 +114,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     public FelixOsgiContainerManager(final URL frameworkBundlesZip, final File frameworkBundlesDir, final PackageScannerConfiguration packageScannerConfig, final HostComponentProvider provider, final PluginEventManager eventManager)
     {
         this(frameworkBundlesZip, new DefaultOsgiPersistentCache(new File(frameworkBundlesDir.getParentFile(),
-            "osgi-cache"), frameworkBundlesDir, null), packageScannerConfig, provider, eventManager);
+            "osgi-cache"), packageScannerConfig.getCurrentHostVersion()), packageScannerConfig, provider, eventManager);
     }
 
     /**

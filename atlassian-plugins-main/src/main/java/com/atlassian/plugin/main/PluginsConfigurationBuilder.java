@@ -275,7 +275,7 @@ public class PluginsConfigurationBuilder
         {
             packageScannerConfiguration = builder.packageScannerConfiguration;
             hostComponentProvider = builder.hostComponentProvider;
-            osgiPersistentCache = new DefaultOsgiPersistentCache(builder.osgiPersistentCache);
+            osgiPersistentCache = new DefaultOsgiPersistentCache(builder.osgiPersistentCache, builder.packageScannerConfiguration.getCurrentHostVersion());
             pluginDirectory = builder.pluginDirectory;
             bundledPluginUrl = builder.bundledPluginUrl;
             bundledPluginCacheDirectory = builder.bundledPluginCacheDirectory;
