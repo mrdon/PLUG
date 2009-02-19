@@ -41,7 +41,7 @@ public class TestAbstractModuleDescriptor extends TestCase
 
         try
         {
-            descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" />").getRootElement());
+            descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal key=\"key\" name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" />").getRootElement());
             ((StateAware)descriptor).enabled();
             fail("Should have blown up.");
         }
@@ -51,7 +51,7 @@ public class TestAbstractModuleDescriptor extends TestCase
         }
 
         // now succeed
-        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockGold\" />").getRootElement());
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal key=\"key\" name=\"bear\" class=\"com.atlassian.plugin.mock.MockGold\" />").getRootElement());
     }
 
     public void testSingletonness() throws DocumentException, PluginParseException
@@ -59,21 +59,21 @@ public class TestAbstractModuleDescriptor extends TestCase
         ModuleDescriptor descriptor = makeSingletonDescriptor();
 
         // try a default descriptor with no singleton="" element. Should _be_ a singleton
-        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" />").getRootElement());
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal key=\"key\" name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" />").getRootElement());
         ((StateAware)descriptor).enabled();
         Object module = descriptor.getModule();
         assertTrue(module == descriptor.getModule());
 
         // now try a default descriptor with singleton="true" element. Should still be a singleton
         descriptor = makeSingletonDescriptor();
-        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" singleton=\"true\" />").getRootElement());
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal key=\"key\" name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" singleton=\"true\" />").getRootElement());
         ((StateAware)descriptor).enabled();
         module = descriptor.getModule();
         assertTrue(module == descriptor.getModule());
 
         // now try reiniting as a non-singleton
         descriptor = makeSingletonDescriptor();
-        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" singleton=\"false\" />").getRootElement());
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal key=\"key\" name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\" singleton=\"false\" />").getRootElement());
         ((StateAware)descriptor).enabled();
         module = descriptor.getModule();
         assertTrue(module != descriptor.getModule());
@@ -82,7 +82,7 @@ public class TestAbstractModuleDescriptor extends TestCase
     public void testGetResourceDescriptor() throws DocumentException, PluginParseException
     {
         ModuleDescriptor descriptor = makeSingletonDescriptor();
-        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\">" +
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal key=\"key\" name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\">" +
                 "<resource type='velocity' name='view' location='foo' />" +
                 "</animal>").getRootElement());
 
@@ -95,7 +95,7 @@ public class TestAbstractModuleDescriptor extends TestCase
     public void testGetResourceDescriptorByType() throws DocumentException, PluginParseException
     {
         ModuleDescriptor descriptor = makeSingletonDescriptor();
-        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\">" +
+        descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal key=\"key\" name=\"bear\" class=\"com.atlassian.plugin.mock.MockBear\">" +
                 "<resource type='velocity' name='view' location='foo' />" +
                 "<resource type='velocity' name='input-params' location='bar' />" +
                 "</animal>").getRootElement());

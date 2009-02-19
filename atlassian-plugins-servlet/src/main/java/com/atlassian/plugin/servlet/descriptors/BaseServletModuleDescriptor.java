@@ -12,6 +12,8 @@ import org.dom4j.Element;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidatePattern.test;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
@@ -30,31 +32,32 @@ public abstract class BaseServletModuleDescriptor<T> extends AbstractModuleDescr
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
+        createPattern().
+                rule(
+                    test("@class").withError("The class is required"),
+                    test("url-pattern").withError("There must be at least one path specified")).
+                rule("init-param",
+                    test("param-name").withError("Parameter name is required"),
+                    test("param-value").withError("Parameter value is required")).
+                evaluate(element);
+
         super.init(plugin, element);
-    
+
         List<Element> urlPatterns = element.elements("url-pattern");
         paths = new ArrayList<String>(urlPatterns.size());
-    
-        for (Iterator<Element> iterator = urlPatterns.iterator(); iterator.hasNext();)
+
+        for (Element urlPattern : urlPatterns)
         {
-            Element urlPattern = iterator.next();
             paths.add(urlPattern.getTextTrim());
         }
 
-        if (paths.isEmpty())
-            throw new PluginParseException("There must be at least one path specified");
-    
         initParams = new HashMap<String,String>();
         List<Element> paramsList = element.elements("init-param");
-        for (Iterator<Element> i = paramsList.iterator(); i.hasNext();) {
-            Element initParamEl = i.next();
+        for (Element initParamEl : paramsList)
+        {
             Element paramNameEl = initParamEl.element("param-name");
             Element paramValueEl = initParamEl.element("param-value");
-            if (paramNameEl != null && paramValueEl != null) {
-                initParams.put(paramNameEl.getTextTrim(), paramValueEl.getTextTrim());
-            } else {
-                log.warn("Invalid init-param XML for servlet module: " + getCompleteKey());
-            }
+            initParams.put(paramNameEl.getTextTrim(), paramValueEl.getTextTrim());
         }
     }
 

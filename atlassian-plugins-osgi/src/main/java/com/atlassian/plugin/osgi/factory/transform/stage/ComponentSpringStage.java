@@ -3,6 +3,9 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
+import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidatePattern.test;
+import com.atlassian.plugin.util.validation.ValidatePattern;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
@@ -26,8 +29,17 @@ public class ComponentSpringStage implements TransformStage
             Document springDoc = SpringHelper.createSpringDocument();
             Element root = springDoc.getRootElement();
             List<Element> elements = context.getDescriptorDocument().getRootElement().elements("component");
+
+            ValidatePattern validation = createPattern().
+                    rule(
+                        test("@key").withError("The key is required"),
+                        test("@class").withError("The class is required"),
+                        test("not(@public) or interface").withError("Interfaces must be declared for public components"));
+
             for (Element component : elements)
             {
+                validation.evaluate(component);
+
                 Element bean = root.addElement("beans:bean");
                 bean.addAttribute("id", component.attributeValue("key"));
                 bean.addAttribute("alias", component.attributeValue("alias"));

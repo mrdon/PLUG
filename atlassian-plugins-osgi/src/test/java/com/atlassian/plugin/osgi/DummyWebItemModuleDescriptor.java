@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi;
 import com.atlassian.plugin.web.descriptors.DefaultWebItemModuleDescriptor;
 import com.atlassian.plugin.web.DefaultWebInterfaceManager;
 import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
 
 public class DummyWebItemModuleDescriptor extends DefaultWebItemModuleDescriptor
 {
@@ -10,7 +11,9 @@ public class DummyWebItemModuleDescriptor extends DefaultWebItemModuleDescriptor
 
     public DummyWebItemModuleDescriptor() {
         super(new DefaultWebInterfaceManager());
-        init(null, DocumentHelper.createElement("somecrap"));
+        Element e = DocumentHelper.createElement("somecrap");
+        e.addAttribute("key", "foo");
+        init(null, e);
         this.key = "somekey";
     }
     public String getCompleteKey()

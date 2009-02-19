@@ -9,6 +9,8 @@ import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import com.atlassian.plugin.util.JavaVersionUtils;
+import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidatePattern.test;
 
 import org.dom4j.Element;
 
@@ -37,6 +39,11 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
 
     public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
+        createPattern().
+                rule(
+                    test("@key").withError("The key is required")).
+                evaluate(element);
+
         this.plugin = plugin;
         this.key = element.attributeValue("key");
         this.name = element.attributeValue("name");

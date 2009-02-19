@@ -65,6 +65,28 @@ public class TestServletModuleDescriptor extends TestCase
             // very good
         }
     }
+
+    public void testInitWithMissingParamValue() 
+    {
+        Plugin plugin = new StaticPlugin();
+        plugin.setKey("somekey");
+        Element e = new DOMElement("servlet");
+        e.addAttribute("key", "key2");
+        e.addAttribute("class", SomeServlet.class.getName());
+        Element url = new DOMElement("url-pattern");
+        url.setText("/foo");
+        e.add(url);
+        Element param = new DOMElement("init-param");
+        e.add(param);
+        try
+        {
+            descriptor.init(plugin, e);
+            fail("Should have thrown exception");
+        } catch (PluginParseException ex)
+        {
+            // very good
+        }
+    }
     
     static class SomeServlet extends HttpServlet {}
 }

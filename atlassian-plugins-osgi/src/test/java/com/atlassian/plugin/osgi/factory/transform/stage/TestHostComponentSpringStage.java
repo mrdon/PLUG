@@ -193,7 +193,7 @@ public class TestHostComponentSpringStage extends TestCase
                         "}")
                 .addFormattedResource("atlassian-plugin.xml",
                         "<atlassian-plugin>",
-                        "  <component-import key='foo' />",
+                        "  <component-import key='foo' class='Foo' interface='Foo'/>",
                         "</atlassian-plugin>")
                 .addResource("META-INF/MANIFEST.MF",
                         "Manifest-Version: 1.0\n" +

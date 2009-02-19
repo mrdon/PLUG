@@ -4,6 +4,9 @@ import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.model.ComponentImport;
+import com.atlassian.plugin.util.validation.ValidatePattern;
+import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidatePattern.test;
 import org.dom4j.Document;
 import org.dom4j.Element;
 

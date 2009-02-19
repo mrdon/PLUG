@@ -4,6 +4,8 @@ import junit.framework.TestCase;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.Plugin;
+import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidatePattern.test;
 import com.mockobjects.dynamic.Mock;
 
 import java.util.Arrays;

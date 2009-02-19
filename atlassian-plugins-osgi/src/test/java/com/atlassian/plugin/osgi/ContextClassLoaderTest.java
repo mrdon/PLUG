@@ -24,7 +24,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
                         "</atlassian-plugin>")
                 .addJava("my.Foo", "package my;public interface Foo {}")
                 .addJava("my.FooImpl", "package my;import com.atlassian.plugin.osgi.DummyHostComponent;" +
-                        "public class FooImpl implements Foo {public FooImpl(DummyHostComponent comp) throws Exception { comp.run(); }}")
+                        "public class FooImpl implements Foo {public FooImpl(DummyHostComponent comp) throws Exception { comp.evaluate(); }}")
                 .build();
         HostComponentProvider prov = new HostComponentProvider()
         {
@@ -56,7 +56,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
                         "</atlassian-plugin>")
                 .addJava("my.Foo", "package my;public interface Foo {}")
                 .addJava("my.FooImpl", "package my;import com.atlassian.plugin.osgi.DummyHostComponent;" +
-                        "public class FooImpl implements Foo {public FooImpl(DummyHostComponent comp) throws Exception { comp.run(); }}")
+                        "public class FooImpl implements Foo {public FooImpl(DummyHostComponent comp) throws Exception { comp.evaluate(); }}")
                 .build();
         HostComponentProvider prov = new HostComponentProvider()
         {
@@ -86,7 +86,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
                         "</atlassian-plugin>")
                 .addJava("my.Foo", "package my;public interface Foo {}")
                 .addJava("my.FooImpl", "package my;import com.atlassian.plugin.osgi.DummyHostComponent;" +
-                        "public class FooImpl implements Foo {public FooImpl(DummyHostComponent comp) throws Exception { comp.run(); }}")
+                        "public class FooImpl implements Foo {public FooImpl(DummyHostComponent comp) throws Exception { comp.evaluate(); }}")
                 .build();
         HostComponentProvider prov = new HostComponentProvider()
         {
@@ -116,7 +116,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
                         "</atlassian-plugin>")
                 .addJava("my.Foo", "package my;public interface Foo {}")
                 .addJava("my.FooImpl", "package my;import com.atlassian.plugin.osgi.DummyHostComponent;" +
-                        "public class FooImpl implements Foo {public FooImpl(DummyHostComponent comp) throws Exception { comp.run(); }}")
+                        "public class FooImpl implements Foo {public FooImpl(DummyHostComponent comp) throws Exception { comp.evaluate(); }}")
                 .build();
         HostComponentProvider prov = new HostComponentProvider()
         {
@@ -145,7 +145,7 @@ public class ContextClassLoaderTest extends PluginInContainerTestBase {
             this.classToLoad = classToLoad;
         }
 
-        public void run()
+        public void evaluate()
         {
             cl = Thread.currentThread().getContextClassLoader();
             try

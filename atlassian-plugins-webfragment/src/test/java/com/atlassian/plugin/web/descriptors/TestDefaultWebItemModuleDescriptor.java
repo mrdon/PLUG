@@ -72,7 +72,7 @@ public class TestDefaultWebItemModuleDescriptor extends TestCase
 
     private Element createElement(String childElement) throws DocumentException
     {
-        String rootElement = "<root>"+childElement+"</root>";
+        String rootElement = "<root key=\"key\">"+childElement+"</root>";
         Document document = DocumentHelper.parseText(rootElement);
         Element element = document.getRootElement();
         return element;

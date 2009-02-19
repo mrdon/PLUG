@@ -3,6 +3,9 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
+import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidatePattern.test;
+import com.atlassian.plugin.util.validation.ValidatePattern;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
@@ -29,26 +32,31 @@ public class ModuleTypeSpringStage implements TransformStage
             {
                 context.getExtraImports().add("com.atlassian.plugin.osgi.external");
                 context.getExtraImports().add("com.atlassian.plugin");
-            }
-            for (Element e : elements)
-            {
-                Element bean = root.addElement("beans:bean");
-                bean.addAttribute("id", getBeanId(e));
-                bean.addAttribute("class", "com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory");
+                ValidatePattern validation = createPattern().
+                        rule(
+                            test("@key").withError("The key is required"),
+                            test("@class").withError("The class is required"));
+                for (Element e : elements)
+                {
+                    validation.evaluate(e);
+                    Element bean = root.addElement("beans:bean");
+                    bean.addAttribute("id", getBeanId(e));
+                    bean.addAttribute("class", "com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory");
 
-                Element arg = bean.addElement("beans:constructor-arg");
-                arg.addAttribute("index", "0");
-                Element value = arg.addElement("beans:value");
-                value.setText(e.attributeValue("key"));
-                Element arg2 = bean.addElement("beans:constructor-arg");
-                arg2.addAttribute("index", "1");
-                Element value2 = arg2.addElement("beans:value");
-                value2.setText(e.attributeValue("class"));
+                    Element arg = bean.addElement("beans:constructor-arg");
+                    arg.addAttribute("index", "0");
+                    Element value = arg.addElement("beans:value");
+                    value.setText(e.attributeValue("key"));
+                    Element arg2 = bean.addElement("beans:constructor-arg");
+                    arg2.addAttribute("index", "1");
+                    Element value2 = arg2.addElement("beans:value");
+                    value2.setText(e.attributeValue("class"));
 
-                Element osgiService = root.addElement("osgi:service");
-                osgiService.addAttribute("id", getBeanId(e) + "_osgiService");
-                osgiService.addAttribute("ref", getBeanId(e));
-                osgiService.addAttribute("auto-export", "interfaces");
+                    Element osgiService = root.addElement("osgi:service");
+                    osgiService.addAttribute("id", getBeanId(e) + "_osgiService");
+                    osgiService.addAttribute("ref", getBeanId(e));
+                    osgiService.addAttribute("auto-export", "interfaces");
+                }
             }
 
             if (root.elements().size() > 0)
