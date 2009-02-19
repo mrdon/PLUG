@@ -20,6 +20,7 @@ public class TestModuleTypeSpringStage extends TestCase
         moduleType.addAttribute("class", "my.FooDescriptor");
 
         SpringTransformerTestHelper.transform(new ModuleTypeSpringStage(), pluginRoot,
+                "beans:bean[@id='springHostContainer' and @class='"+ ModuleTypeSpringStage.SPRING_HOST_CONTAINER+"']",
                 "beans:bean[@id='moduleType-foo' and @class='"+ SingleModuleDescriptorFactory.class.getName()+"']",
                 "osgi:service[@id='moduleType-foo_osgiService' and @auto-export='interfaces']");
     }

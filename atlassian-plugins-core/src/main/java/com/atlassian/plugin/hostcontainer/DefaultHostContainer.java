@@ -28,14 +28,4 @@ public class DefaultHostContainer implements HostContainer
             throw new IllegalArgumentException("Unable to access constructor", e);
         }
     }
-
-    /**
-     * Returns null always
-     * @param moduleClass The class to look up
-     * @return Null
-     */
-    public <T> T getInstance(Class<T> moduleClass)
-    {
-        return null;
-    }
 }

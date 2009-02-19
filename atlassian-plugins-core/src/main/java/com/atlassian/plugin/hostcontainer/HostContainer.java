@@ -19,12 +19,4 @@ public interface HostContainer
      * @throws IllegalArgumentException If unable to instantiate the class
      */
     <T> T create(Class<T> moduleClass) throws IllegalArgumentException;
-
-    /**
-     * Gets an existing implementation of an interface in the underlying object container
-     *
-     * @param moduleClass The bean interface
-     * @return The existing implementation
-     */
-    <T> T getInstance(Class<T> moduleClass);
 }

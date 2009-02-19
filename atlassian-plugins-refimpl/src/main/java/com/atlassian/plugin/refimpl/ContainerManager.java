@@ -7,6 +7,7 @@ import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.hostcontainer.HostContainer;
+import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
 import com.atlassian.plugin.main.AtlassianPlugins;
 import com.atlassian.plugin.main.PluginsConfiguration;
 import com.atlassian.plugin.main.PluginsConfigurationBuilder;
@@ -79,11 +80,6 @@ public class ContainerManager
             {
                 return hostContainer.create(moduleClass);
             }
-
-            public <T> T getInstance(final Class<T> moduleClass)
-            {
-                return hostContainer.getInstance(moduleClass);
-            }
         };
 
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory(delegatingHostContainer);
@@ -133,7 +129,7 @@ public class ContainerManager
         publicContainer.put(WebResourceManager.class, webResourceManager);
         publicContainer.put(Map.class, publicContainer);
 
-        hostContainer = new RefimplHostContainer(publicContainer, osgiContainerManager);
+        hostContainer = new SimpleConstructorHostContainer(publicContainer);
 
         try
         {

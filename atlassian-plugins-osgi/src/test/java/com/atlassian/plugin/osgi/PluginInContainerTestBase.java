@@ -103,6 +103,7 @@ public abstract class PluginInContainerTestBase extends TestCase
         scannerConfig.getPackageIncludes().add("com.atlassian.plugin*");
         scannerConfig.getPackageIncludes().add("javax.servlet*");
         scannerConfig.getPackageIncludes().add("com_cenqua_clover");
+        scannerConfig.getPackageExcludes().add("com.atlassian.plugin.osgi.bridge*");
         HostComponentProvider requiredWrappingProvider = new HostComponentProvider()
         {
             public void provide(ComponentRegistrar registrar)

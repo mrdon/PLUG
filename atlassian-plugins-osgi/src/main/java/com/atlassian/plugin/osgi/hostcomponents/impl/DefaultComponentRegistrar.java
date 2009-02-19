@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 
 import com.atlassian.plugin.osgi.hostcomponents.*;
+import com.atlassian.plugin.hostcontainer.HostContainer;
 
 /**
  * Default component registrar that also can write registered host components into the OSGi service registry
@@ -35,6 +36,12 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
 
         for (HostComponentRegistration reg : registry)
         {
+            if (Arrays.asList(reg.getMainInterfaceClasses()).contains(HostContainer.class))
+            {
+                log.warn("Cannot register a HostContainer as a host component, skipping");
+                continue;
+            }
+
             String[] names = reg.getMainInterfaces();
 
             reg.getProperties().put(HOST_COMPONENT_FLAG, Boolean.TRUE.toString());

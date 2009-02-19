@@ -20,6 +20,8 @@ public class ModuleTypeSpringStage implements TransformStage
 {
     /** The name of the generated Spring XML file for this stage */
     private static final String SPRING_XML = "META-INF/spring/atlassian-plugins-module-types.xml";
+    static final String HOST_CONTAINER = "springHostContainer";
+    static final String SPRING_HOST_CONTAINER = "com.atlassian.plugin.osgi.bridge.external.SpringHostContainer";
 
     public void execute(TransformContext context) throws PluginTransformationException
     {
@@ -31,7 +33,12 @@ public class ModuleTypeSpringStage implements TransformStage
             if (elements.size() > 0)
             {
                 context.getExtraImports().add("com.atlassian.plugin.osgi.external");
+                context.getExtraImports().add("com.atlassian.plugin.osgi.bridge.external");
                 context.getExtraImports().add("com.atlassian.plugin");
+                Element hostContainerBean = root.addElement("beans:bean");
+                hostContainerBean.addAttribute("id", HOST_CONTAINER);
+                hostContainerBean.addAttribute("class", SPRING_HOST_CONTAINER);
+
                 ValidatePattern validation = createPattern().
                         rule(
                             test("@key").withError("The key is required"),
@@ -45,12 +52,15 @@ public class ModuleTypeSpringStage implements TransformStage
 
                     Element arg = bean.addElement("beans:constructor-arg");
                     arg.addAttribute("index", "0");
-                    Element value = arg.addElement("beans:value");
-                    value.setText(e.attributeValue("key"));
+                    arg.addAttribute("ref", HOST_CONTAINER);
                     Element arg2 = bean.addElement("beans:constructor-arg");
                     arg2.addAttribute("index", "1");
                     Element value2 = arg2.addElement("beans:value");
-                    value2.setText(e.attributeValue("class"));
+                    value2.setText(e.attributeValue("key"));
+                    Element arg3 = bean.addElement("beans:constructor-arg");
+                    arg3.addAttribute("index", "2");
+                    Element value3 = arg3.addElement("beans:value");
+                    value3.setText(e.attributeValue("class"));
 
                     Element osgiService = root.addElement("osgi:service");
                     osgiService.addAttribute("id", getBeanId(e) + "_osgiService");

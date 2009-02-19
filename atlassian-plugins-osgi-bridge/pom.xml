@@ -76,6 +76,7 @@
                             <instructions>
                                 <Bundle-Activator>com.atlassian.plugin.osgi.bridge.BridgeActivator</Bundle-Activator>
                                 <Private-Package>com.atlassian.plugin.osgi.bridge</Private-Package>
+                                <Export-Package>com.atlassian.plugin.osgi.bridge.external</Export-Package>
                             </instructions>
                         </configuration>
                     </execution>

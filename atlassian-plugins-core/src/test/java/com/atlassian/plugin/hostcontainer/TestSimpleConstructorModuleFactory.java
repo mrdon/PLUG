@@ -65,20 +65,6 @@ public class TestSimpleConstructorModuleFactory extends TestCase
         }
     }
 
-    public void testGetInstance()
-    {
-        final Map<Class<?>, Object> context = new HashMap<Class<?>, Object>()
-        {
-            {
-                put(String.class, "bob");
-            }
-        };
-
-        final SimpleConstructorHostContainer factory = new SimpleConstructorHostContainer(context);
-        assertEquals("bob", factory.getInstance(String.class));
-        assertNull(factory.getInstance(Integer.class));
-    }
-
     public abstract static class Base
     {
         private final String name;

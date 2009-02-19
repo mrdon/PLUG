@@ -75,18 +75,6 @@ public class SimpleConstructorHostContainer implements HostContainer
         throw new IllegalArgumentException("Unable to match any constructor for class " + moduleClass);
     }
 
-    /**
-     * Gets a class instance of out of the context map
-     *
-     * @param moduleClass The object class
-     * @return The object instance.  May be null.
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T getInstance(final Class<T> moduleClass)
-    {
-        return (T) context.get(moduleClass);
-    }
-
     @SuppressWarnings("unchecked")
     private <T> Collection<Constructor<T>> findConstructorsLargestFirst(final Class<T> moduleClass)
     {
