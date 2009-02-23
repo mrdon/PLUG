@@ -126,7 +126,7 @@ public class ValidatePattern
             {
                 errors.add(errorMessage);
             }
-            else if (obj instanceof List && ((List)obj).size() == 0)
+            else if (obj instanceof List && ((List<?>)obj).size() == 0)
             {
                 errors.add(errorMessage);
             }
@@ -150,6 +150,7 @@ public class ValidatePattern
 
         private void evaluate(Node e, List<String> errors)
         {
+            @SuppressWarnings("unchecked")
             List<Node> contexts = e.selectNodes(contextPattern);
 
             if (contexts != null && contexts.size() > 0)
