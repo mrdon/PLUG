@@ -1133,6 +1133,31 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertTrue(pluginStateStore.loadPluginState().getPluginStateMap(plugin).isEmpty());
     }
 
+    public void testCannotInitTwice() throws PluginParseException
+    {
+        manager.init();
+        try
+        {
+            manager.init();
+            fail("IllegalStateException expected");
+        }
+        catch (final IllegalStateException expected)
+        {}
+    }
+
+    public void testCannotShutdownTwice() throws PluginParseException
+    {
+        manager.init();
+        manager.shutdown();
+        try
+        {
+            manager.shutdown();
+            fail("IllegalStateException expected");
+        }
+        catch (final IllegalStateException expected)
+        {}
+    }
+
     public Plugin createPluginWithVersion(final String version)
     {
         final Plugin p = new StaticPlugin();

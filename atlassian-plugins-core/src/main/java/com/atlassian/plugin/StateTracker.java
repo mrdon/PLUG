@@ -12,7 +12,11 @@ class StateTracker
 {
     enum State
     {
-        NOT_STARTED, STARTING, STARTED, SHUTTING_DOWN, SHUTDOWN
+        NOT_STARTED,
+        STARTING,
+        STARTED,
+        SHUTTING_DOWN,
+        SHUTDOWN
         {
             @Override
             void check(final State newState)
@@ -45,7 +49,7 @@ class StateTracker
         return state.get();
     }
 
-    StateTracker setState(final State newState)
+    StateTracker setState(final State newState) throws IllegalStateException
     {
         for (;;)
         {

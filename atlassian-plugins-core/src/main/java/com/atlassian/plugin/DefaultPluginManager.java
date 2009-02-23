@@ -118,6 +118,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      * Initialize all plugins in all loaders
      *
      * @throws PluginParseException
+     * @throws IllegalStateException if already initialized or already in the process of initialization.
      */
     public void init() throws PluginParseException
     {
@@ -143,6 +144,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     /**
      * Fires the shutdown event
      * @since 2.0.0
+     * @throws IllegalStateException if already shutdown or already in the process of shutting down.
      */
     public void shutdown()
     {

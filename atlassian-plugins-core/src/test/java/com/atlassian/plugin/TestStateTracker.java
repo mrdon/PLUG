@@ -14,7 +14,7 @@ public class TestStateTracker extends TestCase
 {
     public void testStandardTransitions() throws Exception
     {
-        new StateTracker().setState(STARTING).setState(STARTED).setState(SHUTTING_DOWN).setState(SHUTDOWN);
+        new StateTracker().setState(STARTING).setState(STARTED).setState(SHUTTING_DOWN).setState(SHUTDOWN).setState(STARTING);
     }
 
     public void testIllegalNotStartedTransitions() throws Exception
