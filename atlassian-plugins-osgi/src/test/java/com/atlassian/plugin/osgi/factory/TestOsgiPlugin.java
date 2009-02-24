@@ -2,18 +2,11 @@ package com.atlassian.plugin.osgi.factory;
 
 import junit.framework.TestCase;
 import com.mockobjects.dynamic.Mock;
-import com.mockobjects.dynamic.C;
 import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.PluginState;
-import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
-import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import org.osgi.framework.*;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 
 import java.util.Dictionary;
@@ -36,7 +29,7 @@ public class TestOsgiPlugin extends TestCase
         mockBundle.matchAndReturn("getHeaders", dict);
         mockBundleContext = new Mock(BundleContext.class);
 
-        plugin = new OsgiPlugin((Bundle) mockBundle.proxy(), new DefaultPluginEventManager());
+        plugin = new OsgiPlugin((Bundle) mockBundle.proxy());
     }
 
     @Override
@@ -60,10 +53,10 @@ public class TestOsgiPlugin extends TestCase
         mockBundle.verify();
     }
 
-    public void testClose() {
+    public void testUninstall() {
         mockBundle.expectAndReturn("getState", Bundle.ACTIVE);
         mockBundle.expect("uninstall");
-        plugin.close();
+        plugin.uninstall();
         mockBundle.verify();
     }
 
@@ -90,16 +83,6 @@ public class TestOsgiPlugin extends TestCase
         mockBundle.verify();
     }
 
-    public void testisEnabled() {
-        mockBundle.expectAndReturn("getState", Bundle.ACTIVE);
-        assertTrue(plugin.isEnabled());
-        mockBundle.verify();
-
-        mockBundle.expectAndReturn("getState", Bundle.RESOLVED);
-        assertTrue(!plugin.isEnabled());
-        mockBundle.verify();
-    }
-
     public void testAutowireObject() {
         StaticListableBeanFactory bf = new StaticListableBeanFactory();
         bf.addBean("child", new ChildBean());
@@ -108,7 +91,7 @@ public class TestOsgiPlugin extends TestCase
         Mock mockBundle = new Mock(Bundle.class);
         Mock mockBundleContext = new Mock(BundleContext.class);
 
-        OsgiPlugin plugin = new OsgiPlugin((Bundle) mockBundle.proxy(), new DefaultPluginEventManager());
+        OsgiPlugin plugin = new OsgiPlugin((Bundle) mockBundle.proxy());
         mockBundle.expectAndReturn("getSymbolicName", "foo");
         plugin.setKey("foo");
         plugin.onSpringContextRefresh(new PluginContainerRefreshedEvent(new GenericApplicationContext(autowireBf), "foo"));

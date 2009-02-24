@@ -19,7 +19,7 @@ import java.net.URISyntaxException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-public class TestOsgiBundleDeployer extends TestCase {
+public class TestOsgiBundleFactory extends TestCase {
 
     OsgiBundleFactory deployer;
     Mock mockOsgi;
@@ -105,7 +105,7 @@ public class TestOsgiBundleDeployer extends TestCase {
         mockOsgi.expectAndReturn("installBundle", C.ANY_ARGS, mockBundle.proxy());
         Plugin plugin = deployer.create(new JarPluginArtifact(bundle), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
-        assertTrue(plugin instanceof OsgiPlugin);
+        assertTrue(plugin instanceof OsgiBundlePlugin);
         mockOsgi.verify();
     }
 

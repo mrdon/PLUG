@@ -91,7 +91,6 @@ public interface Plugin extends Resourced, Comparable<Plugin>
      */
     boolean isEnabled();
 
-    void setEnabled(boolean enabled);
 
     /**
      * Whether the plugin is a "system" plugin that shouldn't be made visible to the user
@@ -146,7 +145,7 @@ public interface Plugin extends Resourced, Comparable<Plugin>
 
     /**
      * Retrieve the URL of the resource from the plugin.
-     * 
+     *
      * @param path the name of the resource to be loaded
      * @return The URL to the resource, or null if the resource is not found
      */
@@ -163,7 +162,41 @@ public interface Plugin extends Resourced, Comparable<Plugin>
     InputStream getResourceAsStream(String name);
 
     /**
+     * @deprecated Since 2.2.0, use {@link #enable()} or {@link #disable()} instead
+     */
+    void setEnabled(boolean enabled);
+
+    /**
      * Free any resources held by this plugin.  To be called during uninstallation of the {@link Plugin}.
+     * @deprecated Since 2.2.0, use {@link #uninstall()} instead
      */
     void close();
+
+    /**
+     * Installs the plugin, which may involve installing the plugin from an internal container
+     *
+     * @since 2.2.0
+     */
+    void install();
+
+    /**
+     * Uninstalls the plugin, which may involve uninstalling the plugin from an internal container
+     *
+     * @since 2.2.0
+     */
+    void uninstall();
+
+    /**
+     * Enables the plugin
+     *
+     * @since 2.2.0
+     */
+    void enable();
+
+    /**
+     * Disables the plugin
+     *
+     * @since 2.2.0
+     */
+    void disable();
 }

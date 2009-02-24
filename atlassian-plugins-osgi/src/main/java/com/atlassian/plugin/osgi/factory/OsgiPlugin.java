@@ -1,11 +1,10 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.PluginException;
-import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.*;
+import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.PluginEventListener;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
 import com.atlassian.plugin.event.events.PluginContainerFailedEvent;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
@@ -14,6 +13,7 @@ import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 
 import org.apache.commons.lang.Validate;
@@ -34,11 +34,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Plugin that wraps an OSGi bundle that does contain a plugin descriptor.
+ * Plugin that wraps an OSGi bundle that does contain a plugin descriptor.  The actual bundle is not created until the
+ * {@link #install()} method is invoked.  Any attempt to access a method that requires a bundle will throw an
+ * {@link IllegalStateException}.
  */
 public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin, DynamicPlugin
 {
-    private final Bundle bundle;
+    private volatile Bundle bundle;
     private static final Log log = LogFactory.getLog(OsgiPlugin.class);
     private boolean deletable = true;
     private boolean bundled = false;
@@ -46,21 +48,45 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private ServiceTracker moduleDescriptorTracker;
     private ServiceTracker unrecognisedModuleTracker;
     private final Map<String, Element> moduleElements = new HashMap<String, Element>();
-    private final ClassLoader bundleClassLoader;
+    private ClassLoader bundleClassLoader;
     private final PluginEventManager pluginEventManager;
     private volatile boolean treatSpringBeanFactoryCreationAsRefresh = false;
+    private final OsgiContainerManager osgiContainerManager;
+    private final PluginArtifact pluginArtifact;
 
-    public OsgiPlugin(final Bundle bundle, final PluginEventManager pluginEventManager)
+    public OsgiPlugin(final OsgiContainerManager mgr, PluginArtifact artifact, final PluginEventManager pluginEventManager)
     {
-        Validate.notNull(bundle, "The bundle is required");
-        this.bundle = bundle;
-        this.bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
-        pluginEventManager.register(this);
+        Validate.notNull(mgr, "The osgi container is required");
+        Validate.notNull(artifact, "The osgi container is required");
+        Validate.notNull(pluginEventManager, "The osgi container is required");
+        this.osgiContainerManager = mgr;
+        this.pluginArtifact = artifact;
         this.pluginEventManager = pluginEventManager;
     }
 
-    public Bundle getBundle()
+    /**
+     * Only useful for testing
+     */
+    OsgiPlugin(Bundle bundle)
     {
+        this.bundle = bundle;
+        this.osgiContainerManager = null;
+        this.pluginArtifact = null;
+        this.pluginEventManager = new DefaultPluginEventManager();
+
+    }
+
+    /**
+     * @return The active bundle
+     *
+     * @throws IllegalStateException If the bundle hasn't been installed yet
+     */
+    public Bundle getBundle() throws IllegalStateException
+    {
+        if (bundle == null)
+        {
+            throw new IllegalStateException("Bundle hasn't been created yet");
+        }
         return bundle;
     }
 
@@ -71,7 +97,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
 
     public <T> Class<T> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
     {
-        return BundleClassLoaderAccessor.loadClass(bundle, clazz, callingClass);
+        return BundleClassLoaderAccessor.loadClass(getBundle(), clazz, callingClass);
     }
 
     public boolean isUninstallable()
@@ -101,7 +127,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     @Override
     public void setKey(String aPackage) throws IllegalArgumentException
     {
-        if (!bundle.getSymbolicName().equals(aPackage))
+        if (bundle != null && !bundle.getSymbolicName().equals(aPackage))
         {
             throw new IllegalArgumentException("The plugin key '"+aPackage+"' must match the OSGi bundle symbolic name (Bundle-SymbolicName)");
         }
@@ -143,7 +169,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         {
             // TODO: do something with the exception more than logging
             log.error("Unable to start the Spring context for plugin "+getKey(), event.getCause());
-            setEnabled(false);
+            setPluginState(PluginState.DISABLED);
         }
     }
 
@@ -157,7 +183,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         if (getKey().equals(event.getPluginKey()))
         {
             springContextAccessor = new SpringContextAccessor(event.getContainer());
-
+            setPluginState(PluginState.ENABLED);
 
             // Only send refresh event on second creation
             if (treatSpringBeanFactoryCreationAsRefresh)
@@ -176,47 +202,33 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         this.bundled = bundled;
     }
 
-    public PluginState getPluginState()
+    public void install()
     {
-        if (Bundle.ACTIVE == bundle.getState() && shouldHaveSpringContext() && springContextAccessor == null)
-        {
-            return PluginState.ENABLING;
-        }
-        else
-        {
-            return super.getPluginState();
-        }
+        pluginEventManager.register(this);
+        bundle = osgiContainerManager.installBundle(pluginArtifact.toFile());
+        this.bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
+        setPluginState(PluginState.INSTALLED);
     }
 
     @Override
-    public boolean isEnabled()
-    {
-        return (Bundle.ACTIVE == bundle.getState()) && (!shouldHaveSpringContext() || springContextAccessor != null);
-    }
-
-    @Override
-    public void setEnabled(final boolean enabled) throws OsgiContainerException
-    {
-        if (enabled)
-        {
-            enable();
-        }
-        else
-        {
-            disable();
-        }
-    }
-
-    void enable() throws OsgiContainerException
+    public void enable() throws OsgiContainerException
     {
         try
         {
-            if ((bundle.getState() == Bundle.RESOLVED) || (bundle.getState() == Bundle.INSTALLED))
+            if ((getBundle().getState() == Bundle.RESOLVED) || (getBundle().getState() == Bundle.INSTALLED))
             {
-                bundle.start();
-                if (bundle.getBundleContext() != null)
+                getBundle().start();
+                if (getBundle().getBundleContext() != null)
                 {
-                    final BundleContext ctx = bundle.getBundleContext();
+                    if (shouldHaveSpringContext() && springContextAccessor == null)
+                    {
+                        setPluginState(PluginState.ENABLING);
+                    }
+                    else
+                    {
+                        setPluginState(PluginState.ENABLED);
+                    }
+                    final BundleContext ctx = getBundle().getBundleContext();
                     moduleDescriptorTracker = new ServiceTracker(ctx, ModuleDescriptor.class.getName(),
                         new RegisteringServiceTrackerCustomizer());
                     moduleDescriptorTracker.open();
@@ -230,9 +242,10 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                     {
                         public void bundleChanged(BundleEvent bundleEvent)
                         {
-                            if (bundleEvent.getBundle() == bundle && bundleEvent.getType() == BundleEvent.STOPPED)
+                            if (bundleEvent.getBundle() == getBundle() && bundleEvent.getType() == BundleEvent.STOPPED)
                             {
                                 springContextAccessor = null;
+                                setPluginState(PluginState.DISABLED);
                             }
                         }
                     });
@@ -245,11 +258,12 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
     }
 
-    void disable() throws OsgiContainerException
+    @Override
+    public void disable() throws OsgiContainerException
     {
         try
         {
-            if (bundle.getState() == Bundle.ACTIVE)
+            if (getBundle().getState() == Bundle.ACTIVE)
             {
                 if (moduleDescriptorTracker != null)
                 {
@@ -259,7 +273,8 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 {
                     unrecognisedModuleTracker.close();
                 }
-                bundle.stop();
+                getBundle().stop();
+                setPluginState(PluginState.DISABLED);
                 moduleDescriptorTracker = null;
                 unrecognisedModuleTracker = null;
             }
@@ -270,25 +285,29 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
     }
 
-    public void close() throws OsgiContainerException
+    public void uninstall() throws OsgiContainerException
     {
         pluginEventManager.unregister(this);
-        try
+        if (bundle != null)
         {
-            if (bundle.getState() != Bundle.UNINSTALLED)
+            try
             {
-                bundle.uninstall();
+                if (bundle.getState() != Bundle.UNINSTALLED)
+                {
+                    bundle.uninstall();
+                    setPluginState(PluginState.UNINSTALLED);
+                }
             }
-        }
-        catch (final BundleException e)
-        {
-            throw new OsgiContainerException("Cannot uninstall bundle " + bundle.getSymbolicName());
+            catch (final BundleException e)
+            {
+                throw new OsgiContainerException("Cannot uninstall bundle " + bundle.getSymbolicName());
+            }
         }
     }
 
     private boolean shouldHaveSpringContext()
     {
-        return bundle.getHeaders().get("Spring-Context") != null;
+        return getBundle().getHeaders().get("Spring-Context") != null;
     }
 
     public <T> T autowire(final Class<T> clazz)
@@ -344,9 +363,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         public Object addingService(final ServiceReference serviceReference)
         {
             ModuleDescriptor descriptor = null;
-            if (serviceReference.getBundle() == bundle)
+            if (serviceReference.getBundle() == getBundle())
             {
-                descriptor = (ModuleDescriptor) bundle.getBundleContext().getService(serviceReference);
+                descriptor = (ModuleDescriptor) getBundle().getBundleContext().getService(serviceReference);
                 addModuleDescriptor(descriptor);
                 log.info("Dynamically registered new module descriptor: " + descriptor.getCompleteKey());
             }
@@ -355,7 +374,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
 
         public void modifiedService(final ServiceReference serviceReference, final Object o)
         {
-            if (serviceReference.getBundle() == bundle)
+            if (serviceReference.getBundle() == getBundle())
             {
                 final ModuleDescriptor descriptor = (ModuleDescriptor) o;
                 addModuleDescriptor(descriptor);
@@ -365,7 +384,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
 
         public void removedService(final ServiceReference serviceReference, final Object o)
         {
-            if (serviceReference.getBundle() == bundle)
+            if (serviceReference.getBundle() == getBundle())
             {
                 final ModuleDescriptor descriptor = (ModuleDescriptor) o;
                 removeModuleDescriptor(descriptor.getKey());
@@ -390,7 +409,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
          */
         public Object addingService(final ServiceReference serviceReference)
         {
-            final ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) bundle.getBundleContext().getService(serviceReference);
+            final ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) getBundle().getBundleContext().getService(serviceReference);
             for (final UnrecognisedModuleDescriptor unrecognised : getModuleDescriptorsByDescriptorClass(UnrecognisedModuleDescriptor.class))
             {
                 final Element source = moduleElements.get(unrecognised.getKey());

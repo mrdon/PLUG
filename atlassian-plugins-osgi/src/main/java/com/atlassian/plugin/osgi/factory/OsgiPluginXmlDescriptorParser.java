@@ -23,7 +23,7 @@ import org.apache.commons.lang.Validate;
  */
 public class OsgiPluginXmlDescriptorParser extends XmlDescriptorParser
 {
-    private HashSet<String> modulesToIgnore;
+    private final HashSet<String> modulesToIgnore;
 
     /**
      * @param source The XML descriptor source

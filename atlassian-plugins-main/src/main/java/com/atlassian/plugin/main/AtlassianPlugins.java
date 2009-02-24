@@ -1,9 +1,9 @@
 package com.atlassian.plugin.main;
 
-import com.atlassian.plugin.DefaultPluginManager;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.manager.DefaultPluginManager;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;

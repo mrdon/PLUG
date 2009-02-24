@@ -50,8 +50,13 @@ public class StaticPlugin extends AbstractPlugin
         return false;
     }
 
-    public void close()
+    public void install()
     {
+        // no op
+    }
 
+    public void uninstall()
+    {
+        throw new IllegalStateException("Static plugins cannot be uninstalled");
     }
 }

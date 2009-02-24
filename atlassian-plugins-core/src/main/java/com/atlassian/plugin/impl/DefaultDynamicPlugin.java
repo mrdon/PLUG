@@ -117,6 +117,6 @@ public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugi
     @Override
     public PluginState getPluginState()
     {
-        return (closed ? PluginState.CLOSED : super.getPluginState());
+        return (closed ? PluginState.UNINSTALLED : super.getPluginState());
     }
 }

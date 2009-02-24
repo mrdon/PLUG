@@ -3,7 +3,7 @@ package com.atlassian.plugin;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.loaders.PluginLoader;
-import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 import org.apache.log4j.Level;
@@ -21,7 +21,7 @@ public class TestStateAware extends TestCase
     private Mock mockEnabling;
     private Mock mockDisabled;
     private Mock mockThwarted;
-    private DefaultPluginManager manager;
+    private com.atlassian.plugin.manager.DefaultPluginManager manager;
     private Plugin plugin1;
 
     interface Combination extends StateAware, ModuleDescriptor{};
@@ -39,7 +39,7 @@ public class TestStateAware extends TestCase
         plugin1 = new StaticPlugin();
         plugin1.setPluginInformation(new PluginInformation());
         plugin1.setKey("key1");
-        plugin1.setEnabled(true);
+        plugin1.enable();
 
         PluginLoader pluginLoader = setupPluginLoader(plugin1);
         ArrayList pluginLoaders = new ArrayList();
@@ -47,7 +47,7 @@ public class TestStateAware extends TestCase
 
         Mock mockModuleDescriptor = new Mock(ModuleDescriptorFactory.class);
 
-        manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders, (ModuleDescriptorFactory) mockModuleDescriptor.proxy(), new DefaultPluginEventManager());
+        manager = new com.atlassian.plugin.manager.DefaultPluginManager(new MemoryPluginPersistentStateStore(), pluginLoaders, (ModuleDescriptorFactory) mockModuleDescriptor.proxy(), new DefaultPluginEventManager());
 
     }
 

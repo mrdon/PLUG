@@ -21,11 +21,11 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     private String key;
     private boolean enabledByDefault = true;
     private PluginInformation pluginInformation = new PluginInformation();
-    private boolean enabled;
     private boolean system;
     private Resourced resources = Resources.EMPTY_RESOURCES;
     private int pluginsVersion = 1;
     private final Date dateLoaded = new Date();
+    private PluginState pluginState;
 
     public String getName()
     {
@@ -99,7 +99,12 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 
     public PluginState getPluginState()
     {
-        return (isEnabled() ? PluginState.ENABLED : PluginState.DISABLED);
+        return pluginState;
+    }
+
+    protected void setPluginState(PluginState state)
+    {
+        pluginState = state;
     }
 
     public boolean isEnabledByDefault()
@@ -166,7 +171,32 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
      */
     public boolean isEnabled()
     {
-        return enabled;
+        return getPluginState() == PluginState.ENABLED;
+    }
+
+    public void enable()
+    {
+        pluginState = PluginState.ENABLED;
+    }
+
+    public void disable()
+    {
+        pluginState = PluginState.DISABLED;
+    }
+
+    public void close()
+    {
+        uninstall();
+    }
+
+    public void install()
+    {
+        pluginState = PluginState.INSTALLED;
+        
+    }
+    public void uninstall()
+    {
+        pluginState = PluginState.UNINSTALLED;
     }
 
     /**
@@ -174,7 +204,14 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
      */
     public void setEnabled(final boolean enabled)
     {
-        this.enabled = enabled;
+        if (enabled)
+        {
+            enable();
+        }
+        else
+        {
+            disable();
+        }
     }
 
     public boolean isSystemPlugin()

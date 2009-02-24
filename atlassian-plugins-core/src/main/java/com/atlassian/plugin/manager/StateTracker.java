@@ -1,4 +1,4 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.manager;
 
 import java.util.concurrent.atomic.AtomicReference;
 

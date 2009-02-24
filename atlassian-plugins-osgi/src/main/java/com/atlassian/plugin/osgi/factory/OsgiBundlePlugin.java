@@ -1,29 +1,35 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.impl.AbstractPlugin;
+import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
 import java.util.*;
+import java.net.URL;
+import java.io.InputStream;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.BundleException;
 
 /**
  * Plugin that wraps an OSGi bundle that has no plugin descriptor.
  */
-public class OsgiBundlePlugin extends OsgiPlugin
+public class OsgiBundlePlugin extends AbstractPlugin
 {
 
     private Bundle bundle;
     private PluginInformation pluginInformation;
     private Date dateLoaded;
     private String key;
+    private final ClassLoader bundleClassLoader;
 
     public OsgiBundlePlugin(Bundle bundle, String key, PluginEventManager pluginEventManager)
     {
-        super(bundle, pluginEventManager);
+        this.bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
         this.bundle = bundle;
         this.pluginInformation = new PluginInformation();
         pluginInformation.setDescription((String) bundle.getHeaders().get(Constants.BUNDLE_DESCRIPTION));
@@ -177,6 +183,72 @@ public class OsgiBundlePlugin extends OsgiPlugin
     public ResourceDescriptor getResourceDescriptor(String type, String name)
     {
         return null;
+    }
+
+    public <T> Class<T> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
+    {
+        return BundleClassLoaderAccessor.loadClass(bundle, clazz, callingClass);
+    }
+
+    public URL getResource(final String name)
+    {
+        return bundleClassLoader.getResource(name);
+    }
+
+    public InputStream getResourceAsStream(final String name)
+    {
+        return bundleClassLoader.getResourceAsStream(name);
+    }
+
+    public void install()
+    {
+
+    }
+    
+    public void uninstall()
+    {
+        try
+        {
+            bundle.uninstall();
+        }
+        catch (BundleException e)
+        {
+            throw new PluginException(e);
+        }
+        super.uninstall();
+    }
+
+    @Override
+    public void enable()
+    {
+        try
+        {
+            bundle.start();
+        }
+        catch (BundleException e)
+        {
+            throw new PluginException(e);
+        }
+        super.enable();
+    }
+
+    @Override
+    public void disable()
+    {
+        try
+        {
+            bundle.stop();
+        }
+        catch (BundleException e)
+        {
+            throw new PluginException(e);
+        }
+        super.disable();
+    }
+
+    public ClassLoader getClassLoader()
+    {
+        return bundleClassLoader;
     }
 
 }

@@ -1,9 +1,11 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.manager;
 
 /**
- * A wrapper object that the user implements to store the state of plugins.
+ * A wrapper object that the user implements to store the persisted state of plugins.
+ *
+ * @since 2.2.0
  */
-public interface PluginStateStore
+public interface PluginPersistentStateStore
 {
     /**
      * Put the current global state of plugin activation/deactivation into permanent
@@ -16,7 +18,7 @@ public interface PluginStateStore
      *
      * @param state the map of plugin and module activation states
      */
-    void savePluginState(PluginManagerState state);
+    void save(PluginPersistentState state);
 
     /**
      * Get the saved activation state of loaded plugins or modules. The map
@@ -25,5 +27,6 @@ public interface PluginStateStore
      * @return the configured activation/deactivation state for plugins in this Confluence
      *         instance.
      */
-    PluginManagerState loadPluginState();
+    PluginPersistentState load();
 }
+

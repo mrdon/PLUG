@@ -13,7 +13,7 @@ public class TestXmlDynamicPluginFactory extends TestCase
 {
     public void testCreateBadXml()
     {
-        XmlDynamicPluginFactory factory = new XmlDynamicPluginFactory();
+        XmlDynamicPluginFactory factory = new XmlDynamicPluginFactory("foo");
         Mock mockModuleDescriptorFactory = new Mock(ModuleDescriptorFactory.class);
         try
         {

@@ -1,4 +1,4 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.manager;
 
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
@@ -12,9 +12,10 @@ import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
-import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.*;
 
 import org.apache.commons.io.FileUtils;
 
@@ -27,9 +28,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Testing {@link DefaultPluginManager}
- */
 public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
 {
     /**
@@ -37,7 +35,7 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
      */
     private DefaultPluginManager manager;
 
-    private PluginStateStore pluginStateStore;
+    private PluginPersistentStateStore pluginStateStore;
     private List<PluginLoader> pluginLoaders;
     private DefaultModuleDescriptorFactory moduleDescriptorFactory; // we should be able to use the interface here?
 
@@ -50,7 +48,7 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         super.setUp();
         pluginEventManager = new DefaultPluginEventManager();
 
-        pluginStateStore = new MemoryPluginStateStore();
+        pluginStateStore = new MemoryPluginPersistentStateStore();
         pluginLoaders = new ArrayList<PluginLoader>();
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
 
@@ -79,8 +77,11 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         final Mock mockPluginLoader = new Mock(PluginLoader.class);
         final Plugin plugin = new StaticPlugin()
         {
-            @Override
-            public void setEnabled(final boolean enabled)
+            public void enable()
+            {
+            // do nothing
+            }
+            public void disable()
             {
             // do nothing
             }
@@ -107,7 +108,7 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
     private DefaultPluginManager makeClassLoadingPluginManager() throws PluginParseException
     {
         directoryPluginLoader = new DirectoryPluginLoader(pluginsTestDir, Arrays.asList(new LegacyDynamicPluginFactory(
-            PluginAccessor.Descriptor.FILENAME), new XmlDynamicPluginFactory()), pluginEventManager);
+            PluginAccessor.Descriptor.FILENAME), new XmlDynamicPluginFactory("foo")), pluginEventManager);
         pluginLoaders.add(directoryPluginLoader);
 
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
@@ -276,9 +277,12 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         }
 
         @Override
-        public void setEnabled(final boolean val)
+        public void enable()
         {
-            super.setEnabled((--pass) <= 0);
+            if (--pass <= 0)
+            {
+                super.enable();
+            }
         }
     }
 

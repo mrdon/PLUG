@@ -3,15 +3,16 @@ package com.atlassian.plugin.main;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.PluginStateStore;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
+import com.atlassian.plugin.manager.PluginPersistentStateStore;
+import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
 import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
+import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.store.MemoryPluginStateStore;
-import static com.atlassian.plugin.util.Assertions.*;
+import static com.atlassian.plugin.util.Assertions.isTrue;
+import static com.atlassian.plugin.util.Assertions.notNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class PluginsConfigurationBuilder
     private File bundledPluginCacheDirectory;
     private String pluginDescriptorFilename;
     private ModuleDescriptorFactory moduleDescriptorFactory;
-    private PluginStateStore pluginStateStore;
+    private PluginPersistentStateStore pluginStateStore;
     private long hotDeployPollingPeriod;
     private boolean useLegacyDynamicPluginDeployer = false;
     private String applicationKey;
@@ -149,7 +150,7 @@ public class PluginsConfigurationBuilder
      * @param pluginStateStore The plugin state store implementation
      * @return this
      */
-    public PluginsConfigurationBuilder pluginStateStore(final PluginStateStore pluginStateStore)
+    public PluginsConfigurationBuilder pluginStateStore(final PluginPersistentStateStore pluginStateStore)
     {
         this.pluginStateStore = pluginStateStore;
         return this;
@@ -220,7 +221,7 @@ public class PluginsConfigurationBuilder
 
         if (pluginStateStore == null)
         {
-            pluginStateStore = new MemoryPluginStateStore();
+            pluginStateStore = new MemoryPluginPersistentStateStore();
         }
 
         if (moduleDescriptorFactory == null)
@@ -266,7 +267,7 @@ public class PluginsConfigurationBuilder
         private final File bundledPluginCacheDirectory;
         private final String pluginDescriptorFilename;
         private final ModuleDescriptorFactory moduleDescriptorFactory;
-        private final PluginStateStore pluginStateStore;
+        private final PluginPersistentStateStore pluginStateStore;
         private final long hotDeployPollingPeriod;
         private final boolean useLegacyDynamicPluginDeployer;
         private final String applicationKey;
@@ -322,7 +323,7 @@ public class PluginsConfigurationBuilder
             return moduleDescriptorFactory;
         }
 
-        public PluginStateStore getPluginStateStore()
+        public PluginPersistentStateStore getPluginStateStore()
         {
             return pluginStateStore;
         }

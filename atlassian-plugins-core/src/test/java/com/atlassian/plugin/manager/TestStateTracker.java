@@ -1,12 +1,13 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.manager;
 
-import static com.atlassian.plugin.StateTracker.State.NOT_STARTED;
-import static com.atlassian.plugin.StateTracker.State.SHUTDOWN;
-import static com.atlassian.plugin.StateTracker.State.SHUTTING_DOWN;
-import static com.atlassian.plugin.StateTracker.State.STARTED;
-import static com.atlassian.plugin.StateTracker.State.STARTING;
+import static com.atlassian.plugin.manager.StateTracker.State.NOT_STARTED;
+import static com.atlassian.plugin.manager.StateTracker.State.SHUTDOWN;
+import static com.atlassian.plugin.manager.StateTracker.State.SHUTTING_DOWN;
+import static com.atlassian.plugin.manager.StateTracker.State.STARTED;
+import static com.atlassian.plugin.manager.StateTracker.State.STARTING;
 
-import com.atlassian.plugin.StateTracker.State;
+import com.atlassian.plugin.manager.StateTracker.State;
+import com.atlassian.plugin.manager.StateTracker;
 
 import junit.framework.TestCase;
 

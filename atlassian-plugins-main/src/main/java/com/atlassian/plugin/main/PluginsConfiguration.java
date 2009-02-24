@@ -1,9 +1,9 @@
 package com.atlassian.plugin.main;
 
 import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.PluginStateStore;
-import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
+import com.atlassian.plugin.manager.PluginPersistentStateStore;
 import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
+import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 
 import java.io.File;
@@ -58,7 +58,7 @@ public interface PluginsConfiguration
     /**
      * @return the plugin state store implementation
      */
-    PluginStateStore getPluginStateStore();
+    PluginPersistentStateStore getPluginStateStore();
 
     /**
      * @return the number of milliseconds between polling.  Zero to disable.

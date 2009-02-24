@@ -1,4 +1,4 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.manager;
 
 import junit.framework.TestCase;
 import com.atlassian.plugin.loaders.PluginLoader;
@@ -11,7 +11,7 @@ import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
-import com.atlassian.plugin.store.MemoryPluginStateStore;
+import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
@@ -19,6 +19,7 @@ import com.atlassian.plugin.event.listeners.RecordingListener;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.factories.XmlDynamicPluginFactory;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
+import com.atlassian.plugin.*;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -58,7 +59,7 @@ public class TestDefaultPluginManagerEvents extends TestCase
         File pluginTempDirectory = DirectoryPluginLoaderUtils.copyTestPluginsToTempDirectory();
         List<PluginLoader> pluginLoaders = buildPluginLoaders(pluginEventManager, pluginTempDirectory);
 
-        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginStateStore(), pluginLoaders,
+        DefaultPluginManager manager = new DefaultPluginManager(new MemoryPluginPersistentStateStore(), pluginLoaders,
             moduleDescriptorFactory, pluginEventManager);
         manager.setPluginInstaller(new FilePluginInstaller(pluginTempDirectory));
 
@@ -73,7 +74,7 @@ public class TestDefaultPluginManagerEvents extends TestCase
         DirectoryPluginLoader directoryPluginLoader = new DirectoryPluginLoader(
             pluginTempDirectory,
             Arrays.asList(new LegacyDynamicPluginFactory(PluginAccessor.Descriptor.FILENAME),
-                new XmlDynamicPluginFactory()),
+                new XmlDynamicPluginFactory("foo")),
             pluginEventManager);
         pluginLoaders.add(directoryPluginLoader);
         return pluginLoaders;

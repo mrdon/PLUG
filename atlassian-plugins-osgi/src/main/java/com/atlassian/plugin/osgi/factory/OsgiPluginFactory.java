@@ -6,7 +6,6 @@ import com.atlassian.plugin.descriptors.ChainModuleDescriptorFactory;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
-import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.osgi.factory.transform.DefaultPluginTransformer;
@@ -20,14 +19,11 @@ import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 
 import java.io.File;
 import java.io.InputStream;
 import java.util.*;
-
-import aQute.lib.header.OSGiHeader;
 
 /**
  * Plugin loader that starts an OSGi container and loads plugins into it, wrapped as OSGi bundles.
@@ -128,22 +124,15 @@ public class OsgiPluginFactory implements PluginFactory
                 throw new PluginParseException("No descriptor found in classloader for : " + pluginArtifact);
 
             ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
-            // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys);
 
-            Bundle existingBundle = findBundle(parser.getKey(), parser.getPluginInformation().getVersion(), pluginArtifact.toFile());
-            Plugin osgiPlugin;
-            if (existingBundle != null)
-            {
-                osgiPlugin = new OsgiPlugin(existingBundle, pluginEventManager);
-                log.info("OSGi bundle "+parser.getKey()+" found already installed.");
-            }
-            else
-            {
-                osgiPlugin = createOsgiPlugin(pluginArtifact);
-            }
-                
+            Plugin osgiPlugin = new OsgiPlugin(osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager);
+
+            // Temporarily configure plugin until it can be properly installed
             plugin = parser.configurePlugin(combinedFactory, osgiPlugin);
+        } catch (PluginTransformationException ex)
+        {
+            return reportUnloadablePlugin(pluginArtifact.toFile(), ex);
         }
         finally
         {
@@ -193,32 +182,10 @@ public class OsgiPluginFactory implements PluginFactory
 
     }
 
-    private Plugin createOsgiPlugin(PluginArtifact pluginArtifact)
+    private PluginArtifact createOsgiPluginJar(PluginArtifact pluginArtifact)
     {
-        try
-        {
-            File transformedFile = getPluginTransformer().transform(pluginArtifact, osgi.getHostComponentRegistrations());
-            return new OsgiPlugin(osgi.installBundle(transformedFile), pluginEventManager);
-        } catch (OsgiContainerException e)
-        {
-            return reportUnloadablePlugin(pluginArtifact.toFile(), e);
-        } catch (PluginTransformationException ex)
-        {
-            return reportUnloadablePlugin(pluginArtifact.toFile(), ex);
-        }
-    }
-
-    private Bundle findBundle(String key, String version, File pluginFile)
-    {
-        for (Bundle bundle : osgi.getBundles())
-        {
-            if (key.equals(bundle.getSymbolicName()) && version.equals(bundle.getHeaders().get(Constants.BUNDLE_VERSION))
-                    && pluginFile.lastModified() < bundle.getLastModified())
-            {
-                return bundle;
-            }
-        }
-        return null;
+        File transformedFile = getPluginTransformer().transform(pluginArtifact, osgi.getHostComponentRegistrations());
+        return new JarPluginArtifact(transformedFile);
     }
 
     private Plugin reportUnloadablePlugin(File file, Exception e)

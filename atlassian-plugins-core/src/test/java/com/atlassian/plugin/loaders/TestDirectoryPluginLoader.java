@@ -38,7 +38,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     private DirectoryPluginLoader loader;
     private DefaultModuleDescriptorFactory moduleDescriptorFactory;
     private static final List DEFAULT_PLUGIN_FACTORIES = Arrays.asList(new LegacyDynamicPluginFactory(PluginAccessor.Descriptor.FILENAME),
-        new XmlDynamicPluginFactory());
+        new XmlDynamicPluginFactory("foo"));
 
     public static final String BAD_PLUGIN_JAR = "bad-plugins/crap-plugin.jar";
 
@@ -54,10 +54,6 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     @Override
     public void tearDown() throws Exception
     {
-        if (loader != null)
-        {
-            loader.shutDown();
-        }
         FileUtils.deleteDirectory(pluginsTestDir);
         super.tearDown();
     }

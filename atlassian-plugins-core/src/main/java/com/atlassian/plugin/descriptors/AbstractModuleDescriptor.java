@@ -136,7 +136,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         }
         catch (final NoClassDefFoundError e)
         {
-            throw new PluginParseException("Error retrieving dependency of class: " + clazz + ". Missing class: " + e.getMessage());
+            throw new PluginParseException("Error retrieving dependency of class: " + clazz + ". Missing class: " + e.getMessage(), e);
         }
         catch (final UnsupportedClassVersionError e)
         {

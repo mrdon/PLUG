@@ -201,7 +201,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
         }
 
         final DeploymentUnit deploymentUnit = findMatchingDeploymentUnit(plugin);
-        plugin.close();
+        plugin.uninstall();
 
         try
         {
@@ -264,7 +264,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
         for (final Iterator<Plugin> it = plugins.values().iterator(); it.hasNext();)
         {
             final Plugin plugin = it.next();
-            plugin.close();
+            plugin.uninstall();
             it.remove();
         }
 

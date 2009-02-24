@@ -1,4 +1,8 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.manager;
+
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.PluginRestartState;
 
 import java.util.Map;
 
@@ -10,7 +14,7 @@ import java.util.Map;
  * @author anatoli
  *
  */
-public interface PluginManagerState
+public interface PluginPersistentState
 {
     /**
      * Get the map of all states.
@@ -37,4 +41,11 @@ public interface PluginManagerState
      */
     Map<String, Boolean> getPluginStateMap(final Plugin plugin);
 
+    /**
+     * Gets whether the plugin is expected to be upgraded, installed, or removed on next restart
+     *
+     * @param pluginKey The plugin to query
+     * @return The state of the plugin on restart
+     */
+    PluginRestartState getPluginRestartState(String pluginKey);
 }

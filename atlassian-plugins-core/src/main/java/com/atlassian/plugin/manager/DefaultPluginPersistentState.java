@@ -1,14 +1,16 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.manager;
 
 import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
+import com.atlassian.plugin.manager.PluginPersistentState;
+import com.atlassian.plugin.PluginRestartState;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.ModuleDescriptor;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p/>
@@ -16,29 +18,30 @@ import java.util.Map;
  * and the default state configured in the plugin. So if "getPluginState()" or "getPluginModuleState()" return
  * null, then the manager should assume that the default state applies instead.
  * <p>
- * Please note that this method is not threadsafe.  Access to instances should be synchronised.
+ * Please note that this class is not threadsafe.  Access to instances should be synchronised.
  */
-public class DefaultPluginManagerState implements Serializable, PluginManagerState
+public class DefaultPluginPersistentState implements Serializable, PluginPersistentState
 {
     private final Map<String, Boolean> map;
+    private static final String RESTART_STATE_SEPARATOR = "--";
 
-    public DefaultPluginManagerState()
+    public DefaultPluginPersistentState()
     {
-        map = CopyOnWriteMap.newHashMap();
+        this(Collections.<String, Boolean>emptyMap());
     }
 
-    public DefaultPluginManagerState(final Map<String, Boolean> map)
+    public DefaultPluginPersistentState(final Map<String, Boolean> map)
     {
         this.map = CopyOnWriteMap.newHashMap(map);
     }
 
-    public DefaultPluginManagerState(final PluginManagerState state)
+    public DefaultPluginPersistentState(final PluginPersistentState state)
     {
         map = CopyOnWriteMap.newHashMap(state.getMap());
     }
 
     /* (non-Javadoc)
-     * @see com.atlassian.plugin.PluginManagerState#getState(java.lang.String)
+     * @see com.atlassian.plugin.PluginPersistentState#getState(java.lang.String)
      */
     public Boolean getState(final String key)
     {
@@ -46,7 +49,7 @@ public class DefaultPluginManagerState implements Serializable, PluginManagerSta
     }
 
     /* (non-Javadoc)
-     * @see com.atlassian.plugin.PluginManagerState#getMap()
+     * @see com.atlassian.plugin.PluginPersistentState#getMap()
      */
     public Map<String, Boolean> getMap()
     {
@@ -54,7 +57,7 @@ public class DefaultPluginManagerState implements Serializable, PluginManagerSta
     }
 
     /* (non-Javadoc)
-     * @see com.atlassian.plugin.PluginManagerState#isEnabled(com.atlassian.plugin.Plugin)
+     * @see com.atlassian.plugin.PluginPersistentState#isEnabled(com.atlassian.plugin.Plugin)
      */
     public boolean isEnabled(final Plugin plugin)
     {
@@ -63,7 +66,7 @@ public class DefaultPluginManagerState implements Serializable, PluginManagerSta
     }
 
     /* (non-Javadoc)
-     * @see com.atlassian.plugin.PluginManagerState#isEnabled(com.atlassian.plugin.ModuleDescriptor)
+     * @see com.atlassian.plugin.PluginPersistentState#isEnabled(com.atlassian.plugin.ModuleDescriptor)
      */
     public boolean isEnabled(final ModuleDescriptor<?> pluginModule)
     {
@@ -94,14 +97,14 @@ public class DefaultPluginManagerState implements Serializable, PluginManagerSta
         }
         else
         {
-            map.put(completeKey, Boolean.valueOf(isEnabled));
+            map.put(completeKey, isEnabled);
         }
     }
 
     /**
      * reset all plugin's state.
      */
-    public void setState(final PluginManagerState state)
+    public void setState(final PluginPersistentState state)
     {
         map.clear();
         map.putAll(state.getMap());
@@ -124,13 +127,61 @@ public class DefaultPluginManagerState implements Serializable, PluginManagerSta
     }
 
     /* (non-Javadoc)
-     * @see com.atlassian.plugin.PluginManagerState#getPluginStateMap(com.atlassian.plugin.Plugin)
+     * @see com.atlassian.plugin.PluginPersistentState#getPluginStateMap(com.atlassian.plugin.Plugin)
      */
     public Map<String, Boolean> getPluginStateMap(final Plugin plugin)
     {
         final Map<String, Boolean> state = new HashMap<String, Boolean>(getMap());
         CollectionUtils.filter(state.keySet(), new StringStartsWith(plugin.getKey()));
         return state;
+    }
+
+    public PluginRestartState getPluginRestartState(String pluginKey)
+    {
+        for (PluginRestartState state : PluginRestartState.values())
+        {
+            if (map.containsKey(buildStateKey(pluginKey, state)))
+            {
+                return state;
+            }
+        }
+        return PluginRestartState.NONE;
+    }
+
+    public void setPluginRestartState(String pluginKey, PluginRestartState state)
+    {
+        if (state == PluginRestartState.NONE)
+        {
+            for (PluginRestartState st : PluginRestartState.values())
+            {
+                map.remove(buildStateKey(pluginKey, st));
+            }
+        }
+        else
+        {
+            map.put(buildStateKey(pluginKey, state), true);
+        }
+    }
+
+    private static String buildStateKey(String pluginKey, PluginRestartState state)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append(state.name());
+        sb.append(RESTART_STATE_SEPARATOR);
+        sb.append(pluginKey);
+        return sb.toString();
+    }
+
+    public void clearPluginRestartState()
+    {
+        Set<String> keys = new HashSet<String>(getMap().keySet());
+        for (String key : keys)
+        {
+            if (key.contains(RESTART_STATE_SEPARATOR))
+            {
+                map.remove(key);
+            }
+        }
     }
 
     private static class StringStartsWith implements Predicate

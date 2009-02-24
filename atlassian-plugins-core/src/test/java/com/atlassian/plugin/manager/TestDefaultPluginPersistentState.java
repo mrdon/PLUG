@@ -1,21 +1,25 @@
-package com.atlassian.plugin;
+package com.atlassian.plugin.manager;
 
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.impl.StaticPlugin;
+import com.atlassian.plugin.manager.PluginPersistentState;
+import com.atlassian.plugin.manager.DefaultPluginPersistentState;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.PluginRestartState;
 
 import java.util.Map;
 
 import junit.framework.TestCase;
 
-public class TestDefaultPluginManagerState extends TestCase
+public class TestDefaultPluginPersistentState extends TestCase
 {
-    private DefaultPluginManagerState state;
+    private DefaultPluginPersistentState state;
 
     @Override
     protected void setUp() throws Exception
     {
         super.setUp();
-        state = new DefaultPluginManagerState();
+        state = new DefaultPluginPersistentState();
     }
     
     @Override
@@ -56,7 +60,7 @@ public class TestDefaultPluginManagerState extends TestCase
         state.setEnabled(module3, !module3.isEnabledByDefault());
         
         Map<String, Boolean> pluginStateMap = state.getPluginStateMap(plugin1);
-        PluginManagerState pluginState = new DefaultPluginManagerState(pluginStateMap);
+        PluginPersistentState pluginState = new DefaultPluginPersistentState(pluginStateMap);
         
         assertFalse(pluginState.isEnabled(plugin1) == plugin1.isEnabledByDefault());
         assertFalse(pluginState.isEnabled(module1) == module1.isEnabledByDefault());
@@ -87,6 +91,19 @@ public class TestDefaultPluginManagerState extends TestCase
         state.setEnabled(plugin, true);
         pluginStateMap = state.getPluginStateMap(plugin);
         assertFalse(pluginStateMap.isEmpty());
+    }
+
+    public void testPluginRestartState()
+    {
+        assertEquals(PluginRestartState.NONE, state.getPluginRestartState("foo"));
+        state.setPluginRestartState("foo", PluginRestartState.REMOVE);
+        assertEquals(PluginRestartState.REMOVE, state.getPluginRestartState("foo"));
+
+        DefaultPluginPersistentState stateCopy = new DefaultPluginPersistentState(state.getMap());
+        assertEquals(PluginRestartState.REMOVE, stateCopy.getPluginRestartState("foo"));
+        stateCopy.clearPluginRestartState();
+        assertEquals(PluginRestartState.NONE, stateCopy.getPluginRestartState("foo"));
+        assertEquals(PluginRestartState.REMOVE, state.getPluginRestartState("foo"));
     }
     
     

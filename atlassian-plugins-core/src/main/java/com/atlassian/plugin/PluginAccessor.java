@@ -123,7 +123,7 @@ public interface PluginAccessor
      * Retrieve all plugin modules that implement or extend a specific class, and has a descriptor class
      * as the descriptorClazz
      *
-     * @param descriptorClazz @NotNull
+     * @param descriptorClass @NotNull
      * @param moduleClass @NotNull
      * @return List of modules that implement or extend the given class. Empty list if none found
      * @deprecated since 0.17, use {@link #getModules(com.atlassian.plugin.predicate.ModuleDescriptorPredicate)} with an appropriate predicate instead.
@@ -200,4 +200,13 @@ public interface PluginAccessor
      * @return true if the plugin is a system plugin.
      */
     boolean isSystemPlugin(String key);
+
+    /**
+     * Gets the state of the plugin upon restart.  Only useful for plugins that contain module descriptors with the
+     * \@RestartRequired annotation, and therefore, cannot be dynamically installed, upgraded, or removed at runtime
+     *
+     * @param key The plugin key
+     * @return The state of the plugin on restart
+     */
+    PluginRestartState getPluginRestartState(String key);
 }

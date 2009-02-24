@@ -1,9 +1,10 @@
 package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
-import com.atlassian.plugin.DefaultPluginManager;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
+import com.atlassian.plugin.manager.DefaultPluginManager;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
@@ -21,7 +22,6 @@ import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
-import com.atlassian.plugin.store.MemoryPluginStateStore;
 
 import org.apache.commons.io.FileUtils;
 
@@ -125,7 +125,7 @@ public abstract class PluginInContainerTestBase extends TestCase
         final DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Arrays.asList(legacyFactory, osgiPluginDeployer, osgiBundleFactory),
             new DefaultPluginEventManager());
 
-        pluginManager = new DefaultPluginManager(new MemoryPluginStateStore(), Arrays.<PluginLoader> asList(loader), moduleDescriptorFactory,
+        pluginManager = new DefaultPluginManager(new MemoryPluginPersistentStateStore(), Arrays.<PluginLoader> asList(loader), moduleDescriptorFactory,
             pluginEventManager);
         pluginManager.setPluginInstaller(new FilePluginInstaller(pluginsDir));
         pluginManager.init();

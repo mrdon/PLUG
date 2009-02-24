@@ -4,6 +4,7 @@ import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
+import com.atlassian.plugin.event.events.PluginUpgradedEvent;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
@@ -195,6 +196,12 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     public void onShutdown(final PluginFrameworkShutdownEvent event)
     {
         stop();
+    }
+
+    @PluginEventListener
+    public void onPluginUpgrade(PluginUpgradedEvent event)
+    {
+        registration.refreshPackages();
     }
 
     public void start() throws OsgiContainerException
@@ -545,7 +552,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             }
         }
 
-        private void refreshPackages()
+        public void refreshPackages()
         {
             final CountDownLatch latch = new CountDownLatch(1);
             FrameworkListener refreshListener = new FrameworkListener()
