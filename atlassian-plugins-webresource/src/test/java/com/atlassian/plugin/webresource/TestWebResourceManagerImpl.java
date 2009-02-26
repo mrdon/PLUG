@@ -9,9 +9,15 @@ import com.atlassian.plugin.servlet.AbstractFileServerServlet;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
+import org.dom4j.DocumentException;
 
-import java.util.*;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class TestWebResourceManagerImpl extends TestCase
 {
@@ -230,6 +236,9 @@ public class TestWebResourceManagerImpl extends TestCase
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)),
             TestUtils.createWebResourceModuleDescriptor(resourceB, p, resourceDescriptorsB, Collections.EMPTY_LIST));
 
+        Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
+        
         String s = webResourceManager.getResourceTags(resourceA);
         int indexA = s.indexOf(resourceA);
         int indexB = s.indexOf(resourceB);
@@ -262,6 +271,9 @@ public class TestWebResourceManagerImpl extends TestCase
         StringWriter requiredResourceWriter = new StringWriter();
         webResourceManager.requireResource(completeModuleKey);
         webResourceManager.includeResources(requiredResourceWriter);
+        
+        //need to clear out the already written webresources here otherwise they wont be written twice.
+        requestCache.remove("plugin.webresource.written");
         String requiredResourceResult = webResourceManager.getRequiredResources();
         assertEquals(requiredResourceResult, requiredResourceWriter.toString());
 
@@ -273,12 +285,46 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // test resourceTag() methods
         StringWriter resourceTagsWriter = new StringWriter();
+        //need to clear out the already written webresources here otherwise they wont be written twice.
+        requestCache.remove("plugin.webresource.written");
         webResourceManager.requireResource(completeModuleKey, resourceTagsWriter);
+
+        //need to clear out the already written webresources here otherwise they wont be written twice.
+        requestCache.remove("plugin.webresource.written");
         String resourceTagsResult = webResourceManager.getResourceTags(completeModuleKey);
         assertEquals(resourceTagsResult, resourceTagsWriter.toString());
 
         // calling requireResource() or resourceTag() on a single webresource should be the same
         assertEquals(requiredResourceResult, resourceTagsResult);
+    }
+
+    public void testRequireSameResourceTwice() throws DocumentException
+    {
+        String resource1 = "test.atlassian:cool-stuff";
+
+        final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.css");
+
+        final String pluginVersion = "1";
+        final Mock mockPlugin = new Mock(Plugin.class);
+        PluginInformation pluginInfo = new PluginInformation();
+        pluginInfo.setVersion(pluginVersion);
+        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource1)),
+            TestUtils.createWebResourceModuleDescriptor(resource1, (Plugin) mockPlugin.proxy(), resourceDescriptors1));
+
+        Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
+        final StringWriter out = new StringWriter();
+        webResourceManager.requireResource(resource1, out);
+        assertEquals("<link type=\"text/css\" rel=\"stylesheet\" href=\"http://www.foo.com/s/650/123/1/_/download/batch/test.atlassian:cool-stuff/test.atlassian:cool-stuff.css\" media=\"all\"/>\n", out.toString());
+
+        //require the same resource again via a different way.
+        webResourceManager.requireResource(resource1);
+        final StringWriter otherOut = new StringWriter();
+        //when we write it out it shouldn't be written again.
+        webResourceManager.includeResources(otherOut);
+        assertEquals("", otherOut.toString());
     }
 
     public void testRequireResourceWithCacheParameter() throws Exception
@@ -295,6 +341,9 @@ public class TestWebResourceManagerImpl extends TestCase
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
                 TestUtils.createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(),
                 Collections.singletonList(resourceDescriptor)));
+
+        Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
 
         String resourceTagsResult = webResourceManager.getResourceTags(completeModuleKey);
         assertTrue(resourceTagsResult.contains("src=\"" + BASEURL + BatchPluginResource.URL_PREFIX + "/"

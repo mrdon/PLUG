@@ -33,6 +33,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     static final String STATIC_RESOURCE_SUFFIX = "_";
 
     static final String REQUEST_CACHE_RESOURCE_KEY = "plugin.webresource.names";
+    static final String REQUEST_CACHE_WRITTEN_RESOURCE_KEY = "plugin.webresource.written";
 
     protected final WebResourceIntegration webResourceIntegration;
     protected final PluginResourceLocator pluginResourceLocator;
@@ -151,6 +152,12 @@ public class WebResourceManagerImpl implements WebResourceManager
             return;
         }
 
+        //PLUG-302: if we've already written out this module, don't write it again!
+        if(writtenAlready(moduleCompleteKey))
+        {
+            return;
+        }
+
         for (PluginResource resource : resources)
         {
             WebResourceFormatter formatter = getWebResourceFormatter(resource.getResourceName());
@@ -172,6 +179,25 @@ public class WebResourceManagerImpl implements WebResourceManager
             }
             writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writer);
         }
+    }
+
+    private boolean writtenAlready(final String moduleCompleteKey)
+    {
+        Collection alreadyWrittenModules = (Collection) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_WRITTEN_RESOURCE_KEY);
+        if(alreadyWrittenModules == null)
+        {
+            alreadyWrittenModules = new HashSet();
+        }
+        //ensure a particular module is only ever written out ONCE.
+        if(alreadyWrittenModules.contains(moduleCompleteKey))
+        {
+            return true;
+        }
+
+        alreadyWrittenModules.add(moduleCompleteKey);
+        webResourceIntegration.getRequestCache().put(REQUEST_CACHE_WRITTEN_RESOURCE_KEY, alreadyWrittenModules);
+
+        return false;
     }
 
     public String getResourceTags(String moduleCompleteKey)
