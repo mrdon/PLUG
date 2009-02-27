@@ -57,7 +57,15 @@ public class TestPluginEventManagerImpl extends TestCase
     public void testRegisterWithBadListener()
     {
         BadListener l = new BadListener();
-        eventManager.register(l);
+        try
+        {
+            eventManager.register(l);
+            fail();
+        }
+        catch (IllegalArgumentException ex)
+        {
+            // test passed
+        }
         assertEquals(0, l.called);
     }
 

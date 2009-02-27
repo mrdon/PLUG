@@ -6,6 +6,7 @@ import com.atlassian.plugin.util.ClassUtils;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.collections.map.LazyMap;
 import org.apache.commons.collections.Factory;
@@ -69,14 +70,15 @@ public class DefaultPluginEventManager implements PluginEventManager
      * Registers a listener by scanning the object for all listener methods
      *
      * @param listener The listener object
-     * @throws IllegalArgumentException If the listener is null or contains a listener method with 0 or 2 or more
-     * arguments
+     * @throws IllegalArgumentException If the listener is null, contains a listener method with 0 or 2 or more
+     * arguments, or contains no listener methods
      */
     public synchronized void register(Object listener) throws IllegalArgumentException
     {
         if (listener == null)
             throw new IllegalArgumentException("Listener cannot be null");
 
+        final AtomicBoolean listenerFound = new AtomicBoolean(false);
         forEveryListenerMethod(listener, new ListenerMethodHandler()
         {
             public void handle(Object listener, Method m)
@@ -85,8 +87,14 @@ public class DefaultPluginEventManager implements PluginEventManager
                         throw new IllegalArgumentException("Listener methods must only have one argument");
                 Set<Listener> listeners = eventsToListener.get(m.getParameterTypes()[0]);
                 listeners.add(new Listener(listener, m));
+                listenerFound.set(true);
             }
         });
+        if (!listenerFound.get())
+        {
+            throw new IllegalArgumentException("At least one listener method must be specified.  Most likely, a listener " +
+                "method is missing the @PluginEventListener annotation.");
+        }
     }
 
     /**
