@@ -669,7 +669,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     }
 
     /**
-     * Get the modules of all the given descriptor.
+     * Get the modules of all the given descriptor.  If any of the getModule() calls fails, the error is recorded in
+     * the logs and the plugin is disabled.
      *
      * @param moduleDescriptors the collection of module descriptors to get the modules from.
      * @return a {@link Collection} modules that can be any type of object.
@@ -677,13 +678,31 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     private <M> List<M> getModules(final Iterable<ModuleDescriptor<M>> moduleDescriptors)
     {
-        return transform(moduleDescriptors, new Function<ModuleDescriptor<M>, M>()
+        final Set<String> pluginsToDisable = new HashSet<String>();
+        List<M> modules = transform(moduleDescriptors, new Function<ModuleDescriptor<M>, M>()
         {
             public M get(final ModuleDescriptor<M> input)
             {
-                return input.getModule();
+                M result = null;
+                try
+                {
+                    result = input.getModule();
+                }
+                catch (RuntimeException ex)
+                {
+                    log.error("Exception when retrieving plugin module "+input.getKey()+", will disable plugin "
+                            + input.getPlugin().getKey(), ex);
+                    pluginsToDisable.add(input.getPlugin().getKey());
+                }
+                return result;
             }
         });
+
+        for (String badPluginKey : pluginsToDisable)
+        {
+            disablePlugin(badPluginKey);
+        }
+        return modules;
     }
 
     public Plugin getPlugin(final String key)

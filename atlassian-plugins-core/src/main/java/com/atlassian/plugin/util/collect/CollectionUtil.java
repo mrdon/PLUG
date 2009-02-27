@@ -38,8 +38,11 @@ public class CollectionUtil
         {
             public void consume(final T element)
             {
-                result.add(element);
-            };
+                if (element != null)
+                {
+                    result.add(element);
+                }
+            }
         });
         return result;
     }

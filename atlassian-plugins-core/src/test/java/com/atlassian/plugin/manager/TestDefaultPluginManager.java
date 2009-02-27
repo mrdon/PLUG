@@ -463,6 +463,39 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockModulePredicate.verify();
     }
 
+    public void testGetPluginModulesWithGetModuleThrowingException() throws Exception
+    {
+        Plugin badPlugin = new StaticPlugin();
+        badPlugin.setKey("bad");
+        MockModuleDescriptor<Object> badDescriptor = new MockModuleDescriptor<Object>(badPlugin, "bad", new Object())
+        {
+            @Override
+            public Object getModule()
+            {
+                throw new RuntimeException();
+            }
+        };
+        badPlugin.addModuleDescriptor(badDescriptor);
+
+        Plugin goodPlugin = new StaticPlugin();
+        goodPlugin.setKey("good");
+        MockModuleDescriptor<Object> goodDescriptor = new MockModuleDescriptor<Object>(goodPlugin, "good", new Object());
+        goodPlugin.addModuleDescriptor(goodDescriptor);
+
+
+        manager.addPlugins(null, Arrays.asList(goodPlugin, badPlugin));
+        manager.enablePlugin("bad");
+        manager.enablePlugin("good");
+
+        assertTrue(manager.isPluginEnabled("bad"));
+        assertTrue(manager.isPluginEnabled("good"));
+        final Collection<Object> modules = manager.getEnabledModulesByClass(Object.class);
+
+        assertEquals(1, modules.size());
+        assertFalse(manager.isPluginEnabled("bad"));
+        assertTrue(manager.isPluginEnabled("good"));
+    }
+
     public void testGetPluginModulesWithModuleNotMatchingPredicate() throws Exception
     {
         final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
