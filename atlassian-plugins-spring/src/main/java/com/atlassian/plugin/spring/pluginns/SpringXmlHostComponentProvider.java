@@ -18,6 +18,8 @@ import org.apache.commons.lang.ClassUtils;
 /**
  * Host component provider that uses <code>plugin:available="true"</code> attributes in Spring XML bean configuration
  * elements to determine which host components to provide to plugins.
+ *
+ * <p>When searching for interfaces, all spring framework and java.* interfaces are ignored.</p>
  */
 public class SpringXmlHostComponentProvider implements HostComponentProvider, BeanFactoryAware
 {
