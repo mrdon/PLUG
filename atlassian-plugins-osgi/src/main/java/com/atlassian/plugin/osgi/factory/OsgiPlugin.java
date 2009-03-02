@@ -121,17 +121,17 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     }
 
     /**
-     * @param aPackage The plugin key
+     * @param key The plugin key
      * @throws IllegalArgumentException If the plugin key doesn't match the bundle key
      */
     @Override
-    public void setKey(String aPackage) throws IllegalArgumentException
+    public void setKey(String key) throws IllegalArgumentException
     {
-        if (bundle != null && !bundle.getSymbolicName().equals(aPackage))
+        if (bundle != null && !bundle.getSymbolicName().equals(key))
         {
-            throw new IllegalArgumentException("The plugin key '"+aPackage+"' must match the OSGi bundle symbolic name (Bundle-SymbolicName)");
+            throw new IllegalArgumentException("The plugin key '"+key+"' must match the OSGi bundle symbolic name (Bundle-SymbolicName)");
         }
-        super.setKey(aPackage);
+        super.setKey(key);
     }
 
     /**
