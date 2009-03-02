@@ -3,9 +3,9 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
-import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
-import static com.atlassian.plugin.util.validation.ValidatePattern.test;
-import com.atlassian.plugin.util.validation.ValidatePattern;
+import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
+import com.atlassian.plugin.util.validation.ValidationPattern;
 import com.atlassian.plugin.util.PluginUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -31,7 +31,7 @@ public class ComponentSpringStage implements TransformStage
             Element root = springDoc.getRootElement();
             List<Element> elements = context.getDescriptorDocument().getRootElement().elements("component");
 
-            ValidatePattern validation = createPattern().
+            ValidationPattern validation = createPattern().
                     rule(
                         test("@key").withError("The key is required"),
                         test("@class").withError("The class is required"),

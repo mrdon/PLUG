@@ -1,12 +1,12 @@
 package com.atlassian.plugin.servlet.descriptors;
 
-import org.apache.commons.lang.StringUtils;
 import org.dom4j.Element;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
-import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
-import static com.atlassian.plugin.util.validation.ValidatePattern.test;
+import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
+import com.atlassian.plugin.util.validation.ValidationPattern;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
 /**
@@ -22,16 +22,20 @@ public class ServletContextParamModuleDescriptor extends AbstractModuleDescripto
     @Override
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
-        createPattern().
-                rule(
-                    test("param-name").withError("Parameter name is required"),
-                    test("param-value").withError("Parameter value is required")).
-                evaluate(element);
-
         super.init(plugin, element);
         
         paramName = element.elementTextTrim("param-name");
         paramValue = element.elementTextTrim("param-value");
+    }
+
+    @Override
+    protected void provideValidationRules(ValidationPattern pattern)
+    {
+        super.provideValidationRules(pattern);
+        pattern.
+                rule(
+                    test("param-name").withError("Parameter name is required"),
+                    test("param-value").withError("Parameter value is required"));
     }
 
     public String getParamName()

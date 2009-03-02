@@ -11,19 +11,19 @@ import java.util.List;
  *
  * @since 2.2.0
  */
-public class ValidatePattern
+public class ValidationPattern
 {
     private final List<Rule> rules = new ArrayList<Rule>();
 
-    private ValidatePattern() {
+    private ValidationPattern() {
     }
 
     /**
      * @return a new pattern instance
      */
-    public static ValidatePattern createPattern()
+    public static ValidationPattern createPattern()
     {
-        return new ValidatePattern();
+        return new ValidationPattern();
     }
 
     /**
@@ -32,7 +32,7 @@ public class ValidatePattern
      * @param tests A series of tests
      * @return this for chaining
      */
-    public ValidatePattern rule(String context, RuleTest... tests)
+    public ValidationPattern rule(String context, RuleTest... tests)
     {
         rules.add(new Rule(context, tests));
         return this;
@@ -43,7 +43,7 @@ public class ValidatePattern
      * @param tests A series of tests
      * @return this for chaining
      */
-    public ValidatePattern rule(RuleTest... tests)
+    public ValidationPattern rule(RuleTest... tests)
     {
         rules.add(new Rule(".", tests));
         return this;

@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
-import static com.atlassian.plugin.util.validation.ValidatePattern.test;
+import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 import com.atlassian.plugin.PluginParseException;
 
 /**

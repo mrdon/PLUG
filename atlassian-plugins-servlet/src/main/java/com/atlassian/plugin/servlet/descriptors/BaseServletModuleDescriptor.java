@@ -2,7 +2,6 @@ package com.atlassian.plugin.servlet.descriptors;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -12,9 +11,9 @@ import org.dom4j.Element;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
-import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
-import static com.atlassian.plugin.util.validation.ValidatePattern.test;
-import com.atlassian.plugin.hostcontainer.HostContainer;
+import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
+import com.atlassian.plugin.util.validation.ValidationPattern;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
 /**
@@ -32,15 +31,6 @@ public abstract class BaseServletModuleDescriptor<T> extends AbstractModuleDescr
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
-        createPattern().
-                rule(
-                    test("@class").withError("The class is required"),
-                    test("url-pattern").withError("There must be at least one path specified")).
-                rule("init-param",
-                    test("param-name").withError("Parameter name is required"),
-                    test("param-value").withError("Parameter value is required")).
-                evaluate(element);
-
         super.init(plugin, element);
 
         List<Element> urlPatterns = element.elements("url-pattern");
@@ -59,6 +49,19 @@ public abstract class BaseServletModuleDescriptor<T> extends AbstractModuleDescr
             Element paramValueEl = initParamEl.element("param-value");
             initParams.put(paramNameEl.getTextTrim(), paramValueEl.getTextTrim());
         }
+    }
+
+    @Override
+    protected void provideValidationRules(ValidationPattern pattern)
+    {
+        super.provideValidationRules(pattern);
+        pattern.
+                rule(
+                    test("@class").withError("The class is required"),
+                    test("url-pattern").withError("There must be at least one path specified")).
+                rule("init-param",
+                    test("param-name").withError("Parameter name is required"),
+                    test("param-value").withError("Parameter value is required"));
     }
 
     public List<String> getPaths()

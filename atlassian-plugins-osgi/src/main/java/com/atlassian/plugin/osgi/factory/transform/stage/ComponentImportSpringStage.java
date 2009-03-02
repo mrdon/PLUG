@@ -4,16 +4,9 @@ import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.model.ComponentImport;
-import com.atlassian.plugin.util.validation.ValidatePattern;
-import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
-import static com.atlassian.plugin.util.validation.ValidatePattern.test;
 import com.atlassian.plugin.util.PluginUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * Transforms component imports into a Spring XML file

@@ -9,8 +9,9 @@ import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import com.atlassian.plugin.util.JavaVersionUtils;
-import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
-import static com.atlassian.plugin.util.validation.ValidatePattern.test;
+import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
+import com.atlassian.plugin.util.validation.ValidationPattern;
 
 import org.dom4j.Element;
 
@@ -39,10 +40,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
 
     public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
-        createPattern().
-                rule(
-                    test("@key").withError("The key is required")).
-                evaluate(element);
+        validate(element);
 
         this.plugin = plugin;
         this.key = element.attributeValue("key");
@@ -84,6 +82,30 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         }
 
         resources = Resources.fromXml(element);
+    }
+
+    /**
+     * Validates the element, collecting the rules from {@link #provideValidationRules(ValidationPattern)}
+     *
+     * @param element The configuration element
+     * @since 2.2.0
+     */
+    private void validate(Element element)
+    {
+        ValidationPattern pattern = createPattern();
+        provideValidationRules(pattern);
+        pattern.evaluate(element);
+    }
+
+    /**
+     * Provides validation rules for the pattern
+     *
+     * @param pattern The validation pattern
+     * @since 2.2.0
+     */
+    protected void provideValidationRules(ValidationPattern pattern)
+    {
+        pattern.rule(test("@key").withError("The key is required"));
     }
 
     /**

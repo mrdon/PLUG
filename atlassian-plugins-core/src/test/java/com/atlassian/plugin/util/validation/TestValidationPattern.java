@@ -3,11 +3,11 @@ package com.atlassian.plugin.util.validation;
 import junit.framework.TestCase;
 import org.dom4j.Element;
 import org.dom4j.DocumentFactory;
-import static com.atlassian.plugin.util.validation.ValidatePattern.createPattern;
-import static com.atlassian.plugin.util.validation.ValidatePattern.test;
+import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 import com.atlassian.plugin.PluginParseException;
 
-public class TestValidatePattern extends TestCase
+public class TestValidationPattern extends TestCase
 {
     Element root;
 
@@ -39,7 +39,7 @@ public class TestValidatePattern extends TestCase
 
     /*public void testSuccessPerfTest()
     {
-        ValidatePattern ptn = createPattern().
+        ValidationPattern ptn = createPattern().
                 rule(".",
                         test("child").withError("Child is required"),
                         test("not(baz)").withError("Baz should not exist")).
