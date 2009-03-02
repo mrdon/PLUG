@@ -193,6 +193,7 @@ public class XmlDescriptorParser implements DescriptorParser
         // When there's a problem loading a module, return an UnrecognisedModuleDescriptor with error
         catch (final Throwable e)
         {
+            e.printStackTrace();
             final UnrecognisedModuleDescriptor descriptor = UnrecognisedModuleDescriptorFactory.createUnrecognisedModuleDescriptor(plugin, element,
                 e, moduleDescriptorFactory);
 

@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.descriptors.ChainModuleDescriptorFactory;
 import com.atlassian.plugin.factories.PluginFactory;
@@ -12,6 +13,9 @@ import com.atlassian.plugin.osgi.factory.transform.DefaultPluginTransformer;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformer;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
+import com.atlassian.plugin.osgi.factory.descriptor.ComponentModuleDescriptor;
+import com.atlassian.plugin.osgi.factory.descriptor.ModuleTypeModuleDescriptor;
+import com.atlassian.plugin.osgi.factory.descriptor.ComponentImportModuleDescriptor;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import org.apache.commons.io.IOUtils;
@@ -38,6 +42,12 @@ public class OsgiPluginFactory implements PluginFactory
     private final PluginEventManager pluginEventManager;
     private final Set<String> applicationKeys;
     private final OsgiPersistentCache persistentCache;
+    private final ModuleDescriptorFactory transformedDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer())
+    {{
+        addModuleDescriptor("component", ComponentModuleDescriptor.class);
+        addModuleDescriptor("component-import", ComponentImportModuleDescriptor.class);
+        addModuleDescriptor("module-type", ModuleTypeModuleDescriptor.class);
+    }};
 
     private volatile  PluginTransformer pluginTransformer;
 
@@ -160,6 +170,8 @@ public class OsgiPluginFactory implements PluginFactory
         if (moduleDescriptorFactoryTracker != null)
         {
             List<ModuleDescriptorFactory> factories = new ArrayList<ModuleDescriptorFactory>();
+
+            factories.add(transformedDescriptorFactory);
             Object[] serviceObjs = moduleDescriptorFactoryTracker.getServices();
 
             // Add all the dynamic module descriptor factories registered as osgi services
@@ -168,8 +180,8 @@ public class OsgiPluginFactory implements PluginFactory
                 for (Object fac : serviceObjs) factories.add((ModuleDescriptorFactory) fac);
             }
 
-            // Put the application factory first
-            factories.add(0, originalFactory);
+            // Put the application factory second
+            factories.add(1, originalFactory);
 
             // Catch all unknown descriptors as unrecognised
             factories.add(new UnrecognisedModuleDescriptorFallbackFactory());

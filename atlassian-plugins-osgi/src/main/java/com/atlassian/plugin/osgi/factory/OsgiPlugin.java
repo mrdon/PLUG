@@ -333,6 +333,11 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
     }
 
+    Map<String, Element> getModuleElements()
+    {
+        return moduleElements;
+    }
+
     @Override
     public String toString()
     {
