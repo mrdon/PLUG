@@ -14,10 +14,10 @@ import java.util.HashMap;
  */
 public class DefaultWebLink extends AbstractWebItem implements WebLink
 {
-    String url;
-    boolean absoluteUrl;
-    String accessKey;
-    String id;
+    private final String url;
+    private final boolean absoluteUrl;
+    private final String accessKey;
+    private final String id;
 
     public DefaultWebLink(Element linkEl, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider, WebFragmentModuleDescriptor descriptor)
     {

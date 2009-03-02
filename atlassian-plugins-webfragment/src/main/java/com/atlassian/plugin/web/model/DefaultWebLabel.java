@@ -14,8 +14,8 @@ import java.util.*;
  */
 public class DefaultWebLabel extends DefaultWebParam implements WebLabel
 {
-    String key;
-    String noKeyValue;
+    private final String key;
+    private final String noKeyValue;
 
     public DefaultWebLabel(Element labelEl, WebFragmentHelper webFragmentHelper, ContextProvider contextProvider, WebFragmentModuleDescriptor descriptor) throws PluginParseException
     {
@@ -31,6 +31,10 @@ public class DefaultWebLabel extends DefaultWebParam implements WebLabel
             if (this.key == null)
             {
                 this.noKeyValue = labelEl.getTextTrim();
+            }
+            else
+            {
+                this.noKeyValue = null;
             }
         }
     }
