@@ -23,7 +23,7 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
     private final File frameworkBundleCache;
     private final File transformedPluginCache;
     private final String applicationVersion;
-    private Logger log = Logger.getLogger(DefaultOsgiPersistentCache.class);
+    private final Logger log = Logger.getLogger(DefaultOsgiPersistentCache.class);
 
     /**
      * @deprecated
