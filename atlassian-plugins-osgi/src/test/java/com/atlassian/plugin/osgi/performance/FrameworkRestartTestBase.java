@@ -70,8 +70,8 @@ public abstract class FrameworkRestartTestBase extends PluginInContainerTestBase
     {
         for (int x=0; x<5; x++)
         {
-        startPluginFramework();
-        pluginManager.shutdown();
+            startPluginFramework();
+            pluginManager.shutdown();
         }
     }
 }
