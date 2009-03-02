@@ -92,7 +92,7 @@ public class OsgiPluginFactory implements PluginFactory
 
             if (descriptorStream != null)
             {
-                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, applicationKeys);
+                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, applicationKeys.toArray(new String[applicationKeys.size()]));
                 if (descriptorParser.getPluginsVersion() == 2)
                     pluginKey = descriptorParser.getKey();
             }
@@ -134,7 +134,7 @@ public class OsgiPluginFactory implements PluginFactory
                 throw new PluginParseException("No descriptor found in classloader for : " + pluginArtifact);
 
             ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
-            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys);
+            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys.toArray(new String[applicationKeys.size()]));
 
             Plugin osgiPlugin = new OsgiPlugin(osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager);
 

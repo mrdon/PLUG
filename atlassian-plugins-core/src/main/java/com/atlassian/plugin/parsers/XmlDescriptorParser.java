@@ -22,9 +22,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import java.io.InputStream;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Collections;
+import java.util.*;
 
 /**
  * Provides access to the descriptor information retrieved from an XML InputStream.
@@ -42,31 +40,24 @@ public class XmlDescriptorParser implements DescriptorParser
     private final Set<String> applicationKeys;
 
     /**
-     * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
-     * @deprecated Since 2.2.0, use {@link #XmlDescriptorParser(InputStream,Set<String>)} instead
-     */
-    @Deprecated
-    public XmlDescriptorParser(final InputStream source) throws PluginParseException
-    {
-        this(source, null);
-    }
-
-    /**
      * Constructs a parser with an already-constructed document
      * @param source the source document
      * @param applicationKeys the application key to filter modules with, null for all unspecified
      * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
      * @since 2.2.0
      */
-    public XmlDescriptorParser(final Document source, Set<String> applicationKeys) throws PluginParseException
+    public XmlDescriptorParser(final Document source, String... applicationKeys) throws PluginParseException
     {
         Validate.notNull(source, "XML descriptor source document cannot be null");
         document = source;
         if (applicationKeys == null)
         {
-            applicationKeys = Collections.emptySet();
+            this.applicationKeys = Collections.emptySet();
         }
-        this.applicationKeys = applicationKeys;
+        else
+        {
+            this.applicationKeys = new HashSet<String>(Arrays.asList(applicationKeys));
+        }
     }
 
     /**
@@ -76,15 +67,18 @@ public class XmlDescriptorParser implements DescriptorParser
      * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
      * @since 2.2.0
      */
-    public XmlDescriptorParser(InputStream source, Set<String> applicationKeys) throws PluginParseException
+    public XmlDescriptorParser(InputStream source, String... applicationKeys) throws PluginParseException
     {
         Validate.notNull(source, "XML descriptor source cannot be null");
         document = createDocument(source);
         if (applicationKeys == null)
         {
-            applicationKeys = Collections.emptySet();
+            this.applicationKeys = Collections.emptySet();
         }
-        this.applicationKeys = applicationKeys;
+        else
+        {
+            this.applicationKeys = new HashSet<String>(Arrays.asList(applicationKeys));
+        }
     }
 
     protected Document createDocument(final InputStream source) throws PluginParseException

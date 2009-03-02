@@ -22,19 +22,7 @@ public class OsgiPluginXmlDescriptorParserFactory implements DescriptorParserFac
      * @return The parser
      * @throws PluginParseException
      */
-    public DescriptorParser getInstance(InputStream source) throws PluginParseException
-    {
-        return getInstance(source, null);
-    }
-
-    /**
-     * Gets an instance that filters the modules "component", "component-import", "module-type", "bean", and "spring"
-     * @param source The descriptor source
-     * @return The parser
-     * @throws PluginParseException
-     * @since 2.2.0
-     */
-    public DescriptorParser getInstance(InputStream source, Set<String> applicationKeys) throws PluginParseException
+    public DescriptorParser getInstance(InputStream source, String... applicationKeys) throws PluginParseException
     {
         Validate.notNull(source, "The descriptor source must not be null");
         return new OsgiPluginXmlDescriptorParser(source, applicationKeys);

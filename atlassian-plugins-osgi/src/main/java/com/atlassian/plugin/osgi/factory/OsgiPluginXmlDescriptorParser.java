@@ -29,7 +29,7 @@ public class OsgiPluginXmlDescriptorParser extends XmlDescriptorParser
      * @throws com.atlassian.plugin.PluginParseException
      *          if there is a problem reading the descriptor from the XML {@link java.io.InputStream}.
      */
-    public OsgiPluginXmlDescriptorParser(InputStream source, Set<String> applicationKeys) throws PluginParseException
+    public OsgiPluginXmlDescriptorParser(InputStream source, String... applicationKeys) throws PluginParseException
     {
         super(source, applicationKeys);
         Validate.notNull(source, "The descriptor source must not be null");

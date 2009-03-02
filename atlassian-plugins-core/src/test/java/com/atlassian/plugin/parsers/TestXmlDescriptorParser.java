@@ -197,6 +197,6 @@ public class TestXmlDescriptorParser extends TestCase
             sb.append(line.replace('\'', '"')).append('\n');
         }
         InputStream in = new ByteArrayInputStream(sb.toString().getBytes());
-        return new XmlDescriptorParser(in, new HashSet<String>(Arrays.asList(applicationKey)));
+        return new XmlDescriptorParser(in, applicationKey);
     }
 }

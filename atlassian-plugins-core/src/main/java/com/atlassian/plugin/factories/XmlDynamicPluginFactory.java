@@ -81,7 +81,7 @@ public class XmlDynamicPluginFactory implements PluginFactory
         {
             pluginDescriptor = new FileInputStream(pluginArtifact.toFile());
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
-            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys);
+            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys.toArray(new String[applicationKeys.size()]));
             plugin = parser.configurePlugin(moduleDescriptorFactory, new XmlDynamicPlugin());
         }
         catch (RuntimeException e)
@@ -114,7 +114,7 @@ public class XmlDynamicPluginFactory implements PluginFactory
         {
             try
             {
-                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, applicationKeys);
+                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, applicationKeys.toArray(new String[applicationKeys.size()]));
                 pluginKey = descriptorParser.getKey();
             } catch (PluginParseException ex)
             {

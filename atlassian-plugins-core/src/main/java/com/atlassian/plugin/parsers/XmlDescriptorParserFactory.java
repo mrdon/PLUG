@@ -14,15 +14,6 @@ import java.util.Set;
 public class XmlDescriptorParserFactory implements DescriptorParserFactory
 {
     /**
-     * @deprecated Since 2.2.0
-     */
-    @Deprecated
-    public DescriptorParser getInstance(InputStream source) throws PluginParseException
-    {
-        return getInstance(source, null);
-    }
-
-    /**
      *
      * @param source the stream of data which represents the descriptor. The stream will
      * only be read once, so it need not be resettable.
@@ -30,9 +21,8 @@ public class XmlDescriptorParserFactory implements DescriptorParserFactory
      * match everything.
      * @return
      * @throws PluginParseException
-     * @since 2.2.0
      */
-    public DescriptorParser getInstance(InputStream source, Set<String> applicationKeys) throws PluginParseException
+    public DescriptorParser getInstance(InputStream source, String... applicationKeys) throws PluginParseException
     {
         return new XmlDescriptorParser(source, applicationKeys);
     }
