@@ -13,11 +13,11 @@ import org.apache.commons.io.IOUtils;
 public class TestUrlUnzipper extends TestCase
 {
 
-    File basedir;
-    File destdir;
-    File zip;
-    File sourcedir;
-    File source1;
+    private File basedir;
+    private File destdir;
+    private File zip;
+    private File sourcedir;
+    private File source1;
 
     @Override
     protected void setUp() throws Exception {
