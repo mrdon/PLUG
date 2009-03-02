@@ -4,6 +4,7 @@ import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.SomeInterface;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
+import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.test.PluginJarBuilder;
 
 import org.dom4j.DocumentException;
@@ -63,7 +64,7 @@ public class TestComponentImportSpringStage extends TestCase
         final File jar = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml", "<atlassian-plugin>",
             "  <component-import key='foo' interface='com.atlassian.plugin.osgi.SomeInterface' />", "</atlassian-plugin>").build();
 
-        final TransformContext context = new TransformContext(null, null, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
         stage.execute(context);
         assertTrue(context.getExtraImports().contains(SomeInterface.class.getPackage().getName()));
 

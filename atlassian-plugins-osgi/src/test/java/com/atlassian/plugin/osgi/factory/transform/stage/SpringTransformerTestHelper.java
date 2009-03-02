@@ -48,7 +48,7 @@ public class SpringTransformerTestHelper
             pluginJar = new PluginJarBuilder().addResource(PluginAccessor.Descriptor.FILENAME, swriter).build();
         }
         Set<String> keys = new HashSet<String>(Arrays.asList("foo"));
-        final TransformContext context = new TransformContext(regs, new SystemExports(""), new JarPluginArtifact(pluginJar), keys, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, SystemExports.NONE, new JarPluginArtifact(pluginJar), keys, PluginAccessor.Descriptor.FILENAME);
 
         transformer.execute(context);
 

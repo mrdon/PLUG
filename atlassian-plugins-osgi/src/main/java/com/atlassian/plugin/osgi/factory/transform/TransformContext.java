@@ -46,6 +46,7 @@ public class TransformContext
     {
         Validate.notNull(pluginArtifact, "The plugin artifact must be specified");
         Validate.notNull(descriptorPath, "The plugin descriptor path must be specified");
+        Validate.notNull(systemExports, "The system exports must be specified");
 
         this.regs = regs;
         this.systemExports = systemExports;

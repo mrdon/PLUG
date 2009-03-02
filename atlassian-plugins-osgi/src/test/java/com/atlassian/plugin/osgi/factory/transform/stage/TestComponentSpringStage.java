@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.ByteArrayInputStream;
 
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
+import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.mockobjects.dynamic.Mock;
@@ -86,7 +87,7 @@ public class TestComponentSpringStage extends TestCase
         mockPluginArtifact.expectAndReturn("getResourceAsStream", C.args(C.eq("foo")),
                 new ByteArrayInputStream(SpringTransformerTestHelper.elementToString(pluginRoot).getBytes()));
         mockPluginArtifact.expectAndReturn("doesResourceExist", C.args(C.eq("my/IFoo.class")), true);
-        TransformContext ctx = new TransformContext(null, null, (PluginArtifact) mockPluginArtifact.proxy(), null, "foo");
+        TransformContext ctx = new TransformContext(null, SystemExports.NONE, (PluginArtifact) mockPluginArtifact.proxy(), null, "foo");
         transformer.execute(ctx);
 
         assertTrue(ctx.getExtraExports().contains("my"));
@@ -109,7 +110,7 @@ public class TestComponentSpringStage extends TestCase
         mockPluginArtifact.expectAndReturn("getResourceAsStream", C.args(C.eq("foo")),
                 new ByteArrayInputStream(SpringTransformerTestHelper.elementToString(pluginRoot).getBytes()));
         mockPluginArtifact.expectAndReturn("doesResourceExist", C.args(C.eq("my/IFoo.class")), false);
-        TransformContext ctx = new TransformContext(null, null, (PluginArtifact) mockPluginArtifact.proxy(), null, "foo");
+        TransformContext ctx = new TransformContext(null, SystemExports.NONE, (PluginArtifact) mockPluginArtifact.proxy(), null, "foo");
         transformer.execute(ctx);
 
         assertFalse(ctx.getExtraExports().contains("my"));
@@ -131,7 +132,7 @@ public class TestComponentSpringStage extends TestCase
         mockPluginArtifact.matchAndReturn("toFile", new PluginJarBuilder().build());
         mockPluginArtifact.expectAndReturn("getResourceAsStream", C.args(C.eq("foo")),
                 new ByteArrayInputStream(SpringTransformerTestHelper.elementToString(pluginRoot).getBytes()));
-        TransformContext ctx = new TransformContext(null, null, (PluginArtifact) mockPluginArtifact.proxy(), null, "foo");
+        TransformContext ctx = new TransformContext(null, SystemExports.NONE, (PluginArtifact) mockPluginArtifact.proxy(), null, "foo");
         ctx.getExtraExports().add("my");
         transformer.execute(ctx);
 

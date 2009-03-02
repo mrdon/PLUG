@@ -4,6 +4,8 @@ import aQute.lib.header.OSGiHeader;
 
 import java.util.Map;
 
+import org.apache.commons.lang.Validate;
+
 /**
  * Encapsulates the package exports from the system bundle
  *
@@ -13,6 +15,8 @@ public class SystemExports
 {
     private final Map<String, Map<String,String>> exports;
 
+    public static final SystemExports NONE = new SystemExports("");
+
     /**
      * Constructs an instance by parsing the exports line from the manifest
      *
@@ -20,6 +24,10 @@ public class SystemExports
      */
     public SystemExports(String exportsLine)
     {
+        if (exportsLine == null)
+        {
+            exportsLine = "";
+        }
         this.exports = OSGiHeader.parseHeader(exportsLine);
     }
 
@@ -32,33 +40,30 @@ public class SystemExports
      */
     public String getFullExport(String pkg)
     {
-        String fullPkg = pkg;
+        StringBuilder fullPkg = new StringBuilder(pkg);
         if (exports.containsKey(pkg))
         {
-            StringBuilder sb = new StringBuilder();
-            sb.append(pkg);
             Map<String,String> attrs = exports.get(pkg);
             if (attrs != null && !attrs.isEmpty())
             {
                 for (Map.Entry<String,String> entry : attrs.entrySet())
                 {
-                    sb.append(";");
-                    sb.append(entry.getKey());
-                    sb.append("=\"");
+                    fullPkg.append(";");
+                    fullPkg.append(entry.getKey());
+                    fullPkg.append("=\"");
 
                     if ("version".equals(entry.getKey()))
                     {
-                        sb.append("[").append(entry.getValue()).append(",").append(entry.getValue()).append("]");
+                        fullPkg.append("[").append(entry.getValue()).append(",").append(entry.getValue()).append("]");
                     }
                     else
                     {
-                        sb.append(entry.getValue());
+                        fullPkg.append(entry.getValue());
                     }
-                    sb.append("\"");
+                    fullPkg.append("\"");
                 }
             }
-            fullPkg = sb.toString();
         }
-        return fullPkg;
+        return fullPkg.toString();
     }
 }
