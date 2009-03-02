@@ -82,7 +82,7 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
 
         if (applicationVersion != null)
         {
-            File versionFile = new File(osgiBundleCache, "host.version");
+            File versionFile = new File(transformedPluginCache, "host.version");
             if (versionFile.exists())
             {
                 String oldVersion = null;

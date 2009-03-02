@@ -35,14 +35,13 @@ import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
 import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.io.IOUtils;
 
 import javax.servlet.ServletContext;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.InputStream;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * A simple class that behaves like Spring's ContainerManager class.
@@ -91,13 +90,23 @@ public class ContainerManager
         moduleDescriptorFactory.addModuleDescriptor("web-resource", WebResourceModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("web-item", DefaultWebItemModuleDescriptor.class);
 
-        final DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration();
+        final DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration(determineVersion());
         final List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
         packageIncludes.add("org.bouncycastle*");
         packageIncludes.add("org.dom4j*");
 
         scannerConfig.setPackageIncludes(packageIncludes);
         hostComponentProvider = new SimpleHostComponentProvider();
+
+        File osgiCache;
+        if (System.getProperty("osgi.cache") != null)
+        {
+            osgiCache = makeSureDirectoryExists(System.getProperty("osgi.cache"));
+        }
+        else
+        {
+            osgiCache = makeSureDirectoryExists(servletContext, "/WEB-INF/osgi-cache");
+        }
 
         final PluginsConfiguration config = new PluginsConfigurationBuilder()
                 .useLegacyDynamicPluginDeployer(true)
@@ -107,7 +116,7 @@ public class ContainerManager
                 .moduleDescriptorFactory(moduleDescriptorFactory)
                 .packageScannerConfiguration(scannerConfig)
                 .hostComponentProvider(hostComponentProvider)
-                .osgiPersistentCache(makeSureDirectoryExists(servletContext, "/WEB-INF/osgi-cache"))
+                .osgiPersistentCache(osgiCache)
                 .build();
         plugins = new AtlassianPlugins(config);
 
@@ -144,9 +153,37 @@ public class ContainerManager
         downloadStrategies.add(pluginDownloadStrategy);
     }
 
+    private String determineVersion()
+    {
+        InputStream in = null;
+        Properties props = new Properties();
+        try
+        {
+            in = getClass().getClassLoader().getResourceAsStream("META-INF/maven/com.atlassian.plugins/atlassian-plugins-core/pom.properties");
+            if (in != null)
+            {
+                props.load(in);
+                return props.getProperty("version");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        finally
+        {
+            IOUtils.closeQuietly(in);
+        }
+        return null;
+    }
+
     private File makeSureDirectoryExists(ServletContext servletContext, String relativePath)
     {
-        final File dir = new File(servletContext.getRealPath(relativePath));
+        return makeSureDirectoryExists(servletContext.getRealPath(relativePath));
+    }
+
+    private File makeSureDirectoryExists(String path)
+    {
+        File dir = new File(path);
         if (!dir.exists() && !dir.mkdirs())
         {
             throw new RuntimeException("Could not create directory <" + dir + ">");
