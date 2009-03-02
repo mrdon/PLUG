@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
 import com.atlassian.plugin.util.resource.AlternativeResourceLoader;
 
@@ -38,7 +39,7 @@ public class TestAlternativeDirectoryResourceLoader extends TestCase
     {
         if (!"target".equals(base.getName()))
         {
-            org.apache.commons.io.FileUtils.deleteDirectory(base);
+            FileUtils.deleteDirectory(base);
         }
         kid.delete();
     }

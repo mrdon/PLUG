@@ -122,6 +122,9 @@ public class DefaultPluginTransformer implements PluginTransformer
                 for (Map.Entry<String, byte[]> entry : context.getFileOverrides().entrySet())
                 {
                     sb.append("==").append(entry.getKey()).append("==\n");
+
+                    // Yes, this doesn't take into account encoding, but since only text files are overridden, that
+                    // should be fine
                     sb.append(new String(entry.getValue()));
                 }
                 log.debug(sb.toString());
