@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.factory.transform.model;
 
 import org.dom4j.Element;
+import org.apache.commons.lang.Validate;
 
 import java.util.HashSet;
 import java.util.List;
@@ -23,6 +24,7 @@ public class ComponentImport
 
     public ComponentImport(Element element) throws PluginParseException
     {
+        Validate.notNull(element);
         createPattern().
                 rule(
                         test("@key").withError("The key is required"),

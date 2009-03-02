@@ -9,7 +9,7 @@ import com.atlassian.plugin.PluginParseException;
 
 public class TestValidationPattern extends TestCase
 {
-    Element root;
+    private Element root;
 
     @Override
     public void setUp()

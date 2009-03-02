@@ -1,6 +1,7 @@
 package com.atlassian.plugin.util.validation;
 
 import org.dom4j.Node;
+import org.apache.commons.lang.Validate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,16 +52,16 @@ public class ValidationPattern
 
     /**
      * Evaluates the rules against the provided node
-     * @param element The node to evaluate
+     * @param node The node to evaluate
      * @throws ValidationException If a validation error occurs.  If wanting to resolve i18n keys
      * to messages, you can access the list of errors from the exception.
      */
-    public void evaluate(Node element) throws ValidationException
+    public void evaluate(Node node) throws ValidationException
     {
         List<String> errors = new ArrayList<String>();
         for (Rule rule : rules)
         {
-            rule.evaluate(element, errors);
+            rule.evaluate(node, errors);
         }
         if (!errors.isEmpty())
         {
@@ -101,6 +102,7 @@ public class ValidationPattern
 
         private RuleTest(String xpath)
         {
+            Validate.notNull(xpath);
             this.xpath = xpath;
         }
 
@@ -122,11 +124,11 @@ public class ValidationPattern
             {
                 errors.add(errorMessage);
             }
-            else if (obj instanceof Boolean && !((Boolean)obj).booleanValue())
+            else if (obj instanceof Boolean && !((Boolean)obj))
             {
                 errors.add(errorMessage);
             }
-            else if (obj instanceof List && ((List<?>)obj).size() == 0)
+            else if (obj instanceof List && ((List<?>)obj).isEmpty())
             {
                 errors.add(errorMessage);
             }
@@ -144,6 +146,8 @@ public class ValidationPattern
 
         private Rule(String contextPattern, RuleTest[] tests)
         {
+            Validate.notNull(contextPattern);
+            Validate.notNull(tests);
             this.contextPattern = contextPattern;
             this.tests = tests;
         }

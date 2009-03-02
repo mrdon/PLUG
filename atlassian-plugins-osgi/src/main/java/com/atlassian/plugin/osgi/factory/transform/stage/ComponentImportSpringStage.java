@@ -1,8 +1,8 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
-import com.atlassian.plugin.osgi.factory.transform.TransformStage;
-import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
+import com.atlassian.plugin.osgi.factory.transform.TransformContext;
+import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.model.ComponentImport;
 import com.atlassian.plugin.util.PluginUtils;
 import org.dom4j.Document;

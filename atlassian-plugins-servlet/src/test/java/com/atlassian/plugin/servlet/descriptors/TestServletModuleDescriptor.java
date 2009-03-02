@@ -16,7 +16,7 @@ import com.mockobjects.dynamic.Mock;
 
 public class TestServletModuleDescriptor extends TestCase
 {
-    ServletModuleDescriptor descriptor;
+    private ServletModuleDescriptor descriptor;
 
     @Override
     public void setUp()
@@ -60,7 +60,8 @@ public class TestServletModuleDescriptor extends TestCase
         {
             descriptor.init(plugin, e);
             fail("Should have thrown exception");
-        } catch (PluginParseException ex)
+        }
+        catch (PluginParseException ex)
         {
             // very good
         }

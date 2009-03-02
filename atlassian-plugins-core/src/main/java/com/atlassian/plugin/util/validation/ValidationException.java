@@ -3,6 +3,10 @@ package com.atlassian.plugin.util.validation;
 import com.atlassian.plugin.PluginParseException;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+
+import org.apache.commons.lang.Validate;
 
 /**
  * Exception for a validation error parsing DOM4J nodes
@@ -15,7 +19,9 @@ public class ValidationException extends PluginParseException
     public ValidationException(String msg, List<String> errors)
     {
         super(msg);
-        this.errors = errors;
+        
+        Validate.notNull(errors);
+        this.errors = Collections.unmodifiableList(new ArrayList<String>(errors));
     }
 
     /**
