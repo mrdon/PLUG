@@ -156,8 +156,8 @@ public class TestGenerateManifestStage extends TestCase
 
         final Collection imports = Arrays.asList(attrs.getValue("Import-Package").split(","));
         assertEquals(2, imports.size());
-        assertTrue(imports.contains(Logger.class.getPackage().getName() + ";resolution:=optional"));
-        assertTrue(imports.contains(Filter.class.getPackage().getName() + ";resolution:=optional"));
+        assertTrue(imports.contains(Logger.class.getPackage().getName() + ";resolution:=\"optional\""));
+        assertTrue(imports.contains(Filter.class.getPackage().getName() + ";resolution:=\"optional\""));
     }
 
     public void testGenerateManifestWithBundleInstructions() throws Exception
@@ -173,6 +173,23 @@ public class TestGenerateManifestStage extends TestCase
         final Attributes attrs = executeStage(context);
         assertEquals("test.plugin", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals("foo", attrs.getValue(Constants.EXPORT_PACKAGE));
+    }
+
+    public void testGenerateManifestWithHostAndExternalImports() throws Exception
+    {
+        final File plugin = new PluginJarBuilder("plugin")
+                .addPluginInformation("test.plugin", "test.plugin", "1.0")
+                .build();
+
+        SystemExports exports = new SystemExports("foo.bar,foo.baz;version=\"1.0\"");
+        final TransformContext context = new TransformContext(null, exports, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        context.getBndInstructions().put("Import-Package", "foo.bar,foo.baz");
+        final Attributes attrs = executeStage(context);
+        assertEquals("test.plugin", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
+
+        String imports = attrs.getValue(Constants.IMPORT_PACKAGE);
+        assertTrue(imports.contains("foo.baz;version=\"[1.0,1.0]\""));
+        assertTrue(imports.contains("foo.bar"));
     }
 
     private Attributes executeStage(final TransformContext context) throws IOException

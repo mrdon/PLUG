@@ -3,20 +3,20 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;
 import aQute.lib.osgi.Jar;
+import aQute.lib.header.OSGiHeader;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
+import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
+import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 import org.osgi.framework.Constants;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.Manifest;
 
@@ -37,9 +37,17 @@ public class GenerateManifestStage implements TransformStage
             // Possibly necessary due to Spring XML creation
             if (isOsgiBundle(builder.getJar().getManifest()))
             {
-                String imports = addExtraImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), context.getExtraImports());
-                builder.setProperty(Constants.IMPORT_PACKAGE, imports);
-                builder.mergeManifest(builder.getJar().getManifest());
+                if (context.getExtraImports().isEmpty())
+                {
+                    // skip any manifest manipulation
+                    return;
+                }
+                else
+                {
+                    String imports = addExtraImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), context.getExtraImports());
+                    builder.setProperty(Constants.IMPORT_PACKAGE, imports);
+                    builder.mergeManifest(builder.getJar().getManifest());
+                }
             }
             else
             {
@@ -97,6 +105,9 @@ public class GenerateManifestStage implements TransformStage
             builder.calcManifest();
             Jar jar = builder.build();
             Manifest mf = jar.getManifest();
+
+            enforceHostVersionsForUnknownImports(mf, context.getSystemExports());
+
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             mf.write(bout);
             context.getFileOverrides().put("META-INF/MANIFEST.MF", bout.toByteArray());
@@ -104,6 +115,47 @@ public class GenerateManifestStage implements TransformStage
         catch (Exception t)
         {
             throw new PluginParseException("Unable to process plugin to generate OSGi manifest", t);
+        }
+    }
+
+    /**
+     * Scans for any imports with no version specified and locks them into the specific version exported by the host
+     * container
+     * @param manifest The manifest to read and manipulate
+     * @param exports The list of host exports
+     */
+    private void enforceHostVersionsForUnknownImports(Manifest manifest, SystemExports exports)
+    {
+        String origImports = manifest.getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
+        if (origImports != null)
+        {
+            StringBuilder imports = new StringBuilder();
+            Map<String,Map<String,String>> header = OsgiHeaderUtil.parseHeader(origImports);
+            for (Map.Entry<String,Map<String,String>> pkgImport : header.entrySet())
+            {
+                String imp = null;
+                if (pkgImport.getValue().isEmpty())
+                {
+                    String export = exports.getFullExport(pkgImport.getKey());
+                    if (!export.equals(imp))
+                    {
+                        imp = export;
+                    }
+
+                }
+                if (imp == null)
+                {
+                    imp = OsgiHeaderUtil.buildHeader(pkgImport.getKey(), pkgImport.getValue());
+                }
+                imports.append(imp);
+                imports.append(",");
+            }
+            if (imports.length() > 0)
+            {
+                imports.deleteCharAt(imports.length() - 1);
+            }
+
+            manifest.getMainAttributes().putValue(Constants.IMPORT_PACKAGE, imports.toString());
         }
     }
 

@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.IOUtils;
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Jar;
+import aQute.lib.header.OSGiHeader;
 
 import javax.servlet.ServletContext;
 
@@ -115,5 +116,41 @@ public class OsgiHeaderUtil
         for (String ref : referredClasses)
             crawlReferenceTree(ref, scannedClasses, packageImports, level-1);
 
+    }
+
+    /**
+     * Parses an OSGi header line into a map structure
+     *
+     * @param header The header line
+     * @return A map with the key the entry value and the value a map of attributes
+     * @since 2.2.0
+     */
+    public static Map<String,Map<String,String>> parseHeader(String header)
+    {
+        return OSGiHeader.parseHeader(header);
+    }
+
+    /**
+     * Builds the header string from a map
+     * @param key The header value
+     * @param attrs The map of attributes
+     * @return A string, suitable for inclusion into an OSGI header string
+     * @since 2.2.0
+     */
+    public static String buildHeader(String key, Map<String,String> attrs)
+    {
+        StringBuilder fullPkg = new StringBuilder(key);
+        if (attrs != null && !attrs.isEmpty())
+        {
+            for (Map.Entry<String,String> entry : attrs.entrySet())
+            {
+                fullPkg.append(";");
+                fullPkg.append(entry.getKey());
+                fullPkg.append("=\"");
+                fullPkg.append(entry.getValue());
+                fullPkg.append("\"");
+            }
+        }
+        return fullPkg.toString();
     }
 }

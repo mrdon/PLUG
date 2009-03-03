@@ -3,8 +3,11 @@ package com.atlassian.plugin.osgi.factory.transform.model;
 import aQute.lib.header.OSGiHeader;
 
 import java.util.Map;
+import java.util.Collections;
+import java.util.HashMap;
 
 import org.apache.commons.lang.Validate;
+import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 
 /**
  * Encapsulates the package exports from the system bundle
@@ -28,7 +31,7 @@ public class SystemExports
         {
             exportsLine = "";
         }
-        this.exports = OSGiHeader.parseHeader(exportsLine);
+        this.exports = Collections.unmodifiableMap(OsgiHeaderUtil.parseHeader(exportsLine));
     }
 
     /**
@@ -40,30 +43,16 @@ public class SystemExports
      */
     public String getFullExport(String pkg)
     {
-        StringBuilder fullPkg = new StringBuilder(pkg);
         if (exports.containsKey(pkg))
         {
-            Map<String,String> attrs = exports.get(pkg);
-            if (attrs != null && !attrs.isEmpty())
+            Map<String,String> attrs = new HashMap<String,String>(exports.get(pkg));
+            if (attrs.containsKey("version"))
             {
-                for (Map.Entry<String,String> entry : attrs.entrySet())
-                {
-                    fullPkg.append(";");
-                    fullPkg.append(entry.getKey());
-                    fullPkg.append("=\"");
-
-                    if ("version".equals(entry.getKey()))
-                    {
-                        fullPkg.append("[").append(entry.getValue()).append(",").append(entry.getValue()).append("]");
-                    }
-                    else
-                    {
-                        fullPkg.append(entry.getValue());
-                    }
-                    fullPkg.append("\"");
-                }
+                final String version = attrs.get("version");
+                attrs.put("version", "[" + version + "," + version + "]");
             }
+            return OsgiHeaderUtil.buildHeader(pkg, attrs);
         }
-        return fullPkg.toString();
+        return pkg;
     }
 }
