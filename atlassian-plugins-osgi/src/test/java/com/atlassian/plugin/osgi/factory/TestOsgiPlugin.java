@@ -3,6 +3,9 @@ package com.atlassian.plugin.osgi.factory;
 import junit.framework.TestCase;
 import com.mockobjects.dynamic.Mock;
 import com.atlassian.plugin.AutowireCapablePlugin;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
 import org.osgi.framework.*;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
@@ -49,6 +52,13 @@ public class TestOsgiPlugin extends TestCase
     public void testDisabled() {
         mockBundle.expectAndReturn("getState", Bundle.ACTIVE);
         mockBundle.expect("stop");
+        plugin.disable();
+        mockBundle.verify();
+    }
+
+    public void testDisabledOnNonDynamicPlugin() {
+        plugin.addModuleDescriptor(new StaticModuleDescriptor());
+        mockBundle.expectAndReturn("getState", Bundle.ACTIVE);
         plugin.disable();
         mockBundle.verify();
     }
@@ -119,6 +129,15 @@ public class TestOsgiPlugin extends TestCase
     }
 
     public static class ChildBean {
+    }
+
+    @RequiresRestart
+    public static class StaticModuleDescriptor extends AbstractModuleDescriptor
+    {
+        public Object getModule()
+        {
+            return null;
+        }
     }
 
 }

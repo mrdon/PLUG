@@ -136,14 +136,21 @@ public class PluginInstallTest extends PluginInContainerTestBase
         {
             public void run()
             {
-                while (!lock.tryLock())
-                    pluginManager.isPluginEnabled("test.plugin");
+                try
+                {
+                    while (!lock.tryLock(10, TimeUnit.SECONDS))
+                        pluginManager.isPluginEnabled("test.plugin");
+                }
+                catch (InterruptedException e)
+                {
+                    fail();
+                }
             }
         };
         upgradeThread.start();
         isEnabledThread.start();
 
-        upgradeThread.join();
+        upgradeThread.join(10000);
 
         assertTrue(pluginManager.isPluginEnabled("test.plugin"));
     }

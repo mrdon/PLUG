@@ -9,6 +9,7 @@ import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
 import com.atlassian.plugin.event.events.PluginContainerFailedEvent;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
+import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
@@ -265,18 +266,22 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         {
             if (getBundle().getState() == Bundle.ACTIVE)
             {
-                if (moduleDescriptorTracker != null)
+                // Only disable underlying bundle if this is a truely dynamic plugin
+                if (!PluginUtils.doesPluginRequireRestart(this))
                 {
-                    moduleDescriptorTracker.close();
+                    if (moduleDescriptorTracker != null)
+                    {
+                        moduleDescriptorTracker.close();
+                    }
+                    if (unrecognisedModuleTracker != null)
+                    {
+                        unrecognisedModuleTracker.close();
+                    }
+                    getBundle().stop();
+                    moduleDescriptorTracker = null;
+                    unrecognisedModuleTracker = null;
                 }
-                if (unrecognisedModuleTracker != null)
-                {
-                    unrecognisedModuleTracker.close();
-                }
-                getBundle().stop();
                 setPluginState(PluginState.DISABLED);
-                moduleDescriptorTracker = null;
-                unrecognisedModuleTracker = null;
             }
         }
         catch (final BundleException e)
