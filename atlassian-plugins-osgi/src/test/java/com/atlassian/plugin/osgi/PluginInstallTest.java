@@ -52,25 +52,27 @@ public class PluginInstallTest extends PluginInContainerTestBase
             }
         }, factory);
 
-        final File pluginJar = new PluginJarBuilder("first").addFormattedResource("atlassian-plugin.xml",
-                "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>", 
-                "    <plugin-info>",
-                "        <version>1.0</version>",
-                "    </plugin-info>",
-                "    <component-import key='comp1' interface='com.atlassian.plugin.osgi.SomeInterface' />",
-                "    <dummy key='dum1'/>", "</atlassian-plugin>")
-            .build();
-        final File pluginJar2 = new PluginJarBuilder("second").addFormattedResource("atlassian-plugin.xml",
-                "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>", 
-                "    <plugin-info>", 
-                "        <version>1.0</version>",
-                "    </plugin-info>", 
-                "    <component-import key='comp1' interface='com.atlassian.plugin.osgi.SomeInterface' />",
-                "    <component-import key='comp2' interface='com.atlassian.plugin.osgi.AnotherInterface' />", 
-                "    <dummy key='dum1'/>",
-                "    <dummy key='dum2'/>", 
-                "</atlassian-plugin>")
-            .build();
+        final File pluginJar = new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component-import key='comp1' interface='com.atlassian.plugin.osgi.SomeInterface' />",
+                        "    <dummy key='dum1'/>", "</atlassian-plugin>")
+                .build();
+        final File pluginJar2 = new PluginJarBuilder("second")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component-import key='comp1' interface='com.atlassian.plugin.osgi.SomeInterface' />",
+                        "    <component-import key='comp2' interface='com.atlassian.plugin.osgi.AnotherInterface' />",
+                        "    <dummy key='dum1'/>",
+                        "    <dummy key='dum2'/>",
+                        "</atlassian-plugin>")
+                .build();
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
         assertEquals(1, pluginManager.getEnabledPlugins().size());
@@ -893,8 +895,8 @@ public class PluginInstallTest extends PluginInContainerTestBase
                     "public class MyServlet extends javax.servlet.http.HttpServlet implements first.MyInterface {",
                     "   private Callable2 callable;",
                     "   public MyServlet(Callable2 cal) { this.callable = cal; }",
-                    "   public String getServletInfo(){",
-                    "       return callable.call() + ' bob';",
+                    "   public String getServletInfo() {",
+                    "       try {return callable.call() + ' bob';} catch (Exception ex) { throw new RuntimeException(ex);}",
                     "   }",
                     "}")
                 .build(pluginsDir);
@@ -1058,7 +1060,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
             this.callable = callable;
         }
 
-        public String call()
+        public String call() throws Exception
         {
             return callable.call();
         }

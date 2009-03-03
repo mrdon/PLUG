@@ -61,7 +61,7 @@ public class TestHostComponentSpringStage extends TestCase
                 }
             },
             null,
-            "osgi:reference[@id='foo' and @filter='(&(bean-name=foo)(plugins-host=true))']/osgi:interfaces/beans:value/text()='" + SomeInterface.class.getName() + "'");
+            "beans:bean[@id='foo']/beans:property[@name='filter']/@value='(&(bean-name=foo)(plugins-host=true))'");
     }
 
     public void testTransformWithProperNestedInferredImports() throws Exception
@@ -137,17 +137,7 @@ public class TestHostComponentSpringStage extends TestCase
                 }
             },
             null,
-            "osgi:reference[@id='fooLB1' and @filter='(&(bean-name=foo#1)(plugins-host=true))']/osgi:interfaces/beans:value/text()='" + SomeInterface.class.getName() + "'");
-    }
-
-    public void testTransformWithNoBeanName() throws IOException, DocumentException
-    {
-        SpringTransformerTestHelper.transform(transformer, jar, new ArrayList<HostComponentRegistration>()
-        {
-            {
-                add(new StubHostComponentRegistration(SomeInterface.class));
-            }
-        }, null, "osgi:reference[@id='bean0' and not(@filter)]/osgi:interfaces/beans:value/text()='" + SomeInterface.class.getName() + "'");
+            "beans:bean[@id='fooLB1']/beans:property[@name='filter']/@value='(&(bean-name=foo#1)(plugins-host=true))'");
     }
 
     public void testTransformNoMatches() throws Exception
@@ -162,7 +152,7 @@ public class TestHostComponentSpringStage extends TestCase
             {
                 add(new StubHostComponentRegistration("foo", SomeInterface.class));
             }
-        }, null, "not(osgi:reference[@id='foo'])"));
+        }, null, "not(beans:bean[@id='foo'])"));
     }
 
     public void testTransformMatchInInnerJar() throws Exception
@@ -180,7 +170,7 @@ public class TestHostComponentSpringStage extends TestCase
             {
                 add(new StubHostComponentRegistration("foo", SomeInterface.class));
             }
-        }, null, "osgi:reference[@id='foo']");
+        }, null, "beans:bean[@id='foo']");
     }
 
     public void testTransformWithExistingComponentImportName() throws Exception, DocumentException
@@ -213,7 +203,7 @@ public class TestHostComponentSpringStage extends TestCase
                 }
             },
             null,
-            "osgi:reference[@id='foo0' and @filter='(&(bean-name=foo)(plugins-host=true))']/osgi:interfaces/beans:value/text()='" + SomeInterface.class.getName() + "'");
+            "beans:bean[@id='foo0']/beans:property[@name='filter']/@value='(&(bean-name=foo)(plugins-host=true))'");
     }
 
     public void testTransformWithExistingComponentImportInterface() throws Exception, DocumentException
@@ -248,7 +238,7 @@ public class TestHostComponentSpringStage extends TestCase
                 }
             },
             null,
-            "not(osgi:reference[@id='foo' and @filter='(&(bean-name=foo)(plugins-host=true))']/osgi:interfaces/beans:value/text()='" + SomeInterface.class.getName() + "')");
+            "not(beans:bean[@id='foo']/beans:property[@name='filter']/@value='(&(bean-name=foo)(plugins-host=true))']");
     }
 
     public void testTransformWithExistingComponentImportInterfacePartialMatch() throws Exception, DocumentException
@@ -288,6 +278,6 @@ public class TestHostComponentSpringStage extends TestCase
                 }
             },
             null,
-            "not(osgi:reference[@id='foo' and @filter='(&(bean-name=foo)(plugins-host=true))']/osgi:interfaces/beans:value/text()='" + Fooable.class.getName() + "')");
+            "not(beans:bean[@id='foo']/beans:property[@name='filter']/@value='(&(bean-name=foo)(plugins-host=true))']");
     }
 }

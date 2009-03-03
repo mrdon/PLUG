@@ -46,6 +46,13 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
 
             reg.getProperties().put(HOST_COMPONENT_FLAG, Boolean.TRUE.toString());
 
+            // If no bean name specified, generate one that will be consistent across restarts
+            String beanName = reg.getProperties().get(PropertyBuilder.BEAN_NAME);
+            if (beanName == null)
+            {
+                reg.getProperties().put(PropertyBuilder.BEAN_NAME, "hostComponent-"+System.identityHashCode(reg.getInstance().getClass().getName().hashCode()));
+            }
+            
             if (log.isDebugEnabled())
                 log.debug("Registering: "+ Arrays.asList(names)+" instance "+reg.getInstance() + "with properties: "+reg.getProperties());
 

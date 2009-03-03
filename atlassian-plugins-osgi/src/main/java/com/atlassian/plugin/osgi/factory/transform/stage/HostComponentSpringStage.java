@@ -84,20 +84,21 @@ public class HostComponentSpringStage implements TransformStage
 
                     String beanName = reg.getProperties().get(PropertyBuilder.BEAN_NAME);
 
-                    Element osgiService = root.addElement("osgi:reference");
+                    // We don't use Spring DM service references here, because when the plugin is disabled, the proxies
+                    // will be marked destroyed, causing undesirable ServiceProxyDestroyedException fireworks.  Since we
+                    // know host components won't change over the runtime of the plugin, we can use a simple factory
+                    // bean that returns the actual component instance
+
+                    Element osgiService = root.addElement("beans:bean");
                     osgiService.addAttribute("id", determineId(context.getComponentImports().keySet(), beanName, index));
 
-                    if (beanName != null)
-                    {
-                        osgiService.addAttribute("filter", "(&(bean-name=" + beanName + ")(" + ComponentRegistrar.HOST_COMPONENT_FLAG + "=true))");
-                    }
+                    // These are strings since we aren't compiling against the osgi-bridge jar
+                    osgiService.addAttribute("class", "com.atlassian.plugin.osgi.bridge.external.HostComponentFactoryBean");
+                    context.getExtraImports().add("com.atlassian.plugin.osgi.bridge.external");
 
-                    Element interfaces = osgiService.addElement("osgi:interfaces");
-                    for (String name : reg.getMainInterfaces())
-                    {
-                        Element e = interfaces.addElement("beans:value");
-                        e.setText(name);
-                    }
+                    Element e = osgiService.addElement("beans:property");
+                    e.addAttribute("name", "filter");
+                    e.addAttribute("value", "(&(bean-name=" + beanName + ")(" + ComponentRegistrar.HOST_COMPONENT_FLAG + "=true))");
                 }
             }
             addImportsForMatchedHostComponents(matchedRegistrations, context.getSystemExports(), context.getExtraImports());
