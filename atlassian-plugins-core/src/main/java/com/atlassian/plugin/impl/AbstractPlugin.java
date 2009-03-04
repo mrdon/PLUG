@@ -242,16 +242,23 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     }
 
     /**
-     * Plugins with the same key are compared by version number, using {@link VersionStringComparator}.
-     * If the other plugin has a different key, this method returns <tt>1</tt>.
+     * Compares this Plugin to another Plugin for order.
+     * The primary sort field is the key, and the secondary field is the version number.
      *
-     * @return <tt>-1</tt> if the other plugin is newer, <tt>0</tt> if equal,
-     * <tt>1</tt> if the other plugin is older or has a different plugin key.
+     * @param otherPlugin The plugin to be compared.
+     * @return  a negative integer, zero, or a positive integer as this Plugin is less than, equal to, or greater than the specified Plugin.
+     * @see VersionStringComparator
+     * @see Comparable#compareTo
      */
     public int compareTo(final Plugin otherPlugin)
     {
         if (otherPlugin.getKey() == null)
         {
+            if (getKey() == null)
+            {
+                // both null keys - not going to bother checking the version, who cares?
+                return 0;
+            }
             return 1;
         }
         if (getKey() == null)
@@ -268,13 +275,19 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         final String thisVersion = cleanVersionString((getPluginInformation() != null ? getPluginInformation().getVersion() : null));
         final String otherVersion = cleanVersionString((otherPlugin.getPluginInformation() != null ? otherPlugin.getPluginInformation().getVersion() : null));
 
+        // Valid versions should come after invalid versions because when we find multiple instances of a plugin, we choose the "latest".
         if (!VersionStringComparator.isValidVersionString(thisVersion))
         {
+            if (!VersionStringComparator.isValidVersionString(otherVersion))
+            {
+                // both invalid
+                return 0;
+            }
             return -1;
         }
         if (!VersionStringComparator.isValidVersionString(otherVersion))
         {
-            return -1;
+            return 1;
         }
 
         return new VersionStringComparator().compare(thisVersion, otherVersion);
