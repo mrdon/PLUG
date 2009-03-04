@@ -1197,7 +1197,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         final Plugin p1 = createPluginWithVersion("1.0");
         final Plugin p2 = createPluginWithVersion("#$%");
-        assertEquals(-1, p1.compareTo(p2));
+        assertEquals(1, p1.compareTo(p2));
 
         p1.getPluginInformation().setVersion("#$%");
         p2.getPluginInformation().setVersion("1.0");
