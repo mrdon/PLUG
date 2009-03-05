@@ -1,19 +1,19 @@
 package com.atlassian.plugin.spring.pluginns;
 
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Collections;
-
-import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.HierarchicalBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.BeansException;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import org.apache.commons.lang.ClassUtils;
+import org.apache.log4j.Logger;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.HierarchicalBeanFactory;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Host component provider that uses <code>plugin:available="true"</code> attributes in Spring XML bean configuration
@@ -23,6 +23,8 @@ import org.apache.commons.lang.ClassUtils;
  */
 public class SpringXmlHostComponentProvider implements HostComponentProvider, BeanFactoryAware
 {
+    private static final Logger log = Logger.getLogger(SpringXmlHostComponentProvider.class);
+
     public static final String HOST_COMPONENT_PROVIDER = "hostComponentProvider";
     private BeanFactory beanFactory;
     private List<String> beans;
@@ -54,11 +56,19 @@ public class SpringXmlHostComponentProvider implements HostComponentProvider, Be
         if (beanFactory instanceof HierarchicalBeanFactory)
         {
             HierarchicalBeanFactory hbf = (HierarchicalBeanFactory) beanFactory;
-            if (hbf.getParentBeanFactory() != null)
+            final BeanFactory parentBeanFactory = hbf.getParentBeanFactory();
+            if (parentBeanFactory != null)
             {
-                HostComponentProvider provider = (HostComponentProvider) hbf.getParentBeanFactory().getBean(HOST_COMPONENT_PROVIDER);
-                if (provider != null)
-                    provider.provide(registrar);
+                try
+                {
+                    HostComponentProvider provider = (HostComponentProvider) parentBeanFactory.getBean(HOST_COMPONENT_PROVIDER);
+                    if (provider != null)
+                        provider.provide(registrar);
+                }
+                catch (NoSuchBeanDefinitionException e)
+                {
+                    log.info("Unable to find '" + HOST_COMPONENT_PROVIDER + "' in the parent bean factory " + parentBeanFactory);
+                }
             }
         }
     }
