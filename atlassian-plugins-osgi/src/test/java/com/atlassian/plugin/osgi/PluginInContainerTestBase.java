@@ -9,8 +9,10 @@ import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
+import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
+import com.atlassian.plugin.loaders.BundledPluginLoader;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
@@ -24,9 +26,12 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
-import java.io.File;
+import java.io.*;
 import java.util.Arrays;
+import java.util.zip.ZipOutputStream;
+import java.util.zip.ZipEntry;
 
 import junit.framework.TestCase;
 
@@ -99,22 +104,8 @@ public abstract class PluginInContainerTestBase extends TestCase
     protected void initPluginManager(final HostComponentProvider hostComponentProvider, final ModuleDescriptorFactory moduleDescriptorFactory, final String version) throws Exception
     {
         this.moduleDescriptorFactory = moduleDescriptorFactory;
-        final PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration(version);
-        scannerConfig.getPackageIncludes().add("com.atlassian.plugin*");
-        scannerConfig.getPackageIncludes().add("javax.servlet*");
-        scannerConfig.getPackageIncludes().add("com_cenqua_clover");
-        scannerConfig.getPackageExcludes().add("com.atlassian.plugin.osgi.bridge*");
-        HostComponentProvider requiredWrappingProvider = new HostComponentProvider()
-        {
-            public void provide(ComponentRegistrar registrar)
-            {
-                registrar.register(PluginEventManager.class).forInstance(pluginEventManager);
-                if (hostComponentProvider != null)
-                {
-                    hostComponentProvider.provide(registrar);
-                }
-            }
-        };
+        final PackageScannerConfiguration scannerConfig = buildScannerConfiguration(version);
+        HostComponentProvider requiredWrappingProvider = getWrappingHostComponentProvider(hostComponentProvider);
         OsgiPersistentCache cache = new DefaultOsgiPersistentCache(cacheDir, "1.0");
         osgiContainerManager = new FelixOsgiContainerManager(cache, scannerConfig, requiredWrappingProvider, pluginEventManager);
 
@@ -129,5 +120,70 @@ public abstract class PluginInContainerTestBase extends TestCase
             pluginEventManager);
         pluginManager.setPluginInstaller(new FilePluginInstaller(pluginsDir));
         pluginManager.init();
+    }
+
+    protected void initBundlingPluginManager(final ModuleDescriptorFactory moduleDescriptorFactory, File bundledPluginJar) throws Exception
+    {
+        this.moduleDescriptorFactory = moduleDescriptorFactory;
+        final PackageScannerConfiguration scannerConfig = buildScannerConfiguration("1.0");
+        HostComponentProvider requiredWrappingProvider = getWrappingHostComponentProvider(null);
+        OsgiPersistentCache cache = new DefaultOsgiPersistentCache(cacheDir, "1.0");
+        osgiContainerManager = new FelixOsgiContainerManager(cache, scannerConfig, requiredWrappingProvider, pluginEventManager);
+
+        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, (String) null, cache, osgiContainerManager, pluginEventManager);
+
+        final DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Arrays.<PluginFactory>asList(osgiPluginDeployer),
+            new DefaultPluginEventManager());
+
+        File zip = new File(bundledPluginJar.getParentFile(), "bundled-plugins.zip");
+        ZipOutputStream stream = null;
+        InputStream in = null;
+        try
+        {
+            stream = new ZipOutputStream(new FileOutputStream(zip));
+            in = new FileInputStream(bundledPluginJar);
+            stream.putNextEntry(new ZipEntry(bundledPluginJar.getName()));
+            IOUtils.copy(in, stream);
+            stream.closeEntry();
+        }
+        catch (IOException ex)
+        {
+            IOUtils.closeQuietly(in);
+            IOUtils.closeQuietly(stream);
+        }
+        File bundledDir = new File(bundledPluginJar.getParentFile(), "bundled-plugins");
+        final BundledPluginLoader bundledLoader = new BundledPluginLoader(zip.toURL(), bundledDir, Arrays.<PluginFactory>asList(osgiPluginDeployer),
+            new DefaultPluginEventManager());
+
+        pluginManager = new DefaultPluginManager(new MemoryPluginPersistentStateStore(), Arrays.<PluginLoader> asList(bundledLoader, loader), moduleDescriptorFactory,
+            pluginEventManager);
+        pluginManager.setPluginInstaller(new FilePluginInstaller(pluginsDir));
+        pluginManager.init();
+    }
+
+    private HostComponentProvider getWrappingHostComponentProvider(final HostComponentProvider hostComponentProvider)
+    {
+        HostComponentProvider requiredWrappingProvider = new HostComponentProvider()
+        {
+            public void provide(ComponentRegistrar registrar)
+            {
+                registrar.register(PluginEventManager.class).forInstance(pluginEventManager);
+                if (hostComponentProvider != null)
+                {
+                    hostComponentProvider.provide(registrar);
+                }
+            }
+        };
+        return requiredWrappingProvider;
+    }
+
+    private PackageScannerConfiguration buildScannerConfiguration(String version)
+    {
+        final PackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration(version);
+        scannerConfig.getPackageIncludes().add("com.atlassian.plugin*");
+        scannerConfig.getPackageIncludes().add("javax.servlet*");
+        scannerConfig.getPackageIncludes().add("com_cenqua_clover");
+        scannerConfig.getPackageExcludes().add("com.atlassian.plugin.osgi.bridge*");
+        return scannerConfig;
     }
 }

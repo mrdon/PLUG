@@ -4,6 +4,7 @@ import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.util.WaitUntil;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.servlet.DefaultServletModuleManager;
@@ -36,6 +37,49 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class PluginInstallTest extends PluginInContainerTestBase
 {
+
+    public void testUpgradeOfBundledPlugin() throws Exception
+    {
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
+        factory.addModuleDescriptor("object", ObjectModuleDescriptor.class);
+
+        final File pluginJar = new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <object key='obj' class='my.Foo'/>",
+                        "</atlassian-plugin>")
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {}")
+                .build();
+        initBundlingPluginManager(factory, pluginJar);
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+        assertEquals("Test", pluginManager.getPlugin("test.plugin").getName());
+        assertEquals("my.Foo", pluginManager.getPlugin("test.plugin").getModuleDescriptor("obj").getModule().getClass().getName());
+
+        final File pluginJar2 = new PluginJarBuilder("second")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <object key='obj' class='my.Bar'/>",
+                        "</atlassian-plugin>")
+                .addFormattedJava("my.Bar",
+                        "package my;",
+                        "public class Bar {}")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+        assertEquals("Test", pluginManager.getPlugin("test.plugin").getName());
+        assertEquals("my.Bar", pluginManager.getPlugin("test.plugin").getModuleDescriptor("obj").getModule().getClass().getName());
+
+    }
 
     public void testUpgradeWithNewComponentImports() throws Exception
     {
@@ -1070,6 +1114,39 @@ public class PluginInstallTest extends PluginInContainerTestBase
         public String call() throws Exception
         {
             return callable.call();
+        }
+    }
+
+    public static class ObjectModuleDescriptor extends AbstractModuleDescriptor
+    {
+        private Object object;
+        @Override
+        public void enabled()
+        {
+            super.enabled();
+            try
+            {
+                object = getModuleClass().newInstance();
+            }
+            catch (InstantiationException e)
+            {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+            catch (IllegalAccessException e)
+            {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+        }
+
+        @Override
+        public void disabled()
+        {
+            object = null;
+        }
+
+        public Object getModule()
+        {
+            return object;
         }
     }
 }
