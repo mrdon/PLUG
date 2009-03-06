@@ -203,6 +203,11 @@ class ExportsBuilder
            )
            .withMappings(packageScannerConfig.getPackageVersions());
 
+        if (log.isDebugEnabled())
+        {
+            scanner.enableDebug();
+        }
+
         Collection<ExportPackage> exports = scanner.scan();
 
         if (!isPackageScanSuccessful(exports) && packageScannerConfig.getServletContext() != null)
