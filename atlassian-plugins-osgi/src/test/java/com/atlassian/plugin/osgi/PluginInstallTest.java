@@ -37,7 +37,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class PluginInstallTest extends PluginInContainerTestBase
 {
-    /* Will fix
     public void testUpgradeOfBundledPlugin() throws Exception
     {
         final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
@@ -79,7 +78,7 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertEquals("Test", pluginManager.getPlugin("test.plugin").getName());
         assertEquals("my.Bar", pluginManager.getPlugin("test.plugin").getModuleDescriptor("obj").getModule().getClass().getName());
 
-    }*/
+    }
 
     public void testUpgradeWithNewComponentImports() throws Exception
     {

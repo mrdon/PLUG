@@ -205,7 +205,6 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
 
     public void install()
     {
-        pluginEventManager.register(this);
         bundle = osgiContainerManager.installBundle(pluginArtifact.toFile());
         this.bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
         setPluginState(PluginState.INSTALLED);
@@ -218,6 +217,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         {
             if ((getBundle().getState() == Bundle.RESOLVED) || (getBundle().getState() == Bundle.INSTALLED))
             {
+                pluginEventManager.register(this);
                 getBundle().start();
                 if (getBundle().getBundleContext() != null)
                 {
@@ -277,6 +277,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                     {
                         unrecognisedModuleTracker.close();
                     }
+                    pluginEventManager.unregister(this);
                     getBundle().stop();
                     moduleDescriptorTracker = null;
                     unrecognisedModuleTracker = null;
@@ -292,13 +293,13 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
 
     public void uninstall() throws OsgiContainerException
     {
-        pluginEventManager.unregister(this);
         if (bundle != null)
         {
             try
             {
                 if (bundle.getState() != Bundle.UNINSTALLED)
                 {
+                    pluginEventManager.unregister(this);
                     bundle.uninstall();
                     setPluginState(PluginState.UNINSTALLED);
                 }
