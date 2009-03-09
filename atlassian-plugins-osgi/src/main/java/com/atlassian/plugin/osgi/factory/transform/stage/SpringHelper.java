@@ -2,6 +2,7 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
+import com.atlassian.plugin.PluginParseException;
 import org.dom4j.*;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;

@@ -8,10 +8,13 @@ import org.dom4j.Element;
 import java.io.IOException;
 import java.io.File;
 import java.io.ByteArrayInputStream;
+import java.util.Collections;
 
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;

@@ -3,7 +3,6 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;
 import aQute.lib.osgi.Jar;
-import aQute.lib.header.OSGiHeader;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
@@ -27,6 +26,8 @@ import java.util.jar.Manifest;
  */
 public class GenerateManifestStage implements TransformStage
 {
+    private static final String SPRING_CONTEXT_DEFAULT = "*;timeout:=60";
+
     public void execute(TransformContext context) throws PluginTransformationException
     {
         Builder builder = new Builder();
@@ -44,6 +45,7 @@ public class GenerateManifestStage implements TransformStage
                 }
                 else
                 {
+                    assertSpringAvailableIfRequired(context);
                     String imports = addExtraImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), context.getExtraImports());
                     builder.setProperty(Constants.IMPORT_PACKAGE, imports);
                     builder.mergeManifest(builder.getJar().getManifest());
@@ -58,7 +60,7 @@ public class GenerateManifestStage implements TransformStage
                 Properties properties = new Properties();
 
                 // Setup defaults
-                properties.put("Spring-Context", "*;timeout:=60");
+                properties.put("Spring-Context", SPRING_CONTEXT_DEFAULT);
                 properties.put(Analyzer.BUNDLE_SYMBOLICNAME, parser.getKey());
                 properties.put(Analyzer.IMPORT_PACKAGE, "*;resolution:=optional");
 
@@ -211,6 +213,24 @@ public class GenerateManifestStage implements TransformStage
         }
 
         properties.put(key, value.toString().replaceAll("[\r\n]", ""));
+    }
+
+    private static void assertSpringAvailableIfRequired(TransformContext context) throws PluginParseException
+    {
+        if (context.shouldRequireSpring())
+        {
+            String header = (String) context.getManifest().getMainAttributes().get("Spring-Context");
+            if (header == null)
+            {
+                throw new PluginParseException("The Spring Manifest header 'Spring-Context' is missing.  Please add it and " +
+                        "set it to '" + SPRING_CONTEXT_DEFAULT + "'");
+            }
+            else if (!header.contains(";timeout:=60"))
+            {
+                throw new PluginParseException("The Spring Manifest header isn't set for a 60 second timeout waiting for " +
+                        " dependencies.  Please add ';timeout:=60'");
+            }
+        }
     }
 
 }

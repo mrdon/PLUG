@@ -40,6 +40,7 @@ public class TransformContext
     private final Map<String, ComponentImport> componentImports;
     private final SystemExports systemExports;
     private final Set<String> applicationKeys;
+    private boolean shouldRequireSpring = false;
 
     public TransformContext(List<HostComponentRegistration> regs, SystemExports systemExports,
                             PluginArtifact pluginArtifact, Set<String> applicationKeys, String descriptorPath)
@@ -167,6 +168,16 @@ public class TransformContext
     public Set<String> getApplicationKeys()
     {
         return applicationKeys;
+    }
+
+    public boolean shouldRequireSpring()
+    {
+        return shouldRequireSpring;
+    }
+
+    public void setShouldRequireSpring(boolean shouldRequireSpring)
+    {
+        this.shouldRequireSpring = shouldRequireSpring;
     }
 
     private static class DocumentExposingDescriptorParser extends XmlDescriptorParser

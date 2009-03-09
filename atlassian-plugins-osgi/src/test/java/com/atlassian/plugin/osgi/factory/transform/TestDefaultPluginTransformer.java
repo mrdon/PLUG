@@ -66,8 +66,14 @@ public class TestDefaultPluginTransformer extends TestCase
 
     public void testTransform() throws Exception
     {
-        final File file = new PluginJarBuilder().addFormattedJava("my.Foo", "package my;", "public class Foo {",
-            "  com.atlassian.plugin.osgi.factory.transform.Fooable bar;", "}").addPluginInformation("foo", "foo", "1.1").build();
+        final File file = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  com.atlassian.plugin.osgi.factory.transform.Fooable bar;",
+                        "}")
+                .addPluginInformation("foo", "foo", "1.1")
+                .build();
 
         final File copy = transformer.transform(new JarPluginArtifact(file), new ArrayList<HostComponentRegistration>()
         {

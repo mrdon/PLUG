@@ -106,6 +106,32 @@ public class TestGenerateManifestStage extends TestCase
 
     }
 
+    public void testGenerateManifestFailNoSpringWithExisting() throws Exception
+    {
+        final File plugin = new PluginJarBuilder("plugin")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0",
+                        "Import-Package: javax.swing",
+                        "Bundle-SymbolicName: my.foo.symbolicName",
+                        "Bundle-ClassPath: .,foo")
+                .addResource("foo/bar.txt", "Something")
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
+
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        context.setShouldRequireSpring(true);
+        context.getExtraImports().add(AttributeSet.class.getPackage().getName());
+        try
+        {
+            executeStage(context);
+            fail();
+        }
+        catch (PluginParseException ex)
+        {
+            //success
+        }
+    }
+
     public void testGenerateManifest_innerjars() throws URISyntaxException, PluginParseException, IOException
     {
         final File innerJar = new PluginJarBuilder("innerjar1").build();

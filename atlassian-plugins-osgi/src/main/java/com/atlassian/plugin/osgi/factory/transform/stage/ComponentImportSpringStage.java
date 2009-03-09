@@ -44,6 +44,7 @@ public class ComponentImportSpringStage implements TransformStage
             }
             if (root.elements().size() > 0)
             {
+                context.setShouldRequireSpring(true);
                 context.getFileOverrides().put(SPRING_XML, SpringHelper.documentToBytes(springDoc));
             }
         }
