@@ -150,6 +150,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         pluginEventManager.broadcast(new PluginFrameworkShutdownEvent(this, this));
         tracker.setState(StateTracker.State.SHUTDOWN);
         plugins.clear();
+        pluginEventManager.unregister(this);
     }
 
     @PluginEventListener

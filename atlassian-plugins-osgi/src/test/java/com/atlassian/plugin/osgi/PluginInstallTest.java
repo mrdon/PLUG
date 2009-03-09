@@ -4,6 +4,7 @@ import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.util.WaitUntil;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
@@ -126,6 +127,31 @@ public class PluginInstallTest extends PluginInContainerTestBase
         assertEquals(4, pluginManager.getPlugin("test.plugin").getModuleDescriptors().size());
         assertEquals("Test 2", pluginManager.getPlugin("test.plugin").getName());
     }
+
+    /* Enable for manual memory leak profiling
+    public void testNoMemoryLeak() throws Exception
+    {
+        DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
+        factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
+        for (int x=0; x<100; x++)
+        {
+            pluginEventManager = new DefaultPluginEventManager();
+            initPluginManager(new HostComponentProvider(){
+                public void provide(ComponentRegistrar registrar)
+                {
+                    registrar.register(SomeInterface.class).forInstance(new SomeInterface(){});
+                    registrar.register(AnotherInterface.class).forInstance(new AnotherInterface(){});
+                }
+            }, factory);
+            pluginManager.shutdown();
+
+        }
+        System.out.println("Gentlement, start your profilers!");
+        System.in.read();
+
+    }
+    */
+
 
     public void testUpgradeWithNoAutoDisable() throws Exception
     {
