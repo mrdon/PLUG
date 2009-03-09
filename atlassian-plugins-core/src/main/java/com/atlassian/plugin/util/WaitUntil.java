@@ -25,7 +25,7 @@ public class WaitUntil
      */
     public static boolean invoke(final WaitCondition waitCondition)
     {
-        return invoke(waitCondition, 10);
+        return invoke(waitCondition, 60);
     }
 
     /**
