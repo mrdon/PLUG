@@ -115,7 +115,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     public FelixOsgiContainerManager(final URL frameworkBundlesZip, final File frameworkBundlesDir, final PackageScannerConfiguration packageScannerConfig, final HostComponentProvider provider, final PluginEventManager eventManager)
     {
         this(frameworkBundlesZip, new DefaultOsgiPersistentCache(new File(frameworkBundlesDir.getParentFile(),
-            "osgi-cache"), packageScannerConfig.getCurrentHostVersion()), packageScannerConfig, provider, eventManager);
+            "osgi-cache")), packageScannerConfig, provider, eventManager);
     }
 
     /**
@@ -164,16 +164,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         felixLogger = new FelixLoggerBridge(log);
         exportsBuilder = new ExportsBuilder();
 
-        File cacheDir = persistentCache.getOsgiBundleCache();
-        try
-        {
-            FileUtils.cleanDirectory(cacheDir);
-        }
-        catch (final IOException e)
-        {
-            throw new OsgiContainerException("Unable to clean the cache directory: " + cacheDir, e);
-        }
-        log.debug("Using cache directory :" + cacheDir.getAbsolutePath());
     }
 
     public void setFelixLogger(final Logger logger)
@@ -239,6 +229,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             log.debug("Felix configuration: " + configMap);
         }
 
+        validateCaches(configMap);
+
         try
         {
             // Create host activator;
@@ -276,6 +268,20 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         {
             throw new OsgiContainerException("Unable to start OSGi container", ex);
         }
+    }
+
+    /**
+     * Validate caches based on the list of packages exported from the application.  If the list has changed, the cache
+     * directories should be cleared.
+     *
+     * @param configMap The felix configuration
+     */
+    private void validateCaches(StringMap configMap)
+    {
+        String cacheKey = String.valueOf(configMap.get(Constants.FRAMEWORK_SYSTEMPACKAGES).hashCode());
+        persistentCache.validate(cacheKey);
+
+        log.debug("Using Felix bundle cache directory :" + persistentCache.getOsgiBundleCache().getAbsolutePath());
     }
 
     /**

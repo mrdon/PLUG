@@ -106,7 +106,7 @@ public abstract class PluginInContainerTestBase extends TestCase
         this.moduleDescriptorFactory = moduleDescriptorFactory;
         final PackageScannerConfiguration scannerConfig = buildScannerConfiguration(version);
         HostComponentProvider requiredWrappingProvider = getWrappingHostComponentProvider(hostComponentProvider);
-        OsgiPersistentCache cache = new DefaultOsgiPersistentCache(cacheDir, "1.0");
+        OsgiPersistentCache cache = new DefaultOsgiPersistentCache(cacheDir);
         osgiContainerManager = new FelixOsgiContainerManager(cache, scannerConfig, requiredWrappingProvider, pluginEventManager);
 
         final LegacyDynamicPluginFactory legacyFactory = new LegacyDynamicPluginFactory(PluginAccessor.Descriptor.FILENAME, tmpDir);
@@ -127,7 +127,7 @@ public abstract class PluginInContainerTestBase extends TestCase
         this.moduleDescriptorFactory = moduleDescriptorFactory;
         final PackageScannerConfiguration scannerConfig = buildScannerConfiguration("1.0");
         HostComponentProvider requiredWrappingProvider = getWrappingHostComponentProvider(null);
-        OsgiPersistentCache cache = new DefaultOsgiPersistentCache(cacheDir, "1.0");
+        OsgiPersistentCache cache = new DefaultOsgiPersistentCache(cacheDir);
         osgiContainerManager = new FelixOsgiContainerManager(cache, scannerConfig, requiredWrappingProvider, pluginEventManager);
 
         final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, (String) null, cache, osgiContainerManager, pluginEventManager);

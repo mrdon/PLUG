@@ -31,4 +31,11 @@ public interface OsgiPersistentCache
      * @throws OsgiContainerException If the caches couldn't be cleared
      */
     void clear() throws OsgiContainerException;
+
+    /**
+     * Validates the caches against a cache key.  If the key changes, the directories are wiped clean.
+     *
+     * @param cacheKey The cache key, can be anything
+     */
+    void validate(String cacheKey);
 }

@@ -28,7 +28,7 @@ public class TestFelixOsgiContainerManager extends TestCase
     {
         super.setUp();
         tmpdir = PluginTestUtils.createTempDirectory(TestFelixOsgiContainerManager.class);
-        felix = new FelixOsgiContainerManager(frameworkBundlesUrl, new DefaultOsgiPersistentCache(tmpdir, "1.0"), new DefaultPackageScannerConfiguration(),
+        felix = new FelixOsgiContainerManager(frameworkBundlesUrl, new DefaultOsgiPersistentCache(tmpdir), new DefaultPackageScannerConfiguration(),
                 null, new DefaultPluginEventManager());
     }
 

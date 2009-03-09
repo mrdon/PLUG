@@ -33,7 +33,7 @@ public class TestDefaultPluginTransformer extends TestCase
     {
         super.setUp();
         tmpDir = PluginTestUtils.createTempDirectory("plugin-transformer");
-        transformer = new DefaultPluginTransformer(new DefaultOsgiPersistentCache(tmpDir, "1.0"), SystemExports.NONE, null, PluginAccessor.Descriptor.FILENAME);
+        transformer = new DefaultPluginTransformer(new DefaultOsgiPersistentCache(tmpDir), SystemExports.NONE, null, PluginAccessor.Descriptor.FILENAME);
     }
 
     @Override

@@ -22,8 +22,9 @@ public class TestDefaultOsgiPersistentCache extends TestCase
 
     public void testRecordLastVersion() throws IOException
     {
-        new DefaultOsgiPersistentCache(tmpDir, "1.0");
-        File versionFile = new File(new File(tmpDir, "transformed-plugins"), "host.version");
+        DefaultOsgiPersistentCache cache = new DefaultOsgiPersistentCache(tmpDir);
+        File versionFile = new File(new File(tmpDir, "transformed-plugins"), "cache.key");
+        cache.validate("1.0");
         assertTrue(versionFile.exists());
         String txt = FileUtils.readFileToString(versionFile);
         assertEquals("1.0", txt);
@@ -31,19 +32,21 @@ public class TestDefaultOsgiPersistentCache extends TestCase
 
     public void testCleanOnUpgrade() throws IOException
     {
-        new DefaultOsgiPersistentCache(tmpDir, "1.0");
+        DefaultOsgiPersistentCache cache = new DefaultOsgiPersistentCache(tmpDir);
         File tmp = File.createTempFile("foo", ".txt", new File(tmpDir, "transformed-plugins"));
+        cache.validate("1.0");
         assertTrue(tmp.exists());
-        new DefaultOsgiPersistentCache(tmpDir, "2.0");
+        cache.validate("2.0");
         assertFalse(tmp.exists());
     }
 
     public void testNullVersion() throws IOException
     {
-        new DefaultOsgiPersistentCache(tmpDir, null);
+        DefaultOsgiPersistentCache cache = new DefaultOsgiPersistentCache(tmpDir);
+        cache.validate(null);
         File tmp = File.createTempFile("foo", ".txt", new File(tmpDir, "transformed-plugins"));
         assertTrue(tmp.exists());
-        new DefaultOsgiPersistentCache(tmpDir, null);
+        cache.validate(null);
         assertTrue(tmp.exists());
     }
 

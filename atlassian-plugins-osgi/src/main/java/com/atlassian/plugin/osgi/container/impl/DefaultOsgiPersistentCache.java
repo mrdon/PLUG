@@ -22,27 +22,30 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
     private final File osgiBundleCache;
     private final File frameworkBundleCache;
     private final File transformedPluginCache;
-    private final String applicationVersion;
     private final Logger log = Logger.getLogger(DefaultOsgiPersistentCache.class);
 
     /**
-     * @deprecated
+     * Constructs a cache, using the passed file as the base directory for cache subdirectories
+     * @param baseDir The base directory
      */
-    @Deprecated
     public DefaultOsgiPersistentCache(File baseDir)
-    {
-        this(baseDir, null);
-    }
-    
-    public DefaultOsgiPersistentCache(File baseDir, String applicationVersion)
     {
         Validate.notNull(baseDir, "The base directory for OSGi caches cannot be null");
         Validate.isTrue(baseDir.exists(), "The base directory for OSGi persistent caches should exist");
         osgiBundleCache = new File(baseDir, "felix");
         frameworkBundleCache = new File(baseDir, "framework-bundles");
         transformedPluginCache = new File(baseDir, "transformed-plugins");
-        this.applicationVersion = applicationVersion;
-        validate();
+        validate(null);
+    }
+
+    /**
+     * Constructor added in the 2.2.0 beta timeframe, but was made redundant later.  Application version is not used.
+     * @deprecated
+     */
+    @Deprecated
+    public DefaultOsgiPersistentCache(File baseDir, String applicationVersion)
+    {
+        this(baseDir);
     }
 
     public File getFrameworkBundleCache()
@@ -74,15 +77,24 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
         }
     }
 
-    private void validate()
+    public void validate(String cacheValidationKey)
     {
         ensureDirectoryExists(frameworkBundleCache);
         ensureDirectoryExists(osgiBundleCache);
         ensureDirectoryExists(transformedPluginCache);
 
-        if (applicationVersion != null)
+        try
         {
-            File versionFile = new File(transformedPluginCache, "host.version");
+            FileUtils.cleanDirectory(osgiBundleCache);
+        }
+        catch (final IOException e)
+        {
+            throw new OsgiContainerException("Unable to clean the cache directory: " + osgiBundleCache, e);
+        }
+        
+        if (cacheValidationKey != null)
+        {
+            File versionFile = new File(transformedPluginCache, "cache.key");
             if (versionFile.exists())
             {
                 String oldVersion = null;
@@ -92,9 +104,9 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
                 }
                 catch (IOException e)
                 {
-                    log.debug("Unable to read version file", e);
+                    log.debug("Unable to read cache key file", e);
                 }
-                if (!applicationVersion.equals(oldVersion))
+                if (!cacheValidationKey.equals(oldVersion))
                 {
                     log.info("Application upgrade detecting, clearing OSGi cache directories");
                     clear();
@@ -107,11 +119,11 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
 
             try
             {
-                FileUtils.writeStringToFile(versionFile, applicationVersion);
+                FileUtils.writeStringToFile(versionFile, cacheValidationKey);
             }
             catch (IOException e)
             {
-                log.warn("Unable to write cache version file, so will be unable to detect upgrades", e);
+                log.warn("Unable to write cache key file, so will be unable to detect upgrades", e);
             }
         }
     }
