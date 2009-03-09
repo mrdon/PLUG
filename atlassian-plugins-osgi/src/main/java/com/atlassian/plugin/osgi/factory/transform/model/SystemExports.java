@@ -55,4 +55,13 @@ public class SystemExports
         }
         return pkg;
     }
+
+    /**
+     * @param pkg The package to check
+     * @return True if the package is being exported, false otherwise
+     */
+    public boolean isExported(String pkg)
+    {
+        return exports.containsKey(pkg);
+    }
 }
