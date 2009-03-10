@@ -61,4 +61,15 @@ public class TestCssWebResourceFormatter extends TestCase
                     "<![endif]-->\n",
                     cssWebResourceFormatter.formatResource(url, params));
     }
+
+    public void testFormatHtml4Resource()
+    {
+        final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master-ie.css";
+
+        Map params = new HashMap();
+        params.put("html4", "true");
+        params.put("media", "screen");
+        assertEquals("<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" media=\"screen\">\n",
+                    cssWebResourceFormatter.formatResource(url, params));
+    }
 }

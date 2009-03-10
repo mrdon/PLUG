@@ -32,14 +32,22 @@ class CssWebResourceFormatter extends AbstractWebResourceFormatter
         {
             buffer.append(" media=\"all\"");
         }
-        buffer.append("/>\n");
 
+        // support valid HTML 4.01
+        if (!BooleanUtils.toBoolean(params.get("html4")))
+        {
+            buffer.append("/");
+        }
+        buffer.append(">\n");
+        
         // ie conditional commment
-        if(BooleanUtils.toBoolean(params.get("ieonly")))
+        if (BooleanUtils.toBoolean(params.get("ieonly")))
         {
             buffer.insert(0, "<!--[if IE]>\n");
             buffer.append("<![endif]-->\n");
         }
+
+
 
         return buffer.toString();
     }
