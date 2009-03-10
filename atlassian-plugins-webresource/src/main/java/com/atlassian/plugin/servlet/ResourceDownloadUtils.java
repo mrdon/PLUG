@@ -42,7 +42,7 @@ public class ResourceDownloadUtils
                 log.warn("Error flushing output stream: ", e);
             }
         }
-        log.info("Serving file done.");
+        log.debug("Serving file done.");
     }
 
 

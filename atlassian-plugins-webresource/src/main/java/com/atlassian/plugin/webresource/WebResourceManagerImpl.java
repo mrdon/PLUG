@@ -89,7 +89,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         }
 
         List<String> dependencies = ((WebResourceModuleDescriptor) moduleDescriptor).getDependencies();
-        log.info("About to add resource [" + moduleKey + "] and its dependencies: " + dependencies);
+        log.debug("About to add resource [" + moduleKey + "] and its dependencies: " + dependencies);
 
         stack.push(moduleKey);
         try
