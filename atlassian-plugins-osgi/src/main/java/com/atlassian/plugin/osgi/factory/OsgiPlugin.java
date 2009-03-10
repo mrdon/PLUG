@@ -316,28 +316,50 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return getBundle().getHeaders().get("Spring-Context") != null;
     }
 
-    public <T> T autowire(final Class<T> clazz)
+    /**
+     * @throws IllegalStateException if the spring context is not initialized
+     */
+    public <T> T autowire(final Class<T> clazz) throws IllegalStateException
     {
         return autowire(clazz, AutowireStrategy.AUTOWIRE_AUTODETECT);
     }
 
-    public <T> T autowire(final Class<T> clazz, final AutowireStrategy autowireStrategy)
+    /**
+     * @throws IllegalStateException if the spring context is not initialized
+     */
+    public <T> T autowire(final Class<T> clazz, final AutowireStrategy autowireStrategy) throws IllegalStateException
     {
-        return (springContextAccessor != null ? springContextAccessor.createBean(clazz, autowireStrategy) : null);
+        assertSpringContextAvailable();
+        return springContextAccessor.createBean(clazz, autowireStrategy);
     }
 
-    public void autowire(final Object instance)
+    /**
+     * @throws IllegalStateException if the spring context is not initialized
+     */
+    public void autowire(final Object instance) throws IllegalStateException
     {
         autowire(instance, AutowireStrategy.AUTOWIRE_AUTODETECT);
     }
 
-    public void autowire(final Object instance, final AutowireStrategy autowireStrategy)
+    /**
+     * @throws IllegalStateException if the spring context is not initialized
+     */
+    public void autowire(final Object instance, final AutowireStrategy autowireStrategy) throws IllegalStateException
     {
-        if  (springContextAccessor != null)
-        {
-            springContextAccessor.createBean(instance, autowireStrategy);
-        }
+        assertSpringContextAvailable();
+        springContextAccessor.createBean(instance, autowireStrategy);
     }
+
+    /**
+     * @throws IllegalStateException if the spring context is not initialized
+     */
+    private void assertSpringContextAvailable() throws IllegalStateException
+    {
+        if (springContextAccessor == null)
+            throw new IllegalStateException("Cannot autowire object because the Spring context is unavailable.  " +
+                "Ensure your OSGi bundle contains the 'Spring-Context' header.");
+    }
+
 
     Map<String, Element> getModuleElements()
     {
