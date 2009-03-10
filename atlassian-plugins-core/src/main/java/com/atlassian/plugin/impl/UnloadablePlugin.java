@@ -21,32 +21,35 @@ public class UnloadablePlugin extends StaticPlugin
      * @param text The error text
      * @since 2.0.0
      */
-    public UnloadablePlugin(String text)
+    public UnloadablePlugin(final String text)
     {
-        this.errorText = text;
+        errorText = text;
         setKey(UNKNOWN_KEY_PREFIX + System.identityHashCode(this));
     }
 
+    @Override
     public boolean isUninstallable()
     {
         return uninstallable;
     }
 
-    public void setDeletable(boolean deletable)
+    public void setDeletable(final boolean deletable)
     {
         this.deletable = deletable;
     }
 
+    @Override
     public boolean isDeleteable()
     {
         return deletable;
     }
 
-    public void setUninstallable(boolean uninstallable)
+    public void setUninstallable(final boolean uninstallable)
     {
         this.uninstallable = uninstallable;
     }
 
+    @Override
     public boolean isEnabledByDefault()
     {
         return false;
@@ -57,14 +60,20 @@ public class UnloadablePlugin extends StaticPlugin
         return errorText;
     }
 
-    public void setErrorText(String errorText)
+    public void setErrorText(final String errorText)
     {
         this.errorText = errorText;
     }
 
-
+    @Override
     public void close()
     {
 
+    }
+
+    @Override
+    public String toString()
+    {
+        return super.toString() + " " + errorText;
     }
 }
