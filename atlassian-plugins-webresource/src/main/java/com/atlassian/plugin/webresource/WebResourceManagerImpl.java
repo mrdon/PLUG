@@ -49,7 +49,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void requireResource(String moduleCompleteKey)
     {
-        log.info("Requiring resource: " + moduleCompleteKey);
+        log.debug("Requiring resource: " + moduleCompleteKey);
         Map cache = webResourceIntegration.getRequestCache();
         Collection webResourceNames = (Collection) cache.get(REQUEST_CACHE_RESOURCE_KEY);
         if (webResourceNames == null)
@@ -112,7 +112,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         Collection webResourceNames = (Collection) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_RESOURCE_KEY);
         if (webResourceNames == null || webResourceNames.isEmpty())
         {
-            log.info("No resources required to write");
+            log.debug("No resources required to write");
             return;
         }
 

@@ -90,7 +90,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
 
     public void serveResource(HttpServletRequest request, HttpServletResponse response) throws DownloadException
     {
-        log.info("Start to serve batch " + toString());
+        log.debug("Start to serve batch " + toString());
         for (DownloadableResource resource : resources)
         {
             resource.serveResource(request, response);

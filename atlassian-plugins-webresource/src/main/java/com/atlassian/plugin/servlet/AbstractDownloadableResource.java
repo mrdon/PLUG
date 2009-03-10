@@ -63,7 +63,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
         }
 
         streamResource(resourceStream, out);
-        log.info("Serving file done.");
+        log.debug("Serving file done.");
     }
 
     public void streamResource(OutputStream out)
