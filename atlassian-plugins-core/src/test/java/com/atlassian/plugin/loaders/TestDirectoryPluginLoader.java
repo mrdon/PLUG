@@ -1,21 +1,28 @@
 package com.atlassian.plugin.loaders;
 
+import static com.atlassian.plugin.util.collect.CollectionUtil.filter;
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
+
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
+import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.factories.XmlDynamicPluginFactory;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 import com.atlassian.plugin.test.PluginJarBuilder;
+import com.atlassian.plugin.util.collect.CollectionUtil;
+import com.atlassian.plugin.util.collect.Predicate;
 
 import org.apache.commons.io.FileUtils;
 
@@ -25,7 +32,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -37,8 +43,8 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     private PluginEventManager pluginEventManager;
     private DirectoryPluginLoader loader;
     private DefaultModuleDescriptorFactory moduleDescriptorFactory;
-    private static final List DEFAULT_PLUGIN_FACTORIES = Arrays.asList(new LegacyDynamicPluginFactory(PluginAccessor.Descriptor.FILENAME),
-        new XmlDynamicPluginFactory("foo"));
+    private static final List<PluginFactory> DEFAULT_PLUGIN_FACTORIES = unmodifiableList(asList(new LegacyDynamicPluginFactory(
+        PluginAccessor.Descriptor.FILENAME), new XmlDynamicPluginFactory("foo")));
 
     public static final String BAD_PLUGIN_JAR = "bad-plugins/crap-plugin.jar";
 
@@ -62,14 +68,12 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     {
         addTestModuleDecriptors();
         loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
-        final Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        final Collection<Plugin> plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         assertEquals(2, plugins.size());
 
-        for (final Iterator iterator = plugins.iterator(); iterator.hasNext();)
+        for (final Plugin plugin : plugins)
         {
-            final Plugin plugin = (Plugin) iterator.next();
-
             assertTrue(plugin.getName().equals("Test Class Loaded Plugin") || plugin.getName().equals("Test Class Loaded Plugin 2"));
 
             if (plugin.getName().equals("Test Class Loaded Plugin")) // asserts for first plugin
@@ -118,7 +122,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     {
         addTestModuleDecriptors();
         loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
-        Collection col = loader.addFoundPlugins(moduleDescriptorFactory);
+        Collection<Plugin> col = loader.addFoundPlugins(moduleDescriptorFactory);
         assertFalse(col.isEmpty());
 
         col = loader.addFoundPlugins(moduleDescriptorFactory);
@@ -138,7 +142,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         //restore paddington to test plugins dir
         FileUtils.copyDirectory(pluginsDirectory, pluginsTestDir);
 
-        Collection col = loader.addFoundPlugins(moduleDescriptorFactory);
+        Collection<Plugin> col = loader.addFoundPlugins(moduleDescriptorFactory);
         assertEquals(1, col.size());
         // next time we shouldn't find any new plugins
         col = loader.addFoundPlugins(moduleDescriptorFactory);
@@ -149,19 +153,18 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
     {
         addTestModuleDecriptors();
         loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
-        final Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        final Collection<Plugin> plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         //duplicate the paddington plugin before removing the original
         //the duplicate will be used to restore the deleted original after the test
-        final File paddington = new File(pluginsTestDir + File.separator + PADDINGTON_JAR);
 
-        final Iterator iter = plugins.iterator();
+        final Iterator<Plugin> iter = plugins.iterator();
 
         Plugin paddingtonPlugin = null;
 
         while (iter.hasNext())
         {
-            final Plugin plugin = (Plugin) iter.next();
+            final Plugin plugin = iter.next();
 
             if (plugin.getName().equals("Test Class Loaded Plugin"))
             {
@@ -184,7 +187,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
 
         loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
 
-        final Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        final Collection<Plugin> plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         assertEquals("evil jar wasn't loaded, but other plugins were", pluginsTestDir.list(new FilenameFilter()
         {
@@ -193,7 +196,15 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
             {
                 return fileName.endsWith(".jar");
             }
-        }).length - 1, plugins.size());
+        }).length, plugins.size());
+
+        assertEquals(1, CollectionUtil.toList(filter(plugins, new Predicate<Plugin>()
+        {
+            public boolean evaluate(final Plugin input)
+            {
+                return input instanceof UnloadablePlugin;
+            }
+        })).size());
     }
 
     public void testInstallPluginTwice() throws URISyntaxException, IOException, PluginParseException, InterruptedException
@@ -204,10 +215,10 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
 
         loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
 
-        Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        Collection<Plugin> plugins = loader.loadAllPlugins(moduleDescriptorFactory);
         assertEquals(1, plugins.size());
-        assertNotNull(((Plugin) plugins.iterator().next()).getResource("foo.txt"));
-        assertNull(((Plugin) plugins.iterator().next()).getResource("bar.txt"));
+        assertNotNull((plugins.iterator().next()).getResource("foo.txt"));
+        assertNull((plugins.iterator().next()).getResource("bar.txt"));
 
         Thread.currentThread();
         // sleep to ensure the new plugin is picked up
@@ -216,8 +227,8 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         new PluginJarBuilder("plugin").addPluginInformation("some.key", "My name", "1.0", 1).addResource("bar.txt", "bar").build().renameTo(plugin);
         plugins = loader.addFoundPlugins(moduleDescriptorFactory);
         assertEquals(1, plugins.size());
-        assertNull(((Plugin) plugins.iterator().next()).getResource("foo.txt"));
-        assertNotNull(((Plugin) plugins.iterator().next()).getResource("bar.txt"));
+        assertNull((plugins.iterator().next()).getResource("foo.txt"));
+        assertNotNull((plugins.iterator().next()).getResource("bar.txt"));
         assertTrue(plugin.exists());
 
     }
@@ -231,7 +242,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
 
         loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
 
-        final Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        final Collection<Plugin> plugins = loader.loadAllPlugins(moduleDescriptorFactory);
         assertEquals(2, plugins.size());
     }
 
@@ -242,7 +253,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
 
         loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
 
-        final Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        final Collection<Plugin> plugins = loader.loadAllPlugins(moduleDescriptorFactory);
         assertEquals(1, plugins.size());
         assertTrue(plugins.iterator().next() instanceof UnloadablePlugin);
     }
