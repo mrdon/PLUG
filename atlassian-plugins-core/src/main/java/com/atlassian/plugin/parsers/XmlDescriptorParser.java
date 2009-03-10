@@ -6,23 +6,27 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Resources;
-import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptorFactory;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
+import com.atlassian.plugin.util.PluginUtils;
 
+import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.lang.Validate;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Provides access to the descriptor information retrieved from an XML InputStream.
@@ -46,7 +50,7 @@ public class XmlDescriptorParser implements DescriptorParser
      * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
      * @since 2.2.0
      */
-    public XmlDescriptorParser(final Document source, String... applicationKeys) throws PluginParseException
+    public XmlDescriptorParser(final Document source, final String... applicationKeys) throws PluginParseException
     {
         Validate.notNull(source, "XML descriptor source document cannot be null");
         document = source;
@@ -67,7 +71,7 @@ public class XmlDescriptorParser implements DescriptorParser
      * @throws PluginParseException if there is a problem reading the descriptor from the XML {@link InputStream}.
      * @since 2.2.0
      */
-    public XmlDescriptorParser(InputStream source, String... applicationKeys) throws PluginParseException
+    public XmlDescriptorParser(final InputStream source, final String... applicationKeys) throws PluginParseException
     {
         Validate.notNull(source, "XML descriptor source cannot be null");
         document = createDocument(source);
@@ -173,7 +177,7 @@ public class XmlDescriptorParser implements DescriptorParser
         // Determine if this module descriptor is applicable for the current application
         if (!PluginUtils.doesModuleElementApplyToApplication(element, applicationKeys))
         {
-            log.debug("Ignoring module descriptor for this application: "+element.attributeValue("key"));
+            log.debug("Ignoring module descriptor for this application: " + element.attributeValue("key"));
             return null;
         }
 
@@ -187,7 +191,6 @@ public class XmlDescriptorParser implements DescriptorParser
         // When there's a problem loading a module, return an UnrecognisedModuleDescriptor with error
         catch (final Throwable e)
         {
-            e.printStackTrace();
             final UnrecognisedModuleDescriptor descriptor = UnrecognisedModuleDescriptorFactory.createUnrecognisedModuleDescriptor(plugin, element,
                 e, moduleDescriptorFactory);
 
@@ -250,9 +253,9 @@ public class XmlDescriptorParser implements DescriptorParser
         }
 
         // initialize any parameters on the plugin xml definition
-        for (final Iterator iterator = element.elements("param").iterator(); iterator.hasNext();)
+        for (final Iterator<Element> iterator = element.elements("param").iterator(); iterator.hasNext();)
         {
-            final Element param = (Element) iterator.next();
+            final Element param = iterator.next();
 
             // Retrieve the parameter info => name & text
             if (param.attribute("name") != null)
@@ -263,7 +266,7 @@ public class XmlDescriptorParser implements DescriptorParser
 
         if (element.element("application-version") != null)
         {
-            Element ver = element.element("application-version");
+            final Element ver = element.element("application-version");
             if (ver.attribute("max") != null)
             {
                 pluginInfo.setMaxVersion(Float.parseFloat(ver.attributeValue("max")));
