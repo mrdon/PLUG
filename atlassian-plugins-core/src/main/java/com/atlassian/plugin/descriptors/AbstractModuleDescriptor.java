@@ -29,6 +29,10 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     String description;
     boolean enabledByDefault = true;
     boolean systemModule = false;
+
+    /**
+     * @deprecated since 2.2.0
+     */
     protected boolean singleton = true;
     Map<String, String> params;
     protected Resources resources = Resources.EMPTY_RESOURCES;
@@ -205,16 +209,19 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         return systemModule;
     }
 
+    /**
+     * @deprecated Since 2.2.0
+     */
+    @Deprecated
     public boolean isSingleton()
     {
         return singleton;
     }
 
     /**
-     * Override this method if you want your module descriptor to be or not be a singleton by default.
-     * <p>
-     * Default is "true" - ie all plugin modules are singletons by default.
+     * @deprecated Since 2.2.0
      */
+    @Deprecated
     protected boolean isSingletonByDefault()
     {
         return true;
