@@ -47,10 +47,12 @@ public class TestXmlDescriptorParser extends TestCase
         }
         catch (PluginParseException e)
         {
+            e.printStackTrace();
             fail("Plugin information parsing should not fail.");
         }
         catch (FileNotFoundException e)
         {
+            e.printStackTrace();
             // This shouldn't happen
             fail("Error setting up test");
         }

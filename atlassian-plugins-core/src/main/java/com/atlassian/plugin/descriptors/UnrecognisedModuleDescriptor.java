@@ -20,17 +20,6 @@ public final class UnrecognisedModuleDescriptor extends AbstractModuleDescriptor
     }
 
     @Override
-    public void init(final Plugin plugin, final Element element) throws PluginParseException
-    {
-        key = element.attributeValue("key");
-        name = element.attributeValue("name");
-        description = element.elementTextTrim("description");
-
-        this.plugin = plugin;
-        resources = new Resources(Collections.<ResourceDescriptor> emptyList());
-    }
-
-    @Override
     public boolean isEnabledByDefault()
     {
         //never enable a UnrecognisedModuleDescriptor

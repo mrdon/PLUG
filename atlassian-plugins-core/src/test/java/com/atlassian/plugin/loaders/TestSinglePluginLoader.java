@@ -244,16 +244,13 @@ public class TestSinglePluginLoader extends TestCase
 
     public void testBadPluginKey() throws PluginParseException
     {
-        try
-        {
-            SinglePluginLoader loader = new SinglePluginLoader("test-bad-plugin-key-plugin.xml");
-            loader.loadAllPlugins(null);
-            fail("Should have blown up.");
-        }
-        catch (PluginParseException e)
-        {
-            assertTrue(e.getMessage().endsWith("Plugin keys cannot contain ':'. Key is 'test:bad'"));
-        }
+        SinglePluginLoader loader = new SinglePluginLoader("test-bad-plugin-key-plugin.xml");
+        Collection<Plugin> plugins = loader.loadAllPlugins(null);
+        assertEquals(1, plugins.size());
+        Plugin plugin = plugins.iterator().next();
+        assertTrue(plugin instanceof UnloadablePlugin);
+        assertEquals("test-bad-plugin-key-plugin.xml", plugin.getKey());
+        assertTrue(((UnloadablePlugin)plugin).getErrorText().endsWith("Plugin keys cannot contain ':'. Key is 'test:bad'"));
     }
 
     public void testNonUniqueKeysWithinAPlugin() throws PluginParseException
@@ -263,28 +260,19 @@ public class TestSinglePluginLoader extends TestCase
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
 
-        try
-        {
-            loader.loadAllPlugins(moduleDescriptorFactory);
-            fail("Should have died with duplicate key exception.");
-        }
-        catch (PluginParseException e)
-        {
-            assertTrue(e.getMessage().endsWith("Found duplicate key 'bear' within plugin 'test.bad.plugin'"));
-        }
+        List<Plugin> plugins = new ArrayList<Plugin>(loader.loadAllPlugins(moduleDescriptorFactory));
+        assertEquals(1, plugins.size());
+        Plugin plugin = plugins.get(0);
+        assertTrue(plugin instanceof UnloadablePlugin);
+        assertTrue(((UnloadablePlugin)plugin).getErrorText().endsWith("Found duplicate key 'bear' within plugin 'test.bad.plugin'"));
     }
 
     public void testBadResource()
     {
-        try
-        {
-            new SinglePluginLoader("foo").loadAllPlugins(null);
-            fail("Should have thrown exception");
-        }
-        catch (PluginParseException e)
-        {
-            // Expected exception
-        }
+        List<Plugin> plugins = new ArrayList<Plugin>(new SinglePluginLoader("foo").loadAllPlugins(null));
+        assertEquals(1, plugins.size());
+        assertTrue(plugins.get(0) instanceof UnloadablePlugin);
+        assertEquals("foo", plugins.get(0).getKey());
     }
 
     public void enableModules(Plugin plugin)

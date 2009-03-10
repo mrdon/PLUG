@@ -1,7 +1,5 @@
 package com.atlassian.plugin.loaders;
 
-import static com.atlassian.plugin.util.Assertions.notNull;
-
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginException;
@@ -12,7 +10,10 @@ import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
+import static com.atlassian.plugin.util.Assertions.notNull;
 import com.atlassian.plugin.util.ClassLoaderUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +51,8 @@ public class SinglePluginLoader implements PluginLoader
 
     private final DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
 
+    private static final Log log = LogFactory.getLog(SinglePluginLoader.class);
+
     /**
      * @deprecated use URL instead.
      */
@@ -80,11 +83,23 @@ public class SinglePluginLoader implements PluginLoader
         url = null;
     }
 
-    public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory moduleDescriptorFactory)
     {
         if (plugins == null)
         {
-            plugins = Collections.singleton(loadPlugin(moduleDescriptorFactory));
+            Plugin plugin;
+            try
+            {
+                plugin = loadPlugin(moduleDescriptorFactory);
+            }
+            catch (RuntimeException ex)
+            {
+                String id = getIdentifier();
+                log.error("Error loading plugin or descriptor: " + id, ex);
+                plugin = new UnloadablePlugin(id + ": " + ex);
+                plugin.setKey(id);
+            }
+            plugins = Collections.singleton(plugin);
         }
         return plugins;
     }
@@ -146,6 +161,17 @@ public class SinglePluginLoader implements PluginLoader
         }
 
         return plugin;
+    }
+
+    private String getIdentifier()
+    {
+        if (resource != null) {
+            return resource;
+        }
+        if (url != null) {
+            return url.getPath();
+        }
+        return inputStreamRef.toString();
     }
 
     protected StaticPlugin getNewPlugin()

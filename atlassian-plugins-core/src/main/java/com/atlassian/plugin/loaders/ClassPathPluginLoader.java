@@ -57,14 +57,7 @@ public class ClassPathPluginLoader implements PluginLoader
         while (pluginDescriptorFiles.hasMoreElements())
         {
             url = pluginDescriptorFiles.nextElement();
-            try
-            {
-                plugins.addAll(new SinglePluginLoader(url).loadAllPlugins(moduleDescriptorFactory));
-            }
-            catch (final PluginParseException e)
-            {
-                log.error("Unable to load plugin at url: " + url + ", " + e.getMessage(), e);
-            }
+            plugins.addAll(new SinglePluginLoader(url).loadAllPlugins(moduleDescriptorFactory));
         }
     }
 
