@@ -64,27 +64,37 @@ public class PluginInformation
         return vendorUrl;
     }
 
+    /**
+     * @deprecated Since 2.2.0
+     */
+    @Deprecated
     public void setMaxVersion(final float maxVersion)
     {
         this.maxVersion = maxVersion;
     }
 
+    /**
+     * @deprecated Since 2.2.0
+     */
+    @Deprecated
     public void setMinVersion(final float minVersion)
     {
         this.minVersion = minVersion;
     }
 
     /**
-     * @return the configured max application version, 0 if undefined
+     * @deprecated Since 2.2.0
      */
+    @Deprecated
     public float getMaxVersion()
     {
         return maxVersion;
     }
 
     /**
-     * @return the configured min application version, 0 if undefined
+     * @deprecated Since 2.2.0
      */
+    @Deprecated
     public float getMinVersion()
     {
         return minVersion;
