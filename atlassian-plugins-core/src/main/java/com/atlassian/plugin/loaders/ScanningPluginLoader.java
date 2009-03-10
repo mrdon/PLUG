@@ -1,6 +1,13 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.*;
+import com.atlassian.plugin.DefaultPluginArtifactFactory;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginArtifactFactory;
+import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
@@ -71,24 +78,25 @@ public class ScanningPluginLoader implements DynamicPluginLoader
         pluginEventManager.register(this);
     }
 
-    public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    public Collection<Plugin> loadAllPlugins(final ModuleDescriptorFactory moduleDescriptorFactory)
     {
         scanner.scan();
 
         for (final DeploymentUnit deploymentUnit : scanner.getDeploymentUnits())
         {
+            Plugin plugin;
             try
             {
-                final Plugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
-                plugins.put(deploymentUnit, plugin);
+                plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
             }
             catch (final PluginParseException e)
             {
-                // This catches errors so that the successfully loaded plugins can be returned.
-                // It might be nicer if this method returned an object containing both the succesfully loaded
-                // plugins and the unsuccessfully loaded plugins.
                 log.error("Error loading descriptor for : " + deploymentUnit, e);
+                plugin = new UnloadablePlugin(deploymentUnit.toString() + ": " + e);
+                plugin.setKey(deploymentUnit.getPath().getName());
             }
+            postProcess(plugin);
+            plugins.put(deploymentUnit, plugin);
         }
 
         if (scanner.getDeploymentUnits().isEmpty())
@@ -300,4 +308,14 @@ public class ScanningPluginLoader implements DynamicPluginLoader
         }
         return pluginKey;
     }
+
+    /**
+     * Template method that can be used by a specific {@link PluginLoader} to
+     * add information to a {@link Plugin} after it has been loaded.
+     * 
+     * @param plugin a plugin that has been loaded
+     * @since v2.2.0
+     */
+    protected void postProcess(final Plugin plugin)
+    {}
 }
