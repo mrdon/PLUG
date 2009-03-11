@@ -1,3 +1,6 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+
 <%@ taglib uri="http://www.opensymphony.com/sitemesh/decorator" prefix="decorator" %>
 
 <html>
@@ -14,7 +17,7 @@
             Atlassian Plugins Reference Implementation - Admin Decorator
         </h2>
         <decorator:body />
-        <hr />
+        <hr>
         <div style="text-align:center">
             Atlassian Plugins -
             <a href="http://jira.atlassian.com/browse/PLUG">Issues</a> |
