@@ -48,129 +48,52 @@ class ExportsBuilder
      */
     public String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig, File cacheDir){
 
-        String exports = loadExportsFromCache(cacheDir, packageScannerConfig.getCurrentHostVersion());
+        String exports = null;
 
-        if (exports == null)
-        {
+        StringBuilder origExports = new StringBuilder();
+        origExports.append("org.osgi.framework; version=1.4.1,");
+        origExports.append("org.osgi.service.packageadmin; version=1.2.0," );
+        origExports.append("org.osgi.service.startlevel; version=1.1.0,");
+        origExports.append("org.osgi.service.url; version=1.0.0,");
+        origExports.append("org.osgi.util; version=1.4.1,");
+        origExports.append("org.osgi.util.tracker; version=1.4.1,");
+        origExports.append("host.service.command; version=1.0.0,");
 
-            StringBuilder origExports = new StringBuilder();
-            origExports.append("org.osgi.framework; version=1.4.1,");
-            origExports.append("org.osgi.service.packageadmin; version=1.2.0," );
-            origExports.append("org.osgi.service.startlevel; version=1.1.0,");
-            origExports.append("org.osgi.service.url; version=1.0.0,");
-            origExports.append("org.osgi.util; version=1.4.1,");
-            origExports.append("org.osgi.util.tracker; version=1.4.1,");
-            origExports.append("host.service.command; version=1.0.0,");
+        constructJdkExports(origExports, JDK_PACKAGES_PATH);
+        origExports.append(",");
 
-            constructJdkExports(origExports, JDK_PACKAGES_PATH);
+        if (System.getProperty("java.specification.version").equals("1.6")) {
+            constructJdkExports(origExports, JDK6_PACKAGES_PATH);
             origExports.append(",");
+        }
 
-            if (System.getProperty("java.specification.version").equals("1.6")) {
-                constructJdkExports(origExports, JDK6_PACKAGES_PATH);
-                origExports.append(",");
-            }
-
-            Collection<ExportPackage> exportList = generateExports(packageScannerConfig);
-            constructAutoExports(origExports, exportList);
+        Collection<ExportPackage> exportList = generateExports(packageScannerConfig);
+        constructAutoExports(origExports, exportList);
 
 
-            try
-            {
-                origExports.append(OsgiHeaderUtil.findReferredPackages(regs));
+        try
+        {
+            origExports.append(OsgiHeaderUtil.findReferredPackages(regs));
 
-                Analyzer analyzer = new Analyzer();
-                analyzer.setJar(new Jar("somename.jar"));
+            Analyzer analyzer = new Analyzer();
+            analyzer.setJar(new Jar("somename.jar"));
 
-                // we pretend the exports are imports for the sake of the bnd tool, which would otherwise cut out
-                // exports that weren't actually in the jar
-                analyzer.setProperty(Constants.IMPORT_PACKAGE, origExports.toString());
-                Manifest mf = analyzer.calcManifest();
+            // we pretend the exports are imports for the sake of the bnd tool, which would otherwise cut out
+            // exports that weren't actually in the jar
+            analyzer.setProperty(Constants.IMPORT_PACKAGE, origExports.toString());
+            Manifest mf = analyzer.calcManifest();
 
-                exports = mf.getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
-                saveExportsToCache(cacheDir, packageScannerConfig.getCurrentHostVersion(), exports);
-            } catch (IOException ex)
-            {
-                log.error("Unable to calculate necessary exports based on host components", ex);
-                exports = origExports.toString();
-            }
+            exports = mf.getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
+        } catch (IOException ex)
+        {
+            log.error("Unable to calculate necessary exports based on host components", ex);
+            exports = origExports.toString();
         }
 
         if (log.isDebugEnabled()) {
             log.debug("Exports:\n"+exports.replaceAll(",", "\r\n"));
         }
         return exports;
-    }
-
-    private void saveExportsToCache(File cacheDir, String currentHostVersion, String exports)
-    {
-        // Don't bother saving exports if a version isn't supplied
-        if (currentHostVersion == null)
-            return;
-
-        File cache = new File(cacheDir, EXPORTS_TXT);
-        FileWriter fout = null;
-        try
-        {
-            fout = new FileWriter(cache);
-            fout.write(currentHostVersion);
-            fout.write("\n");
-            fout.write(exports);
-        }
-        catch (FileNotFoundException e)
-        {
-            log.warn("Cache directory not available: "+cacheDir.getAbsolutePath(), e);
-        }
-        catch (IOException e)
-        {
-            log.warn("Unable to save exports cache", e);
-        }
-        finally
-        {
-            IOUtils.closeQuietly(fout);
-        }
-
-    }
-
-    private String loadExportsFromCache(File cacheDir, String currentHostVersion)
-    {
-        // Don't bother loading exports if a version isn't supplied
-        if (currentHostVersion == null)
-            return null;
-
-        File cache = new File(cacheDir, EXPORTS_TXT);
-        if (cache.exists())
-        {
-            FileReader reader = null;
-            try
-            {
-                reader = new FileReader(cache);
-                String contents = IOUtils.toString(reader);
-                int pos = contents.indexOf('\n');
-                if (pos == -1)
-                {
-                    throw new IOException("Invalid cache file format");
-                }
-                String cacheVersion = contents.substring(0, pos);
-                if (currentHostVersion.equals(cacheVersion))
-                {
-                    return contents.substring(pos + 1);
-                }
-            }
-            catch (FileNotFoundException e)
-            {
-                // Should never happen
-                throw new RuntimeException(e);
-            }
-            catch (IOException e)
-            {
-                log.warn("Unable to write exports cache", e);
-            }
-            finally
-            {
-                IOUtils.closeQuietly(reader);
-            }
-        }
-        return null;
     }
 
     void constructAutoExports(StringBuilder sb, Collection<ExportPackage> packageExports) {

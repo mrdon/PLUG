@@ -48,28 +48,6 @@ public class TestExportsBuilder extends TestCase
         assertFalse(exports.contains(",,"));
     }
 
-    public void testDetermineExportsUseCache()
-    {
-        final String myPackage = ExportsBuilder.class.getPackage().getName();
-
-        DefaultPackageScannerConfiguration config = new DefaultPackageScannerConfiguration("0.0");
-
-        String exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), config, tmpDir);
-        assertFalse(exports.contains(",,"));
-        assertTrue(new File(tmpDir, "exports.txt").exists());
-        assertTrue(exports.contains(myPackage));
-        config.setPackageExcludes(Arrays.asList(myPackage));
-
-        String exports2 = builder.determineExports(new ArrayList<HostComponentRegistration>(), config, tmpDir);
-        assertTrue(exports2.contains(myPackage));
-
-        config = new DefaultPackageScannerConfiguration("1.0");
-        config.setPackageExcludes(Arrays.asList(myPackage));
-
-        String exports3 = builder.determineExports(new ArrayList<HostComponentRegistration>(), config, tmpDir);
-        assertFalse(exports3.contains(myPackage));
-    }
-
     public void testConstructAutoExports()
     {
         List<ExportPackage> exports = new ArrayList<ExportPackage>();
