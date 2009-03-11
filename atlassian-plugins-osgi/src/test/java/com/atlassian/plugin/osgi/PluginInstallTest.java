@@ -627,8 +627,14 @@ public class PluginInstallTest extends PluginInContainerTestBase
                 .build();
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        Thread.sleep(5000);
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("test.plugin").getModuleDescriptors().iterator().next().getClass().getSimpleName().equals("MyModuleDescriptor");
+            }
+        });
         final Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
         assertEquals(1, descriptors.size());
         final ModuleDescriptor<?> descriptor = descriptors.iterator().next();
@@ -675,8 +681,14 @@ public class PluginInstallTest extends PluginInContainerTestBase
                 .build();
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        Thread.sleep(5000);
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("test.plugin").getModuleDescriptors().iterator().next().getClass().getSimpleName().equals("MyModuleDescriptor");
+            }
+        });
         final Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
         assertEquals(1, descriptors.size());
         final ModuleDescriptor<?> descriptor = descriptors.iterator().next();
@@ -716,15 +728,28 @@ public class PluginInstallTest extends PluginInContainerTestBase
                 .build();
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
-        Thread.sleep(5000);
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("test.plugin").getModuleDescriptors().iterator().next().getClass().getSimpleName().equals("MyModuleDescriptor");
+            }
+        });
+
         Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
         assertEquals(1, descriptors.size());
         ModuleDescriptor<?> descriptor = descriptors.iterator().next();
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
 
         pluginManager.uninstall(pluginManager.getPlugin("test.plugin.module"));
-        Thread.sleep(5000);
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("test.plugin").getModuleDescriptors().iterator().next().getClass().getSimpleName().equals("UnrecognisedModuleDescriptor");
+            }
+        });
         descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
         assertEquals(1, descriptors.size());
         descriptor = descriptors.iterator().next();
@@ -762,7 +787,13 @@ public class PluginInstallTest extends PluginInContainerTestBase
                 .build();
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        Thread.sleep(5000);
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("test.plugin").getModuleDescriptor("dum2").getClass().getSimpleName().equals("MyModuleDescriptor");
+            }
+        });
         final Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin").getModuleDescriptors();
         assertEquals(2, descriptors.size());
         final ModuleDescriptor<?> descriptor = pluginManager.getPlugin("test.plugin").getModuleDescriptor("dum2");
@@ -1029,19 +1060,14 @@ public class PluginInstallTest extends PluginInContainerTestBase
                 .build();
         pluginManager.installPlugin(new JarPluginArtifact(updatedJar));
 
-        Thread.sleep(5000);
-        WaitUntil.invoke(new WaitUntil.WaitCondition()
+        WaitUntil.invoke(new BasicWaitCondition()
         {
             public boolean isFinished()
             {
                 return pluginManager.isPluginEnabled("asecond");
             }
 
-            public String getWaitMessage()
-            {
-                return null;
-            }
-        }, 10, TimeUnit.SECONDS, 2);
+        });
 
         assertEquals("hi bob", mgr.getServlet("/foo", (ServletConfig) mockServletConfig.proxy()).getServletInfo());
     }

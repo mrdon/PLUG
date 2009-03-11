@@ -4,6 +4,7 @@ import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.util.WaitUntil;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.test.PluginJarBuilder;
@@ -27,7 +28,7 @@ public class EnableDisablePluginTest extends PluginInContainerTestBase
         assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
         pluginManager.disablePlugin("enabledisable");
         pluginManager.enablePlugin("enabledisable");
-        Thread.sleep(5000);
+
         plugin = pluginManager.getPlugin("enabledisable");
         assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
     }

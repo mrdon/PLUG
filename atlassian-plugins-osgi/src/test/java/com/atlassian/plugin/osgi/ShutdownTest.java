@@ -14,7 +14,6 @@ public class ShutdownTest extends PluginInContainerTestBase
                 .build();
         initPluginManager(null);
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        Thread.sleep(3000);
         pluginManager.shutdown();
     }
 }
