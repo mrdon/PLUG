@@ -297,6 +297,30 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         manager.init();
         assertEquals(2, manager.getEnabledPlugins().size());
     }
+    
+    public void testLoadOlderDuplicatePluginDoesNotTryToEnableIt() 
+    {
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        pluginLoaders.add(new MultiplePluginLoader("test-atlassian-plugin-newer.xml"));
+        Plugin plugin = new StaticPlugin(){
+            @Override
+            public void enable()
+            {
+                fail("enable() must never be called on a earlier version of plugin when later version is installed");
+            }
+
+            @Override
+            public void disable()
+            {
+                fail("disable() must never be called on a earlier version of plugin when later version is installed");
+            }
+        };
+        plugin.setKey("test.atlassian.plugin");
+        plugin.getPluginInformation().setVersion("1.0");
+        manager.init();
+        manager.addPlugins(null, Collections.singletonList(plugin));
+    }
 
     public void testLoadNewerDuplicatePlugin() throws PluginParseException
     {

@@ -421,6 +421,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     protected void addPlugins(final PluginLoader loader, final Collection<Plugin> pluginsToAdd) throws PluginParseException
     {
+        Set<Plugin> installedPlugins = new TreeSet<Plugin>();
         for (final Plugin plugin : new TreeSet<Plugin>(pluginsToAdd))
         {
             boolean pluginUpgraded = false;
@@ -453,6 +454,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                 }
             }
             plugin.install();
+            installedPlugins.add(plugin);
             if (pluginUpgraded)
             {
                 pluginEventManager.broadcast(new PluginUpgradedEvent(plugin));
@@ -460,7 +462,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         }
 
         final Set<Plugin> pluginsInEnablingState = new HashSet<Plugin>();
-        for (final Plugin plugin : new TreeSet<Plugin>(pluginsToAdd))
+        for (final Plugin plugin : installedPlugins)
         {
             plugins.put(plugin.getKey(), plugin);
             if (getState().isEnabled(plugin))
