@@ -86,7 +86,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     {
         if (bundle == null)
         {
-            throw new IllegalStateException("Bundle hasn't been created yet");
+            throw new IllegalStateException("Bundle hasn't been created yet.  This is probably because the module " +
+                "descriptor is trying to load classes in its init() method.  Move all classloading into the " +
+                "enabled() method, and be sure to properly drop class and instance references in disabled().");
         }
         return bundle;
     }

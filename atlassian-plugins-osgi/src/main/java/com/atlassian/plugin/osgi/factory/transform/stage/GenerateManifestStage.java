@@ -11,7 +11,10 @@ import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
+import com.sun.tools.example.debug.gui.Environment;
 import org.osgi.framework.Constants;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,6 +30,7 @@ import java.util.jar.Manifest;
 public class GenerateManifestStage implements TransformStage
 {
     private static final String SPRING_CONTEXT_DEFAULT = "*;timeout:=60";
+    private static final Log log = LogFactory.getLog(GenerateManifestStage.class);
 
     public void execute(TransformContext context) throws PluginTransformationException
     {
@@ -215,19 +219,19 @@ public class GenerateManifestStage implements TransformStage
         properties.put(key, value.toString().replaceAll("[\r\n]", ""));
     }
 
-    private static void assertSpringAvailableIfRequired(TransformContext context) throws PluginParseException
+    private static void assertSpringAvailableIfRequired(TransformContext context)
     {
         if (context.shouldRequireSpring())
         {
             String header = (String) context.getManifest().getMainAttributes().get("Spring-Context");
             if (header == null)
             {
-                throw new PluginParseException("The Spring Manifest header 'Spring-Context' is missing.  Please add it and " +
+                log.warn("The Spring Manifest header 'Spring-Context' is missing.  Please add it and " +
                         "set it to '" + SPRING_CONTEXT_DEFAULT + "'");
             }
             else if (!header.contains(";timeout:=60"))
             {
-                throw new PluginParseException("The Spring Manifest header isn't set for a 60 second timeout waiting for " +
+                log.warn("The Spring Manifest header isn't set for a 60 second timeout waiting for " +
                         " dependencies.  Please add ';timeout:=60'");
             }
         }
