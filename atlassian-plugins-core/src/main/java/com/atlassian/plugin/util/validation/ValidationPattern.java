@@ -122,17 +122,16 @@ public class ValidationPattern
             Object obj = ctxNode.selectObject(xpath);
             if (obj == null)
             {
-                errors.add(errorMessage);
+                errors.add(errorMessage  + ": " + ctxNode.asXML());
             }
             else if (obj instanceof Boolean && !((Boolean)obj))
             {
-                errors.add(errorMessage);
+                errors.add(errorMessage  + ": " + ctxNode.asXML());
             }
             else if (obj instanceof List && ((List<?>)obj).isEmpty())
             {
-                errors.add(errorMessage);
+                errors.add(errorMessage + ": " + ctxNode.asXML());
             }
-
         }
     }
 
