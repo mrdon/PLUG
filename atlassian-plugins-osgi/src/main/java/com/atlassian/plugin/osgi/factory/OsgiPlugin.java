@@ -1,22 +1,20 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.parsers.DescriptorParser;
-import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.event.PluginEventListener;
-import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
-import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
-import com.atlassian.plugin.event.events.PluginContainerFailedEvent;
-import com.atlassian.plugin.event.events.PluginRefreshedEvent;
-import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
-import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
+import com.atlassian.plugin.event.PluginEventListener;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginContainerFailedEvent;
+import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
+import com.atlassian.plugin.event.events.PluginRefreshedEvent;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
-
+import com.atlassian.plugin.util.PluginUtils;
+import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

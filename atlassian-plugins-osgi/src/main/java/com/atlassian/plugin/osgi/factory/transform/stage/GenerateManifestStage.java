@@ -11,10 +11,9 @@ import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
-import com.sun.tools.example.debug.gui.Environment;
-import org.osgi.framework.Constants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.osgi.framework.Constants;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
