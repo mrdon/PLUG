@@ -900,7 +900,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         plugin.enable();
 
         // Only change the state if the plugin was enabled successfully
-        if (WaitUntil.invoke(new PluginEnabledCondition(plugin)))
+        if (WaitUntil.invoke(new PluginFinishedEnablingCondition(plugin)))
         {
             enablePluginState(plugin, getStore());
             notifyPluginEnabled(plugin);
@@ -1146,7 +1146,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         return getClassLoader().loadClass(className);
     }
 
-    public ClassLoader getClassLoader()
+    public PluginsClassLoader getClassLoader()
     {
         return classLoader;
     }
@@ -1204,18 +1204,18 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     public void setDescriptorParserFactory(final DescriptorParserFactory descriptorParserFactory)
     {}
 
-    private static class PluginEnabledCondition implements WaitUntil.WaitCondition
+    private static class PluginFinishedEnablingCondition implements WaitUntil.WaitCondition
     {
         private final Plugin plugin;
 
-        public PluginEnabledCondition(final Plugin plugin)
+        public PluginFinishedEnablingCondition(final Plugin plugin)
         {
             this.plugin = plugin;
         }
 
         public boolean isFinished()
         {
-            return plugin.getPluginState() == PluginState.ENABLED;
+            return plugin.getPluginState() != PluginState.ENABLING;
         }
 
         public String getWaitMessage()
@@ -1223,5 +1223,4 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             return "Waiting until plugin " + plugin + " is enabled";
         }
     }
-
 }

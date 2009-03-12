@@ -25,7 +25,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     private Resourced resources = Resources.EMPTY_RESOURCES;
     private int pluginsVersion = 1;
     private final Date dateLoaded = new Date();
-    private PluginState pluginState;
+    private volatile PluginState pluginState;
 
     public String getName()
     {
@@ -192,7 +192,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     public void install()
     {
         pluginState = PluginState.INSTALLED;
-        
+
     }
     public void uninstall()
     {
