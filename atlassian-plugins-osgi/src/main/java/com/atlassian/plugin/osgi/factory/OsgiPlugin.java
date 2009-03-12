@@ -253,7 +253,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 }
                 else
                 {
-                    throw new BundleException("Bundle started, but no BundleContext available.  This should never happen.");
+                    log.warn("Bundle started, but no BundleContext available.  This should never happen outside tests.");
                 }
             }
             else
