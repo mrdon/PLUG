@@ -88,7 +88,6 @@ public class ContainerManager
         moduleDescriptorFactory.addModuleDescriptor("servlet-context-param", ServletContextParamModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("servlet-context-listener", ServletContextListenerModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("web-resource", WebResourceModuleDescriptor.class);
-        moduleDescriptorFactory.addModuleDescriptor("web-item", DefaultWebItemModuleDescriptor.class);
 
         final DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration(determineVersion());
         final List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
