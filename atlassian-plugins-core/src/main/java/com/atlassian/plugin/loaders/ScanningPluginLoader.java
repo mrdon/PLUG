@@ -84,17 +84,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
 
         for (final DeploymentUnit deploymentUnit : scanner.getDeploymentUnits())
         {
-            Plugin plugin;
-            try
-            {
-                plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
-            }
-            catch (final PluginParseException e)
-            {
-                log.error("Error loading descriptor for : " + deploymentUnit, e);
-                plugin = new UnloadablePlugin(deploymentUnit.toString() + ": " + e);
-                plugin.setKey(deploymentUnit.getPath().getName());
-            }
+            Plugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
             postProcess(plugin);
             plugins.put(deploymentUnit, plugin);
         }
@@ -107,7 +97,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
         return plugins.values();
     }
 
-    protected Plugin deployPluginFromUnit(final DeploymentUnit deploymentUnit, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    protected Plugin deployPluginFromUnit(final DeploymentUnit deploymentUnit, final ModuleDescriptorFactory moduleDescriptorFactory)
     {
         Plugin plugin = null;
         String errorText = "No plugin factories found for plugin file " + deploymentUnit;
@@ -128,14 +118,11 @@ public class ScanningPluginLoader implements DynamicPluginLoader
                     }
                 }
             }
-            catch (final PluginParseException ex)
-            {
-                throw ex;
-            }
             catch (final RuntimeException ex)
             {
                 log.error("Unable to deploy plugin '" + pluginKey + "', file " + deploymentUnit, ex);
                 errorText = ex.getMessage();
+                break;
             }
         }
         if (plugin == null)
@@ -145,6 +132,11 @@ public class ScanningPluginLoader implements DynamicPluginLoader
             {
                 plugin.setKey(pluginKey);
             }
+            else
+            {
+                plugin.setKey(deploymentUnit.getPath().getName());
+            }
+
         }
         else
         {

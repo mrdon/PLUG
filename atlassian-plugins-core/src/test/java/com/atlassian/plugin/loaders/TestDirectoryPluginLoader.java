@@ -258,6 +258,43 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         assertTrue(plugins.iterator().next() instanceof UnloadablePlugin);
     }
 
+    public void testPluginWithModuleDescriptorWithNoKey() throws Exception, IOException, PluginParseException, InterruptedException
+    {
+        FileUtils.cleanDirectory(pluginsTestDir);
+        new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <object/>",
+                        "</atlassian-plugin>")
+                .build(pluginsTestDir);
+
+        loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
+
+        final Collection<Plugin> plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        assertEquals(1, plugins.size());
+        assertTrue(plugins.iterator().next() instanceof UnloadablePlugin);
+        assertEquals("test.plugin", plugins.iterator().next().getKey());
+    }
+
+    public void testPluginWithBadDescriptor() throws Exception, IOException, PluginParseException, InterruptedException
+    {
+        FileUtils.cleanDirectory(pluginsTestDir);
+        File pluginJar = new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-pluasdfasdf")
+                .build(pluginsTestDir);
+
+        loader = new DirectoryPluginLoader(pluginsTestDir, DEFAULT_PLUGIN_FACTORIES, pluginEventManager);
+
+        final Collection<Plugin> plugins = loader.loadAllPlugins(moduleDescriptorFactory);
+        assertEquals(1, plugins.size());
+        assertTrue(plugins.iterator().next() instanceof UnloadablePlugin);
+        assertEquals(pluginJar.getName(), plugins.iterator().next().getKey());
+    }
+
     private void createJarFile(final String jarname, final String jarEntry, final String saveDir) throws IOException
     {
         final OutputStream os = new FileOutputStream(saveDir + File.separator + jarname);
