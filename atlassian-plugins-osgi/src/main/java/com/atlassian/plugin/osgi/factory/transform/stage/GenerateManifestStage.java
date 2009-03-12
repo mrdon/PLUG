@@ -225,13 +225,14 @@ public class GenerateManifestStage implements TransformStage
             String header = (String) context.getManifest().getMainAttributes().get("Spring-Context");
             if (header == null)
             {
-                log.warn("The Spring Manifest header 'Spring-Context' is missing.  Please add it and " +
-                        "set it to '" + SPRING_CONTEXT_DEFAULT + "'");
+                log.warn("The Spring Manifest header 'Spring-Context' is missing in jar '" +
+                        context.getPluginArtifact().toString() + "'.  Please add it and set it to '" +
+                        SPRING_CONTEXT_DEFAULT + "'");
             }
             else if (!header.contains(";timeout:=60"))
             {
-                log.warn("The Spring Manifest header isn't set for a 60 second timeout waiting for " +
-                        " dependencies.  Please add ';timeout:=60'");
+                log.warn("The Spring Manifest header in jar '" +  context.getPluginArtifact().toString() + "' isn't " +
+                        "set for a 60 second timeout waiting for  dependencies.  Please add ';timeout:=60'");
             }
         }
     }

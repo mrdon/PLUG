@@ -13,6 +13,7 @@ import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
+import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
 import org.apache.commons.lang.Validate;
@@ -22,15 +23,15 @@ import org.dom4j.Element;
 import org.osgi.framework.*;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
+import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.service.packageadmin.RequiredBundle;
+import org.osgi.service.packageadmin.ExportedPackage;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Plugin that wraps an OSGi bundle that does contain a plugin descriptor.  The actual bundle is not created until the
@@ -52,6 +53,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private volatile boolean treatSpringBeanFactoryCreationAsRefresh = false;
     private final OsgiContainerManager osgiContainerManager;
     private final PluginArtifact pluginArtifact;
+    private final PackageAdmin packageAdmin;
 
     public OsgiPlugin(final OsgiContainerManager mgr, PluginArtifact artifact, final PluginEventManager pluginEventManager)
     {
@@ -61,6 +63,11 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         this.osgiContainerManager = mgr;
         this.pluginArtifact = artifact;
         this.pluginEventManager = pluginEventManager;
+
+        Bundle systemBundle = mgr.getBundles()[0];
+        BundleContext systemBundleContext = systemBundle.getBundleContext();
+        final ServiceReference ref = systemBundleContext.getServiceReference(org.osgi.service.packageadmin.PackageAdmin.class.getName());
+        packageAdmin = (PackageAdmin) systemBundleContext.getService(ref);
     }
 
     /**
@@ -72,6 +79,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         this.osgiContainerManager = null;
         this.pluginArtifact = null;
         this.pluginEventManager = new DefaultPluginEventManager();
+        this.packageAdmin = null;
 
     }
 
@@ -393,7 +401,42 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
         return result;
     }
-    
+
+    /**
+     * Use the PackageAdmin to determine which bundles provide the package imports
+     *
+     * @return A set of bundle symbolic names, or plugin keys.  Empty set if none.
+     * @since 2.2.0
+     */
+    public Set<String> getRequiredPlugins()
+    {
+        Set<String> keys = new HashSet<String>();
+
+        Set<String> imports = OsgiHeaderUtil.parseHeader((String) getBundle().getHeaders().get(Constants.IMPORT_PACKAGE)).keySet();
+        for (String imp : imports)
+        {
+            ExportedPackage[] exports = packageAdmin.getExportedPackages(imp);
+            if (exports != null)
+            {
+                for (ExportedPackage export : exports)
+                {
+                    Bundle[] importingBundles = export.getImportingBundles();
+                    if (importingBundles != null)
+                    {
+                        for (Bundle importingBundle : importingBundles)
+                        {
+                            if (getBundle() == importingBundle)
+                            {
+                                keys.add(export.getExportingBundle().getSymbolicName());
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return keys;
+    }
 
     /**
      * Tracks module descriptors registered as services, then updates the descriptors map accordingly

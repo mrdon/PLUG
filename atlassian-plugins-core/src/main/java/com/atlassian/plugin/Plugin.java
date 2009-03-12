@@ -2,10 +2,7 @@ package com.atlassian.plugin;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public interface Plugin extends Resourced, Comparable<Plugin>
 {
@@ -50,7 +47,7 @@ public interface Plugin extends Resourced, Comparable<Plugin>
      * Get the {@link ModuleDescriptor} for a particular key. Returns <tt>null</tt> if the plugin does not exist.
      * <p>
      * Note: The {@link ModuleDescriptor#getModule()} may throw {@link ClassCastException} if the expected type is incorrect.
-     * 
+     *
      * @param key the {@link String} complete key of the module, in the form "org.example.plugin:module-key".
      * @return the {@link ModuleDescriptor} of the expected type.
      */
@@ -138,7 +135,7 @@ public interface Plugin extends Resourced, Comparable<Plugin>
 
     /**
      * Get the classloader for the plugin.
-     * 
+     *
      * @return The classloader used to load classes for this plugin
      */
     ClassLoader getClassLoader();
@@ -199,4 +196,10 @@ public interface Plugin extends Resourced, Comparable<Plugin>
      * @since 2.2.0
      */
     void disable();
+
+    /**
+     * @return A list of plugin keys that this plugin is dependent upon, or an empty list if none
+     * @since 2.2.0
+     */
+    Set<String> getRequiredPlugins();
 }

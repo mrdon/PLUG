@@ -7,11 +7,7 @@ import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.util.VersionStringComparator;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 {
@@ -25,7 +21,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     private Resourced resources = Resources.EMPTY_RESOURCES;
     private int pluginsVersion = 1;
     private final Date dateLoaded = new Date();
-    private volatile PluginState pluginState;
+    private volatile PluginState pluginState = PluginState.UNINSTALLED;
 
     public String getName()
     {
@@ -182,6 +178,11 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     public void disable()
     {
         pluginState = PluginState.DISABLED;
+    }
+
+    public Set<String> getRequiredPlugins()
+    {
+        return Collections.emptySet();
     }
 
     public void close()

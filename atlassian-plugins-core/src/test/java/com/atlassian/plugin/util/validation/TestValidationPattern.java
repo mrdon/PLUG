@@ -73,7 +73,7 @@ public class TestValidationPattern extends TestCase
         }
         catch (PluginParseException ex)
         {
-            assertEquals("Baz should exist", ex.getMessage());
+            assertTrue(ex.getMessage().startsWith("Baz should exist"));
         }
     }
 
@@ -89,7 +89,7 @@ public class TestValidationPattern extends TestCase
         }
         catch (PluginParseException ex)
         {
-            assertEquals("Baz should exist", ex.getMessage());
+            assertTrue(ex.getMessage().startsWith("Baz should exist"));
         }
     }
 
@@ -105,7 +105,7 @@ public class TestValidationPattern extends TestCase
         }
         catch (PluginParseException ex)
         {
-            assertEquals("Baz should exist", ex.getMessage());
+            assertTrue(ex.getMessage().startsWith("Baz should exist"));
         }
     }
 

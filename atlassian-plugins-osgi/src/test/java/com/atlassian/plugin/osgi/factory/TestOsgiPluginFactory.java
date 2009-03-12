@@ -17,6 +17,9 @@ import com.atlassian.plugin.test.PluginTestUtils;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.packageadmin.PackageAdmin;
 import org.apache.commons.io.FileUtils;
 
 import com.mockobjects.dynamic.C;
@@ -62,6 +65,12 @@ public class TestOsgiPluginFactory extends TestCase
         mockSystemBundle.matchAndReturn("getHeaders", sysDict);
         mockSystemBundle.matchAndReturn("getLastModified", System.currentTimeMillis());
         mockSystemBundle.matchAndReturn("getSymbolicName", "system.bundle");
+
+        Mock mockSysContext = new Mock(BundleContext.class);
+        mockSystemBundle.matchAndReturn("getBundleContext", mockSysContext.proxy());
+
+        mockSysContext.matchAndReturn("getServiceReference", C.ANY_ARGS, null);
+        mockSysContext.matchAndReturn("getService", C.ANY_ARGS, new Mock(PackageAdmin.class).proxy());
     }
 
     @Override

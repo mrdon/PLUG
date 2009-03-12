@@ -89,6 +89,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     private final PluginsClassLoader classLoader;
     private final Map<String, Plugin> plugins = new ConcurrentHashMap<String, Plugin>();
     private final PluginEventManager pluginEventManager;
+    private final PluginEnabler pluginEnabler = new PluginEnabler(this, this);
 
     private final StateTracker tracker = new StateTracker();
 
@@ -453,14 +454,16 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      * plugin cannot be unloaded a {@link PluginException} will be thrown.
      *
      * @param loader the loader used to load this plugin
-     * @param pluginsToAdd the plugins to add
+     * @param pluginsToInstall the plugins to add
      * @throws PluginParseException if the plugin cannot be parsed
      * @since 2.0.2
      */
-    protected void addPlugins(final PluginLoader loader, final Collection<Plugin> pluginsToAdd) throws PluginParseException
+    protected void addPlugins(final PluginLoader loader, final Collection<Plugin> pluginsToInstall) throws PluginParseException
     {
-        final Set<Plugin> installedPlugins = new TreeSet<Plugin>();
-        for (final Plugin plugin : new TreeSet<Plugin>(pluginsToAdd))
+        final Set<Plugin> pluginsToEnable = new HashSet<Plugin>();
+
+        // Install plugins, looking for upgrades and duplicates
+        for (final Plugin plugin : new TreeSet<Plugin>(pluginsToInstall))
         {
             boolean pluginUpgraded = false;
             // testing to make sure plugin keys are unique
@@ -491,76 +494,26 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                     continue;
                 }
             }
+
             plugin.install();
-            installedPlugins.add(plugin);
+            if (getState().isEnabled(plugin))
+            {
+                pluginsToEnable.add(plugin);
+            }
+
             if (pluginUpgraded)
             {
                 pluginEventManager.broadcast(new PluginUpgradedEvent(plugin));
             }
-        }
-
-        final Set<Plugin> pluginsInEnablingState = new HashSet<Plugin>();
-        for (final Plugin plugin : installedPlugins)
-        {
             plugins.put(plugin.getKey(), plugin);
-            if (getState().isEnabled(plugin))
-            {
-                try
-                {
-                    plugin.enable();
-                    if (plugin.getPluginState() == PluginState.ENABLING)
-                    {
-                        pluginsInEnablingState.add(plugin);
-                    }
-                }
-                catch (final RuntimeException ex)
-                {
-                    log.error("Unable to enable plugin " + plugin.getKey(), ex);
-                }
-            }
-
             pluginToPluginLoader.put(plugin, loader);
         }
 
-        if (!plugins.isEmpty())
-        {
-            // Now try to enable plugins that weren't enabled before, probably due to dependency ordering issues
-            WaitUntil.invoke(new WaitUntil.WaitCondition()
-            {
-                public boolean isFinished()
-                {
-                    for (final Iterator<Plugin> i = pluginsInEnablingState.iterator(); i.hasNext();)
-                    {
-                        final Plugin plugin = i.next();
-                        if (plugin.getPluginState() != PluginState.ENABLING)
-                        {
-                            i.remove();
-                        }
-                    }
-                    return pluginsInEnablingState.isEmpty();
-                }
+        // enable all plugins, waiting a time period for them to enable
+        pluginEnabler.enable(pluginsToEnable);
 
-                public String getWaitMessage()
-                {
-                    return "Plugins that have yet to start: " + pluginsInEnablingState;
-                }
-            }, 60);
-
-            // Disable any plugins that aren't enabled by now
-            if (!pluginsInEnablingState.isEmpty())
-            {
-                final StringBuilder sb = new StringBuilder();
-                for (final Plugin plugin : pluginsInEnablingState)
-                {
-                    sb.append(plugin.getKey()).append(',');
-                    disablePlugin(plugin.getKey());
-                }
-                sb.deleteCharAt(sb.length() - 1);
-                log.error("Unable to start the following plugins: " + sb.toString());
-            }
-        }
-
-        for (final Plugin plugin : pluginsToAdd)
+        // handle the plugins that were able to be successfully enabled
+        for (final Plugin plugin : pluginsToInstall)
         {
             if (plugin.getPluginState() == PluginState.ENABLED)
             {
@@ -934,16 +887,12 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             return;
         }
 
-        plugin.enable();
+        pluginEnabler.enableRecursively(plugin);
 
-        // Only change the state if the plugin was enabled successfully
-        if (WaitUntil.invoke(new PluginFinishedEnablingCondition(plugin)))
+        if (plugin.getPluginState().equals(PluginState.ENABLED))
         {
-            if (plugin.getPluginState().equals(PluginState.ENABLED))
-            {
-                enablePluginState(plugin, getStore());
-                notifyPluginEnabled(plugin);
-            }
+            enablePluginState(plugin, getStore());
+            notifyPluginEnabled(plugin);
         }
     }
 
