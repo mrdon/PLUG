@@ -251,6 +251,14 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                         }
                     });
                 }
+                else
+                {
+                    throw new BundleException("Bundle started, but no BundleContext available.  This should never happen.");
+                }
+            }
+            else
+            {
+                log.warn("Cannot enable a plugin that is already enabled or in the process of being enabled.");
             }
         }
         catch (final BundleException e)
