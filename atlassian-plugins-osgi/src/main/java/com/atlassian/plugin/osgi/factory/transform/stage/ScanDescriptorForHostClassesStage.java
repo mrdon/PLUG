@@ -38,9 +38,9 @@ public class ScanDescriptorForHostClassesStage implements TransformStage
                 {
                     if (context.getPluginArtifact().doesResourceExist(pkgPath))
                     {
-                        log.warn("The plugin '" + context.getPluginArtifact().toString() + "' uses a package that is " +
-                                "also exported by the application.  It is highly recommended that the plugin use its " +
-                                "its own packages.");
+                        log.warn("The plugin '" + context.getPluginArtifact().toString() + "' uses a package '" +
+                                pkg + "' that is also exported by the application.  It is highly recommended that the " +
+                                "plugin use its own packages.");
                     }
                     else
                     {
