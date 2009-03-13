@@ -236,7 +236,8 @@
                             <goal>execute</goal>
                         </goals>
                         <configuration>
-                            <containers>resin3x,tomcat5x,tomcat6x</containers>
+                            <!-- disabled jboss4x and resin3x due to hardcoded port conflicts -->
+                            <containers>tomcat5x,tomcat6x</containers>
                         </configuration>
                     </execution>
                 </executions>
