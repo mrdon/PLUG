@@ -1113,7 +1113,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     }
 
     /**
-     * This method checks to see if the plugin should be enabled based on the state manager and the plugin.
+     * This method checks to see if the plugin is enabled based on the state manager and the plugin.
      *
      * @param key The plugin key
      * @return True if the plugin is enabled
