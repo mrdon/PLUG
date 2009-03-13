@@ -93,7 +93,7 @@ class PluginEnabler
 
                 public String getWaitMessage()
                 {
-                    return "Plugins that have yet to enablet: " + pluginsInEnablingState;
+                    return "Plugins that have yet to enabled: " + pluginsInEnablingState;
                 }
             }, 60);
 

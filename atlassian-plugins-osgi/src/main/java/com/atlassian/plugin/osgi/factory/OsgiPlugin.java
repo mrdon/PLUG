@@ -506,17 +506,10 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                         addModuleDescriptor(descriptor);
                         log.info("Turned plugin module " + descriptor.getCompleteKey() + " into module " + descriptor);
                     }
-                    catch (final IllegalAccessException e)
+                    catch (final Exception e)
                     {
-                        log.error("Unable to transform " + unrecognised.getKey() + " into actual plugin module using factory " + factory, e);
-                    }
-                    catch (final InstantiationException e)
-                    {
-                        log.error("Unable to transform " + unrecognised.getKey() + " into actual plugin module using factory " + factory, e);
-                    }
-                    catch (final ClassNotFoundException e)
-                    {
-                        log.error("Unable to transform " + unrecognised.getKey() + " into actual plugin module using factory " + factory, e);
+                        log.error("Unable to transform " + unrecognised.getCompleteKey() + " into actual plugin module using factory " + factory, e);
+                        unrecognised.setErrorText(e.getMessage());
                     }
                 }
             }
