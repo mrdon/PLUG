@@ -192,7 +192,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     }
 
     @PluginEventListener
-    public void onSpringContextFailed(final PluginContainerFailedEvent<?> event)
+    public void onSpringContextFailed(final PluginContainerFailedEvent event)
     {
         if (getKey() == null)
         {
@@ -207,7 +207,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     }
 
     @PluginEventListener
-    public void onSpringContextRefresh(final PluginContainerRefreshedEvent<?> event)
+    public void onSpringContextRefresh(final PluginContainerRefreshedEvent event)
     {
         if (getKey() == null)
         {
@@ -431,6 +431,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
      * @return A set of bundle symbolic names, or plugin keys.  Empty set if none.
      * @since 2.2.0
      */
+    @Override
     public Set<String> getRequiredPlugins()
     {
         final Set<String> keys = new HashSet<String>();
