@@ -1,13 +1,12 @@
 package com.atlassian.plugin.osgi.bridge;
 
-import org.springframework.osgi.context.event.OsgiBundleApplicationContextListener;
-import org.springframework.osgi.context.event.OsgiBundleApplicationContextEvent;
-import org.springframework.osgi.context.event.OsgiBundleContextFailedEvent;
-import org.springframework.osgi.context.event.OsgiBundleContextRefreshedEvent;
-import org.springframework.context.ApplicationContext;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginContainerFailedEvent;
 import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
+import org.springframework.osgi.context.event.OsgiBundleApplicationContextEvent;
+import org.springframework.osgi.context.event.OsgiBundleApplicationContextListener;
+import org.springframework.osgi.context.event.OsgiBundleContextFailedEvent;
+import org.springframework.osgi.context.event.OsgiBundleContextRefreshedEvent;
 
 /**
  * Bridges key Spring DM extender events with the plugin system
@@ -28,7 +27,7 @@ public class SpringOsgiEventBridge implements OsgiBundleApplicationContextListen
         if (evt instanceof OsgiBundleContextFailedEvent)
         {
             OsgiBundleContextFailedEvent e = (OsgiBundleContextFailedEvent)evt;
-            pluginEventManager.broadcast(new PluginContainerFailedEvent<ApplicationContext>(
+            pluginEventManager.broadcast(new PluginContainerFailedEvent(
                     e.getApplicationContext(),
                     e.getBundle().getSymbolicName(),
                     e.getFailureCause()));
@@ -36,7 +35,7 @@ public class SpringOsgiEventBridge implements OsgiBundleApplicationContextListen
         else if (evt instanceof OsgiBundleContextRefreshedEvent)
         {
             OsgiBundleContextRefreshedEvent e = (OsgiBundleContextRefreshedEvent)evt;
-            pluginEventManager.broadcast(new PluginContainerRefreshedEvent<ApplicationContext>(
+            pluginEventManager.broadcast(new PluginContainerRefreshedEvent(
                     e.getApplicationContext(),
                     e.getBundle().getSymbolicName()));
         }

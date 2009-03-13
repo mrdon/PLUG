@@ -32,6 +32,7 @@ public class OsgiBundleFactory implements PluginFactory
     public OsgiBundleFactory(OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
         Validate.notNull(osgi, "The osgi container is required");
+        Validate.notNull(pluginEventManager, "The plugin event manager is required");
         this.osgi = osgi;
         this.pluginEventManager = pluginEventManager;
     }
