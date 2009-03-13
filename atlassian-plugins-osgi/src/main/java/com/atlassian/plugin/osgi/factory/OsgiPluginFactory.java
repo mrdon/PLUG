@@ -44,12 +44,12 @@ public class OsgiPluginFactory implements PluginFactory
     private final OsgiPersistentCache persistentCache;
     private final ModuleDescriptorFactory transformedDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer())
     {{
-        addModuleDescriptor("component", ComponentModuleDescriptor.class);
-        addModuleDescriptor("component-import", ComponentImportModuleDescriptor.class);
-        addModuleDescriptor("module-type", ModuleTypeModuleDescriptor.class);
-    }};
+            addModuleDescriptor("component", ComponentModuleDescriptor.class);
+            addModuleDescriptor("component-import", ComponentImportModuleDescriptor.class);
+            addModuleDescriptor("module-type", ModuleTypeModuleDescriptor.class);
+        }};
 
-    private volatile  PluginTransformer pluginTransformer;
+    private volatile PluginTransformer pluginTransformer;
 
     private ServiceTracker moduleDescriptorFactoryTracker;
 
@@ -57,6 +57,7 @@ public class OsgiPluginFactory implements PluginFactory
     {
         this(pluginDescriptorFileName, new HashSet<String>(Arrays.asList(applicationKey)), persistentCache, osgi, pluginEventManager);
     }
+
     public OsgiPluginFactory(String pluginDescriptorFileName, Set<String> applicationKeys, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
         Validate.notNull(pluginDescriptorFileName, "Plugin descriptor is required");
@@ -74,14 +75,16 @@ public class OsgiPluginFactory implements PluginFactory
     {
         if (pluginTransformer == null)
         {
-            String exportString = (String) osgi.getBundles()[0].getHeaders().get(Constants.EXPORT_PACKAGE);
+            String exportString = (String) osgi.getBundles()[0].getHeaders()
+                    .get(Constants.EXPORT_PACKAGE);
             SystemExports exports = new SystemExports(exportString);
             pluginTransformer = new DefaultPluginTransformer(persistentCache, exports, applicationKeys, pluginDescriptorFileName);
         }
         return pluginTransformer;
     }
 
-    public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException {
+    public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException
+    {
         Validate.notNull(pluginArtifact, "The plugin artifact is required");
 
         String pluginKey = null;
@@ -94,9 +97,11 @@ public class OsgiPluginFactory implements PluginFactory
             {
                 final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, applicationKeys.toArray(new String[applicationKeys.size()]));
                 if (descriptorParser.getPluginsVersion() == 2)
+                {
                     pluginKey = descriptorParser.getKey();
+                }
             }
-        } 
+        }
         finally
         {
             IOUtils.closeQuietly(descriptorStream);
@@ -114,7 +119,8 @@ public class OsgiPluginFactory implements PluginFactory
 
     /**
      * Deploys the plugin artifact
-     * @param pluginArtifact the plugin artifact to deploy
+     *
+     * @param pluginArtifact          the plugin artifact to deploy
      * @param moduleDescriptorFactory The factory for plugin modules
      * @return The instantiated and populated plugin
      * @throws PluginParseException If the descriptor cannot be parsed
@@ -131,7 +137,9 @@ public class OsgiPluginFactory implements PluginFactory
         {
             pluginDescriptor = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
             if (pluginDescriptor == null)
+            {
                 throw new PluginParseException("No descriptor found in classloader for : " + pluginArtifact);
+            }
 
             ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys.toArray(new String[applicationKeys.size()]));
@@ -140,7 +148,8 @@ public class OsgiPluginFactory implements PluginFactory
 
             // Temporarily configure plugin until it can be properly installed
             plugin = parser.configurePlugin(combinedFactory, osgiPlugin);
-        } catch (PluginTransformationException ex)
+        }
+        catch (PluginTransformationException ex)
         {
             return reportUnloadablePlugin(pluginArtifact.toFile(), ex);
         }
@@ -160,10 +169,12 @@ public class OsgiPluginFactory implements PluginFactory
     private ModuleDescriptorFactory getChainedModuleDescriptorFactory(ModuleDescriptorFactory originalFactory)
     {
         // we really don't want two of these
-        synchronized(this)
+        synchronized (this)
         {
             if (moduleDescriptorFactoryTracker == null)
+            {
                 moduleDescriptorFactoryTracker = osgi.getServiceTracker(ModuleDescriptorFactory.class.getName());
+            }
         }
 
         // Really shouldn't be null, but could be in tests since we can't mock a service tracker :(
@@ -172,16 +183,17 @@ public class OsgiPluginFactory implements PluginFactory
             List<ModuleDescriptorFactory> factories = new ArrayList<ModuleDescriptorFactory>();
 
             factories.add(transformedDescriptorFactory);
+            factories.add(originalFactory);
             Object[] serviceObjs = moduleDescriptorFactoryTracker.getServices();
 
             // Add all the dynamic module descriptor factories registered as osgi services
             if (serviceObjs != null)
             {
-                for (Object fac : serviceObjs) factories.add((ModuleDescriptorFactory) fac);
+                for (Object fac : serviceObjs)
+                {
+                    factories.add((ModuleDescriptorFactory) fac);
+                }
             }
-
-            // Put the application factory second
-            factories.add(1, originalFactory);
 
             // Catch all unknown descriptors as unrecognised
             factories.add(new UnrecognisedModuleDescriptorFallbackFactory());
@@ -189,7 +201,9 @@ public class OsgiPluginFactory implements PluginFactory
             return new ChainModuleDescriptorFactory(factories.toArray(new ModuleDescriptorFactory[]{}));
         }
         else
+        {
             return originalFactory;
+        }
 
 
     }
@@ -202,10 +216,10 @@ public class OsgiPluginFactory implements PluginFactory
 
     private Plugin reportUnloadablePlugin(File file, Exception e)
     {
-        log.error("Unable to load plugin: "+file, e);
+        log.error("Unable to load plugin: " + file, e);
 
         UnloadablePlugin plugin = new UnloadablePlugin();
-        plugin.setErrorText("Unable to load plugin: "+e.getMessage());
+        plugin.setErrorText("Unable to load plugin: " + e.getMessage());
         return plugin;
     }
 }
