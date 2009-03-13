@@ -86,23 +86,23 @@ public class TransformContext
 
     private Document retrieveDocFromJar(PluginArtifact pluginArtifact, String descriptorPath) throws PluginTransformationException
     {
-        Document descriptorDocument;
-        InputStream descriptorStream = null;
+        Document document;
+        InputStream stream = null;
         try
         {
-            descriptorStream = pluginArtifact.getResourceAsStream(descriptorPath);
-            if (descriptorStream == null)
+            stream = pluginArtifact.getResourceAsStream(descriptorPath);
+            if (stream == null)
             {
                 throw new PluginTransformationException("Unable to access descriptor " + descriptorPath);
             }
-            DocumentExposingDescriptorParser parser = new DocumentExposingDescriptorParser(descriptorStream);
-            descriptorDocument = parser.getDocument();
+            DocumentExposingDescriptorParser parser = new DocumentExposingDescriptorParser(stream);
+            document = parser.getDocument();
         }
         finally
         {
-            IOUtils.closeQuietly(descriptorStream);
+            IOUtils.closeQuietly(stream);
         }
-        return descriptorDocument;
+        return document;
     }
 
     public File getPluginFile()

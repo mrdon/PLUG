@@ -21,10 +21,10 @@ import org.osgi.framework.BundleException;
 public class OsgiBundlePlugin extends AbstractPlugin
 {
 
-    private Bundle bundle;
-    private PluginInformation pluginInformation;
-    private Date dateLoaded;
-    private String key;
+    private final Bundle bundle;
+    private final PluginInformation pluginInformation;
+    private final Date dateLoaded;
+    private final String key;
     private final ClassLoader bundleClassLoader;
 
     public OsgiBundlePlugin(Bundle bundle, String key, PluginEventManager pluginEventManager)

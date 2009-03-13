@@ -35,7 +35,7 @@ public class TestXmlDescriptorParser extends TestCase
         mockFactory.expect("getModuleDescriptorClass", "unknown-plugin");
 
         // create a Plugin for testing
-        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) null, classLoader);
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
 
         try
         {
@@ -112,7 +112,7 @@ public class TestXmlDescriptorParser extends TestCase
         mockFactory.expect("getModuleDescriptorClass", "unknown-plugin");
 
         // create a Plugin for testing
-        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) null, classLoader);
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
         parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
         assertEquals(2, testPlugin.getPluginsVersion());
     }
@@ -129,7 +129,7 @@ public class TestXmlDescriptorParser extends TestCase
         mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), MockAnimalModuleDescriptor.class);
 
         // create a Plugin for testing
-        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) null, classLoader);
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
         parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
         assertNotNull(testPlugin.getModuleDescriptor("bear"));
     }
@@ -146,7 +146,7 @@ public class TestXmlDescriptorParser extends TestCase
         mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), MockAnimalModuleDescriptor.class);
 
         // create a Plugin for testing
-        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) null, classLoader);
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
         parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
         assertNull(testPlugin.getModuleDescriptor("bear"));
     }
@@ -164,7 +164,7 @@ public class TestXmlDescriptorParser extends TestCase
         mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), MockAnimalModuleDescriptor.class);
 
         // create a Plugin for testing
-        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) null, classLoader);
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
         parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
         assertNotNull(testPlugin.getModuleDescriptor("bear"));
         assertNull(testPlugin.getModuleDescriptor("bear2"));

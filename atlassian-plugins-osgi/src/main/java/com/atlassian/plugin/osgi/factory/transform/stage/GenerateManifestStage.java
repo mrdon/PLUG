@@ -13,6 +13,7 @@ import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.StringUtils;
 import org.osgi.framework.Constants;
 
 import java.io.ByteArrayOutputStream;
@@ -102,7 +103,7 @@ public class GenerateManifestStage implements TransformStage
                 // Add extra exports to the exports list
                 if (!properties.containsKey(Analyzer.EXPORT_PACKAGE))
                 {
-                    properties.put(Analyzer.EXPORT_PACKAGE, addExtraExports(context.getExtraExports()));
+                    properties.put(Analyzer.EXPORT_PACKAGE, StringUtils.join(context.getExtraExports(), ','));
                 }
                 builder.setProperties(properties);
             }
@@ -162,21 +163,6 @@ public class GenerateManifestStage implements TransformStage
 
             manifest.getMainAttributes().putValue(Constants.IMPORT_PACKAGE, imports.toString());
         }
-    }
-
-    private String addExtraExports(List<String> extraExports)
-    {
-        StringBuilder result = new StringBuilder();
-        for (String exp : extraExports)
-        {
-            result.append(exp).append(",");
-        }
-        if (result.length() > 0)
-        {
-            result.deleteCharAt(result.length() - 1);
-        }
-
-        return result.toString();
     }
 
     private boolean isOsgiBundle(Manifest manifest) throws IOException

@@ -9,6 +9,8 @@ import com.atlassian.plugin.PluginState;
 import java.io.InputStream;
 import java.net.URL;
 
+import org.apache.commons.lang.Validate;
+
 /**
  * A dynamically loaded plugin is loaded through the plugin class loader.
  */
@@ -27,10 +29,8 @@ public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugi
 
     public DefaultDynamicPlugin(final PluginArtifact pluginArtifact, final PluginClassLoader loader)
     {
-        if (loader == null)
-        {
-            throw new IllegalArgumentException("PluginClassLoader must not be null");
-        }
+        Validate.notNull(pluginArtifact, "The plugin artifact cannot be null");
+        Validate.notNull(loader, "The plugin class loader cannot be null");
         this.pluginArtifact = pluginArtifact;
         this.loader = loader;
     }

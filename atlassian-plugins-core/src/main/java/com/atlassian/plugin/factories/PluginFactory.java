@@ -35,12 +35,12 @@ public interface PluginFactory
     Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException;
 
     /**
-     * Deploys the deployment unit by instantiating the plugin and configuring it.  Should only be called if the respective
+     * Deploys the plugin artifact by instantiating the plugin and configuring it.  Should only be called if the respective
      * {@link #canCreate(PluginArtifact)} call returned the plugin key
      *
-     * @param pluginArtifact the unit to deploy
+     * @param pluginArtifact the plugin artifact to deploy
      * @param moduleDescriptorFactory the factory for the module descriptors
-     * @return the plugin loaded from the deployment unit, or an UnloadablePlugin instance if loading fails.
+     * @return the plugin loaded from the plugin artifact, or an UnloadablePlugin instance if loading fails.
      * @throws com.atlassian.plugin.PluginParseException if the plugin could not be parsed
      * @since 2.2.0
      */

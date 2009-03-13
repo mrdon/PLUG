@@ -117,6 +117,7 @@ public class OsgiPluginFactory implements PluginFactory
      */
     public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
+        Validate.notNull(deploymentUnit, "The deployment unit is required");
         return create(new JarPluginArtifact(deploymentUnit.getPath()), moduleDescriptorFactory);
     }
 

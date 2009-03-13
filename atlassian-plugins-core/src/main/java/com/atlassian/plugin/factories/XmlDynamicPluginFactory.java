@@ -81,7 +81,7 @@ public class XmlDynamicPluginFactory implements PluginFactory
      */
     public Plugin create(final PluginArtifact pluginArtifact, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        Validate.notNull(pluginArtifact, "The deployment unit must not be null");
+        Validate.notNull(pluginArtifact, "The plugin artifact must not be null");
         Validate.notNull(moduleDescriptorFactory, "The module descriptor factory must not be null");
 
         InputStream pluginDescriptor = null;

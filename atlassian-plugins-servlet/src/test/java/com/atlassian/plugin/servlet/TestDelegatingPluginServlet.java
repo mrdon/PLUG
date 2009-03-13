@@ -26,7 +26,7 @@ public class TestDelegatingPluginServlet extends TestCase
     public void setUp() throws Exception
     {
         classLoader = new PluginClassLoader(PluginTestUtils.getFileForResource(PluginTestUtils.SIMPLE_TEST_JAR));
-        plugin = new DefaultDynamicPlugin((PluginArtifact) null, classLoader);
+        plugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
         
         mockRequest = new Mock(HttpServletRequest.class);
         mockRequest.matchAndReturn("getPathInfo", "/servlet/test");
