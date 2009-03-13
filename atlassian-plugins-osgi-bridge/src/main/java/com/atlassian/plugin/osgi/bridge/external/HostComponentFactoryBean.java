@@ -66,7 +66,7 @@ public class HostComponentFactoryBean implements FactoryBean, BundleContextAware
             try
             {
                 ServiceReference[] references = bundleContext.getServiceReferences(null, filter);
-                if (references.length == 0)
+                if (references == null || references.length == 0)
                 {
                     throw new PluginException("No service reference for '" + filter + "'");
                 }
