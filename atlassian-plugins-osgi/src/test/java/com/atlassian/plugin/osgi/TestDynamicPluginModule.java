@@ -17,7 +17,7 @@ import java.util.List;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-public class DynamicPluginModuleTest extends PluginInContainerTestBase
+public class TestDynamicPluginModule extends PluginInContainerTestBase
 {
     public void testDynamicPluginModule() throws Exception
     {

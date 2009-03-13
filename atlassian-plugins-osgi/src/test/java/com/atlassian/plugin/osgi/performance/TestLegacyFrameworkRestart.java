@@ -17,7 +17,7 @@ import java.io.File;
 /**
  * Tests the plugin framework handling restarts correctly
  */
-public class LegacyFrameworkRestartTest extends FrameworkRestartTestBase
+public class TestLegacyFrameworkRestart extends FrameworkRestartTestBase
 {
     protected void addPlugin(File dir, int x) throws IOException
     {

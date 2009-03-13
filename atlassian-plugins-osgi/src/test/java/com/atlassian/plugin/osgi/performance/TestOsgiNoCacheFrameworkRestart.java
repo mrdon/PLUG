@@ -17,7 +17,7 @@ import java.io.File;
 /**
  * Tests the plugin framework handling restarts correctly
  */
-public class OsgiNoCacheFrameworkRestartTest extends FrameworkRestartTestBase
+public class TestOsgiNoCacheFrameworkRestart extends FrameworkRestartTestBase
 {
 
     protected void addPlugin(File dir, int x) throws IOException

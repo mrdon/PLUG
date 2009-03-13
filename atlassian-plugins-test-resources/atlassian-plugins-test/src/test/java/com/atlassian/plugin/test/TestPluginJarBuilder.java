@@ -10,7 +10,7 @@ import java.net.URL;
 import org.apache.commons.io.IOUtils;
 import com.atlassian.plugin.test.PluginJarBuilder;
 
-public class PluginJarBuilderTest extends TestCase {
+public class TestPluginJarBuilder extends TestCase {
 
     public void testBuild() throws Exception {
         File jar = new PluginJarBuilder("foo")

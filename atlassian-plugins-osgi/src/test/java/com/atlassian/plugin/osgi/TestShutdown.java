@@ -5,7 +5,7 @@ import com.atlassian.plugin.JarPluginArtifact;
 
 import java.io.File;
 
-public class ShutdownTest extends PluginInContainerTestBase
+public class TestShutdown extends PluginInContainerTestBase
 {
     public void testShutdown() throws Exception
     {

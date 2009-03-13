@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class PluginInstallTest extends PluginInContainerTestBase
+public class TestPluginInstall extends PluginInContainerTestBase
 {
     public void testUpgradeOfBundledPlugin() throws Exception
     {

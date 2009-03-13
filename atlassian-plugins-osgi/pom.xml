@@ -66,7 +66,7 @@
                                         ${basedir}/src/test/jmeter/tests.jmx
                                     </input>
                                     <sysproperties>
-                                        <className>com.atlassian.plugin.osgi.performance.LegacyFrameworkRestartTest
+                                        <className>com.atlassian.plugin.osgi.performance.TestLegacyFrameworkRestart
                                         </className>
                                     </sysproperties>
                                 </configuration>

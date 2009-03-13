@@ -13,7 +13,7 @@ import java.io.File;
 
 import org.osgi.util.tracker.ServiceTracker;
 
-public class EnableDisablePluginTest extends PluginInContainerTestBase
+public class TestEnableDisablePlugin extends PluginInContainerTestBase
 {
     public void testEnableDisableEnable() throws Exception
     {

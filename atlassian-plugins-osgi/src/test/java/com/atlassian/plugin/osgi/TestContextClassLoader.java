@@ -9,7 +9,7 @@ import junit.framework.TestCase;
 
 import java.io.File;
 
-public class ContextClassLoaderTest extends PluginInContainerTestBase {
+public class TestContextClassLoader extends PluginInContainerTestBase {
 
     public void testCorrectContextClassLoaderForHostComponents() throws Exception
     {

@@ -48,7 +48,7 @@
       </ThreadGroup>
       <hashTree>
         <JUnitSampler guiclass="JUnitTestSamplerGui" testclass="JUnitSampler" testname="Slurp Test" enabled="true">
-          <stringProp name="junitSampler.classname">com.atlassian.plugin.osgi.performance.OsgiCacheFrameworkRestartTest</stringProp>
+          <stringProp name="junitSampler.classname">com.atlassian.plugin.osgi.performance.TestOsgiCacheFrameworkRestart</stringProp>
           <stringProp name="junitsampler.constructorstring"></stringProp>
           <stringProp name="junitsampler.pkg.filter">${packagePattern}</stringProp>
           <stringProp name="junitsampler.success">Test successful</stringProp>

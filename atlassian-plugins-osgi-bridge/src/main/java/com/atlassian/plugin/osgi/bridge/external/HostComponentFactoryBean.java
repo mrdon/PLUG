@@ -7,6 +7,9 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.InvalidSyntaxException;
 import com.atlassian.plugin.PluginException;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 /**
  * Simple factory bean to resolve host components.  Since we know host components won't change during the bundle's
  * lifetime, we can use a direct reference instead of the fancy proxy stuff from Spring DM.
@@ -39,19 +42,22 @@ public class HostComponentFactoryBean implements FactoryBean, BundleContextAware
         this.bundleContext = bundleContext;
     }
 
-	/**
-	 * Sets the OSGi service filter.
-	 *
-	 * @param filter OSGi filter describing the importing OSGi service
-	 */
-	public void setFilter(String filter) {
-		this.filter = filter;
-	}
+    /**
+     * Sets the OSGi service filter.
+     *
+     * @param filter OSGi filter describing the importing OSGi service
+     */
+    public void setFilter(String filter)
+    {
+        this.filter = filter;
+    }
 
     /**
      * Finds a service, if the bundle context is available.
+     *
      * @return The service, null if not found or the bundle context isn't available yet
-     * @throws com.atlassian.plugin.PluginException If either 0 or more than 1 service reference is found
+     * @throws com.atlassian.plugin.PluginException
+     *          If either 0 or more than 1 service reference is found
      */
     private Object findService() throws PluginException
     {
@@ -66,7 +72,7 @@ public class HostComponentFactoryBean implements FactoryBean, BundleContextAware
                 }
                 if (references.length > 1)
                 {
-                    throw new PluginException("Too many service references found for '" + filter + "'");
+                    throw new PluginException("Too many service references found for '" + filter + "': " + Arrays.asList(references));
                 }
                 service = bundleContext.getService(references[0]);
             }
