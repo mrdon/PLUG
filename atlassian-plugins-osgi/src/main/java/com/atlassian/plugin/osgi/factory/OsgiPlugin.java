@@ -1,5 +1,7 @@
 package com.atlassian.plugin.osgi.factory;
 
+import static org.apache.commons.lang.Validate.notNull;
+
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginArtifact;
@@ -21,7 +23,6 @@ import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
 
-import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Element;
@@ -47,7 +48,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Plugin that wraps an OSGi bundle that does contain a plugin descriptor.  The actual bundle is not created until the
@@ -66,27 +66,27 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private final PackageAdmin packageAdmin;
     private volatile Bundle bundle;
     private volatile SpringContextAccessor springContextAccessor;
-    private volatile boolean treatSpringBeanFactoryCreationAsRefresh = false;
     private volatile ClassLoader bundleClassLoader;
+    private volatile boolean treatSpringBeanFactoryCreationAsRefresh = false;
+    private volatile boolean deletable = true;
+    private volatile boolean bundled = false;
     //@GuardedBy("this")
     private ServiceTracker moduleDescriptorTracker;
     //@GuardedBy("this")
     private ServiceTracker unrecognisedModuleTracker;
-    private final AtomicBoolean deletable = new AtomicBoolean(true);
-    private final AtomicBoolean bundled = new AtomicBoolean(true);
 
-    public OsgiPlugin(final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginEventManager pluginEventManager)
+    public OsgiPlugin(final OsgiContainerManager osgiContainerManager, final PluginArtifact pluginArtifact, final PluginEventManager pluginEventManager)
     {
-        Validate.notNull(mgr, "The osgi container is required");
-        Validate.notNull(artifact, "The osgi container is required");
-        Validate.notNull(pluginEventManager, "The osgi container is required");
-        osgiContainerManager = mgr;
-        pluginArtifact = artifact;
+        notNull(osgiContainerManager, "The osgiContainerManager is required");
+        notNull(pluginArtifact, "The pluginArtifact is required");
+        notNull(pluginEventManager, "The pluginEventManager is required");
+        this.osgiContainerManager = osgiContainerManager;
+        this.pluginArtifact = pluginArtifact;
         this.pluginEventManager = pluginEventManager;
 
-        final Bundle systemBundle = mgr.getBundles()[0];
+        final Bundle systemBundle = osgiContainerManager.getBundles()[0];
         final BundleContext systemBundleContext = systemBundle.getBundleContext();
-        final ServiceReference ref = systemBundleContext.getServiceReference(org.osgi.service.packageadmin.PackageAdmin.class.getName());
+        final ServiceReference ref = systemBundleContext.getServiceReference(PackageAdmin.class.getName());
         packageAdmin = (PackageAdmin) systemBundleContext.getService(ref);
     }
 
@@ -173,22 +173,22 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
 
     public boolean isDeleteable()
     {
-        return deletable.get();
+        return deletable;
     }
 
     public void setDeletable(final boolean deletable)
     {
-        this.deletable.set(deletable);
+        this.deletable = deletable;
     }
 
     public boolean isBundledPlugin()
     {
-        return bundled.get();
+        return bundled;
     }
 
     public void setBundled(final boolean bundled)
     {
-        this.bundled.set(bundled);
+        this.bundled = bundled;
     }
 
     @PluginEventListener
