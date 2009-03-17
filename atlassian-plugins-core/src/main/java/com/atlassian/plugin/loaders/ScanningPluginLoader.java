@@ -85,7 +85,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
         for (final DeploymentUnit deploymentUnit : scanner.getDeploymentUnits())
         {
             Plugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
-            postProcess(plugin);
+            plugin = postProcess(plugin);
             plugins.put(deploymentUnit, plugin);
         }
 
@@ -308,6 +308,8 @@ public class ScanningPluginLoader implements DynamicPluginLoader
      * @param plugin a plugin that has been loaded
      * @since v2.2.0
      */
-    protected void postProcess(final Plugin plugin)
-    {}
+    protected Plugin postProcess(final Plugin plugin)
+    {
+        return plugin;
+    }
 }

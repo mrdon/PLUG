@@ -1,6 +1,7 @@
 package com.atlassian.plugin.event.events;
 
 import com.atlassian.plugin.Plugin;
+import org.apache.commons.lang.Validate;
 
 /**
  * Event that indicates a plugin has been upgraded at runtime
@@ -17,6 +18,7 @@ public class PluginUpgradedEvent
      */
     public PluginUpgradedEvent(Plugin plugin)
     {
+        Validate.notNull(plugin);
         this.plugin = plugin;
     }
 

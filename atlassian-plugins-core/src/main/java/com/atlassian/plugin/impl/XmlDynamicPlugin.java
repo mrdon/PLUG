@@ -10,15 +10,8 @@ import java.net.URL;
  *
  * @since 2.1.0
  */
-public class XmlDynamicPlugin extends AbstractPlugin implements DynamicPlugin
+public class XmlDynamicPlugin extends AbstractPlugin
 {
-    private boolean bundledPlugin;
-    private boolean deletable;
-
-    public boolean isBundledPlugin()
-    {
-        return bundledPlugin;
-    }
 
     public boolean isUninstallable()
     {
@@ -27,7 +20,7 @@ public class XmlDynamicPlugin extends AbstractPlugin implements DynamicPlugin
 
     public boolean isDeleteable()
     {
-        return deletable;
+        return true;
     }
 
     public boolean isDynamicallyLoaded()
@@ -37,16 +30,6 @@ public class XmlDynamicPlugin extends AbstractPlugin implements DynamicPlugin
 
     public void close()
     {}
-
-    public void setDeletable(final boolean deletable)
-    {
-        this.deletable = deletable;
-    }
-
-    public void setBundled(final boolean bundled)
-    {
-        bundledPlugin = bundled;
-    }
 
     public <M> Class<M> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
     {

@@ -170,32 +170,44 @@ public interface Plugin extends Resourced, Comparable<Plugin>
     void close();
 
     /**
-     * Installs the plugin, which may involve installing the plugin from an internal container
+     * Installs the plugin into any internal, managing container.  This method will be called on every startup.  Unless
+     * an exception is thrown, the plugin should be in the {@link PluginState#INSTALLED} state.  If the plugin is already
+     * in the {@link PluginState#INSTALLED} state, nothing will happen.
      *
      * @since 2.2.0
+     * @throws PluginException If the plugin could not be installed
      */
-    void install();
+    void install() throws PluginException;
 
     /**
-     * Uninstalls the plugin, which may involve uninstalling the plugin from an internal container
+     * Uninstalls the plugin from any internal container.  This method will be called on every shutdown.  Unless an
+     * exception is thrown, the plugin should be in the {@link PluginState#UNINSTALLED} state.  If the plugin is already
+     * in the {@link PluginState#UNINSTALLED} state, nothing will happen.
      *
      * @since 2.2.0
+     * @throws PluginException If the plugin could not be uninstalled
      */
-    void uninstall();
+    void uninstall() throws PluginException;
 
     /**
-     * Enables the plugin
+     * Enables the plugin.  Unless an exception is thrown, the plugin should then be in either the
+     * {@link PluginState#ENABLING} or {@link PluginState#ENABLED} state.  If the plugin is already in the
+     * {@link PluginState#ENABLING} or {@link PluginState#ENABLED} state, nothing will happen.
+     *
      *
      * @since 2.2.0
+     * @throws PluginException If the plugin could not be enabled
      */
-    void enable();
+    void enable() throws PluginException;
 
     /**
-     * Disables the plugin
+     * Disables the plugin.  Unless an exception is thrown, the plugin should be in the {@link PluginState#DISABLED}
+     * state. If the plugin is already in the {@link PluginState#DISABLED} state, nothing will happen.
      *
-     * @since 2.2.0
+     * @since 2.2.0 If the plugin could not be disabled
+     * @throws PluginException
      */
-    void disable();
+    void disable() throws PluginException;
 
     /**
      * @return A list of plugin keys that this plugin is dependent upon, or an empty list if none

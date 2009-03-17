@@ -148,7 +148,7 @@ public class OsgiPluginFactory implements PluginFactory
             ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys.toArray(new String[applicationKeys.size()]));
 
-            Plugin osgiPlugin = new OsgiPlugin(osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager);
+            Plugin osgiPlugin = new OsgiPlugin(parser.getKey(), osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager);
 
             // Temporarily configure plugin until it can be properly installed
             plugin = parser.configurePlugin(combinedFactory, osgiPlugin);

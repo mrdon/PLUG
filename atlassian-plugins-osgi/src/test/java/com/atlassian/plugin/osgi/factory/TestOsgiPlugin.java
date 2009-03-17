@@ -1,134 +1,86 @@
 package com.atlassian.plugin.osgi.factory;
 
-import junit.framework.TestCase;
-import com.mockobjects.dynamic.Mock;
-import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
-import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
-import org.osgi.framework.*;
-import org.springframework.beans.factory.support.StaticListableBeanFactory;
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.context.support.GenericApplicationContext;
+import com.atlassian.plugin.event.PluginEventManager;
+import junit.framework.TestCase;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 public class TestOsgiPlugin extends TestCase
 {
-    Mock mockBundle;
-    OsgiPlugin plugin;
-    Mock mockBundleContext;
+    private Bundle bundle;
+    private OsgiPlugin plugin;
+    private BundleContext bundleContext;
+    private Dictionary dict;
+    private OsgiPluginHelper helper;
 
     @Override
     public void setUp()
     {
 
-        mockBundle = new Mock(Bundle.class);
-        Dictionary dict = new Hashtable();
+
+        bundle = mock(Bundle.class);
+        dict = new Hashtable();
         dict.put(Constants.BUNDLE_DESCRIPTION, "desc");
         dict.put(Constants.BUNDLE_VERSION, "1.0");
-        mockBundle.matchAndReturn("getHeaders", dict);
-        mockBundleContext = new Mock(BundleContext.class);
+        when(bundle.getHeaders()).thenReturn(dict);
+        bundleContext = mock(BundleContext.class);
+        when(bundle.getBundleContext()).thenReturn(bundleContext);
 
-        plugin = new OsgiPlugin((Bundle) mockBundle.proxy());
+        helper = mock(OsgiPluginHelper.class);
+        when(helper.getBundle()).thenReturn(bundle);
+
+        plugin = new OsgiPlugin(mock(PluginEventManager.class), helper);
     }
 
     @Override
     public void tearDown()
     {
-        mockBundle = null;
+        bundle = null;
         plugin = null;
-        mockBundleContext = null;
+        bundleContext = null;
     }
-    public void testEnabled() {
-        mockBundle.expectAndReturn("getBundleContext", null);
-        mockBundle.expectAndReturn("getState", Bundle.RESOLVED);
-        mockBundle.expect("start");
+
+    public void testEnabled() throws BundleException
+    {
+        when(bundle.getState()).thenReturn(Bundle.RESOLVED);
         plugin.enable();
-        mockBundle.verify();
-    }
-    public void testDisabled() {
-        mockBundle.expectAndReturn("getState", Bundle.ACTIVE);
-        mockBundle.expect("stop");
-        plugin.disable();
-        mockBundle.verify();
+        verify(bundle).start();
     }
 
-    public void testDisabledOnNonDynamicPlugin() {
+    public void testDisabled() throws BundleException
+    {
+        when(bundle.getState()).thenReturn(Bundle.ACTIVE);
+        plugin.disable();
+        verify(bundle).stop();
+    }
+
+    public void testDisabledOnNonDynamicPlugin() throws BundleException
+    {
         plugin.addModuleDescriptor(new StaticModuleDescriptor());
-        mockBundle.expectAndReturn("getState", Bundle.ACTIVE);
+        when(bundle.getState()).thenReturn(Bundle.ACTIVE);
         plugin.disable();
-        mockBundle.verify();
+        verify(bundle, never()).stop();
     }
 
-    public void testUninstall() {
-        mockBundle.expectAndReturn("getState", Bundle.ACTIVE);
-        mockBundle.expect("uninstall");
+    public void testUninstall() throws BundleException
+    {
+        when(bundle.getState()).thenReturn(Bundle.ACTIVE);
         plugin.uninstall();
-        mockBundle.verify();
-    }
-
-    public void testSetKey()
-    {
-        mockBundle.expectAndReturn("getSymbolicName", "foo");
-        plugin.setKey("foo");
-        assertEquals("foo", plugin.getKey());
-        mockBundle.verify();
-    }
-
-    public void testSetKeyWithMismatchedName()
-    {
-        mockBundle.expectAndReturn("getSymbolicName", "foo");
-        try
-        {
-            plugin.setKey("bar");
-            fail("Should have thrown exception");
-        }
-        catch (IllegalArgumentException ex)
-        {
-            // test passed
-        }
-        mockBundle.verify();
-    }
-
-    public void testAutowireObject() {
-        StaticListableBeanFactory bf = new StaticListableBeanFactory();
-        bf.addBean("child", new ChildBean());
-        DefaultListableBeanFactory autowireBf = new DefaultListableBeanFactory(bf);
-
-        Mock mockBundle = new Mock(Bundle.class);
-        Mock mockBundleContext = new Mock(BundleContext.class);
-
-        OsgiPlugin plugin = new OsgiPlugin((Bundle) mockBundle.proxy());
-        mockBundle.expectAndReturn("getSymbolicName", "foo");
-        plugin.setKey("foo");
-        plugin.onSpringContextRefresh(new PluginContainerRefreshedEvent(new GenericApplicationContext(autowireBf), "foo"));
-        SetterInjectedBean bean = new SetterInjectedBean();
-        plugin.autowire(bean, AutowireCapablePlugin.AutowireStrategy.AUTOWIRE_BY_NAME);
-        assertNotNull(bean.getChild());
-        mockBundle.verify();
-        mockBundleContext.verify();
-
-    }
-
-    public static class SetterInjectedBean
-    {
-        private ChildBean child;
-
-        public ChildBean getChild()
-        {
-            return child;
-        }
-
-        public void setChild(ChildBean child)
-        {
-            this.child = child;
-        }
-    }
-
-    public static class ChildBean {
+        assertEquals(plugin.getPluginState(), PluginState.UNINSTALLED);
     }
 
     @RequiresRestart
@@ -140,4 +92,17 @@ public class TestOsgiPlugin extends TestCase
         }
     }
 
+
+    public void testShouldHaveSpringContext() throws MalformedURLException
+    {
+        dict.put(OsgiPlugin.SPRING_CONTEXT, "*;timeout:=60");
+        assertTrue(OsgiPlugin.shouldHaveSpringContext(bundle));
+
+        dict.remove(OsgiPlugin.SPRING_CONTEXT);
+        assertFalse(OsgiPlugin.shouldHaveSpringContext(bundle));
+        when(bundle.getEntry("META-INF/spring/")).thenReturn(new URL("http://foo"));
+        assertTrue(OsgiPlugin.shouldHaveSpringContext(bundle));
+
+
+    }
 }

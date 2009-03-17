@@ -2,7 +2,7 @@ package com.atlassian.plugin;
 
 /**
  * The state of the plugin after restart.  This value indicates the action that will be performed for plugins that
- * cannot be installed, upgraded, or removed at runtime due to the \@RequiresRestart annotation on a used module
+ * cannot be installed, upgraded, or removed at runtime due to the {@link com.atlassian.plugin.descriptors.RequiresRestart @RequiresRestart} annotation on a used module
  * descriptor.
  *
  * @since 2.2.0

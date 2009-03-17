@@ -14,13 +14,10 @@ import org.apache.commons.lang.Validate;
 /**
  * A dynamically loaded plugin is loaded through the plugin class loader.
  */
-public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugin
+public class DefaultDynamicPlugin extends AbstractPlugin
 {
     private final PluginArtifact pluginArtifact;
     private final PluginClassLoader loader;
-    private boolean deletable = true;
-    private boolean bundled = false;
-    private boolean closed = false;
 
     public DefaultDynamicPlugin(final DeploymentUnit deploymentUnit, final PluginClassLoader loader)
     {
@@ -90,33 +87,17 @@ public class DefaultDynamicPlugin extends AbstractPlugin implements DynamicPlugi
 
     public boolean isDeleteable()
     {
-        return deletable;
-    }
-
-    public void setDeletable(final boolean deletable)
-    {
-        this.deletable = deletable;
+        return true;
     }
 
     public boolean isBundledPlugin()
     {
-        return bundled;
-    }
-
-    public void setBundled(final boolean bundled)
-    {
-        this.bundled = bundled;
-    }
-
-    public void close()
-    {
-        loader.close();
-        closed = true;
+        return false;
     }
 
     @Override
-    public PluginState getPluginState()
+    protected void uninstallInternal()
     {
-        return (closed ? PluginState.UNINSTALLED : super.getPluginState());
+        loader.close();
     }
 }

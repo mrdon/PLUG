@@ -1,5 +1,6 @@
 package com.atlassian.plugin.impl;
 
+import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 
 import java.io.InputStream;
@@ -40,23 +41,14 @@ public class StaticPlugin extends AbstractPlugin
         return false;
     }
 
-    public boolean isBundledPlugin()
-    {
-        return false;
-    }
-
     public boolean isDeleteable()
     {
         return false;
     }
 
-    public void install()
+    @Override
+    protected void uninstallInternal()
     {
-        // no op
-    }
-
-    public void uninstall()
-    {
-        throw new IllegalStateException("Static plugins cannot be uninstalled");
+        throw new PluginException("Static plugins cannot be uninstalled");
     }
 }

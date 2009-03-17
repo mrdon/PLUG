@@ -1,5 +1,18 @@
 package com.atlassian.plugin.manager;
 
+import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.MockModuleDescriptor;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.PluginInstaller;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.PluginRestartState;
+import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
@@ -12,7 +25,7 @@ import com.atlassian.plugin.event.listeners.PassListener;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.factories.XmlDynamicPluginFactory;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.impl.DynamicPlugin;
+import com.atlassian.plugin.impl.AbstractDelegatingPlugin;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
@@ -21,12 +34,16 @@ import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.loaders.SinglePluginLoader;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
-import com.atlassian.plugin.mock.*;
+import com.atlassian.plugin.mock.MockAnimal;
+import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
+import com.atlassian.plugin.mock.MockBear;
+import com.atlassian.plugin.mock.MockMineral;
+import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
+import com.atlassian.plugin.mock.MockThing;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.predicate.PluginPredicate;
-import com.atlassian.plugin.*;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
@@ -36,7 +53,11 @@ import org.apache.commons.io.IOUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class TestDefaultPluginManager extends AbstractTestClassLoader
 {
@@ -76,10 +97,6 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         if (directoryPluginLoader != null)
         {
             directoryPluginLoader = null;
-        }
-        if (manager != null)
-        {
-            manager.shutdown();
         }
 
         super.tearDown();
@@ -305,13 +322,14 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders.add(new MultiplePluginLoader("test-atlassian-plugin-newer.xml"));
         Plugin plugin = new StaticPlugin(){
             @Override
-            public void enable()
+            protected PluginState enableInternal()
             {
                 fail("enable() must never be called on a earlier version of plugin when later version is installed");
+                return null;
             }
 
             @Override
-            public void disable()
+            public void disableInternal()
             {
                 fail("disable() must never be called on a earlier version of plugin when later version is installed");
             }
@@ -1135,8 +1153,10 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(2, manager.getPlugins().size());
 
         // Set plugin file can't be deleted.
-        final DynamicPlugin pluginToRemove = (DynamicPlugin) manager.getPlugin("test.atlassian.plugin.classloaded");
-        pluginToRemove.setDeletable(false);
+        final Plugin pluginToRemove = new AbstractDelegatingPlugin(manager.getPlugin("test.atlassian.plugin.classloaded"))
+        {
+            public boolean isDeleteable() {return false;}
+        };
 
         // Disable plugin module before uninstall
         final MockAnimalModuleDescriptor moduleDescriptor = (MockAnimalModuleDescriptor) manager.getPluginModule("test.atlassian.plugin.classloaded:paddington");
@@ -1588,7 +1608,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         }
 
         @Override
-        public void enable()
+        protected PluginState enableInternal()
         {
             throw new RuntimeException("boo");
         }

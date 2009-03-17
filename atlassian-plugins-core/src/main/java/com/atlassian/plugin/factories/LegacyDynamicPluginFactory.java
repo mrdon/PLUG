@@ -1,9 +1,12 @@
 package com.atlassian.plugin.factories;
 
-import com.atlassian.plugin.*;
+import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.impl.DefaultDynamicPlugin;
-import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
@@ -12,9 +15,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 
 /**
  * Deploys version 1.0 plugins into the legacy custom classloader structure that gives each plugin its own classloader.
@@ -102,7 +103,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
     /**
      * @deprecated Since 2.2.0, use {@link #createPlugin(PluginArtifact,PluginClassLoader)} instead
      */
-    protected DynamicPlugin createPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
+    protected Plugin createPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
     {
         return createPlugin(new JarPluginArtifact(deploymentUnit.getPath()), loader);
     }
@@ -114,7 +115,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
      * @return The plugin instance
      * @since 2.2.0
      */
-    protected DynamicPlugin createPlugin(PluginArtifact pluginArtifact, PluginClassLoader loader)
+    protected Plugin createPlugin(PluginArtifact pluginArtifact, PluginClassLoader loader)
     {
         return new DefaultDynamicPlugin(pluginArtifact, loader);
     }

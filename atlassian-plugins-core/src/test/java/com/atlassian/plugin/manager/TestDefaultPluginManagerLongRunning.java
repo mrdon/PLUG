@@ -7,6 +7,7 @@ import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.factories.XmlDynamicPluginFactory;
 import com.atlassian.plugin.impl.StaticPlugin;
+import com.atlassian.plugin.impl.AbstractDelegatingPlugin;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
@@ -78,13 +79,13 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         final Mock mockPluginLoader = new Mock(PluginLoader.class);
         final Plugin plugin = new StaticPlugin()
         {
-            public void enable()
+            public PluginState enableInternal()
             {
-            // do nothing
+                return PluginState.DISABLED;
             }
-            public void disable()
+            public void disableInternal()
             {
-            // do nothing
+                // do nothing
             }
         };
         plugin.setKey("foo");
@@ -267,12 +268,13 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         return p;
     }
 
-    private static class EnableInPassPlugin extends StaticPlugin
+    private static class EnableInPassPlugin extends AbstractDelegatingPlugin
     {
         private int pass;
 
         public EnableInPassPlugin(final String key, final int pass)
         {
+            super(new StaticPlugin());
             this.pass = pass;
             setKey(key);
         }

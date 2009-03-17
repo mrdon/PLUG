@@ -139,11 +139,6 @@ public class OsgiBundlePlugin extends AbstractPlugin
         throw new UnsupportedOperationException("Not available");
     }
 
-    public boolean isBundledPlugin()
-    {
-        return false;
-    }
-
     public Date getDateLoaded()
     {
         return dateLoaded;
@@ -200,12 +195,8 @@ public class OsgiBundlePlugin extends AbstractPlugin
         return bundleClassLoader.getResourceAsStream(name);
     }
 
-    public void install()
-    {
-
-    }
-    
-    public void uninstall()
+    @Override
+    protected void uninstallInternal()
     {
         try
         {
@@ -215,25 +206,24 @@ public class OsgiBundlePlugin extends AbstractPlugin
         {
             throw new PluginException(e);
         }
-        super.uninstall();
     }
 
     @Override
-    public void enable()
+    protected PluginState enableInternal()
     {
         try
         {
             bundle.start();
+            return PluginState.ENABLED;
         }
         catch (BundleException e)
         {
             throw new PluginException(e);
         }
-        super.enable();
     }
 
     @Override
-    public void disable()
+    protected void disableInternal()
     {
         try
         {
@@ -243,7 +233,6 @@ public class OsgiBundlePlugin extends AbstractPlugin
         {
             throw new PluginException(e);
         }
-        super.disable();
     }
 
     public ClassLoader getClassLoader()

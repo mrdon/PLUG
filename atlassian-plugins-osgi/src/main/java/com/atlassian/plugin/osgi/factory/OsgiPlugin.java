@@ -1,169 +1,99 @@
 package com.atlassian.plugin.osgi.factory;
 
-import static org.apache.commons.lang.Validate.notNull;
-
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginState;
-import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
+import com.atlassian.plugin.IllegalPluginStateException;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginContainerFailedEvent;
 import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
-import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.impl.AbstractPlugin;
-import com.atlassian.plugin.impl.DynamicPlugin;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
-import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.PluginUtils;
-import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleListener;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
  * Plugin that wraps an OSGi bundle that does contain a plugin descriptor.  The actual bundle is not created until the
  * {@link #install()} method is invoked.  Any attempt to access a method that requires a bundle will throw an
- * {@link IllegalStateException}.
+ * {@link com.atlassian.plugin.IllegalPluginStateException}.
+ *
+ * This class uses a {@link OsgiPluginHelper} to represent different behaviors of key methods in different states.
+ * {@link OsgiPluginUninstalledHelper} implements the methods when the plugin hasn't yet been installed into the
+ * OSGi container, while {@link OsgiPluginInstalledHelper} implements the methods when the bundle is available.  This
+ * leaves this class to manage the {@link PluginState} and interactions with the event system.
  */
 //@Threadsafe
-public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin, DynamicPlugin
+public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
 {
-    private static final Log log = LogFactory.getLog(OsgiPlugin.class);
-
     private final Map<String, Element> moduleElements = new HashMap<String, Element>();
     private final PluginEventManager pluginEventManager;
-    private final OsgiContainerManager osgiContainerManager;
-    private final PluginArtifact pluginArtifact;
     private final PackageAdmin packageAdmin;
-    private volatile Bundle bundle;
-    private volatile SpringContextAccessor springContextAccessor;
-    private volatile ClassLoader bundleClassLoader;
+
     private volatile boolean treatSpringBeanFactoryCreationAsRefresh = false;
-    private volatile boolean deletable = true;
-    private volatile boolean bundled = false;
-    //@GuardedBy("this")
-    private ServiceTracker moduleDescriptorTracker;
-    //@GuardedBy("this")
-    private ServiceTracker unrecognisedModuleTracker;
+    private volatile OsgiPluginHelper helper;
+    public static final String SPRING_CONTEXT = "Spring-Context";
 
-    public OsgiPlugin(final OsgiContainerManager osgiContainerManager, final PluginArtifact pluginArtifact, final PluginEventManager pluginEventManager)
+    public OsgiPlugin(final String key, final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginEventManager pluginEventManager)
     {
-        notNull(osgiContainerManager, "The osgiContainerManager is required");
-        notNull(pluginArtifact, "The pluginArtifact is required");
-        notNull(pluginEventManager, "The pluginEventManager is required");
-        this.osgiContainerManager = osgiContainerManager;
-        this.pluginArtifact = pluginArtifact;
-        this.pluginEventManager = pluginEventManager;
+        Validate.notNull(key, "The plugin key is required");
+        Validate.notNull(mgr, "The osgi container is required");
+        Validate.notNull(artifact, "The osgi container is required");
+        Validate.notNull(pluginEventManager, "The osgi container is required");
 
-        final Bundle systemBundle = osgiContainerManager.getBundles()[0];
-        final BundleContext systemBundleContext = systemBundle.getBundleContext();
-        final ServiceReference ref = systemBundleContext.getServiceReference(PackageAdmin.class.getName());
-        packageAdmin = (PackageAdmin) systemBundleContext.getService(ref);
+        this.helper = new OsgiPluginUninstalledHelper(key, mgr, artifact);
+        this.pluginEventManager = pluginEventManager;
+        this.packageAdmin = extractPackageAdminFromOsgi(mgr);
     }
 
     /**
-     * Only useful for testing
+     * Only used for testing
+     * @param helper The helper to use
      */
-    OsgiPlugin(final Bundle bundle)
+    OsgiPlugin(PluginEventManager pluginEventManager, OsgiPluginHelper helper)
     {
-        this.bundle = bundle;
-        osgiContainerManager = null;
-        pluginArtifact = null;
-        pluginEventManager = new DefaultPluginEventManager();
-        packageAdmin = null;
+        this.helper = helper;
+        this.pluginEventManager = pluginEventManager;
+        this.packageAdmin = null;
     }
 
     /**
      * @return The active bundle
-     *
-     * @throws IllegalStateException If the bundle hasn't been installed yet
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
      */
-    public Bundle getBundle() throws IllegalStateException
+    public Bundle getBundle() throws IllegalPluginStateException
     {
-        if (bundle == null)
-        {
-            throw new IllegalStateException("Bundle hasn't been created yet.  This is probably because the module " +
-                "descriptor is trying to load classes in its init() method.  Move all classloading into the " +
-                "enabled() method, and be sure to properly drop class and instance references in disabled().");
-        }
-        return bundle;
+        return helper.getBundle();
     }
 
-    public void addModuleDescriptorElement(final String key, final Element element)
-    {
-        moduleElements.put(key, element);
-    }
-
-    public <T> Class<T> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
-    {
-        return BundleClassLoaderAccessor.loadClass(getBundle(), clazz, callingClass);
-    }
-
+    /**
+     * @return true
+     */
     public boolean isUninstallable()
     {
         return true;
     }
 
-    public URL getResource(final String name)
-    {
-        return bundleClassLoader.getResource(name);
-    }
-
-    public InputStream getResourceAsStream(final String name)
-    {
-        return bundleClassLoader.getResourceAsStream(name);
-    }
-
-    public ClassLoader getClassLoader()
-    {
-        return bundleClassLoader;
-    }
-
     /**
-     * @param key The plugin key
-     * @throws IllegalArgumentException If the plugin key doesn't match the bundle key
-     */
-    @Override
-    public void setKey(final String key) throws IllegalArgumentException
-    {
-        if ((bundle != null) && !bundle.getSymbolicName().equals(key))
-        {
-            throw new IllegalArgumentException("The plugin key '"+key+"' must match the OSGi bundle symbolic name (Bundle-SymbolicName)");
-        }
-        super.setKey(key);
-    }
-
-    /**
-     * This plugin is dynamically loaded, so returns true.
      * @return true
      */
     public boolean isDynamicallyLoaded()
@@ -171,51 +101,97 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return true;
     }
 
+    /**
+     * @return true
+     */
     public boolean isDeleteable()
     {
-        return deletable;
+        return true;
     }
 
-    public void setDeletable(final boolean deletable)
+    /**
+     *
+     * @param clazz        The name of the class to be loaded
+     * @param callingClass The class calling the loading (used to help find a classloader)
+     * @param <T> The class type
+     * @return The class instance, loaded from the OSGi bundle
+     * @throws ClassNotFoundException If the class cannot be found
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
+     */
+    public <T> Class<T> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException, IllegalPluginStateException
     {
-        this.deletable = deletable;
+        return helper.loadClass(clazz, callingClass);
     }
 
-    public boolean isBundledPlugin()
+    /**
+     * @param name The resource name
+     * @return The resource URL, null if not found
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
+     */
+    public URL getResource(final String name) throws IllegalPluginStateException
     {
-        return bundled;
+        return helper.getResource(name);
     }
 
-    public void setBundled(final boolean bundled)
+    /**
+     * @param name The name of the resource to be loaded.
+     * @return Null if not found
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
+     */
+    public InputStream getResourceAsStream(final String name) throws IllegalPluginStateException
     {
-        this.bundled = bundled;
+        return helper.getResourceAsStream(name);
     }
 
+    /**
+     * @return The classloader to load classes and resources from the bundle
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
+     */
+    public ClassLoader getClassLoader() throws IllegalPluginStateException
+    {
+        return helper.getClassLoader();
+    }
+
+    /**
+     * Called when the spring context for the bundle has failed to be created.  This means the bundle is still
+     * active, but the Spring context is not available, so for our purposes, the plugin shouldn't be enabled.
+     *
+     * @param event The plugin container failed event
+     * @throws com.atlassian.plugin.IllegalPluginStateException If the plugin key hasn't been set yet
+     */
     @PluginEventListener
-    public void onSpringContextFailed(final PluginContainerFailedEvent event)
+    public void onSpringContextFailed(final PluginContainerFailedEvent event) throws IllegalPluginStateException
     {
         if (getKey() == null)
         {
-            throw new IllegalStateException("Plugin key must be set");
+            throw new IllegalPluginStateException("Plugin key must be set");
         }
         if (getKey().equals(event.getPluginKey()))
         {
             // TODO: do something with the exception more than logging
-            log.error("Unable to start the Spring context for plugin "+getKey(), event.getCause());
+            getLog().error("Unable to start the Spring context for plugin " + getKey(), event.getCause());
             setPluginState(PluginState.DISABLED);
         }
     }
 
+    /**
+     * Called when the spring context for the bundle has been created or refreshed.  If this is the first time the
+     * context has been refreshed, then it is a new context.  Otherwise, this means that the bundle has been reloaded,
+     * usually due to a dependency upgrade.
+     *
+     * @param event The event
+     * @throws com.atlassian.plugin.IllegalPluginStateException If the plugin key hasn't been set yet
+     */
     @PluginEventListener
-    public void onSpringContextRefresh(final PluginContainerRefreshedEvent event)
+    public void onSpringContextRefresh(final PluginContainerRefreshedEvent event) throws IllegalPluginStateException
     {
         if (getKey() == null)
         {
-            throw new IllegalStateException("Plugin key must be set");
+            throw new IllegalPluginStateException("Plugin key must be set");
         }
         if (getKey().equals(event.getPluginKey()))
         {
-            springContextAccessor = new SpringContextAccessor(event.getContainer());
+            helper.setPluginContainer(event.getContainer());
             setPluginState(PluginState.ENABLED);
 
             // Only send refresh event on second creation
@@ -230,148 +206,30 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         }
     }
 
-    @Override
-    public void install()
-    {
-        bundle = osgiContainerManager.installBundle(pluginArtifact.toFile());
-        bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
-        setPluginState(PluginState.INSTALLED);
-    }
-
-    @Override
-    public synchronized void enable() throws OsgiContainerException
-    {
-        try
-        {
-            if ((getBundle().getState() == Bundle.RESOLVED) || (getBundle().getState() == Bundle.INSTALLED))
-            {
-                pluginEventManager.register(this);
-                getBundle().start();
-                if (getBundle().getBundleContext() != null)
-                {
-                    if (shouldHaveSpringContext() && (springContextAccessor == null))
-                    {
-                        setPluginState(PluginState.ENABLING);
-                    }
-                    else
-                    {
-                        setPluginState(PluginState.ENABLED);
-                    }
-                    final BundleContext ctx = getBundle().getBundleContext();
-                    moduleDescriptorTracker = new ServiceTracker(ctx, ModuleDescriptor.class.getName(),
-                        new RegisteringServiceTrackerCustomizer());
-                    moduleDescriptorTracker.open();
-                    unrecognisedModuleTracker = new ServiceTracker(ctx, ListableModuleDescriptorFactory.class.getName(),
-                        new UnrecognisedServiceTrackerCustomizer());
-                    unrecognisedModuleTracker.open();
-
-                    // ensure the bean factory is removed when the bundle is stopped
-                    // Do we need to unregister this?
-                    ctx.addBundleListener(new BundleListener()
-                    {
-                        public void bundleChanged(final BundleEvent bundleEvent)
-                        {
-                            if ((bundleEvent.getBundle() == getBundle()) && (bundleEvent.getType() == BundleEvent.STOPPED))
-                            {
-                                springContextAccessor = null;
-                                setPluginState(PluginState.DISABLED);
-                            }
-                        }
-                    });
-                }
-                else
-                {
-                    log.warn("Bundle started, but no BundleContext available.  This should never happen outside tests.");
-                }
-            }
-            else
-            {
-                log.warn("Cannot enable a plugin that is already enabled or in the process of being enabled.");
-            }
-        }
-        catch (final BundleException e)
-        {
-            throw new OsgiContainerException("Cannot start plugin: " + getKey(), e);
-        }
-    }
-
-    @Override
-    public synchronized void disable() throws OsgiContainerException
-    {
-        try
-        {
-            if (getBundle().getState() == Bundle.ACTIVE)
-            {
-                // Only disable underlying bundle if this is a truely dynamic plugin
-                if (!PluginUtils.doesPluginRequireRestart(this))
-                {
-                    if (moduleDescriptorTracker != null)
-                    {
-                        moduleDescriptorTracker.close();
-                    }
-                    if (unrecognisedModuleTracker != null)
-                    {
-                        unrecognisedModuleTracker.close();
-                    }
-                    pluginEventManager.unregister(this);
-                    getBundle().stop();
-                    moduleDescriptorTracker = null;
-                    unrecognisedModuleTracker = null;
-                }
-                setPluginState(PluginState.DISABLED);
-            }
-        }
-        catch (final BundleException e)
-        {
-            throw new OsgiContainerException("Cannot stop plugin: " + getKey(), e);
-        }
-    }
-
-    @Override
-    public void uninstall() throws OsgiContainerException
-    {
-        if (bundle != null)
-        {
-            try
-            {
-                if (bundle.getState() != Bundle.UNINSTALLED)
-                {
-                    pluginEventManager.unregister(this);
-                    bundle.uninstall();
-                    setPluginState(PluginState.UNINSTALLED);
-                }
-            }
-            catch (final BundleException e)
-            {
-                throw new OsgiContainerException("Cannot uninstall bundle " + bundle.getSymbolicName());
-            }
-        }
-    }
-
-    private boolean shouldHaveSpringContext()
-    {
-        return getBundle().getHeaders().get("Spring-Context") != null;
-    }
-
     /**
-     * @throws IllegalStateException if the spring context is not initialized
+     * Creates and autowires the class, using Spring's autodetection algorithm
+     *
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
      */
-    public <T> T autowire(final Class<T> clazz) throws IllegalStateException
+    public <T> T autowire(final Class<T> clazz) throws IllegalPluginStateException
     {
         return autowire(clazz, AutowireStrategy.AUTOWIRE_AUTODETECT);
     }
 
     /**
-     * @throws IllegalStateException if the spring context is not initialized
+     * Creates and autowires the class
+     *
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
      */
-    public <T> T autowire(final Class<T> clazz, final AutowireStrategy autowireStrategy) throws IllegalStateException
+    public <T> T autowire(final Class<T> clazz, final AutowireStrategy autowireStrategy) throws IllegalPluginStateException
     {
-        assertSpringContextAvailable();
-        return springContextAccessor.createBean(clazz, autowireStrategy);
+        return helper.autowire(clazz, autowireStrategy);
     }
 
     /**
-     * @throws IllegalStateException if the spring context is not initialized
+     * Autowires the instance using Spring's autodetection algorithm
+     *
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
      */
     public void autowire(final Object instance) throws IllegalStateException
     {
@@ -379,30 +237,26 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     }
 
     /**
-     * @throws IllegalStateException if the spring context is not initialized
+     * Autowires the instance
+     *
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
      */
-    public void autowire(final Object instance, final AutowireStrategy autowireStrategy) throws IllegalStateException
+    public void autowire(final Object instance, final AutowireStrategy autowireStrategy) throws IllegalPluginStateException
     {
-        assertSpringContextAvailable();
-        springContextAccessor.createBean(instance, autowireStrategy);
+        helper.autowire(instance, autowireStrategy);
     }
 
     /**
-     * @throws IllegalStateException if the spring context is not initialized
+     * Determines which plugins are required for this one to operate based on tracing the "wires" or packages that
+     * are imported by this plugin.  Bundles that provide those packages are determined to be required plugins.
+     *
+     * @return A set of bundle symbolic names, or plugin keys.  Empty set if none.
+     * @since 2.2.0
      */
-    private void assertSpringContextAvailable() throws IllegalStateException
+    @Override
+    public Set<String> getRequiredPlugins() throws IllegalPluginStateException
     {
-        if (springContextAccessor == null)
-        {
-            throw new IllegalStateException("Cannot autowire object because the Spring context is unavailable.  " +
-                "Ensure your OSGi bundle contains the 'Spring-Context' header.");
-        }
-    }
-
-
-    Map<String, Element> getModuleElements()
-    {
-        return moduleElements;
+        return helper.getRequiredPlugins();
     }
 
     @Override
@@ -411,291 +265,185 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return getKey();
     }
 
-    protected <T extends ModuleDescriptor<?>> List<T> getModuleDescriptorsByDescriptorClass(final Class<T> descriptor)
-    {
-        final List<T> result = new ArrayList<T>();
-
-        for (final ModuleDescriptor<?> moduleDescriptor : getModuleDescriptors())
-        {
-            if (moduleDescriptor.getClass().isAssignableFrom(descriptor))
-            {
-                result.add(descriptor.cast(moduleDescriptor));
-            }
-        }
-        return result;
-    }
-
     /**
-     * Use the PackageAdmin to determine which bundles provide the package imports
+     * Installs the plugin artifact into OSGi
      *
-     * @return A set of bundle symbolic names, or plugin keys.  Empty set if none.
-     * @since 2.2.0
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
      */
     @Override
-    public Set<String> getRequiredPlugins()
+    protected void installInternal() throws IllegalPluginStateException
     {
-        final Set<String> keys = new HashSet<String>();
-
-        final Set<String> imports = OsgiHeaderUtil.parseHeader((String) getBundle().getHeaders().get(Constants.IMPORT_PACKAGE)).keySet();
-        for (final String imp : imports)
-        {
-            final ExportedPackage[] exports = packageAdmin.getExportedPackages(imp);
-            if (exports != null)
-            {
-                for (final ExportedPackage export : exports)
-                {
-                    final Bundle[] importingBundles = export.getImportingBundles();
-                    if (importingBundles != null)
-                    {
-                        for (final Bundle importingBundle : importingBundles)
-                        {
-                            if (getBundle() == importingBundle)
-                            {
-                                keys.add(export.getExportingBundle().getSymbolicName());
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return keys;
+        Bundle bundle = helper.install();
+        helper = new OsgiPluginInstalledHelper(bundle, packageAdmin, shouldHaveSpringContext(bundle));
     }
 
     /**
-     * Tracks module descriptors registered as services, then updates the descriptors map accordingly
-     */
-    private class RegisteringServiceTrackerCustomizer implements ServiceTrackerCustomizer
-    {
-
-        public Object addingService(final ServiceReference serviceReference)
-        {
-            ModuleDescriptor<?> descriptor = null;
-            if (serviceReference.getBundle() == getBundle())
-            {
-                descriptor = (ModuleDescriptor<?>) getBundle().getBundleContext().getService(serviceReference);
-                addModuleDescriptor(descriptor);
-                if (log.isInfoEnabled())
-                {
-                    log.info("Dynamically registered new module descriptor: " + descriptor.getCompleteKey());
-                }
-            }
-            return descriptor;
-        }
-
-        public void modifiedService(final ServiceReference serviceReference, final Object o)
-        {
-            if (serviceReference.getBundle() == getBundle())
-            {
-                final ModuleDescriptor<?> descriptor = (ModuleDescriptor<?>) o;
-                addModuleDescriptor(descriptor);
-                if (log.isInfoEnabled())
-                {
-                    log.info("Dynamically upgraded new module descriptor: " + descriptor.getCompleteKey());
-                }
-            }
-        }
-
-        public void removedService(final ServiceReference serviceReference, final Object o)
-        {
-            if (serviceReference.getBundle() == getBundle())
-            {
-                final ModuleDescriptor<?> descriptor = (ModuleDescriptor<?>) o;
-                removeModuleDescriptor(descriptor.getKey());
-                if (log.isInfoEnabled())
-                {
-                    log.info("Dynamically removed module descriptor: " + descriptor.getCompleteKey());
-                }
-            }
-        }
-    }
-
-    /**
-     * Service tracker that tracks {@link ListableModuleDescriptorFactory} instances and handles transforming
-     * {@link UnrecognisedModuleDescriptor}} instances into modules if the new factory supports them.  Updates to factories
-     * and removal are also handled.
+     * Enables the plugin by setting the OSGi bundle state to enabled.
      *
-     * @since 2.1.2
+     * @return {@link PluginState#ENABLED}if spring isn't necessory or {@link PluginState#ENABLING} if we are waiting
+     * on a spring context
+     * @throws OsgiContainerException If the underlying OSGi system threw an exception or we tried to enable the bundle
+     * when it was in an invalid state
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
      */
-    private class UnrecognisedServiceTrackerCustomizer implements ServiceTrackerCustomizer
+    @Override
+    protected synchronized PluginState enableInternal() throws OsgiContainerException, IllegalPluginStateException
     {
-
-        /**
-         * Turns any {@link UnrecognisedModuleDescriptor} modules that can be handled by the new factory into real
-         * modules
-         */
-        public Object addingService(final ServiceReference serviceReference)
+        PluginState stateResult;
+        try
         {
-            final ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) getBundle().getBundleContext().getService(serviceReference);
-            for (final UnrecognisedModuleDescriptor unrecognised : getModuleDescriptorsByDescriptorClass(UnrecognisedModuleDescriptor.class))
+            if ((getBundle().getState() == Bundle.RESOLVED) || (getBundle().getState() == Bundle.INSTALLED))
             {
-                final Element source = moduleElements.get(unrecognised.getKey());
-                if ((source != null) && factory.hasModuleDescriptor(source.getName()))
+                pluginEventManager.register(this);
+                getBundle().start();
+                boolean requireSpring = shouldHaveSpringContext(getBundle());
+                if (requireSpring && !treatSpringBeanFactoryCreationAsRefresh)
                 {
-                    try
+                    stateResult = PluginState.ENABLING;
+                }
+                else
+                {
+                    stateResult = PluginState.ENABLED;
+                }
+                final BundleContext ctx = getBundle().getBundleContext();
+                helper.onEnable(
+                        new ServiceTracker(ctx, ModuleDescriptor.class.getName(),
+                                new ModuleDescriptorServiceTrackerCustomizer(this)),
+                        new ServiceTracker(ctx, ListableModuleDescriptorFactory.class.getName(),
+                                new UnrecognizedModuleDescriptorServiceTrackerCustomizer(this)));
+
+                // ensure the bean factory is removed when the bundle is stopped
+                // Do we need to unregister this?
+                ctx.addBundleListener(new BundleListener()
+                {
+                    public void bundleChanged(final BundleEvent bundleEvent)
                     {
-                        final ModuleDescriptor<?> descriptor = factory.getModuleDescriptor(source.getName());
-                        descriptor.init(unrecognised.getPlugin(), source);
-                        addModuleDescriptor(descriptor);
-                        if (log.isInfoEnabled())
+                        if ((bundleEvent.getBundle() == getBundle()) && (bundleEvent.getType() == BundleEvent.STOPPED))
                         {
-                            log.info("Turned plugin module " + descriptor.getCompleteKey() + " into module " + descriptor);
+                            helper.onDisable();
+                            setPluginState(PluginState.DISABLED);
                         }
                     }
-                    catch (final Exception e)
-                    {
-                        log.error("Unable to transform " + unrecognised.getCompleteKey() + " into actual plugin module using factory " + factory, e);
-                        unrecognised.setErrorText(e.getMessage());
-                    }
-                }
-            }
-            return factory;
-        }
-
-        /**
-         * Updates any local module descriptors that were created from the modified factory
-         */
-        public void modifiedService(final ServiceReference serviceReference, final Object o)
-        {
-            removedService(serviceReference, o);
-            addingService(serviceReference);
-        }
-
-        /**
-         * Reverts any current module descriptors that were provided from the factory being removed into {@link
-         * UnrecognisedModuleDescriptor} instances.
-         */
-        public void removedService(final ServiceReference serviceReference, final Object o)
-        {
-            final ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) o;
-            for (final Class<ModuleDescriptor<?>> moduleDescriptorClass : factory.getModuleDescriptorClasses())
-            {
-                for (final ModuleDescriptor<?> descriptor : getModuleDescriptorsByDescriptorClass(moduleDescriptorClass))
-                {
-                    final UnrecognisedModuleDescriptor unrecognisedModuleDescriptor = new UnrecognisedModuleDescriptor();
-                    final Element source = moduleElements.get(descriptor.getKey());
-                    if (source != null)
-                    {
-                        unrecognisedModuleDescriptor.init(OsgiPlugin.this, source);
-                        unrecognisedModuleDescriptor.setErrorText(UnrecognisedModuleDescriptorFallbackFactory.DESCRIPTOR_TEXT);
-                        addModuleDescriptor(unrecognisedModuleDescriptor);
-                        if (log.isInfoEnabled())
-                        {
-                            log.info("Removed plugin module " + unrecognisedModuleDescriptor.getCompleteKey() + " as its factory was uninstalled");
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Manages spring context access, including autowiring.
-     *
-     * @since 2.2.0
-     */
-    private static final class SpringContextAccessor
-    {
-        private final Object nativeBeanFactory;
-        private final Method nativeCreateBeanMethod;
-        private final Method nativeAutowireBeanMethod;
-
-        public SpringContextAccessor(final Object applicationContext)
-        {
-            Object beanFactory = null;
-            try
-            {
-                final Method m = applicationContext.getClass().getMethod("getAutowireCapableBeanFactory");
-                beanFactory = m.invoke(applicationContext);
-            }
-            catch (final NoSuchMethodException e)
-            {
-                // Should never happen
-                throw new PluginException("Cannot find createBean method on registered bean factory: " + beanFactory, e);
-            }
-            catch (final IllegalAccessException e)
-            {
-                // Should never happen
-                throw new PluginException("Cannot access createBean method", e);
-            }
-            catch (final InvocationTargetException e)
-            {
-                handleSpringMethodInvocationError(e);
-            }
-
-            nativeBeanFactory = beanFactory;
-            try
-            {
-                nativeCreateBeanMethod = beanFactory.getClass().getMethod("createBean", Class.class, int.class, boolean.class);
-                nativeAutowireBeanMethod = beanFactory.getClass().getMethod("autowireBeanProperties", Object.class, int.class, boolean.class);
-            }
-            catch (final NoSuchMethodException e)
-            {
-                // Should never happen
-                throw new PluginException("Cannot find createBean method on registered bean factory: " + nativeBeanFactory, e);
-            }
-        }
-
-        private void handleSpringMethodInvocationError(final InvocationTargetException e)
-        {
-            if (e.getCause() instanceof Error)
-            {
-                throw (Error) e.getCause();
-            }
-            else if (e.getCause() instanceof RuntimeException)
-            {
-                throw (RuntimeException) e.getCause();
+                });
             }
             else
             {
-                // Should never happen as Spring methods only throw runtime exceptions
-                throw new PluginException("Unable to invoke createBean", e.getCause());
+                throw new OsgiContainerException("Cannot enable the plugin when the bundle is not in the resolved or installed state");
             }
+            return stateResult;
         }
-
-        public <T> T createBean(final Class<T> clazz, final AutowireStrategy autowireStrategy)
+        catch (final BundleException e)
         {
-            if (nativeBeanFactory == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                return clazz.cast(nativeCreateBeanMethod.invoke(nativeBeanFactory, clazz, autowireStrategy.ordinal(), false));
-            }
-            catch (final IllegalAccessException e)
-            {
-                // Should never happen
-                throw new PluginException("Unable to access createBean method", e);
-            }
-            catch (final InvocationTargetException e)
-            {
-                handleSpringMethodInvocationError(e);
-                return null;
-            }
+            throw new OsgiContainerException("Cannot start plugin: " + getKey(), e);
         }
+    }
 
-        public void createBean(final Object instance, final AutowireStrategy autowireStrategy)
+    /**
+     * Disables the plugin by changing the bundle state back to resolved
+     *
+     * @throws OsgiContainerException If the OSGi system threw an exception
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
+     */
+    @Override
+    protected synchronized void disableInternal() throws OsgiContainerException, IllegalPluginStateException
+    {
+        try
         {
-            if (nativeBeanFactory == null)
+            // Only disable underlying bundle if this is a truely dynamic plugin
+            if (!PluginUtils.doesPluginRequireRestart(this))
             {
-                return;
-            }
-
-            try
-            {
-                nativeAutowireBeanMethod.invoke(nativeBeanFactory, instance, autowireStrategy.ordinal(), false);
-            }
-            catch (final IllegalAccessException e)
-            {
-                // Should never happen
-                throw new PluginException("Unable to access createBean method", e);
-            }
-            catch (final InvocationTargetException e)
-            {
-                handleSpringMethodInvocationError(e);
+                helper.onDisable();
+                pluginEventManager.unregister(this);
+                getBundle().stop();
+                treatSpringBeanFactoryCreationAsRefresh = false;
             }
         }
+        catch (final BundleException e)
+        {
+            throw new OsgiContainerException("Cannot stop plugin: " + getKey(), e);
+        }
+    }
+
+    /**
+     * Uninstalls the bundle from the OSGi container
+     * @throws OsgiContainerException If the underlying OSGi system threw an exception
+     * @throws IllegalPluginStateException if the bundle hasn't been created yet
+     */
+    @Override
+    protected void uninstallInternal() throws OsgiContainerException, IllegalPluginStateException
+    {
+        try
+        {
+            if (getBundle().getState() != Bundle.UNINSTALLED)
+            {
+                pluginEventManager.unregister(this);
+                getBundle().uninstall();
+                helper.onUninstall();
+                setPluginState(PluginState.UNINSTALLED);
+            }
+        }
+        catch (final BundleException e)
+        {
+            throw new OsgiContainerException("Cannot uninstall bundle " + getBundle().getSymbolicName());
+        }
+    }
+
+    /**
+     * Adds a module descriptor XML element for later processing, needed for dynamic module support
+     *
+     * @param key The module key
+     * @param element The module element
+     */
+    void addModuleDescriptorElement(final String key, final Element element)
+    {
+        moduleElements.put(key, element);
+    }
+
+    /**
+     * Exposes {@link #removeModuleDescriptor(String)} for package-protected classes
+     *
+     * @param key The module descriptor key
+     */
+    void clearModuleDescriptor(String key)
+    {
+        removeModuleDescriptor(key);
+    }
+
+    /**
+     * Gets the module elements for dynamic module descriptor handling.  Doesn't need to return a copy or anything
+     * immutable because it is only accessed by package-private helper classes
+     *
+     * @return The map of module keys to module XML elements
+     */
+    Map<String, Element> getModuleElements()
+    {
+        return moduleElements;
+    }
+
+    /**
+     * @param bundle The bundle
+     * @return True if the OSGi bundle should have a spring context
+     */
+    static boolean shouldHaveSpringContext(Bundle bundle)
+    {
+        return (bundle.getHeaders().get(SPRING_CONTEXT) != null) ||
+                (bundle.getEntry("META-INF/spring/") != null);
+    }
+
+    /**
+     * Extracts the {@link PackageAdmin} instance from the OSGi container
+     * @param mgr The OSGi container manager
+     * @return The package admin instance, should never be null
+     */
+    private PackageAdmin extractPackageAdminFromOsgi(OsgiContainerManager mgr)
+    {
+        // Get the system bundle (always bundle 0)
+        Bundle bundle = mgr.getBundles()[0];
+
+        // We assume the package admin will always be available
+        final ServiceReference ref = bundle.getBundleContext()
+                .getServiceReference(PackageAdmin.class.getName());
+        return (PackageAdmin) bundle.getBundleContext()
+                .getService(ref);
     }
 }

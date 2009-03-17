@@ -3,7 +3,7 @@ package com.atlassian.plugin.loaders;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.factories.PluginFactory;
-import com.atlassian.plugin.impl.DynamicPlugin;
+import com.atlassian.plugin.impl.AbstractDelegatingPlugin;
 import com.atlassian.plugin.util.FileUtils;
 
 import java.io.File;
@@ -28,13 +28,34 @@ public class BundledPluginLoader extends DirectoryPluginLoader
     }
 
     @Override
-    protected void postProcess(final Plugin plugin)
+    protected Plugin postProcess(final Plugin plugin)
     {
-        if (plugin instanceof DynamicPlugin)
+        return new BundledPluginDelegate(plugin);
+    }
+
+    /**
+     * Delegate that overrides methods to enforce bundled plugin behavior
+     *
+     * @Since 2.2.0
+     */
+    private static class BundledPluginDelegate extends AbstractDelegatingPlugin
+    {
+
+        public BundledPluginDelegate(Plugin delegate)
         {
-            final DynamicPlugin dplugin = (DynamicPlugin) plugin;
-            dplugin.setDeletable(false);
-            dplugin.setBundled(true);
+            super(delegate);
+        }
+
+        @Override
+        public boolean isBundledPlugin()
+        {
+            return true;
+        }
+
+        @Override
+        public boolean isDeleteable()
+        {
+            return false;
         }
     }
 }

@@ -9,6 +9,9 @@ import com.atlassian.plugin.util.VersionStringComparator;
 
 import java.util.*;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 {
     private final Map<String, ModuleDescriptor<?>> modules = newLinkedMap();
@@ -23,6 +26,8 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     private final Date dateLoaded = new Date();
     private volatile PluginState pluginState = PluginState.UNINSTALLED;
 
+    private final Log log = LogFactory.getLog(this.getClass());
+
     public String getName()
     {
         return name;
@@ -31,6 +36,14 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     public void setName(final String name)
     {
         this.name = name;
+    }
+
+    /**
+     * @return the logger used internally
+     */
+    protected Log getLog()
+    {
+        return log;
     }
 
     public String getI18nNameKey()
@@ -165,19 +178,83 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     /**
      * @return true if the plugin has been enabled
      */
+    @Deprecated
     public boolean isEnabled()
     {
         return getPluginState() == PluginState.ENABLED;
     }
 
-    public void enable()
+    public final void enable()
     {
-        pluginState = PluginState.ENABLED;
+        if (pluginState == PluginState.ENABLED || pluginState == PluginState.ENABLING)
+        {
+            return;
+        }
+        if (getLog().isDebugEnabled())
+        {
+            getLog().debug("Enabling plugin '" + getKey() + "'");
+        }
+        try
+        {
+            pluginState = enableInternal();
+        }
+        catch (PluginException ex)
+        {
+            log.warn("Unable to enable plugin '" + getKey() + "'", ex);
+            throw ex;
+        }
+        if (getLog().isDebugEnabled())
+        {
+            getLog().debug("Enabled plugin '" + getKey() + "'");
+        }
     }
 
-    public void disable()
+    /**
+     * Perform any internal enabling logic.  Subclasses should only throw {@link PluginException}.
+     *
+     * @throws PluginException If the plugin could not be enabled
+     * @since 2.2.0
+     * @return Either {@link PluginState#ENABLED} or {@link PluginState#ENABLING}
+     */
+    protected PluginState enableInternal() throws PluginException
     {
-        pluginState = PluginState.DISABLED;
+        return PluginState.ENABLED;
+    }
+
+    public final void disable()
+    {
+        if (pluginState == PluginState.DISABLED)
+        {
+            return;
+        }
+        if (getLog().isDebugEnabled())
+        {
+            getLog().debug("Disabling plugin '" + getKey() + "'");
+        }
+        try
+        {
+            disableInternal();
+            pluginState = PluginState.DISABLED;
+        }
+        catch (PluginException ex)
+        {
+            log.warn("Unable to disable plugin '" + getKey() + "'", ex);
+            throw ex;
+        }
+        if (getLog().isDebugEnabled())
+        {
+            getLog().debug("Disabled plugin '" + getKey() + "'");
+        }
+    }
+
+    /**
+     * Perform any internal disabling logic.  Subclasses should only throw {@link PluginException}.
+     *
+     * @throws PluginException If the plugin could not be disabled
+     * @since 2.2.0
+     */
+    protected void disableInternal() throws PluginException
+    {
     }
 
     public Set<String> getRequiredPlugins()
@@ -190,19 +267,82 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         uninstall();
     }
 
-    public void install()
+    public final void install()
     {
-        pluginState = PluginState.INSTALLED;
-
+        if (pluginState == PluginState.INSTALLED)
+        {
+            return;
+        }
+        if (getLog().isDebugEnabled())
+        {
+            getLog().debug("Installing plugin '" + getKey() + "'");
+        }
+        try
+        {
+            installInternal();
+            pluginState = PluginState.INSTALLED;
+        }
+        catch (PluginException ex)
+        {
+            log.warn("Unable to install plugin '" + getKey() + "'", ex);
+            throw ex;
+        }
+        if (getLog().isDebugEnabled())
+        {
+            getLog().debug("Installed plugin '" + getKey() + "'");
+        }
     }
-    public void uninstall()
+
+    /**
+     * Perform any internal installation logic.  Subclasses should only throw {@link PluginException}.
+     *
+     * @throws PluginException If the plugin could not be installed
+     * @since 2.2.0
+     */
+    protected void installInternal() throws PluginException
     {
-        pluginState = PluginState.UNINSTALLED;
+    }
+
+    public final void uninstall()
+    {
+        if (pluginState == PluginState.UNINSTALLED)
+        {
+            return;
+        }
+        if (getLog().isDebugEnabled())
+        {
+            getLog().debug("Uninstalling plugin '" + getKey() + "'");
+        }
+        try
+        {
+            uninstallInternal();
+            pluginState = PluginState.UNINSTALLED;
+        }
+        catch (PluginException ex)
+        {
+            log.warn("Unable to uninstall plugin '" + getKey() + "'", ex);
+            throw ex;
+        }
+        if (getLog().isDebugEnabled())
+        {
+            getLog().debug("Uninstalled plugin '" + getKey() + "'");
+        }
+    }
+
+    /**
+     * Perform any internal uninstallation logic.  Subclasses should only throw {@link PluginException}.
+     *
+     * @throws PluginException If the plugin could not be uninstalled
+     * @since 2.2.0
+     */
+    protected void uninstallInternal() throws PluginException
+    {
     }
 
     /**
      * Setter for the enabled state of a plugin. If this is set to false then the plugin will not execute.
      */
+    @Deprecated
     public void setEnabled(final boolean enabled)
     {
         if (enabled)
@@ -240,6 +380,11 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     public Date getDateLoaded()
     {
         return dateLoaded;
+    }
+
+    public boolean isBundledPlugin()
+    {
+        return false;
     }
 
     /**

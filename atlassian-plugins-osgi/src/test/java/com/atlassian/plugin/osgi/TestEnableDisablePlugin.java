@@ -30,6 +30,7 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
         pluginManager.enablePlugin("enabledisable");
 
         plugin = pluginManager.getPlugin("enabledisable");
+
         assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
     }
 
