@@ -149,9 +149,22 @@ public class DefaultPluginTransformer implements PluginTransformer
         return null;
     }
 
-    private static String generateCacheName(File file)
+    /**
+     * Generate a cache name that incorporates the timestap and preserves the extension
+     * @param file The original file to cache
+     * @return The new file name
+     */
+    static String generateCacheName(File file)
     {
-        return file.getName()+"_"+file.lastModified();
+        int dotPos = file.getName().lastIndexOf('.');
+        if (dotPos > 0 && file.getName().length() - 1 > dotPos)
+        {
+            return file.getName().substring(0, dotPos) + "_" + file.lastModified() + file.getName().substring(dotPos);
+        }
+        else
+        {
+            return file.getName() + "_" + file.lastModified();
+        }
     }
 
 

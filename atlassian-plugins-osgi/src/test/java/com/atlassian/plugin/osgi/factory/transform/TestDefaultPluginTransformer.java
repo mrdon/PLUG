@@ -83,7 +83,8 @@ public class TestDefaultPluginTransformer extends TestCase
         });
 
         assertNotNull(copy);
-        assertEquals(file.getName()+"_"+file.lastModified(), copy.getName());
+        assertTrue(copy.getName().contains(String.valueOf(file.lastModified())));
+        assertTrue(copy.getName().endsWith(".jar"));
         assertEquals(tmpDir.getAbsolutePath(), copy.getParentFile().getParentFile().getAbsolutePath());
         final JarFile jar = new JarFile(copy);
         final Attributes attrs = jar.getManifest().getMainAttributes();
@@ -91,6 +92,21 @@ public class TestDefaultPluginTransformer extends TestCase
         assertEquals("1.1", attrs.getValue(Constants.BUNDLE_VERSION));
 
         assertNotNull(jar.getEntry("META-INF/spring/atlassian-plugins-host-components.xml"));
+    }
+
+    public void testGenerateCacheName() throws IOException
+    {
+        File tmp = File.createTempFile("asdf", ".jar", tmpDir);
+        assertTrue(DefaultPluginTransformer.generateCacheName(tmp).endsWith(".jar"));
+        tmp = File.createTempFile("asdf", "asdf", tmpDir);
+        assertTrue(DefaultPluginTransformer.generateCacheName(tmp).endsWith(String.valueOf(tmp.lastModified())));
+
+        tmp = File.createTempFile("asdf", "asdf.", tmpDir);
+        assertTrue(DefaultPluginTransformer.generateCacheName(tmp).endsWith(String.valueOf(tmp.lastModified())));
+
+        tmp = File.createTempFile("asdf", "asdf.s", tmpDir);
+        assertTrue(DefaultPluginTransformer.generateCacheName(tmp).endsWith(String.valueOf(".s")));
+
     }
 
 }
