@@ -85,6 +85,12 @@ public class JarPluginArtifact implements PluginArtifact
         return jarFile.getName();
     }
 
+    @Override
+    public String toString()
+    {
+        return getName();
+    }
+
     /**
      * @return a buffered file input stream of the file on disk. This input stream
      * is not resettable.

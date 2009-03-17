@@ -10,17 +10,24 @@ import com.atlassian.plugin.test.PluginJarBuilder;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.Filter;
+import org.apache.commons.logging.Log;
 import org.osgi.framework.Constants;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Matchers.contains;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.ByteArrayOutputStream;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import java.lang.reflect.Field;
 
 import javax.print.attribute.AttributeSet;
 
@@ -106,9 +113,11 @@ public class TestGenerateManifestStage extends TestCase
 
     }
 
-    /* temporarily disabled.  Should be enabled by 2.2.0 final
-    public void testGenerateManifestFailNoSpringWithExisting() throws Exception
+    public void testGenerateManifestWarnNoSpringWithExisting() throws Exception
     {
+        Log log = mock(Log.class);
+        GenerateManifestStage.log = log;
+        
         final File plugin = new PluginJarBuilder("plugin")
                 .addFormattedResource("META-INF/MANIFEST.MF",
                         "Manifest-Version: 1.0",
@@ -122,17 +131,33 @@ public class TestGenerateManifestStage extends TestCase
         final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
         context.setShouldRequireSpring(true);
         context.getExtraImports().add(AttributeSet.class.getPackage().getName());
-        try
-        {
-            executeStage(context);
-            fail();
-        }
-        catch (PluginParseException ex)
-        {
-            //success
-        }
+        executeStage(context);
+        verify(log).warn(contains("'Spring-Context' is missing"));
     }
-    */
+
+    public void testGenerateManifestWarnNoTimeout() throws Exception
+    {
+        Log log = mock(Log.class);
+        GenerateManifestStage.log = log;
+
+        final File plugin = new PluginJarBuilder("plugin")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0",
+                        "Import-Package: javax.swing",
+                        "Bundle-SymbolicName: my.foo.symbolicName",
+                        "Spring-Context: *",
+                        "Bundle-ClassPath: .,foo")
+                .addResource("foo/bar.txt", "Something")
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
+
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        context.setShouldRequireSpring(true);
+        context.getExtraImports().add(AttributeSet.class.getPackage().getName());
+        executeStage(context);
+        verify(log).warn(contains("Please add ';timeout:=60'"));
+    }
+
 
     public void testGenerateManifest_innerjars() throws URISyntaxException, PluginParseException, IOException
     {

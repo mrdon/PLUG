@@ -30,7 +30,7 @@ import java.util.jar.Manifest;
 public class GenerateManifestStage implements TransformStage
 {
     private static final String SPRING_CONTEXT_DEFAULT = "*;timeout:=60";
-    private static final Log log = LogFactory.getLog(GenerateManifestStage.class);
+    static Log log = LogFactory.getLog(GenerateManifestStage.class);
 
     public void execute(TransformContext context) throws PluginTransformationException
     {
@@ -208,7 +208,7 @@ public class GenerateManifestStage implements TransformStage
     {
         if (context.shouldRequireSpring())
         {
-            String header = (String) context.getManifest().getMainAttributes().get("Spring-Context");
+            String header = (String) context.getManifest().getMainAttributes().getValue("Spring-Context");
             if (header == null)
             {
                 log.warn("The Spring Manifest header 'Spring-Context' is missing in jar '" +
