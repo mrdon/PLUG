@@ -43,9 +43,9 @@ public class TestPluginInstall extends PluginInContainerTestBase
         final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         factory.addModuleDescriptor("object", ObjectModuleDescriptor.class);
 
-        final File pluginJar = new PluginJarBuilder("first")
+        final File pluginJar = new PluginJarBuilder("testUpgradeOfBundledPlugin")
                 .addFormattedResource("atlassian-plugin.xml",
-                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "<atlassian-plugin name='Test' key='test.bundled.plugin' pluginsVersion='2'>",
                         "    <plugin-info>",
                         "        <version>1.0</version>",
                         "    </plugin-info>",
@@ -57,12 +57,12 @@ public class TestPluginInstall extends PluginInContainerTestBase
                 .build();
         initBundlingPluginManager(factory, pluginJar);
         assertEquals(1, pluginManager.getEnabledPlugins().size());
-        assertEquals("Test", pluginManager.getPlugin("test.plugin").getName());
-        assertEquals("my.Foo", pluginManager.getPlugin("test.plugin").getModuleDescriptor("obj").getModule().getClass().getName());
+        assertEquals("Test", pluginManager.getPlugin("test.bundled.plugin").getName());
+        assertEquals("my.Foo", pluginManager.getPlugin("test.bundled.plugin").getModuleDescriptor("obj").getModule().getClass().getName());
 
-        final File pluginJar2 = new PluginJarBuilder("second")
+        final File pluginJar2 = new PluginJarBuilder("testUpgradeOfBundledPlugin")
                 .addFormattedResource("atlassian-plugin.xml",
-                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "<atlassian-plugin name='Test' key='test.bundled.plugin' pluginsVersion='2'>",
                         "    <plugin-info>",
                         "        <version>1.0</version>",
                         "    </plugin-info>",
@@ -76,8 +76,8 @@ public class TestPluginInstall extends PluginInContainerTestBase
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
 
         assertEquals(1, pluginManager.getEnabledPlugins().size());
-        assertEquals("Test", pluginManager.getPlugin("test.plugin").getName());
-        assertEquals("my.Bar", pluginManager.getPlugin("test.plugin").getModuleDescriptor("obj").getModule().getClass().getName());
+        assertEquals("Test", pluginManager.getPlugin("test.bundled.plugin").getName());
+        assertEquals("my.Bar", pluginManager.getPlugin("test.bundled.plugin").getModuleDescriptor("obj").getModule().getClass().getName());
 
     }
 
