@@ -57,7 +57,7 @@ public class GenerateManifestStage implements TransformStage
             }
             else
             {
-                // We don't care about the modules, so we pass null to match all
+                // We don't care about the modules, so we pass null
                 XmlDescriptorParser parser = new XmlDescriptorParser(context.getDescriptorDocument(), null);
                 PluginInformation info = parser.getPluginInformation();
 
