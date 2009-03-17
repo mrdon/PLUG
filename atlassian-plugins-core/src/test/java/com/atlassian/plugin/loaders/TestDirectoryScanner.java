@@ -36,6 +36,24 @@ public class TestDirectoryScanner extends AbstractTestClassLoader
         assertEquals("pooh-test-plugin.jar", unit.getPath().getName());
     }
 
+    public void testSkipDot() throws Exception
+    {
+        File pluginsDirectory = pluginsTestDir;
+        assertNotNull(File.createTempFile(".asdf", ".jar", pluginsDirectory));
+        Scanner scanner = new DirectoryScanner(pluginsDirectory);
+        scanner.scan();
+        Collection<DeploymentUnit> deployedUnits = scanner.getDeploymentUnits();
+        assertEquals(2, deployedUnits.size());
+
+        // units should be returned ordered alphabetically
+        Iterator iterator = deployedUnits.iterator();
+        DeploymentUnit unit = (DeploymentUnit) iterator.next();
+        assertEquals("paddington-test-plugin.jar", unit.getPath().getName());
+
+        unit = (DeploymentUnit) iterator.next();
+        assertEquals("pooh-test-plugin.jar", unit.getPath().getName());
+    }
+
     public void testRemove()
     {
         File pluginsDirectory = pluginsTestDir;

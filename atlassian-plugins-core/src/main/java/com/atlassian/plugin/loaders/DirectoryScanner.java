@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.*;
 
 import com.atlassian.plugin.loaders.classloading.*;
@@ -99,9 +100,17 @@ class DirectoryScanner implements com.atlassian.plugin.loaders.classloading.Scan
         }
         clear(removedFiles);
 
-        // Checks for new files.
+        // Checks for new files that don't start in '.'
         Collection<DeploymentUnit> result = new ArrayList<DeploymentUnit>();
-        File files[] = pluginsDirectory.listFiles();
+        File files[] = pluginsDirectory.listFiles(new FilenameFilter()
+        {
+
+            public boolean accept(File dir, String name)
+            {
+                return !name.startsWith(".");
+            }
+        });
+
         if (files == null)
         {
             log.error("listFiles returned null for directory " + pluginsDirectory.getAbsolutePath());
