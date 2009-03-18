@@ -31,7 +31,7 @@ public abstract class AbstractFileServerServlet extends HttpServlet
         }
         catch (DownloadException e)
         {
-            log.error("Error while serving file", e);
+            log.error("Error while serving file for request:" + httpServletRequest.getRequestURI(), e);
             if (!httpServletResponse.isCommitted())
             {
                 httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while serving file");
