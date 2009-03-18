@@ -1,19 +1,15 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.parsers.XmlDescriptorParser;
-import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.parsers.XmlDescriptorParser;
+
+import org.apache.commons.lang.Validate;
+import org.dom4j.Element;
 
 import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Set;
-
-import org.dom4j.Element;
-import org.apache.commons.lang.Validate;
 
 /**
  * Descriptor parser that handles special tasks for osgi plugins such as recording the
@@ -29,7 +25,7 @@ public class OsgiPluginXmlDescriptorParser extends XmlDescriptorParser
      * @throws com.atlassian.plugin.PluginParseException
      *          if there is a problem reading the descriptor from the XML {@link java.io.InputStream}.
      */
-    public OsgiPluginXmlDescriptorParser(InputStream source, String... applicationKeys) throws PluginParseException
+    public OsgiPluginXmlDescriptorParser(final InputStream source, final String... applicationKeys) throws PluginParseException
     {
         super(source, applicationKeys);
         Validate.notNull(source, "The descriptor source must not be null");
@@ -45,10 +41,10 @@ public class OsgiPluginXmlDescriptorParser extends XmlDescriptorParser
      * @throws PluginParseException
      */
     @Override
-    protected ModuleDescriptor createModuleDescriptor(Plugin plugin, Element element, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
+    protected ModuleDescriptor<?> createModuleDescriptor(final Plugin plugin, final Element element, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        ModuleDescriptor descriptor = super.createModuleDescriptor(plugin, element, moduleDescriptorFactory);
-        String key = (descriptor != null ? descriptor.getKey() : element.attributeValue("key"));
+        final ModuleDescriptor<?> descriptor = super.createModuleDescriptor(plugin, element, moduleDescriptorFactory);
+        final String key = (descriptor != null ? descriptor.getKey() : element.attributeValue("key"));
         ((OsgiPlugin) plugin).addModuleDescriptorElement(key, element);
         return descriptor;
     }

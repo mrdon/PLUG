@@ -1,13 +1,12 @@
 package com.atlassian.plugin.osgi.factory;
 
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
-import com.atlassian.plugin.PluginParseException;
-
-import java.io.InputStream;
-import java.util.Set;
 
 import org.apache.commons.lang.Validate;
+
+import java.io.InputStream;
 
 /**
  * Descriptor parser factory that creates parsers for Osgi plugins.  Must only be used with {@link OsgiPlugin} instances.
@@ -22,7 +21,7 @@ public class OsgiPluginXmlDescriptorParserFactory implements DescriptorParserFac
      * @return The parser
      * @throws PluginParseException
      */
-    public DescriptorParser getInstance(InputStream source, String... applicationKeys) throws PluginParseException
+    public DescriptorParser getInstance(final InputStream source, final String... applicationKeys) throws PluginParseException
     {
         Validate.notNull(source, "The descriptor source must not be null");
         return new OsgiPluginXmlDescriptorParser(source, applicationKeys);

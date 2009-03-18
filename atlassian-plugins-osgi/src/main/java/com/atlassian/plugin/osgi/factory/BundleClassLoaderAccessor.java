@@ -1,8 +1,10 @@
 package com.atlassian.plugin.osgi.factory;
 
+import com.atlassian.plugin.util.resource.AlternativeResourceLoader;
+import com.atlassian.plugin.util.resource.NoOpAlternativeResourceLoader;
+
 import org.apache.commons.collections.iterators.IteratorEnumeration;
 import org.apache.commons.lang.Validate;
-import org.apache.log4j.Logger;
 import org.osgi.framework.Bundle;
 
 import java.io.IOException;
@@ -10,17 +12,12 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
 
-import com.atlassian.plugin.util.resource.AlternativeResourceLoader;
-import com.atlassian.plugin.util.resource.NoOpAlternativeResourceLoader;
-
 /**
  * Utility methods for accessing a bundle as if it was a classloader.
  */
 class BundleClassLoaderAccessor
 {
-    private static final Logger log = Logger.getLogger(BundleClassLoaderAccessor.class);
-
-    static ClassLoader getClassLoader(final Bundle bundle, AlternativeResourceLoader alternativeResourceLoader)
+    static ClassLoader getClassLoader(final Bundle bundle, final AlternativeResourceLoader alternativeResourceLoader)
     {
         return new BundleClassLoader(bundle, alternativeResourceLoader);
     }
@@ -60,10 +57,10 @@ class BundleClassLoaderAccessor
             return bundle.loadClass(name);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public Enumeration<URL> findResources(final String name) throws IOException
         {
-            @SuppressWarnings("unchecked")
             Enumeration<URL> e = bundle.getResources(name);
 
             // For some reason, getResources() sometimes returns nothing, yet getResource() will return one.  This code

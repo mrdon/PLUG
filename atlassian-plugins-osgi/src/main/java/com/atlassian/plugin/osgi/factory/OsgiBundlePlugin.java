@@ -1,19 +1,26 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.*;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.Resourced;
+import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
+import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
-import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.elements.ResourceLocation;
-import com.atlassian.plugin.elements.ResourceDescriptor;
-
-import java.util.*;
-import java.net.URL;
-import java.io.InputStream;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
+
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Plugin that wraps an OSGi bundle that has no plugin descriptor.
@@ -27,118 +34,139 @@ public class OsgiBundlePlugin extends AbstractPlugin
     private final String key;
     private final ClassLoader bundleClassLoader;
 
-    public OsgiBundlePlugin(Bundle bundle, String key, PluginEventManager pluginEventManager)
+    public OsgiBundlePlugin(final Bundle bundle, final String key, final PluginEventManager pluginEventManager)
     {
-        this.bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
+        bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
         this.bundle = bundle;
-        this.pluginInformation = new PluginInformation();
+        pluginInformation = new PluginInformation();
         pluginInformation.setDescription((String) bundle.getHeaders().get(Constants.BUNDLE_DESCRIPTION));
         pluginInformation.setVersion((String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
         this.key = key;
-        this.dateLoaded = new Date();
+        dateLoaded = new Date();
     }
-    
 
+
+    @Override
     public int getPluginsVersion()
     {
         return 2;
     }
 
-    public void setPluginsVersion(int version)
+    @Override
+    public void setPluginsVersion(final int version)
     {
         throw new UnsupportedOperationException("Not available");
     }
 
+    @Override
     public String getName()
     {
         return (String) bundle.getHeaders().get("Bundle-Name");
     }
 
-    public void setName(String name)
+    @Override
+    public void setName(final String name)
     {
         throw new UnsupportedOperationException("Not available");
     }
 
+    @Override
     public String getI18nNameKey()
     {
         return key;
     }
 
-    public void setI18nNameKey(String i18nNameKey)
+    @Override
+    public void setI18nNameKey(final String i18nNameKey)
     {
         throw new UnsupportedOperationException("Not available");
     }
 
+    @Override
     public String getKey()
     {
         return key;
     }
 
-    public void setKey(String aPackage)
+    @Override
+    public void setKey(final String aPackage)
     {
         throw new UnsupportedOperationException("Not available");
     }
 
-    public void addModuleDescriptor(ModuleDescriptor moduleDescriptor)
+    @Override
+    public void addModuleDescriptor(final ModuleDescriptor<?> moduleDescriptor)
     {
         throw new UnsupportedOperationException("Not available");
     }
 
-    public Collection getModuleDescriptors()
+    @Override
+    public Collection<ModuleDescriptor<?>> getModuleDescriptors()
     {
         return Collections.emptyList();
     }
 
-    public ModuleDescriptor getModuleDescriptor(String key)
+    @Override
+    public ModuleDescriptor<?> getModuleDescriptor(final String key)
     {
         return null;
     }
 
-    public List getModuleDescriptorsByModuleClass(Class aClass)
+    @Override
+    public <M> List<ModuleDescriptor<M>> getModuleDescriptorsByModuleClass(final Class<M> aClass)
     {
-        return null;
+        return Collections.emptyList();
     }
 
+    @Override
     public boolean isEnabledByDefault()
     {
         return true;
     }
 
-    public void setEnabledByDefault(boolean enabledByDefault)
+    @Override
+    public void setEnabledByDefault(final boolean enabledByDefault)
     {
         throw new UnsupportedOperationException("Not available");
     }
 
+    @Override
     public PluginInformation getPluginInformation()
     {
         return pluginInformation;
     }
 
-    public void setPluginInformation(PluginInformation pluginInformation)
+    @Override
+    public void setPluginInformation(final PluginInformation pluginInformation)
     {
         throw new UnsupportedOperationException("Not available");
     }
 
-    public void setResources(Resourced resources)
+    @Override
+    public void setResources(final Resourced resources)
     {
         throw new UnsupportedOperationException("Not available");
     }
 
+    @Override
     public boolean isSystemPlugin()
     {
         return false;
     }
 
+    @Override
     public boolean containsSystemModule()
     {
         return false;
     }
 
-    public void setSystemPlugin(boolean system)
+    @Override
+    public void setSystemPlugin(final boolean system)
     {
         throw new UnsupportedOperationException("Not available");
     }
 
+    @Override
     public Date getDateLoaded()
     {
         return dateLoaded;
@@ -160,22 +188,26 @@ public class OsgiBundlePlugin extends AbstractPlugin
     }
 
 
-    public List getResourceDescriptors()
+    @Override
+    public List<ResourceDescriptor> getResourceDescriptors()
     {
         return Collections.emptyList();
     }
 
-    public List getResourceDescriptors(String type)
+    @Override
+    public List<ResourceDescriptor> getResourceDescriptors(final String type)
     {
         return Collections.emptyList();
     }
 
-    public ResourceLocation getResourceLocation(String type, String name)
+    @Override
+    public ResourceLocation getResourceLocation(final String type, final String name)
     {
         return null;
     }
 
-    public ResourceDescriptor getResourceDescriptor(String type, String name)
+    @Override
+    public ResourceDescriptor getResourceDescriptor(final String type, final String name)
     {
         return null;
     }
@@ -202,7 +234,7 @@ public class OsgiBundlePlugin extends AbstractPlugin
         {
             bundle.uninstall();
         }
-        catch (BundleException e)
+        catch (final BundleException e)
         {
             throw new PluginException(e);
         }
@@ -216,7 +248,7 @@ public class OsgiBundlePlugin extends AbstractPlugin
             bundle.start();
             return PluginState.ENABLED;
         }
-        catch (BundleException e)
+        catch (final BundleException e)
         {
             throw new PluginException(e);
         }
@@ -229,7 +261,7 @@ public class OsgiBundlePlugin extends AbstractPlugin
         {
             bundle.stop();
         }
-        catch (BundleException e)
+        catch (final BundleException e)
         {
             throw new PluginException(e);
         }
