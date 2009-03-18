@@ -1,9 +1,8 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.osgi.container.OsgiContainerException;
+
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleListener;
 import org.osgi.util.tracker.ServiceTracker;
 
 import java.io.InputStream;

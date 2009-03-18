@@ -1,27 +1,25 @@
 package com.atlassian.plugin.osgi.factory;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.Constants;
-import org.osgi.framework.BundleListener;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.packageadmin.ExportedPackage;
-import org.apache.commons.lang.Validate;
-
-import java.net.URL;
-import java.io.InputStream;
-import java.util.Set;
-import java.util.HashSet;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
-
 import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.IllegalPluginStateException;
-import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
+import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
+import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
+
+import org.apache.commons.lang.Validate;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.service.packageadmin.ExportedPackage;
+import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.util.tracker.ServiceTracker;
+
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Helper class that implements the methods assuming the OSGi plugin has been installed
@@ -43,12 +41,12 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
      * @param packageAdmin The package admin
      * @param requireSpring Whether spring is required for autowiring
      */
-    public OsgiPluginInstalledHelper(Bundle bundle, PackageAdmin packageAdmin, boolean requireSpring)
+    public OsgiPluginInstalledHelper(final Bundle bundle, final PackageAdmin packageAdmin, final boolean requireSpring)
     {
         Validate.notNull(bundle);
         Validate.notNull(packageAdmin);
         this.bundle = bundle;
-        this.bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
+        bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
         this.packageAdmin = packageAdmin;
         this.requireSpring = requireSpring;
     }
@@ -58,17 +56,17 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
         return bundle;
     }
 
-    public <T> Class<T> loadClass(String clazz, Class<?> callingClass) throws ClassNotFoundException
+    public <T> Class<T> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
     {
         return BundleClassLoaderAccessor.loadClass(getBundle(), clazz, callingClass);
     }
 
-    public URL getResource(String name)
+    public URL getResource(final String name)
     {
         return bundleClassLoader.getResource(name);
     }
 
-    public InputStream getResourceAsStream(String name)
+    public InputStream getResourceAsStream(final String name)
     {
         return bundleClassLoader.getResourceAsStream(name);
     }
@@ -83,11 +81,11 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
         throw new IllegalPluginStateException("Plugin '" + bundle.getSymbolicName() + "' has already been installed");
     }
 
-    public void onEnable(ServiceTracker... serviceTrackers) throws OsgiContainerException
+    public void onEnable(final ServiceTracker... serviceTrackers) throws OsgiContainerException
     {
         Validate.notNull(serviceTrackers);
         this.serviceTrackers = serviceTrackers;
-        for (ServiceTracker svc : serviceTrackers)
+        for (final ServiceTracker svc : serviceTrackers)
         {
             svc.open();
         }
@@ -95,7 +93,7 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
 
     public void onDisable() throws OsgiContainerException
     {
-        for (ServiceTracker svc : serviceTrackers)
+        for (final ServiceTracker svc : serviceTrackers)
         {
             svc.close();
         }
@@ -117,7 +115,7 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
      * @return The autowired instance
      * @throws IllegalPluginStateException If spring is required but not available
      */
-    public <T> T autowire(Class<T> clazz, AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalPluginStateException
+    public <T> T autowire(final Class<T> clazz, final AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalPluginStateException
     {
         if (requireSpring)
         {
@@ -130,11 +128,11 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
             {
                 return clazz.newInstance();
             }
-            catch (InstantiationException e)
+            catch (final InstantiationException e)
             {
                 throw new PluginException("Unable to instantiate " + clazz, e);
             }
-            catch (IllegalAccessException e)
+            catch (final IllegalAccessException e)
             {
                 throw new PluginException("Unable to access " + clazz, e);
             }
@@ -144,13 +142,13 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
     /**
      * If spring is required, it looks for the spring application context and calls autowire().  If not, the object
      * is untouched.
-     * 
+     *
      * @param instance The instance to autowire
      * @param autowireStrategy The autowire strategy to use The strategy to use, only respected if spring is available
      * @return The autowired instance
      * @throws IllegalPluginStateException If spring is required but not available
      */
-    public void autowire(Object instance, AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalPluginStateException
+    public void autowire(final Object instance, final AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalPluginStateException
     {
         // Only do anything if spring is required
         if (requireSpring)
@@ -198,7 +196,7 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
         return keys;
     }
 
-    public void setPluginContainer(Object container)
+    public void setPluginContainer(final Object container)
     {
         if (container == null)
         {
