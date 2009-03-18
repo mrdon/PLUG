@@ -18,14 +18,16 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Default component registrar that also can write registered host components into the OSGi service registry.
  */
 public class DefaultComponentRegistrar implements ComponentRegistrar
 {
-    private final List<HostComponentRegistration> registry = new ArrayList<HostComponentRegistration>();
+    private final List<HostComponentRegistration> registry = new CopyOnWriteArrayList<HostComponentRegistration>();
 
     private final Log log = LogFactory.getLog(DefaultComponentRegistrar.class);
 
@@ -53,12 +55,12 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
             reg.getProperties().put(HOST_COMPONENT_FLAG, Boolean.TRUE.toString());
 
             // If no bean name specified, generate one that will be consistent across restarts
-            String beanName = reg.getProperties().get(PropertyBuilder.BEAN_NAME);
+            final String beanName = reg.getProperties().get(PropertyBuilder.BEAN_NAME);
             if (beanName == null)
             {
                 reg.getProperties().put(PropertyBuilder.BEAN_NAME, "hostComponent-"+System.identityHashCode(reg.getInstance().getClass().getName().hashCode()));
             }
-            
+
             if (log.isDebugEnabled())
             {
                 log.debug("Registering: " + Arrays.asList(names) + " instance " + reg.getInstance() + "with properties: " + reg.getProperties());
@@ -76,12 +78,12 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
                 services.add(sreg);
             }
         }
-        return services;
+        return Collections.unmodifiableList(services);
     }
 
     public List<HostComponentRegistration> getRegistry()
     {
-        return registry;
+        return Collections.unmodifiableList(registry);
     }
 
     /**
