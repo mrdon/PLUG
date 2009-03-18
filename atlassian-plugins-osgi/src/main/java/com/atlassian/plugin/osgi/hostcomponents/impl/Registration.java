@@ -2,11 +2,9 @@ package com.atlassian.plugin.osgi.hostcomponents.impl;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Arrays;
-
-import org.osgi.framework.ServiceRegistration;
 
 
 /**
@@ -14,20 +12,22 @@ import org.osgi.framework.ServiceRegistration;
  */
 class Registration implements HostComponentRegistration
 {
-    private String[] mainInterfaces;
-    private Class[] mainInterfaceClasses;
+    private final String[] mainInterfaces;
+    private final Class<?>[] mainInterfaceClasses;
+    private final Dictionary<String,String> properties = new Hashtable<String,String>();
     private Object instance;
-    private Dictionary<String,String> properties = new Hashtable<String,String>();
 
-    public Registration(Class[] ifs)
+    public Registration(final Class<?>[] ifs)
     {
-        this.mainInterfaceClasses = ifs;
+        mainInterfaceClasses = ifs;
         mainInterfaces = new String[ifs.length];
         for (int x=0; x<ifs.length; x++)
         {
             if (!ifs[x].isInterface())
+            {
                 throw new IllegalArgumentException("Services can only be registered against interfaces");
-            
+            }
+
             mainInterfaces[x] = ifs[x].getName();
         }
     }
@@ -37,7 +37,7 @@ class Registration implements HostComponentRegistration
         return instance;
     }
 
-    public void setInstance(Object instance)
+    public void setInstance(final Object instance)
     {
         this.instance = instance;
     }
@@ -52,25 +52,42 @@ class Registration implements HostComponentRegistration
         return mainInterfaces;
     }
 
-    public Class[] getMainInterfaceClasses()
+    public Class<?>[] getMainInterfaceClasses()
     {
         return mainInterfaceClasses;
     }
 
-    public boolean equals(Object o)
+    @Override
+    public boolean equals(final Object o)
     {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+        {
+            return true;
+        }
+        if ((o == null) || (getClass() != o.getClass()))
+        {
+            return false;
+        }
 
-        Registration that = (Registration) o;
+        final Registration that = (Registration) o;
 
-        if (!instance.equals(that.instance)) return false;
-        if (!Arrays.equals(mainInterfaces, that.mainInterfaces)) return false;
-        if (!properties.equals(that.properties)) return false;
+        if (!instance.equals(that.instance))
+        {
+            return false;
+        }
+        if (!Arrays.equals(mainInterfaces, that.mainInterfaces))
+        {
+            return false;
+        }
+        if (!properties.equals(that.properties))
+        {
+            return false;
+        }
 
         return true;
     }
 
+    @Override
     public int hashCode()
     {
         int result;
