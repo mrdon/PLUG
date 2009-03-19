@@ -17,6 +17,10 @@
         <profile>
             <id>perftest</id>
             <properties>
+                <jmeter.home>/opt/performance/tools/jmeter</jmeter.home>
+                <history.directory>/opt/performance/history/plugins2/${project.artifactid}-${project.version}-${java.specification.version}</history.directory>
+                <jprofiler.home>/opt/performance/tools/jprofiler5/</jprofiler.home>
+                <!--TODO: JVM Args? -->
                 <skipTests>true</skipTests>
             </properties>
             <build>
@@ -41,16 +45,25 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>chronos-maven-plugin</artifactId>
-                        <version>1.0-atlassian-SNAPSHOT</version>
+                        <version>1.0-atlassian-2</version>
                         <configuration>
-                            <jmeterhome>/Users/dbrown/incoming/jakarta-jmeter-2.3.2</jmeterhome>
+                            <jmeterhome>${jmeter.home}</jmeterhome>
+                            <heap>1024m</heap>
+                            <historydir>${history.directory}</historydir>
                             <sysproperties>
                                 <property>
                                     <name>script.base</name>
                                     <value>${project.build.directory}/performanceTest</value>
                                 </property>
+                                <property>
+                                    <name>loops.testlegacyframework</name>
+                                    <value>10</value>
+                                </property>
+                                <property>
+                                    <name>className</name>
+                                    <value>com.atlassian.plugin.osgi.performance.TestLegacyFrameworkRestart</value>
+                                </property>
                             </sysproperties>
-                            <heap>1024m</heap>
                             <!--<options>
                                 <value>-Xdebug</value>
                                 <value>-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005</value>
@@ -62,30 +75,52 @@
                                 <id>perftest-legacy</id>
                                 <phase>integration-test</phase>
                                 <configuration>
-                                    <input>
-                                        ${basedir}/src/test/jmeter/tests.jmx
-                                    </input>
-                                    <sysproperties>
-                                        <className>com.atlassian.plugin.osgi.performance.TestLegacyFrameworkRestart
-                                        </className>
-                                    </sysproperties>
+                                    <dataid>perftest-legacy</dataid>
+                                    <input>${project.build.directory}/test-classes/perftest-legacy.jmx</input>
                                 </configuration>
                                 <goals>
                                     <goal>jmeter</goal>
-                                    <!--<goal>savehistory</goal>-->
+                                    <goal>savehistory</goal>
                                 </goals>
                             </execution>
                         </executions>
                     </plugin>
                 </plugins>
             </build>
+            <reporting>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>chronos-maven-plugin</artifactId>
+                        <version>1.0-atlassian-2</version>
+                        <configuration>
+                            <historydir>${history.directory}</historydir>
+                        </configuration>
+                        <reportSets>
+                            <reportSet>
+                                <id>perftest-legacy</id>
+                                <configuration>
+                                    <dataid>perftest-legacy</dataid>
+                                    <reportid>perftest-legacy</reportid>
+                                    <title>JMeter Plugins 2 Legacy Report</title>
+                                    <description>
+                                        <![CDATA[Test Report]]>
+                                    </description>
+                                </configuration>
+                                <reports>
+                                    <report>report</report>
+                                    <report>historyreport</report>
+                                </reports>
+                            </reportSet>
+                        </reportSets>
+                    </plugin>
+                </plugins>
+            </reporting>
         </profile>
-
     </profiles>
 
     <build>
         <plugins>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>

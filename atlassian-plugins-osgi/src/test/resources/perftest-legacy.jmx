@@ -17,11 +17,6 @@
             <stringProp name="Argument.value">${__P(className,.)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="resultDir" elementType="Argument">
-            <stringProp name="Argument.name">resultDir</stringProp>
-            <stringProp name="Argument.value">${scriptbase}/results</stringProp>
-            <stringProp name="Argument.metadata">=</stringProp>
-          </elementProp>
           <elementProp name="packagePattern" elementType="Argument">
             <stringProp name="Argument.name">packagePattern</stringProp>
             <stringProp name="Argument.value">com.atlassian.plugin.osgi.performance</stringProp>
@@ -32,13 +27,28 @@
       <stringProp name="TestPlan.user_define_classpath"></stringProp>
     </TestPlan>
     <hashTree>
+      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="resultDir" elementType="Argument">
+            <stringProp name="Argument.name">resultDir</stringProp>
+            <stringProp name="Argument.value">${scriptbase}/results</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="testLegacyFrameworkLoops" elementType="Argument">
+            <stringProp name="Argument.name">testLegacyFrameworkLoops</stringProp>
+            <stringProp name="Argument.value">${__P(loops.testlegacyframework,50)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </Arguments>
+      <hashTree/>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Run JUnit test method" enabled="true">
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">10</stringProp>
+          <stringProp name="LoopController.loops">${testLegacyFrameworkLoops}</stringProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">0</stringProp>
         <longProp name="ThreadGroup.start_time">1224216989000</longProp>
         <longProp name="ThreadGroup.end_time">1224216989000</longProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
@@ -47,7 +57,7 @@
         <stringProp name="ThreadGroup.delay"></stringProp>
       </ThreadGroup>
       <hashTree>
-        <JUnitSampler guiclass="JUnitTestSamplerGui" testclass="JUnitSampler" testname="Slurp Test" enabled="true">
+        <JUnitSampler guiclass="JUnitTestSamplerGui" testclass="JUnitSampler" testname="TestOsgiCacheFrameworkRestart" enabled="true">
           <stringProp name="junitSampler.classname">com.atlassian.plugin.osgi.performance.TestOsgiCacheFrameworkRestart</stringProp>
           <stringProp name="junitsampler.constructorstring"></stringProp>
           <stringProp name="junitsampler.pkg.filter">${packagePattern}</stringProp>
@@ -92,7 +102,7 @@
             <sampleCount>true</sampleCount>
           </value>
         </objProp>
-        <stringProp name="filename">${resultDir}/jmeter-result-setuptest.jtl</stringProp>
+        <stringProp name="filename">${resultDir}/jmeter-result-legacy.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
       <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
@@ -125,7 +135,7 @@
             <threadCounts>true</threadCounts>
           </value>
         </objProp>
-        <stringProp name="filename">${resultDir}/jmeter-summary-setuptest.jtl</stringProp>
+        <stringProp name="filename"></stringProp>
       </ResultCollector>
       <hashTree/>
     </hashTree>
