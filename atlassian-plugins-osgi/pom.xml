@@ -27,9 +27,11 @@
             <properties>
                 <jvm.opts1>-agentlib:jprofilerti=offline,id=${jprofiler.profileid},config=${jprofiler.configfile}</jvm.opts1>
                 <jvm.opts2>-Xbootclasspath/a:${jprofiler.home}/bin/agent.jar</jvm.opts2>
-                <jprofiler.home>/opt/performance/tools/jprofiler5/</jprofiler.home>
-                <jprofiler.profileid>109</jprofiler.profileid>
+                <jprofiler.home>/opt/performance/tools/jprofiler521/</jprofiler.home>
+                <jprofiler.profileid>111</jprofiler.profileid>
                 <jprofiler.configfile>${project.build.directory}/test-classes/jprofilerconfig.xml</jprofiler.configfile>
+                <setuptest.runtime>100</setuptest.runtime>
+                <fixedload.offset>101</fixedload.offset><!--This probably wont trigger unless things go really bad-->
             </properties>
             <build>
                 <plugins>
@@ -46,8 +48,10 @@
                               <configuration>
                                   <tasks>
                                       <replace file="${jprofiler.configfile}" token="@project-dir@" value="${project.build.directory}" />
+                                      <!--
                                       <replace file="${jprofiler.configfile}" token="@setupoffset@" value="${setuptest.runtime}" />
                                       <replace file="${jprofiler.configfile}" token="@fixedoffset@" value="${fixedload.offset}" />
+                                      -->
                                   </tasks>
                               </configuration>
                           </execution>
@@ -62,8 +66,6 @@
                 <jmeter.home>/opt/performance/tools/jmeter</jmeter.home>
                 <history.directory>/opt/performance/history/plugins2/${project.artifactid}-${project.version}-${java.specification.version}</history.directory>
                 <sitedoc.url>dav:https://internal.docs.atlassian.com/plugins2-performance/${project.artifactid}-${project.version}-${java.specification.version}</sitedoc.url>
-                <setuptest.runtime>160</setuptest.runtime>
-                <fixedload.offset>161</fixedload.offset><!--This probably wont trigger unless things go really bad-->
                 <skipTests>true</skipTests>
             </properties>
             <distributionManagement>
@@ -107,7 +109,7 @@
                                 </property>-->
                                 <property>
                                     <name>loops.testlegacyframework</name>
-                                    <value>10</value>
+                                    <value>20</value>
                                 </property>
                                 <property>
                                     <name>className</name>
