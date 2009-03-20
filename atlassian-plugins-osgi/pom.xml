@@ -64,7 +64,7 @@
             <id>perftest</id>
             <properties>
                 <jmeter.home>/opt/performance/tools/jmeter</jmeter.home>
-                <history.directory>/opt/performance/history/plugins2/${project.artifactid}-${project.version}-${java.specification.version}</history.directory>
+                <history.directory>/opt/performance/history/plugins2/perflegacy-${project.version}-${java.specification.version}</history.directory>
                 <sitedoc.url>dav:https://internal.docs.atlassian.com/plugins2-performance/${project.artifactid}-${project.version}-${java.specification.version}</sitedoc.url>
                 <skipTests>true</skipTests>
             </properties>
