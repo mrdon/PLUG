@@ -13,16 +13,65 @@
         An extension to Atlassian Plugins that provides a loader that loads plugins into OSGi
     </description>
 
+    <properties>
+        <!-- This should use ${project.build.directory} instead of target, but Maven < 2.0.9 fails to interpolate. -->
+        <frameworkBundleDirectory>target/framework-bundles</frameworkBundleDirectory>
+        <!-- DEBUG<global.jvm.opts>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005</global.jvm.opts>-->
+        <jvm.opts1>-Ddummy1=1</jvm.opts1><!--NPE's if you leave these blank -->
+        <jvm.opts2>-Ddummy2=2</jvm.opts2>
+    </properties>
+
     <profiles>
+        <profile>
+            <id>perfprofile</id>
+            <properties>
+                <jvm.opts1>-agentlib:jprofilerti=offline,id=${jprofiler.profileid},config=${jprofiler.configfile}</jvm.opts1>
+                <jvm.opts2>-Xbootclasspath/a:${jprofiler.home}/bin/agent.jar</jvm.opts2>
+                <jprofiler.home>/opt/performance/tools/jprofiler5/</jprofiler.home>
+                <jprofiler.profileid>109</jprofiler.profileid>
+                <jprofiler.configfile>${project.build.directory}/test-classes/jprofilerconfig.xml</jprofiler.configfile>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                      <artifactId>maven-antrun-plugin</artifactId>
+                      <executions>
+                          <execution>
+                              <id>30_update-jprofiler-paths</id>
+                              <!-- Antrun is broken WRT phases, so this is bound to process-test-classes instead of pre-integration-test -->
+                              <phase>process-test-classes</phase>
+                              <goals>
+                                  <goal>run</goal>
+                              </goals>
+                              <configuration>
+                                  <tasks>
+                                      <replace file="${jprofiler.configfile}" token="@project-dir@" value="${project.build.directory}" />
+                                      <replace file="${jprofiler.configfile}" token="@setupoffset@" value="${setuptest.runtime}" />
+                                      <replace file="${jprofiler.configfile}" token="@fixedoffset@" value="${fixedload.offset}" />
+                                  </tasks>
+                              </configuration>
+                          </execution>
+                      </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>perftest</id>
             <properties>
                 <jmeter.home>/opt/performance/tools/jmeter</jmeter.home>
                 <history.directory>/opt/performance/history/plugins2/${project.artifactid}-${project.version}-${java.specification.version}</history.directory>
-                <jprofiler.home>/opt/performance/tools/jprofiler5/</jprofiler.home>
-                <!--TODO: JVM Args? -->
+                <sitedoc.url>dav:https://internal.docs.atlassian.com/plugins2-performance/${project.artifactid}-${project.version}-${java.specification.version}</sitedoc.url>
+                <setuptest.runtime>160</setuptest.runtime>
+                <fixedload.offset>161</fixedload.offset><!--This probably wont trigger unless things go really bad-->
                 <skipTests>true</skipTests>
             </properties>
+            <distributionManagement>
+                <site>
+                    <id>atlassian-documentation</id>
+                    <url>${sitedoc.url}</url>
+                </site>
+            </distributionManagement>
             <build>
                 <defaultGoal>verify</defaultGoal>
                 <plugins>
@@ -51,10 +100,11 @@
                             <heap>1024m</heap>
                             <historydir>${history.directory}</historydir>
                             <sysproperties>
+                                <!-- WTF.  No idea why, but maven doesn't interpolate this variable.
                                 <property>
                                     <name>script.base</name>
-                                    <value>${project.build.directory}/performanceTest</value>
-                                </property>
+                                    <value>${project.build.directory}</value>
+                                </property>-->
                                 <property>
                                     <name>loops.testlegacyframework</name>
                                     <value>10</value>
@@ -64,11 +114,11 @@
                                     <value>com.atlassian.plugin.osgi.performance.TestLegacyFrameworkRestart</value>
                                 </property>
                             </sysproperties>
-                            <!--<options>
-                                <value>-Xdebug</value>
-                                <value>-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005</value>
+                            <options>
+                                <value>${jvm.opts1}</value>
+                                <value>${jvm.opts2}</value>
+                                <value>-Datlassian.org.osgi.framework.bootdelegation=java.*,com.jprofiler.*</value>
                             </options>
-                            -->
                         </configuration>
                         <executions>
                             <execution>
@@ -406,10 +456,6 @@
 
     </dependencies>
 
-    <properties>
-        <!-- This should use ${project.build.directory} instead of target, but Maven < 2.0.9 fails to interpolate. -->
-        <frameworkBundleDirectory>target/framework-bundles</frameworkBundleDirectory>
-    </properties>
 </project>
 
 
