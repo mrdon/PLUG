@@ -109,7 +109,7 @@
                                 </property>-->
                                 <property>
                                     <name>loops.testlegacyframework</name>
-                                    <value>20</value>
+                                    <value>10</value>
                                 </property>
                                 <property>
                                     <name>className</name>
