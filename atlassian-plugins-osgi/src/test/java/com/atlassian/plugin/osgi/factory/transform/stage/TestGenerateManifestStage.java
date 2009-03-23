@@ -5,6 +5,7 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
+import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.test.PluginJarBuilder;
 
@@ -74,6 +75,7 @@ public class TestGenerateManifestStage extends TestCase
         assertEquals("http://www.atlassian.com", attrs.getValue(Constants.BUNDLE_DOCURL));
         assertEquals(null, attrs.getValue(Constants.EXPORT_PACKAGE));
         assertEquals(".", attrs.getValue(Constants.BUNDLE_CLASSPATH));
+        assertEquals("com.atlassian.plugins.example", attrs.getValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY));
         assertEquals("*;timeout:=60", attrs.getValue("Spring-Context"));
         assertEquals(null, attrs.getValue(Constants.IMPORT_PACKAGE));
 
@@ -107,9 +109,27 @@ public class TestGenerateManifestStage extends TestCase
         final Attributes attrs = executeStage(context);
         assertEquals("my.foo.symbolicName", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals(".,foo", attrs.getValue(Constants.BUNDLE_CLASSPATH));
+        assertEquals("innerjarcp", attrs.getValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY));
         final String importPackage = attrs.getValue(Constants.IMPORT_PACKAGE);
         assertTrue(importPackage.contains(AttributeSet.class.getPackage().getName()+","));
         assertTrue(importPackage.contains("javax.swing"));
+
+    }
+
+    public void testGenerateManifestNoSpring() throws Exception
+    {
+        final File plugin = new PluginJarBuilder("plugin")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0",
+                        "Bundle-SymbolicName: my.foo.symbolicName",
+                        "Bundle-ClassPath: .,foo")
+                .addResource("foo/bar.txt", "Something")
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
+
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final Attributes attrs = executeStage(context);
+        assertEquals("innerjarcp", attrs.getValue("Atlassian-Plugin-Key"));
 
     }
 
@@ -131,7 +151,9 @@ public class TestGenerateManifestStage extends TestCase
         final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
         context.setShouldRequireSpring(true);
         context.getExtraImports().add(AttributeSet.class.getPackage().getName());
-        executeStage(context);
+
+        Attributes attrs = executeStage(context);
+        assertEquals("innerjarcp", attrs.getValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY));
         verify(log).warn(contains("'Spring-Context' is missing"));
     }
 

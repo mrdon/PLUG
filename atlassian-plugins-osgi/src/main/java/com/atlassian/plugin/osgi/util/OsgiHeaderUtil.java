@@ -2,6 +2,7 @@ package com.atlassian.plugin.osgi.util;
 
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
+import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.util.ClassUtils;
 
@@ -18,6 +19,7 @@ import static org.twdata.pkgscanner.PackageScanner.exclude;
 import static org.twdata.pkgscanner.PackageScanner.packages;
 import org.osgi.framework.Version;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Bundle;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.IOUtils;
@@ -152,5 +154,51 @@ public class OsgiHeaderUtil
             }
         }
         return fullPkg.toString();
+    }
+
+    /**
+     * Gets the plugin key from the bundle
+     *
+     * WARNING: shamelessly copied at {@link com.atlassian.plugin.osgi.bridge.SpringOsgiEventBridge}, which can't use
+     * this class due to creating a cyclic build dependency.  Ensure these two implementations are in sync.
+     *
+     * @param bundle The plugin bundle
+     * @return The plugin key, cannot be null
+     * @since 2.2.0
+     */
+    public static String getPluginKey(Bundle bundle)
+    {
+        return getPluginKey(
+                bundle.getSymbolicName(),
+                bundle.getHeaders().get(OsgiPlugin.ATLASSIAN_PLUGIN_KEY),
+                bundle.getHeaders().get(Constants.BUNDLE_VERSION)
+        );
+    }
+
+    /**
+     * Gets the plugin key from the jar manifest
+     *
+     * @param mf The plugin jar manifest
+     * @return The plugin key, cannot be null
+     * @since 2.2.0
+     */
+    public static String getPluginKey(Manifest mf)
+    {
+        return getPluginKey(
+                mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME),
+                mf.getMainAttributes().getValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY),
+                mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION)
+        );
+    }
+
+    private static String getPluginKey(Object bundleName, Object atlKey, Object version)
+    {
+        Object key = atlKey;
+        if (key == null)
+        {
+            key = bundleName + "-" + version;
+        }
+        return key.toString();
+
     }
 }

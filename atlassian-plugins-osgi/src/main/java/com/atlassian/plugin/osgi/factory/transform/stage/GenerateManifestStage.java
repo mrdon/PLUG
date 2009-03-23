@@ -9,6 +9,7 @@ import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
+import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 import org.apache.commons.logging.Log;
@@ -39,12 +40,18 @@ public class GenerateManifestStage implements TransformStage
         {
             builder.setJar(context.getPluginFile());
 
+            // We don't care about the modules, so we pass null
+            XmlDescriptorParser parser = new XmlDescriptorParser(context.getDescriptorDocument(), null);
+
             // Possibly necessary due to Spring XML creation
             if (isOsgiBundle(builder.getJar().getManifest()))
             {
                 if (context.getExtraImports().isEmpty())
                 {
-                    // skip any manifest manipulation
+                    Manifest mf = builder.getJar().getManifest();
+                    mf.getMainAttributes().putValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, parser.getKey());
+                    writeManifestOverride(context, mf);
+                    // skip any manifest manipulation by bnd
                     return;
                 }
                 else
@@ -52,13 +59,13 @@ public class GenerateManifestStage implements TransformStage
                     assertSpringAvailableIfRequired(context);
                     String imports = addExtraImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), context.getExtraImports());
                     builder.setProperty(Constants.IMPORT_PACKAGE, imports);
+
+                    builder.setProperty(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, parser.getKey());
                     builder.mergeManifest(builder.getJar().getManifest());
                 }
             }
             else
             {
-                // We don't care about the modules, so we pass null
-                XmlDescriptorParser parser = new XmlDescriptorParser(context.getDescriptorDocument(), null);
                 PluginInformation info = parser.getPluginInformation();
 
                 Properties properties = new Properties();
@@ -80,6 +87,7 @@ public class GenerateManifestStage implements TransformStage
                 header(properties, Analyzer.BUNDLE_NAME, parser.getKey());
                 header(properties, Analyzer.BUNDLE_VENDOR, info.getVendorName());
                 header(properties, Analyzer.BUNDLE_DOCURL, info.getVendorUrl());
+                header(properties, OsgiPlugin.ATLASSIAN_PLUGIN_KEY, parser.getKey());
 
                 // Scan for embedded jars
                 StringBuilder classpath = new StringBuilder();
@@ -114,14 +122,20 @@ public class GenerateManifestStage implements TransformStage
 
             enforceHostVersionsForUnknownImports(mf, context.getSystemExports());
 
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            mf.write(bout);
-            context.getFileOverrides().put("META-INF/MANIFEST.MF", bout.toByteArray());
+            writeManifestOverride(context, mf);
         }
         catch (Exception t)
         {
             throw new PluginParseException("Unable to process plugin to generate OSGi manifest", t);
         }
+    }
+
+    private void writeManifestOverride(TransformContext context, Manifest mf)
+            throws IOException
+    {
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        mf.write(bout);
+        context.getFileOverrides().put("META-INF/MANIFEST.MF", bout.toByteArray());
     }
 
     /**

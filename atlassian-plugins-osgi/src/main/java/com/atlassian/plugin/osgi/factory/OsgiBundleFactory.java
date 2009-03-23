@@ -7,6 +7,7 @@ import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
@@ -18,6 +19,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.jar.Manifest;
+import java.util.HashMap;
+import java.util.Hashtable;
 
 /**
  * Plugin deployer that deploys OSGi bundles that don't contain XML descriptor files
@@ -55,8 +58,7 @@ public class OsgiBundleFactory implements PluginFactory
                 String symName = mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
                 if (symName != null)
                 {
-                    pluginKey = getPluginKey(mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME),
-                        mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
+                    pluginKey = OsgiHeaderUtil.getPluginKey(mf);
                 }
             }
             return pluginKey;
@@ -97,7 +99,7 @@ public class OsgiBundleFactory implements PluginFactory
         {
             return reportUnloadablePlugin(file, ex);
         }
-        String key = getPluginKey(bundle.getSymbolicName(), (String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
+        String key = OsgiHeaderUtil.getPluginKey(bundle);
         return new OsgiBundlePlugin(bundle, key, pluginEventManager);
     }
 
@@ -108,10 +110,5 @@ public class OsgiBundleFactory implements PluginFactory
         UnloadablePlugin plugin = new UnloadablePlugin();
         plugin.setErrorText("Unable to load plugin: "+e.getMessage());
         return plugin;
-    }
-
-    private String getPluginKey(String symbolicName, String version)
-    {
-        return symbolicName + "-" + version;
     }
 }

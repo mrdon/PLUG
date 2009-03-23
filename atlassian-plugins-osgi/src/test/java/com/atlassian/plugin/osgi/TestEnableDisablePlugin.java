@@ -78,6 +78,51 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
         assertEquals(PluginState.ENABLED, provider.getPluginState());
     }
 
+    public void testEnableEnablesDependentPluginsWithBundles() throws Exception
+    {
+        PluginJarBuilder builderProvider = new PluginJarBuilder("enabledisable-prov")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                    "Manifest-Version: 1.0",
+                    "Bundle-SymbolicName: my",
+                    "Atlassian-Plugin-Key: provider",
+                    "Export-Package: my",
+                    "")
+                .addJava("my.Foo", "package my;" +
+                        "public interface Foo {}");
+
+
+
+        PluginJarBuilder builderConsumer = new PluginJarBuilder("enabledisable-con", builderProvider.getClassLoader())
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test' key='consumer' pluginsVersion='2'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "        <bundle-instructions><Import-Package>my</Import-Package></bundle-instructions>",
+                    "    </plugin-info>",
+                    "</atlassian-plugin>")
+                .addJava("my2.Bar", "package my2;" +
+                        "public class Bar implements my.Foo {}");
+
+        initPluginManager(null);
+        pluginManager.installPlugin(new JarPluginArtifact(builderProvider.build()));
+        pluginManager.installPlugin(new JarPluginArtifact(builderConsumer.build()));
+
+        Plugin provider = pluginManager.getPlugin("provider");
+        Plugin consumer = pluginManager.getPlugin("consumer");
+        assertEquals(PluginState.ENABLED, provider.getPluginState());
+        assertEquals(PluginState.ENABLED, consumer.getPluginState());
+
+        pluginManager.disablePlugin("provider");
+        pluginManager.disablePlugin("consumer");
+
+        assertEquals(PluginState.DISABLED, provider.getPluginState());
+        assertEquals(PluginState.DISABLED, consumer.getPluginState());
+
+        pluginManager.enablePlugin("consumer");
+        assertEquals(PluginState.ENABLED, consumer.getPluginState());
+        assertEquals(PluginState.ENABLED, provider.getPluginState());
+    }
+
     public void testDisableDoesNotKillLongRunningOperation() throws Exception
     {
         File pluginJar = new PluginJarBuilder("longrunning")

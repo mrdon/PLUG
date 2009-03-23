@@ -5,6 +5,7 @@ import com.atlassian.plugin.IllegalPluginStateException;
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.util.tracker.ServiceTracker;
 import org.apache.commons.lang.Validate;
@@ -64,10 +65,10 @@ class OsgiPluginUninstalledHelper implements OsgiPluginHelper
     public Bundle install()
     {
         Bundle bundle = osgiContainerManager.installBundle(pluginArtifact.toFile());
-        if (!bundle.getSymbolicName()
-                .equals(key))
+        if (!OsgiHeaderUtil.getPluginKey(bundle).equals(key))
         {
-            throw new IllegalArgumentException("The plugin key '" + key + "' must match the OSGi bundle symbolic name (Bundle-SymbolicName)");
+            throw new IllegalArgumentException("The plugin key '" + key + "' must either match the OSGi bundle symbolic " +
+                    "name (Bundle-SymbolicName) or be specified in the Atlassian-Plugin-Key manifest header");
         }
         return bundle;
     }

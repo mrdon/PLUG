@@ -185,7 +185,7 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
                             // If we are the bundle consumer, or importer, then add the exporter as a required plugin
                             if (getBundle() == importingBundle)
                             {
-                                keys.add(export.getExportingBundle().getSymbolicName());
+                                keys.add(OsgiHeaderUtil.getPluginKey(export.getExportingBundle()));
                                 break;
                             }
                         }

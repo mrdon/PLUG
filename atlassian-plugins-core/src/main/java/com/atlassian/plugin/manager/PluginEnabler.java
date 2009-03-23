@@ -125,7 +125,9 @@ class PluginEnabler
         // Ensure dependent plugins are enabled first
         for (String dependencyKey : plugin.getRequiredPlugins())
         {
-            if (!dependentKeys.contains(dependencyKey) && !pluginAccessor.isPluginEnabled(dependencyKey))
+            if (!dependentKeys.contains(dependencyKey) &&
+                    (pluginAccessor.getPlugin(dependencyKey) != null) &&
+                    !pluginAccessor.isPluginEnabled(dependencyKey))
             {
                 scanDependencies(pluginAccessor.getPlugin(dependencyKey), dependentKeys);
             }

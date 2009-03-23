@@ -52,6 +52,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
     private volatile boolean treatSpringBeanFactoryCreationAsRefresh = false;
     private volatile OsgiPluginHelper helper;
     public static final String SPRING_CONTEXT = "Spring-Context";
+    public static final String ATLASSIAN_PLUGIN_KEY = "Atlassian-Plugin-Key";
 
     public OsgiPlugin(final String key, final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginEventManager pluginEventManager)
     {
