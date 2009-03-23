@@ -31,7 +31,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
     private static final String[] DEFAULT_KEYS = { "/", "*", "/*" };
 
     private final Map<String, Collection<String>> mappings = new HashMap<String, Collection<String>>();
-    private final List<String> complexPaths = new ArrayList<String>();
+    private final Set<String> complexPaths = new HashSet<String>();
 
     private final KeyMatcher matcher = new KeyMatcher();
 
@@ -174,7 +174,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
     private final class KeyMatcher
     {
         /** Find exact key in mappings. */
-        String findKey(final String path, final Map<String, Collection<String>> mappings, final List<String> keys)
+        String findKey(final String path, final Map<String, Collection<String>> mappings, final Set<String> keys)
         {
             String result = findExactKey(path, mappings);
             if (result == null)
@@ -199,12 +199,10 @@ public class DefaultPathMapper implements Serializable, PathMapper
         }
 
         /** Find single matching complex key */
-        String findComplexKey(final String path, final List<String> complexPaths)
+        String findComplexKey(final String path, final Set<String> complexPaths)
         {
-            final int size = complexPaths.size();
-            for (int i = 0; i < size; i++)
+            for (String key : complexPaths)
             {
-                final String key = (String) complexPaths.get(i);
                 if (match(key, path, false))
                 {
                     return key;
@@ -214,13 +212,11 @@ public class DefaultPathMapper implements Serializable, PathMapper
         }
 
         /** Find all matching complex keys */
-        Collection<String> findComplexKeys(final String path, final List<String> complexPaths)
+        Collection<String> findComplexKeys(final String path, final Set<String> complexPaths)
         {
-            final int size = complexPaths.size();
             final List<String> matches = new ArrayList<String>();
-            for (int i = 0; i < size; i++)
+            for (String key : complexPaths)
             {
-                final String key = (String) complexPaths.get(i);
                 if (match(key, path, false))
                 {
                     matches.add(key);
