@@ -566,7 +566,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
         assertEquals("Test 2", pluginManager.getPlugin("test.plugin").getName());
     }
 
-    public void testPluginDependentOnPackageImporttestPluginWithHostComponentUsingOldPackageImport() throws Exception
+    public void testPluginDependentOnPackageImport() throws Exception
     {
         HostComponentProvider prov = new HostComponentProvider()
         {
