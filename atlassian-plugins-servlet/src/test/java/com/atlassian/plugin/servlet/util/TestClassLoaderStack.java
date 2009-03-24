@@ -14,16 +14,24 @@ public class TestClassLoaderStack extends TestCase
     public void testThreadClassLoaderIsReplacedAndRestored() throws URISyntaxException
     {
         ClassLoader mainLoader = Thread.currentThread().getContextClassLoader();
-        ClassLoader pluginLoader = new PluginClassLoader(getFileForResource(FILTER_TEST_JAR));
-        ClassLoader pluginLoader2 = new PluginClassLoader(getFileForResource(FILTER_TEST_JAR));
+        try
+        {
+            ClassLoader pluginLoader = new PluginClassLoader(getFileForResource(FILTER_TEST_JAR));
+            ClassLoader pluginLoader2 = new PluginClassLoader(getFileForResource(FILTER_TEST_JAR));
 
-        ClassLoaderStack.push(pluginLoader);
-        assertSame(pluginLoader, Thread.currentThread().getContextClassLoader());
-        ClassLoaderStack.push(pluginLoader2);
-        assertSame(pluginLoader2, Thread.currentThread().getContextClassLoader());
-        ClassLoaderStack.pop();
-        assertSame(pluginLoader, Thread.currentThread().getContextClassLoader());
-        ClassLoaderStack.pop();
-        assertSame(mainLoader, Thread.currentThread().getContextClassLoader());
+            ClassLoaderStack.push(pluginLoader);
+            assertSame(pluginLoader, Thread.currentThread().getContextClassLoader());
+            ClassLoaderStack.push(pluginLoader2);
+            assertSame(pluginLoader2, Thread.currentThread().getContextClassLoader());
+            ClassLoaderStack.pop();
+            assertSame(pluginLoader, Thread.currentThread().getContextClassLoader());
+            ClassLoaderStack.pop();
+            assertSame(mainLoader, Thread.currentThread().getContextClassLoader());
+        }
+        finally
+        {
+            Thread.currentThread().setContextClassLoader(mainLoader);
+        }
+
     }
 }
