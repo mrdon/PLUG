@@ -13,6 +13,8 @@ import junit.framework.TestCase;
 import java.util.*;
 import java.io.StringWriter;
 
+import org.dom4j.DocumentException;
+
 public class TestWebResourceManagerImpl extends TestCase
 {
     private Mock mockWebResourceIntegration;
@@ -238,6 +240,34 @@ public class TestWebResourceManagerImpl extends TestCase
         assertNotSame(-1, indexB);
         assertTrue(indexB < indexA);
     }
+    
+    public void testRequireResourcesAreClearedAfterIncludesResourcesIsCalled() throws Exception
+    {
+        final String moduleKey = "cool-resources";
+        final String completeModuleKey = "test.atlassian:" + moduleKey;
+
+        final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.css", "more-cool.css", "cool.js");
+
+        final String pluginVersion = "1";
+        final Mock mockPlugin = new Mock(Plugin.class);
+        PluginInformation pluginInfo = new PluginInformation();
+        pluginInfo.setVersion(pluginVersion);
+        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
+
+        Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
+            TestUtils.createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(), resourceDescriptors1));
+
+        // test requireResource() methods
+        webResourceManager.requireResource(completeModuleKey);
+        webResourceManager.includeResources(new StringWriter());
+        
+        StringWriter requiredResourceWriter = new StringWriter();
+        webResourceManager.includeResources(requiredResourceWriter);
+        assertEquals("", requiredResourceWriter.toString());
+    }
 
     public void testRequireResourceAndResourceTagMethods() throws Exception
     {
@@ -261,8 +291,8 @@ public class TestWebResourceManagerImpl extends TestCase
         // test requireResource() methods
         StringWriter requiredResourceWriter = new StringWriter();
         webResourceManager.requireResource(completeModuleKey);
-        webResourceManager.includeResources(requiredResourceWriter);
         String requiredResourceResult = webResourceManager.getRequiredResources();
+        webResourceManager.includeResources(requiredResourceWriter);
         assertEquals(requiredResourceResult, requiredResourceWriter.toString());
 
         String staticBase = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX  + "/" + SYSTEM_BUILD_NUMBER

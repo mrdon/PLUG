@@ -120,6 +120,18 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void includeResources(Writer writer)
     {
+        includeResources(writer, true);
+    }
+
+    public String getRequiredResources()
+    {
+        StringWriter writer = new StringWriter();
+        includeResources(writer, false);
+        return writer.toString();
+    }
+
+    private void includeResources(Writer writer, boolean clearResources)
+    {
         LinkedHashSet<String> webResourceNames = getWebResourceNames();
         if (webResourceNames == null || webResourceNames.isEmpty())
         {
@@ -132,16 +144,12 @@ public class WebResourceManagerImpl implements WebResourceManager
             String resourceName = (String) webResourceName;
             writeResourceTag(resourceName, writer);
         }
-        webResourceNames.clear();
+        if (clearResources)
+        {
+            webResourceNames.clear();
+        }
     }
-
-    public String getRequiredResources()
-    {
-        StringWriter writer = new StringWriter();
-        includeResources(writer);
-        return writer.toString();
-    }
-
+    
     public void requireResource(String moduleCompleteKey, Writer writer)
     {
         LinkedHashSet<String> resourcesWithDeps = new LinkedHashSet<String>();
