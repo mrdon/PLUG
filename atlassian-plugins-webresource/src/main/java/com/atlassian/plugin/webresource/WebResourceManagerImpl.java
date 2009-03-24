@@ -1,15 +1,19 @@
 package com.atlassian.plugin.webresource;
 
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import org.apache.commons.collections.set.ListOrderedSet;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -50,17 +54,24 @@ public class WebResourceManagerImpl implements WebResourceManager
     public void requireResource(String moduleCompleteKey)
     {
         log.debug("Requiring resource: " + moduleCompleteKey);
-        Map cache = webResourceIntegration.getRequestCache();
-        Collection webResourceNames = (Collection) cache.get(REQUEST_CACHE_RESOURCE_KEY);
-        if (webResourceNames == null)
-        {
-            webResourceNames = new ListOrderedSet();
-        }
+        LinkedHashSet<String> webResourceNames = getWebResourceNames();
 
-        ListOrderedSet resources = new ListOrderedSet();
+        LinkedHashSet<String> resources = new LinkedHashSet<String>();
         addResourceWithDependencies(moduleCompleteKey, resources, new Stack<String>());
         webResourceNames.addAll(resources);
-        cache.put(REQUEST_CACHE_RESOURCE_KEY, webResourceNames);
+    }
+
+    @SuppressWarnings("unchecked")
+    private LinkedHashSet<String> getWebResourceNames()
+    {
+        Map cache = webResourceIntegration.getRequestCache();
+        LinkedHashSet<String> webResourceNames = (LinkedHashSet<String>) cache.get(REQUEST_CACHE_RESOURCE_KEY);
+        if (webResourceNames == null)
+        {
+            webResourceNames = new LinkedHashSet<String>();
+            cache.put(REQUEST_CACHE_RESOURCE_KEY, webResourceNames);
+        }
+        return webResourceNames;
     }
 
     /**
@@ -72,7 +83,7 @@ public class WebResourceManagerImpl implements WebResourceManager
      * @param orderedResourceKeys an ordered list set where the resources are added in order
      * @param stack where we are in the dependency tree
      */
-    private void addResourceWithDependencies(String moduleKey, ListOrderedSet orderedResourceKeys, Stack<String> stack)
+    private void addResourceWithDependencies(String moduleKey, LinkedHashSet<String> orderedResourceKeys, Stack<String> stack)
     {
         if (stack.contains(moduleKey))
         {
@@ -81,7 +92,7 @@ public class WebResourceManagerImpl implements WebResourceManager
             return;
         }
 
-        ModuleDescriptor moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleKey);
+        ModuleDescriptor<?> moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleKey);
         if (!(moduleDescriptor instanceof WebResourceModuleDescriptor))
         {
             log.warn("Cannot find web resource module for: " + moduleKey);
@@ -109,7 +120,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void includeResources(Writer writer)
     {
-        Collection webResourceNames = (Collection) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_RESOURCE_KEY);
+        LinkedHashSet<String> webResourceNames = getWebResourceNames();
         if (webResourceNames == null || webResourceNames.isEmpty())
         {
             log.debug("No resources required to write");
@@ -121,6 +132,7 @@ public class WebResourceManagerImpl implements WebResourceManager
             String resourceName = (String) webResourceName;
             writeResourceTag(resourceName, writer);
         }
+        webResourceNames.clear();
     }
 
     public String getRequiredResources()
@@ -132,7 +144,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void requireResource(String moduleCompleteKey, Writer writer)
     {
-        ListOrderedSet resourcesWithDeps = new ListOrderedSet();
+        LinkedHashSet<String> resourcesWithDeps = new LinkedHashSet<String>();
         addResourceWithDependencies(moduleCompleteKey, resourcesWithDeps, new Stack<String>());
 
         for (Object resource : resourcesWithDeps)
@@ -226,7 +238,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public String getStaticPluginResource(String moduleCompleteKey, String resourceName)
     {
-        ModuleDescriptor moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleCompleteKey);
+        ModuleDescriptor<?> moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleCompleteKey);
         if(moduleDescriptor == null)
             return null;
 
@@ -236,6 +248,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     /**
      * @return "{base url}/s/{build num}/{system counter}/{plugin version}/_/download/resources/{plugin.key:module.key}/{resource.name}"
      */
+    @SuppressWarnings("unchecked")
     public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName)
     {
         // "{base url}/s/{build num}/{system counter}/{plugin version}/_"
@@ -249,6 +262,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     /**
      * @deprecated Use {@link #getStaticPluginResource(com.atlassian.plugin.ModuleDescriptor, String)} instead
      */
+    @SuppressWarnings("unchecked")
     public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, String resourceName)
     {
         return getStaticPluginResource(moduleDescriptor, resourceName);
@@ -267,6 +281,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     /**
      * @deprecated Since 2.2.
      */
+    @SuppressWarnings("unchecked")
     public void setIncludeMode(IncludeMode includeMode)
     {
         webResourceIntegration.getRequestCache().put(REQUEST_CACHE_MODE_KEY, includeMode);
