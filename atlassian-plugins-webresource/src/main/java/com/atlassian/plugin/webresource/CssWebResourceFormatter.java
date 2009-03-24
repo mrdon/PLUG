@@ -12,7 +12,6 @@ class CssWebResourceFormatter extends AbstractWebResourceFormatter
     private static final String CSS_EXTENSION = ".css";
     private static final String MEDIA_PARAM = "media";
     private static final String IEONLY_PARAM = "ieonly";
-    private static final String HTML4_PARAM = "html4";
 
     private static final List<String> HANDLED_PARAMETERS = Arrays.asList("title", MEDIA_PARAM, "charset");
 
@@ -36,22 +35,14 @@ class CssWebResourceFormatter extends AbstractWebResourceFormatter
         {
             buffer.append(" media=\"all\"");
         }
+        buffer.append("/>\n");
 
-        // support valid HTML 4.01
-        if (!BooleanUtils.toBoolean(params.get(HTML4_PARAM)))
-        {
-            buffer.append("/");
-        }
-        buffer.append(">\n");
-        
         // ie conditional commment
         if (BooleanUtils.toBoolean(params.get(IEONLY_PARAM)))
         {
             buffer.insert(0, "<!--[if IE]>\n");
             buffer.append("<![endif]-->\n");
         }
-
-
 
         return buffer.toString();
     }
