@@ -197,6 +197,10 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         try
         {
             pluginState = enableInternal();
+            if (pluginState != PluginState.ENABLED && pluginState != PluginState.ENABLING)
+            {
+                log.warn("Illegal state transition to "+pluginState+" for plugin '" + getKey() + "' on enable()");
+            }
         }
         catch (PluginException ex)
         {

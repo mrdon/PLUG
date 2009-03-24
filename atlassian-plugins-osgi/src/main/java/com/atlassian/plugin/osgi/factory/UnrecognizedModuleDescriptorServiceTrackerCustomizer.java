@@ -6,6 +6,7 @@ import org.osgi.framework.Bundle;
 import org.dom4j.Element;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.Validate;
 import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptor;
@@ -29,7 +30,9 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
 
     public UnrecognizedModuleDescriptorServiceTrackerCustomizer(OsgiPlugin plugin)
     {
+        Validate.notNull(plugin);
         this.bundle = plugin.getBundle();
+        Validate.notNull(bundle);
         this.plugin = plugin;
     }
     /**

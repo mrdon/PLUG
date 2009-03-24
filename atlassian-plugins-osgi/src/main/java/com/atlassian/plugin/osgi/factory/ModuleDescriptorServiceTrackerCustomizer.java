@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.factory;
 import com.atlassian.plugin.ModuleDescriptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.Validate;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
@@ -20,7 +21,9 @@ class ModuleDescriptorServiceTrackerCustomizer implements ServiceTrackerCustomiz
 
     public ModuleDescriptorServiceTrackerCustomizer(OsgiPlugin plugin)
     {
+        Validate.notNull(plugin);
         this.bundle = plugin.getBundle();
+        Validate.notNull(bundle);
         this.plugin = plugin;
     }
 
