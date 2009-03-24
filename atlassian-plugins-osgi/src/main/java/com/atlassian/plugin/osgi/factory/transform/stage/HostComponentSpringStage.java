@@ -11,6 +11,7 @@ import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.util.Clazz;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.apache.commons.io.IOUtils;
@@ -25,6 +26,7 @@ import java.util.zip.ZipEntry;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 
 public class HostComponentSpringStage implements TransformStage
 {
@@ -163,6 +165,8 @@ public class HostComponentSpringStage implements TransformStage
             jarStream) throws IOException
     {
 
+        Set<String> entries = new HashSet<String>();
+        Set<String> superClassNames = new HashSet<String>();
         ZipInputStream zin = null;
         try
         {
@@ -173,7 +177,9 @@ public class HostComponentSpringStage implements TransformStage
                 String path = zipEntry.getName();
                 if (path.endsWith(".class"))
                 {
+                    entries.add(path.substring(0, path.length() - ".class".length()));
                     Clazz cls = new Clazz(path, new UnclosableInputStream(zin));
+                    superClassNames.add(cls.getSuperClassName());
                     Set<String> referredClasses = cls.getReferredClasses();
                     for (String ref : referredClasses)
                     {
@@ -194,6 +200,50 @@ public class HostComponentSpringStage implements TransformStage
         finally
         {
             IOUtils.closeQuietly(zin);
+        }
+
+        addHostComponentsUsedInSuperClasses(allHostComponents, matchedHostComponents, entries, superClassNames);
+    }
+
+    /**
+     * Searches super classes not in the plugin jar, which have methods that use host components
+     * @param allHostComponents The set of all host component classes
+     * @param matchedHostComponents The set of host component classes already found
+     * @param entries The paths of all files in the jar
+     * @param superClassNames All super classes find by classes in the jar
+     */
+    private void addHostComponentsUsedInSuperClasses(Set<String> allHostComponents, Set<String> matchedHostComponents, Set<String> entries, Set<String> superClassNames)
+    {
+        for (String superClassName : superClassNames)
+        {
+            // Only search super classes not in the jar
+            if (!entries.contains(superClassName))
+            {
+                try
+                {
+                    Class spr = ClassLoaderUtils.loadClass(superClassName.replace('/','.'), this.getClass());
+
+                    // Ignore object
+                    if (spr != Object.class)
+                    {
+                        // Search methods for parameters that use host components
+                        for (Method m : spr.getMethods())
+                        {
+                            for (Class param : m.getParameterTypes())
+                            {
+                                if (allHostComponents.contains(param.getName()))
+                                {
+                                    matchedHostComponents.add(param.getName());
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (ClassNotFoundException e)
+                {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
+            }
         }
     }
 

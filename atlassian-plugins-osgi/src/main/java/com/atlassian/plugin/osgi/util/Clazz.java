@@ -53,6 +53,7 @@ public class Clazz {
 	int					major		= 0;
 
 	String				sourceFile;
+    String              superClassName;
 	Set					xref;
 	Set					classes;
 	Set					descriptors;
@@ -146,9 +147,11 @@ public class Clazz {
 		int this_class = in.readUnsignedShort();
 		int super_class = in.readUnsignedShort();
 		String supr =(String) pool[intPool[super_class]];
-		if ( supr != null )
-		    addReference(supr);
-		
+		if ( supr != null ){
+            superClassName = supr;
+            addReference(supr);
+        }
+
 		className = (String) pool[intPool[this_class]];
 
 		int interfacesCount = in.readUnsignedShort();
@@ -659,7 +662,12 @@ public class Clazz {
 		return path;
 	}
 
-	public Set xref(InputStream in) throws IOException {
+    public String getSuperClassName()
+    {
+        return superClassName;
+    }
+
+    public Set xref(InputStream in) throws IOException {
 		DataInputStream din = new DataInputStream(in);
 		Set set = parseClassFile(din);
 		din.close();

@@ -108,8 +108,14 @@ public class TestHostComponentSpringStage extends TestCase
 
     public void testTransformWithInferredImportsOfSuperInterfaces() throws Exception
     {
-        jar = new PluginJarBuilder().addFormattedJava("my.Foo", "package my;", "public class Foo {",
-            "  public Foo(com.atlassian.plugin.osgi.factory.transform.FooChild bar) {}", "}").addPluginInformation("my.plugin", "my.plugin", "1.0").build();
+        jar = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  public Foo(com.atlassian.plugin.osgi.factory.transform.FooChild bar) {}",
+                        "}")
+                .addPluginInformation("my.plugin", "my.plugin", "1.0")
+                .build();
 
         final List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>()
         {
@@ -121,6 +127,55 @@ public class TestHostComponentSpringStage extends TestCase
         final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
         transformer.execute(context);
         assertTrue(context.getExtraImports().contains(SomeClass.class.getPackage().getName()));
+
+    }
+
+    public void testTransformWithSuperClassThatUsesHostComponent() throws Exception
+    {
+        jar = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo extends " + AbstractFoo.class.getName() + " {",
+                        "}")
+                .addPluginInformation("my.plugin", "my.plugin", "1.0")
+                .build();
+
+        final List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>()
+        {
+            {
+                add(new MockRegistration("foo", FooChild.class));
+            }
+        };
+
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
+        transformer.execute(context);
+        assertTrue(context.getExtraImports().contains(FooChild.class.getPackage().getName()));
+    }
+
+    public void testTransformWithSuperClassInJar() throws Exception
+    {
+        jar = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "}")
+                .addFormattedJava("my2.Bar",
+                        "package my2;",
+                        "public class Bar extends my.Foo {",
+                        "}")
+                .addPluginInformation("my.plugin", "my.plugin", "1.0")
+                .build();
+
+        final List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>()
+        {
+            {
+                add(new MockRegistration("foo", FooChild.class));
+            }
+        };
+
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
+        transformer.execute(context);
+        assertEquals(0, context.getExtraImports().size());
 
     }
 
@@ -280,4 +335,5 @@ public class TestHostComponentSpringStage extends TestCase
             null,
             "not(beans:bean[@id='foo']/beans:property[@name='filter']/@value='(&(bean-name=foo)(plugins-host=true))']");
     }
+
 }
