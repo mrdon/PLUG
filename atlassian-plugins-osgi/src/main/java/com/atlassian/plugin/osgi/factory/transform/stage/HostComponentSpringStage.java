@@ -219,29 +219,33 @@ public class HostComponentSpringStage implements TransformStage
             // Only search super classes not in the jar
             if (!entries.contains(superClassName))
             {
-                try
-                {
-                    Class spr = ClassLoaderUtils.loadClass(superClassName.replace('/','.'), this.getClass());
+                String cls = superClassName.replace('/','.');
 
-                    // Ignore object
-                    if (spr != Object.class)
+                // Ignore java classes including Object
+                if (!cls.startsWith("java."))
+                {
+                    Class spr;
+                    try
                     {
-                        // Search methods for parameters that use host components
-                        for (Method m : spr.getMethods())
+                        spr = ClassLoaderUtils.loadClass(cls, this.getClass());
+                    }
+                    catch (ClassNotFoundException e)
+                    {
+                        // ignore class not found as it could be from another plugin
+                        continue;
+                    }
+
+                    // Search methods for parameters that use host components
+                    for (Method m : spr.getMethods())
+                    {
+                        for (Class param : m.getParameterTypes())
                         {
-                            for (Class param : m.getParameterTypes())
+                            if (allHostComponents.contains(param.getName()))
                             {
-                                if (allHostComponents.contains(param.getName()))
-                                {
-                                    matchedHostComponents.add(param.getName());
-                                }
+                                matchedHostComponents.add(param.getName());
                             }
                         }
                     }
-                }
-                catch (ClassNotFoundException e)
-                {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 }
             }
         }

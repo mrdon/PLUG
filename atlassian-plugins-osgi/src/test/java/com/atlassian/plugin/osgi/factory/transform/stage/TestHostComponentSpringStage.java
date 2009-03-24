@@ -179,6 +179,35 @@ public class TestHostComponentSpringStage extends TestCase
 
     }
 
+    public void testTransformWithSuperClassInOtherJar() throws Exception
+    {
+        PluginJarBuilder parent = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "}");
+
+        jar = new PluginJarBuilder("child", parent.getClassLoader())
+                .addFormattedJava("my2.Bar",
+                        "package my2;",
+                        "public class Bar extends my.Foo {",
+                        "}")
+                .addPluginInformation("my.plugin", "my.plugin", "1.0")
+                .build();
+
+        final List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>()
+        {
+            {
+                add(new MockRegistration("foo", FooChild.class));
+            }
+        };
+
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
+        transformer.execute(context);
+        assertEquals(0, context.getExtraImports().size());
+
+    }
+
     public void testTransformWithPoundSign() throws IOException, DocumentException
     {
         SpringTransformerTestHelper.transform(
