@@ -28,7 +28,7 @@ public class ComponentImport
         createPattern().
                 rule(
                         test("@key").withError("The key is required"),
-                        test("(@interface and string-length(@interface) > 0 or (interface and string-length(interface[1]) > 0)")
+                        test("(@interface and string-length(@interface) > 0) or (interface and string-length(interface[1]) > 0)")
                                 .withError("The interface must be specified either via the 'interface'" +
                                     "attribute or child 'interface' elements")).
                 evaluate(element);
