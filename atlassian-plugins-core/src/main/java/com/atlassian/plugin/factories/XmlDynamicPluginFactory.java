@@ -125,13 +125,6 @@ public class XmlDynamicPluginFactory implements PluginFactory
             {
                 return null;
             }
-        }
-        finally
-        {
-            IOUtils.closeQuietly(descriptorStream);
-        }
-        try
-        {
             final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream,
                 applicationKeys.toArray(new String[applicationKeys.size()]));
             return descriptorParser.getKey();

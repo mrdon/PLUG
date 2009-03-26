@@ -131,20 +131,21 @@ public class LegacyDynamicPluginFactory implements PluginFactory
     {
         Validate.notNull(pluginArtifact, "The plugin artifact must not be null");
         String pluginKey = null;
-        final InputStream descriptorStream = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
-        if (descriptorStream != null)
+        InputStream descriptorStream = null;
+        try
         {
-            try
+            descriptorStream = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
+            if (descriptorStream != null)
             {
                 final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, null);
 
                 // Only recognize version 1 plugins
                 if (descriptorParser.getPluginsVersion() <= 1)
                     pluginKey = descriptorParser.getKey();
-            } finally
-            {
-                IOUtils.closeQuietly(descriptorStream);
             }
+        } finally
+        {
+            IOUtils.closeQuietly(descriptorStream);
         }
         return pluginKey;
     }

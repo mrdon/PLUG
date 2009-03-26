@@ -105,18 +105,27 @@ public class OsgiHeaderUtil
         if (log.isDebugEnabled())
             log.debug("Crawling "+className);
 
-        InputStream in = ClassLoaderUtils.getResourceAsStream(className, OsgiHeaderUtil.class);
-        if (in == null)
+        InputStream in = null;
+        try
         {
-            log.error("Cannot find interface "+className);
-            return;
-        }
-        Clazz clz = new Clazz(className, in);
-        packageImports.addAll(clz.getReferred().keySet());
+            in = ClassLoaderUtils.getResourceAsStream(className, OsgiHeaderUtil.class);
 
-        Set<String> referredClasses = clz.getReferredClasses();
-        for (String ref : referredClasses)
-            crawlReferenceTree(ref, scannedClasses, packageImports, level-1);
+            if (in == null)
+            {
+                log.error("Cannot find interface "+className);
+                return;
+            }
+            Clazz clz = new Clazz(className, in);
+            packageImports.addAll(clz.getReferred().keySet());
+
+            Set<String> referredClasses = clz.getReferredClasses();
+            for (String ref : referredClasses)
+                crawlReferenceTree(ref, scannedClasses, packageImports, level-1);
+        }
+        finally
+        {
+            IOUtils.closeQuietly(in);
+        }
 
     }
 

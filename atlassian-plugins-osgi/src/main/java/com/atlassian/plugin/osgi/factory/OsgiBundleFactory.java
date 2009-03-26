@@ -43,10 +43,11 @@ public class OsgiBundleFactory implements PluginFactory
     public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException {
         Validate.notNull(pluginArtifact, "The plugin artifact is required");
         String pluginKey = null;
-        InputStream manifestStream = pluginArtifact.getResourceAsStream("META-INF/MANIFEST.MF");
+        InputStream manifestStream = null;
 
         try
         {
+            manifestStream = pluginArtifact.getResourceAsStream("META-INF/MANIFEST.MF");
             if (manifestStream != null)
             {
                 Manifest mf;
