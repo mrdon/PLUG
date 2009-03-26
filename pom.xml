@@ -40,6 +40,7 @@
     <modules>
         <module>atlassian-plugins-servlet</module>
         <module>atlassian-plugins-osgi-bridge</module>
+        <module>atlassian-plugins-osgi-logging</module>
         <module>atlassian-plugins-osgi</module>
         <module>atlassian-plugins-spring</module>
         <module>atlassian-plugins-refimpl</module>

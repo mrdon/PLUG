@@ -193,25 +193,6 @@
                                     <version>2.5.5</version>
                                 </artifactItem>
                                 <artifactItem>
-                                    <groupId>org.slf4j</groupId>
-                                    <artifactId>com.springsource.slf4j.org.apache.commons.logging</artifactId>
-                                    <version>1.5.0</version>
-                                </artifactItem>
-
-                                <artifactItem>
-                                    <groupId>org.slf4j</groupId>
-                                    <artifactId>com.springsource.slf4j.api</artifactId>
-                                    <version>1.5.0</version>
-                                </artifactItem>
-
-                                <artifactItem>
-
-                                    <groupId>org.slf4j</groupId>
-                                    <artifactId>com.springsource.slf4j.log4j</artifactId>
-                                    <version>1.5.0</version>
-                                </artifactItem>
-
-                                <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
 
                                     <artifactId>spring-osgi-annotation</artifactId>
@@ -257,7 +238,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${frameworkBundleDirectory}</outputDirectory>
-                            <includeArtifactIds>atlassian-plugins-osgi-bridge</includeArtifactIds>
+                            <includeArtifactIds>atlassian-plugins-osgi-bridge,atlassian-plugins-osgi-logging</includeArtifactIds>
                         </configuration>
                     </execution>
                     <execution>
@@ -326,6 +307,13 @@
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugins</groupId>
+            <artifactId>atlassian-plugins-osgi-logging</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>biz.aQute</groupId>
             <artifactId>bndlib</artifactId>

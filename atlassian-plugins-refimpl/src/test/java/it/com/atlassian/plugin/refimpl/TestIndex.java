@@ -18,11 +18,10 @@ public class TestIndex extends WebTestCase
     public void testIndex()
     {
         beginAt("/");
-        assertTextPresent("com.springsource.slf4j.log4j");
+        assertTextPresent("com.atlassian.plugin.osgi.bridge");
 
         assertTextNotPresent("Resolved");
         assertTextNotPresent("Installed");
         assertTextPresent("General Decorator");
     }
-
 }
