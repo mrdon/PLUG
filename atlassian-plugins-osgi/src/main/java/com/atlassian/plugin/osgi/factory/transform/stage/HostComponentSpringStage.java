@@ -43,13 +43,19 @@ public class HostComponentSpringStage implements TransformStage
             Set<String> hostComponentInterfaceNames = convertRegistrationsToSet(context.getHostComponentRegistrations());
             Set<String> matchedInterfaceNames = new HashSet<String>();
             List<String> innerJarPaths = findJarPaths(context.getManifest());
+            InputStream pluginStream = null;
             try
             {
-                findUsedHostComponents(hostComponentInterfaceNames, matchedInterfaceNames, innerJarPaths, new FileInputStream(context.getPluginFile()));
+                pluginStream = new FileInputStream(context.getPluginFile());
+                findUsedHostComponents(hostComponentInterfaceNames, matchedInterfaceNames, innerJarPaths, pluginStream);
             }
             catch (IOException e)
             {
                 throw new PluginParseException("Unable to scan for host components in plugin classes", e);
+            }
+            finally
+            {
+                IOUtils.closeQuietly(pluginStream);
             }
 
             List<HostComponentRegistration> matchedRegistrations = new ArrayList<HostComponentRegistration>();

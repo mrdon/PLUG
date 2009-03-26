@@ -222,7 +222,7 @@ public class GenerateManifestStage implements TransformStage
     {
         if (context.shouldRequireSpring())
         {
-            String header = (String) context.getManifest().getMainAttributes().getValue("Spring-Context");
+            String header = context.getManifest().getMainAttributes().getValue("Spring-Context");
             if (header == null)
             {
                 log.warn("The Spring Manifest header 'Spring-Context' is missing in jar '" +

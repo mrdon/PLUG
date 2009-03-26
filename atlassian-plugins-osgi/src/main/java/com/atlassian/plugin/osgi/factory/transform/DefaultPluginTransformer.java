@@ -8,6 +8,7 @@ import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginArtifact;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -184,44 +185,63 @@ public class DefaultPluginTransformer implements PluginTransformer
         // delete it, otherwise you cannot rename your existing zip to it.
         byte[] buf = new byte[1024];
 
-        ZipInputStream zin = new ZipInputStream(new FileInputStream(zipFile));
-        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(tempFile));
 
-        ZipEntry entry = zin.getNextEntry();
-        while (entry != null)
+        ZipInputStream zin = null;
+        ZipOutputStream out = null;
+        try
         {
-            String name = entry.getName();
-            if (!files.containsKey(name))
+            zin = new ZipInputStream(new FileInputStream(zipFile));
+            out = new ZipOutputStream(new FileOutputStream(tempFile));
+
+            ZipEntry entry = zin.getNextEntry();
+            while (entry != null)
             {
-                // Add ZIP entry to output stream.
-                out.putNextEntry(new ZipEntry(name));
-                // Transfer bytes from the ZIP file to the output file
-                int len;
-                while ((len = zin.read(buf)) > 0)
-                    out.write(buf, 0, len);
+                String name = entry.getName();
+                if (!files.containsKey(name))
+                {
+                    // Add ZIP entry to output stream.
+                    out.putNextEntry(new ZipEntry(name));
+                    // Transfer bytes from the ZIP file to the output file
+                    int len;
+                    while ((len = zin.read(buf)) > 0)
+                        out.write(buf, 0, len);
+                }
+                entry = zin.getNextEntry();
             }
-            entry = zin.getNextEntry();
+            // Close the streams
+            zin.close();
+            // Compress the files
+            for (Map.Entry<String, byte[]> fentry : files.entrySet())
+            {
+                InputStream in = null;
+                try
+                {
+                    in = new ByteArrayInputStream(fentry.getValue());
+                    // Add ZIP entry to output stream.
+                    out.putNextEntry(new ZipEntry(fentry.getKey()));
+                    // Transfer bytes from the file to the ZIP file
+                    int len;
+                    while ((len = in.read(buf)) > 0)
+                    {
+                        out.write(buf, 0, len);
+                    }
+                    // Complete the entry
+                    out.closeEntry();
+                }
+                finally
+                {
+                    IOUtils.closeQuietly(in);
+                }
+            }
+            // Complete the ZIP file
+            out.close();
         }
-        // Close the streams
-        zin.close();
-        // Compress the files
-        for (Map.Entry<String, byte[]> fentry : files.entrySet())
+        finally
         {
-            InputStream in = new ByteArrayInputStream(fentry.getValue());
-            // Add ZIP entry to output stream.
-            out.putNextEntry(new ZipEntry(fentry.getKey()));
-            // Transfer bytes from the file to the ZIP file
-            int len;
-            while ((len = in.read(buf)) > 0)
-            {
-                out.write(buf, 0, len);
-            }
-            // Complete the entry
-            out.closeEntry();
-            in.close();
+            // Close just in case
+            IOUtils.closeQuietly(zin);
+            IOUtils.closeQuietly(out);
         }
-        // Complete the ZIP file
-        out.close();
         return tempFile;
     }
 

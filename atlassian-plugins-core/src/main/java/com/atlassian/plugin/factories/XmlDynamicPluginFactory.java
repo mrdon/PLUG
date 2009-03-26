@@ -117,10 +117,18 @@ public class XmlDynamicPluginFactory implements PluginFactory
     public String canCreate(final PluginArtifact pluginArtifact) throws PluginParseException
     {
         Validate.notNull(pluginArtifact, "The plugin artifact must not be null");
-        final InputStream descriptorStream = pluginArtifact.getInputStream();
-        if (descriptorStream == null)
+        InputStream descriptorStream = null;
+        try
         {
-            return null;
+            descriptorStream = pluginArtifact.getInputStream();
+            if (descriptorStream == null)
+            {
+                return null;
+            }
+        }
+        finally
+        {
+            IOUtils.closeQuietly(descriptorStream);
         }
         try
         {
