@@ -5,6 +5,7 @@ import junit.framework.TestCase;
 import java.io.Serializable;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Arrays;
 
 import org.osgi.framework.BundleContext;
 import com.mockobjects.dynamic.Mock;
@@ -65,6 +66,21 @@ public class TestDefaultComponentRegistrar extends TestCase
 
         mockBundleContext.verify();
     }
+
+    public void testWriteRegistryGenBeanName()
+    {
+        Class[] ifs = new Class[]{Serializable.class};
+        DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+        registrar.register(ifs).forInstance("Foo");
+
+        Mock mockBundleContext = new Mock(BundleContext.class);
+        registerInMock(mockBundleContext, ifs, "Foo", "hostComponent-" + Arrays.asList(registrar.getRegistry().get(0).getMainInterfaces()).hashCode());
+
+        registrar.writeRegistry((BundleContext) mockBundleContext.proxy());
+
+        mockBundleContext.verify();
+    }
+
 
     private void registerInMock(Mock mockBundleContext, Class[] ifs, Object instance, String name)
     {

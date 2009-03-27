@@ -58,7 +58,8 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
             final String beanName = reg.getProperties().get(PropertyBuilder.BEAN_NAME);
             if (beanName == null)
             {
-                reg.getProperties().put(PropertyBuilder.BEAN_NAME, "hostComponent-"+System.identityHashCode(reg.getInstance().getClass().getName().hashCode()));
+                String genKey = String.valueOf(Arrays.asList(reg.getMainInterfaces()).hashCode());
+                reg.getProperties().put(PropertyBuilder.BEAN_NAME, "hostComponent-"+genKey);
             }
 
             if (log.isDebugEnabled())
