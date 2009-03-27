@@ -6,6 +6,11 @@ import java.util.*;
 
 public interface Plugin extends Resourced, Comparable<Plugin>
 {
+    /**
+     * @deprecated since 2.2.0.  This comparator only takes into account the plugin name and assumes it is not null,
+     * yet a) that constraint is not validated anywhere in plugin loading and b) the plugin could have used the i18n
+     * name, and only the application can resolve that to a name useful for comparisons.
+     */
     public static final Comparator<Plugin> NAME_COMPARATOR = new PluginNameComparator();
 
     /**
