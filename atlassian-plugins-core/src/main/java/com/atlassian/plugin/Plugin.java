@@ -25,12 +25,46 @@ public interface Plugin extends Resourced, Comparable<Plugin>
      */
     void setPluginsVersion(int version);
 
+    /**
+     * Returns the non-localised name of this plugin if defined.
+     *
+     * <p> This corresponds to the value of the {@code name} field in the plugin's XML configuration file.
+     *
+     * <p> You would expect a plugin developer to fill in one of either {@code name}, or {@code i18n-name-key}, 
+     * but the framework does no validation and makes no guarantees that this is the case.
+     *
+     * @return the non-localised name of this plugin if defined, or null.
+     * @see #getI18nNameKey()
+     */
     String getName();
 
+    /**
+     * Sets the non-localised name of this plugin.
+     *
+     * @param name the name.
+     * @see #getName()
+     */
     void setName(String name);
 
+    /**
+     * Returns the i18nKey used to get an internationalised name for this plugin.
+     *
+     * <p> This corresponds to the value of the {@code i18n-name-key} field in the plugin's XML configuration file.
+     *
+     * <p> You would expect a plugin developer to fill in one of either {@code name}, or {@code i18n-name-key},
+     * but the framework does no validation and makes no guarantees that this is the case.
+     *
+     * @return the i18n Name Key for this plugin if defined, or null.
+     * @see #getName()
+     */
     String getI18nNameKey();
 
+    /**
+     * Sets the i18nKey used to get an internationalised name for this plugin.
+     *
+     * @param i18nNameKey the i18n Name Key.
+     * @see #getI18nNameKey()
+     */
     void setI18nNameKey(String i18nNameKey);
 
     String getKey();
@@ -40,7 +74,9 @@ public interface Plugin extends Resourced, Comparable<Plugin>
     void addModuleDescriptor(ModuleDescriptor<?> moduleDescriptor);
 
     /**
-     * Get the {@link Collection} of {@link ModuleDescriptor descriptors}. The iteration order of the collection is
+     * Get the {@link Collection} of {@link ModuleDescriptor descriptors}.
+     *
+     * <p> The iteration order of the collection is
      * the order that the modules will be enabled, and should be the same order that the modules appear in the
      * plugin descriptor.
      *
@@ -82,49 +118,63 @@ public interface Plugin extends Resourced, Comparable<Plugin>
     void setResources(Resourced resources);
 
     /**
-     * @return the current state of the plugin
+     * Returns this plugin's current state.
+     *
+     * @return the current state of the plugin.
      * @since 2.2.0
      */
     PluginState getPluginState();
 
     /**
      * @deprecated since 2.2.0, use {@link #getPluginState()} instead
-     * @return
+     * @return {@code true} if this plugin is enabled.
      */
     boolean isEnabled();
 
 
     /**
-     * Whether the plugin is a "system" plugin that shouldn't be made visible to the user
+     * Whether the plugin is a "system" plugin that shouldn't be made visible to the user.
+     *
+     * @return {@code true} if this plugin is a "system" plugin.
      */
     boolean isSystemPlugin();
 
-    boolean containsSystemModule();
-
     void setSystemPlugin(boolean system);
+
+    boolean containsSystemModule();
 
     /**
      * Whether the plugin is a "bundled" plugin that can't be removed.
+     *
+     * @return {@code true} if this plugin is a "bundled" plugin.
      */
     boolean isBundledPlugin();
 
     /**
      * The date this plugin was loaded into the system.
+     *
+     * @return The date this plugin was loaded into the system.
      */
     Date getDateLoaded();
 
     /**
      * Whether or not this plugin can be 'uninstalled'.
+     *
+     * @return {@code true} if this plugin can be 'uninstalled'.
      */
     boolean isUninstallable();
 
     /**
      * Should the plugin file be deleted on unistall?
+     *
+     * @return {@code true} if this plugin file should be deleted on unistall.
      */
     boolean isDeleteable();
 
     /**
-     * Whether or not this plugin is loaded dynamically at runtime
+     * Whether or not this plugin is loaded dynamically at runtime.
+     *
+     * @return {@code true} if this plugin is loaded dynamically at runtime.
      */
     boolean isDynamicallyLoaded();
 
@@ -134,7 +184,7 @@ public interface Plugin extends Resourced, Comparable<Plugin>
      * @param clazz        The name of the class to be loaded
      * @param callingClass The class calling the loading (used to help find a classloader)
      * @return The loaded class.
-     * @throws ClassNotFoundException
+     * @throws ClassNotFoundException if the class cannot be located.
      */
     <T> Class<T> loadClass(String clazz, Class<?> callingClass) throws ClassNotFoundException;
 
@@ -164,6 +214,7 @@ public interface Plugin extends Resourced, Comparable<Plugin>
     InputStream getResourceAsStream(String name);
 
     /**
+     * @param enabled new enabled state
      * @deprecated Since 2.2.0, use {@link #enable()} or {@link #disable()} instead
      */
     void setEnabled(boolean enabled);
@@ -210,7 +261,7 @@ public interface Plugin extends Resourced, Comparable<Plugin>
      * state. If the plugin is already in the {@link PluginState#DISABLED} state, nothing will happen.
      *
      * @since 2.2.0 If the plugin could not be disabled
-     * @throws PluginException
+     * @throws PluginException If the plugin could not be disabled
      */
     void disable() throws PluginException;
 
