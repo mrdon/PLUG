@@ -1,27 +1,32 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.jar.JarEntry;
+import java.util.jar.Manifest;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.osgi.framework.Constants;
+
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;
 import aQute.lib.osgi.Jar;
+
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
-import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.lang.StringUtils;
-import org.osgi.framework.Constants;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.*;
-import java.util.jar.JarEntry;
-import java.util.jar.Manifest;
 
 /**
  * Generates an OSGi manifest if not already defined.  Should be the last stage.
@@ -33,22 +38,22 @@ public class GenerateManifestStage implements TransformStage
     private static final String SPRING_CONTEXT_DEFAULT = "*;timeout:=60";
     static Log log = LogFactory.getLog(GenerateManifestStage.class);
 
-    public void execute(TransformContext context) throws PluginTransformationException
+    public void execute(final TransformContext context) throws PluginTransformationException
     {
-        Builder builder = new Builder();
+        final Builder builder = new Builder();
         try
         {
             builder.setJar(context.getPluginFile());
 
             // We don't care about the modules, so we pass null
-            XmlDescriptorParser parser = new XmlDescriptorParser(context.getDescriptorDocument(), null);
+            final XmlDescriptorParser parser = new XmlDescriptorParser(context.getDescriptorDocument(), null);
 
             // Possibly necessary due to Spring XML creation
             if (isOsgiBundle(builder.getJar().getManifest()))
             {
                 if (context.getExtraImports().isEmpty())
                 {
-                    Manifest mf = builder.getJar().getManifest();
+                    final Manifest mf = builder.getJar().getManifest();
                     mf.getMainAttributes().putValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, parser.getKey());
                     writeManifestOverride(context, mf);
                     // skip any manifest manipulation by bnd
@@ -57,7 +62,7 @@ public class GenerateManifestStage implements TransformStage
                 else
                 {
                     assertSpringAvailableIfRequired(context);
-                    String imports = addExtraImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), context.getExtraImports());
+                    final String imports = addExtraImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), context.getExtraImports());
                     builder.setProperty(Constants.IMPORT_PACKAGE, imports);
 
                     builder.setProperty(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, parser.getKey());
@@ -66,9 +71,9 @@ public class GenerateManifestStage implements TransformStage
             }
             else
             {
-                PluginInformation info = parser.getPluginInformation();
+                final PluginInformation info = parser.getPluginInformation();
 
-                Properties properties = new Properties();
+                final Properties properties = new Properties();
 
                 // Setup defaults
                 properties.put("Spring-Context", SPRING_CONTEXT_DEFAULT);
@@ -90,14 +95,13 @@ public class GenerateManifestStage implements TransformStage
                 header(properties, OsgiPlugin.ATLASSIAN_PLUGIN_KEY, parser.getKey());
 
                 // Scan for embedded jars
-                StringBuilder classpath = new StringBuilder();
+                final StringBuilder classpath = new StringBuilder();
                 classpath.append(".");
-                for (Enumeration<JarEntry> e = context.getPluginJar().entries(); e.hasMoreElements();)
+                for (final JarEntry jarEntry : context.getPluginJarEntries())
                 {
-                    JarEntry entry = e.nextElement();
-                    if (entry.getName().startsWith("META-INF/lib/") && entry.getName().endsWith(".jar"))
+                    if (jarEntry.getName().startsWith("META-INF/lib/") && jarEntry.getName().endsWith(".jar"))
                     {
-                        classpath.append(",").append(entry.getName());
+                        classpath.append(",").append(jarEntry.getName());
                     }
                 }
                 header(properties, Analyzer.BUNDLE_CLASSPATH, classpath.toString());
@@ -117,23 +121,30 @@ public class GenerateManifestStage implements TransformStage
             }
 
             builder.calcManifest();
-            Jar jar = builder.build();
-            Manifest mf = jar.getManifest();
+            builder.getJar().close();
+            final Jar jar = builder.build();
+            final Manifest mf = jar.getManifest();
 
             enforceHostVersionsForUnknownImports(mf, context.getSystemExports());
 
             writeManifestOverride(context, mf);
+            jar.close();
         }
-        catch (Exception t)
+        catch (final Exception t)
         {
             throw new PluginParseException("Unable to process plugin to generate OSGi manifest", t);
+        } finally
+        {
+            builder.getJar().close();
+            builder.close();
         }
+
     }
 
-    private void writeManifestOverride(TransformContext context, Manifest mf)
+    private void writeManifestOverride(final TransformContext context, final Manifest mf)
             throws IOException
     {
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        final ByteArrayOutputStream bout = new ByteArrayOutputStream();
         mf.write(bout);
         context.getFileOverrides().put("META-INF/MANIFEST.MF", bout.toByteArray());
     }
@@ -144,19 +155,19 @@ public class GenerateManifestStage implements TransformStage
      * @param manifest The manifest to read and manipulate
      * @param exports The list of host exports
      */
-    private void enforceHostVersionsForUnknownImports(Manifest manifest, SystemExports exports)
+    private void enforceHostVersionsForUnknownImports(final Manifest manifest, final SystemExports exports)
     {
-        String origImports = manifest.getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
+        final String origImports = manifest.getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
         if (origImports != null)
         {
-            StringBuilder imports = new StringBuilder();
-            Map<String,Map<String,String>> header = OsgiHeaderUtil.parseHeader(origImports);
-            for (Map.Entry<String,Map<String,String>> pkgImport : header.entrySet())
+            final StringBuilder imports = new StringBuilder();
+            final Map<String,Map<String,String>> header = OsgiHeaderUtil.parseHeader(origImports);
+            for (final Map.Entry<String,Map<String,String>> pkgImport : header.entrySet())
             {
                 String imp = null;
                 if (pkgImport.getValue().isEmpty())
                 {
-                    String export = exports.getFullExport(pkgImport.getKey());
+                    final String export = exports.getFullExport(pkgImport.getKey());
                     if (!export.equals(imp))
                     {
                         imp = export;
@@ -179,15 +190,15 @@ public class GenerateManifestStage implements TransformStage
         }
     }
 
-    private boolean isOsgiBundle(Manifest manifest) throws IOException
+    private boolean isOsgiBundle(final Manifest manifest) throws IOException
     {
         return manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null;
     }
 
-    private String addExtraImports(String imports, List<String> extraImports)
+    private String addExtraImports(String imports, final List<String> extraImports)
     {
-        StringBuilder referrers = new StringBuilder();
-        for (String imp : extraImports)
+        final StringBuilder referrers = new StringBuilder();
+        for (final String imp : extraImports)
         {
             referrers.append(imp).append(",");
         }
@@ -203,7 +214,7 @@ public class GenerateManifestStage implements TransformStage
         return imports;
     }
 
-    private static void header(Properties properties, String key, Object value)
+    private static void header(final Properties properties, final String key, final Object value)
     {
         if (value == null)
         {
@@ -218,11 +229,11 @@ public class GenerateManifestStage implements TransformStage
         properties.put(key, value.toString().replaceAll("[\r\n]", ""));
     }
 
-    private static void assertSpringAvailableIfRequired(TransformContext context)
+    private static void assertSpringAvailableIfRequired(final TransformContext context)
     {
         if (context.shouldRequireSpring())
         {
-            String header = context.getManifest().getMainAttributes().getValue("Spring-Context");
+            final String header = context.getManifest().getMainAttributes().getValue("Spring-Context");
             if (header == null)
             {
                 log.warn("The Spring Manifest header 'Spring-Context' is missing in jar '" +

@@ -1,15 +1,19 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
-import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
-import com.atlassian.plugin.osgi.factory.transform.TransformContext;
-import com.atlassian.plugin.PluginParseException;
-import org.dom4j.*;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
-import org.apache.log4j.Logger;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
+import org.apache.log4j.Logger;
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
+
+import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
+import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 
 /**
  * Helper class for generating a new Spring XML file
@@ -28,8 +32,8 @@ class SpringHelper
      */
     static Document createSpringDocument()
     {
-        Document springDoc = DocumentHelper.createDocument();
-        Element root = springDoc.addElement("beans");
+        final Document springDoc = DocumentHelper.createDocument();
+        final Element root = springDoc.addElement("beans");
 
         root.addNamespace("beans", "http://www.springframework.org/schema/beans");
         root.addNamespace("osgi", "http://www.springframework.org/schema/osgi");
@@ -47,18 +51,18 @@ class SpringHelper
      * @param doc The document
      * @return A byte array of the contents
      */
-    static byte[] documentToBytes(Document doc)
+    static byte[] documentToBytes(final Document doc)
     {
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        OutputFormat format = OutputFormat.createPrettyPrint();
+        final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        final OutputFormat format = OutputFormat.createPrettyPrint();
 
         try
         {
-            XMLWriter writer = new XMLWriter(bout, format);
+            final XMLWriter writer = new XMLWriter(bout, format);
             writer.write(doc);
         }
-        catch (IOException e)
+        catch (final IOException e)
         {
             throw new PluginTransformationException("Unable to print generated Spring XML", e);
         }
@@ -73,9 +77,9 @@ class SpringHelper
      * @param path The path of the file
      * @return True if not present, false otherwise
      */
-    static boolean shouldGenerateFile(TransformContext context, String path)
+    static boolean shouldGenerateFile(final TransformContext context, final String path)
     {
-        if (context.getPluginJar().getEntry(path) == null)
+        if (context.getPluginJarEntry(path) == null)
         {
             log.debug("File "+path+" not present, generating");
             return true;
