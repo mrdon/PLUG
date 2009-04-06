@@ -297,6 +297,7 @@
             <groupId>com.atlassian.plugins</groupId>
             <artifactId>atlassian-plugins-osgi-spring-extender</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.atlassian.plugins</groupId>
