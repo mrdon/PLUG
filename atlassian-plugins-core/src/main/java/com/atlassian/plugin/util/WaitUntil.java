@@ -1,10 +1,9 @@
 package com.atlassian.plugin.util;
 
-import static java.lang.Thread.sleep;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import static java.lang.Thread.sleep;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -13,6 +12,35 @@ import java.util.concurrent.TimeUnit;
 public class WaitUntil
 {
     private static final Log log = LogFactory.getLog(WaitUntil.class);
+
+    /**
+     * Number of seconds to wait before a plugin starts up. Configurable through system property
+     * "com.atlassian.plugin.startup.wait". Defaults to {@link #DEFAULT_STARTUP_WAIT}
+     */
+    private static final int STARTUP_WAIT;
+
+    /**
+     * Default {@link #STARTUP_WAIT}
+     */
+    private static final int DEFAULT_STARTUP_WAIT = 60;
+
+    static
+    {
+        final String startupWait = System.getProperty("com.atlassian.plugin.startup.wait", String.valueOf(DEFAULT_STARTUP_WAIT));
+        int secondsToWait;
+        try
+        {
+            secondsToWait = Integer.parseInt(startupWait);
+        }
+        catch (NumberFormatException e)
+        {
+            log.warn("Unable to parse property com.atlassian.plugin.startup.wait value of '" + startupWait + "' for startupWait time. " +
+                     "Using default value " + DEFAULT_STARTUP_WAIT, e);
+            secondsToWait = DEFAULT_STARTUP_WAIT;
+        }
+
+        STARTUP_WAIT = secondsToWait;
+    }
 
     private WaitUntil()
     {}
@@ -25,7 +53,7 @@ public class WaitUntil
      */
     public static boolean invoke(final WaitCondition waitCondition)
     {
-        return invoke(waitCondition, 60);
+        return invoke(waitCondition, STARTUP_WAIT);
     }
 
     /**
