@@ -14,6 +14,9 @@ import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
+import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitStartingEvent;
+import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitEndedEvent;
+import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitTimedOutEvent;
 import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
@@ -31,6 +34,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Plugin that wraps an OSGi bundle that does contain a plugin descriptor.  The actual bundle is not created until the
@@ -49,6 +53,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
     private final PluginEventManager pluginEventManager;
     private final PackageAdmin packageAdmin;
 
+    private final Set<OutstandingDependency> outstandingDependencies = new CopyOnWriteArraySet<OutstandingDependency>();
     private volatile boolean treatSpringBeanFactoryCreationAsRefresh = false;
     private volatile OsgiPluginHelper helper;
     public static final String SPRING_CONTEXT = "Spring-Context";
@@ -169,10 +174,54 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
         }
         if (getKey().equals(event.getPluginKey()))
         {
+            logAndClearOustandingDependencies();
             // TODO: do something with the exception more than logging
             getLog().error("Unable to start the Spring context for plugin " + getKey(), event.getCause());
             setPluginState(PluginState.DISABLED);
         }
+    }
+
+    @PluginEventListener
+    public void onServiceDependencyWaitStarting(PluginServiceDependencyWaitStartingEvent event)
+    {
+        if (event.getPluginKey() != null && event.getPluginKey().equals(getKey()))
+        {
+            OutstandingDependency dep = new OutstandingDependency(event.getBeanName(), String.valueOf(event.getFilter()));
+            outstandingDependencies.add(dep);
+            getLog().info(generateOutstandingDependencyLogMessage(dep, "Waiting for"));
+        }
+    }
+
+    @PluginEventListener
+    public void onServiceDependencyWaitEnded(PluginServiceDependencyWaitEndedEvent event)
+    {
+        if (event.getPluginKey() != null && event.getPluginKey().equals(getKey()))
+        {
+            OutstandingDependency dep = new OutstandingDependency(event.getBeanName(), String.valueOf(event.getFilter()));
+            outstandingDependencies.remove(dep);
+            getLog().info(generateOutstandingDependencyLogMessage(dep, "Found"));
+        }
+    }
+
+    @PluginEventListener
+    public void onServiceDependencyWaitEnded(PluginServiceDependencyWaitTimedOutEvent event)
+    {
+        if (event.getPluginKey() != null && event.getPluginKey().equals(getKey()))
+        {
+            OutstandingDependency dep = new OutstandingDependency(event.getBeanName(), String.valueOf(event.getFilter()));
+            outstandingDependencies.remove(dep);
+            getLog().error(generateOutstandingDependencyLogMessage(dep, "Timeout waiting for "));
+        }
+    }
+
+    private String generateOutstandingDependencyLogMessage(OutstandingDependency dep, String action)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append(action).append(" ");
+        sb.append("OSGi service dependency for plugin ").append(getKey()).append(":\n");
+        sb.append("\t bean name: ").append(dep.getBeanName()).append("\n");
+        sb.append("\t filter:    ").append(dep.getFilter());
+        return sb.toString();
     }
 
     /**
@@ -192,6 +241,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
         }
         if (getKey().equals(event.getPluginKey()))
         {
+            outstandingDependencies.clear();
             helper.setPluginContainer(event.getContainer());
             setPluginState(PluginState.ENABLED);
 
@@ -353,6 +403,10 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
             // Only disable underlying bundle if this is a truely dynamic plugin
             if (!PluginUtils.doesPluginRequireRestart(this))
             {
+                if (getPluginState() == PluginState.ENABLING)
+                {
+                    logAndClearOustandingDependencies();
+                }
                 helper.onDisable();
                 pluginEventManager.unregister(this);
                 getBundle().stop();
@@ -363,6 +417,15 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
         {
             throw new OsgiContainerException("Cannot stop plugin: " + getKey(), e);
         }
+    }
+
+    private void logAndClearOustandingDependencies()
+    {
+        for (OutstandingDependency dep : outstandingDependencies)
+        {
+            getLog().warn(generateOutstandingDependencyLogMessage(dep, "Never resolved"));
+        }
+        outstandingDependencies.clear();
     }
 
     /**
@@ -446,5 +509,61 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
                 .getServiceReference(PackageAdmin.class.getName());
         return (PackageAdmin) bundle.getBundleContext()
                 .getService(ref);
+    }
+
+    private static class OutstandingDependency
+    {
+        private final String beanName;
+        private final String filter;
+
+        public OutstandingDependency(String beanName, String filter)
+        {
+            this.beanName = beanName;
+            this.filter = filter;
+        }
+
+        public String getBeanName()
+        {
+            return beanName;
+        }
+
+        public String getFilter()
+        {
+            return filter;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o)
+            {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass())
+            {
+                return false;
+            }
+
+            OutstandingDependency that = (OutstandingDependency) o;
+
+            if (beanName != null ? !beanName.equals(that.beanName) : that.beanName != null)
+            {
+                return false;
+            }
+            if (!filter.equals(that.filter))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = beanName != null ? beanName.hashCode() : 0;
+            result = 31 * result + filter.hashCode();
+            return result;
+        }
     }
 }

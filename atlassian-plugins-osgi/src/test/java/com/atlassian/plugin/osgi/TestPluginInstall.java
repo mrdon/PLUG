@@ -870,6 +870,24 @@ public class TestPluginInstall extends PluginInContainerTestBase
         }
     }
 
+    public void testInstallWithUnsatisifedDependency() throws Exception
+    {
+            File plugin = new PluginJarBuilder("unsatisifiedDependency")
+                    .addFormattedResource("atlassian-plugin.xml",
+                            "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                            "    <plugin-info>",
+                            "        <version>1.0</version>",
+                            "    </plugin-info>",
+                            "    <component-import key='foo' interface='java.util.concurrent.Callable' />",
+                            "</atlassian-plugin>")
+                    .build(pluginsDir);
+
+            long start = System.currentTimeMillis();
+            initPluginManager();
+
+            assertTrue(start + (60 * 1000) > System.currentTimeMillis());
+    }
+
     public static class Callable3Aware
     {
         private final Callable3 callable;

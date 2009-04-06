@@ -208,13 +208,6 @@
 
                                 <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
-                                    <artifactId>spring-osgi-extender</artifactId>
-                                    <version>${springDmVersion}</version>
-
-                                </artifactItem>
-
-                                <artifactItem>
-                                    <groupId>org.springframework.osgi</groupId>
                                     <artifactId>spring-osgi-io</artifactId>
                                     <version>${springDmVersion}</version>
                                 </artifactItem>
@@ -238,7 +231,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${frameworkBundleDirectory}</outputDirectory>
-                            <includeArtifactIds>atlassian-plugins-osgi-bridge,atlassian-plugins-osgi-logging</includeArtifactIds>
+                            <includeArtifactIds>atlassian-plugins-osgi-bridge,atlassian-plugins-osgi-logging,atlassian-plugins-osgi-spring-extender</includeArtifactIds>
                         </configuration>
                     </execution>
                     <execution>
@@ -296,9 +289,18 @@
 
     <dependencies>
         <dependency>
-
             <groupId>com.atlassian.plugins</groupId>
             <artifactId>atlassian-plugins-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugins</groupId>
+            <artifactId>atlassian-plugins-osgi-spring-extender</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugins</groupId>
+            <artifactId>atlassian-plugins-osgi-events</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

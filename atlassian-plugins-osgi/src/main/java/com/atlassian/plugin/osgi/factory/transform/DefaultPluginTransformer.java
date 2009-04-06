@@ -7,7 +7,6 @@ import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginArtifact;
 import org.apache.commons.lang.Validate;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 

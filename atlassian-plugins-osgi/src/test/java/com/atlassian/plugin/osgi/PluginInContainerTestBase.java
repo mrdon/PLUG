@@ -23,6 +23,7 @@ import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
 import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 
 import org.apache.commons.io.FileUtils;
@@ -82,13 +83,7 @@ public abstract class PluginInContainerTestBase extends TestCase
 
     protected void initPluginManager() throws Exception
     {
-        initPluginManager(new HostComponentProvider()
-        {
-            public void provide(final ComponentRegistrar registrar)
-            {
-                registrar.register(PluginEventManager.class).forInstance(pluginEventManager);
-            }
-        }, new DefaultModuleDescriptorFactory(new DefaultHostContainer()));
+        initPluginManager(null, new DefaultModuleDescriptorFactory(new DefaultHostContainer()));
     }
 
     protected void initPluginManager(final HostComponentProvider hostComponentProvider) throws Exception
@@ -165,13 +160,24 @@ public abstract class PluginInContainerTestBase extends TestCase
     {
         HostComponentProvider requiredWrappingProvider = new HostComponentProvider()
         {
-            public void provide(ComponentRegistrar registrar)
+            public void provide(final ComponentRegistrar registrar)
             {
-                registrar.register(PluginEventManager.class).forInstance(pluginEventManager);
+
                 if (hostComponentProvider != null)
                 {
-                    hostComponentProvider.provide(registrar);
+                    hostComponentProvider.provide(new ComponentRegistrar()
+                    {
+                        public InstanceBuilder register(Class<?>... mainInterfaces)
+                        {
+                            if (!Arrays.asList(mainInterfaces).contains(PluginEventManager.class))
+                            {
+                                return registrar.register(mainInterfaces);
+                            }
+                            return null;
+                        }
+                    });
                 }
+                registrar.register(PluginEventManager.class).forInstance(pluginEventManager);
             }
         };
         return requiredWrappingProvider;

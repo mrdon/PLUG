@@ -168,7 +168,7 @@ public class OsgiHeaderUtil
     /**
      * Gets the plugin key from the bundle
      *
-     * WARNING: shamelessly copied at {@link com.atlassian.plugin.osgi.bridge.SpringOsgiEventBridge}, which can't use
+     * WARNING: shamelessly copied at {@link com.atlassian.plugin.osgi.bridge.PluginBundleUtils}, which can't use
      * this class due to creating a cyclic build dependency.  Ensure these two implementations are in sync.
      *
      * @param bundle The plugin bundle

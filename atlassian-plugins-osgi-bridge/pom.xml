@@ -20,9 +20,14 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.atlassian.plugins</groupId>
+            <artifactId>atlassian-plugins-osgi-events</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.osgi</groupId>
-            <artifactId>spring-osgi-core</artifactId>
-
+            <artifactId>spring-osgi-extender</artifactId>
             <version>${springDmVersion}</version>
             <scope>provided</scope>
         </dependency>

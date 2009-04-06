@@ -48,7 +48,6 @@ public class GenerateManifestStage implements TransformStage
             // We don't care about the modules, so we pass null
             final XmlDescriptorParser parser = new XmlDescriptorParser(context.getDescriptorDocument(), null);
 
-            // Possibly necessary due to Spring XML creation
             if (isOsgiBundle(builder.getJar().getManifest()))
             {
                 if (context.getExtraImports().isEmpty())
@@ -61,6 +60,7 @@ public class GenerateManifestStage implements TransformStage
                 }
                 else
                 {
+                    // Possibly necessary due to Spring XML creation
                     assertSpringAvailableIfRequired(context);
                     final String imports = addExtraImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), context.getExtraImports());
                     builder.setProperty(Constants.IMPORT_PACKAGE, imports);

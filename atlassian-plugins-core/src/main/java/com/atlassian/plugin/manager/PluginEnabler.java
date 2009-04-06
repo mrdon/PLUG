@@ -13,7 +13,8 @@ import org.apache.commons.logging.Log;
 
 /**
  * Helper class that handles the problem of enabling a set of plugins at once.  This functionality is used for both
- * the initial plugin loading and manual plugin enabling.
+ * the initial plugin loading and manual plugin enabling.  The system waits 60 seconds for all dependencies to be
+ * resolved, then resets the timer to 3 seconds if only one remains.
  *
  * @since 2.2.0
  */
@@ -22,6 +23,7 @@ class PluginEnabler
     private final PluginAccessor pluginAccessor;
     private final PluginController pluginController;
     private Log log = LogFactory.getLog(PluginEnabler.class);
+    private static final long LAST_PLUGIN_TIMEOUT = 3 * 1000;
 
     public PluginEnabler(PluginAccessor pluginAccessor, PluginController pluginController)
     {
@@ -78,8 +80,13 @@ class PluginEnabler
             // Now try to enable plugins that weren't enabled before, probably due to dependency ordering issues
             WaitUntil.invoke(new WaitUntil.WaitCondition()
             {
+                private long singlePluginTimeout;
                 public boolean isFinished()
                 {
+                    if (singlePluginTimeout > 0 && singlePluginTimeout < System.currentTimeMillis())
+                    {
+                        return true;
+                    }
                     for (final Iterator<Plugin> i = pluginsInEnablingState.iterator(); i.hasNext();)
                     {
                         final Plugin plugin = i.next();
@@ -87,6 +94,11 @@ class PluginEnabler
                         {
                             i.remove();
                         }
+                    }
+                    if (pluginsInEnablingState.size() == 1 && singlePluginTimeout == 0)
+                    {
+                        log.debug("Only one plugin left not enabled.  Resetting the timeout to 3 seconds.");
+                        singlePluginTimeout = System.currentTimeMillis() + LAST_PLUGIN_TIMEOUT;
                     }
                     return pluginsInEnablingState.isEmpty();
                 }

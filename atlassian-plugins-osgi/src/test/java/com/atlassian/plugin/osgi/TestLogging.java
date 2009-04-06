@@ -32,7 +32,8 @@ public class TestLogging extends PluginInContainerTestBase
                 .build();
         initBundlingPluginManager(factory, pluginJar);
 
-        // for some reason, it is called 14 times w/o priming, but 19 with
+        // for some reason, it is called 14 times w/o priming, but 19 with.  Sadly, this test only works correctly
+        // when invoked from Maven
         assertEquals(19, CountingException.count);
     }
 

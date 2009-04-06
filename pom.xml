@@ -42,6 +42,8 @@
         <module>atlassian-plugins-osgi-bridge</module>
         <module>atlassian-plugins-osgi-logging</module>
         <module>atlassian-plugins-osgi</module>
+        <module>atlassian-plugins-osgi-events</module>
+        <module>atlassian-plugins-osgi-spring-extender</module>
         <module>atlassian-plugins-spring</module>
         <module>atlassian-plugins-refimpl</module>
         <module>atlassian-plugins-core</module>
