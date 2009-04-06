@@ -36,6 +36,7 @@ public class FelixLoggerBridge extends Logger {
         setLogLevel(
                 log.isDebugEnabled() ? Logger.LOG_DEBUG :
                 log.isInfoEnabled() ? Logger.LOG_WARNING :
+                log.isWarnEnabled() ? Logger.LOG_WARNING :
                 Logger.LOG_ERROR);
     }
 
@@ -61,7 +62,18 @@ public class FelixLoggerBridge extends Logger {
                 logInfoUnlessLame(message);
                 break;
             case LOG_WARNING:
-                logInfoUnlessLame(message);
+                // Handles special class loader errors from felix that have quite useful information
+                if (throwable != null && throwable instanceof ClassNotFoundException)
+                {
+                    if (isClassNotFoundsWeCareAbout(throwable))
+                    {
+                        log.debug("Class not found in bundle: " + message);
+                    }
+                }
+                else
+                {
+                    logInfoUnlessLame(message);
+                }
                 break;
             default:
                 log.debug("UNKNOWN[" + level + "]: " + message);
@@ -78,5 +90,22 @@ public class FelixLoggerBridge extends Logger {
                     return;
         }
         log.info(message);
+    }
+
+    public boolean isClassNotFoundsWeCareAbout(Throwable t)
+    {
+        if (t instanceof ClassNotFoundException)
+        {
+            String className = t.getMessage();
+            if (className.contains("***") && t.getCause() instanceof ClassNotFoundException)
+            {
+                className = t.getCause().getMessage();
+            }
+            if (!className.startsWith("org.springframework") && !className.endsWith("BeanInfo") && !className.endsWith("Editor"))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
