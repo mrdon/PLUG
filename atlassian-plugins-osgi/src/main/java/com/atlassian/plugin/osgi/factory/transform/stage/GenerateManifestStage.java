@@ -76,7 +76,11 @@ public class GenerateManifestStage implements TransformStage
                 final Properties properties = new Properties();
 
                 // Setup defaults
-                properties.put("Spring-Context", SPRING_CONTEXT_DEFAULT);
+                if (SpringHelper.isSpringUsed(context))
+                {
+                    properties.put("Spring-Context", SPRING_CONTEXT_DEFAULT);
+                }
+
                 properties.put(Analyzer.BUNDLE_SYMBOLICNAME, parser.getKey());
                 properties.put(Analyzer.IMPORT_PACKAGE, "*;resolution:=optional");
 
@@ -236,8 +240,8 @@ public class GenerateManifestStage implements TransformStage
             final String header = context.getManifest().getMainAttributes().getValue("Spring-Context");
             if (header == null)
             {
-                log.warn("The Spring Manifest header 'Spring-Context' is missing in jar '" +
-                        context.getPluginArtifact().toString() + "'.  Please add it and set it to '" +
+                log.debug("The Spring Manifest header 'Spring-Context' is missing in jar '" +
+                        context.getPluginArtifact().toString() + "'.  If you experience any problems, please add it and set it to '" +
                         SPRING_CONTEXT_DEFAULT + "'");
             }
             else if (!header.contains(";timeout:=60"))

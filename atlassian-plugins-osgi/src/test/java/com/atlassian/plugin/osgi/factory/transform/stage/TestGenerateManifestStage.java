@@ -65,6 +65,7 @@ public class TestGenerateManifestStage extends TestCase
 
         final TransformContext context = new TransformContext(Collections.<HostComponentRegistration> emptyList(), SystemExports.NONE, new JarPluginArtifact(file),
             null, PluginAccessor.Descriptor.FILENAME);
+        context.setShouldRequireSpring(true);
 
         final Attributes attrs = executeStage(context);
 
@@ -133,6 +134,20 @@ public class TestGenerateManifestStage extends TestCase
 
     }
 
+    public void testGenerateManifestSimplePluginNoSpring() throws Exception
+    {
+        final File plugin = new PluginJarBuilder("plugin")
+                .addResource("foo/bar.txt", "Something")
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
+
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final Attributes attrs = executeStage(context);
+        assertEquals("innerjarcp", attrs.getValue("Atlassian-Plugin-Key"));
+        assertNull(attrs.getValue("Spring-Context"));
+
+    }
+
     public void testGenerateManifestWarnNoSpringWithExisting() throws Exception
     {
         Log log = mock(Log.class);
@@ -154,7 +169,7 @@ public class TestGenerateManifestStage extends TestCase
 
         Attributes attrs = executeStage(context);
         assertEquals("innerjarcp", attrs.getValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY));
-        verify(log).warn(contains("'Spring-Context' is missing"));
+        verify(log).debug(contains("'Spring-Context' is missing"));
     }
 
     public void testGenerateManifestWarnNoTimeout() throws Exception

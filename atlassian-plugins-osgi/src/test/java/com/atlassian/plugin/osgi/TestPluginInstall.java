@@ -2,34 +2,27 @@ package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
-import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginState;
-import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.util.WaitUntil;
-import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
-import com.atlassian.plugin.servlet.DefaultServletModuleManager;
-import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.servlet.DefaultServletModuleManager;
+import com.atlassian.plugin.servlet.ServletModuleManager;
+import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.test.PluginJarBuilder;
-import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
-import com.mockobjects.dynamic.Mock;
+import com.atlassian.plugin.util.WaitUntil;
 import com.mockobjects.dynamic.C;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import com.mockobjects.dynamic.Mock;
 import org.osgi.util.tracker.ServiceTracker;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import java.io.File;
-import java.util.Collection;
-import java.util.List;
 import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -872,20 +865,31 @@ public class TestPluginInstall extends PluginInContainerTestBase
 
     public void testInstallWithUnsatisifedDependency() throws Exception
     {
-            File plugin = new PluginJarBuilder("unsatisifiedDependency")
-                    .addFormattedResource("atlassian-plugin.xml",
-                            "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
-                            "    <plugin-info>",
-                            "        <version>1.0</version>",
-                            "    </plugin-info>",
-                            "    <component-import key='foo' interface='java.util.concurrent.Callable' />",
-                            "</atlassian-plugin>")
-                    .build(pluginsDir);
+        File plugin = new PluginJarBuilder("unsatisifiedDependency")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component-import key='foo' interface='java.util.concurrent.Callable' />",
+                        "</atlassian-plugin>")
+                .build(pluginsDir);
 
-            long start = System.currentTimeMillis();
-            initPluginManager();
+        long start = System.currentTimeMillis();
+        initPluginManager();
 
-            assertTrue(start + (60 * 1000) > System.currentTimeMillis());
+        assertTrue(start + (60 * 1000) > System.currentTimeMillis());
+    }
+    public void testInstallSimplePluginNoSpring() throws Exception
+    {
+        File jar = new PluginJarBuilder("strangePath")
+                .addPluginInformation("no-spring", "foo", "1.0")
+                .build();
+
+        initPluginManager();
+        pluginManager.installPlugin(new JarPluginArtifact(jar));
+
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
     }
 
     public static class Callable3Aware
