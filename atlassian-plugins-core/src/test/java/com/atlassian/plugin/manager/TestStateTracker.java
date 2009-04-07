@@ -20,7 +20,7 @@ public class TestStateTracker extends TestCase
 
     public void testIllegalNotStartedTransitions() throws Exception
     {
-        assertIllegalState(new StateTracker(), NOT_STARTED, STARTED, SHUTTING_DOWN, SHUTDOWN);
+        assertIllegalState(new StateTracker(), NOT_STARTED, STARTED, SHUTDOWN);
     }
 
     public void testIllegalStartingTransitions() throws Exception

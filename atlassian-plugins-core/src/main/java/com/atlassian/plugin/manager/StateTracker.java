@@ -12,7 +12,17 @@ class StateTracker
 {
     enum State
     {
-        NOT_STARTED,
+        NOT_STARTED
+        {
+            @Override
+            void check(final State newState)
+            {
+                if (newState != STARTING && newState != SHUTTING_DOWN)
+                {
+                    illegalState(newState);
+                }
+            }
+        },
         STARTING,
         STARTED,
         SHUTTING_DOWN,
