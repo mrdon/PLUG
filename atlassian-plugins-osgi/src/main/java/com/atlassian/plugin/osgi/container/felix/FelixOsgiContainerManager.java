@@ -388,7 +388,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
      * Manages framework-level framework bundles and host components registration, and individual plugin bundle
      * installation and removal.
      */
-    static class BundleRegistration implements BundleActivator, BundleListener
+    static class BundleRegistration implements BundleActivator, BundleListener, FrameworkListener
     {
         private BundleContext bundleContext;
         private final DefaultComponentRegistrar registrar;
@@ -412,36 +412,18 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             packageAdmin = (PackageAdmin) context.getService(ref);
 
             context.addBundleListener(this);
+            context.addFrameworkListener(this);
 
             loadHostComponents(registrar);
             extractAndInstallFrameworkBundles();
-            context.addFrameworkListener(new FrameworkListener()
-            {
-                public void frameworkEvent(final FrameworkEvent event)
-                {
-                    String bundleBits = "";
-                    if (event.getBundle() != null)
-                    {
-                        bundleBits = " in bundle " + event.getBundle().getSymbolicName();
-                    }
-                    switch (event.getType())
-                    {
-                        case FrameworkEvent.ERROR:
-                            log.error("Framework error" + bundleBits, event.getThrowable());
-                            break;
-                        case FrameworkEvent.WARNING:
-                            log.warn("Framework warning" + bundleBits, event.getThrowable());
-                            break;
-                        case FrameworkEvent.INFO:
-                            log.info("Framework info" + bundleBits, event.getThrowable());
-                            break;
-                    }
-                }
-            });
         }
 
         public void stop(final BundleContext ctx) throws Exception
-        {}
+        {
+            ctx.removeBundleListener(this);
+            ctx.removeFrameworkListener(this);
+
+        }
 
         public void bundleChanged(final BundleEvent evt)
         {
@@ -574,23 +556,50 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                     }
                 }
             };
-            bundleContext.addFrameworkListener(refreshListener);
 
-            packageAdmin.refreshPackages(null);
-            boolean refreshed = false;
+            bundleContext.addFrameworkListener(refreshListener);
             try
             {
-                refreshed = latch.await(10, TimeUnit.SECONDS);
+                packageAdmin.refreshPackages(null);
+                boolean refreshed = false;
+                try
+                {
+                    refreshed = latch.await(10, TimeUnit.SECONDS);
+                }
+                catch (InterruptedException e)
+                {
+                    // ignore
+                }
+                if (!refreshed)
+                {
+                    log.warn("Timeout exceeded waiting for package refresh");
+                }
             }
-            catch (InterruptedException e)
+            finally
             {
-                // ignore
+                bundleContext.removeFrameworkListener(refreshListener);
             }
-            if (!refreshed)
+        }
+
+        public void frameworkEvent(FrameworkEvent event)
+        {
+            String bundleBits = "";
+            if (event.getBundle() != null)
             {
-                log.warn("Timeout exceeded waiting for package refresh");
+                bundleBits = " in bundle " + event.getBundle().getSymbolicName();
             }
-            bundleContext.removeFrameworkListener(refreshListener);
+            switch (event.getType())
+            {
+                case FrameworkEvent.ERROR:
+                    log.error("Framework error" + bundleBits, event.getThrowable());
+                    break;
+                case FrameworkEvent.WARNING:
+                    log.warn("Framework warning" + bundleBits, event.getThrowable());
+                    break;
+                case FrameworkEvent.INFO:
+                    log.info("Framework info" + bundleBits, event.getThrowable());
+                    break;
+            }
         }
     }
 
