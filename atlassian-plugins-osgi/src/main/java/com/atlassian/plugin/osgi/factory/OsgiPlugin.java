@@ -379,7 +379,8 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
             }
             else
             {
-                throw new OsgiContainerException("Cannot enable the plugin when the bundle is not in the resolved or installed state");
+                throw new OsgiContainerException("Cannot enable the plugin '" + getKey() + "' when the bundle is not in the resolved or installed state: "
+                        + getBundle().getState() + "(" + getBundle().getBundleId() + ")");
             }
             return stateResult;
         }

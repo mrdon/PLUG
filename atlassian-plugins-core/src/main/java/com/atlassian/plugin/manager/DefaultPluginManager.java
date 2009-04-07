@@ -474,6 +474,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                     try
                     {
                         updatePlugin(existingPlugin, plugin);
+                        pluginsToEnable.remove(existingPlugin);
                         pluginUpgraded = true;
                     }
                     catch (final PluginException e)

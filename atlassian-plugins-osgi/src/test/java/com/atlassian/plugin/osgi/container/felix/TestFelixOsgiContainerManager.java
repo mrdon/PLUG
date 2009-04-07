@@ -193,6 +193,47 @@ public class TestFelixOsgiContainerManager extends TestCase
         assertNotNull(bundleUpdate.getResource("bar.txt"));
     }
 
+    public void testInstallBundleTwiceDifferentSymbolicNames() throws URISyntaxException, IOException, BundleException
+    {
+        File plugin = new PluginJarBuilder("plugin")
+                .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
+                        "Import-Package: javax.swing\n" +
+                        "Bundle-Version: 1.0\n" +
+                        "Bundle-SymbolicName: my.foo\n" +
+                        "Atlassian-Plugin-Key: my.foo.symbolicName\n" +
+                        "Bundle-ManifestVersion: 2\n")
+                .addResource("foo.txt", "foo")
+                .build();
+
+        File pluginUpdate = new PluginJarBuilder("plugin")
+                .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
+                        "Import-Package: javax.swing\n" +
+                        "Bundle-Version: 1.0\n" +
+                        "Atlassian-Plugin-Key: my.foo.symbolicName\n" +
+                        "Bundle-SymbolicName: my.bar\n" +
+                        "Bundle-ManifestVersion: 2\n")
+                .addResource("bar.txt", "bar")
+                .build();
+
+        felix.start();
+        assertEquals(1, felix.getBundles().length);
+        Bundle bundle = felix.installBundle(plugin);
+        assertEquals(2, felix.getBundles().length);
+        assertEquals("1.0", bundle.getHeaders().get(Constants.BUNDLE_VERSION));
+        assertEquals(Bundle.INSTALLED, bundle.getState());
+        assertNotNull(bundle.getResource("foo.txt"));
+        assertNull(bundle.getResource("bar.txt"));
+        bundle.start();
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+        Bundle bundleUpdate = felix.installBundle(pluginUpdate);
+        assertEquals(2, felix.getBundles().length);
+        assertEquals(Bundle.INSTALLED, bundleUpdate.getState());
+        bundleUpdate.start();
+        assertEquals(Bundle.ACTIVE, bundleUpdate.getState());
+        assertNull(bundleUpdate.getResource("foo.txt"));
+        assertNotNull(bundleUpdate.getResource("bar.txt"));
+    }
+
     public void testInstallFailure() throws Exception
     {
         File plugin = new PluginJarBuilder("plugin")
