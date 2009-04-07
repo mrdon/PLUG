@@ -20,7 +20,7 @@ import java.util.List;
  * @deprecated Since 2.2.0, use {@link com.atlassian.plugin.manager.DefaultPluginManager} instead
  */
 @Deprecated
-public class DefaultPluginManager extends com.atlassian.plugin.manager.DefaultPluginManager
+public class DefaultPluginManager extends com.atlassian.plugin.manager.DefaultPluginManager implements PluginManager
 {
     public DefaultPluginManager(final PluginPersistentStateStore store, final List<PluginLoader> pluginLoaders, final ModuleDescriptorFactory moduleDescriptorFactory, final PluginEventManager pluginEventManager)
     {
