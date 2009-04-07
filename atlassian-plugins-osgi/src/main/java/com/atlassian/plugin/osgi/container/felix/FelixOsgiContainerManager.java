@@ -13,6 +13,7 @@ import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
+import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 
 import org.apache.commons.io.FileUtils;
@@ -475,10 +476,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 try
                 {
                     final JarFile jar = new JarFile(path);
-                    final String name = jar.getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+                    final String pluginKey = OsgiHeaderUtil.getPluginKey(jar.getManifest());
                     for (final Bundle oldBundle : bundleContext.getBundles())
                     {
-                        if (name.equals(oldBundle.getSymbolicName()))
+                        if (pluginKey.equals(OsgiHeaderUtil.getPluginKey(oldBundle)))
                         {
                             log.info("Uninstalling existing version " + oldBundle.getHeaders().get(Constants.BUNDLE_VERSION));
                             oldBundle.uninstall();

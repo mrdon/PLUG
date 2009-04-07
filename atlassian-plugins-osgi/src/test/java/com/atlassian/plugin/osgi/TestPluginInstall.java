@@ -81,6 +81,42 @@ public class TestPluginInstall extends PluginInContainerTestBase
 
     }
 
+    public void testUpgradeOfBadPlugin() throws Exception
+    {
+        new PluginJarBuilder("testUpgradeOfBundledPlugin-old")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.bundled.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component key='obj' class='my.Foo'/>",
+                        "</atlassian-plugin>")
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  public Foo() { throw new RuntimeException('bad plugin');}",
+                        "}")
+                .build(pluginsDir);
+        new PluginJarBuilder("testUpgradeOfBundledPlugin-new")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.bundled.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>2.0</version>",
+                        "    </plugin-info>",
+                        "    <component key='obj' class='my.Foo'/>",
+                        "</atlassian-plugin>")
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  public Foo() {}",
+                        "}")
+                .build(pluginsDir);
+        initPluginManager();
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+        assertEquals("Test", pluginManager.getPlugin("test.bundled.plugin").getName());
+        assertEquals("2.0", pluginManager.getPlugin("test.bundled.plugin").getPluginInformation().getVersion());
+    }
+
     public void testUpgradeWithNewComponentImports() throws Exception
     {
         final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());

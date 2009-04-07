@@ -122,7 +122,7 @@ public abstract class PluginInContainerTestBase extends TestCase
         pluginManager.init();
     }
 
-    protected void initBundlingPluginManager(final ModuleDescriptorFactory moduleDescriptorFactory, File bundledPluginJar) throws Exception
+    protected void initBundlingPluginManager(final ModuleDescriptorFactory moduleDescriptorFactory, File... bundledPluginJars) throws Exception
     {
         this.moduleDescriptorFactory = moduleDescriptorFactory;
         final PackageScannerConfiguration scannerConfig = buildScannerConfiguration("1.0");
@@ -135,23 +135,26 @@ public abstract class PluginInContainerTestBase extends TestCase
         final DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Arrays.<PluginFactory>asList(osgiPluginDeployer),
             new DefaultPluginEventManager());
 
-        File zip = new File(bundledPluginJar.getParentFile(), "bundled-plugins.zip");
-        ZipOutputStream stream = null;
-        InputStream in = null;
-        try
+        File zip = new File(bundledPluginJars[0].getParentFile(), "bundled-plugins.zip");
+        for (File bundledPluginJar : bundledPluginJars)
         {
-            stream = new ZipOutputStream(new FileOutputStream(zip));
-            in = new FileInputStream(bundledPluginJar);
-            stream.putNextEntry(new ZipEntry(bundledPluginJar.getName()));
-            IOUtils.copy(in, stream);
-            stream.closeEntry();
+            ZipOutputStream stream = null;
+            InputStream in = null;
+            try
+            {
+                stream = new ZipOutputStream(new FileOutputStream(zip));
+                in = new FileInputStream(bundledPluginJar);
+                stream.putNextEntry(new ZipEntry(bundledPluginJar.getName()));
+                IOUtils.copy(in, stream);
+                stream.closeEntry();
+            }
+            catch (IOException ex)
+            {
+                IOUtils.closeQuietly(in);
+                IOUtils.closeQuietly(stream);
+            }
         }
-        catch (IOException ex)
-        {
-            IOUtils.closeQuietly(in);
-            IOUtils.closeQuietly(stream);
-        }
-        File bundledDir = new File(bundledPluginJar.getParentFile(), "bundled-plugins");
+        File bundledDir = new File(bundledPluginJars[0].getParentFile(), "bundled-plugins");
         final BundledPluginLoader bundledLoader = new BundledPluginLoader(zip.toURL(), bundledDir, Arrays.<PluginFactory>asList(osgiPluginDeployer),
             new DefaultPluginEventManager());
 
