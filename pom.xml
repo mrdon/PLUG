@@ -72,12 +72,19 @@
                 <artifactId>maven-one-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>m1-deploy</id>
                         <configuration>
                             <remoteRepositoryId>atlassian-m1-repository</remoteRepositoryId>
                             <remoteRepositoryUrl>dav:https://maven.atlassian.com/maven1</remoteRepositoryUrl>
                         </configuration>
                         <goals>
                             <goal>deploy-maven-one-repository</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>m1-install</id>
+                        <goals>
+                            <goal>install-maven-one-repository</goal>
                         </goals>
                     </execution>
                 </executions>
