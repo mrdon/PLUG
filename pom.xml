@@ -8,7 +8,7 @@
 
     <groupId>com.atlassian.plugins</groupId>
     <artifactId>atlassian-plugins</artifactId>
-    <version>0.23.3</version>
+    <version>0.23.3-SNAPSHOT</version>
 
     <name>Atlassian Plugins</name>
     <description>
