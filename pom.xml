@@ -8,7 +8,7 @@
 
     <groupId>com.atlassian.plugins</groupId>
     <artifactId>atlassian-plugins</artifactId>
-    <version>0.23.3-SNAPSHOT</version>
+    <version>0.23.3</version>
 
     <name>Atlassian Plugins</name>
     <description>
@@ -35,9 +35,9 @@
     </ciManagement>
 
     <scm>
-        <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/branches/0.23.x</connection>
-        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/branches/0.23.x</developerConnection>
-        <url>https://studio.atlassian.com/svn/PLUG/branches/0.23.x</url>
+        <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-0.23.3</connection>
+        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-0.23.3</developerConnection>
+        <url>https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-0.23.3</url>
     </scm>
 
     <build>
