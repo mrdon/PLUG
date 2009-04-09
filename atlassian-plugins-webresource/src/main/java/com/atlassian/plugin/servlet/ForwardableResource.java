@@ -1,6 +1,7 @@
 package com.atlassian.plugin.servlet;
 
 import com.atlassian.plugin.elements.ResourceLocation;
+import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -30,7 +31,11 @@ public class ForwardableResource implements DownloadableResource
     {
         try
         {
-            response.setContentType(getContentType()); // this will be used if content-type is not set by the forward handler, e.g. for webapp content in Tomcat
+            String type = getContentType();
+            if(StringUtils.isNotBlank(type))
+            {
+                response.setContentType(type); // this will be used if content-type is not set by the forward handler, e.g. for webapp content in Tomcat
+            }
             request.getRequestDispatcher(getLocation()).forward(request, response);
         }
         catch(ServletException e)
