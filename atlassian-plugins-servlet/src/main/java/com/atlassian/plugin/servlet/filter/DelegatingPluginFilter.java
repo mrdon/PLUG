@@ -48,13 +48,31 @@ public class DelegatingPluginFilter implements Filter
         }
     }
 
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+    public void doFilter(ServletRequest request, ServletResponse response, final FilterChain chain)
         throws IOException, ServletException
     {
         ClassLoaderStack.push(descriptor.getPlugin().getClassLoader());
         try
         {
-            filter.doFilter(new PluginHttpRequestWrapper((HttpServletRequest) request, descriptor), response, chain);
+            // Reset the classloader during chain execution to prevent plugin's classloader being used for the duration
+            // of the request
+            FilterChain resetContextClassLoaderChain = new FilterChain()
+            {
+                @Override
+                public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) throws IOException, ServletException
+                {
+                    ClassLoaderStack.pop();
+                    try
+                    {
+                        chain.doFilter(servletRequest, servletResponse);
+                    }
+                    finally
+                    {
+                        ClassLoaderStack.push(descriptor.getPlugin().getClassLoader());
+                    }
+                }
+            };
+            filter.doFilter(new PluginHttpRequestWrapper((HttpServletRequest) request, descriptor), response, resetContextClassLoaderChain);
         }
         finally
         {

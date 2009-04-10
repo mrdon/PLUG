@@ -93,6 +93,7 @@ public class ContainerManager
         final List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
         packageIncludes.add("org.bouncycastle*");
         packageIncludes.add("org.dom4j*");
+        packageIncludes.add("javax.servlet.jsp*");
 
         scannerConfig.setPackageIncludes(packageIncludes);
         hostComponentProvider = new SimpleHostComponentProvider();

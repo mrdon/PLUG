@@ -20,6 +20,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 
+import static org.mockito.Mockito.mock;
+
 public class TestDelegatingPluginFilter extends TestCase
 {
     public void testPluginClassLoaderIsThreadContextClassLoaderWhenFiltering() throws Exception
@@ -30,6 +32,24 @@ public class TestDelegatingPluginFilter extends TestCase
         Mock mockResponse = new Mock(HttpServletResponse.class);
 
         createClassLoaderCheckingFilter("filter").doFilter((HttpServletRequest) mockRequest.proxy(), (HttpServletResponse) mockResponse.proxy(), emptyChain);
+    }
+
+    public void testClassLoaderResetDuringFilterChainExecution() throws Exception
+    {
+        Mock mockRequest = new Mock(HttpServletRequest.class);
+        mockRequest.expectAndReturn("getPathInfo", "/servlet");
+
+        Mock mockResponse = new Mock(HttpServletResponse.class);
+
+        final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        FilterChain chain = new FilterChain()
+        {
+            public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) throws IOException, ServletException
+            {
+                assertEquals(cl, Thread.currentThread().getContextClassLoader());
+            }
+        };
+        createClassLoaderCheckingFilter("filter").doFilter((HttpServletRequest) mockRequest.proxy(), (HttpServletResponse) mockResponse.proxy(), chain);
     }
     
     public void testPluginClassLoaderIsThreadContextLoaderWhenFiltersInChainAreFromDifferentPlugins() throws Exception
