@@ -58,7 +58,6 @@ public class DelegatingPluginFilter implements Filter
             // of the request
             FilterChain resetContextClassLoaderChain = new FilterChain()
             {
-                @Override
                 public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) throws IOException, ServletException
                 {
                     ClassLoaderStack.pop();
