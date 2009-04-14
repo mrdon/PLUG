@@ -1,10 +1,6 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginState;
-import com.atlassian.plugin.IllegalPluginStateException;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginContainerFailedEvent;
@@ -13,19 +9,14 @@ import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
-import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitStartingEvent;
 import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitEndedEvent;
+import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitStartingEvent;
 import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitTimedOutEvent;
+import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.BundleListener;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.*;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -218,9 +209,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
     {
         StringBuilder sb = new StringBuilder();
         sb.append(action).append(" ");
-        sb.append("OSGi service dependency for plugin ").append(getKey()).append(":\n");
-        sb.append("\t bean name: ").append(dep.getBeanName()).append("\n");
-        sb.append("\t filter:    ").append(dep.getFilter());
+        sb.append("service '").append(dep.getBeanName()).append("' for plugin '").append(getKey()).append("' with filter ").append(dep.getFilter());
         return sb.toString();
     }
 
