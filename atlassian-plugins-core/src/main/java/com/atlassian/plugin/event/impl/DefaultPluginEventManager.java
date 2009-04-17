@@ -2,17 +2,21 @@ package com.atlassian.plugin.event.impl;
 
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.util.ClassUtils;
+import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.apache.commons.collections.map.LazyMap;
 import org.apache.commons.collections.Factory;
+import org.apache.commons.collections.map.LazyMap;
+import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.lang.Validate;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Simple, synchronous event manager that uses one or more method selectors to determine event listeners.  The default
@@ -20,8 +24,9 @@ import org.apache.commons.lang.Validate;
  */
 public class DefaultPluginEventManager implements PluginEventManager
 {
-    private final Map<Class,Set<Listener>> eventsToListener;
     private static final Log log = LogFactory.getLog(DefaultPluginEventManager.class);
+
+    private final Map<Class<?>,Set<Listener>> eventsToListener;
     private final ListenerMethodSelector[] listenerMethodSelectors;
 
     /**
@@ -36,30 +41,34 @@ public class DefaultPluginEventManager implements PluginEventManager
      * Constructor that looks for an arbitrary selectors
      * @param selectors List of selectors that determine which are listener methods
      */
-    public DefaultPluginEventManager(ListenerMethodSelector[] selectors)
+    public DefaultPluginEventManager(final ListenerMethodSelector[] selectors)
     {
-        this.listenerMethodSelectors = selectors;
-        eventsToListener = LazyMap.decorate(new HashMap<Class,Set<Listener>>(), new Factory() {
-            public Set<Listener> create() { return new HashSet<Listener>(); }
+        listenerMethodSelectors = selectors;
+        @SuppressWarnings("unchecked")
+        final Map<Class<?>,Set<Listener>> map = LazyMap.decorate(CopyOnWriteMap.newHashMap(), new Factory() {
+            public Set<Listener> create() { return new CopyOnWriteArraySet<Listener>(); }
         });
+        eventsToListener = map;
     }
 
     /**
-     * Broadcasts an event to all listeners synchronously, logging all exceptions as an ERROR.
+     * Broadcasts an event to all listeners, logging all exceptions as an ERROR.
      *
      * @param event The event object
      */
-    public synchronized void broadcast(Object event)
+    public void broadcast(final Object event)
     {
         Validate.notNull(event, "The event to broadcast must not be null");
         final Set<Listener> calledListeners = new HashSet<Listener>();
-        for (Class type : ClassUtils.findAllTypes(event.getClass()))
+        for (final Class<?> type : ClassUtils.findAllTypes(event.getClass()))
         {
-            Set<Listener> registrations = eventsToListener.get(type);
-            for (Listener reg : registrations)
+            final Set<Listener> registrations = eventsToListener.get(type);
+            for (final Listener reg : registrations)
             {
                 if (calledListeners.contains(reg))
+                {
                     continue;
+                }
                 calledListeners.add(reg);
                 reg.notify(event);
             }
@@ -73,19 +82,23 @@ public class DefaultPluginEventManager implements PluginEventManager
      * @throws IllegalArgumentException If the listener is null, contains a listener method with 0 or 2 or more
      * arguments, or contains no listener methods
      */
-    public synchronized void register(Object listener) throws IllegalArgumentException
+    public void register(final Object listener) throws IllegalArgumentException
     {
         if (listener == null)
+        {
             throw new IllegalArgumentException("Listener cannot be null");
+        }
 
         final AtomicBoolean listenerFound = new AtomicBoolean(false);
         forEveryListenerMethod(listener, new ListenerMethodHandler()
         {
-            public void handle(Object listener, Method m)
+            public void handle(final Object listener, final Method m)
             {
                 if (m.getParameterTypes().length != 1)
-                        throw new IllegalArgumentException("Listener methods must only have one argument");
-                Set<Listener> listeners = eventsToListener.get(m.getParameterTypes()[0]);
+                {
+                    throw new IllegalArgumentException("Listener methods must only have one argument");
+                }
+                final Set<Listener> listeners = eventsToListener.get(m.getParameterTypes()[0]);
                 listeners.add(new Listener(listener, m));
                 listenerFound.set(true);
             }
@@ -101,13 +114,13 @@ public class DefaultPluginEventManager implements PluginEventManager
      * Unregisters the listener
      * @param listener The listener
      */
-    public synchronized void unregister(Object listener)
+    public void unregister(final Object listener)
     {
         forEveryListenerMethod(listener, new ListenerMethodHandler()
         {
-            public void handle(Object listener, Method m)
+            public void handle(final Object listener, final Method m)
             {
-                Set<Listener> listeners = eventsToListener.get(m.getParameterTypes()[0]);
+                final Set<Listener> listeners = eventsToListener.get(m.getParameterTypes()[0]);
                 listeners.remove(new Listener(listener, m));
             }
         });
@@ -118,15 +131,13 @@ public class DefaultPluginEventManager implements PluginEventManager
      * @param listener The listener object
      * @param handler The handler
      */
-    void forEveryListenerMethod(Object listener, ListenerMethodHandler handler)
+    void forEveryListenerMethod(final Object listener, final ListenerMethodHandler handler)
     {
-        Method[] methods = listener.getClass().getMethods();
-        for (int x=0; x<methods.length; x++)
+        final Method[] methods = listener.getClass().getMethods();
+        for (final Method m : methods)
         {
-            Method m = methods[x];
-            for (int s = 0; s<listenerMethodSelectors.length; s++)
+            for (final ListenerMethodSelector selector : listenerMethodSelectors)
             {
-                ListenerMethodSelector selector = listenerMethodSelectors[s];
                 if (selector.isListenerMethod(m))
                 {
                     handler.handle(listener, m);
@@ -153,7 +164,7 @@ public class DefaultPluginEventManager implements PluginEventManager
 
         public final Method method;
 
-        public Listener(Object listener, Method method)
+        public Listener(final Object listener, final Method method)
         {
             Validate.notNull(listener);
             Validate.notNull(method);
@@ -161,36 +172,50 @@ public class DefaultPluginEventManager implements PluginEventManager
             this.method = method;
         }
 
-        public void notify(Object event)
+        public void notify(final Object event)
         {
             Validate.notNull(event);
             try
             {
                 method.invoke(listener, event);
             }
-            catch (IllegalAccessException e)
+            catch (final IllegalAccessException e)
             {
                 log.error("Unable to access listener method: "+method, e);
             }
-            catch (InvocationTargetException e)
+            catch (final InvocationTargetException e)
             {
                 log.error("Exception calling listener method", e.getCause());
             }
         }
 
-        public boolean equals(Object o)
+        @Override
+        public boolean equals(final Object o)
         {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o)
+            {
+                return true;
+            }
+            if ((o == null) || (getClass() != o.getClass()))
+            {
+                return false;
+            }
 
-            Listener that = (Listener) o;
+            final Listener that = (Listener) o;
 
-            if (!listener.equals(that.listener)) return false;
-            if (!method.equals(that.method)) return false;
+            if (!listener.equals(that.listener))
+            {
+                return false;
+            }
+            if (!method.equals(that.method))
+            {
+                return false;
+            }
 
             return true;
         }
 
+        @Override
         public int hashCode()
         {
             int result;
