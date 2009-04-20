@@ -250,7 +250,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 {
                     try
                     {
-                        Thread.currentThread().setContextClassLoader(null);
                         felix.start();
                         felixRunning = true;
                     }
