@@ -67,6 +67,20 @@ public class TestDefaultComponentRegistrar extends TestCase
         mockBundleContext.verify();
     }
 
+    public void testWriteRegistryNoInterface()
+    {
+        Class[] ifs = new Class[]{};
+        DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+        registrar.register(ifs).forInstance("Foo").withName("foo");
+
+        Mock mockBundleContext = new Mock(BundleContext.class);
+        registerInMock(mockBundleContext, ifs, "Foo", "foo");
+
+        registrar.writeRegistry((BundleContext) mockBundleContext.proxy());
+
+        mockBundleContext.verify();
+    }
+
     public void testWriteRegistryGenBeanName()
     {
         Class[] ifs = new Class[]{Serializable.class};

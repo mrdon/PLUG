@@ -67,6 +67,11 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
                 log.debug("Registering: " + Arrays.asList(names) + " instance " + reg.getInstance() + "with properties: " + reg.getProperties());
             }
 
+            if (names.length == 0)
+            {
+                log.warn("Host component " + beanName + " of instance " + reg.getInstance() + " has no interfaces");
+            }
+
             Object service = reg.getInstance();
             if (!ContextClassLoaderStrategy.USE_PLUGIN.name().equals(reg.getProperties().get(PropertyBuilder.CONTEXT_CLASS_LOADER_STRATEGY)))
             {
