@@ -413,7 +413,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
     {
         for (OutstandingDependency dep : outstandingDependencies)
         {
-            getLog().warn(generateOutstandingDependencyLogMessage(dep, "Never resolved"));
+            getLog().error(generateOutstandingDependencyLogMessage(dep, "Never resolved"));
         }
         outstandingDependencies.clear();
     }
