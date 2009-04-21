@@ -12,6 +12,7 @@ import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.constraint.Constraint;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.hostcontainer.HostContainer;
 
 public class TestDefaultComponentRegistrar extends TestCase
 {
@@ -65,6 +66,20 @@ public class TestDefaultComponentRegistrar extends TestCase
         registrar.writeRegistry((BundleContext) mockBundleContext.proxy());
 
         mockBundleContext.verify();
+    }
+
+    public void testWriteRegistryRemovesHostContainer()
+    {
+        Class[] ifs = new Class[]{HostContainer.class};
+        DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+        registrar.register(ifs).forInstance("Foo").withName("foo");
+
+        Mock mockBundleContext = new Mock(BundleContext.class);
+
+        registrar.writeRegistry((BundleContext) mockBundleContext.proxy());
+
+        mockBundleContext.verify();
+        assertEquals(0, registrar.getRegistry().size());
     }
 
     public void testWriteRegistryNoInterface()

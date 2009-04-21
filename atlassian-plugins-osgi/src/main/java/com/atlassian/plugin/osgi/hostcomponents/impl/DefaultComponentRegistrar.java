@@ -42,11 +42,12 @@ public class DefaultComponentRegistrar implements ComponentRegistrar
     {
         final ArrayList<ServiceRegistration> services = new ArrayList<ServiceRegistration>();
 
-        for (final HostComponentRegistration reg : registry)
+        for (final HostComponentRegistration reg : new ArrayList<HostComponentRegistration>(registry))
         {
             if (Arrays.asList(reg.getMainInterfaceClasses()).contains(HostContainer.class))
             {
                 log.warn("Cannot register a HostContainer as a host component, skipping");
+                registry.remove(reg);
                 continue;
             }
 
