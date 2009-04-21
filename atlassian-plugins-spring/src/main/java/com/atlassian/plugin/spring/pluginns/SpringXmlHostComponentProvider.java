@@ -45,13 +45,20 @@ public class SpringXmlHostComponentProvider implements HostComponentProvider, Be
         for (String name : beans)
         {
             Object bean = beanFactory.getBean(name);
-            Class[] beanInterfaces = interfaces.get(name);
-            if (beanInterfaces == null)
+            if (beanFactory.isSingleton(name))
             {
-                beanInterfaces = findInterfaces(bean.getClass());
+                Class[] beanInterfaces = interfaces.get(name);
+                if (beanInterfaces == null)
+                {
+                    beanInterfaces = findInterfaces(bean.getClass());
+                }
+                registrar.register(beanInterfaces).forInstance(bean)
+                        .withName(name);
             }
-            registrar.register(beanInterfaces).forInstance(bean)
-                    .withName(name);
+            else
+            {
+                log.warn("Cannot register bean " + name + " as it's scope is not singleton");
+            }
         }
         if (beanFactory instanceof HierarchicalBeanFactory)
         {

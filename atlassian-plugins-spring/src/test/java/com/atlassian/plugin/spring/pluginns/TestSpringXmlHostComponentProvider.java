@@ -36,6 +36,26 @@ public class TestSpringXmlHostComponentProvider extends TestCase
                 new HashSet(Arrays.asList(list.get(0).getMainInterfaceClasses())));
     }
 
+    public void testProvideWithPrototype()
+    {
+        XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("com/atlassian/plugin/spring/pluginns/plugins-spring-test-prototype.xml"));
+
+        SpringXmlHostComponentProvider provider = (SpringXmlHostComponentProvider) factory.getBean(SpringXmlHostComponentProvider.HOST_COMPONENT_PROVIDER);
+        assertNotNull(provider);
+
+
+        DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+        provider.provide(registrar);
+
+        List<HostComponentRegistration> list = registrar.getRegistry();
+        assertNotNull(list);
+        assertEquals(1, list.size());
+        assertEquals("foo", list.get(0).getProperties().get("bean-name"));
+        assertEquals(2, list.get(0).getMainInterfaces().length);
+        assertEquals(new HashSet(Arrays.asList(Fooable.class, Barable.class)),
+                new HashSet(Arrays.asList(list.get(0).getMainInterfaceClasses())));
+    }
+
     public void testProvideWithCustomInterface()
     {
         XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("com/atlassian/plugin/spring/pluginns/plugins-spring-test-interface.xml"));
