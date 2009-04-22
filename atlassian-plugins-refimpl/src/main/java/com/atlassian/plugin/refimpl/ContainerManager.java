@@ -1,5 +1,20 @@
 package com.atlassian.plugin.refimpl;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.servlet.ServletContext;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
@@ -27,21 +42,12 @@ import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescrip
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.util.Assertions;
-import com.atlassian.plugin.web.descriptors.DefaultWebItemModuleDescriptor;
 import com.atlassian.plugin.webresource.PluginResourceLocator;
 import com.atlassian.plugin.webresource.PluginResourceLocatorImpl;
 import com.atlassian.plugin.webresource.WebResourceIntegration;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
 import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.io.IOUtils;
-
-import javax.servlet.ServletContext;
-import java.io.File;
-import java.io.InputStream;
-import java.io.IOException;
-import java.util.*;
 
 /**
  * A simple class that behaves like Spring's ContainerManager class.
@@ -117,6 +123,7 @@ public class ContainerManager
                 .packageScannerConfiguration(scannerConfig)
                 .hostComponentProvider(hostComponentProvider)
                 .osgiPersistentCache(osgiCache)
+                .pluginStateStore(new DefaultPluginPersistentStateStore(osgiCache))
                 .build();
         plugins = new AtlassianPlugins(config);
 
@@ -126,8 +133,8 @@ public class ContainerManager
         servletModuleManager = new DefaultServletModuleManager(servletContext, pluginEventManager);
         pluginAccessor = plugins.getPluginAccessor();
 
-        PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(pluginAccessor, new SimpleServletContextFactory(servletContext));
-        PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
+        final PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(pluginAccessor, new SimpleServletContextFactory(servletContext));
+        final PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
 
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration);
 
@@ -156,7 +163,7 @@ public class ContainerManager
     private String determineVersion()
     {
         InputStream in = null;
-        Properties props = new Properties();
+        final Properties props = new Properties();
         try
         {
             in = getClass().getClassLoader().getResourceAsStream("META-INF/maven/com.atlassian.plugins/atlassian-plugins-core/pom.properties");
@@ -165,7 +172,7 @@ public class ContainerManager
                 props.load(in);
                 return props.getProperty("version");
             }
-        } catch (IOException e) {
+        } catch (final IOException e) {
             e.printStackTrace();
             return null;
         }
@@ -176,14 +183,14 @@ public class ContainerManager
         return null;
     }
 
-    private File makeSureDirectoryExists(ServletContext servletContext, String relativePath)
+    private File makeSureDirectoryExists(final ServletContext servletContext, final String relativePath)
     {
         return makeSureDirectoryExists(servletContext.getRealPath(relativePath));
     }
 
-    private File makeSureDirectoryExists(String path)
+    private File makeSureDirectoryExists(final String path)
     {
-        File dir = new File(path);
+        final File dir = new File(path);
         if (!dir.exists() && !dir.mkdirs())
         {
             throw new RuntimeException("Could not create directory <" + dir + ">");
