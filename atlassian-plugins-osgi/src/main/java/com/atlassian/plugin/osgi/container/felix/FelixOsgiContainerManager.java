@@ -391,7 +391,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     static class BundleRegistration implements BundleActivator, BundleListener, FrameworkListener
     {
         private BundleContext bundleContext;
-        private final DefaultComponentRegistrar registrar;
+        private DefaultComponentRegistrar registrar;
         private List<ServiceRegistration> hostServicesReferences;
         private List<HostComponentRegistration> hostComponentRegistrations;
         private final URL frameworkBundlesUrl;
@@ -424,10 +424,18 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         {
             ctx.removeBundleListener(this);
             ctx.removeFrameworkListener(this);
+            if (hostServicesReferences != null)
+            {
+                for (ServiceRegistration ref : hostServicesReferences)
+                {
+                    ref.unregister();
+                }
+            }
             bundleContext = null;
             packageAdmin = null;
             hostServicesReferences = null;
             hostComponentRegistrations = null;
+            registrar = null;
         }
 
         public void bundleChanged(final BundleEvent evt)
