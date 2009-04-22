@@ -164,7 +164,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         eventManager.register(this);
         felixLogger = new FelixLoggerBridge(log);
         exportsBuilder = new ExportsBuilder();
-
     }
 
     public void setFelixLogger(final Logger logger)
@@ -250,6 +249,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 {
                     try
                     {
+                        Thread.currentThread().setContextClassLoader(null);
                         felix.start();
                         felixRunning = true;
                     }
@@ -396,6 +396,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         private List<HostComponentRegistration> hostComponentRegistrations;
         private final URL frameworkBundlesUrl;
         private final File frameworkBundlesDir;
+        private final ClassLoader initializedClassLoader;
         private PackageAdmin packageAdmin;
 
         public BundleRegistration(final URL frameworkBundlesUrl, final File frameworkBundlesDir, final DefaultComponentRegistrar registrar)
@@ -403,6 +404,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             this.registrar = registrar;
             this.frameworkBundlesUrl = frameworkBundlesUrl;
             this.frameworkBundlesDir = frameworkBundlesDir;
+            this.initializedClassLoader = Thread.currentThread().getContextClassLoader();
         }
 
         public void start(final BundleContext context) throws Exception
@@ -422,7 +424,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         {
             ctx.removeBundleListener(this);
             ctx.removeFrameworkListener(this);
-
+            bundleContext = null;
+            packageAdmin = null;
+            hostServicesReferences = null;
+            hostComponentRegistrations = null;
         }
 
         public void bundleChanged(final BundleEvent evt)
@@ -515,9 +520,20 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 }
             }
 
-            // Register host components as OSGi services
-            hostServicesReferences = registrar.writeRegistry(bundleContext);
-            hostComponentRegistrations = registrar.getRegistry();
+            // Swap the old classloader back in when creating proxies for host components
+            ClassLoader oldCl = Thread.currentThread().getContextClassLoader();
+            try
+            {
+                Thread.currentThread().setContextClassLoader(initializedClassLoader);
+                // Register host components as OSGi services
+                hostServicesReferences = registrar.writeRegistry(bundleContext);
+                hostComponentRegistrations = registrar.getRegistry();
+            }
+            finally
+            {
+                Thread.currentThread().setContextClassLoader(oldCl);
+            }
+
         }
 
         private void extractAndInstallFrameworkBundles() throws BundleException
