@@ -1,10 +1,15 @@
 package com.atlassian.plugin.webresource;
 
+import com.atlassian.plugin.servlet.DownloadException;
+import com.atlassian.plugin.servlet.DownloadableResource;
+import com.atlassian.plugin.servlet.util.CapturingHttpServletResponse;
+import com.atlassian.plugin.webresource.util.DownloadableResourceTestImpl;
 import junit.framework.TestCase;
 
+import java.io.ByteArrayOutputStream;
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.Collections;
 
 public class TestBatchPluginResource extends TestCase
 {
@@ -101,5 +106,37 @@ public class TestBatchPluginResource extends TestCase
 
         assertEquals(batch1, batch2);
         assertNotSame(batch1, batch3);
+    }
+
+    public void testNewLineStreamingHttpResponse() throws DownloadException
+    {
+        BatchPluginResource batchResource = new BatchPluginResource("test.plugin:webresources", "js", null);
+
+        DownloadableResource testResource1 = new DownloadableResourceTestImpl("text/js", "Test1");
+        DownloadableResource testResource2 = new DownloadableResourceTestImpl("text/js", "Test2");
+        batchResource.add(testResource1);
+        batchResource.add(testResource2);
+
+        CapturingHttpServletResponse response = new CapturingHttpServletResponse();
+        batchResource.serveResource(null,response);
+
+        String actualResponse = response.toString();
+        assertEquals("Test1\nTest2\n", actualResponse);
+    }
+
+    public void testNewLineStreamingOutputStream()
+    {
+        BatchPluginResource batchResource = new BatchPluginResource("test.plugin:webresources", "js", null);
+
+        DownloadableResource testResource1 = new DownloadableResourceTestImpl("text/js", "Test1");
+        DownloadableResource testResource2 = new DownloadableResourceTestImpl("text/js", "Test2");
+        batchResource.add(testResource1);
+        batchResource.add(testResource2);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        batchResource.streamResource(baos);
+
+        String actualResponse = baos.toString();
+        assertEquals("Test1\nTest2\n", actualResponse);
     }
 }

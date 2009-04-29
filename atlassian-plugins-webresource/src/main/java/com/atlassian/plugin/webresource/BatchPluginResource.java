@@ -1,21 +1,20 @@
 package com.atlassian.plugin.webresource;
 
-import com.atlassian.plugin.servlet.DownloadException;
-import com.atlassian.plugin.servlet.DownloadableResource;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import java.io.OutputStream;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-
+import com.atlassian.plugin.servlet.DownloadException;
+import com.atlassian.plugin.servlet.DownloadableResource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Represents a batch of plugin resources. <p/>
@@ -83,7 +82,9 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         for (DownloadableResource resource : resources)
         {
             if (resource.isResourceModified(request, response))
+            {
                 return true;
+            }
         }
         return false;
     }
@@ -94,30 +95,64 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         for (DownloadableResource resource : resources)
         {
             resource.serveResource(request, response);
+            writeNewLine(response);
         }
     }
-    
+
     public void streamResource(OutputStream out)
     {
         for (DownloadableResource resource : resources)
         {
             resource.streamResource(out);
+            writeNewLine(out);
         }
-    }    
+    }
+
+    /**
+     * If a minified files follows another file and the former does not have a free floating carriage return AND ends in
+     * a // comment then the one line minified file will in fact be lost from view in a batched send.  So we need
+     * to put a new line between files
+     *
+     * @param response the HTTP response
+     */
+    private void writeNewLine(HttpServletResponse response)
+    {
+        try
+        {
+            response.getOutputStream().write('\n');
+        }
+        catch (IOException e)
+        {
+            log.error("Error serving the requested file", e);
+        }
+    }
+
+    private void writeNewLine(final OutputStream out)
+    {
+        try
+        {
+            out.write('\n');
+        }
+        catch (IOException e)
+        {
+            log.error("Error serving the requested file", e);
+        }
+    }
 
     public String getContentType()
     {
         String contentType = params.get("content-type");
         if (contentType != null)
+        {
             return contentType;
-        
+        }
         return null;
     }
 
     /**
      * Parses the given url and query parameter map into a BatchPluginResource. Query paramters must be
      * passed in through the map, any in the url String will be ignored.
-     * @param url the url to parse
+     * @param url         the url to parse
      * @param queryParams a map of String key and value pairs representing the query parameters in the url
      */
     public static BatchPluginResource parse(String url, Map<String, String> queryParams)
@@ -133,7 +168,9 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         String[] parts = typeAndModuleKey.split("/", 2);
 
         if (parts.length < 2)
+        {
             return null;
+        }
 
         String moduleKey = parts[0];
         String resourceName = parts[1];
@@ -161,20 +198,22 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
     {
         StringBuilder sb = new StringBuilder();
         sb.append(URL_PREFIX).append(PATH_SEPARATOR)
-            .append(moduleCompleteKey).append(PATH_SEPARATOR)
-            .append(resourceName);
+                .append(moduleCompleteKey).append(PATH_SEPARATOR)
+                .append(resourceName);
 
-        if(params.size() > 0 )
+        if (params.size() > 0)
         {
             sb.append("?");
             int count = 0;
 
-            for (Map.Entry<String, String> entry: params.entrySet())
+            for (Map.Entry<String, String> entry : params.entrySet())
             {
                 sb.append(entry.getKey()).append("=").append(entry.getValue());
 
-                if(++count < params.size())
+                if (++count < params.size())
+                {
                     sb.append("&");
+                }
             }
         }
 
@@ -208,15 +247,29 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
 
     public boolean equals(Object o)
     {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+        {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
 
         BatchPluginResource that = (BatchPluginResource) o;
 
         if (moduleCompleteKey != null ? !moduleCompleteKey.equals(that.moduleCompleteKey) : that.moduleCompleteKey != null)
+        {
             return false;
-        if (params != null ? !params.equals(that.params) : that.params != null) return false;
-        if (type != null ? !type.equals(that.type) : that.type != null) return false;
+        }
+        if (params != null ? !params.equals(that.params) : that.params != null)
+        {
+            return false;
+        }
+        if (type != null ? !type.equals(that.type) : that.type != null)
+        {
+            return false;
+        }
 
         return true;
     }

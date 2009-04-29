@@ -16,8 +16,9 @@ public class DownloadableClasspathResource extends AbstractDownloadableResource
         super(plugin, resourceLocation, extraPath);
     }
 
-    protected InputStream getResourceAsStream()
+    @Override
+    protected InputStream getResourceAsStream(final String resourceLocation)
     {
-        return plugin.getResourceAsStream(getLocation());
+        return plugin.getResourceAsStream(resourceLocation);
     }
 }

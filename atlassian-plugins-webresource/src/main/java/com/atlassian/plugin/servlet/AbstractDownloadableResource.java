@@ -3,22 +3,27 @@ package com.atlassian.plugin.servlet;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.servlet.util.LastModifiedHandler;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 abstract class AbstractDownloadableResource implements DownloadableResource
 {
     private static final Log log = LogFactory.getLog(AbstractDownloadableResource.class);
+
+    /**
+     * This is a the system environment variable to set to disable the minification naming strategy used to find web
+     * resources.
+     */
+    private static final String ATLASSIAN_WEBRESOURCE_DISABLE_MINIFICATION = "atlassian.webresource.disable.minification";
 
     protected Plugin plugin;
     protected String extraPath;
@@ -40,16 +45,17 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     {
         log.debug("Serving: " + this);
 
-        InputStream resourceStream = getResourceAsStream();
+        InputStream resourceStream = getResourceAsStreamViaMinificationStrategy();
         if (resourceStream == null)
         {
             log.warn("Resource not found: " + this);
             return;
         }
 
-        if(StringUtils.isNotBlank(getContentType()))
+        final String contentType = getContentType();
+        if(StringUtils.isNotBlank(contentType))
         {
-            response.setContentType(getContentType());
+            response.setContentType(contentType);
         }
 
         OutputStream out;
@@ -68,7 +74,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
 
     public void streamResource(OutputStream out)
     {
-        InputStream resourceStream = getResourceAsStream();
+        InputStream resourceStream = getResourceAsStreamViaMinificationStrategy();
         if (resourceStream == null)
         {
             log.warn("Resource not found: " + this);
@@ -81,7 +87,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     /**
      * Copy from the supplied OutputStream to the supplied InputStream. Note that the InputStream will be closed on
      * completion.
-     * 
+     *
      * @param in the stream to read from
      * @param out the stream to write to
      */
@@ -106,7 +112,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
             {
                 log.warn("Error flushing output stream", e);
             }
-        }        
+        }
     }
 
     /**
@@ -130,17 +136,87 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     }
 
     /**
-     * Returns an {@link InputStream} to stream the resource from.
+     * Returns an {@link InputStream} to stream the resource from based on resource name.
+     *
+     * @param resourceLocation the location of the resource to try and load
+     *
+     * @return an InputStream if the resource can be found or null if cant be found
      */
-    protected abstract InputStream getResourceAsStream();
+    protected abstract InputStream getResourceAsStream(String resourceLocation);
 
+    /**
+     * This is called to return the location of the resource that this object represents.
+     *
+     * @return the location of the resource that this object represents.
+     */
     protected String getLocation()
     {
         return resourceLocation.getLocation() + extraPath;
     }
 
+    @Override
     public String toString()
     {
         return "Resource: " + getLocation() + " (" + getContentType() + ")";
+    }
+
+    /**
+     * This is called to use a minification naming strategy to find resources.  If a minified file cant by found then
+     * the base location is ised as the fall back
+     *
+     * @return an InputStream r null if nothing can be found for the resource name
+     */
+    private InputStream getResourceAsStreamViaMinificationStrategy()
+    {
+
+        InputStream inputStream = null;
+        String location = getLocation();
+        if (minificationStrategyInPlay(location))
+        {
+            final String minifiedLocation = getMinifiedLocation(location);
+            inputStream = getResourceAsStream(minifiedLocation);
+        }
+        if (inputStream == null)
+        {
+            inputStream = getResourceAsStream(location);
+        }
+        return inputStream;
+    }
+
+
+    /**
+     * Returns true if the minification strategy should be applied to a given resource name
+     *
+     * @param resourceLocation the location of the resource
+     *
+     * @return true if the minification strategy should be used.
+     */
+    private boolean minificationStrategyInPlay(final String resourceLocation)
+    {
+        // first off CHECK if we have a System property
+        if (Boolean.getBoolean(ATLASSIAN_WEBRESOURCE_DISABLE_MINIFICATION))
+        {
+            return false;
+        }
+        // now check if the file in fact already minified
+        int index = resourceLocation.indexOf("-min.");
+        if (index != -1 && resourceLocation.lastIndexOf("-min.") == index)
+        {
+            return false;
+        }
+        // slightly different naming scheme
+        index = resourceLocation.indexOf(".min.");
+        if (index != -1 && resourceLocation.lastIndexOf(".min.") == index)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    private String getMinifiedLocation(String location)
+    {
+        int lastDot = location.lastIndexOf(".");
+        // this can never but -1 since the method call is protected by a call to minificationStrategyInPlay() first
+        return location.substring(0, lastDot) + "-min" + location.substring(lastDot);
     }
 }

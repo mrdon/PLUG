@@ -3,8 +3,8 @@ package com.atlassian.plugin.servlet;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.elements.ResourceLocation;
 
-import javax.servlet.ServletContext;
 import java.io.InputStream;
+import javax.servlet.ServletContext;
 
 /**
  * A {@link DownloadableResource} that will serve the resource via the web application's {@link ServletContext}.
@@ -19,8 +19,9 @@ public class DownloadableWebResource extends AbstractDownloadableResource
         this.servletContext = servletContext;
     }
 
-    protected InputStream getResourceAsStream()
+    @Override
+    protected InputStream getResourceAsStream(final String resourceLocation)
     {
-        return servletContext.getResourceAsStream(getLocation());
+        return servletContext.getResourceAsStream(resourceLocation);
     }
 }
