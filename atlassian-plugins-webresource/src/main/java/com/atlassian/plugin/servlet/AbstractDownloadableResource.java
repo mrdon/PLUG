@@ -15,6 +15,12 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * This base class is used to provide the ability to server minified versions of files
+ * if required and available.
+ *
+ * @since 2.2
+ */
 abstract class AbstractDownloadableResource implements DownloadableResource
 {
     private static final Log log = LogFactory.getLog(AbstractDownloadableResource.class);
@@ -193,10 +199,17 @@ abstract class AbstractDownloadableResource implements DownloadableResource
      */
     private boolean minificationStrategyInPlay(final String resourceLocation)
     {
-        // first off CHECK if we have a System property
-        if (Boolean.getBoolean(ATLASSIAN_WEBRESOURCE_DISABLE_MINIFICATION))
+        // first off CHECK if we have a System property set to true that DISABLES the minification
+        try
         {
-            return false;
+            if (Boolean.getBoolean(ATLASSIAN_WEBRESOURCE_DISABLE_MINIFICATION))
+            {
+                return false;
+            }
+        }
+        catch (SecurityException se)
+        {
+            // some app servers might have protected access to system properties.  Unlikely but lets be defensive
         }
         // now check if the file in fact already minified
         int index = resourceLocation.indexOf("-min.");

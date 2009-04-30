@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * Note BatchPluginResource is also a type of {@link DownloadableResource}. The underlying implementation simply
  * keeps a list of {@link DownloadableResource} of which this batch represents and delegates method calls.
+ * 
  * @since 2.2
  */
 public class BatchPluginResource implements DownloadableResource, PluginResource
