@@ -144,45 +144,52 @@ public class TestAbstractDownloadableResource extends TestCase
 
     public void testWhenSystemPropertyIsSet() throws DownloadException
     {
-        System.setProperty("atlassian.webresource.disable.minification", "true");
-
-        // now in this case it must never ask for minified files.  This class used will assert that.
-        NeverMinifiedFileServingDownloableResouce neverMinifiedFileServingDownloableResouce = new NeverMinifiedFileServingDownloableResouce();
-        assertContent(neverMinifiedFileServingDownloableResouce, NEVER_MINIFIED_CONTENT);
-
-        MinifiedFileServingDownloableResouce minifiedFileServingDownloableResouce = new MinifiedFileServingDownloableResouce();
-        assertContent(minifiedFileServingDownloableResouce, PLAIN_CONTENT);
-
-
-        // it should ask for -min files first but get null and hence move on to the plain old content case.
-        NotMinifiedFileServingDownloableResouce notMinifiedFileServingDownloableResouce = new NotMinifiedFileServingDownloableResouce();
-        assertContent(notMinifiedFileServingDownloableResouce, PLAIN_CONTENT);
-
-
-        System.setProperty("atlassian.webresource.disable.minification", "false");
-
-        // it should ask for -min files first and in this case get content back
-        assertContent(minifiedFileServingDownloableResouce, MINIFIED_CONTENT);
-
-        // it should ask for -min files first but get null and hence move on to the plain old content case.
-        assertContent(notMinifiedFileServingDownloableResouce, PLAIN_CONTENT);
-
-        //
-        // now this test is wierd but hey.  If I call back on a never minified resource class object it should
-        // throw an assertion exception that it doesnt expect it.  This proves that it odes indeed get called
-        // with a -min version of itself
         try
         {
-            assertContent(neverMinifiedFileServingDownloableResouce, "doesnt matter");
-            
-            fail("This should have barfed in NeverMinifiedFileServingDownloableResouce");
-        }
-        catch (AssertionFailedError expected)
-        {
-            // this is expected since the test class asserts tgat a -min file should never be called on it.
-            // and hence by inference the atlassian.webresource.disable.minification property is not taking effect
-        }
+            System.setProperty("atlassian.webresource.disable.minification", "true");
 
+            // now in this case it must never ask for minified files.  This class used will assert that.
+            NeverMinifiedFileServingDownloableResouce neverMinifiedFileServingDownloableResouce = new NeverMinifiedFileServingDownloableResouce();
+            assertContent(neverMinifiedFileServingDownloableResouce, NEVER_MINIFIED_CONTENT);
+
+            MinifiedFileServingDownloableResouce minifiedFileServingDownloableResouce = new MinifiedFileServingDownloableResouce();
+            assertContent(minifiedFileServingDownloableResouce, PLAIN_CONTENT);
+
+
+            // it should ask for -min files first but get null and hence move on to the plain old content case.
+            NotMinifiedFileServingDownloableResouce notMinifiedFileServingDownloableResouce = new NotMinifiedFileServingDownloableResouce();
+            assertContent(notMinifiedFileServingDownloableResouce, PLAIN_CONTENT);
+
+
+            System.setProperty("atlassian.webresource.disable.minification", "false");
+
+            // it should ask for -min files first and in this case get content back
+            assertContent(minifiedFileServingDownloableResouce, MINIFIED_CONTENT);
+
+            // it should ask for -min files first but get null and hence move on to the plain old content case.
+            assertContent(notMinifiedFileServingDownloableResouce, PLAIN_CONTENT);
+
+            //
+            // now this test is wierd but hey.  If I call back on a never minified resource class object it should
+            // throw an assertion exception that it doesnt expect it.  This proves that it odes indeed get called
+            // with a -min version of itself
+            try
+            {
+                assertContent(neverMinifiedFileServingDownloableResouce, "doesnt matter");
+
+                fail("This should have barfed in NeverMinifiedFileServingDownloableResouce");
+            }
+            catch (AssertionFailedError expected)
+            {
+                // this is expected since the test class asserts tgat a -min file should never be called on it.
+                // and hence by inference the atlassian.webresource.disable.minification property is not taking effect
+            }
+        }
+        finally
+        {
+            // reset for this test
+            System.setProperty("atlassian.webresource.disable.minification", "false");
+        }
     }
 
     private void assertContent(AbstractDownloadableResource downloadableResource, String content)
