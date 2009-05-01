@@ -23,13 +23,11 @@ public class DownloadableResourceTestImpl implements DownloadableResource
         this.content = content;
     }
 
-    @Override
     public boolean isResourceModified(final HttpServletRequest request, final HttpServletResponse response)
     {
         return false;
     }
 
-    @Override
     public void serveResource(final HttpServletRequest request, final HttpServletResponse response)
             throws DownloadException
     {
@@ -43,7 +41,6 @@ public class DownloadableResourceTestImpl implements DownloadableResource
         }
     }
 
-    @Override
     public void streamResource(final OutputStream out)
     {
         writeContent(out);
@@ -62,7 +59,6 @@ public class DownloadableResourceTestImpl implements DownloadableResource
         }
     }
 
-    @Override
     public String getContentType()
     {
         return contentType;
