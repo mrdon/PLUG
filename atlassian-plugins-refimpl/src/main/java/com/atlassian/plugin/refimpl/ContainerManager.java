@@ -100,6 +100,7 @@ public class ContainerManager
         packageIncludes.add("org.bouncycastle*");
         packageIncludes.add("org.dom4j*");
         packageIncludes.add("javax.servlet.jsp*");
+        packageIncludes.add("com.opensymphony.module.sitemesh*");
 
         scannerConfig.setPackageIncludes(packageIncludes);
         hostComponentProvider = new SimpleHostComponentProvider();
@@ -124,6 +125,7 @@ public class ContainerManager
                 .hostComponentProvider(hostComponentProvider)
                 .osgiPersistentCache(osgiCache)
                 .pluginStateStore(new DefaultPluginPersistentStateStore(osgiCache))
+                .applicationKey("refapp")
                 .build();
         plugins = new AtlassianPlugins(config);
 
