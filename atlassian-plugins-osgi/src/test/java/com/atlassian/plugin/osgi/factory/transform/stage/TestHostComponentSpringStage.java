@@ -39,11 +39,12 @@ public class TestHostComponentSpringStage extends TestCase
                         "  public Foo(com.atlassian.plugin.osgi.SomeInterface bar) {}",
                         "}")
                 .addPluginInformation("my.plugin", "my.plugin", "1.0")
-                .addResource("META-INF/MANIFEST.MF",
-                    "Manifest-Version: 1.0\n" +
-                    "Bundle-Version: 1.0\n" +
-                    "Bundle-SymbolicName: my.server\n" +
-                    "Bundle-ManifestVersion: 2\n")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                    "Manifest-Version: 1.0",
+                    "Bundle-Version: 1.0",
+                    "Bundle-SymbolicName: my.server",
+                    "Bundle-ManifestVersion: 2",
+                    "Bundle-ClassPath: .\n")
                 .build();
         systemExports = new SystemExports("javax.servlet;version=\"2.3\",javax.servlet.http;version=\"2.3\"");
     }

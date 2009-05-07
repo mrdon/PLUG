@@ -270,7 +270,7 @@ public class HostComponentSpringStage implements TransformStage
                 {
                     paths.add(entry);
                 }
-                else
+                else if (!".".equals(entry))
                 {
                     log.warn("Non-jar classpath elements not supported: " + entry);
                 }
