@@ -123,10 +123,10 @@
                     <plugin>
                         <groupId>com.atlassian.maven.plugins</groupId>
                         <artifactId>maven-clover2-plugin</artifactId>
-                        <version>2.4.3</version>
+                        <version>2.5.0</version>
                         <configuration>
                             <fullRunEvery>20</fullRunEvery>
-                            <!--<snapshot>${user.home}/.clover/atlassian-plugins-clover.snapshot</snapshot>-->
+                            <snapshot>${user.home}/.clover/atlassian-plugins-clover.snapshot</snapshot>
                             <singleCloverDatabase>true</singleCloverDatabase>
                         </configuration>
                         <executions>
@@ -151,7 +151,7 @@
                     <plugin>
                         <groupId>com.atlassian.maven.plugins</groupId>
                         <artifactId>maven-clover2-plugin</artifactId>
-                        <version>2.4.3</version>
+                        <version>2.5.0</version>
                         <configuration>
 
 
