@@ -66,6 +66,22 @@ public class UnloadablePlugin extends StaticPlugin
     }
 
     @Override
+    public String getName()
+    {
+        // See if there is a name defined
+        String name = super.getName();
+        if (name != null)
+        {
+            return name;
+        }
+        else
+        {
+            // No name configured - use the Key
+            return getKey();
+        }
+    }
+
+    @Override
     public void close()
     {
 
