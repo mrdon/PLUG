@@ -100,12 +100,17 @@ public class TestOsgiBundleFactory extends TestCase {
         Dictionary<String, String> dict = new Hashtable<String, String>();
         dict.put(Constants.BUNDLE_DESCRIPTION, "desc");
         dict.put(Constants.BUNDLE_VERSION, "1.0");
+        dict.put(Constants.BUNDLE_VENDOR, "acme");
+        dict.put(Constants.BUNDLE_NAME, "myplugin");
         mockBundle.matchAndReturn("getHeaders", dict);
         mockBundle.expectAndReturn("getSymbolicName", "my.foo.symbolicName");
         mockOsgi.expectAndReturn("installBundle", C.ANY_ARGS, mockBundle.proxy());
         Plugin plugin = deployer.create(new JarPluginArtifact(bundle), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiBundlePlugin);
+        assertEquals("acme", plugin.getPluginInformation().getVendorName());
+        assertEquals("myplugin", plugin.getName());
+        assertEquals("desc", plugin.getPluginInformation().getDescription());
         mockOsgi.verify();
     }
 
