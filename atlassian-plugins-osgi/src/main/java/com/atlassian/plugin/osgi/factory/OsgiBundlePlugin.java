@@ -41,6 +41,8 @@ public class OsgiBundlePlugin extends AbstractPlugin
         pluginInformation = new PluginInformation();
         pluginInformation.setDescription((String) bundle.getHeaders().get(Constants.BUNDLE_DESCRIPTION));
         pluginInformation.setVersion((String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
+        pluginInformation.setVendorName((String) bundle.getHeaders().get(Constants.BUNDLE_VENDOR));
+        
         this.key = key;
         dateLoaded = new Date();
     }
@@ -61,7 +63,7 @@ public class OsgiBundlePlugin extends AbstractPlugin
     @Override
     public String getName()
     {
-        return (String) bundle.getHeaders().get("Bundle-Name");
+        return (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
     }
 
     @Override
