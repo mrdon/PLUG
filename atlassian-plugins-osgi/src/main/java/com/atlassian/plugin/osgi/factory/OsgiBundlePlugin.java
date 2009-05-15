@@ -73,12 +73,6 @@ public class OsgiBundlePlugin extends AbstractPlugin
     }
 
     @Override
-    public String getI18nNameKey()
-    {
-        return key;
-    }
-
-    @Override
     public void setI18nNameKey(final String i18nNameKey)
     {
         throw new UnsupportedOperationException("Not available");

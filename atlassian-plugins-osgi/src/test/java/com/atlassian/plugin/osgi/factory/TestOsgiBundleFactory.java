@@ -111,6 +111,7 @@ public class TestOsgiBundleFactory extends TestCase {
         assertEquals("acme", plugin.getPluginInformation().getVendorName());
         assertEquals("myplugin", plugin.getName());
         assertEquals("desc", plugin.getPluginInformation().getDescription());
+        assertNull(plugin.getI18nNameKey());
         mockOsgi.verify();
     }
 
