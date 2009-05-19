@@ -168,9 +168,6 @@ public class TestXmlDescriptorParser extends TestCase
         assertNull(testPlugin.getModuleDescriptor("bear2"));
     }
 
-    /**
-     * Test for https://studio.atlassian.com/browse/PLUG-376
-     */
     public void testPluginWithSystemAttribute()
     {
         XmlDescriptorParser parser = parse(null,
@@ -185,13 +182,10 @@ public class TestXmlDescriptorParser extends TestCase
         // create a Plugin for testing
         Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
         parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
-        assertEquals("This plugin should be a system plugin.", true, testPlugin.isSystemPlugin());
+        assertEquals("This plugin should not be a system plugin - only WEB-INF/lib plugins can be system plugins.", false, testPlugin.isSystemPlugin());
     }
 
-    /**
-     * Test for https://studio.atlassian.com/browse/PLUG-376
-     */
-    public void testPluginWithutSystemAttribute()
+    public void testPluginWithoutSystemAttribute()
     {
         XmlDescriptorParser parser = parse(null,
                  "<atlassian-plugin key='foo' >",
