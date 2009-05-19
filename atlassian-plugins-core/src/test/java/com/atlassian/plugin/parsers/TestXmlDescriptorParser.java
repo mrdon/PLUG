@@ -2,9 +2,6 @@ package com.atlassian.plugin.parsers;
 
 import java.io.*;
 import java.net.URL;
-import java.util.Collections;
-import java.util.Arrays;
-import java.util.HashSet;
 
 import junit.framework.TestCase;
 
@@ -16,6 +13,7 @@ import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 
+@SuppressWarnings({"deprecation"}) //suppress deprecation warnings because we still need to test deprecated methods.
 public class TestXmlDescriptorParser extends TestCase
 {
     private static final String MISSING_INFO_TEST_FILE = "test-missing-plugin-info.xml";
@@ -168,6 +166,46 @@ public class TestXmlDescriptorParser extends TestCase
         parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
         assertNotNull(testPlugin.getModuleDescriptor("bear"));
         assertNull(testPlugin.getModuleDescriptor("bear2"));
+    }
+
+    /**
+     * Test for https://studio.atlassian.com/browse/PLUG-376
+     */
+    public void testPluginWithSystemAttribute()
+    {
+        XmlDescriptorParser parser = parse(null,
+                 "<atlassian-plugin key='foo' system='true'>",
+                "</atlassian-plugin>");
+        
+        // mock up some supporting objects
+        PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
+        Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
+        mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), MockAnimalModuleDescriptor.class);
+
+        // create a Plugin for testing
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
+        parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
+        assertEquals("This plugin should be a system plugin.", true, testPlugin.isSystemPlugin());
+    }
+
+    /**
+     * Test for https://studio.atlassian.com/browse/PLUG-376.
+     */
+    public void testPluginWithutSystemAttribute()
+    {
+        XmlDescriptorParser parser = parse(null,
+                 "<atlassian-plugin key='foo' >",
+                "</atlassian-plugin>");
+
+        // mock up some supporting objects
+        PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
+        Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
+        mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), MockAnimalModuleDescriptor.class);
+
+        // create a Plugin for testing
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
+        parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
+        assertEquals("This plugin should not be a system plugin.", false, testPlugin.isSystemPlugin());
     }
 
     public void testPluginsVersionWithDash()
