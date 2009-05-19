@@ -126,9 +126,6 @@ public class XmlDescriptorParser implements DescriptorParser
             plugin.setEnabledByDefault(false);
         }
 
-        // Fix https://studio.atlassian.com/browse/PLUG-376
-        plugin.setSystemPlugin(Boolean.parseBoolean(pluginElement.attributeValue("system")));
-
         for (final Iterator i = pluginElement.elementIterator(); i.hasNext();)
         {
             final Element element = (Element) i.next();
