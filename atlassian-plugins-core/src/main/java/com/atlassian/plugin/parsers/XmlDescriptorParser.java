@@ -126,6 +126,12 @@ public class XmlDescriptorParser implements DescriptorParser
             plugin.setEnabledByDefault(false);
         }
 
+        // Fixes https://studio.atlassian.com/browse/PLUG-376
+        if ( pluginElement.attributeValue("system") != null)
+        {
+            plugin.setSystemPlugin("true".equals(pluginElement.attributeValue("system")));
+        }
+
         for (final Iterator i = pluginElement.elementIterator(); i.hasNext();)
         {
             final Element element = (Element) i.next();
