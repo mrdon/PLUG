@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.io.IOException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -19,6 +20,7 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -101,6 +103,54 @@ public class TestDefaultServletModuleManager extends TestCase
         HttpServlet wrappedServlet = servletModuleManager.getServlet("/servlet", (ServletConfig) mockServletConfig.proxy());
         wrappedServlet.service((HttpServletRequest) mockHttpServletRequest.proxy(), (HttpServletResponse) mockHttpServletResponse.proxy());
         assertTrue(servlet.serviceCalled);
+    }
+
+    public void testGettingServletWithException() throws Exception
+    {
+        Mock mockServletContext = new Mock(ServletContext.class);
+        mockServletContext.expectAndReturn("getInitParameterNames", Collections.enumeration(Collections.emptyList()));
+        mockServletContext.expect("log", C.ANY_ARGS);
+        Mock mockServletConfig = new Mock(ServletConfig.class);
+        mockServletConfig.expectAndReturn("getServletContext", mockServletContext.proxy());
+
+        Mock mockHttpServletRequest = new Mock(HttpServletRequest.class);
+        mockHttpServletRequest.expectAndReturn("getPathInfo", "/servlet");
+        Mock mockHttpServletResponse = new Mock(HttpServletResponse.class);
+
+        TestHttpServletWithException servlet = new TestHttpServletWithException();
+        ServletModuleDescriptor descriptor = new ServletModuleDescriptorBuilder()
+            .with(servlet)
+            .withPath("/servlet")
+            .with(servletModuleManager)
+            .build();
+
+        servletModuleManager.addServletModule(descriptor);
+
+        assertNull(servletModuleManager.getServlet("/servlet", (ServletConfig) mockServletConfig.proxy()));
+    }
+
+    public void testGettingFilterWithException() throws Exception
+    {
+        Mock mockServletContext = new Mock(ServletContext.class);
+        mockServletContext.expectAndReturn("getInitParameterNames", Collections.enumeration(Collections.emptyList()));
+        mockServletContext.expect("log", C.ANY_ARGS);
+        Mock mockFilterConfig = new Mock(FilterConfig.class);
+        mockFilterConfig.expectAndReturn("getServletContext", mockServletContext.proxy());
+
+        Mock mockHttpServletRequest = new Mock(HttpServletRequest.class);
+        mockHttpServletRequest.expectAndReturn("getPathInfo", "/servlet");
+
+        TestFilterWithException servlet = new TestFilterWithException();
+        ServletFilterModuleDescriptor descriptor = new ServletFilterModuleDescriptorBuilder()
+            .with(servlet)
+            .withPath("/servlet")
+            .with(servletModuleManager)
+            .at(FilterLocation.AFTER_ENCODING)
+            .build();
+
+        servletModuleManager.addFilterModule(descriptor);
+
+        assertEquals(false, servletModuleManager.getFilters(FilterLocation.AFTER_ENCODING, "/servlet", (FilterConfig) mockFilterConfig.proxy()).iterator().hasNext());
     }
     
     public void testGettingServletWithComplexPath() throws Exception
@@ -316,6 +366,31 @@ public class TestDefaultServletModuleManager extends TestCase
         public void service(ServletRequest request, ServletResponse response)
         {
             serviceCalled = true;
+        }
+    }
+
+    static class TestHttpServletWithException extends HttpServlet
+    {
+        @Override
+        public void init(ServletConfig servletConfig) throws ServletException
+        {
+            throw new RuntimeException("exception thrown");
+        }
+    }
+
+    static class TestFilterWithException implements Filter
+    {
+        public void init(FilterConfig filterConfig) throws ServletException
+        {
+            throw new RuntimeException("exception thrown");
+        }
+
+        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException
+        {
+        }
+
+        public void destroy()
+        {
         }
     }
 

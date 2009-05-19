@@ -30,6 +30,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * A simple servletModuleManager to track and retrieve the loaded servlet plugin modules.
  *
@@ -46,6 +49,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
     private final ConcurrentMap<String, LazyLoadedReference<Filter>> filterRefs = new ConcurrentHashMap<String, LazyLoadedReference<Filter>>();
 
     private final ConcurrentMap<Plugin, LazyLoadedReference<ServletContext>> pluginContextRefs = new ConcurrentHashMap<Plugin, LazyLoadedReference<ServletContext>>();
+    private final Log log = LogFactory.getLog(getClass());
 
     /**
      * Constructor that sets itself in the servlet context for later use in dispatching servlets and filters.
@@ -119,7 +123,12 @@ public class DefaultServletModuleManager implements ServletModuleManager
             return null;
         }
 
-        return getServlet(descriptor, servletConfig);
+        HttpServlet servlet = getServlet(descriptor, servletConfig);
+        if (servlet == null)
+        {
+            servletRefs.remove(descriptor.getCompleteKey());
+        }
+        return servlet;
     }
 
     public void removeServletModule(ServletModuleDescriptor descriptor)
@@ -163,7 +172,15 @@ public class DefaultServletModuleManager implements ServletModuleManager
         List<Filter> filters = new LinkedList<Filter>();
         for (final ServletFilterModuleDescriptor descriptor : matchingFilterDescriptors)
         {
-            filters.add(getFilter(descriptor, filterConfig));
+            Filter filter = getFilter(descriptor, filterConfig);
+            if (filter == null)
+            {
+                filterRefs.remove(descriptor.getCompleteKey());
+            }
+            else
+            {
+                filters.add(getFilter(descriptor, filterConfig));
+            }
         }
         return filters;
     }
@@ -248,7 +265,15 @@ public class DefaultServletModuleManager implements ServletModuleManager
                 servletRef = servletRefs.get(descriptor.getCompleteKey());
             }
         }
-        HttpServlet servlet = servletRef.get();
+        HttpServlet servlet = null;
+        try
+        {
+            servlet = servletRef.get();
+        }
+        catch (LazyLoadedReference.InitializationException ex)
+        {
+            log.error("Unable to create servlet", ex);
+        }
         return servlet;
     }
 
@@ -261,7 +286,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      *
      * @param descriptor
      * @param filterConfig
-     * @return
+     * @return The filter, or null if the filter is invalid and should be removed
      */
     private Filter getFilter(final ServletFilterModuleDescriptor descriptor, final FilterConfig filterConfig)
     {
@@ -281,7 +306,16 @@ public class DefaultServletModuleManager implements ServletModuleManager
                 filterRef = filterRefs.get(descriptor.getCompleteKey());
             }
         }
-        return filterRef.get();
+        Filter filter = null;
+        try
+        {
+            filter = filterRef.get();
+        }
+        catch (LazyLoadedReference.InitializationException ex)
+        {
+            log.error("Unable to create filter", ex);
+        }
+        return filter;
     }
 
     /**
