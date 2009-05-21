@@ -35,7 +35,8 @@ import java.util.TreeMap;
  */
 public class ScanningPluginLoader implements DynamicPluginLoader
 {
-    private static Log log = LogFactory.getLog(DirectoryPluginLoader.class);
+    private final Log log = LogFactory.getLog(this.getClass());
+
     protected final com.atlassian.plugin.loaders.classloading.Scanner scanner;
     protected final Map<DeploymentUnit, Plugin> plugins;
     protected final List<PluginFactory> pluginFactories;
@@ -304,7 +305,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
     /**
      * Template method that can be used by a specific {@link PluginLoader} to
      * add information to a {@link Plugin} after it has been loaded.
-     * 
+     *
      * @param plugin a plugin that has been loaded
      * @since v2.2.0
      */
