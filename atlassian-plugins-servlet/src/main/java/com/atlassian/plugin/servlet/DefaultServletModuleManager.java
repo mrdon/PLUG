@@ -270,7 +270,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         {
             servlet = servletRef.get();
         }
-        catch (LazyLoadedReference.InitializationException ex)
+        catch (RuntimeException ex)
         {
             log.error("Unable to create servlet", ex);
         }
@@ -311,7 +311,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         {
             filter = filterRef.get();
         }
-        catch (LazyLoadedReference.InitializationException ex)
+        catch (RuntimeException ex)
         {
             log.error("Unable to create filter", ex);
         }
