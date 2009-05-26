@@ -3,7 +3,6 @@ package com.atlassian.plugin.parsers;
 import com.atlassian.plugin.PluginParseException;
 
 import java.io.InputStream;
-import java.util.Set;
 
 /**
  * A factory for creating descriptor parsers.
