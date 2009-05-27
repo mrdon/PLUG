@@ -102,7 +102,7 @@ public class UnloadableStaticPluginFactory implements PluginFactory
             {
                 parser.configurePlugin(moduleDescriptorFactory, plugin);
             }
-            catch (PluginParseException ex)
+            catch (Exception ex)
             {
                 // Error on full configure - we'll just set the key as this is an UnloadablePlugin anyway.
                 plugin.setKey(parser.getKey());   
