@@ -1,5 +1,9 @@
 package com.atlassian.plugin.manager;
 
+import static com.atlassian.plugin.util.collect.CollectionUtil.filter;
+import static com.atlassian.plugin.util.collect.CollectionUtil.toList;
+import static com.atlassian.plugin.util.collect.CollectionUtil.transform;
+
 import com.atlassian.plugin.ModuleCompleteKey;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
@@ -43,15 +47,13 @@ import com.atlassian.plugin.predicate.PluginPredicate;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.WaitUntil;
 import com.atlassian.plugin.util.collect.CollectionUtil;
-import static com.atlassian.plugin.util.collect.CollectionUtil.filter;
-import static com.atlassian.plugin.util.collect.CollectionUtil.toList;
-import static com.atlassian.plugin.util.collect.CollectionUtil.transform;
 import com.atlassian.plugin.util.collect.Function;
 import com.atlassian.plugin.util.collect.Predicate;
+
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.lang.time.StopWatch;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -136,7 +138,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     public void init() throws PluginParseException
     {
         tracker.setState(StateTracker.State.STARTING);
-        StopWatch stopWatch = new StopWatch();
+        final StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         log.info("Initialising the plugin system");
         pluginEventManager.broadcast(new PluginFrameworkStartingEvent(this, this));
@@ -186,9 +188,9 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         tracker.setState(StateTracker.State.SHUTTING_DOWN);
         log.info("Shutting down the plugin system");
         pluginEventManager.broadcast(new PluginFrameworkShutdownEvent(this, this));
-        tracker.setState(StateTracker.State.SHUTDOWN);
         plugins.clear();
         pluginEventManager.unregister(this);
+        tracker.setState(StateTracker.State.SHUTDOWN);
     }
 
     @PluginEventListener
