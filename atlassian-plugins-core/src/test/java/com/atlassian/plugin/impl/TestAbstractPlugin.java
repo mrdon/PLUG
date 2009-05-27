@@ -1,19 +1,21 @@
 package com.atlassian.plugin.impl;
 
-import junit.framework.TestCase;
-
-import java.net.URL;
-import java.io.InputStream;
-
 import com.atlassian.plugin.util.VersionStringComparator;
+
+import org.apache.commons.lang.StringUtils;
+
+import java.io.InputStream;
+import java.net.URL;
+
+import junit.framework.TestCase;
 
 public class TestAbstractPlugin extends TestCase
 {
     public void testCompareTo()
     {
-        AbstractPlugin p1 = createAbstractPlugin();
+        final AbstractPlugin p1 = createAbstractPlugin();
         p1.setKey("foo");
-        AbstractPlugin p2 = createAbstractPlugin();
+        final AbstractPlugin p2 = createAbstractPlugin();
         p2.setKey("bar");
 
         // foo should be after bar
@@ -23,10 +25,10 @@ public class TestAbstractPlugin extends TestCase
 
     public void testCompareToOnVersion()
     {
-        AbstractPlugin p1 = createAbstractPlugin();
+        final AbstractPlugin p1 = createAbstractPlugin();
         p1.setKey("foo");
         p1.getPluginInformation().setVersion("3.4.1");
-        AbstractPlugin p2 = createAbstractPlugin();
+        final AbstractPlugin p2 = createAbstractPlugin();
         p2.setKey("foo");
         p2.getPluginInformation().setVersion("3.1.4");
 
@@ -37,10 +39,10 @@ public class TestAbstractPlugin extends TestCase
 
     public void testCompareToWhenEqual()
     {
-        AbstractPlugin p1 = createAbstractPlugin();
+        final AbstractPlugin p1 = createAbstractPlugin();
         p1.setKey("foo");
         p1.getPluginInformation().setVersion("3.1.4");
-        AbstractPlugin p2 = createAbstractPlugin();
+        final AbstractPlugin p2 = createAbstractPlugin();
         p2.setKey("foo");
         p2.getPluginInformation().setVersion("3.1.4");
 
@@ -51,10 +53,10 @@ public class TestAbstractPlugin extends TestCase
 
     public void testCompareToWithNullPluginInformation()
     {
-        AbstractPlugin p1 = createAbstractPlugin();
+        final AbstractPlugin p1 = createAbstractPlugin();
         p1.setKey("foo");
         p1.setPluginInformation(null);
-        AbstractPlugin p2 = createAbstractPlugin();
+        final AbstractPlugin p2 = createAbstractPlugin();
         p2.setKey("foo");
 
         // p2 has default version (== "0.0")
@@ -66,12 +68,12 @@ public class TestAbstractPlugin extends TestCase
 
     public void testCompareWithInvalidVersion() throws Exception
     {
-        AbstractPlugin p1 = createAbstractPlugin();
+        final AbstractPlugin p1 = createAbstractPlugin();
         p1.setKey("foo");
         final String invalidVersion = "@$%^#";
         assertFalse(VersionStringComparator.isValidVersionString(invalidVersion));
         p1.getPluginInformation().setVersion(invalidVersion);
-        AbstractPlugin p2 = createAbstractPlugin();
+        final AbstractPlugin p2 = createAbstractPlugin();
         p2.setKey("foo");
         p2.getPluginInformation().setVersion("3.2");
 
@@ -82,12 +84,12 @@ public class TestAbstractPlugin extends TestCase
 
     public void testCompareWithBothVersionsInvalid() throws Exception
     {
-        AbstractPlugin p1 = createAbstractPlugin();
+        final AbstractPlugin p1 = createAbstractPlugin();
         p1.setKey("foo");
         p1.getPluginInformation().setVersion("@$%^#");
         assertFalse(VersionStringComparator.isValidVersionString(p1.getPluginInformation().getVersion()));
 
-        AbstractPlugin p2 = createAbstractPlugin();
+        final AbstractPlugin p2 = createAbstractPlugin();
         p2.setKey("foo");
         p2.getPluginInformation().setVersion("!!");
 
@@ -98,8 +100,8 @@ public class TestAbstractPlugin extends TestCase
 
     public void testCompareToWithNullKey()
     {
-        AbstractPlugin p1 = createAbstractPlugin();
-        AbstractPlugin p2 = createAbstractPlugin();
+        final AbstractPlugin p1 = createAbstractPlugin();
+        final AbstractPlugin p2 = createAbstractPlugin();
         p2.setKey("foo");
 
         // null should be before "foo"
@@ -110,12 +112,36 @@ public class TestAbstractPlugin extends TestCase
 
     public void testCompareToWithBothNullKeys()
     {
-        AbstractPlugin p1 = createAbstractPlugin();
-        AbstractPlugin p2 = createAbstractPlugin();
+        final AbstractPlugin p1 = createAbstractPlugin();
+        final AbstractPlugin p2 = createAbstractPlugin();
 
         assertNull(p1.getKey());
         assertTrue(p1.compareTo(p2) == 0);
         assertTrue(p2.compareTo(p1) == 0);
+    }
+
+    public void testGetNameReturnsKeyIfBlank()
+    {
+        final AbstractPlugin p1 = createAbstractPlugin();
+        p1.setKey("foo");
+        assertEquals("foo", p1.getName());
+    }
+
+    public void testGetNameReturnsSetName()
+    {
+        final AbstractPlugin p1 = createAbstractPlugin();
+        p1.setKey("key");
+        p1.setI18nNameKey("i18n");
+        p1.setName("name");
+        assertEquals("name", p1.getName());
+    }
+
+    public void testGetNameReturnsBlankIfI18nNameKeySpecified()
+    {
+        final AbstractPlugin p1 = createAbstractPlugin();
+        p1.setKey("foo");
+        p1.setI18nNameKey("i18n");
+        assertTrue(StringUtils.isBlank(p1.getName()));
     }
 
     private AbstractPlugin createAbstractPlugin()
@@ -123,6 +149,7 @@ public class TestAbstractPlugin extends TestCase
         return new AbstractPlugin()
         {
 
+            @Override
             public boolean isBundledPlugin()
             {
                 return false;
@@ -164,5 +191,4 @@ public class TestAbstractPlugin extends TestCase
             }
         };
     }
-
 }
