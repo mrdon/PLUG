@@ -20,7 +20,7 @@ import java.io.InputStream;
  * to a directory that only accepts OSGi plugins.  This should be placed last in the chain of plugin factories and
  * only if {@link com.atlassian.plugin.factories.LegacyDynamicPluginFactory} is not used.
  *
- * @since 2.3.0
+ * @since 2.2.3
  */
 public class UnloadableStaticPluginFactory implements PluginFactory
 {
@@ -38,7 +38,6 @@ public class UnloadableStaticPluginFactory implements PluginFactory
     {
         Validate.notNull(pluginArtifact, "The plugin artifact is required");
 
-        String pluginKey = null;
         InputStream descriptorStream = null;
         try
         {
@@ -49,7 +48,9 @@ public class UnloadableStaticPluginFactory implements PluginFactory
                 final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
                 if (descriptorParser.getPluginsVersion() == 1)
                 {
-                    pluginKey = descriptorParser.getKey();
+                    // This is a version 1 plugin inside the version 2 plugin directory - we want to create an
+                    // UnloadablePlugin with appropriate error message.
+                    return descriptorParser.getKey();
                 }
             }
         }
@@ -57,7 +58,7 @@ public class UnloadableStaticPluginFactory implements PluginFactory
         {
             IOUtils.closeQuietly(descriptorStream);
         }
-        return pluginKey;
+        return null;
     }
 
     /**
@@ -95,9 +96,19 @@ public class UnloadableStaticPluginFactory implements PluginFactory
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
 
             plugin = new UnloadablePlugin();
+            // This should be a valid plugin, it just got put in the wrong directory.
+            // We'll try to do a full configure because it looks more user-friendly.
+            try
+            {
+                parser.configurePlugin(moduleDescriptorFactory, plugin);
+            }
+            catch (PluginParseException ex)
+            {
+                // Error on full configure - we'll just set the key as this is an UnloadablePlugin anyway.
+                plugin.setKey(parser.getKey());   
+            }
             plugin.setErrorText("Unable to load the static '" + pluginArtifact + "' plugin from the plugins directory.  Please " +
                                 "copy this file into WEB-INF/lib and restart.");
-            plugin.setKey(parser.getKey());
         }
         finally
         {
