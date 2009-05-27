@@ -64,11 +64,19 @@ public class UnloadablePlugin extends StaticPlugin
     {
         this.errorText = errorText;
     }
-    
+
     @Override
     public void close()
-    {
+    {}
 
+    @Override
+    protected void uninstallInternal()
+    {
+        if (!uninstallable)
+        {
+            // should throw exception
+            super.uninstallInternal();
+        }
     }
 
     @Override
