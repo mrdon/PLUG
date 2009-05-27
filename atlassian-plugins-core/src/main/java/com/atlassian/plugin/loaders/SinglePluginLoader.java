@@ -142,10 +142,10 @@ public class SinglePluginLoader implements PluginLoader
                 UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin);
                 final StringBuilder errorText = new StringBuilder("OSGi plugins cannot be deployed via the classpath, which is usually WEB-INF/lib.");
                 if (resource != null) {
-                    errorText.append(" Resource is: " + resource);
+                    errorText.append("\n Resource is: ").append(resource);
                 }
                 if (url != null) {
-                    errorText.append(" URL is: " + url);
+                    errorText.append("\n URL is: ").append(url);
                 }
                 unloadablePlugin.setErrorText(errorText.toString());
                 plugin = unloadablePlugin;
