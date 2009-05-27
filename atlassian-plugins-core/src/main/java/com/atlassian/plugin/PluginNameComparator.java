@@ -17,8 +17,13 @@ class PluginNameComparator implements Comparator<Plugin>, Serializable
      * @param p2 plugin to compare
      * @return result of plugin name comparison
      */
-    public int compare(Plugin p1, Plugin p2)
+    public int compare(final Plugin p1, final Plugin p2)
     {
-        return p1.getName().compareTo(p2.getName());
+        final String name1 = p1.getName();
+        final String name2 = p2.getName();
+        if ((name1 == null) || (name2 == null)) {
+            return (name1 == null) ? (name2 == null) ? 0 : -1 : 1;
+        }
+        return name1.compareTo(name2);
     }
 }

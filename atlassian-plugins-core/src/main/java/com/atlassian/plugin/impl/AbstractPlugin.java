@@ -2,15 +2,28 @@ package com.atlassian.plugin.impl;
 
 import static com.atlassian.plugin.util.concurrent.CopyOnWriteMap.newLinkedMap;
 
-import com.atlassian.plugin.*;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.Resourced;
+import com.atlassian.plugin.Resources;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.util.VersionStringComparator;
 
-import java.util.*;
-
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 {
@@ -30,7 +43,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 
     public String getName()
     {
-        return name;
+        return !StringUtils.isBlank(name) ? name : !StringUtils.isBlank(i18nNameKey) ? "" : getKey();
     }
 
     public void setName(final String name)
@@ -111,7 +124,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         return pluginState;
     }
 
-    protected void setPluginState(PluginState state)
+    protected void setPluginState(final PluginState state)
     {
         pluginState = state;
     }
@@ -186,7 +199,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 
     public final void enable()
     {
-        if (pluginState == PluginState.ENABLED || pluginState == PluginState.ENABLING)
+        if ((pluginState == PluginState.ENABLED) || (pluginState == PluginState.ENABLING))
         {
             return;
         }
@@ -197,12 +210,12 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         try
         {
             pluginState = enableInternal();
-            if (pluginState != PluginState.ENABLED && pluginState != PluginState.ENABLING)
+            if ((pluginState != PluginState.ENABLED) && (pluginState != PluginState.ENABLING))
             {
                 log.warn("Illegal state transition to "+pluginState+" for plugin '" + getKey() + "' on enable()");
             }
         }
-        catch (PluginException ex)
+        catch (final PluginException ex)
         {
             log.warn("Unable to enable plugin '" + getKey() + "'", ex);
             throw ex;
@@ -240,7 +253,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
             disableInternal();
             pluginState = PluginState.DISABLED;
         }
-        catch (PluginException ex)
+        catch (final PluginException ex)
         {
             log.warn("Unable to disable plugin '" + getKey() + "'", ex);
             throw ex;
@@ -286,7 +299,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
             installInternal();
             pluginState = PluginState.INSTALLED;
         }
-        catch (PluginException ex)
+        catch (final PluginException ex)
         {
             log.warn("Unable to install plugin '" + getKey() + "'", ex);
             throw ex;
@@ -322,7 +335,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
             uninstallInternal();
             pluginState = PluginState.UNINSTALLED;
         }
-        catch (PluginException ex)
+        catch (final PluginException ex)
         {
             log.warn("Unable to uninstall plugin '" + getKey() + "'", ex);
             throw ex;
