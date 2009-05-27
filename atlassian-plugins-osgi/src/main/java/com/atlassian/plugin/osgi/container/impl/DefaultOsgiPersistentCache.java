@@ -1,16 +1,14 @@
 package com.atlassian.plugin.osgi.container.impl;
 
-import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
-import com.atlassian.plugin.PluginException;
-import com.sun.jmx.snmp.internal.SnmpEngineImpl;
+import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.Validate;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-
-import org.apache.commons.lang.Validate;
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
 
 /**
  * Default implementation of persistent cache.  Handles clearing of directories if an upgrade has been detected.
@@ -28,7 +26,7 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
      * Constructs a cache, using the passed file as the base directory for cache subdirectories
      * @param baseDir The base directory
      */
-    public DefaultOsgiPersistentCache(File baseDir)
+    public DefaultOsgiPersistentCache(final File baseDir)
     {
         Validate.notNull(baseDir, "The base directory for OSGi caches cannot be null");
         Validate.isTrue(baseDir.exists(), "The base directory for OSGi persistent caches should exist");
@@ -43,7 +41,7 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
      * @deprecated
      */
     @Deprecated
-    public DefaultOsgiPersistentCache(File baseDir, String applicationVersion)
+    public DefaultOsgiPersistentCache(final File baseDir, final String applicationVersion)
     {
         this(baseDir);
     }
@@ -71,13 +69,13 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
             FileUtils.cleanDirectory(osgiBundleCache);
             FileUtils.cleanDirectory(transformedPluginCache);
         }
-        catch (IOException e)
+        catch (final IOException e)
         {
             throw new OsgiContainerException("Unable to clear OSGi caches", e);
         }
     }
 
-    public void validate(String cacheValidationKey)
+    public void validate(final String cacheValidationKey)
     {
         ensureDirectoryExists(frameworkBundleCache);
         ensureDirectoryExists(osgiBundleCache);
@@ -91,10 +89,10 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
         {
             throw new OsgiContainerException("Unable to clean the cache directory: " + osgiBundleCache, e);
         }
-        
+
         if (cacheValidationKey != null)
         {
-            File versionFile = new File(transformedPluginCache, "cache.key");
+            final File versionFile = new File(transformedPluginCache, "cache.key");
             if (versionFile.exists())
             {
                 String oldVersion = null;
@@ -102,13 +100,13 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
                 {
                     oldVersion = FileUtils.readFileToString(versionFile);
                 }
-                catch (IOException e)
+                catch (final IOException e)
                 {
                     log.debug("Unable to read cache key file", e);
                 }
                 if (!cacheValidationKey.equals(oldVersion))
                 {
-                    log.info("Application upgrade detecting, clearing OSGi cache directories");
+                    log.info("Application upgrade detected, clearing OSGi cache directories");
                     clear();
                 }
                 else
@@ -121,14 +119,14 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
             {
                 FileUtils.writeStringToFile(versionFile, cacheValidationKey);
             }
-            catch (IOException e)
+            catch (final IOException e)
             {
                 log.warn("Unable to write cache key file, so will be unable to detect upgrades", e);
             }
         }
     }
 
-    private void ensureDirectoryExists(File dir)
+    private void ensureDirectoryExists(final File dir)
     {
         if (dir.exists() && !dir.isDirectory())
         {
