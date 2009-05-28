@@ -1170,10 +1170,12 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
         unloadablePlugin.setUninstallable(plugin.isUninstallable());
         unloadablePlugin.setDeletable(plugin.isDeleteable());
+        // Add the error text at the plugin level as well. This is useful for logging.
+        unloadablePlugin.setErrorText(unloadableDescriptor.getErrorText());
         plugins.put(plugin.getKey(), unloadablePlugin);
 
-        // Disable it
-        disablePluginState(plugin, getStore());
+        // PLUG-390: We used to persist the disabled state here, but we don't want to do this.
+        // We want to try load this plugin again on restart as the user may have installed a fixed version of this plugin.
         return unloadablePlugin;
     }
 
