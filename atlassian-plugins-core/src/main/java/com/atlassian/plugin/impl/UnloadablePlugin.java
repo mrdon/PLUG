@@ -67,8 +67,16 @@ public class UnloadablePlugin extends StaticPlugin
 
     @Override
     public void close()
-    {
+    {}
 
+    @Override
+    protected void uninstallInternal()
+    {
+        if (!uninstallable)
+        {
+            // should throw exception
+            super.uninstallInternal();
+        }
     }
 
     @Override
