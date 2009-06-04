@@ -105,7 +105,6 @@ public class XmlDescriptorParser implements DescriptorParser
 
     public Plugin configurePlugin(final ModuleDescriptorFactory moduleDescriptorFactory, final Plugin plugin) throws PluginParseException
     {
-
         final Element pluginElement = getPluginElement();
         plugin.setName(pluginElement.attributeValue("name"));
         plugin.setKey(getKey());
@@ -299,7 +298,14 @@ public class XmlDescriptorParser implements DescriptorParser
         }
         if (val != null)
         {
-            return Integer.parseInt(val);
+            try
+            {
+                return Integer.parseInt(val);
+            }
+            catch (final NumberFormatException e)
+            {
+                throw new RuntimeException("Could not parse pluginsVersion: " + e.getMessage(), e);
+            }
         }
         else
         {
