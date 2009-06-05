@@ -4,10 +4,11 @@
     <parent>
         <groupId>com.atlassian.plugins</groupId>
         <artifactId>atlassian-plugins-parent</artifactId>
-        <version>2.2.3-beta1</version>
+        <version>2.2.3-SNAPSHOT</version>
     </parent>
 
    <artifactId>atlassian-plugins-refimpl</artifactId>
+  <version>2.2.3-beta1</version>
    <packaging>war</packaging>
    <name>Atlassian Plugins - Reference Implementation</name>
 
