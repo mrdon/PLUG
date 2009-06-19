@@ -7,7 +7,6 @@
     </parent>
 
     <artifactId>atlassian-plugins-osgi-spring-extender</artifactId>
-  <version>2.2.3-beta1</version>
     <name>Atlassian Plugins - Spring DM extender repackaged bundle</name>
     <description>
         Extends Spring DM extender to integrate with plugin event system. To be replaced when Felix supports fragments.

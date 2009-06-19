@@ -7,7 +7,6 @@
     </parent>
 
     <artifactId>atlassian-plugins-core</artifactId>
-  <version>2.2.3-beta1</version>
     <name>Atlassian Plugins - Core</name>
     <description>
         A library to give systems the ability to have plugins, make them more pluggable and hence add pluggability
@@ -16,9 +15,9 @@
 
     <!-- SCM information as the directory for this sub module doesn't follow our standrard conventions -->
     <scm>
-        <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.2.3-beta1/atlassian-plugins-core</connection>
-        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.2.3-beta1/atlassian-plugins-core</developerConnection>
-        <url>https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.2.3-beta1/atlassian-plugins-core</url>
+        <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.2.x/atlassian-plugins-core</connection>
+        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.2.x/atlassian-plugins-core</developerConnection>
+        <url>https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.2.x/atlassian-plugins-core</url>
     </scm>
     <build>
         <testResources>

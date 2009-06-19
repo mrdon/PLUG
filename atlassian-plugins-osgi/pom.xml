@@ -7,7 +7,6 @@
     </parent>
 
     <artifactId>atlassian-plugins-osgi</artifactId>
-  <version>2.2.3-beta1</version>
 
     <name>Atlassian Plugins - OSGi Loader</name>
     <description>

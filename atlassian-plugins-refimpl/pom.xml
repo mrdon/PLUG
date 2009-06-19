@@ -8,7 +8,6 @@
     </parent>
 
    <artifactId>atlassian-plugins-refimpl</artifactId>
-  <version>2.2.3-beta1</version>
    <packaging>war</packaging>
    <name>Atlassian Plugins - Reference Implementation</name>
 
