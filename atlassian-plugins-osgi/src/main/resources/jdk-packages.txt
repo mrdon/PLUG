@@ -1,5 +1,13 @@
 # Java package list pulled from Java SE 5 (excluding java.*)
 # Copied from the packages frame in the Javadocs - http://java.sun.com/j2se/1.5.0/docs/api/index.html
+# Additional packages that are missing from the javadocs were added:
+#  org.w3c.dom.css
+#  org.w3c.dom.html
+#  org.w3c.dom.ranges
+#  org.w3c.dom.stylesheets
+#  org.w3c.dom.traversal
+#  org.w3c.dom.views 
+# See https://studio.atlassian.com/browse/PLUG-394 for details
 
 javax.accessibility
 javax.activity
@@ -112,8 +120,14 @@ org.omg.SendingContext
 org.omg.stub.java.rmi
 org.w3c.dom
 org.w3c.dom.bootstrap
+org.w3c.dom.css
 org.w3c.dom.events
+org.w3c.dom.html
 org.w3c.dom.ls
+org.w3c.dom.ranges
+org.w3c.dom.stylesheets
+org.w3c.dom.traversal
+org.w3c.dom.views
 org.xml.sax
 org.xml.sax.ext
 org.xml.sax.helpers
