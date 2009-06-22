@@ -1,12 +1,13 @@
 package com.atlassian.plugin.webresource;
 
-import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import org.dom4j.Attribute;
 import org.dom4j.Element;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A way of linking to web 'resources', such as javascript or css.  This allows us to include resources once
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
     private List<String> dependencies = new ArrayList<String>();
+    private boolean disableMinification;
 
     @Override
     public void init(final Plugin plugin, final Element element) throws PluginParseException
@@ -28,6 +30,9 @@ public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
         {
             dependencies.add(dependency.getTextTrim());
         }
+
+        final Attribute minifiedAttribute = element.attribute("disable-minification");
+        disableMinification = minifiedAttribute == null ? false : Boolean.valueOf(minifiedAttribute.getValue());
     }
 
     /**
@@ -46,5 +51,13 @@ public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
     public List<String> getDependencies()
     {
         return dependencies;
+    }
+
+    /**
+     * @return true if the minified form of the resources should be returned if they exist.
+     */
+    public boolean isDisableMinification()
+    {
+        return disableMinification;
     }
 }

@@ -13,9 +13,9 @@ public class DownloadableWebResource extends AbstractDownloadableResource
 {
     private final ServletContext servletContext;
 
-    public DownloadableWebResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath, ServletContext servletContext)
+    public DownloadableWebResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath, ServletContext servletContext, boolean disableMinification)
     {
-        super(plugin, resourceLocation, extraPath);
+        super(plugin, resourceLocation, extraPath, disableMinification);
         this.servletContext = servletContext;
     }
 

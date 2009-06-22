@@ -34,14 +34,20 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     protected Plugin plugin;
     protected String extraPath;
     protected ResourceLocation resourceLocation;
+    private final boolean disableMinification;
 
     public AbstractDownloadableResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath)
+    {
+        this(plugin, resourceLocation, extraPath, false);
+    }
+
+    public AbstractDownloadableResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath, boolean disableMinification)
     {
         if (extraPath != null && !"".equals(extraPath.trim()) && !resourceLocation.getLocation().endsWith("/"))
         {
             extraPath = "/" + extraPath;
         }
-
+        this.disableMinification = disableMinification;
         this.plugin = plugin;
         this.extraPath = extraPath;
         this.resourceLocation = resourceLocation;
@@ -199,7 +205,13 @@ abstract class AbstractDownloadableResource implements DownloadableResource
      */
     private boolean minificationStrategyInPlay(final String resourceLocation)
     {
-        // first off CHECK if we have a System property set to true that DISABLES the minification
+        // check if minification has been turned off for this resource (at the module level)
+        if (disableMinification)
+        {
+            return false;
+        }
+
+        // secondly CHECK if we have a System property set to true that DISABLES the minification
         try
         {
             if (Boolean.getBoolean(ATLASSIAN_WEBRESOURCE_DISABLE_MINIFICATION))
@@ -211,19 +223,19 @@ abstract class AbstractDownloadableResource implements DownloadableResource
         {
             // some app servers might have protected access to system properties.  Unlikely but lets be defensive
         }
-        // now check if the file in fact already minified
-        int index = resourceLocation.indexOf("-min.");
-        if (index != -1 && resourceLocation.lastIndexOf("-min.") == index)
+        // We only minify .js or .css files
+        if (resourceLocation.endsWith(".js"))
         {
-            return false;
+            // Check if it is already the minified vesrion of the file
+            return !(resourceLocation.endsWith("-min.js") || resourceLocation.endsWith(".min.js"));
         }
-        // slightly different naming scheme
-        index = resourceLocation.indexOf(".min.");
-        if (index != -1 && resourceLocation.lastIndexOf(".min.") == index)
+        if (resourceLocation.endsWith(".css")) 
         {
-            return false;
+            // Check if it is already the minified vesrion of the file
+            return !(resourceLocation.endsWith("-min.css") || resourceLocation.endsWith(".min.css"));
         }
-        return true;
+        // Not .js or .css, don't bother trying to find a minified version (may save some file operations)
+        return false;
     }
 
     private String getMinifiedLocation(String location)

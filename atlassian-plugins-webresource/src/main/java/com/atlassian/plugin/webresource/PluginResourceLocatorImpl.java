@@ -1,21 +1,24 @@
 package com.atlassian.plugin.webresource;
 
-import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.lang.StringUtils;
-
-import java.util.*;
-
-import com.atlassian.plugin.servlet.ServletContextFactory;
+import com.atlassian.plugin.servlet.DownloadableClasspathResource;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.DownloadableWebResource;
-import com.atlassian.plugin.servlet.DownloadableClasspathResource;
 import com.atlassian.plugin.servlet.ForwardableResource;
+import com.atlassian.plugin.servlet.ServletContextFactory;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Default implementation of {@link PluginResourceLocator}.
@@ -159,7 +162,13 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
         if (resourceLocation != null)
         {
-            return getDownloadablePluginResource(plugin, resourceLocation, filePath);
+            boolean disableMinification = false;
+            // I think it should always be a WebResourceModuleDescriptor, but not sure...
+            if (moduleDescriptor instanceof WebResourceModuleDescriptor)
+            {
+                disableMinification = ((WebResourceModuleDescriptor)moduleDescriptor).isDisableMinification();
+            }
+            return getDownloadablePluginResource(plugin, resourceLocation, filePath, disableMinification);
         }
 
         String[] nextParts = splitLastPathPart(resourcePath);
@@ -177,7 +186,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         ResourceLocation resourceLocation = plugin.getResourceLocation(DOWNLOAD_TYPE, resourcePath);
         if (resourceLocation != null)
         {
-            return getDownloadablePluginResource(plugin, resourceLocation, filePath);
+            return getDownloadablePluginResource(plugin, resourceLocation, filePath, false);
         }
 
         String[] nextParts = splitLastPathPart(resourcePath);
@@ -204,7 +213,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         };
     }
 
-    private DownloadableResource getDownloadablePluginResource(Plugin plugin, ResourceLocation resourceLocation, String filePath)
+    private DownloadableResource getDownloadablePluginResource(Plugin plugin, ResourceLocation resourceLocation, String filePath, boolean disableMinification)
     {
         String sourceParam = resourceLocation.getParameter(RESOURCE_SOURCE_PARAM);
 
@@ -214,7 +223,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
         // serve static resources from the web application - batching supported
         if ("webContextStatic".equalsIgnoreCase(sourceParam))
-            return new DownloadableWebResource(plugin, resourceLocation, filePath, servletContextFactory.getServletContext());
+            return new DownloadableWebResource(plugin, resourceLocation, filePath, servletContextFactory.getServletContext(), disableMinification);
 
         return new DownloadableClasspathResource(plugin, resourceLocation, filePath);
     }
@@ -225,7 +234,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         if (moduleDescriptor == null || !(moduleDescriptor instanceof WebResourceModuleDescriptor))
         {
             log.error("Error loading resource \"" + moduleCompleteKey + "\". Resource is not a Web Resource Module");
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         boolean singleMode = Boolean.valueOf(System.getProperty(PLUGIN_WEBRESOURCE_BATCHING_OFF));
