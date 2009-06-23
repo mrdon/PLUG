@@ -265,7 +265,10 @@ public class ScanningPluginLoader implements DynamicPluginLoader
         for (final Iterator<Plugin> it = plugins.values().iterator(); it.hasNext();)
         {
             final Plugin plugin = it.next();
-            plugin.uninstall();
+            if (plugin.isUninstallable())
+            {
+                plugin.uninstall();
+            }
             it.remove();
         }
 
