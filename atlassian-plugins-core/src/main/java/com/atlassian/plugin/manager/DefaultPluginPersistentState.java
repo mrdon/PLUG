@@ -150,14 +150,13 @@ public class DefaultPluginPersistentState implements Serializable, PluginPersist
 
     public void setPluginRestartState(String pluginKey, PluginRestartState state)
     {
-        if (state == PluginRestartState.NONE)
+        // Remove existing state, if any
+        for (PluginRestartState st : PluginRestartState.values())
         {
-            for (PluginRestartState st : PluginRestartState.values())
-            {
-                map.remove(buildStateKey(pluginKey, st));
-            }
+            map.remove(buildStateKey(pluginKey, st));
         }
-        else
+        
+        if (state != PluginRestartState.NONE)
         {
             map.put(buildStateKey(pluginKey, state), true);
         }

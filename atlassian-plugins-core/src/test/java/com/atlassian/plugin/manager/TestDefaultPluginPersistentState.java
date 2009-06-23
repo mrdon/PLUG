@@ -105,6 +105,15 @@ public class TestDefaultPluginPersistentState extends TestCase
         assertEquals(PluginRestartState.NONE, stateCopy.getPluginRestartState("foo"));
         assertEquals(PluginRestartState.REMOVE, state.getPluginRestartState("foo"));
     }
+
+    public void testPluginRestartStateRemoveExisting()
+    {
+        DefaultPluginPersistentState state = new DefaultPluginPersistentState();
+        state.setPluginRestartState("foo", PluginRestartState.UPGRADE);
+        assertEquals(PluginRestartState.UPGRADE, state.getPluginRestartState("foo"));
+        state.setPluginRestartState("foo", PluginRestartState.REMOVE);
+        assertEquals(PluginRestartState.REMOVE, state.getPluginRestartState("foo"));
+    }
     
     
 
