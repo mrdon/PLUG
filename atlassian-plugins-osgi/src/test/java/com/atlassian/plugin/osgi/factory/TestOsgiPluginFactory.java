@@ -93,6 +93,42 @@ public class TestOsgiPluginFactory extends TestCase
         mockOsgi.verify();
     }
 
+    public void testCreateOsgiPluginWithBadVersion() throws PluginParseException, IOException
+    {
+        jar = new PluginJarBuilder("someplugin").addPluginInformation("plugin.key", "My Plugin", "beta.1.0").build();
+        mockBundle.expectAndReturn("getSymbolicName", "plugin.key");
+        mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
+        mockOsgi.matchAndReturn("getBundles", new Bundle[] {(Bundle) mockSystemBundle.proxy()});
+        try
+        {
+            factory.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+            fail("Should have complained about osgi version");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            // expected
+        }
+        mockOsgi.verify();
+    }
+
+    public void testCreateOsgiPluginWithEmptyVersion() throws PluginParseException, IOException
+    {
+        jar = new PluginJarBuilder("someplugin").addPluginInformation("plugin.key", "My Plugin", "").build();
+        mockBundle.expectAndReturn("getSymbolicName", "plugin.key");
+        mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
+        mockOsgi.matchAndReturn("getBundles", new Bundle[] {(Bundle) mockSystemBundle.proxy()});
+        try
+        {
+            factory.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+            fail("Should have complained about osgi version");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            // expected
+        }
+        mockOsgi.verify();
+    }
+
     /**
     public void testCreateOsgiPluginFail() throws PluginParseException
     {
@@ -120,4 +156,5 @@ public class TestOsgiPluginFactory extends TestCase
         final String key = factory.canCreate(new JarPluginArtifact(plugin));
         assertNull(key);
     }
+
 }
