@@ -167,6 +167,11 @@ public class OsgiPluginFactory implements PluginFactory
         return plugin;
     }
 
+    /**
+     * Validate the version is a valid OSGi version.
+     * @param parser The parser that parsed the descriptor
+     * @throws IllegalArgumentException If the version is empty or invalid
+     */
     private void validateIsValidOsgiVersion(DescriptorParser parser) throws IllegalArgumentException
     {
         String version = parser.getPluginInformation().getVersion();
