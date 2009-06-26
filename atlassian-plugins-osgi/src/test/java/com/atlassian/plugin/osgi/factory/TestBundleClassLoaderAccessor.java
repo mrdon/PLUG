@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.factory;
 import junit.framework.TestCase;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
+import com.atlassian.plugin.osgi.util.BundleClassLoaderAccessor;
 import org.osgi.framework.Bundle;
 
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package com.atlassian.plugin.osgi.factory;
+package com.atlassian.plugin.osgi.util;
 
 import com.atlassian.plugin.util.resource.AlternativeResourceLoader;
 import com.atlassian.plugin.util.resource.NoOpAlternativeResourceLoader;
@@ -14,15 +14,31 @@ import java.util.Enumeration;
 
 /**
  * Utility methods for accessing a bundle as if it was a classloader.
+ *
+ * @since 2.3.0
  */
-class BundleClassLoaderAccessor
+public class BundleClassLoaderAccessor
 {
-    static ClassLoader getClassLoader(final Bundle bundle, final AlternativeResourceLoader alternativeResourceLoader)
+    /**
+     * Creates a classloader that delegates to the bundle
+     * @param bundle The bundle to delegate to
+     * @param alternativeResourceLoader An alternative resource loader to bypass bundle, can be null
+     * @return A new classloader instance
+     */
+    public static ClassLoader getClassLoader(final Bundle bundle, final AlternativeResourceLoader alternativeResourceLoader)
     {
         return new BundleClassLoader(bundle, alternativeResourceLoader);
     }
 
-    static <T> Class<T> loadClass(final Bundle bundle, final String name, final Class<?> callingClass) throws ClassNotFoundException
+    /**
+     * Loads a class from the bundle
+     * @param bundle The bundle
+     * @param name The name of the class to load
+     * @param <T> The type of the class
+     * @return The class instance
+     * @throws ClassNotFoundException If the class cannot be found in the bundle
+     */
+    public static <T> Class<T> loadClass(final Bundle bundle, final String name) throws ClassNotFoundException
     {
         Validate.notNull(bundle, "The bundle is required");
         @SuppressWarnings("unchecked")

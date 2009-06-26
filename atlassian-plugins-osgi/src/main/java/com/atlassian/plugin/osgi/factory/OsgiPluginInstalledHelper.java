@@ -5,6 +5,7 @@ import com.atlassian.plugin.IllegalPluginStateException;
 import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
+import com.atlassian.plugin.osgi.util.BundleClassLoaderAccessor;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
 
 import org.apache.commons.lang.Validate;
@@ -58,7 +59,7 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
 
     public <T> Class<T> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
     {
-        return BundleClassLoaderAccessor.loadClass(getBundle(), clazz, callingClass);
+        return BundleClassLoaderAccessor.loadClass(getBundle(), clazz);
     }
 
     public URL getResource(final String name)

@@ -5,6 +5,7 @@ import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.Resourced;
+import com.atlassian.plugin.osgi.util.BundleClassLoaderAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.event.PluginEventManager;
@@ -210,7 +211,7 @@ public class OsgiBundlePlugin extends AbstractPlugin
 
     public <T> Class<T> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
     {
-        return BundleClassLoaderAccessor.loadClass(bundle, clazz, callingClass);
+        return BundleClassLoaderAccessor.loadClass(bundle, clazz);
     }
 
     public URL getResource(final String name)
