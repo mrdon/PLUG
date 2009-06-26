@@ -4,12 +4,20 @@ import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.PluginRestartState;
+import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.descriptors.RequiresRestart;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.manager.DefaultPluginManager;
 import com.atlassian.plugin.util.WaitUntil;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.test.PluginJarBuilder;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -32,6 +40,39 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
         plugin = pluginManager.getPlugin("enabledisable");
 
         assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
+    }
+    
+    public void testDisableEnableOfPluginThatRequiresRestart() throws Exception, IOException
+    {
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
+        factory.addModuleDescriptor("requiresRestart", RequiresRestartModuleDescriptor.class);
+        new PluginJarBuilder()
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='2'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "    </plugin-info>",
+                    "    <requiresRestart key='foo' />",
+                    "</atlassian-plugin>")
+                .build(pluginsDir);
+
+        initPluginManager(null, factory);
+
+        assertEquals(1, pluginManager.getPlugins().size());
+        assertNotNull(pluginManager.getPlugin("test.restartrequired"));
+        assertTrue(pluginManager.isPluginEnabled("test.restartrequired"));
+        assertEquals(1, pluginManager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+        assertEquals(PluginRestartState.NONE, pluginManager.getPluginRestartState("test.restartrequired"));
+
+        pluginManager.disablePlugin("test.restartrequired");
+        assertFalse(pluginManager.isPluginEnabled("test.restartrequired"));
+        pluginManager.enablePlugin("test.restartrequired");
+
+        assertEquals(1, pluginManager.getPlugins().size());
+        assertNotNull(pluginManager.getPlugin("test.restartrequired"));
+        assertTrue(pluginManager.isPluginEnabled("test.restartrequired"));
+        assertEquals(PluginRestartState.NONE, pluginManager.getPluginRestartState("test.restartrequired"));
+        assertEquals(1, pluginManager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
     }
 
     public void testEnableEnablesDependentPlugins() throws Exception
@@ -187,5 +228,15 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
         pluginManager.disablePlugin("longrunning");
         t.join();
         assertEquals("called", sb.toString());
+    }
+    
+    @RequiresRestart
+    public static class RequiresRestartModuleDescriptor extends AbstractModuleDescriptor
+    {
+        @Override
+        public Void getModule()
+        {
+            throw new UnsupportedOperationException("You should never be getting a module from this descriptor " + this.getClass().getName());
+        }
     }
 }

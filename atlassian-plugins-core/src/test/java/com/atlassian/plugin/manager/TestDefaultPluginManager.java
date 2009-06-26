@@ -1048,6 +1048,40 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(2, manager.getPlugins().size());
     }
 
+    public void testDisableEnableOfPluginThatRequiresRestart() throws PluginParseException, IOException
+    {
+        createFillAndCleanTempPluginDirectory();
+        moduleDescriptorFactory.addModuleDescriptor("requiresRestart", RequiresRestartModuleDescriptor.class);
+
+        new PluginJarBuilder()
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "    </plugin-info>",
+                    "    <requiresRestart key='foo' />",
+                    "</atlassian-plugin>")
+                .build(pluginsTestDir);
+
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
+
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
+
+        manager.disablePlugin("test.restartrequired");
+        assertFalse(manager.isPluginEnabled("test.restartrequired"));
+        manager.enablePlugin("test.restartrequired");
+
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+    }
+
     public void testCannotRemovePluginFromStaticLoader() throws PluginParseException, IOException
     {
         createFillAndCleanTempPluginDirectory();
