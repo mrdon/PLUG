@@ -1,4 +1,4 @@
-package com.atlassian.plugin.osgi.factory;
+package com.atlassian.plugin.osgi.util;
 
 import junit.framework.TestCase;
 import com.mockobjects.dynamic.Mock;
