@@ -43,6 +43,7 @@ class SpringHelper
                         "http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd");
         root.setName("beans:beans");
         root.addAttribute("default-autowire", "autodetect");
+        root.addAttribute("osgi:default-timeout", "30000");
         return springDoc;
     }
 
