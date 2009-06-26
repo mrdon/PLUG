@@ -145,6 +145,7 @@ public interface PluginAccessor
      * @param descriptorClazz module descriptor class
      * @param verbose         log verbose messages flag
      * @return List of {@link ModuleDescriptor}s that implement or extend the given class.
+     * @deprecated Since 2.3.0, use {@link #getEnabledModuleDescriptorsByClass(Class<D>)} instead
      */
     <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(Class<D> descriptorClazz, boolean verbose);
 

@@ -786,11 +786,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         return toList(moduleDescriptors);
     }
 
-    public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz)
-    {
-        return getEnabledModuleDescriptorsByClass(descriptorClazz, false);
-    }
-
     /**
      * This method has been reverted to pre PLUG-40 to fix performance issues that were encountered during
      * load testing. This should be reverted to the state it was in at 54639 when the fundamental issue leading
@@ -798,7 +793,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      *
      * @see PluginAccessor#getEnabledModuleDescriptorsByClass(Class)
      */
-    public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz, final boolean verbose)
+    public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz)
     {
         final List<D> result = new LinkedList<D>();
         for (final Plugin plugin : plugins.values())
@@ -806,9 +801,9 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             // Skip disabled plugins
             if (!isPluginEnabled(plugin.getKey()))
             {
-                if (verbose && log.isInfoEnabled())
+                if (log.isDebugEnabled())
                 {
-                    log.info("Plugin [" + plugin.getKey() + "] is disabled.");
+                    log.debug("Plugin [" + plugin.getKey() + "] is disabled.");
                 }
                 continue;
             }
@@ -823,15 +818,20 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                 }
                 else
                 {
-                    if (verbose && log.isInfoEnabled())
+                    if (log.isDebugEnabled())
                     {
-                        log.info("Module [" + module.getCompleteKey() + "] is disabled.");
+                        log.debug("Module [" + module.getCompleteKey() + "] is disabled.");
                     }
                 }
             }
         }
 
         return result;
+    }
+
+    public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz, final boolean verbose)
+    {
+        return getEnabledModuleDescriptorsByClass(descriptorClazz);
     }
 
     /**
