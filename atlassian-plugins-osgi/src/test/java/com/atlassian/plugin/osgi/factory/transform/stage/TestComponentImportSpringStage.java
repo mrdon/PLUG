@@ -39,6 +39,18 @@ public class TestComponentImportSpringStage extends TestCase
 
     }
 
+    public void testTransformWithCustomFilter() throws IOException, DocumentException
+    {
+        final ComponentImportSpringStage stage = new ComponentImportSpringStage();
+
+        Element pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
+        Element component = pluginRoot.addElement("component-import");
+        component.addAttribute("key", "foo");
+        component.addAttribute("interface", "my.Foo");
+        component.addAttribute("filter", "(foo=bar)");
+        SpringTransformerTestHelper.transform(stage, pluginRoot, "osgi:reference[@id='foo' and @filter='(foo=bar)']'");
+    }
+
     public void testTransformForOneApp() throws IOException, DocumentException
     {
         final ComponentImportSpringStage stage = new ComponentImportSpringStage();

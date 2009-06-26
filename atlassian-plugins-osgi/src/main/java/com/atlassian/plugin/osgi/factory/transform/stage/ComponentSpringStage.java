@@ -35,7 +35,7 @@ public class ComponentSpringStage implements TransformStage
                     rule(
                         test("@key").withError("The key is required"),
                         test("@class").withError("The class is required"),
-                        test("not(@public) or interface").withError("Interfaces must be declared for public components"));
+                        test("not(@public) or interface or @interface").withError("Interfaces must be declared for public components"));
 
             for (Element component : elements)
             {
@@ -61,6 +61,10 @@ public class ComponentSpringStage implements TransformStage
                     {
                         interfaceNames.add(inf.getTextTrim());
                     }
+                    if (component.attributeValue("interface") != null)
+                    {
+                        interfaceNames.add(component.attributeValue("interface"));
+                    }
 
                     Element interfaces = osgiService.addElement("osgi:interfaces");
                     for (String name : interfaceNames)
@@ -68,6 +72,18 @@ public class ComponentSpringStage implements TransformStage
                         ensureExported(name, context);
                         Element e = interfaces.addElement("beans:value");
                         e.setText(name);
+                    }
+
+                    Element targetSvcprops = osgiService.addElement("osgi:service-properties");
+                    Element svcprops = component.element("service-properties");
+                    if (svcprops != null)
+                    {
+                        for (Element prop : new ArrayList<Element>(svcprops.elements("entry")))
+                        {
+                            Element e = targetSvcprops.addElement("beans:entry");
+                            e.addAttribute("key", prop.attributeValue("key"));
+                            e.addAttribute("value", prop.attributeValue("value"));
+                        }
                     }
                 }
             }

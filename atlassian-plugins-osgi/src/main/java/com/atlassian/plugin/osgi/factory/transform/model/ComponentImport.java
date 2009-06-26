@@ -20,6 +20,7 @@ public class ComponentImport
 {
     private final String key;
     private final Set<String> interfaces;
+    private final String filter;
     private final Element source;
 
     public ComponentImport(Element element) throws PluginParseException
@@ -35,6 +36,7 @@ public class ComponentImport
 
         this.source = element;
         this.key = element.attributeValue("key");
+        this.filter = element.attributeValue("filter");
         this.interfaces = new HashSet<String>();
         if (element.attribute("interface") != null)
         {
@@ -63,5 +65,14 @@ public class ComponentImport
     public Element getSource()
     {
         return source;
+    }
+
+    /**
+     * @return The configured ldap filter
+     * @since 2.3.0
+     */
+    public String getFilter()
+    {
+        return filter;
     }
 }

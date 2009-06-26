@@ -45,6 +45,46 @@ public class TestComponentSpringStage extends TestCase
                                                                        "//osgi:interfaces",
                                                                        "//beans:value[.='my.IFoo']");
 
+        // public component, interface as attribute
+        pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
+        component = pluginRoot.addElement("component");
+        component.addAttribute("key", "foo");
+        component.addAttribute("class", "my.Foo");
+        component.addAttribute("public", "true");
+        component.addAttribute("interface", "my.IFoo");
+        SpringTransformerTestHelper.transform(transformer, pluginRoot, "beans:bean[@id='foo' and @class='my.Foo']",
+                                                                       "osgi:service[@id='foo_osgiService' and @ref='foo']",
+                                                                       "//osgi:interfaces",
+                                                                       "//beans:value[.='my.IFoo']");
+
+    }
+
+    public void testTransformWithServiceProperties() throws IOException, DocumentException
+    {
+        ComponentSpringStage transformer = new ComponentSpringStage();
+
+        Element pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
+        Element component = pluginRoot.addElement("component");
+        component.addAttribute("key", "foo");
+        component.addAttribute("class", "my.Foo");
+        component.addAttribute("public", "true");
+        component.addAttribute("interface", "my.IFoo");
+
+        Element svcprops = component.addElement("service-properties");
+        Element prop = svcprops.addElement("entry");
+        prop.addAttribute("key", "foo");
+        prop.addAttribute("value", "bar");
+        SpringTransformerTestHelper.transform(transformer, pluginRoot, "beans:bean[@id='foo' and @class='my.Foo']",
+                                                                       "osgi:service[@id='foo_osgiService']/osgi:service-properties",
+                                                                       "osgi:service[@id='foo_osgiService']/osgi:service-properties/beans:entry[@key='foo' and @value='bar']",
+                                                                       "//osgi:interfaces",
+                                                                       "//beans:value[.='my.IFoo']");
+
+        svcprops.clearContent();
+        SpringTransformerTestHelper.transform(transformer, pluginRoot, "beans:bean[@id='foo' and @class='my.Foo']",
+                                                                       "osgi:service[@id='foo_osgiService']/osgi:service-properties",
+                                                                       "//osgi:interfaces",
+                                                                       "//beans:value[.='my.IFoo']");
     }
 
     public void testTransformForOneApp() throws IOException, DocumentException

@@ -33,13 +33,18 @@ public class ComponentImportSpringStage implements TransformStage
                 }
                 Element osgiReference = root.addElement("osgi:reference");
                 osgiReference.addAttribute("id", comp.getKey());
+
+                if (comp.getFilter() != null)
+                {
+                    osgiReference.addAttribute("filter", comp.getFilter());
+                }
+
                 Element interfaces = osgiReference.addElement("osgi:interfaces");
                 for (String infName : comp.getInterfaces())
                 {
                     context.getExtraImports().add(infName.substring(0, infName.lastIndexOf('.')));
                     Element e = interfaces.addElement("beans:value");
                     e.setText(infName);
-
                 }
             }
             if (root.elements().size() > 0)
