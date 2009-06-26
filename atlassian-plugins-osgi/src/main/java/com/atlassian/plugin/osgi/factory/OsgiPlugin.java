@@ -332,7 +332,11 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
         PluginState stateResult;
         try
         {
-            if ((getBundle().getState() == Bundle.RESOLVED) || (getBundle().getState() == Bundle.INSTALLED))
+            if (getBundle().getState() == Bundle.ACTIVE)
+            {
+                stateResult = PluginState.ENABLED;
+            }
+            else if ((getBundle().getState() == Bundle.RESOLVED) || (getBundle().getState() == Bundle.INSTALLED))
             {
                 pluginEventManager.register(this);
                 getBundle().start();
