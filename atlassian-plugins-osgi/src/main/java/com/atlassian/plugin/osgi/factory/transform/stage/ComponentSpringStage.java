@@ -35,7 +35,9 @@ public class ComponentSpringStage implements TransformStage
                     rule(
                         test("@key").withError("The key is required"),
                         test("@class").withError("The class is required"),
-                        test("not(@public) or interface or @interface").withError("Interfaces must be declared for public components"));
+                        test("not(@public) or interface or @interface").withError("Interfaces must be declared for public components"),
+                        test("not(service-properties) or count(service-properties/entry[@key and @value]) > 0")
+                                .withError("The service-properties element must contain at least one entry element with key and value attributes"));
 
             for (Element component : elements)
             {
@@ -74,10 +76,10 @@ public class ComponentSpringStage implements TransformStage
                         e.setText(name);
                     }
 
-                    Element targetSvcprops = osgiService.addElement("osgi:service-properties");
                     Element svcprops = component.element("service-properties");
                     if (svcprops != null)
                     {
+                        Element targetSvcprops = osgiService.addElement("osgi:service-properties");
                         for (Element prop : new ArrayList<Element>(svcprops.elements("entry")))
                         {
                             Element e = targetSvcprops.addElement("beans:entry");

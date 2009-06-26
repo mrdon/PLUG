@@ -15,6 +15,7 @@ import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.util.validation.ValidationException;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
@@ -81,10 +82,18 @@ public class TestComponentSpringStage extends TestCase
                                                                        "//beans:value[.='my.IFoo']");
 
         svcprops.clearContent();
-        SpringTransformerTestHelper.transform(transformer, pluginRoot, "beans:bean[@id='foo' and @class='my.Foo']",
-                                                                       "osgi:service[@id='foo_osgiService']/osgi:service-properties",
-                                                                       "//osgi:interfaces",
-                                                                       "//beans:value[.='my.IFoo']");
+        try
+        {
+            SpringTransformerTestHelper.transform(transformer, pluginRoot, "beans:bean[@id='foo' and @class='my.Foo']",
+                    "osgi:service[@id='foo_osgiService']/osgi:service-properties",
+                    "//osgi:interfaces",
+                    "//beans:value[.='my.IFoo']");
+            fail("Validation exception should have been thrown");
+        }
+        catch (ValidationException ex)
+        {
+            // expected
+        }
     }
 
     public void testTransformForOneApp() throws IOException, DocumentException
