@@ -153,20 +153,6 @@ public class HostComponentSpringStage implements TransformStage
         return interfaceNames;
     }
 
-    private Set<Set<String>> convertRegistrationsToSetOfSets(List<HostComponentRegistration> regs)
-    {
-        Set<Set<String>> regInterfaceNames = new HashSet<Set<String>>();
-        if (regs != null)
-        {
-            for (HostComponentRegistration reg : regs)
-            {
-                HashSet<String> names = new HashSet<String>(Arrays.asList(reg.getMainInterfaces()));
-                regInterfaceNames.add(names);
-            }
-        }
-        return regInterfaceNames;
-    }
-
     private void findUsedHostComponents(Set<String> allHostComponents, Set<String> matchedHostComponents, List<String> innerJarPaths, InputStream
             jarStream) throws IOException
     {

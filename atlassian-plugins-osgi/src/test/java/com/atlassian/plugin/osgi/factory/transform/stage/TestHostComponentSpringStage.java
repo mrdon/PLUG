@@ -49,6 +49,33 @@ public class TestHostComponentSpringStage extends TestCase
         systemExports = new SystemExports("javax.servlet;version=\"2.3\",javax.servlet.http;version=\"2.3\"");
     }
 
+    public void testTransformWithInnerJar() throws Exception, DocumentException
+    {
+        File outerjar = new PluginJarBuilder()
+                .addPluginInformation("my.plugin", "my.plugin", "1.0")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                    "Manifest-Version: 1.0",
+                    "Bundle-Version: 1.0",
+                    "Bundle-SymbolicName: my.server",
+                    "Bundle-ManifestVersion: 2",
+                    "Bundle-ClassPath: .,foo.jar\n")
+                .addFile("foo.jar", jar)
+                .build();
+
+        SpringTransformerTestHelper.transform(
+            transformer,
+            outerjar,
+            new ArrayList<HostComponentRegistration>()
+            {
+                {
+                    add(new StubHostComponentRegistration("foo", new SomeInterface()
+                    {}, SomeInterface.class));
+                }
+            },
+            null,
+            "beans:bean[@id='foo']/beans:property[@name='filter']/@value='(&(bean-name=foo)(plugins-host=true))'");
+    }
+
     public void testTransform() throws IOException, DocumentException
     {
         SpringTransformerTestHelper.transform(
