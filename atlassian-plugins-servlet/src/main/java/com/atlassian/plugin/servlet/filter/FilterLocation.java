@@ -1,5 +1,7 @@
 package com.atlassian.plugin.servlet.filter;
 
+import java.util.Locale;
+
 /**
  * An enumeration defining the places plugin filters can appear in an applications filter stack.  The locations are
  * defined by what operations they immediate precede or follow.
@@ -24,7 +26,7 @@ public enum FilterLocation
     {
         if (value != null)
         {
-            return FilterLocation.valueOf(value.toUpperCase().replace('-','_'));
+            return FilterLocation.valueOf(value.toUpperCase(Locale.ENGLISH).replace('-','_'));
         }
         else
         {

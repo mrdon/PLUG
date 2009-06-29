@@ -3,6 +3,8 @@ package com.atlassian.plugin.servlet.filter;
 import junit.framework.TestCase;
 import com.atlassian.plugin.PluginParseException;
 
+import java.util.Locale;
+
 public class TestFilterLocation extends TestCase
 {
     public void testParse()
@@ -26,6 +28,21 @@ public class TestFilterLocation extends TestCase
         {
             // test passed
         }
+    }
 
+    public void testParseWithTurkishCharacters()
+    {
+        Locale defLocale = Locale.getDefault();
+        try
+        {
+            Locale.setDefault(new Locale("tr","",""));
+            assertEquals(FilterLocation.BEFORE_LOGIN, FilterLocation.parse("before-log\u0069n"));
+            assertEquals(FilterLocation.BEFORE_LOGIN, FilterLocation.parse("before-log\u0131n"));
+            assertEquals(FilterLocation.BEFORE_LOGIN, FilterLocation.parse("before-login"));
+        }
+        finally
+        {
+            Locale.setDefault(defLocale);
+        }
     }
 }
