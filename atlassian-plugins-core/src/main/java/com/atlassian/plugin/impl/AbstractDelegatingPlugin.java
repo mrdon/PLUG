@@ -5,6 +5,7 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.Resourced;
 import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 
@@ -22,7 +23,7 @@ import org.apache.commons.lang.Validate;
  *
  * @since 2.2.0
  */
-public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plugin>
+public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plugin>, AutowireCapablePlugin
 {
     private final Plugin delegate;
 
@@ -268,5 +269,73 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
     public boolean equals(Object obj)
     {
         return delegate.equals(obj);
+    }
+
+    /**
+     * @throws UnsupportedOperationException If the underlying delegate doesn't implement {@link AutowireCapablePlugin}
+     * @since 2.3.0
+     */
+    public <T> T autowire(Class<T> clazz) throws UnsupportedOperationException
+    {
+        if (delegate instanceof AutowireCapablePlugin)
+        {
+            return ((AutowireCapablePlugin)delegate).autowire(clazz);
+        }
+        else
+        {
+            throw new UnsupportedOperationException("The AutowireCapablePlugin interface is not implemented by the "
+                    + "delegate '" + delegate.getClass().getSimpleName() + "'");
+        }
+    }
+
+    /**
+     * @throws UnsupportedOperationException If the underlying delegate doesn't implement {@link AutowireCapablePlugin}
+     * @since 2.3.0
+     */
+    public <T> T autowire(Class<T> clazz, AutowireStrategy autowireStrategy) throws UnsupportedOperationException
+    {
+        if (delegate instanceof AutowireCapablePlugin)
+        {
+            return ((AutowireCapablePlugin)delegate).autowire(clazz, autowireStrategy);
+        }
+        else
+        {
+            throw new UnsupportedOperationException("The AutowireCapablePlugin interface is not implemented by the "
+                    + "delegate '" + delegate.getClass().getSimpleName() + "'");
+        }
+    }
+
+    /**
+     * @throws UnsupportedOperationException If the underlying delegate doesn't implement {@link AutowireCapablePlugin}
+     * @since 2.3.0
+     */
+    public void autowire(Object instance) throws UnsupportedOperationException
+    {
+        if (delegate instanceof AutowireCapablePlugin)
+        {
+            ((AutowireCapablePlugin)delegate).autowire(instance);
+        }
+        else
+        {
+            throw new UnsupportedOperationException("The AutowireCapablePlugin interface is not implemented by the "
+                    + "delegate '" + delegate.getClass().getSimpleName() + "'");
+        }
+    }
+
+    /**
+     * @throws UnsupportedOperationException If the underlying delegate doesn't implement {@link AutowireCapablePlugin}
+     * @since 2.3.0
+     */
+    public void autowire(Object instance, AutowireStrategy autowireStrategy) throws UnsupportedOperationException
+    {
+        if (delegate instanceof AutowireCapablePlugin)
+        {
+            ((AutowireCapablePlugin)delegate).autowire(instance, autowireStrategy);
+        }
+        else
+        {
+            throw new UnsupportedOperationException("The AutowireCapablePlugin interface is not implemented by the "
+                    + "delegate '" + delegate.getClass().getSimpleName() + "'");
+        }
     }
 }
