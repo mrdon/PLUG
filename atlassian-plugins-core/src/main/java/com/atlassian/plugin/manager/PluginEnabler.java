@@ -13,7 +13,7 @@ import java.util.*;
 /**
  * Helper class that handles the problem of enabling a set of plugins at once.  This functionality is used for both
  * the initial plugin loading and manual plugin enabling.  The system waits 60 seconds for all dependencies to be
- * resolved, then resets the timer to 3 seconds if only one remains.
+ * resolved, then resets the timer to 5 seconds if only one remains.
  *
  * @since 2.2.0
  */
