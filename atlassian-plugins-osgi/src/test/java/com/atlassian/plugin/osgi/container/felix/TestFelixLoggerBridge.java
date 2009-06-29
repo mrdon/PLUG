@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.container.felix;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.felix.framework.Logger;
+import org.apache.felix.moduleloader.ResourceNotFoundException;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
@@ -33,6 +34,14 @@ public class TestFelixLoggerBridge extends TestCase
         FelixLoggerBridge bridge = new FelixLoggerBridge(log);
         bridge.doLog(null, Logger.LOG_WARNING, "foo", new ClassNotFoundException("foo"));
         verify(log).debug("Class not found in bundle: foo");
+    }
+
+    public void testResourceNotFound()
+    {
+        when(log.isInfoEnabled()).thenReturn(true);
+        FelixLoggerBridge bridge = new FelixLoggerBridge(log);
+        bridge.doLog(null, Logger.LOG_WARNING, "foo", new ResourceNotFoundException("foo"));
+        verify(log).trace("Resource not found in bundle: foo");
     }
 
     public void testClassNotFoundOnDebug()
