@@ -6,6 +6,7 @@ import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
 import com.atlassian.plugin.util.WaitUntil;
@@ -13,9 +14,14 @@ import com.atlassian.plugin.util.WaitUntil;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.Collections;
+import java.util.HashSet;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Bundle;
 
 public class TestDynamicPluginModule extends PluginInContainerTestBase
 {
@@ -33,7 +39,8 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                         "<atlassian-plugin name='Test' key='test.plugin.module' pluginsVersion='2'>",
                         "    <plugin-info>",
                         "        <version>1.0</version>",
-                        "    </plugin-info>", "    <component key='factory' class='foo.MyModuleDescriptorFactory' public='true'>",
+                        "    </plugin-info>",
+                        "    <component key='factory' class='foo.MyModuleDescriptorFactory' public='true'>",
                         "       <interface>com.atlassian.plugin.ModuleDescriptorFactory</interface>",
                         "    </component>",
                         "</atlassian-plugin>")
@@ -69,6 +76,72 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
         final ModuleDescriptor<?> descriptor = descriptors.iterator()
                 .next();
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
+    }
+
+    public void testDynamicPluginModuleNotLinkToAllPlugins() throws Exception
+    {
+        new PluginJarBuilder("pluginType")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin.module' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <module-type key='foo' class='foo.MyModuleDescriptor'/>",
+                        "</atlassian-plugin>")
+                .addFormattedJava("foo.MyModuleDescriptor",
+                        "package foo;",
+                        "public class MyModuleDescriptor extends com.atlassian.plugin.descriptors.AbstractModuleDescriptor {",
+                        "  public Object getModule(){return null;}",
+                        "}")
+                .build(pluginsDir);
+        new PluginJarBuilder("fooUser")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <foo key='dum2'/>",
+                        "</atlassian-plugin>")
+                .build(pluginsDir);
+        new PluginJarBuilder("foootherUser")
+                .addPluginInformation("unusing.plugin", "Unusing plugin", "1.0")
+                .build(pluginsDir);
+
+        initPluginManager(new HostComponentProvider()
+        {
+            public void provide(final ComponentRegistrar registrar)
+            {
+            }
+        });
+
+        assertEquals("MyModuleDescriptor", pluginManager.getPlugin("test.plugin").getModuleDescriptor("dum2").getClass().getSimpleName());
+        Set<String> deps = findDependentBundles(((OsgiPlugin) pluginManager.getPlugin("test.plugin.module")).getBundle());
+        assertTrue(deps.contains("test.plugin"));
+        assertFalse(deps.contains("unusing.plugin"));
+    }
+
+    private Set<String> findDependentBundles(Bundle bundle)
+    {
+        Set<String> deps = new HashSet<String>();
+        final ServiceReference[] registeredServices = bundle.getRegisteredServices();
+        if (registeredServices == null)
+        {
+            return deps;
+        }
+
+        for (final ServiceReference serviceReference : registeredServices)
+        {
+            final Bundle[] usingBundles = serviceReference.getUsingBundles();
+            if (usingBundles == null)
+            {
+                continue;
+            }
+            for (final Bundle usingBundle : usingBundles)
+            {
+                deps.add(usingBundle.getSymbolicName());
+            }
+        }
+        return deps;
     }
 
     public void testDynamicPluginModuleUsingModuleTypeDescriptor() throws Exception

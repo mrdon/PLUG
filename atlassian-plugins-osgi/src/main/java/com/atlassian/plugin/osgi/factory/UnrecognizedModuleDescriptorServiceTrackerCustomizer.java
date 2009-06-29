@@ -42,11 +42,13 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
     public Object addingService(final ServiceReference serviceReference)
     {
         final ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) bundle.getBundleContext().getService(serviceReference);
+        boolean usedFactory = false;
         for (final UnrecognisedModuleDescriptor unrecognised : getModuleDescriptorsByDescriptorClass(UnrecognisedModuleDescriptor.class))
         {
             final Element source = plugin.getModuleElements().get(unrecognised.getKey());
             if ((source != null) && factory.hasModuleDescriptor(source.getName()))
             {
+                usedFactory = true;
                 try
                 {
                     final ModuleDescriptor<?> descriptor = factory.getModuleDescriptor(source.getName());
@@ -64,7 +66,17 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
                 }
             }
         }
-        return factory;
+        if (usedFactory)
+        {
+            return factory;
+        }
+        else
+        {
+            // The docs seem to indicate returning null is enough to untrack a service, but the source code and tests
+            // show otherwise.
+            bundle.getBundleContext().ungetService(serviceReference);
+            return null;
+        }
     }
 
     /**
