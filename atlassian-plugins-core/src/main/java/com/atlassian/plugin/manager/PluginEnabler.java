@@ -22,7 +22,7 @@ class PluginEnabler
     private final PluginAccessor pluginAccessor;
     private final PluginController pluginController;
     private Log log = LogFactory.getLog(PluginEnabler.class);
-    private static final long LAST_PLUGIN_TIMEOUT = 3 * 1000;
+    private static final long LAST_PLUGIN_TIMEOUT = 5 * 1000;
 
     public PluginEnabler(PluginAccessor pluginAccessor, PluginController pluginController)
     {
