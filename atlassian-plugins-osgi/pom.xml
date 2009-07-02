@@ -27,7 +27,7 @@
             <properties>
                 <jvm.opts1>-agentlib:jprofilerti=offline,id=${jprofiler.profileid},config=${jprofiler.configfile}</jvm.opts1>
                 <jvm.opts2>-Xbootclasspath/a:${jprofiler.home}/bin/agent.jar</jvm.opts2>
-                <jprofiler.home>/opt/performance/tools/jprofiler521/</jprofiler.home>
+                <jprofiler.home>/opt/performance/tools/jprofiler522/</jprofiler.home>
                 <jprofiler.profileid>111</jprofiler.profileid>
                 <jprofiler.configfile>${project.build.directory}/test-classes/jprofilerconfig.xml</jprofiler.configfile>
                 <setuptest.runtime>100</setuptest.runtime>
