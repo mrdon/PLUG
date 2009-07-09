@@ -691,6 +691,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
                 .addFormattedResource("META-INF/MANIFEST.MF",
                     "Manifest-Version: 1.0",
                     "Bundle-SymbolicName: first",
+                    "Bundle-Version: 1.0",
                     "Export-Package: first",
                     "")
                 .build(pluginsDir);
@@ -728,6 +729,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
                 .addFormattedResource("META-INF/MANIFEST.MF",
                     "Manifest-Version: 1.0",
                     "Bundle-SymbolicName: first",
+                    "Bundle-Version: 1.0",
                     "Export-Package: first",
                     "")
                 .build(pluginsDir);
@@ -801,6 +803,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
                 .addFormattedResource("META-INF/MANIFEST.MF",
                     "Manifest-Version: 1.0",
                     "Bundle-SymbolicName: foo",
+                    "Bundle-Version: 1.0",
                     "Export-Package: first",
                     "")
                 .build();

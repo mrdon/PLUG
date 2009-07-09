@@ -13,6 +13,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;
@@ -54,6 +55,7 @@ public class GenerateManifestStage implements TransformStage
                 {
                     final Manifest mf = builder.getJar().getManifest();
                     mf.getMainAttributes().putValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, parser.getKey());
+                    validateOsgiVersionIsValid(mf);
                     writeManifestOverride(context, mf);
                     // skip any manifest manipulation by bnd
                     return;
@@ -130,6 +132,7 @@ public class GenerateManifestStage implements TransformStage
             final Manifest mf = jar.getManifest();
 
             enforceHostVersionsForUnknownImports(mf, context.getSystemExports());
+            validateOsgiVersionIsValid(mf);
 
             writeManifestOverride(context, mf);
             jar.close();
@@ -143,6 +146,24 @@ public class GenerateManifestStage implements TransformStage
             builder.close();
         }
 
+    }
+
+    private void validateOsgiVersionIsValid(Manifest mf)
+    {
+        String version = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+        try
+        {
+            if (Version.parseVersion(version) == Version.emptyVersion)
+            {
+                // we still consider an empty version to be bad
+                throw new IllegalArgumentException();
+            }
+        }
+        catch (IllegalArgumentException ex)
+        {
+            throw new IllegalArgumentException("Plugin version '" + version + "' is required and must be able to be " +
+                    "parsed as an OSGi version - MAJOR.MINOR.MICRO.QUALIFIER");
+        }
     }
 
     private void writeManifestOverride(final TransformContext context, final Manifest mf)
