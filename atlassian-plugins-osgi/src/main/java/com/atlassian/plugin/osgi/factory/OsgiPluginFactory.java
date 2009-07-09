@@ -149,8 +149,6 @@ public class OsgiPluginFactory implements PluginFactory
             ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys.toArray(new String[applicationKeys.size()]));
 
-            validateIsValidOsgiVersion(parser);
-
             Plugin osgiPlugin = new OsgiPlugin(parser.getKey(), osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager);
 
             // Temporarily configure plugin until it can be properly installed
@@ -165,29 +163,6 @@ public class OsgiPluginFactory implements PluginFactory
             IOUtils.closeQuietly(pluginDescriptor);
         }
         return plugin;
-    }
-
-    /**
-     * Validate the version is a valid OSGi version.
-     * @param parser The parser that parsed the descriptor
-     * @throws IllegalArgumentException If the version is empty or invalid
-     */
-    private void validateIsValidOsgiVersion(DescriptorParser parser) throws IllegalArgumentException
-    {
-        String version = parser.getPluginInformation().getVersion();
-        try
-        {
-            if (Version.parseVersion(version) == Version.emptyVersion)
-            {
-                // we still consider an empty version to be bad
-                throw new IllegalArgumentException();
-            }
-        }
-        catch (IllegalArgumentException ex)
-        {
-            throw new IllegalArgumentException("Plugin version '" + version + "' is required and must be able to be " +
-                    "parsed as an OSGi version - MAJOR.MINOR.MICRO.QUALIFIER");
-        }
     }
 
     /**

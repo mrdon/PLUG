@@ -6,24 +6,18 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
-import com.atlassian.plugin.impl.UnloadablePlugin;
-import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
-import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.test.PluginTestUtils;
-
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.apache.commons.io.FileUtils;
-
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
+import junit.framework.TestCase;
+import org.apache.commons.io.FileUtils;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.service.packageadmin.PackageAdmin;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,8 +25,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
-
-import junit.framework.TestCase;
 
 public class TestOsgiPluginFactory extends TestCase
 {
@@ -98,50 +90,31 @@ public class TestOsgiPluginFactory extends TestCase
         jar = new PluginJarBuilder("someplugin").addPluginInformation("plugin.key", "My Plugin", "beta.1.0").build();
         mockBundle.expectAndReturn("getSymbolicName", "plugin.key");
         mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
-        mockOsgi.matchAndReturn("getBundles", new Bundle[] {(Bundle) mockSystemBundle.proxy()});
-        try
-        {
-            factory.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
-            fail("Should have complained about osgi version");
-        }
-        catch (IllegalArgumentException ex)
-        {
-            // expected
-        }
-        mockOsgi.verify();
-    }
-
-    public void testCreateOsgiPluginWithEmptyVersion() throws PluginParseException, IOException
-    {
-        jar = new PluginJarBuilder("someplugin").addPluginInformation("plugin.key", "My Plugin", "").build();
-        mockBundle.expectAndReturn("getSymbolicName", "plugin.key");
-        mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
-        mockOsgi.matchAndReturn("getBundles", new Bundle[] {(Bundle) mockSystemBundle.proxy()});
-        try
-        {
-            factory.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
-            fail("Should have complained about osgi version");
-        }
-        catch (IllegalArgumentException ex)
-        {
-            // expected
-        }
-        mockOsgi.verify();
-    }
-
-    /**
-    public void testCreateOsgiPluginFail() throws PluginParseException
-    {
-        //noinspection ThrowableInstanceNeverThrown
-        mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
         mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
         mockOsgi.matchAndReturn("getBundles", new Bundle[] {(Bundle) mockSystemBundle.proxy()});
-        final Plugin plugin = factory.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
-        assertNotNull(plugin);
-        assertTrue(plugin instanceof UnloadablePlugin);
+        try
+        {
+            factory.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+            fail("Should have complained about osgi version");
+        }
+        catch (PluginParseException ex)
+        {
+            // expected
+        }
         mockOsgi.verify();
     }
-     **/
+
+    public void testCreateOsgiPluginWithBadVersion2() throws PluginParseException, IOException
+    {
+        jar = new PluginJarBuilder("someplugin").addPluginInformation("plugin.key", "My Plugin", "3.2-rc1").build();
+        mockBundle.expectAndReturn("getSymbolicName", "plugin.key");
+        mockOsgi.expectAndReturn("getHostComponentRegistrations", new ArrayList());
+        mockOsgi.expectAndReturn("getServiceTracker", C.ANY_ARGS, null);
+        mockOsgi.matchAndReturn("getBundles", new Bundle[] {(Bundle) mockSystemBundle.proxy()});
+        Plugin plugin = factory.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+        assertTrue(plugin instanceof OsgiPlugin);
+        mockOsgi.verify();
+    }
 
     public void testCanLoadWithXml() throws PluginParseException, IOException
     {

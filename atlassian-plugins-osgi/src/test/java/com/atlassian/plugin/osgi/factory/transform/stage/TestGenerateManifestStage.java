@@ -123,6 +123,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addFormattedResource("META-INF/MANIFEST.MF",
                         "Manifest-Version: 1.0",
                         "Bundle-SymbolicName: my.foo.symbolicName",
+                        "Bundle-Version: 1.0",
                         "Bundle-ClassPath: .,foo")
                 .addResource("foo/bar.txt", "Something")
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
@@ -131,6 +132,51 @@ public class TestGenerateManifestStage extends TestCase
         final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
         final Attributes attrs = executeStage(context);
         assertEquals("innerjarcp", attrs.getValue("Atlassian-Plugin-Key"));
+
+    }
+
+    public void testGenerateManifestInvalidVersionWithExisting() throws Exception
+    {
+        final File plugin = new PluginJarBuilder("plugin")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0",
+                        "Bundle-SymbolicName: my.foo.symbolicName",
+                        "Bundle-Version: beta1",
+                        "Bundle-ClassPath: .,foo\n")
+                .addResource("foo/bar.txt", "Something")
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
+
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        try
+        {
+            executeStage(context);
+            fail("Should have complained about bad plugin version");
+        }
+        catch (PluginParseException ex)
+        {
+            ex.printStackTrace();
+            // expected
+        }
+    }
+
+    public void testGenerateManifestInvalidVersion() throws Exception
+    {
+        final File plugin = new PluginJarBuilder("plugin")
+                .addPluginInformation("innerjarcp", "Some name", "beta1.0")
+                .build();
+
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        try
+        {
+            executeStage(context);
+            fail("Should have complained about bad plugin version");
+        }
+        catch (PluginParseException ex)
+        {
+            ex.printStackTrace();
+            // expected
+        }
 
     }
 
