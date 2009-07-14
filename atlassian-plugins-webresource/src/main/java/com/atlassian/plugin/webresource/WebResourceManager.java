@@ -38,31 +38,9 @@ public interface WebResourceManager
     public void includeResources(Writer writer);
 
     /**
-     * Writes out the resource tags of the provided type to the previously required resources called via {@link #requireResource(String)}.
-     * If you need it as a String to embed the tags in a template, use {@link #getRequiredResources(String)}.
-     *
-     * <p/>
-     * Example - if a 'javascript' resource has been required earlier with requireResource() and the passed type
-     * parameter is "js" this method should output:
-     * <pre><code>
-     *  &lt;script type=&quot;text/javascript&quot; src=&quot;$contextPath/scripts/javascript.js&quot;&gt;&lt;/script&gt;
-     * </code></pre>
-     * Similarly for other supported resources
-     *
-     * @param writer The writer to write the links to
-     * @param type The type of resource to create links for
-     */
-    public void includeResources(Writer writer, String type);
-
-    /**
      * @see {@link #includeResources(Writer)}
      */
     public String getRequiredResources();
-
-    /**
-     * @see {@link #includeResources(Writer, String)}
-     */
-    public String getRequiredResources(String type);
 
     /**
      * Writes the resource tags of the specified resource to the writer.
@@ -142,8 +120,7 @@ public interface WebResourceManager
 
     /**
      * @see {@link #getStaticPluginResource(String, String)}
-     * @param moduleDescriptor plugin module containing the required resource
-     * @param resourceName resource in the module to return
+     * @param pluginModuleKey complete plugin module key
      * @return returns the url of this plugin resource
      */
     public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName);

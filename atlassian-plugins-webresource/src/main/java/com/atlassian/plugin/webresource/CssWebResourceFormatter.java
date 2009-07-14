@@ -47,11 +47,6 @@ class CssWebResourceFormatter extends AbstractWebResourceFormatter
         return buffer.toString();
     }
 
-    public WebResourceType getType()
-    {
-        return WebResourceType.CSS;
-    }
-
     protected List<String> getAttributeParameters()
     {
         return HANDLED_PARAMETERS;

@@ -9,7 +9,11 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -118,35 +122,17 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void includeResources(Writer writer)
     {
-        includeResources(writer, null, true);
+        includeResources(writer, true);
     }
 
     public String getRequiredResources()
     {
-        return getRequiredResources(null);
-    }
-
-    public void includeResources(Writer writer, String type)
-    {
-        // Don't clear the resource set because they may be needed for other types.
-        includeResources(writer, type, false);
-    }
-
-    public String getRequiredResources(String type)
-    {
         StringWriter writer = new StringWriter();
-        includeResources(writer, type, false);
+        includeResources(writer, false);
         return writer.toString();
     }
 
-    public void requireResource(final String moduleCompleteKey, final Writer writer)
-    {
-        final LinkedHashSet<String> resourcesWithDeps = new LinkedHashSet<String>();
-        addResourceWithDependencies(moduleCompleteKey, resourcesWithDeps, new Stack<String>());
-        writeResourceTagsByType(writer, resourcesWithDeps, null);
-    }
-
-    private void includeResources(Writer writer, String type, boolean clearResources)
+    private void includeResources(Writer writer, boolean clearResources)
     {
         LinkedHashSet<String> webResourceNames = getWebResourceNames();
         if (webResourceNames == null || webResourceNames.isEmpty())
@@ -155,45 +141,29 @@ public class WebResourceManagerImpl implements WebResourceManager
             return;
         }
 
-        WebResourceType resourceType = WebResourceType.parse(type);
-        writeResourceTagsByType(writer, webResourceNames, resourceType);
-
+        for (Object webResourceName : webResourceNames)
+        {
+            String resourceName = (String) webResourceName;
+            writeResourceTag(resourceName, writer);
+        }
         if (clearResources)
         {
             webResourceNames.clear();
         }
     }
 
-    private void writeResourceTagsByType(Writer writer, LinkedHashSet<String> webResourceNames, WebResourceType resourceType)
+    public void requireResource(final String moduleCompleteKey, final Writer writer)
     {
-        Map<WebResourceType, Writer> typeWriters = getWritersForResourceTypes();
-        for (String resourceName : webResourceNames)
+        final LinkedHashSet<String> resourcesWithDeps = new LinkedHashSet<String>();
+        addResourceWithDependencies(moduleCompleteKey, resourcesWithDeps, new Stack<String>());
+
+        for (final Object resource : resourcesWithDeps)
         {
-            writeResourceTags(resourceName, resourceType, writer, typeWriters);
+            writeResourceTag((String) resource, writer);
         }
-        flushWritersForResourceTypes(writer, typeWriters);
     }
 
-    private Map<WebResourceType, Writer> getWritersForResourceTypes()
-    {
-        Map<WebResourceType, Writer> typeWriters = new HashMap<WebResourceType, Writer>();
-        for (WebResourceFormatter formatter : webResourceFormatters)
-        {
-            typeWriters.put(formatter.getType(), new StringWriter());
-        }
-        return typeWriters;
-    }
-
-    /**
-        Writes the formatted resources for each type in the order CSS, JS for optimized loading by the browser.
-     */
-    private void flushWritersForResourceTypes(Writer writer, Map<WebResourceType, Writer> typeWriters)
-    {
-        writeContentAndSwallowErrors(typeWriters.get(WebResourceType.CSS).toString(), writer);
-        writeContentAndSwallowErrors(typeWriters.get(WebResourceType.JAVASCRIPT).toString(), writer);
-    }
-
-    private void writeResourceTags(final String moduleCompleteKey, WebResourceType type, final Writer writer, Map<WebResourceType, Writer> typeWriters)
+    private void writeResourceTag(final String moduleCompleteKey, final Writer writer)
     {
         final List<PluginResource> resources = pluginResourceLocator.getPluginResources(moduleCompleteKey);
 
@@ -212,13 +182,6 @@ public class WebResourceManagerImpl implements WebResourceManager
                 continue;
             }
 
-            WebResourceType formatterType = formatter.getType();
-            if (type != null && type != formatterType)
-            {
-                // Skip resources not matching required type, if provided.
-                continue;
-            }
-
             String url = resource.getUrl();
             if (resource.isCacheSupported())
             {
@@ -229,7 +192,7 @@ public class WebResourceManagerImpl implements WebResourceManager
             {
                 url = webResourceIntegration.getBaseUrl() + url;
             }
-            writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), typeWriters.get(formatterType));
+            writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writer);
         }
     }
 

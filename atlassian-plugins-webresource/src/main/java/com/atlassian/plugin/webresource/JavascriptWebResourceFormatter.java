@@ -25,11 +25,6 @@ class JavascriptWebResourceFormatter extends AbstractWebResourceFormatter
         return buffer.toString();
     }
 
-    public WebResourceType getType()
-    {
-        return WebResourceType.JAVASCRIPT;
-    }
-
     protected List<String> getAttributeParameters()
     {
         return HANDLED_PARAMETERS;
