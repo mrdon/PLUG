@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.atomic.AtomicReference;
 import java.io.IOException;
 
@@ -41,6 +42,8 @@ import com.atlassian.plugin.servlet.filter.FilterTestUtils.FilterAdapter;
 import com.atlassian.plugin.servlet.filter.FilterTestUtils.SoundOffFilter;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TestDefaultServletModuleManager extends TestCase
 {
@@ -177,6 +180,64 @@ public class TestDefaultServletModuleManager extends TestCase
         HttpServlet wrappedServlet = servletModuleManager.getServlet("/servlet/this/is/a/test", (ServletConfig) mockServletConfig.proxy());
         wrappedServlet.service((HttpServletRequest) mockHttpServletRequest.proxy(), (HttpServletResponse) mockHttpServletResponse.proxy());
         assertTrue(servlet.serviceCalled);
+    }
+
+    public void testMultipleFitlersWithTheSameComplexPath() throws ServletException
+    {
+        ServletContext servletContext = mock(ServletContext.class);
+        FilterConfig filterConfig = mock(FilterConfig.class);
+        when(filterConfig.getServletContext()).thenReturn(servletContext);
+        when(servletContext.getInitParameterNames()).thenReturn(new Vector().elements());
+        Plugin plugin = new PluginBuilder().build();
+        ServletFilterModuleDescriptor filterDescriptor = new ServletFilterModuleDescriptorBuilder()
+            .with(plugin)
+            .withKey("foo")
+            .with(new FilterAdapter())
+            .withPath("/foo/*")
+            .with(servletModuleManager)
+            .build();
+
+        ServletFilterModuleDescriptor filterDescriptor2 = new ServletFilterModuleDescriptorBuilder()
+            .with(plugin)
+            .withKey("bar")
+            .with(new FilterAdapter())
+            .withPath("/foo/*")
+            .with(servletModuleManager)
+            .build();
+        servletModuleManager.addFilterModule(filterDescriptor);
+        servletModuleManager.addFilterModule(filterDescriptor2);
+
+        servletModuleManager.removeFilterModule(filterDescriptor);
+        assertTrue(servletModuleManager.getFilters(FilterLocation.BEFORE_DISPATCH, "/foo/jim", filterConfig).iterator().hasNext());
+    }
+
+    public void testMultipleFitlersWithTheSameSimplePath() throws ServletException
+    {
+        ServletContext servletContext = mock(ServletContext.class);
+        FilterConfig filterConfig = mock(FilterConfig.class);
+        when(filterConfig.getServletContext()).thenReturn(servletContext);
+        when(servletContext.getInitParameterNames()).thenReturn(new Vector().elements());
+        Plugin plugin = new PluginBuilder().build();
+        ServletFilterModuleDescriptor filterDescriptor = new ServletFilterModuleDescriptorBuilder()
+            .with(plugin)
+            .withKey("foo")
+            .with(new FilterAdapter())
+            .withPath("/foo")
+            .with(servletModuleManager)
+            .build();
+
+        ServletFilterModuleDescriptor filterDescriptor2 = new ServletFilterModuleDescriptorBuilder()
+            .with(plugin)
+            .withKey("bar")
+            .with(new FilterAdapter())
+            .withPath("/foo")
+            .with(servletModuleManager)
+            .build();
+        servletModuleManager.addFilterModule(filterDescriptor);
+        servletModuleManager.addFilterModule(filterDescriptor2);
+
+        servletModuleManager.removeFilterModule(filterDescriptor);
+        assertTrue(servletModuleManager.getFilters(FilterLocation.BEFORE_DISPATCH, "/foo", filterConfig).iterator().hasNext());
     }
     
     public void testPluginContextInitParamsGetMerged() throws Exception

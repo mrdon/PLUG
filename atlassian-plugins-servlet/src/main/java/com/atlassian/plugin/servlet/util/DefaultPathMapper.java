@@ -136,12 +136,15 @@ public class DefaultPathMapper implements Serializable, PathMapper
             for (final Iterator<String> iterator = matcher.findComplexKeys(path, complexPaths).iterator(); iterator.hasNext();)
             {
                 final String mapped = iterator.next();
-                matches.addAll(mappings.get(mapped));
+                if (mappings.containsKey(mapped))
+                {
+                    matches.addAll(mappings.get(mapped));
+                }
             }
             // find default keys
             for (final Iterator<String> iterator = matcher.findDefaultKeys(mappings).iterator(); iterator.hasNext();)
             {
-                final String mapped = (String) iterator.next();
+                final String mapped = iterator.next();
                 matches.addAll(mappings.get(mapped));
             }
             return Collections.unmodifiableCollection(matches);
