@@ -9,11 +9,11 @@ import com.atlassian.plugin.manager.PluginPersistentStateStore;
  */
 public class MemoryPluginPersistentStateStore implements PluginPersistentStateStore
 {
-    private final DefaultPluginPersistentState state = new DefaultPluginPersistentState();
+    private volatile PluginPersistentState state = new DefaultPluginPersistentState();
 
     public void save(final PluginPersistentState state)
     {
-        this.state.setState(state);
+        this.state = state;
     }
 
     public PluginPersistentState load()

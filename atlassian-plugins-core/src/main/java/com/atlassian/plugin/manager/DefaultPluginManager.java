@@ -1,5 +1,6 @@
 package com.atlassian.plugin.manager;
 
+import static com.atlassian.plugin.util.Assertions.notNull;
 import static com.atlassian.plugin.util.collect.CollectionUtil.filter;
 import static com.atlassian.plugin.util.collect.CollectionUtil.toList;
 import static com.atlassian.plugin.util.collect.CollectionUtil.transform;
@@ -28,16 +29,17 @@ import com.atlassian.plugin.event.events.PluginEnabledEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkWarmRestartedEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkWarmRestartingEvent;
 import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.event.events.PluginUpgradedEvent;
-import com.atlassian.plugin.event.events.PluginFrameworkWarmRestartingEvent;
-import com.atlassian.plugin.event.events.PluginFrameworkWarmRestartedEvent;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.loaders.DynamicPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
+import com.atlassian.plugin.manager.PluginPersistentState.Builder;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.EnabledModulePredicate;
 import com.atlassian.plugin.predicate.EnabledPluginPredicate;
@@ -47,10 +49,10 @@ import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.predicate.ModuleOfClassPredicate;
 import com.atlassian.plugin.predicate.PluginPredicate;
 import com.atlassian.plugin.util.PluginUtils;
-import com.atlassian.plugin.util.WaitUntil;
 import com.atlassian.plugin.util.collect.CollectionUtil;
 import com.atlassian.plugin.util.collect.Function;
 import com.atlassian.plugin.util.collect.Predicate;
+import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -68,7 +70,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -88,11 +89,11 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     private final List<PluginLoader> pluginLoaders;
     private final PluginPersistentStateStore store;
     private final ModuleDescriptorFactory moduleDescriptorFactory;
-    private final PluginsClassLoader classLoader;
-    private final Map<String, Plugin> plugins = new ConcurrentHashMap<String, Plugin>();
     private final PluginEventManager pluginEventManager;
-    private final PluginEnabler pluginEnabler = new PluginEnabler(this, this);
 
+    private final Map<String, Plugin> plugins = CopyOnWriteMap.newHashMap();
+    private final PluginsClassLoader classLoader = new PluginsClassLoader(this);
+    private final PluginEnabler pluginEnabler = new PluginEnabler(this, this);
     private final StateTracker tracker = new StateTracker();
 
     /**
@@ -107,28 +108,12 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     public DefaultPluginManager(final PluginPersistentStateStore store, final List<PluginLoader> pluginLoaders, final ModuleDescriptorFactory moduleDescriptorFactory, final PluginEventManager pluginEventManager)
     {
-        if (store == null)
-        {
-            throw new IllegalArgumentException("PluginPersistentStateStore must not be null.");
-        }
-        if (pluginLoaders == null)
-        {
-            throw new IllegalArgumentException("Plugin Loaders list must not be null.");
-        }
-        if (moduleDescriptorFactory == null)
-        {
-            throw new IllegalArgumentException("ModuleDescriptorFactory must not be null.");
-        }
-        if (pluginEventManager == null)
-        {
-            throw new IllegalArgumentException("PluginEventManager must not be null.");
-        }
-        this.pluginLoaders = pluginLoaders;
-        this.store = store;
-        this.moduleDescriptorFactory = moduleDescriptorFactory;
-        this.pluginEventManager = pluginEventManager;
+        this.pluginLoaders = notNull("Plugin Loaders list must not be null.", pluginLoaders);
+        this.store = notNull("PluginPersistentStateStore must not be null.", store);
+        this.moduleDescriptorFactory = notNull("ModuleDescriptorFactory must not be null.", moduleDescriptorFactory);
+        this.pluginEventManager = notNull("PluginEventManager must not be null.", pluginEventManager);
+
         this.pluginEventManager.register(this);
-        classLoader = new PluginsClassLoader(this);
     }
 
     /**
@@ -170,9 +155,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             addPlugins(loader, pluginsToLoad);
         }
 
-        final DefaultPluginPersistentState currentState = new DefaultPluginPersistentState(getStore().load());
-        currentState.clearPluginRestartState();
-        getStore().save(currentState);
+        getStore().save(getBuilder().clearPluginRestartState().toState());
 
         pluginEventManager.broadcast(new PluginFrameworkStartedEvent(this, this));
         stopWatch.stop();
@@ -202,9 +185,9 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         pluginEventManager.broadcast(new PluginFrameworkWarmRestartingEvent(this, this));
 
         // Make sure we reload plugins in order
-        for (PluginLoader loader : pluginLoaders)
+        for (final PluginLoader loader : pluginLoaders)
         {
-            for (Map.Entry<Plugin,PluginLoader> entry : pluginToPluginLoader.entrySet())
+            for (final Map.Entry<Plugin, PluginLoader> entry : pluginToPluginLoader.entrySet())
             {
                 if (entry.getValue() == loader)
                 {
@@ -322,9 +305,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                             {
                                 if (oldPlugin == null)
                                 {
-                                    final DefaultPluginPersistentState currentState = new DefaultPluginPersistentState(getStore().load());
-                                    currentState.setPluginRestartState(plugin.getKey(), PluginRestartState.INSTALL);
-                                    getStore().save(currentState);
+                                    getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.INSTALL).toState());
 
                                     final UnloadablePlugin unloadablePlugin = new UnloadablePlugin("Plugin requires a restart of the application");
                                     unloadablePlugin.setKey(plugin.getKey());
@@ -332,9 +313,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                                 }
                                 else
                                 {
-                                    final DefaultPluginPersistentState currentState = new DefaultPluginPersistentState(getStore().load());
-                                    currentState.setPluginRestartState(plugin.getKey(), PluginRestartState.UPGRADE);
-                                    getStore().save(currentState);
+                                    getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.UPGRADE).toState());
                                     continue;
                                 }
                             }
@@ -342,9 +321,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                             // Check to ensure that the old plugin didn't require restart, even if the new one doesn't
                             else if ((oldPlugin != null) && PluginUtils.doesPluginRequireRestart(oldPlugin))
                             {
-                                final DefaultPluginPersistentState currentState = new DefaultPluginPersistentState(getStore().load());
-                                currentState.setPluginRestartState(plugin.getKey(), PluginRestartState.UPGRADE);
-                                getStore().save(currentState);
+                                getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.UPGRADE).toState());
                                 continue;
                             }
                             pluginsToAdd.add(plugin);
@@ -370,9 +347,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         if (PluginUtils.doesPluginRequireRestart(plugin))
         {
             ensurePluginAndLoaderSupportsUninstall(plugin);
-            final DefaultPluginPersistentState currentState = new DefaultPluginPersistentState(getStore().load());
-            currentState.setPluginRestartState(plugin.getKey(), PluginRestartState.REMOVE);
-            getStore().save(currentState);
+            getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.REMOVE).toState());
         }
         else
         {
@@ -385,13 +360,12 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void removeStateFromStore(final PluginPersistentStateStore stateStore, final Plugin plugin)
     {
-        final DefaultPluginPersistentState currentState = new DefaultPluginPersistentState(stateStore.load());
-        currentState.removeState(plugin.getKey());
+        final PluginPersistentState.Builder builder = PluginPersistentState.Builder.create(stateStore.load()).removeState(plugin.getKey());
         for (final ModuleDescriptor<?> moduleDescriptor : plugin.getModuleDescriptors())
         {
-            currentState.removeState(moduleDescriptor.getCompleteKey());
+            builder.removeState(moduleDescriptor.getCompleteKey());
         }
-        stateStore.save(currentState);
+        stateStore.save(builder.toState());
     }
 
     /**
@@ -603,10 +577,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             }
         });
 
-        // Restore the configuration
-        final DefaultPluginPersistentState currentState = new DefaultPluginPersistentState(getStore().load());
-        currentState.addState(oldPluginState);
-        getStore().save(currentState);
+        getStore().save(getBuilder().addState(oldPluginState).toState());
     }
 
     public Collection<Plugin> getPlugins()
@@ -925,9 +896,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void enablePluginState(final Plugin plugin, final PluginPersistentStateStore stateStore)
     {
-        final DefaultPluginPersistentState currentState = new DefaultPluginPersistentState(stateStore.load());
-        currentState.setEnabled(plugin, true);
-        stateStore.save(currentState);
+        stateStore.save(getBuilder().setEnabled(plugin, true).toState());
     }
 
     /**
@@ -1002,9 +971,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void disablePluginState(final Plugin plugin, final PluginPersistentStateStore stateStore)
     {
-        final DefaultPluginPersistentState currentState = new DefaultPluginPersistentState(stateStore.load());
-        currentState.setEnabled(plugin, false);
-        stateStore.save(currentState);
+        stateStore.save(getBuilder().setEnabled(plugin, false).toState());
     }
 
     protected void notifyPluginDisabled(final Plugin plugin)
@@ -1052,9 +1019,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void disablePluginModuleState(final ModuleDescriptor<?> module, final PluginPersistentStateStore stateStore)
     {
-        final DefaultPluginPersistentState currentState = new DefaultPluginPersistentState(stateStore.load());
-        currentState.setEnabled(module, false);
-        stateStore.save(currentState);
+        stateStore.save(getBuilder().setEnabled(module, false).toState());
     }
 
     protected void notifyModuleDisabled(final ModuleDescriptor<?> module)
@@ -1107,9 +1072,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void enablePluginModuleState(final ModuleDescriptor<?> module, final PluginPersistentStateStore stateStore)
     {
-        final DefaultPluginPersistentState currentState = new DefaultPluginPersistentState(stateStore.load());
-        currentState.setEnabled(module, true);
-        stateStore.save(currentState);
+        stateStore.save(getBuilder().setEnabled(module, true).toState());
     }
 
     protected void notifyModuleEnabled(final ModuleDescriptor<?> module)
@@ -1149,7 +1112,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     {
         final Plugin plugin = plugins.get(key);
 
-        return (plugin != null) && getState().isEnabled(plugin) && (plugin.getPluginState() == PluginState.ENABLED);
+        return (plugin != null) && ((plugin.getPluginState() == PluginState.ENABLED) && getState().isEnabled(plugin));
     }
 
     public InputStream getDynamicResourceAsStream(final String name)
@@ -1215,30 +1178,15 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         return getState().getPluginRestartState(key);
     }
 
+    private Builder getBuilder()
+    {
+        return PluginPersistentState.Builder.create(getStore().load());
+    }
+
     /**
      * @deprecated Since 2.0.0.beta2
      */
     @Deprecated
     public void setDescriptorParserFactory(final DescriptorParserFactory descriptorParserFactory)
     {}
-
-    private static class PluginFinishedEnablingCondition implements WaitUntil.WaitCondition
-    {
-        private final Plugin plugin;
-
-        public PluginFinishedEnablingCondition(final Plugin plugin)
-        {
-            this.plugin = plugin;
-        }
-
-        public boolean isFinished()
-        {
-            return plugin.getPluginState() != PluginState.ENABLING;
-        }
-
-        public String getWaitMessage()
-        {
-            return "Waiting until plugin " + plugin + " is enabled";
-        }
-    }
 }

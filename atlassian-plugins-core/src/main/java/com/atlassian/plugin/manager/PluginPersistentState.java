@@ -1,10 +1,16 @@
 package com.atlassian.plugin.manager;
 
-import com.atlassian.plugin.Plugin;
+import static com.atlassian.plugin.manager.PluginPersistentState.Util.RESTART_STATE_SEPARATOR;
+import static com.atlassian.plugin.manager.PluginPersistentState.Util.buildStateKey;
+
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginRestartState;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Interface that represents a configuration state for plugins and plugin modules. The configuration state (enabled
@@ -48,4 +54,130 @@ public interface PluginPersistentState
      * @return The state of the plugin on restart
      */
     PluginRestartState getPluginRestartState(String pluginKey);
+
+    /**
+     * Builder for {@link PluginPersistentState} instances.
+     */
+    public static final class Builder
+    {
+        public static Builder create()
+        {
+            return new Builder();
+        }
+
+        public static Builder create(final PluginPersistentState state)
+        {
+            return new Builder(state);
+        }
+
+        private final Map<String, Boolean> map = new HashMap<String, Boolean>();
+
+        Builder()
+        {}
+
+        Builder(final PluginPersistentState state)
+        {
+            map.putAll(state.getMap());
+        }
+
+        public PluginPersistentState toState()
+        {
+            return new DefaultPluginPersistentState(map);
+        }
+
+        public Builder setEnabled(final ModuleDescriptor<?> pluginModule, final boolean isEnabled)
+        {
+            setEnabled(pluginModule.getCompleteKey(), pluginModule.isEnabledByDefault(), isEnabled);
+            return this;
+        }
+
+        public Builder setEnabled(final Plugin plugin, final boolean isEnabled)
+        {
+            setEnabled(plugin.getKey(), plugin.isEnabledByDefault(), isEnabled);
+            return this;
+        }
+
+        private Builder setEnabled(final String completeKey, final boolean enabledByDefault, final boolean isEnabled)
+        {
+            if (isEnabled == enabledByDefault)
+            {
+                map.remove(completeKey);
+            }
+            else
+            {
+                map.put(completeKey, isEnabled);
+            }
+            return this;
+        }
+
+        /**
+         * reset all plugin's state.
+         */
+        public Builder setState(final PluginPersistentState state)
+        {
+            map.clear();
+            map.putAll(state.getMap());
+            return this;
+        }
+
+        /**
+         * Add the plugin state.
+         */
+        public Builder addState(final Map<String, Boolean> state)
+        {
+            map.putAll(state);
+            return this;
+        }
+
+        /**
+         * Remove a plugin's state.
+         */
+        public Builder removeState(final String key)
+        {
+            map.remove(key);
+            return this;
+        }
+
+        public Builder setPluginRestartState(final String pluginKey, final PluginRestartState state)
+        {
+            // Remove existing state, if any
+            for (final PluginRestartState st : PluginRestartState.values())
+            {
+                map.remove(buildStateKey(pluginKey, st));
+            }
+
+            if (state != PluginRestartState.NONE)
+            {
+                map.put(buildStateKey(pluginKey, state), true);
+            }
+            return this;
+        }
+
+        public Builder clearPluginRestartState()
+        {
+            final Set<String> keys = new HashSet<String>(map.keySet());
+            for (final String key : keys)
+            {
+                if (key.contains(RESTART_STATE_SEPARATOR))
+                {
+                    map.remove(key);
+                }
+            }
+            return this;
+        }
+    }
+
+    static class Util
+    {
+        static final String RESTART_STATE_SEPARATOR = "--";
+
+        static String buildStateKey(final String pluginKey, final PluginRestartState state)
+        {
+            final StringBuilder sb = new StringBuilder();
+            sb.append(state.name());
+            sb.append(RESTART_STATE_SEPARATOR);
+            sb.append(pluginKey);
+            return sb.toString();
+        }
+    }
 }
