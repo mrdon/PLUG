@@ -5,6 +5,7 @@ import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import com.atlassian.plugin.event.events.PluginUpgradedEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkWarmRestartingEvent;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
@@ -192,6 +193,13 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     public void onPluginUpgrade(PluginUpgradedEvent event)
     {
         registration.refreshPackages();
+    }
+
+    @PluginEventListener
+    public void onPluginFrameworkWarmRestarting(PluginFrameworkWarmRestartingEvent event)
+    {
+        final DefaultComponentRegistrar registrar = collectHostComponents(hostComponentProvider);
+        registration.loadHostComponents(registrar);
     }
 
     public void start() throws OsgiContainerException
@@ -517,7 +525,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             return hostComponentRegistrations;
         }
 
-        private void loadHostComponents(final DefaultComponentRegistrar registrar)
+        void loadHostComponents(final DefaultComponentRegistrar registrar)
         {
             // Unregister any existing host components
             if (hostServicesReferences != null)

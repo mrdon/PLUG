@@ -945,37 +945,4 @@ public class TestPluginInstall extends PluginInContainerTestBase
             return callable.call();
         }
     }
-
-    public static class ObjectModuleDescriptor extends AbstractModuleDescriptor
-    {
-        private Object object;
-        @Override
-        public void enabled()
-        {
-            super.enabled();
-            try
-            {
-                object = getModuleClass().newInstance();
-            }
-            catch (InstantiationException e)
-            {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
-            catch (IllegalAccessException e)
-            {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
-        }
-
-        @Override
-        public void disabled()
-        {
-            object = null;
-        }
-
-        public Object getModule()
-        {
-            return object;
-        }
-    }
 }

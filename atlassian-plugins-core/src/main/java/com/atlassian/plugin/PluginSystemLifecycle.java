@@ -21,4 +21,11 @@ public interface PluginSystemLifecycle
      * @since 2.0.0
      */
     void shutdown();
+
+    /**
+     * Restart all plugins by disabling and enabling them in the order they were loaded (by plugin loader)
+     *
+     * @since 2.3.0
+     */
+    void warmRestart();
 }

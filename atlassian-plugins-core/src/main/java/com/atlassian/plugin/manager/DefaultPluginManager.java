@@ -32,6 +32,8 @@ import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.event.events.PluginUpgradedEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkWarmRestartingEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkWarmRestartedEvent;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.loaders.DynamicPluginLoader;
@@ -191,6 +193,29 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         plugins.clear();
         pluginEventManager.unregister(this);
         tracker.setState(StateTracker.State.SHUTDOWN);
+    }
+
+    public void warmRestart()
+    {
+        tracker.setState(StateTracker.State.WARM_RESTARTING);
+        log.info("Initiating a warm restart of the plugin system");
+        pluginEventManager.broadcast(new PluginFrameworkWarmRestartingEvent(this, this));
+
+        // Make sure we reload plugins in order
+        for (PluginLoader loader : pluginLoaders)
+        {
+            for (Map.Entry<Plugin,PluginLoader> entry : pluginToPluginLoader.entrySet())
+            {
+                if (entry.getValue() == loader)
+                {
+                    // This doesn't have to be an event, but it may be useful for third-parties
+                    pluginEventManager.broadcast(new PluginRefreshedEvent(entry.getKey()));
+                }
+            }
+        }
+
+        pluginEventManager.broadcast(new PluginFrameworkWarmRestartedEvent(this, this));
+        tracker.setState(StateTracker.State.STARTED);
     }
 
     @PluginEventListener

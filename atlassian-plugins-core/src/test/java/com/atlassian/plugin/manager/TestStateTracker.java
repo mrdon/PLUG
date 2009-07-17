@@ -1,6 +1,6 @@
 package com.atlassian.plugin.manager;
 
-import static com.atlassian.plugin.manager.StateTracker.State.NOT_STARTED;
+import static com.atlassian.plugin.manager.StateTracker.State.*;
 import static com.atlassian.plugin.manager.StateTracker.State.SHUTDOWN;
 import static com.atlassian.plugin.manager.StateTracker.State.SHUTTING_DOWN;
 import static com.atlassian.plugin.manager.StateTracker.State.STARTED;
@@ -31,6 +31,16 @@ public class TestStateTracker extends TestCase
     public void testIllegalStartedTransitions() throws Exception
     {
         assertIllegalState(new StateTracker().setState(STARTING).setState(STARTED), STARTED, NOT_STARTED, STARTING, SHUTDOWN);
+    }
+
+    public void testIllegalWarmRestartingTransitions() throws Exception
+    {
+        assertIllegalState(new StateTracker().setState(STARTING).setState(STARTED).setState(WARM_RESTARTING), NOT_STARTED, STARTING, SHUTDOWN, SHUTTING_DOWN);
+    }
+
+    public void testIllegalWarmRestartTransitions() throws Exception
+    {
+        assertIllegalState(new StateTracker().setState(STARTING).setState(STARTED).setState(WARM_RESTARTING).setState(STARTED), STARTED, NOT_STARTED, STARTING, SHUTDOWN);
     }
 
     public void testIllegalShuttingDownTransitions() throws Exception

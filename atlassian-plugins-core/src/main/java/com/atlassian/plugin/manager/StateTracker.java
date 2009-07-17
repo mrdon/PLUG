@@ -24,7 +24,28 @@ class StateTracker
             }
         },
         STARTING,
-        STARTED,
+        STARTED
+        {
+            @Override
+            void check(final State newState)
+            {
+                if (newState != WARM_RESTARTING && newState != SHUTTING_DOWN)
+                {
+                    illegalState(newState);
+                }
+            }
+        },
+        WARM_RESTARTING
+        {
+            @Override
+            void check(final State newState)
+            {
+                if (newState != STARTED)
+                {
+                    illegalState(newState);
+                }
+            }
+        },
         SHUTTING_DOWN,
         SHUTDOWN
         {
