@@ -17,6 +17,7 @@ public class TestPathMapper extends TestCase
         assertEquals("foo.baz", pathMapper.get("/bar/foo"));
         pathMapper.put("foo.bar", null);
         assertNull(pathMapper.get("/foo/bar"));
+        assertEquals(0, pathMapper.getAll("/foo/bar").size());
         assertEquals("foo.baz", pathMapper.get("/bar/foo"));
     }
 }
