@@ -57,6 +57,11 @@ public interface PluginPersistentState
 
     /**
      * Builder for {@link PluginPersistentState} instances.
+     * <p>
+     * This class is <strong>not thread safe</strong>. It should
+     * only be used in a method local context.
+     * 
+     * @since 2.3.0
      */
     public static final class Builder
     {
@@ -82,7 +87,7 @@ public interface PluginPersistentState
 
         public PluginPersistentState toState()
         {
-            return new DefaultPluginPersistentState(map);
+            return new DefaultPluginPersistentState(map, true);
         }
 
         public Builder setEnabled(final ModuleDescriptor<?> pluginModule, final boolean isEnabled)

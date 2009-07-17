@@ -26,12 +26,32 @@ public final class DefaultPluginPersistentState implements Serializable, PluginP
 {
     private final Map<String, Boolean> map;
 
+    /**
+     * Creates an empty {@link PluginPersistentState}.
+     * @deprecated create {@link PluginPersistentState} instances using the 
+     * {@link PluginPersistentState.Builder}
+     */
+    @Deprecated
     public DefaultPluginPersistentState()
     {
         map = Collections.emptyMap();
     }
 
+    /**
+     * Creates a {@link PluginPersistentState} with the supplied states.
+     * 
+     * @param map of the plugin states using the {@link Plugin#getKey()} as the key.
+     * @deprecated create {@link PluginPersistentState} instances using the 
+     * {@link PluginPersistentState.Builder}
+     */
+    @Deprecated
     public DefaultPluginPersistentState(final Map<String, Boolean> map)
+    {
+        this.map = unmodifiableMap(new HashMap<String, Boolean>(map));
+    }
+
+    /* for use from within this package, the second parameter is ignored */
+    DefaultPluginPersistentState(final Map<String, Boolean> map, final boolean ignore)
     {
         this.map = unmodifiableMap(new HashMap<String, Boolean>(map));
     }
@@ -44,11 +64,6 @@ public final class DefaultPluginPersistentState implements Serializable, PluginP
     public DefaultPluginPersistentState(final PluginPersistentState state)
     {
         this(state.getMap());
-    }
-
-    private Boolean getState(final String key)
-    {
-        return map.get(key);
     }
 
     /* (non-Javadoc)
@@ -64,7 +79,7 @@ public final class DefaultPluginPersistentState implements Serializable, PluginP
      */
     public boolean isEnabled(final Plugin plugin)
     {
-        final Boolean bool = getState(plugin.getKey());
+        final Boolean bool = map.get(plugin.getKey());
         return (bool == null) ? plugin.isEnabledByDefault() : bool.booleanValue();
     }
 
@@ -78,7 +93,7 @@ public final class DefaultPluginPersistentState implements Serializable, PluginP
             return false;
         }
 
-        final Boolean bool = getState(pluginModule.getCompleteKey());
+        final Boolean bool = map.get(pluginModule.getCompleteKey());
         return (bool == null) ? pluginModule.isEnabledByDefault() : bool.booleanValue();
     }
 
