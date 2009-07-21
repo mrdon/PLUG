@@ -110,6 +110,7 @@
                                             <groupId>org.apache.jmeter</groupId>
                                             <artifactId>apache-jmeter</artifactId>
                                             <type>tar.gz</type>
+                                            <version>${jmeter.version}</version>
                                         </artifactItem>
                                     </artifactItems>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
@@ -317,12 +318,6 @@
             <groupId>com.atlassian.plugins</groupId>
             <artifactId>atlassian-plugins-core</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.jmeter</groupId>
-          <artifactId>apache-jmeter</artifactId>
-          <version>${jmeter.version}</version>
-          <type>tar.gz</type>
         </dependency>
         <dependency>
             <groupId>com.atlassian.plugins</groupId>
