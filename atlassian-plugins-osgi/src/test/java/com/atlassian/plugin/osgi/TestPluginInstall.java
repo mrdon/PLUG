@@ -3,6 +3,8 @@ package com.atlassian.plugin.osgi;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.event.PluginEventListener;
+import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.hostcontainer.HostContainer;
@@ -26,6 +28,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -556,7 +559,17 @@ public class TestPluginInstall extends PluginInContainerTestBase
                     "}")
                 .build();
 
+        final RefreshHappened refresh = new RefreshHappened();
+        pluginEventManager.register(refresh);
         pluginManager.installPlugin(new JarPluginArtifact(updatedJar));
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return refresh.refreshHappened;
+            }
+
+        });
         assertEquals(3, pluginManager.getEnabledPlugins().size());
         assertEquals("hi", ((OsgiPlugin)pluginManager.getPlugin("test2.plugin")).autowire(Callable3Aware.class).call());
     }
@@ -943,6 +956,19 @@ public class TestPluginInstall extends PluginInContainerTestBase
         public String call() throws Exception
         {
             return callable.call();
+        }
+    }
+
+    public static class RefreshHappened
+    {
+        public volatile boolean refreshHappened = false;
+        @PluginEventListener
+        public void foo(PluginRefreshedEvent evt)
+        {
+            if (evt.getPlugin().getKey().equals("test2.plugin"))
+            {
+                refreshHappened = true;
+            }
         }
     }
 }
