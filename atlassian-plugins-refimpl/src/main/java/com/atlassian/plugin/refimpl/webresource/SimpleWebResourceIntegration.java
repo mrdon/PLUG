@@ -4,6 +4,7 @@ import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.refimpl.ContainerManager;
 import com.atlassian.plugin.refimpl.ParameterUtils;
 import com.atlassian.plugin.webresource.WebResourceIntegration;
+import com.atlassian.plugin.webresource.WebResourceManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +34,12 @@ public class SimpleWebResourceIntegration implements WebResourceIntegration
 
     public String getBaseUrl()
     {
-        return ParameterUtils.getBaseUrl();
+        return getBaseUrl(WebResourceManager.UrlMode.AUTO);
+    }
+
+    public String getBaseUrl(WebResourceManager.UrlMode urlMode)
+    {
+        return ParameterUtils.getBaseUrl(urlMode);
     }
 
     public PluginAccessor getPluginAccessor()

@@ -39,6 +39,10 @@ public class TestWebResourceManagerImpl extends TestCase
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, (WebResourceIntegration) mockWebResourceIntegration.proxy());
 
         mockWebResourceIntegration.matchAndReturn("getBaseUrl", BASEURL);
+        mockWebResourceIntegration.matchAndReturn("getBaseUrl", C.args(C.eq(WebResourceManager.UrlMode.ABSOLUTE)),
+                                                  BASEURL);
+        mockWebResourceIntegration.matchAndReturn("getBaseUrl", C.args(C.eq(WebResourceManager.UrlMode.RELATIVE)), "");
+        mockWebResourceIntegration.matchAndReturn("getBaseUrl", C.args(C.eq(WebResourceManager.UrlMode.AUTO)), "");
         mockWebResourceIntegration.matchAndReturn("getSystemBuildNumber", SYSTEM_BUILD_NUMBER);
         mockWebResourceIntegration.matchAndReturn("getSystemCounter", SYSTEM_COUNTER);
     }
@@ -269,24 +273,12 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals("", requiredResourceWriter.toString());
     }
 
+    // testRequireResourceAndResourceTagMethods
+
     public void testRequireResourceAndResourceTagMethods() throws Exception
     {
-        final String moduleKey = "cool-resources";
-        final String completeModuleKey = "test.atlassian:" + moduleKey;
-
-        final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.css", "more-cool.css", "cool.js");
-
-        final String pluginVersion = "1";
-        final Mock mockPlugin = new Mock(Plugin.class);
-        PluginInformation pluginInfo = new PluginInformation();
-        pluginInfo.setVersion(pluginVersion);
-        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
-
-        Map requestCache = new HashMap();
-        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
-
-        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
-            TestUtils.createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(), resourceDescriptors1));
+        final String completeModuleKey = "test.atlassian:cool-resources";
+        final String staticBase = setupRequireResourceAndResourceTagMethods(false, completeModuleKey);
 
         // test requireResource() methods
         StringWriter requiredResourceWriter = new StringWriter();
@@ -294,9 +286,6 @@ public class TestWebResourceManagerImpl extends TestCase
         String requiredResourceResult = webResourceManager.getRequiredResources();
         webResourceManager.includeResources(requiredResourceWriter);
         assertEquals(requiredResourceResult, requiredResourceWriter.toString());
-
-        String staticBase = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX  + "/" + SYSTEM_BUILD_NUMBER
-            + "/" + SYSTEM_COUNTER + "/" + pluginVersion + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
 
         assertTrue(requiredResourceResult.contains("href=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".css"));
         assertTrue(requiredResourceResult.contains("src=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".js"));
@@ -311,14 +300,110 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(requiredResourceResult, resourceTagsResult);
     }
 
+    public void testRequireResourceAndResourceTagMethodsWithAbsoluteUrlMode() throws Exception
+    {
+        testRequireResourceAndResourceTagMethods(WebResourceManager.UrlMode.ABSOLUTE, true);
+    }
+
+    public void testRequireResourceAndResourceTagMethodsWithRelativeUrlMode() throws Exception
+    {
+        testRequireResourceAndResourceTagMethods(WebResourceManager.UrlMode.RELATIVE, false);
+    }
+
+    public void testRequireResourceAndResourceTagMethodsWithAutoUrlMode() throws Exception
+    {
+        testRequireResourceAndResourceTagMethods(WebResourceManager.UrlMode.AUTO, false);
+    }
+
+    private void testRequireResourceAndResourceTagMethods(WebResourceManager.UrlMode urlMode, boolean baseUrlExpected)
+        throws Exception
+    {
+        final String completeModuleKey = "test.atlassian:cool-resources";
+        final String staticBase = setupRequireResourceAndResourceTagMethods(baseUrlExpected, completeModuleKey);
+
+        // test requireResource() methods
+        final StringWriter requiredResourceWriter = new StringWriter();
+        webResourceManager.requireResource(completeModuleKey);
+        final String requiredResourceResult = webResourceManager.getRequiredResources(urlMode);
+        webResourceManager.includeResources(requiredResourceWriter, urlMode);
+        assertEquals(requiredResourceResult, requiredResourceWriter.toString());
+
+        assertTrue(requiredResourceResult.contains("href=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".css"));
+        assertTrue(requiredResourceResult.contains("src=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".js"));
+
+        // test resourceTag() methods
+        StringWriter resourceTagsWriter = new StringWriter();
+        webResourceManager.requireResource(completeModuleKey, resourceTagsWriter, urlMode);
+        String resourceTagsResult = webResourceManager.getResourceTags(completeModuleKey, urlMode);
+        assertEquals(resourceTagsResult, resourceTagsWriter.toString());
+
+        // calling requireResource() or resourceTag() on a single webresource should be the same
+        assertEquals(requiredResourceResult, resourceTagsResult);
+    }
+
+    private String setupRequireResourceAndResourceTagMethods(boolean baseUrlExpected, String completeModuleKey)
+        throws DocumentException
+    {
+        final List<ResourceDescriptor> resourceDescriptors1 =
+            TestUtils.createResourceDescriptors("cool.css", "more-cool.css", "cool.js");
+
+        final String pluginVersion = "1";
+        final Mock mockPlugin = new Mock(Plugin.class);
+        final PluginInformation pluginInfo = new PluginInformation();
+        pluginInfo.setVersion(pluginVersion);
+        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
+
+        final Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
+            TestUtils.createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(), resourceDescriptors1));
+
+        final String staticBase = (baseUrlExpected ? BASEURL : "") +
+            "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX  + "/" + SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER +
+            "/" + pluginVersion + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
+        return staticBase;
+    }
+
+    // testRequireResourceWithCacheParameter
+
     public void testRequireResourceWithCacheParameter() throws Exception
     {
-        final String moduleKey = "no-cache-resources";
-        final String completeModuleKey = "test.atlassian:" + moduleKey;
+        final String completeModuleKey = "test.atlassian:no-cache-resources";
 
+        final String expectedResult = setupRequireResourceWithCacheParameter(false, completeModuleKey);
+        assertTrue(webResourceManager.getResourceTags(completeModuleKey).contains(expectedResult));
+    }
+
+    public void testRequireResourceWithCacheParameterAndAbsoluteUrlMode() throws Exception
+    {
+        testRequireResourceWithCacheParameter(WebResourceManager.UrlMode.ABSOLUTE, true);
+    }
+
+    public void testRequireResourceWithCacheParameterAndRelativeUrlMode() throws Exception
+    {
+        testRequireResourceWithCacheParameter(WebResourceManager.UrlMode.RELATIVE, false);
+    }
+
+    public void testRequireResourceWithCacheParameterAndAutoUrlMode() throws Exception
+    {
+        testRequireResourceWithCacheParameter(WebResourceManager.UrlMode.AUTO, false);
+    }
+
+    private void testRequireResourceWithCacheParameter(WebResourceManager.UrlMode urlMode, boolean baseUrlExpected)
+        throws Exception
+    {
+        final String completeModuleKey = "test.atlassian:no-cache-resources";
+        final String expectedResult = setupRequireResourceWithCacheParameter(baseUrlExpected, completeModuleKey);
+        assertTrue(webResourceManager.getResourceTags(completeModuleKey, urlMode).contains(expectedResult));
+    }
+
+    private String setupRequireResourceWithCacheParameter(boolean baseUrlExpected, String completeModuleKey)
+        throws DocumentException
+    {
         final Mock mockPlugin = new Mock(Plugin.class);
 
-        Map<String, String> params = new HashMap<String, String>();
+        final Map<String, String> params = new HashMap<String, String>();
         params.put("cache", "false");
         ResourceDescriptor resourceDescriptor = TestUtils.createResourceDescriptor("no-cache.js", params);
 
@@ -326,30 +411,124 @@ public class TestWebResourceManagerImpl extends TestCase
                 TestUtils.createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(),
                 Collections.singletonList(resourceDescriptor)));
 
-        String resourceTagsResult = webResourceManager.getResourceTags(completeModuleKey);
-        assertTrue(resourceTagsResult.contains("src=\"" + BASEURL + BatchPluginResource.URL_PREFIX + "/"
-            + completeModuleKey + "/" + completeModuleKey + ".js?cache=false"));
+        return "src=\"" + (baseUrlExpected ? BASEURL : "") + BatchPluginResource.URL_PREFIX +
+               "/" + completeModuleKey + "/" + completeModuleKey + ".js?cache=false";
     }
+
+    // testGetStaticResourcePrefix
 
     public void testGetStaticResourcePrefix()
     {
-        String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" +
-            SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
+        final String expectedPrefix = setupGetStaticResourcePrefix(false);
         assertEquals(expectedPrefix, webResourceManager.getStaticResourcePrefix());
     }
 
+    public void testGetStaticResourcePrefixWithAbsoluteUrlMode()
+    {
+        testGetStaticResourcePrefix(WebResourceManager.UrlMode.ABSOLUTE, true);
+    }
+
+    public void testGetStaticResourcePrefixWithRelativeUrlMode()
+    {
+        testGetStaticResourcePrefix(WebResourceManager.UrlMode.RELATIVE, false);
+    }
+
+    public void testGetStaticResourcePrefixWithAutoUrlMode()
+    {
+        testGetStaticResourcePrefix(WebResourceManager.UrlMode.AUTO, false);
+    }
+
+    private void testGetStaticResourcePrefix(WebResourceManager.UrlMode urlMode, boolean baseUrlExpected)
+    {
+        final String expectedPrefix = setupGetStaticResourcePrefix(baseUrlExpected);
+        assertEquals(expectedPrefix, webResourceManager.getStaticResourcePrefix(urlMode));
+    }
+
+    private String setupGetStaticResourcePrefix(boolean baseUrlExpected)
+    {
+        return (baseUrlExpected ? BASEURL : "") +
+            "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" +
+            SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
+    }
+
+    // testGetStaticResourcePrefixWithCounter
+
     public void testGetStaticResourcePrefixWithCounter()
     {
-        String resourceCounter = "456";
-        String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" +
-            SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + resourceCounter + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
+        final String resourceCounter = "456";
+        final String expectedPrefix = setupGetStaticResourcePrefixWithCounter(false, resourceCounter);
         assertEquals(expectedPrefix, webResourceManager.getStaticResourcePrefix(resourceCounter));
     }
+
+    public void testGetStaticResourcePrefixWithCounterAndAbsoluteUrlMode()
+    {
+        testGetStaticResourcePrefixWithCounter(WebResourceManager.UrlMode.ABSOLUTE, true);
+    }
+
+    public void testGetStaticResourcePrefixWithCounterAndRelativeUrlMode()
+    {
+        testGetStaticResourcePrefixWithCounter(WebResourceManager.UrlMode.RELATIVE, false);
+    }
+
+    public void testGetStaticResourcePrefixWithCounterAndAutoUrlMode()
+    {
+        testGetStaticResourcePrefixWithCounter(WebResourceManager.UrlMode.AUTO, false);
+    }
+
+    private void testGetStaticResourcePrefixWithCounter(WebResourceManager.UrlMode urlMode, boolean baseUrlExpected)
+    {
+        final String resourceCounter = "456";
+        final String expectedPrefix = setupGetStaticResourcePrefixWithCounter(baseUrlExpected, resourceCounter);
+        assertEquals(expectedPrefix, webResourceManager.getStaticResourcePrefix(resourceCounter, urlMode));
+    }
+
+    private String setupGetStaticResourcePrefixWithCounter(boolean baseUrlExpected, String resourceCounter)
+    {
+        return (baseUrlExpected ? BASEURL : "") +
+            "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" +
+            SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + resourceCounter +
+            "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
+    }
+
+    // testGetStaticPluginResourcePrefix
 
     public void testGetStaticPluginResourcePrefix()
     {
         final String moduleKey = "confluence.extra.animal:animal";
+        final String resourceName = "foo.js";
 
+        final String expectedPrefix = setupGetStaticPluginResourcePrefix(false, moduleKey, resourceName);        
+
+        assertEquals(expectedPrefix, webResourceManager.getStaticPluginResource(moduleKey, resourceName));
+    }
+
+    public void testGetStaticPluginResourcePrefixWithAbsoluteUrlMode()
+    {
+        testGetStaticPluginResourcePrefix(WebResourceManager.UrlMode.ABSOLUTE, true);
+    }
+
+    public void testGetStaticPluginResourcePrefixWithRelativeUrlMode()
+    {
+        testGetStaticPluginResourcePrefix(WebResourceManager.UrlMode.RELATIVE, false);
+    }
+
+    public void testGetStaticPluginResourcePrefixWithAutoUrlMode()
+    {
+        testGetStaticPluginResourcePrefix(WebResourceManager.UrlMode.AUTO, false);
+    }
+
+    private void testGetStaticPluginResourcePrefix(WebResourceManager.UrlMode urlMode, boolean baseUrlExpected)
+    {
+        final String moduleKey = "confluence.extra.animal:animal";
+        final String resourceName = "foo.js";
+
+        final String expectedPrefix = setupGetStaticPluginResourcePrefix(baseUrlExpected, moduleKey, resourceName);
+
+        assertEquals(expectedPrefix, webResourceManager.getStaticPluginResource(moduleKey, resourceName, urlMode));
+    }
+
+    private String setupGetStaticPluginResourcePrefix(boolean baseUrlExpected, String moduleKey, String resourceName)
+    {
         final Plugin animalPlugin = new StaticPlugin();
         animalPlugin.setKey("confluence.extra.animal");
         animalPlugin.setPluginsVersion(Integer.parseInt(ANIMAL_PLUGIN_VERSION));
@@ -357,11 +536,11 @@ public class TestWebResourceManagerImpl extends TestCase
         mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(moduleKey)),
             TestUtils.createWebResourceModuleDescriptor(moduleKey, animalPlugin));
 
-        String resourceName = "foo.js";
-        String expectedPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER +
-            "/" + SYSTEM_COUNTER + "/" + ANIMAL_PLUGIN_VERSION + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + "/" + AbstractFileServerServlet
-            .SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX + "/" + moduleKey + "/" + resourceName;
-
-        assertEquals(expectedPrefix, webResourceManager.getStaticPluginResource(moduleKey, resourceName));
+        return (baseUrlExpected ? BASEURL : "") +
+            "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER +
+            "/" + SYSTEM_COUNTER + "/" + ANIMAL_PLUGIN_VERSION + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX +
+            "/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX +
+            "/" + moduleKey + "/" + resourceName;
     }
+
 }
