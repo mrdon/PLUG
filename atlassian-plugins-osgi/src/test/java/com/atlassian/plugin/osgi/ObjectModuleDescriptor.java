@@ -3,10 +3,11 @@ package com.atlassian.plugin.osgi;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.AutowireCapablePlugin;
 
+/**
+ * Module type for an object
+ */
 public class ObjectModuleDescriptor extends AbstractModuleDescriptor<Object>
 {
-
-
     public Object getModule()
     {
         Object module = null;
@@ -23,11 +24,11 @@ public class ObjectModuleDescriptor extends AbstractModuleDescriptor<Object>
             }
             catch (InstantiationException e)
             {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                throw new RuntimeException(e);
             }
             catch (IllegalAccessException e)
             {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                throw new RuntimeException(e);
             }
         }
         return module;

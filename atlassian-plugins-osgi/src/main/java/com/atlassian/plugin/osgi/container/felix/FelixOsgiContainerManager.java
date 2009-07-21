@@ -198,8 +198,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     @PluginEventListener
     public void onPluginFrameworkWarmRestarting(PluginFrameworkWarmRestartingEvent event)
     {
-        final DefaultComponentRegistrar registrar = collectHostComponents(hostComponentProvider);
-        registration.loadHostComponents(registrar);
+        registration.loadHostComponents(collectHostComponents(hostComponentProvider));
     }
 
     public void start() throws OsgiContainerException
