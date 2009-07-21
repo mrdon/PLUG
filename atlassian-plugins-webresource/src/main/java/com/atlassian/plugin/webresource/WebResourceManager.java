@@ -468,6 +468,8 @@ public interface WebResourceManager
     /**
      * A formatting mode for URLs. Used to specify to {@code WebResourceManager} methods whether to use absolute URLs,
      * relative URLs, or allow the concrete implementation to decide
+     *
+     * @since 2.3.0
      */
     enum UrlMode
     {
