@@ -375,7 +375,10 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
                 throw new OsgiContainerException("Cannot enable the plugin '" + getKey() + "' when the bundle is not in the resolved or installed state: "
                         + getBundle().getState() + "(" + getBundle().getBundleId() + ")");
             }
-            return stateResult;
+
+            // Only set state to enabling if it hasn't already been enabled via another thread notifying of a spring
+            // application context creation during the execution of this method
+            return (getPluginState() != PluginState.ENABLED ? stateResult : PluginState.ENABLED);
         }
         catch (final BundleException e)
         {
@@ -394,7 +397,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
     {
         try
         {
-            // Only disable underlying bundle if this is a truely dynamic plugin
+            // Only disable underlying bundle if this is a truly dynamic plugin
             if (!PluginUtils.doesPluginRequireRestart(this))
             {
                 if (getPluginState() == PluginState.ENABLING)

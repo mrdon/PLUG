@@ -96,7 +96,8 @@ class PluginEnabler
                     }
                     if (pluginsInEnablingState.size() == 1 && singlePluginTimeout == 0)
                     {
-                        log.debug("Only one plugin left not enabled.  Resetting the timeout to 3 seconds.");
+                        log.debug("Only one plugin left not enabled.  Resetting the timeout to " +
+                                (LAST_PLUGIN_TIMEOUT/1000) + " seconds.");
                         singlePluginTimeout = System.currentTimeMillis() + LAST_PLUGIN_TIMEOUT;
                     }
                     return pluginsInEnablingState.isEmpty();
