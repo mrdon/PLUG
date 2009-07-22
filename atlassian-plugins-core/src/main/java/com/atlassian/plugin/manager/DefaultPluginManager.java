@@ -806,15 +806,15 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
             for (final ModuleDescriptor<?> module : plugin.getModuleDescriptors())
             {
-                if (descriptorClazz.isInstance(module) && isPluginModuleEnabled(module.getCompleteKey()))
+                if (descriptorClazz.isInstance(module))
                 {
-                    @SuppressWarnings("unchecked")
-                    final D moduleDescriptor = (D) module;
-                    result.add(moduleDescriptor);
-                }
-                else
-                {
-                    if (log.isDebugEnabled())
+                    if (isPluginModuleEnabled(module.getCompleteKey()))
+                    {
+                        @SuppressWarnings("unchecked")
+                        final D moduleDescriptor = (D) module;
+                        result.add(moduleDescriptor);
+                    }
+                    else if (log.isDebugEnabled())
                     {
                         log.debug("Module [" + module.getCompleteKey() + "] is disabled.");
                     }
