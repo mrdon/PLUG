@@ -10,6 +10,7 @@ import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -26,7 +27,7 @@ public class DefaultPluginEventManager implements PluginEventManager
 {
     private static final Log log = LogFactory.getLog(DefaultPluginEventManager.class);
 
-    private final Map<Class<?>,Set<Listener>> eventsToListener;
+    private final Map<Class<?>, Set<Listener>> eventsToListener;
     private final ListenerMethodSelector[] listenerMethodSelectors;
 
     /**
@@ -34,7 +35,7 @@ public class DefaultPluginEventManager implements PluginEventManager
      */
     public DefaultPluginEventManager()
     {
-        this(new ListenerMethodSelector[]{new MethodNameListenerMethodSelector(), new AnnotationListenerMethodSelector()});
+        this(new ListenerMethodSelector[] { new MethodNameListenerMethodSelector(), new AnnotationListenerMethodSelector() });
     }
 
     /**
@@ -44,9 +45,17 @@ public class DefaultPluginEventManager implements PluginEventManager
     public DefaultPluginEventManager(final ListenerMethodSelector[] selectors)
     {
         listenerMethodSelectors = selectors;
+        //@TODO the commons-collections LazyMap is not thread-safe, there is a race condition if two threads 
+        // try and add a listener for the same class at the same time, leading to one listener
+        // being discarded. We need to use either the atlassian-util-concurrent memoizer function
+        // or the google-collections computingMap with weak keys.
         @SuppressWarnings("unchecked")
-        final Map<Class<?>,Set<Listener>> map = LazyMap.decorate(CopyOnWriteMap.newHashMap(), new Factory() {
-            public Set<Listener> create() { return new CopyOnWriteArraySet<Listener>(); }
+        final Map<Class<?>, Set<Listener>> map = LazyMap.decorate(CopyOnWriteMap.newHashMap(), new Factory()
+        {
+            public Set<Listener> create()
+            {
+                return new CopyOnWriteArraySet<Listener>();
+            }
         });
         eventsToListener = map;
     }
@@ -105,8 +114,8 @@ public class DefaultPluginEventManager implements PluginEventManager
         });
         if (!listenerFound.get())
         {
-            throw new IllegalArgumentException("At least one listener method must be specified.  Most likely, a listener " +
-                "method is missing the @PluginEventListener annotation.");
+            throw new IllegalArgumentException(
+                "At least one listener method must be specified.  Most likely, a listener " + "method is missing the @PluginEventListener annotation.");
         }
     }
 
@@ -181,7 +190,7 @@ public class DefaultPluginEventManager implements PluginEventManager
             }
             catch (final IllegalAccessException e)
             {
-                log.error("Unable to access listener method: "+method, e);
+                log.error("Unable to access listener method: " + method, e);
             }
             catch (final InvocationTargetException e)
             {
