@@ -1,5 +1,7 @@
 package com.atlassian.plugin.servlet;
 
+import static com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor.byWeight;
+
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.event.PluginEventListener;
@@ -8,7 +10,6 @@ import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.servlet.descriptors.ServletContextListenerModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
-import static com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor.*;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.servlet.filter.DelegatingPluginFilter;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
@@ -19,19 +20,30 @@ import com.atlassian.plugin.servlet.util.LazyLoadedReference;
 import com.atlassian.plugin.servlet.util.PathMapper;
 import com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * A simple servletModuleManager to track and retrieve the loaded servlet plugin modules.
@@ -41,14 +53,14 @@ import org.apache.commons.logging.LogFactory;
 public class DefaultServletModuleManager implements ServletModuleManager
 {
     private final PathMapper servletMapper;
-    private final Map<String, ServletModuleDescriptor> servletDescriptors = new HashMap<String, ServletModuleDescriptor>();
+    private final Map<String, ServletModuleDescriptor<HttpServlet>> servletDescriptors = new HashMap<String, ServletModuleDescriptor<HttpServlet>>();
     private final ConcurrentMap<String, LazyLoadedReference<HttpServlet>> servletRefs = new ConcurrentHashMap<String, LazyLoadedReference<HttpServlet>>();
 
     private final PathMapper filterMapper;
     private final Map<String, ServletFilterModuleDescriptor> filterDescriptors = new HashMap<String, ServletFilterModuleDescriptor>();
     private final ConcurrentMap<String, LazyLoadedReference<Filter>> filterRefs = new ConcurrentHashMap<String, LazyLoadedReference<Filter>>();
 
-    private final ConcurrentMap<Plugin, LazyLoadedReference<ServletContext>> pluginContextRefs = new ConcurrentHashMap<Plugin, LazyLoadedReference<ServletContext>>();
+    private final ConcurrentMap<Plugin, ContextLifecycleReference> pluginContextRefs = new ConcurrentHashMap<Plugin, ContextLifecycleReference>();
     private final Log log = LogFactory.getLog(getClass());
 
     /**
@@ -58,7 +70,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * @param pluginEventManager The plugin event manager
      * @since 2.2.0
      */
-    public DefaultServletModuleManager(ServletContext servletContext, PluginEventManager pluginEventManager)
+    public DefaultServletModuleManager(final ServletContext servletContext, final PluginEventManager pluginEventManager)
     {
         this(pluginEventManager);
         ServletContextServletModuleManagerAccessor.setServletModuleManager(servletContext, this);
@@ -71,7 +83,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      *
      * @param pluginEventManager The plugin event manager
      */
-    public DefaultServletModuleManager(PluginEventManager pluginEventManager)
+    public DefaultServletModuleManager(final PluginEventManager pluginEventManager)
     {
         this(pluginEventManager, new DefaultPathMapper(), new DefaultPathMapper());
     }
@@ -85,45 +97,45 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * @param servletPathMapper The path mapper used for mapping servlets to paths
      * @param filterPathMapper The path mapper used for mapping filters to paths
      */
-    public DefaultServletModuleManager(PluginEventManager pluginEventManager, PathMapper servletPathMapper, PathMapper filterPathMapper)
+    public DefaultServletModuleManager(final PluginEventManager pluginEventManager, final PathMapper servletPathMapper, final PathMapper filterPathMapper)
     {
-        this.servletMapper = servletPathMapper;
-        this.filterMapper = filterPathMapper;
+        servletMapper = servletPathMapper;
+        filterMapper = filterPathMapper;
         pluginEventManager.register(this);
     }
 
-    public void addServletModule(ServletModuleDescriptor descriptor)
+    public void addServletModule(final ServletModuleDescriptor<HttpServlet> descriptor)
     {
         servletDescriptors.put(descriptor.getCompleteKey(), descriptor);
 
-        @SuppressWarnings("unchecked") // for some reason the JDK complains about getPaths not returning a List<String> ?!?!?
+        // for some reason the JDK complains about getPaths not returning a List<String> ?!?!?
         final List<String> paths = descriptor.getPaths();
-        for (String path : paths)
+        for (final String path : paths)
         {
             servletMapper.put(descriptor.getCompleteKey(), path);
         }
-        LazyLoadedReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
+        final LazyLoadedReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
         if (servletRef != null)
         {
             servletRef.get().destroy();
         }
     }
 
-    public HttpServlet getServlet(String path, final ServletConfig servletConfig) throws ServletException
+    public HttpServlet getServlet(final String path, final ServletConfig servletConfig) throws ServletException
     {
-        String completeKey = servletMapper.get(path);
+        final String completeKey = servletMapper.get(path);
 
         if (completeKey == null)
         {
             return null;
         }
-        ServletModuleDescriptor descriptor = servletDescriptors.get(completeKey);
+        final ServletModuleDescriptor<HttpServlet> descriptor = servletDescriptors.get(completeKey);
         if (descriptor == null)
         {
             return null;
         }
 
-        HttpServlet servlet = getServlet(descriptor, servletConfig);
+        final HttpServlet servlet = getServlet(descriptor, servletConfig);
         if (servlet == null)
         {
             servletRefs.remove(descriptor.getCompleteKey());
@@ -131,37 +143,37 @@ public class DefaultServletModuleManager implements ServletModuleManager
         return servlet;
     }
 
-    public void removeServletModule(ServletModuleDescriptor descriptor)
+    public void removeServletModule(final ServletModuleDescriptor<HttpServlet> descriptor)
     {
         servletDescriptors.remove(descriptor.getCompleteKey());
         servletMapper.put(descriptor.getCompleteKey(), null);
 
-        LazyLoadedReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
+        final LazyLoadedReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
         if (servletRef != null)
         {
             servletRef.get().destroy();
         }
     }
 
-    public void addFilterModule(ServletFilterModuleDescriptor descriptor)
+    public void addFilterModule(final ServletFilterModuleDescriptor descriptor)
     {
         filterDescriptors.put(descriptor.getCompleteKey(), descriptor);
 
-        for (String path : descriptor.getPaths())
+        for (final String path : descriptor.getPaths())
         {
             filterMapper.put(descriptor.getCompleteKey(), path);
         }
-        LazyLoadedReference<Filter> filterRef = filterRefs.remove(descriptor.getCompleteKey());
+        final LazyLoadedReference<Filter> filterRef = filterRefs.remove(descriptor.getCompleteKey());
         if (filterRef != null)
         {
             filterRef.get().destroy();
         }
     }
 
-    public Iterable<Filter> getFilters(FilterLocation location, String path, final FilterConfig filterConfig) throws ServletException
+    public Iterable<Filter> getFilters(final FilterLocation location, final String path, final FilterConfig filterConfig) throws ServletException
     {
-        List<ServletFilterModuleDescriptor> matchingFilterDescriptors = new ArrayList<ServletFilterModuleDescriptor>();
-        for (String completeKey : filterMapper.getAll(path))
+        final List<ServletFilterModuleDescriptor> matchingFilterDescriptors = new ArrayList<ServletFilterModuleDescriptor>();
+        for (final String completeKey : filterMapper.getAll(path))
         {
             final ServletFilterModuleDescriptor descriptor = filterDescriptors.get(completeKey);
             if (location.equals(descriptor.getLocation()))
@@ -169,10 +181,10 @@ public class DefaultServletModuleManager implements ServletModuleManager
                 sortedInsert(matchingFilterDescriptors, descriptor, byWeight);
             }
         }
-        List<Filter> filters = new LinkedList<Filter>();
+        final List<Filter> filters = new LinkedList<Filter>();
         for (final ServletFilterModuleDescriptor descriptor : matchingFilterDescriptors)
         {
-            Filter filter = getFilter(descriptor, filterConfig);
+            final Filter filter = getFilter(descriptor, filterConfig);
             if (filter == null)
             {
                 filterRefs.remove(descriptor.getCompleteKey());
@@ -185,7 +197,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         return filters;
     }
 
-    static <T> void sortedInsert(List<T> list, final T e, Comparator<T> comparator)
+    static <T> void sortedInsert(final List<T> list, final T e, final Comparator<T> comparator)
     {
         int insertIndex = Collections.binarySearch(list, e, comparator);
         if (insertIndex < 0)
@@ -196,7 +208,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         else
         {
             // there is already a value at that position, so we need to find the next available spot for it
-            while (insertIndex < list.size() && comparator.compare(list.get(insertIndex), e) == 0)
+            while ((insertIndex < list.size()) && (comparator.compare(list.get(insertIndex), e) == 0))
             {
                 insertIndex++;
             }
@@ -204,12 +216,12 @@ public class DefaultServletModuleManager implements ServletModuleManager
         list.add(insertIndex, e);
     }
 
-    public void removeFilterModule(ServletFilterModuleDescriptor descriptor)
+    public void removeFilterModule(final ServletFilterModuleDescriptor descriptor)
     {
         filterDescriptors.remove(descriptor.getCompleteKey());
         filterMapper.put(descriptor.getCompleteKey(), null);
 
-        LazyLoadedReference<Filter> filterRef = filterRefs.remove(descriptor.getCompleteKey());
+        final LazyLoadedReference<Filter> filterRef = filterRefs.remove(descriptor.getCompleteKey());
         if (filterRef != null)
         {
             filterRef.get().destroy();
@@ -221,19 +233,16 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * associated with the plugin that was disabled.
      */
     @PluginEventListener
-    public void onPluginDisabled(PluginDisabledEvent event)
+    public void onPluginDisabled(final PluginDisabledEvent event)
     {
-        Plugin plugin = event.getPlugin();
-        LazyLoadedReference<ServletContext> context = pluginContextRefs.remove(plugin);
+        final Plugin plugin = event.getPlugin();
+        final ContextLifecycleReference context = pluginContextRefs.remove(plugin);
         if (context == null)
         {
             return;
         }
 
-        for (ServletContextListenerModuleDescriptor descriptor : findModuleDescriptorsByType(ServletContextListenerModuleDescriptor.class, plugin))
-        {
-            descriptor.getModule().contextDestroyed(new ServletContextEvent(context.get()));
-        }
+        context.get().contextDestroyed();
     }
 
     /**
@@ -247,7 +256,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * @param servletConfig
      * @return
      */
-    private HttpServlet getServlet(final ServletModuleDescriptor descriptor, final ServletConfig servletConfig)
+    private HttpServlet getServlet(final ServletModuleDescriptor<HttpServlet> descriptor, final ServletConfig servletConfig)
     {
         // check for an existing reference, if there is one it's either in the process of loading, in which case
         // servletRef.get() below will block until it's available, otherwise we go about creating a new ref to use
@@ -255,7 +264,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         if (servletRef == null)
         {
             // if there isn't an existing reference, create one.
-            ServletContext servletContext = getWrappedContext(descriptor.getPlugin(), servletConfig.getServletContext());
+            final ServletContext servletContext = getWrappedContext(descriptor.getPlugin(), servletConfig.getServletContext());
             servletRef = new LazyLoadedServletReference(descriptor, servletContext);
 
             // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
@@ -270,7 +279,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         {
             servlet = servletRef.get();
         }
-        catch (RuntimeException ex)
+        catch (final RuntimeException ex)
         {
             log.error("Unable to create servlet", ex);
         }
@@ -296,7 +305,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         if (filterRef == null)
         {
             // if there isn't an existing reference, create one.
-            ServletContext servletContext = getWrappedContext(descriptor.getPlugin(), filterConfig.getServletContext());
+            final ServletContext servletContext = getWrappedContext(descriptor.getPlugin(), filterConfig.getServletContext());
             filterRef = new LazyLoadedFilterReference(descriptor, servletContext);
 
             // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
@@ -306,16 +315,15 @@ public class DefaultServletModuleManager implements ServletModuleManager
                 filterRef = filterRefs.get(descriptor.getCompleteKey());
             }
         }
-        Filter filter = null;
         try
         {
-            filter = filterRef.get();
+            return filterRef.get();
         }
-        catch (RuntimeException ex)
+        catch (final RuntimeException ex)
         {
             log.error("Unable to create filter", ex);
+            return null;
         }
-        return filter;
     }
 
     /**
@@ -330,18 +338,18 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * @param baseContext The applications base servlet context which we will be wrapping.
      * @return A wrapped, fully initialized servlet context that can be used for all the plugins filters and servlets.
      */
-    private ServletContext getWrappedContext(Plugin plugin, ServletContext baseContext)
+    private ServletContext getWrappedContext(final Plugin plugin, final ServletContext baseContext)
     {
-        LazyLoadedReference<ServletContext> pluginContextRef = pluginContextRefs.get(plugin);
+        ContextLifecycleReference pluginContextRef = pluginContextRefs.get(plugin);
         if (pluginContextRef == null)
         {
-            pluginContextRef = new LazyLoadedContextReference(plugin, baseContext);
+            pluginContextRef = new ContextLifecycleReference(plugin, baseContext);
             if (pluginContextRefs.putIfAbsent(plugin, pluginContextRef) != null)
             {
                 pluginContextRef = pluginContextRefs.get(plugin);
             }
         }
-        return pluginContextRef.get();
+        return pluginContextRef.get().servletContext;
     }
 
     private static final class LazyLoadedFilterReference extends LazyLoadedReference<Filter>
@@ -349,7 +357,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         private final ServletFilterModuleDescriptor descriptor;
         private final ServletContext servletContext;
 
-        private LazyLoadedFilterReference(ServletFilterModuleDescriptor descriptor, ServletContext servletContext)
+        private LazyLoadedFilterReference(final ServletFilterModuleDescriptor descriptor, final ServletContext servletContext)
         {
             this.descriptor = descriptor;
             this.servletContext = servletContext;
@@ -358,7 +366,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         @Override
         protected Filter create() throws Exception
         {
-            Filter filter = new DelegatingPluginFilter(descriptor);
+            final Filter filter = new DelegatingPluginFilter(descriptor);
             filter.init(new PluginFilterConfig(descriptor, servletContext));
             return filter;
         }
@@ -366,10 +374,10 @@ public class DefaultServletModuleManager implements ServletModuleManager
 
     private static final class LazyLoadedServletReference extends LazyLoadedReference<HttpServlet>
     {
-        private final ServletModuleDescriptor descriptor;
+        private final ServletModuleDescriptor<HttpServlet> descriptor;
         private final ServletContext servletContext;
 
-        private LazyLoadedServletReference(ServletModuleDescriptor descriptor, ServletContext servletContext)
+        private LazyLoadedServletReference(final ServletModuleDescriptor<HttpServlet> descriptor, final ServletContext servletContext)
         {
             this.descriptor = descriptor;
             this.servletContext = servletContext;
@@ -378,36 +386,38 @@ public class DefaultServletModuleManager implements ServletModuleManager
         @Override
         protected HttpServlet create() throws Exception
         {
-            HttpServlet servlet = new DelegatingPluginServlet(descriptor);
+            final HttpServlet servlet = new DelegatingPluginServlet(descriptor);
             servlet.init(new PluginServletConfig(descriptor, servletContext));
             return servlet;
         }
     }
 
-    private static final class LazyLoadedContextReference extends LazyLoadedReference<ServletContext>
+    private static final class ContextLifecycleReference extends LazyLoadedReference<ContextLifecycleManager>
     {
         private final Plugin plugin;
         private final ServletContext baseContext;
 
-        private LazyLoadedContextReference(Plugin plugin, ServletContext baseContext)
+        private ContextLifecycleReference(final Plugin plugin, final ServletContext baseContext)
         {
             this.plugin = plugin;
             this.baseContext = baseContext;
         }
 
         @Override
-        protected ServletContext create() throws Exception
+        protected ContextLifecycleManager create() throws Exception
         {
-            ConcurrentMap<String, Object> contextAttributes = new ConcurrentHashMap<String, Object>();
-            Map<String, String> initParams = mergeInitParams(baseContext, plugin);
-            ServletContext context = new PluginServletContextWrapper(plugin, baseContext, contextAttributes, initParams);
+            final ConcurrentMap<String, Object> contextAttributes = new ConcurrentHashMap<String, Object>();
+            final Map<String, String> initParams = mergeInitParams(baseContext, plugin);
+            final ServletContext context = new PluginServletContextWrapper(plugin, baseContext, contextAttributes, initParams);
 
             ClassLoaderStack.push(plugin.getClassLoader());
+            final List<ServletContextListener> listeners = new ArrayList<ServletContextListener>();
             try
             {
-                for (ServletContextListenerModuleDescriptor descriptor : findModuleDescriptorsByType(ServletContextListenerModuleDescriptor.class, plugin))
+                for (final ServletContextListenerModuleDescriptor descriptor : findModuleDescriptorsByType(
+                    ServletContextListenerModuleDescriptor.class, plugin))
                 {
-                    descriptor.getModule().contextInitialized(new ServletContextEvent(context));
+                    listeners.add(descriptor.getModule());
                 }
             }
             finally
@@ -415,18 +425,20 @@ public class DefaultServletModuleManager implements ServletModuleManager
                 ClassLoaderStack.pop();
             }
 
-            return context;
+            return new ContextLifecycleManager(context, listeners);
         }
 
-        private Map<String, String> mergeInitParams(ServletContext baseContext, Plugin plugin)
+        private Map<String, String> mergeInitParams(final ServletContext baseContext, final Plugin plugin)
         {
-            Map<String, String> mergedInitParams = new HashMap<String, String>();
-            for (Enumeration<String> e = baseContext.getInitParameterNames(); e.hasMoreElements(); )
+            final Map<String, String> mergedInitParams = new HashMap<String, String>();
+            @SuppressWarnings("unchecked")
+            final Enumeration<String> e = baseContext.getInitParameterNames();
+            while (e.hasMoreElements())
             {
-                String paramName = e.nextElement();
+                final String paramName = e.nextElement();
                 mergedInitParams.put(paramName, baseContext.getInitParameter(paramName));
             }
-            for (ServletContextParamModuleDescriptor descriptor : findModuleDescriptorsByType(ServletContextParamModuleDescriptor.class, plugin))
+            for (final ServletContextParamModuleDescriptor descriptor : findModuleDescriptorsByType(ServletContextParamModuleDescriptor.class, plugin))
             {
                 mergedInitParams.put(descriptor.getParamName(), descriptor.getParamValue());
             }
@@ -434,16 +446,46 @@ public class DefaultServletModuleManager implements ServletModuleManager
         }
     }
 
-    static <T extends ModuleDescriptor<?>> Iterable<T> findModuleDescriptorsByType(Class<T> type, Plugin plugin)
+    static <T extends ModuleDescriptor<?>> Iterable<T> findModuleDescriptorsByType(final Class<T> type, final Plugin plugin)
     {
-        Set<T> descriptors = new HashSet<T>();
-        for (ModuleDescriptor<?> descriptor : plugin.getModuleDescriptors())
+        final Set<T> descriptors = new HashSet<T>();
+        for (final ModuleDescriptor<?> descriptor : plugin.getModuleDescriptors())
         {
             if (type.isAssignableFrom(descriptor.getClass()))
             {
-                descriptors.add((T) descriptor);
+                descriptors.add(type.cast(descriptor));
             }
         }
         return descriptors;
+    }
+
+    static final class ContextLifecycleManager
+    {
+        private final ServletContext servletContext;
+        private final Iterable<ServletContextListener> listeners;
+
+        ContextLifecycleManager(final ServletContext servletContext, final Iterable<ServletContextListener> listeners)
+        {
+            this.servletContext = servletContext;
+            this.listeners = listeners;
+            for (final ServletContextListener listener : listeners)
+            {
+                listener.contextInitialized(new ServletContextEvent(servletContext));
+            }
+        }
+
+        ServletContext getServletContext()
+        {
+            return servletContext;
+        }
+
+        void contextDestroyed()
+        {
+            final ServletContextEvent event = new ServletContextEvent(servletContext);
+            for (final ServletContextListener listener : listeners)
+            {
+                listener.contextDestroyed(event);
+            }
+        }
     }
 }

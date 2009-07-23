@@ -1,16 +1,18 @@
 package com.atlassian.plugin.servlet;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
 import com.atlassian.plugin.servlet.filter.ServletFilterModuleContainerFilter;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterConfig;
+import javax.servlet.Servlet;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextListener;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 
 /**
  * The ServletModuleManager is responsible for servlets and filters - and their servlet contexts - defined in plugins.
@@ -50,7 +52,7 @@ public interface ServletModuleManager
      * 
      * @param descriptor Details of what the servlet class is and the path it should serve.
      */
-    void addServletModule(ServletModuleDescriptor descriptor);
+    void addServletModule(ServletModuleDescriptor<HttpServlet> descriptor);
 
     /**
      * Return an instance of the HttpServlet that should be used to serve content matching the provided url path.
@@ -68,7 +70,7 @@ public interface ServletModuleManager
      *  
      * @param descriptor Details of what servlet module to remove.
      */
-    void removeServletModule(ServletModuleDescriptor descriptor);
+    void removeServletModule(ServletModuleDescriptor<HttpServlet> descriptor);
 
     /**
      * Register a new filter plugin module.
