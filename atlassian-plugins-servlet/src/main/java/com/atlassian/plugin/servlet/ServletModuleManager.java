@@ -52,7 +52,7 @@ public interface ServletModuleManager
      * 
      * @param descriptor Details of what the servlet class is and the path it should serve.
      */
-    void addServletModule(ServletModuleDescriptor<HttpServlet> descriptor);
+    void addServletModule(ServletModuleDescriptor descriptor);
 
     /**
      * Return an instance of the HttpServlet that should be used to serve content matching the provided url path.
@@ -70,7 +70,7 @@ public interface ServletModuleManager
      *  
      * @param descriptor Details of what servlet module to remove.
      */
-    void removeServletModule(ServletModuleDescriptor<HttpServlet> descriptor);
+    void removeServletModule(ServletModuleDescriptor descriptor);
 
     /**
      * Register a new filter plugin module.

@@ -23,11 +23,11 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class DelegatingPluginServlet extends HttpServlet
 {
-    private final ServletModuleDescriptor<HttpServlet> descriptor;
+    private final ServletModuleDescriptor descriptor;
 
     private final HttpServlet servlet;
 
-    public DelegatingPluginServlet(final ServletModuleDescriptor<HttpServlet> descriptor)
+    public DelegatingPluginServlet(final ServletModuleDescriptor descriptor)
     {
         this.descriptor = descriptor;
         servlet = descriptor.getModule();
@@ -88,9 +88,11 @@ public class DelegatingPluginServlet extends HttpServlet
     }
 
     @Override
-    public Enumeration<?> getInitParameterNames()
+    public Enumeration<String> getInitParameterNames()
     {
-        return servlet.getInitParameterNames();
+        @SuppressWarnings("unchecked")
+        final Enumeration<String> initParameterNames = servlet.getInitParameterNames();
+        return initParameterNames;
     }
 
     @Override

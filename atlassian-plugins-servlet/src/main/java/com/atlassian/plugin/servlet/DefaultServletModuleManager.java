@@ -53,7 +53,7 @@ import javax.servlet.http.HttpServlet;
 public class DefaultServletModuleManager implements ServletModuleManager
 {
     private final PathMapper servletMapper;
-    private final Map<String, ServletModuleDescriptor<HttpServlet>> servletDescriptors = new HashMap<String, ServletModuleDescriptor<HttpServlet>>();
+    private final Map<String, ServletModuleDescriptor> servletDescriptors = new HashMap<String, ServletModuleDescriptor>();
     private final ConcurrentMap<String, LazyLoadedReference<HttpServlet>> servletRefs = new ConcurrentHashMap<String, LazyLoadedReference<HttpServlet>>();
 
     private final PathMapper filterMapper;
@@ -104,7 +104,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         pluginEventManager.register(this);
     }
 
-    public void addServletModule(final ServletModuleDescriptor<HttpServlet> descriptor)
+    public void addServletModule(final ServletModuleDescriptor descriptor)
     {
         servletDescriptors.put(descriptor.getCompleteKey(), descriptor);
 
@@ -129,7 +129,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         {
             return null;
         }
-        final ServletModuleDescriptor<HttpServlet> descriptor = servletDescriptors.get(completeKey);
+        final ServletModuleDescriptor descriptor = servletDescriptors.get(completeKey);
         if (descriptor == null)
         {
             return null;
@@ -143,7 +143,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         return servlet;
     }
 
-    public void removeServletModule(final ServletModuleDescriptor<HttpServlet> descriptor)
+    public void removeServletModule(final ServletModuleDescriptor descriptor)
     {
         servletDescriptors.remove(descriptor.getCompleteKey());
         servletMapper.put(descriptor.getCompleteKey(), null);
@@ -256,7 +256,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * @param servletConfig
      * @return
      */
-    private HttpServlet getServlet(final ServletModuleDescriptor<HttpServlet> descriptor, final ServletConfig servletConfig)
+    private HttpServlet getServlet(final ServletModuleDescriptor descriptor, final ServletConfig servletConfig)
     {
         // check for an existing reference, if there is one it's either in the process of loading, in which case
         // servletRef.get() below will block until it's available, otherwise we go about creating a new ref to use
@@ -374,10 +374,10 @@ public class DefaultServletModuleManager implements ServletModuleManager
 
     private static final class LazyLoadedServletReference extends LazyLoadedReference<HttpServlet>
     {
-        private final ServletModuleDescriptor<HttpServlet> descriptor;
+        private final ServletModuleDescriptor descriptor;
         private final ServletContext servletContext;
 
-        private LazyLoadedServletReference(final ServletModuleDescriptor<HttpServlet> descriptor, final ServletContext servletContext)
+        private LazyLoadedServletReference(final ServletModuleDescriptor descriptor, final ServletContext servletContext)
         {
             this.descriptor = descriptor;
             this.servletContext = servletContext;

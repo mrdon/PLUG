@@ -5,15 +5,15 @@ import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 
-import javax.servlet.http.HttpServlet;
-
 import org.apache.commons.lang.Validate;
+
+import javax.servlet.http.HttpServlet;
 
 /**
  * A module descriptor that allows plugin developers to define servlets. Developers can define what urls the
  * servlet should be serve by defining one or more &lt;url-pattern&gt; elements.
  */
-public class ServletModuleDescriptor<T extends HttpServlet> extends BaseServletModuleDescriptor<T> implements StateAware
+public class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpServlet> implements StateAware
 {
     private final ServletModuleManager servletModuleManager;
     private final HostContainer hostContainer;
@@ -24,7 +24,7 @@ public class ServletModuleDescriptor<T extends HttpServlet> extends BaseServletM
      * @param hostContainer The module factory
      * @since 2.2.0
      */
-    public ServletModuleDescriptor(HostContainer hostContainer, ServletModuleManager servletModuleManager)
+    public ServletModuleDescriptor(final HostContainer hostContainer, final ServletModuleManager servletModuleManager)
     {
         Validate.notNull(hostContainer);
         Validate.notNull(servletModuleManager);
@@ -32,36 +32,35 @@ public class ServletModuleDescriptor<T extends HttpServlet> extends BaseServletM
         this.servletModuleManager = servletModuleManager;
     }
 
+    @Override
     public void enabled()
     {
         super.enabled();
         servletModuleManager.addServletModule(this);
     }
 
+    @Override
     public void disabled()
     {
         servletModuleManager.removeServletModule(this);
         super.disabled();
     }
 
-    public T getModule()
+    @Override
+    public HttpServlet getModule()
     {
-        T servlet;
         // Give the plugin a go first
         if (plugin instanceof AutowireCapablePlugin)
         {
-            servlet = ((AutowireCapablePlugin) plugin).autowire(getModuleClass());
+            return ((AutowireCapablePlugin) plugin).autowire(getModuleClass());
         }
-        else
-        {
-            servlet = hostContainer.create(getModuleClass());
-        }
-        return servlet;
+        return hostContainer.create(getModuleClass());
     }
 
     /**
      * @deprecated Since 2.0.0, use {@link #getModule}
      */
+    @Deprecated
     public HttpServlet getServlet()
     {
         return getModule();
