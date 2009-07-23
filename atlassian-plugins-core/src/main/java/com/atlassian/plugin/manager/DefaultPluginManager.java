@@ -178,21 +178,47 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         tracker.setState(StateTracker.State.SHUTDOWN);
     }
 
-    public void warmRestart()
+    public final void warmRestart()
     {
         tracker.setState(StateTracker.State.WARM_RESTARTING);
         log.info("Initiating a warm restart of the plugin system");
         pluginEventManager.broadcast(new PluginFrameworkWarmRestartingEvent(this, this));
 
         // Make sure we reload plugins in order
+        final List<List<Plugin>> disabledPlugins = new ArrayList<List<Plugin>>();
+        final List<PluginLoader> loaders = new ArrayList<PluginLoader>(pluginLoaders);
+        Collections.reverse(loaders);
         for (final PluginLoader loader : pluginLoaders)
         {
+            final List<Plugin> plugins = new ArrayList<Plugin>();
+            disabledPlugins.add(plugins);
             for (final Map.Entry<Plugin, PluginLoader> entry : pluginToPluginLoader.entrySet())
             {
                 if (entry.getValue() == loader)
                 {
-                    // This doesn't have to be an event, but it may be useful for third-parties
-                    pluginEventManager.broadcast(new PluginRefreshedEvent(entry.getKey()));
+                    final Plugin plugin = entry.getKey();
+                    if (isPluginEnabled(plugin.getKey()))
+                    {
+                        notifyPluginDisabled(plugin);
+                        disablePluginState(plugin, getStore());
+                        plugins.add(plugin);
+                    }
+                }
+            }
+        }
+
+        //then enable them in reverse order
+        Collections.reverse(disabledPlugins);
+        for (final List<Plugin> plugins : disabledPlugins)
+        {
+            pluginEnabler.enable(plugins);
+
+            for (final Plugin plugin : plugins)
+            {
+                if (plugin.getPluginState().equals(PluginState.ENABLED))
+                {
+                    enablePluginState(plugin, getStore());
+                    notifyPluginEnabled(plugin);
                 }
             }
         }
