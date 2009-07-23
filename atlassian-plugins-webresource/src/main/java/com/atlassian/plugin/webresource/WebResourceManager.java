@@ -5,17 +5,17 @@ import com.atlassian.plugin.ModuleDescriptor;
 import java.io.Writer;
 
 /**
- * Manage 'css', 'javascript' and other 'resources' that are usually linked at the top of pages using
- * <code>&lt;script&gt;</code> and <code>&lt;link&gt;</code> tags.
+ * Manage 'css', 'javascript' and other 'resources' that are usually linked at the top of pages using {@code <script>
+ * and <link>} tags.
  * <p/>
- * By using the WebResourceManager, components can declare dependencies on javascript and css that they would
- * otherwise have to embed inline (which means that it can't be cached, and are often duplicated in a page).
+ * By using the WebResourceManager, components can declare dependencies on javascript and css that they would otherwise
+ * have to embed inline (which means that it can't be cached, and are often duplicated in a page).
  */
 public interface WebResourceManager
 {
     /**
-     * Indicates to that a given plugin web resource is required. All resources called via this method must be
-     * included when {@link #includeResources(Writer)} is called.
+     * Indicates to that a given plugin web resource is required. All resources called via this method must be included
+     * when {@link #includeResources(Writer)} is called.
      *
      * @param moduleCompleteKey The fully qualified plugin web resource module (eg <code>jira.webresources:scriptaculous</code>)
      * @see #includeResources(Writer)
@@ -28,46 +28,33 @@ public interface WebResourceManager
      * <p/>
      * Example - if a 'javascript' resource has been required earlier with requireResource(), this method should
      * output:
-     * <pre><code>
-     *  &lt;script type=&quot;text/javascript&quot; src=&quot;$contextPath/scripts/javascript.js&quot;&gt;&lt;/script&gt;
-     * </code></pre>
+     * <pre>
+     *  {@literal <script type="text/javascript" src="$contextPath/scripts/javascript.js"></script>}
+     * </pre>
      * Similarly for other supported resources
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link #includeResources(Writer,
      * UrlMode)} with a {@code urlMode} value of {@link WebResourceManager.UrlMode#AUTO}.
      *
      * @param writer The writer to write the links to
+     * @deprecated As of 2.3.0, replaced by {@link #includeResources(Writer, UrlMode)}
      */
+    @Deprecated
     public void includeResources(Writer writer);
 
     /**
      * Writes out the resource tags to the previously required resources called via {@link #requireResource(String)}. If
      * you need it as a String to embed the tags in a template, use {@link #getRequiredResources(UrlMode)}.
      * <p/>
-     * <p/>
      * Example - if a 'javascript' resource has been required earlier with requireResource(), this method should
      * output:
-     * <pre><code>
-     *  &lt;script type=&quot;text/javascript&quot; src=&quot;$contextPath/scripts/javascript.js&quot;&gt;&lt;/script&gt;
-     * </code></pre>
+     * <pre>
+     *  {@literal <script type="text/javascript" src="$contextPath/scripts/javascript.js"></script>}
+     * </pre>
      * Similarly for other supported resources
      * <p/>
      * This method formats resource URLs in either relative or absolute format, depending on the value of {@code
-     * urlMode}.
-     * <p/>
-     * If {@code urlMode == {@link UrlMode#ABSOLUTE}}, this method uses absolute URLs, with URL scheme, hostname, port
-     * (if non-standard for the scheme), and resource path.
-     * <p/>
-     * If {@code urlMode == {@link UrlMode#RELATIVE}}, this method uses relative URLs containing just the resource
-     * path.
-     * <p/>
-     * If {@code urlMode == {@link UrlMode#AUTO}}, this method may use either absolute or relative URLs. Implementations
-     * are free to determine which mode to use based on any criteria of their choosing. For example, an implementation
-     * may choose to use relative URLs if it detects that it is running in the context of an HTTP request, and absolute
-     * URLs if it detects that it is not.  Or it may choose to always use absolute URLs, or always use relative URLs.
-     * Callers should only use {@code UrlMode#AUTO} when they are sure that either absolute or relative URLs will be
-     * appropriate, and should not rely on any particular observed behavior regarding how this value is interpreted,
-     * which may vary across different implementations.
+     * urlMode}.  See {@link UrlMode} for details of the different options for URL format.
      *
      * @param writer  The writer to write the links to
      * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
@@ -82,17 +69,19 @@ public interface WebResourceManager
      * <p/>
      * Example - if a 'javascript' resource has been required earlier with requireResource(), this method should
      * return:
-     * <pre><code>
-     *  &lt;script type=&quot;text/javascript&quot; src=&quot;$contextPath/scripts/javascript.js&quot;&gt;&lt;/script&gt;
-     * </code></pre>
+     * <pre>
+     *  {@literal <script type="text/javascript" src="$contextPath/scripts/javascript.js"></script>}
+     * </pre>
      * Similarly for other supported resources
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link #getRequiredResources(UrlMode)}
      * with a {@code urlMode} value of {@link WebResourceManager.UrlMode#AUTO}.
      *
      * @return the resource tags for all resources previously required
-     * @see {@link #includeResources(Writer)}
+     * @see #includeResources(Writer)
+     * @deprecated As of 2.3.0, replaced by {@link #getRequiredResources(UrlMode)}
      */
+    @Deprecated
     public String getRequiredResources();
 
     /**
@@ -101,32 +90,18 @@ public interface WebResourceManager
      * <p/>
      * Example - if a 'javascript' resource has been required earlier with requireResource(), this method should
      * return:
-     * <pre><code>
-     *  &lt;script type=&quot;text/javascript&quot; src=&quot;$contextPath/scripts/javascript.js&quot;&gt;&lt;/script&gt;
-     * </code></pre>
+     * <pre>
+     *  {@literal <script type="text/javascript" src="$contextPath/scripts/javascript.js"></script>}
+     * </pre>
      * Similarly for other supported resources
      * <p/>
      * This method formats resource URLs in either relative or absolute format, depending on the value of {@code
-     * urlMode}.
-     * <p/>
-     * If {@code urlMode == {@link UrlMode#ABSOLUTE}}, this method uses absolute URLs, with URL scheme, hostname, port
-     * (if non-standard for the scheme), and resource path.
-     * <p/>
-     * If {@code urlMode == {@link UrlMode#RELATIVE}}, this method uses relative URLs containing just the resource
-     * path.
-     * <p/>
-     * If {@code urlMode == {@link UrlMode#AUTO}}, this method may use either absolute or relative URLs. Implementations
-     * are free to determine which mode to use based on any criteria of their choosing. For example, an implementation
-     * may choose to use relative URLs if it detects that it is running in the context of an HTTP request, and absolute
-     * URLs if it detects that it is not.  Or it may choose to always use absolute URLs, or always use relative URLs.
-     * Callers should only use {@code UrlMode#AUTO} when they are sure that either absolute or relative URLs will be
-     * appropriate, and should not rely on any particular observed behavior regarding how this value is interpreted,
-     * which may vary across different implementations.
+     * urlMode}.  See {@link UrlMode} for details of the different options for URL format.
      *
      * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
      *                decide
      * @return the resource tags for all resources previously required
-     * @see {@link #includeResources(Writer, UrlMode)}
+     * @see #includeResources(Writer, UrlMode)
      * @since 2.3.0
      */
     public String getRequiredResources(UrlMode urlMode);
@@ -140,7 +115,9 @@ public interface WebResourceManager
      *
      * @param moduleCompleteKey The fully qualified plugin web resource module (eg <code>jira.webresources:scriptaculous</code>)
      * @param writer            The writer to write the resource tags to.
+     * @deprecated As of 2.3.0, replaced by {@link #requireResource(String, Writer, UrlMode)}
      */
+    @Deprecated
     public void requireResource(String moduleCompleteKey, Writer writer);
 
     /**
@@ -148,21 +125,7 @@ public interface WebResourceManager
      * a template, use {@link #getResourceTags(String, UrlMode)}.
      * <p/>
      * This method formats resource URLs in either relative or absolute format, depending on the value of {@code
-     * urlMode}.
-     * <p/>
-     * If {@code urlMode == {@link UrlMode#ABSOLUTE}}, this method uses absolute URLs, with URL scheme, hostname, port
-     * (if non-standard for the scheme), and resource path.
-     * <p/>
-     * If {@code urlMode == {@link UrlMode#RELATIVE}}, this method uses relative URLs containing just the resource
-     * path.
-     * <p/>
-     * If {@code urlMode == {@link UrlMode#AUTO}}, this method may use either absolute or relative URLs. Implementations
-     * are free to determine which mode to use based on any criteria of their choosing. For example, an implementation
-     * may choose to use relative URLs if it detects that it is running in the context of an HTTP request, and absolute
-     * URLs if it detects that it is not.  Or it may choose to always use absolute URLs, or always use relative URLs.
-     * Callers should only use {@code UrlMode#AUTO} when they are sure that either absolute or relative URLs will be
-     * appropriate, and should not rely on any particular observed behavior regarding how this value is interpreted,
-     * which may vary across different implementations.
+     * urlMode}.  See {@link UrlMode} for details of the different options for URL format.
      *
      * @param moduleCompleteKey The fully qualified plugin web resource module (eg <code>jira.webresources:scriptaculous</code>)
      * @param writer            The writer to write the resource tags to.
@@ -181,9 +144,11 @@ public interface WebResourceManager
      *
      * @param moduleCompleteKey The fully qualified plugin web resource module (eg <code>jira.webresources:scriptaculous</code>)
      * @return the resource tags for the specified resource
-     * @see {@link #requireResource(String, Writer)}
+     * @see #requireResource(String, Writer)
      * @since 2.2
+     * @deprecated As of 2.3.0, replaced by {@link #getResourceTags(String, UrlMode)}
      */
+    @Deprecated
     public String getResourceTags(String moduleCompleteKey);
 
     /**
@@ -191,27 +156,13 @@ public interface WebResourceManager
      * {@link #requireResource(String, java.io.Writer, UrlMode)}.
      * <p/>
      * This method formats resource URLs in either relative or absolute format, depending on the value of {@code
-     * urlMode}.
-     * <p/>
-     * If {@code urlMode == {@link UrlMode#ABSOLUTE}}, this method uses absolute URLs, with URL scheme, hostname, port
-     * (if non-standard for the scheme), and resource path.
-     * <p/>
-     * If {@code urlMode == {@link UrlMode#RELATIVE}}, this method uses relative URLs containing just the resource
-     * path.
-     * <p/>
-     * If {@code urlMode == {@link UrlMode#AUTO}}, this method may use either absolute or relative URLs. Implementations
-     * are free to determine which mode to use based on any criteria of their choosing. For example, an implementation
-     * may choose to use relative URLs if it detects that it is running in the context of an HTTP request, and absolute
-     * URLs if it detects that it is not.  Or it may choose to always use absolute URLs, or always use relative URLs.
-     * Callers should only use {@code UrlMode#AUTO} when they are sure that either absolute or relative URLs will be
-     * appropriate, and should not rely on any particular observed behavior regarding how this value is interpreted,
-     * which may vary across different implementations.
+     * urlMode}.  See {@link UrlMode} for details of the different options for URL format.
      *
      * @param moduleCompleteKey The fully qualified plugin web resource module (eg <code>jira.webresources:scriptaculous</code>)
      * @param urlMode           specifies whether to use absolute URLs, relative URLs, or allow the concrete
      *                          implementation to decide
      * @return the resource tags for the specified resource
-     * @see {@link #requireResource(String, Writer, UrlMode)}
+     * @see #requireResource(String, Writer, UrlMode)
      * @since 2.3.0
      */
     public String getResourceTags(String moduleCompleteKey, UrlMode urlMode);
@@ -219,52 +170,38 @@ public interface WebResourceManager
     /**
      * A helper method to return a prefix for 'system' static resources.  Generally the implementation will return
      * <p/>
-     * <pre><code>/s/{build num}/{system counter}/_</code></pre>
+     * {@code /s/{build num}/{system counter}/_}
      * <p/>
      * Note that the servlet context is prepended, and there is no trailing slash.
      * <p/>
      * Typical usage is to replace:
      * <p/>
-     * <pre><code>&lt;%= request.getContextPath() %>/styles/global.css</code></pre>
-     * with
-     * <pre><code>&lt;%= webResourceManager.getStaticResourcePrefix() %>/styles/global.css</code></pre>
+     * {@code <%= request.getContextPath() %>/styles/global.css} with {@code <%= webResourceManager.getStaticResourcePrefix()
+     * %>/styles/global.css}
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link #getStaticResourcePrefix(UrlMode)}
      * with a {@code urlMode} value of {@link WebResourceManager.UrlMode#AUTO}.
      *
      * @return A prefix that can be used to prefix 'static system' resources.
+     * @deprecated As of 2.3.0, replaced by {@link #getStaticResourcePrefix(UrlMode)}
      */
+    @Deprecated
     public String getStaticResourcePrefix();
 
     /**
      * A helper method to return a prefix for 'system' static resources.  Generally the implementation will return
      * <p/>
-     * <pre><code>/s/{build num}/{system counter}/_</code></pre>
+     * {@code /s/{build num}/{system counter}/_}
      * <p/>
      * Note that the servlet context is prepended, and there is no trailing slash.
      * <p/>
      * Typical usage is to replace:
      * <p/>
-     * <pre><code>&lt;%= request.getContextPath() %>/styles/global.css</code></pre>
-     * with
-     * <pre><code>&lt;%= webResourceManager.getStaticResourcePrefix() %>/styles/global.css</code></pre>
+     * {@code <%= request.getContextPath() %>/styles/global.css} with {@code <%= webResourceManager.getStaticResourcePrefix()
+     * %>/styles/global.css}
      * <p/>
      * This method returns a URL in either a relative or an absolute format, depending on the value of {@code urlMode}.
-     * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#ABSOLUTE}}, this method returns an absolute URL, with URL
-     * scheme, hostname, port (if non-standard for the scheme), and context path.
-     * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#RELATIVE}}, this method returns a relative URL containing
-     * just the context path.
-     * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#AUTO}}, this method may return either an absolute or a
-     * relative URL.  Implementations are free to determine which mode to use based on any criteria of their choosing.
-     * For example, an implementation may choose to return a relative URL if it detects that it is running in the
-     * context of an HTTP request, and an absolute URL if it detects that it is not.  Or it may choose to always return
-     * an absolute URL, or always return a relative URL.  Callers should only use {@code
-     * WebResourceManager.UrlMode#AUTO} when they are sure that either an absolute or a relative URL will be
-     * appropriate, and should not rely on any particular observed behavior regarding how this value is interpreted,
-     * which may vary across different implementations.
+     * See {@link UrlMode} for details of the different options for URL format.
      *
      * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
      *                decide
@@ -279,15 +216,14 @@ public interface WebResourceManager
      * <p/>
      * Generally the implementation will return
      * <p/>
-     * <pre><code>/s/{build num}/{system counter}/{resource counter}/_</code></pre>
+     * {@code /s/{build num}/{system counter}/{resource counter}/_}
      * <p/>
      * Note that the servlet context is prepended, and there is no trailing slash.
      * <p/>
      * Typical usage is to replace:
      * <p/>
-     * <pre><code>&lt;%= request.getContextPath() %>/styles/global.css</code></pre>
-     * with
-     * <pre><code>&lt;%= webResourceManager.getStaticResourcePrefix(resourceCounter) %>/styles/global.css</code></pre>
+     * {@code <%= request.getContextPath() %>/styles/global.css} with {@code <%= webResourceManager.getStaticResourcePrefix(resourceCounter)
+     * %>/styles/global.css}
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link #getStaticResourcePrefix(String,
      * UrlMode)} with a {@code urlMode} value of {@link WebResourceManager.UrlMode#AUTO}.
@@ -295,7 +231,9 @@ public interface WebResourceManager
      * @param resourceCounter A number that represents the unique version of the resource you require.  Every time this
      *                        resource changes, you need to increment the resource counter
      * @return A prefix that can be used to prefix 'static system' resources.
+     * @deprecated As of 2.3.0, replaced by {@link #getStaticResourcePrefix(String, UrlMode)}
      */
+    @Deprecated
     public String getStaticResourcePrefix(String resourceCounter);
 
     /**
@@ -304,37 +242,22 @@ public interface WebResourceManager
      * <p/>
      * Generally the implementation will return
      * <p/>
-     * <pre><code>/s/{build num}/{system counter}/{resource counter}/_</code></pre>
+     * {@code /s/{build num}/{system counter}/{resource counter}/_}
      * <p/>
      * Note that the servlet context is prepended, and there is no trailing slash.
      * <p/>
      * Typical usage is to replace:
      * <p/>
-     * <pre><code>&lt;%= request.getContextPath() %>/styles/global.css</code></pre>
-     * with
-     * <pre><code>&lt;%= webResourceManager.getStaticResourcePrefix(resourceCounter) %>/styles/global.css</code></pre>
+     * {@code <%= request.getContextPath() %>/styles/global.css} with {@code <%= webResourceManager.getStaticResourcePrefix(resourceCounter)
+     * %>/styles/global.css}
      * <p/>
      * This method returns a URL in either a relative or an absolute format, depending on the value of {@code urlMode}.
-     * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#ABSOLUTE}}, this method returns an absolute URL, with URL
-     * scheme, hostname, port (if non-standard for the scheme), and context path.
-     * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#RELATIVE}}, this method returns a relative URL containing
-     * just the context path.
-     * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#AUTO}}, this method may return either an absolute or a
-     * relative URL.  Implementations are free to determine which mode to use based on any criteria of their choosing.
-     * For example, an implementation may choose to return a relative URL if it detects that it is running in the
-     * context of an HTTP request, and an absolute URL if it detects that it is not.  Or it may choose to always return
-     * an absolute URL, or always return a relative URL.  Callers should only use {@code
-     * WebResourceManager.UrlMode#AUTO} when they are sure that either an absolute or a relative URL will be
-     * appropriate, and should not rely on any particular observed behavior regarding how this value is interpreted,
-     * which may vary across different implementations.
+     * See {@link UrlMode} for details of the different options for URL format.
      *
      * @param resourceCounter A number that represents the unique version of the resource you require.  Every time this
      *                        resource changes, you need to increment the resource counter
-     * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
-     *                decide
+     * @param urlMode         specifies whether to use absolute URLs, relative URLs, or allow the concrete
+     *                        implementation to decide
      * @return A prefix that can be used to prefix 'static system' resources.
      * @since 2.3.0
      */
@@ -343,15 +266,14 @@ public interface WebResourceManager
     /**
      * A helper method to return a url for 'plugin' resources.  Generally the implementation will return
      * <p/>
-     * <pre><code>/s/{build num}/{system counter}/{plugin version}/_/download/resources/plugin.key:module.key/resource.name</code></pre>
+     * {@code /s/{build num}/{system counter}/{plugin version}/_/download/resources/plugin.key:module.key/resource.name}
      * <p/>
      * Note that the servlet context is prepended, and there is no trailing slash.
      * <p/>
      * Typical usage is to replace:
      * <p/>
-     * <pre><code>&lt;%= request.getContextPath() %>/download/resources/plugin.key:module.key/resource.name</code></pre>
-     * with
-     * <pre><code>&lt;%= webResourceManager.getStaticPluginResource(descriptor, resourceName) %></code></pre>
+     * {@code <%= request.getContextPath() %>/download/resources/plugin.key:module.key/resource.name} with {@code <%=
+     * webResourceManager.getStaticPluginResource(descriptor, resourceName) %>}
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link #getStaticPluginResource(String,
      * String, UrlMode)} with a {@code urlMode} value of {@link WebResourceManager.UrlMode#AUTO}.
@@ -359,38 +281,25 @@ public interface WebResourceManager
      * @param moduleCompleteKey complete plugin module key
      * @param resourceName      the name of the resource as defined in the plugin manifest
      * @return A url that can be used to request 'plugin' resources.
+     * @deprecated As of 2.3.0, replaced by {@link #getStaticPluginResource(String, String, UrlMode)}
      */
+    @Deprecated
     public String getStaticPluginResource(String moduleCompleteKey, String resourceName);
 
     /**
      * A helper method to return a url for 'plugin' resources.  Generally the implementation will return
      * <p/>
-     * <pre><code>/s/{build num}/{system counter}/{plugin version}/_/download/resources/plugin.key:module.key/resource.name</code></pre>
+     * {@code /s/{build num}/{system counter}/{plugin version}/_/download/resources/plugin.key:module.key/resource.name}
      * <p/>
      * Note that the servlet context is prepended, and there is no trailing slash.
      * <p/>
      * Typical usage is to replace:
      * <p/>
-     * <pre><code>&lt;%= request.getContextPath() %>/download/resources/plugin.key:module.key/resource.name</code></pre>
-     * with
-     * <pre><code>&lt;%= webResourceManager.getStaticPluginResource(descriptor, resourceName) %></code></pre>
+     * {@code <%= request.getContextPath() %>/download/resources/plugin.key:module.key/resource.name} with {@code <%=
+     * webResourceManager.getStaticPluginResource(descriptor, resourceName) %>}
      * <p/>
      * This method returns a URL in either a relative or an absolute format, depending on the value of {@code urlMode}.
-     * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#ABSOLUTE}}, this method returns an absolute URL, with URL
-     * scheme, hostname, port (if non-standard for the scheme), and context path.
-     * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#RELATIVE}}, this method returns a relative URL containing
-     * just the context path.
-     * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#AUTO}}, this method may return either an absolute or a
-     * relative URL.  Implementations are free to determine which mode to use based on any criteria of their choosing.
-     * For example, an implementation may choose to return a relative URL if it detects that it is running in the
-     * context of an HTTP request, and an absolute URL if it detects that it is not.  Or it may choose to always return
-     * an absolute URL, or always return a relative URL.  Callers should only use {@code
-     * WebResourceManager.UrlMode#AUTO} when they are sure that either an absolute or a relative URL will be
-     * appropriate, and should not rely on any particular observed behavior regarding how this value is interpreted,
-     * which may vary across different implementations.
+     * See {@link UrlMode} for details of the different options for URL format.
      *
      * @param moduleCompleteKey complete plugin module key
      * @param resourceName      the name of the resource as defined in the plugin manifest
@@ -404,15 +313,14 @@ public interface WebResourceManager
     /**
      * A helper method to return a url for 'plugin' resources.  Generally the implementation will return
      * <p/>
-     * <pre><code>/s/{build num}/{system counter}/{plugin version}/_/download/resources/plugin.key:module.key/resource.name</code></pre>
+     * {@code /s/{build num}/{system counter}/{plugin version}/_/download/resources/plugin.key:module.key/resource.name}
      * <p/>
      * Note that the servlet context is prepended, and there is no trailing slash.
      * <p/>
      * Typical usage is to replace:
      * <p/>
-     * <pre><code>&lt;%= request.getContextPath() %>/download/resources/plugin.key:module.key/resource.name</code></pre>
-     * with
-     * <pre><code>&lt;%= webResourceManager.getStaticPluginResource(descriptor, resourceName) %></code></pre>
+     * {@code <%= request.getContextPath() %>/download/resources/plugin.key:module.key/resource.name} with {@code <%=
+     * webResourceManager.getStaticPluginResource(descriptor, resourceName) %>}
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link
      * #getStaticPluginResource(ModuleDescriptor, String, UrlMode)} with a {@code urlMode} value of {@link
@@ -421,46 +329,33 @@ public interface WebResourceManager
      * @param moduleDescriptor plugin module descriptor that contains the resource
      * @param resourceName     the name of the resource as defined in the plugin manifest
      * @return returns the url of this plugin resource
-     * @see {@link #getStaticPluginResource(String, String)}
+     * @see #getStaticPluginResource(String, String)
+     * @deprecated As of 2.3.0, replaced by {@link #getStaticPluginResource(ModuleDescriptor, String, UrlMode)}
      */
+    @Deprecated
     public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName);
 
     /**
      * A helper method to return a url for 'plugin' resources.  Generally the implementation will return
      * <p/>
-     * <pre><code>/s/{build num}/{system counter}/{plugin version}/_/download/resources/plugin.key:module.key/resource.name</code></pre>
+     * {@code /s/{build num}/{system counter}/{plugin version}/_/download/resources/plugin.key:module.key/resource.name}
      * <p/>
      * Note that the servlet context is prepended, and there is no trailing slash.
      * <p/>
      * Typical usage is to replace:
      * <p/>
-     * <pre><code>&lt;%= request.getContextPath() %>/download/resources/plugin.key:module.key/resource.name</code></pre>
-     * with
-     * <pre><code>&lt;%= webResourceManager.getStaticPluginResource(descriptor, resourceName) %></code></pre>
+     * {@code <%= request.getContextPath() %>/download/resources/plugin.key:module.key/resource.name} with {@code <%=
+     * webResourceManager.getStaticPluginResource(descriptor, resourceName) %>}
      * <p/>
      * This method returns a URL in either a relative or an absolute format, depending on the value of {@code urlMode}.
-     * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#ABSOLUTE}}, this method returns an absolute URL, with URL
-     * scheme, hostname, port (if non-standard for the scheme), and context path.
-     * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#RELATIVE}}, this method returns a relative URL containing
-     * just the context path.
-     * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#AUTO}}, this method may return either an absolute or a
-     * relative URL.  Implementations are free to determine which mode to use based on any criteria of their choosing.
-     * For example, an implementation may choose to return a relative URL if it detects that it is running in the
-     * context of an HTTP request, and an absolute URL if it detects that it is not.  Or it may choose to always return
-     * an absolute URL, or always return a relative URL.  Callers should only use {@code
-     * WebResourceManager.UrlMode#AUTO} when they are sure that either an absolute or a relative URL will be
-     * appropriate, and should not rely on any particular observed behavior regarding how this value is interpreted,
-     * which may vary across different implementations.
+     * See {@link UrlMode} for details of the different options for URL format.
      *
      * @param moduleDescriptor plugin module descriptor that contains the resource
      * @param resourceName     the name of the resource as defined in the plugin manifest
      * @param urlMode          specifies whether to use absolute URLs, relative URLs, or allow the concrete
      *                         implementation to decide
      * @return returns the url of this plugin resource
-     * @see {@link #getStaticPluginResource(String, String, UrlMode)}
+     * @see #getStaticPluginResource(String, String, UrlMode)
      * @since 2.3.0
      */
     public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName, UrlMode urlMode);
@@ -473,11 +368,24 @@ public interface WebResourceManager
      */
     enum UrlMode
     {
-        /** Absolute URL format, with URL scheme, hostname, port (if non-standard for the scheme), and context path. */
+        /**
+         * Absolute URL format, with URL scheme, hostname, port (if non-standard for the scheme), and context path.
+         */
         ABSOLUTE,
-        /** Relative URL format, containing just the context path. */
+        /**
+         * Relative URL format, containing just the context path.
+         */
         RELATIVE,
-        /** Unspecified URL format, indicating that either absolute or relative URLs are acceptable */
+        /**
+         * Unspecified URL format, indicating that either absolute or relative URLs are acceptable.   Implementations
+         * are free to determine which mode to use based on any criteria of their choosing. For example, an
+         * implementation may choose to return a relative URL if it detects that it is running in the context of an HTTP
+         * request, and an absolute URL if it detects that it is not.  Or it may choose to always return an absolute
+         * URL, or always return a relative URL.  Callers should only use {@code WebResourceManager.UrlMode#AUTO} when
+         * they are sure that either an absolute or a relative URL will be appropriate, and should not rely on any
+         * particular observed behavior regarding how this value is interpreted, which may vary across different
+         * implementations.
+         */
         AUTO
     }
 
@@ -504,7 +412,7 @@ public interface WebResourceManager
     public void setIncludeMode(IncludeMode includeMode);
 
     /**
-     * @deprecated Since 2.2. Use {@link #writeResourceTags(String, Writer)} instead.
+     * @deprecated Since 2.2. Use {@link #requireResource(String, Writer, UrlMode)} instead.
      */
     @Deprecated
     public static final IncludeMode DELAYED_INCLUDE_MODE = new IncludeMode()
