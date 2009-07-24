@@ -1,14 +1,26 @@
 package com.atlassian.plugin.osgi.bridge.external;
 
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.osgi.context.BundleContextAware;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.Filter;
+import org.osgi.framework.ServiceEvent;
+import static org.osgi.framework.ServiceEvent.*;
+import org.apache.commons.lang.Validate;
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.logging.Log;
 import com.atlassian.plugin.PluginException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Simple factory bean to resolve host components.  Since we know host components won't change during the bundle's
@@ -16,11 +28,12 @@ import java.util.Arrays;
  *
  * @since 2.2.0
  */
-public class HostComponentFactoryBean implements FactoryBean, BundleContextAware
+public class HostComponentFactoryBean implements FactoryBean, BundleContextAware, InitializingBean
 {
     private BundleContext bundleContext;
     private String filter;
     private Object service;
+    private Class<?>[] interfaces;
 
     public Object getObject() throws Exception
     {
@@ -52,6 +65,11 @@ public class HostComponentFactoryBean implements FactoryBean, BundleContextAware
         this.filter = filter;
     }
 
+    public void setInterfaces(Class<?>[] interfaces)
+    {
+        this.interfaces = interfaces;
+    }
+
     /**
      * Finds a service, if the bundle context is available.
      *
@@ -61,26 +79,80 @@ public class HostComponentFactoryBean implements FactoryBean, BundleContextAware
      */
     private Object findService() throws PluginException
     {
-        if (service == null && bundleContext != null)
+        return service;
+    }
+
+    /**
+     * Wraps the service in a dynamic proxy that ensures the service reference is still valid
+     *
+     * @return A proxy that wraps the service
+     */
+    private Object createHostComponentProxy()
+    {
+        // we use the bundleContext's classloader since it was loaded from the main webapp
+        return Proxy.newProxyInstance(bundleContext.getClass().getClassLoader(), interfaces, new DynamicServiceInvocationHandler(
+                bundleContext, filter));
+    }
+
+    public void afterPropertiesSet() throws Exception
+    {
+        Validate.notNull(bundleContext);
+        Validate.notNull(interfaces);
+        service = createHostComponentProxy();
+    }
+
+    /**
+     * InvocationHandler for a dynamic proxy that ensures all methods are executed with the
+     * object class's class loader as the context class loader.
+     */
+    static class DynamicServiceInvocationHandler implements InvocationHandler
+    {
+        private static final Log log = LogFactory.getLog(DynamicServiceInvocationHandler.class);
+        private volatile Object service;
+
+
+        DynamicServiceInvocationHandler(final BundleContext bundleContext, final String filter)
         {
             try
             {
-                ServiceReference[] references = bundleContext.getServiceReferences(null, filter);
-                if (references == null || references.length == 0)
+                ServiceReference[] refs = bundleContext.getServiceReferences(null, filter);
+                if (refs != null && refs.length > 0)
                 {
-                    throw new PluginException("No service reference for '" + filter + "'");
+                    service = bundleContext.getService(refs[0]);
                 }
-                if (references.length > 1)
+
+                bundleContext.addServiceListener(new ServiceListener()
                 {
-                    throw new PluginException("Too many service references found for '" + filter + "': " + Arrays.asList(references));
-                }
-                service = bundleContext.getService(references[0]);
+                    public void serviceChanged(ServiceEvent serviceEvent)
+                    {
+                        // We ignore unregistered services as we want to continue to use the old one during a transition
+                        if (REGISTERED == serviceEvent.getType())
+                        {
+                            if (log.isDebugEnabled())
+                            {
+                                log.debug("Updating the host component matching filter: " + filter);
+                            }
+                            service = bundleContext.getService(serviceEvent.getServiceReference());
+                        }
+                    }
+                }, filter);
             }
             catch (InvalidSyntaxException e)
             {
-                throw new PluginException("Invalid filter syntax '" + filter + "'");
+                throw new IllegalArgumentException("Invalid filter string: " + filter, e);
             }
         }
-        return service;
+
+        public Object invoke(final Object o, final Method method, final Object[] objects) throws Throwable
+        {
+            try
+            {
+                return method.invoke(service, objects);
+            }
+            catch (final InvocationTargetException e)
+            {
+                throw e.getTargetException();
+            }
+        }
     }
 }

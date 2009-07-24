@@ -89,6 +89,7 @@ public class TestHostComponentSpringStage extends TestCase
                 }
             },
             null,
+            "beans:bean[@id='foo']/beans:property[@name='interfaces']/beans:list/beans:value='" + SomeInterface.class.getName() + "'",
             "beans:bean[@id='foo']/beans:property[@name='filter']/@value='(&(bean-name=foo)(plugins-host=true))'");
     }
 

@@ -107,6 +107,15 @@ public class HostComponentSpringStage implements TransformStage
                     Element e = osgiService.addElement("beans:property");
                     e.addAttribute("name", "filter");
                     e.addAttribute("value", "(&(bean-name=" + beanName + ")(" + ComponentRegistrar.HOST_COMPONENT_FLAG + "=true))");
+
+                    Element listProp = osgiService.addElement("beans:property");
+                    listProp.addAttribute("name", "interfaces");
+                    Element list = listProp.addElement("beans:list");
+                    for (String inf : reg.getMainInterfaces())
+                    {
+                        Element tmp = list.addElement("beans:value");
+                        tmp.setText(inf);
+                    }
                 }
             }
             addImportsForMatchedHostComponents(matchedRegistrations, context.getSystemExports(), context.getExtraImports());
