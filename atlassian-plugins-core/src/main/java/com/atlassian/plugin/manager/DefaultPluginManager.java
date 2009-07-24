@@ -185,13 +185,11 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         pluginEventManager.broadcast(new PluginFrameworkWarmRestartingEvent(this, this));
 
         // Make sure we reload plugins in order
-        final List<List<Plugin>> disabledPlugins = new ArrayList<List<Plugin>>();
+        final List<Plugin> restartedPlugins = new ArrayList<Plugin>();
         final List<PluginLoader> loaders = new ArrayList<PluginLoader>(pluginLoaders);
         Collections.reverse(loaders);
         for (final PluginLoader loader : pluginLoaders)
         {
-            final List<Plugin> plugins = new ArrayList<Plugin>();
-            disabledPlugins.add(plugins);
             for (final Map.Entry<Plugin, PluginLoader> entry : pluginToPluginLoader.entrySet())
             {
                 if (entry.getValue() == loader)
@@ -199,30 +197,21 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                     final Plugin plugin = entry.getKey();
                     if (isPluginEnabled(plugin.getKey()))
                     {
-                        notifyPluginDisabled(plugin);
-                        disablePluginState(plugin, getStore());
-                        plugins.add(plugin);
+                        disablePluginModules(plugin);
+                        restartedPlugins.add(plugin);
                     }
                 }
             }
         }
 
         //then enable them in reverse order
-        Collections.reverse(disabledPlugins);
-        for (final List<Plugin> plugins : disabledPlugins)
+        Collections.reverse(restartedPlugins);
+        for (final Plugin plugin : restartedPlugins)
         {
-            pluginEnabler.enable(plugins);
-
-            for (final Plugin plugin : plugins)
-            {
-                if (plugin.getPluginState().equals(PluginState.ENABLED))
-                {
-                    enablePluginState(plugin, getStore());
-                    notifyPluginEnabled(plugin);
-                }
-            }
+            enablePluginModules(plugin);
         }
 
+        classLoader.notifyPluginOrModuleEnabled();
         pluginEventManager.broadcast(new PluginFrameworkWarmRestartedEvent(this, this));
         tracker.setState(StateTracker.State.STARTED);
     }
@@ -232,20 +221,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     {
         final Plugin plugin = event.getPlugin();
 
-        // disable the plugin, shamefully copied from notifyPluginDisabled()
-        final List<ModuleDescriptor<?>> moduleDescriptors = new ArrayList<ModuleDescriptor<?>>(plugin.getModuleDescriptors());
-        Collections.reverse(moduleDescriptors); // disable in reverse order
-
-        for (final ModuleDescriptor<?> module : moduleDescriptors)
-        {
-            // don't actually disable the module, just fire the events because its plugin is being disabled
-            // if the module was actually disabled, you'd have to reenable each one when enabling the plugin
-
-            if (isPluginModuleEnabled(module.getCompleteKey()))
-            {
-                publishModuleDisabledEvents(module);
-            }
-        }
+        disablePluginModules(plugin);
 
         // enable the plugin, shamefully copied from notifyPluginEnabled()
         classLoader.notifyPluginOrModuleEnabled();
@@ -1002,6 +978,15 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void notifyPluginDisabled(final Plugin plugin)
     {
+        disablePluginModules(plugin);
+
+        // This needs to happen after modules are disabled to prevent errors
+        plugin.disable();
+        pluginEventManager.broadcast(new PluginDisabledEvent(plugin));
+    }
+
+    private void disablePluginModules(Plugin plugin)
+    {
         final List<ModuleDescriptor<?>> moduleDescriptors = new ArrayList<ModuleDescriptor<?>>(plugin.getModuleDescriptors());
         Collections.reverse(moduleDescriptors); // disable in reverse order
 
@@ -1015,10 +1000,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                 publishModuleDisabledEvents(module);
             }
         }
-
-        // This needs to happen after modules are disabled to prevent errors
-        plugin.disable();
-        pluginEventManager.broadcast(new PluginDisabledEvent(plugin));
     }
 
     public void disablePluginModule(final String completeKey)
