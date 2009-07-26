@@ -255,7 +255,10 @@ public class OsgiBundlePlugin extends AbstractPlugin
     {
         try
         {
-            bundle.stop();
+            if (bundle.getState() == Bundle.ACTIVE)
+            {
+                bundle.stop();
+            }
         }
         catch (final BundleException e)
         {
