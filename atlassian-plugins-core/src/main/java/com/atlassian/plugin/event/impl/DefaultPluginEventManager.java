@@ -2,10 +2,6 @@ package com.atlassian.plugin.event.impl;
 
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.util.ClassUtils;
-import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
-
-import org.apache.commons.collections.Factory;
-import org.apache.commons.collections.map.LazyMap;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,8 +9,9 @@ import org.apache.commons.logging.LogFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,7 +23,7 @@ public class DefaultPluginEventManager implements PluginEventManager
 {
     private static final Log log = LogFactory.getLog(DefaultPluginEventManager.class);
 
-    private final Map<Class<?>,Set<Listener>> eventsToListener;
+    private final ConcurrentMap<Class<?>, Set<Listener>> eventsToListener;
     private final ListenerMethodSelector[] listenerMethodSelectors;
 
     /**
@@ -44,11 +41,10 @@ public class DefaultPluginEventManager implements PluginEventManager
     public DefaultPluginEventManager(final ListenerMethodSelector[] selectors)
     {
         listenerMethodSelectors = selectors;
-        @SuppressWarnings("unchecked")
-        final Map<Class<?>,Set<Listener>> map = LazyMap.decorate(CopyOnWriteMap.newHashMap(), new Factory() {
-            public Set<Listener> create() { return new CopyOnWriteArraySet<Listener>(); }
-        });
-        eventsToListener = map;
+        //@TODO We use the concurrent hashmap's putIfAbsent call to ensure a set of listeners on write.
+        // Should change to a copy-on-write map when one is available from either the atlassian-util-concurrent memoizer
+        // function or the google-collections computingMap with weak keys.
+        eventsToListener = new ConcurrentHashMap<Class<?>, Set<Listener>>();
     }
 
     /**
@@ -63,14 +59,17 @@ public class DefaultPluginEventManager implements PluginEventManager
         for (final Class<?> type : ClassUtils.findAllTypes(event.getClass()))
         {
             final Set<Listener> registrations = eventsToListener.get(type);
-            for (final Listener reg : registrations)
+            if (registrations != null)
             {
-                if (calledListeners.contains(reg))
+                for (final Listener reg : registrations)
                 {
-                    continue;
+                    if (calledListeners.contains(reg))
+                    {
+                        continue;
+                    }
+                    calledListeners.add(reg);
+                    reg.notify(event);
                 }
-                calledListeners.add(reg);
-                reg.notify(event);
             }
         }
     }
@@ -98,6 +97,7 @@ public class DefaultPluginEventManager implements PluginEventManager
                 {
                     throw new IllegalArgumentException("Listener methods must only have one argument");
                 }
+                eventsToListener.putIfAbsent(m.getParameterTypes()[0], new CopyOnWriteArraySet<Listener>());
                 final Set<Listener> listeners = eventsToListener.get(m.getParameterTypes()[0]);
                 listeners.add(new Listener(listener, m));
                 listenerFound.set(true);
@@ -120,6 +120,7 @@ public class DefaultPluginEventManager implements PluginEventManager
         {
             public void handle(final Object listener, final Method m)
             {
+                eventsToListener.putIfAbsent(m.getParameterTypes()[0], new CopyOnWriteArraySet<Listener>());
                 final Set<Listener> listeners = eventsToListener.get(m.getParameterTypes()[0]);
                 listeners.remove(new Listener(listener, m));
             }
