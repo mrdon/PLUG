@@ -2,6 +2,8 @@ package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
@@ -31,7 +33,7 @@ public class TestClassLoaderEdgeCases extends PluginInContainerTestBase
                         "    <plugin-info>",
                         "        <version>1.0</version>",
                         "    </plugin-info>",
-                        "    <component key='obj' class='my.Foo'/>",
+                        "    <object key='obj' class='my.Foo'/>",
                         "</atlassian-plugin>")
                 .addFormattedJava("my.Foo",
                         "package my;",
@@ -42,7 +44,9 @@ public class TestClassLoaderEdgeCases extends PluginInContainerTestBase
                         "}")
                 .addFile("META-INF/lib/private.jar", privateJar)
                 .build();
-        initPluginManager();
+        DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
+        factory.addModuleDescriptor("object", ObjectModuleDescriptor.class);
+        initPluginManager(null, factory);
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
         assertEquals(1, pluginManager.getEnabledPlugins().size());
         OsgiPlugin plugin = (OsgiPlugin) pluginManager.getPlugin("test.privatejar.plugin");

@@ -22,6 +22,7 @@ public class TestComponentModuleDescriptor extends TestCase
         when(plugin.<Foo>loadClass((String)anyObject(), (Class<?>) anyObject())).thenReturn(Foo.class);
         desc.init(plugin, e);
 
+        Foo.called = false;
         desc.enabled();
         assertFalse(Foo.called);
     }
