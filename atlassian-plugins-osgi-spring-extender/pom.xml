@@ -66,43 +66,40 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>org.springframework.bundle.osgi.extender</Bundle-SymbolicName>
-                        <Bundle-Version>1.1.3</Bundle-Version>
+                        <Bundle-SymbolicName>org.springframework.osgi.extender</Bundle-SymbolicName>
+                        <Bundle-Version>1.2.0</Bundle-Version>
                         <Export-Package>
-                            org.springframework.osgi.extender.support;uses:="org.springframework.osgi.extender,
-                            org.springframework.osgi.context,org.springframework.osgi.extender.support.scanning,
-                            org.springframework.osgi.context.support,org.osgi.framework,org.apache.commons.logging,
-                            org.springframework.util,org.springframework.beans.factory,
-                            org.springframework.osgi.util";version="1.1.3",
-                            org.springframework.osgi.extender;uses:="org.springframework.osgi.context,org.springframework.beans.factory.config,org.osgi.framework,org.springframework.beans";version="1.1.3",
-                            org.springframework.osgi.extender.event;uses:="org.osgi.framework,org.springframework.util,org.springframework.context,
-                            org.springframework.osgi.context.event,org.springframework.osgi.service.importer.event";version="1.1.3",
-                            org.springframework.osgi.extender.support.scanning;uses:="org.osgi.framework,org.springframework.util";version="1.1.3"
+                            org.springframework.osgi.extender;version="1.2.0";uses:="org.osgi.framework,org.springframework.beans,org.springframework.beans.factory.config,org.springframework.osgi.context",
+                            org.springframework.osgi.extender.event;version="1.2.0";uses:="org.osgi.framework,org.springframework.context,org.springframework.osgi.context.event,org.springframework.osgi.service.importer.event",
+                            org.springframework.osgi.extender.support;version="1.2.0";uses:="org.osgi.framework,org.springframework.beans.factory,org.springframework.osgi.context,org.springframework.osgi.extender,org.springframework.osgi.extender.support.scanning",
+                            org.springframework.osgi.extender.support.scanning;version="1.2.0";uses:="org.osgi.framework"
                         </Export-Package>
                         <Import-Package>
-                            org.apache.commons.logging,org.osgi.framework;version="1.3",org.osgi.util.tracker;version="1.3",
-                            org.osgi.service.packageadmin;version="1.2",org.springframework.beans;version="2.5.4",
-                            org.springframework.beans.factory;version="2.5.4",
-                            org.springframework.beans.factory.config;version="2.5.4",
-                            org.springframework.beans.factory.xml;version="2.5.4",org.springframework.context;version="2.5.4",
-                            org.springframework.context.event;version="2.5.4",
-                            org.springframework.core;version="2.5.4",org.springframework.core.enums;version="2.5.4",
-                            org.springframework.core.task;version="2.5.4",org.springframework.osgi;version="1.1.3",
-                            org.springframework.osgi.context;version="1.1.3",
-                            org.springframework.osgi.context.event;version="1.1.3",
-                            org.springframework.osgi.context.support;version="1.1.3",
-                            org.springframework.osgi.extender;version="1.1.3",
-                            org.springframework.osgi.extender.event;version="1.1.3",
-                            org.springframework.osgi.extender.support;version="1.1.3",
-                            org.springframework.osgi.extender.support.scanning;version="1.1.3",
-                            org.springframework.osgi.extensions.annotation;resolution:=optional;version="1.1.3",
-                            org.springframework.osgi.io.internal.resolver;version="1.1.3",
-                            org.springframework.osgi.service.importer;version="1.1.3",
-                            org.springframework.osgi.service.importer.event;version="1.1.3",
-                            org.springframework.osgi.service.importer.support;version="1.1.3",
-                            org.springframework.osgi.util;version="1.1.3",org.springframework.scheduling.timer;version="2.5.4",
-                            org.springframework.util;version="2.5.4",org.xml.sax;resolution:=optional,
-                            com_*;resolution:=optional
+                             org.apache.commons.logging;version="[1.0,2.0)",
+                            org.osgi.framework;version="1.3",
+                            org.osgi.service.packageadmin;version="1.2",
+                            org.springframework.beans;version="[2.5.6,4.0)",
+                            org.springframework.beans.factory;version="[2.5.6,4.0)",
+                            org.springframework.beans.factory.config;version="[2.5.6,4.0)",
+                            org.springframework.beans.factory.xml;version="[2.5.6,4.0)",
+                            org.springframework.context;version="[2.5.6,4.0)",
+                            org.springframework.context.event;version="[2.5.6,4.0)",
+                            org.springframework.core;version="[2.5.6,4.0)",
+                            org.springframework.core.enums;version="[2.5.6,4.0)",
+                            org.springframework.core.io;version="[2.5.6,4.0)",
+                            org.springframework.core.task;version="[2.5.6,4.0)",
+                            org.springframework.osgi;version="[1.2.0,1.2.0]",
+                            org.springframework.osgi.context;version="[1.2.0,1.2.0]",
+                            org.springframework.osgi.context.event;version="[1.2.0,1.2.0]",
+                            org.springframework.osgi.context.support;version="[1.2.0,1.2.0]",
+                            org.springframework.osgi.extensions.annotation;version="[1.2.0,1.2.0]";resolution:=optional,
+                            org.springframework.osgi.service.importer;version="[1.2.0,1.2.0]",
+                            org.springframework.osgi.service.importer.event;version="[1.2.0,1.2.0]",
+                            org.springframework.osgi.service.importer.support;version="[1.2.0,1.2.0]",
+                            org.springframework.osgi.util;version="[1.2.0,1.2.0]",
+                            org.springframework.scheduling.timer;version="[2.5.6,4.0)",
+                            org.springframework.util;version="[2.5.6,4.0)",
+                            org.xml.sax;resolution:=optional
                         </Import-Package>
                         <Bundle-Activator>org.springframework.osgi.extender.internal.activator.ContextLoaderListener
                         </Bundle-Activator>
