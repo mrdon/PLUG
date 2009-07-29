@@ -20,8 +20,9 @@ public class TestComponentModuleDescriptor extends TestCase
 
         Plugin plugin = mock(Plugin.class);
         when(plugin.<Foo>loadClass((String)anyObject(), (Class<?>) anyObject())).thenReturn(Foo.class);
-        desc.init(plugin, e);
 
+        Foo.called = false;
+        desc.init(plugin, e);
         desc.enabled();
         assertFalse(Foo.called);
     }
