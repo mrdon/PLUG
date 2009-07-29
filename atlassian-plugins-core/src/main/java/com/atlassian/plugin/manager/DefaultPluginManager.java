@@ -70,6 +70,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.LinkedHashMap;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -247,10 +248,40 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     public String installPlugin(final PluginArtifact pluginArtifact) throws PluginParseException
     {
-        final String key = validatePlugin(pluginArtifact);
-        pluginInstaller.installPlugin(key, pluginArtifact);
+        Set<String> keys = installPlugins(pluginArtifact);
+        if (keys != null && keys.size() == 1)
+        {
+            return keys.iterator().next();
+        }
+        else
+        {
+            // should never happen
+            throw new PluginParseException("Could not install plugin");
+        }
+    }
+
+    public Set<String> installPlugins(final PluginArtifact... pluginArtifacts) throws PluginParseException
+    {
+        LinkedHashMap<String,PluginArtifact> validatedArtifacts = new LinkedHashMap<String,PluginArtifact>();
+        try
+        {
+            for (PluginArtifact pluginArtifact : pluginArtifacts)
+            {
+                validatedArtifacts.put(validatePlugin(pluginArtifact), pluginArtifact);
+            }
+        }
+        catch (PluginParseException ex)
+        {
+            throw new PluginParseException("All plugins could not validated", ex);
+        }
+
+        for (Map.Entry<String,PluginArtifact> entry : validatedArtifacts.entrySet())
+        {
+            pluginInstaller.installPlugin(entry.getKey(), entry.getValue());
+        }
+
         scanForNewPlugins();
-        return key;
+        return validatedArtifacts.keySet();
     }
 
     /**

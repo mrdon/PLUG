@@ -48,6 +48,11 @@ import com.atlassian.plugin.test.PluginJarBuilder;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
 
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
@@ -1388,6 +1393,118 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPluginStateStore.verify();
         enabledListener.assertCalled();
     }
+
+    public void testInstallPluginsWithOne()
+    {
+        DynamicPluginLoader loader = mock(DynamicPluginLoader.class);
+        ModuleDescriptorFactory descriptorFactory = mock(ModuleDescriptorFactory.class);
+        PluginEventManager eventManager = mock(PluginEventManager.class);
+        PluginInstaller installer = mock(PluginInstaller.class);
+        DefaultPluginManager pm = new DefaultPluginManager(new MemoryPluginPersistentStateStore(), Collections.<PluginLoader>singletonList(loader), descriptorFactory, eventManager);
+        pm.setPluginInstaller(installer);
+        PluginArtifact artifact = mock(PluginArtifact.class);
+        Plugin plugin = mock(Plugin.class);
+        when(loader.canLoad(artifact)).thenReturn("foo");
+        when(loader.addFoundPlugins(descriptorFactory)).thenReturn(Arrays.asList(plugin));
+
+        pm.installPlugins(artifact);
+
+        verify(loader).canLoad(artifact);
+        verify(installer).installPlugin("foo", artifact);
+    }
+
+    public void testInstallPluginsWithTwo()
+    {
+        DynamicPluginLoader loader = mock(DynamicPluginLoader.class);
+        ModuleDescriptorFactory descriptorFactory = mock(ModuleDescriptorFactory.class);
+        PluginEventManager eventManager = mock(PluginEventManager.class);
+        PluginInstaller installer = mock(PluginInstaller.class);
+        DefaultPluginManager pm = new DefaultPluginManager(new MemoryPluginPersistentStateStore(), Collections.<PluginLoader>singletonList(loader), descriptorFactory, eventManager);
+        pm.setPluginInstaller(installer);
+        PluginArtifact artifactA = mock(PluginArtifact.class);
+        Plugin pluginA = mock(Plugin.class);
+        when(loader.canLoad(artifactA)).thenReturn("a");
+        PluginArtifact artifactB = mock(PluginArtifact.class);
+        Plugin pluginB = mock(Plugin.class);
+        when(loader.canLoad(artifactB)).thenReturn("b");
+
+        when(loader.addFoundPlugins(descriptorFactory)).thenReturn(Arrays.asList(pluginA, pluginB));
+
+        pm.installPlugins(artifactA, artifactB);
+
+        verify(loader).canLoad(artifactA);
+        verify(loader).canLoad(artifactB);
+        verify(installer).installPlugin("a", artifactA);
+        verify(installer).installPlugin("b", artifactB);
+    }
+
+    public void testInstallPluginsWithTwoButOneFailsValidation()
+    {
+        DynamicPluginLoader loader = mock(DynamicPluginLoader.class);
+        ModuleDescriptorFactory descriptorFactory = mock(ModuleDescriptorFactory.class);
+        PluginEventManager eventManager = mock(PluginEventManager.class);
+        PluginInstaller installer = mock(PluginInstaller.class);
+        DefaultPluginManager pm = new DefaultPluginManager(new MemoryPluginPersistentStateStore(), Collections.<PluginLoader>singletonList(loader), descriptorFactory, eventManager);
+        pm.setPluginInstaller(installer);
+        PluginArtifact artifactA = mock(PluginArtifact.class);
+        Plugin pluginA = mock(Plugin.class);
+        when(loader.canLoad(artifactA)).thenReturn("a");
+        PluginArtifact artifactB = mock(PluginArtifact.class);
+        Plugin pluginB = mock(Plugin.class);
+        when(loader.canLoad(artifactB)).thenReturn(null);
+
+        when(loader.addFoundPlugins(descriptorFactory)).thenReturn(Arrays.asList(pluginA, pluginB));
+
+        try
+        {
+            pm.installPlugins(artifactA, artifactB);
+            fail("Should have not installed plugins");
+        }
+        catch (PluginParseException ex)
+        {
+            // this is good
+        }
+
+        verify(loader).canLoad(artifactA);
+        verify(loader).canLoad(artifactB);
+        verify(installer, never()).installPlugin("a", artifactA);
+        verify(installer, never()).installPlugin("b", artifactB);
+    }
+
+    public void testInstallPluginsWithTwoButOneFailsValidationWithException()
+    {
+        DynamicPluginLoader loader = mock(DynamicPluginLoader.class);
+        ModuleDescriptorFactory descriptorFactory = mock(ModuleDescriptorFactory.class);
+        PluginEventManager eventManager = mock(PluginEventManager.class);
+        PluginInstaller installer = mock(PluginInstaller.class);
+        DefaultPluginManager pm = new DefaultPluginManager(new MemoryPluginPersistentStateStore(), Collections.<PluginLoader>singletonList(loader), descriptorFactory, eventManager);
+        pm.setPluginInstaller(installer);
+        PluginArtifact artifactA = mock(PluginArtifact.class);
+        Plugin pluginA = mock(Plugin.class);
+        when(loader.canLoad(artifactA)).thenReturn("a");
+        PluginArtifact artifactB = mock(PluginArtifact.class);
+        Plugin pluginB = mock(Plugin.class);
+        doThrow(new PluginParseException()).when(loader).canLoad(artifactB);
+
+        when(loader.addFoundPlugins(descriptorFactory)).thenReturn(Arrays.asList(pluginA, pluginB));
+
+        try
+        {
+            pm.installPlugins(artifactA, artifactB);
+            fail("Should have not installed plugins");
+        }
+        catch (PluginParseException ex)
+        {
+            // this is good
+        }
+
+        verify(loader).canLoad(artifactA);
+        verify(loader).canLoad(artifactB);
+        verify(installer, never()).installPlugin("a", artifactA);
+        verify(installer, never()).installPlugin("b", artifactB);
+    }
+
+
 
     private <T> void checkResources(final PluginAccessor manager, final boolean canGetGlobal, final boolean canGetModule) throws IOException
     {
