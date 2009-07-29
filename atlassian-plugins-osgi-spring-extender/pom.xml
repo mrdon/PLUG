@@ -99,7 +99,8 @@
                             org.springframework.osgi.util;version="[1.2.0,1.2.0]",
                             org.springframework.scheduling.timer;version="[2.5.6,4.0)",
                             org.springframework.util;version="[2.5.6,4.0)",
-                            org.xml.sax;resolution:=optional
+                            org.xml.sax;resolution:=optional,
+                            com_*;resolution:=optional
                         </Import-Package>
                         <Bundle-Activator>org.springframework.osgi.extender.internal.activator.ContextLoaderListener
                         </Bundle-Activator>
