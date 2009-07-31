@@ -31,7 +31,7 @@ public class TestCssWebResourceFormatter extends TestCase
     {
         final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master.css";
 
-        assertEquals("<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" media=\"all\"/>\n",
+        assertEquals("<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" media=\"all\">\n",
                     cssWebResourceFormatter.formatResource(url, new HashMap()));
     }
 
@@ -44,7 +44,7 @@ public class TestCssWebResourceFormatter extends TestCase
         params.put("foo", "bar"); // test invalid parameter
 
         assertEquals("<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" title=\"Confluence Master CSS\"" +
-                    " charset=\"utf-8\" media=\"all\"/>\n",
+                    " charset=\"utf-8\" media=\"all\">\n",
                     cssWebResourceFormatter.formatResource(url, params));
 
     }
@@ -57,7 +57,7 @@ public class TestCssWebResourceFormatter extends TestCase
         params.put("ieonly", "true");
         params.put("media", "screen");
         assertEquals("<!--[if IE]>\n" +
-                    "<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" media=\"screen\"/>\n" +
+                    "<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" media=\"screen\">\n" +
                     "<![endif]-->\n",
                     cssWebResourceFormatter.formatResource(url, params));
     }

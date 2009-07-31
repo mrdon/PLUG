@@ -35,7 +35,7 @@ class CssWebResourceFormatter extends AbstractWebResourceFormatter
         {
             buffer.append(" media=\"all\"");
         }
-        buffer.append("/>\n");
+        buffer.append(">\n");
 
         // ie conditional commment
         if (BooleanUtils.toBoolean(params.get(IEONLY_PARAM)))
