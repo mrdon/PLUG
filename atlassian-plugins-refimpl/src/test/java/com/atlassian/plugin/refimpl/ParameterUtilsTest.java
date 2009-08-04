@@ -1,6 +1,6 @@
 package com.atlassian.plugin.refimpl;
 
-import com.atlassian.plugin.webresource.WebResourceManager;
+import com.atlassian.plugin.webresource.UrlMode;
 
 import junit.framework.TestCase;
 
@@ -34,16 +34,16 @@ public class ParameterUtilsTest extends TestCase
 
     public void testBaseUrlWithAbsoluteUrlMode()
     {
-        assertEquals(BASE_URL, ParameterUtils.getBaseUrl(WebResourceManager.UrlMode.ABSOLUTE));
+        assertEquals(BASE_URL, ParameterUtils.getBaseUrl(UrlMode.ABSOLUTE));
     }
 
     public void testBaseUrlWithRelativeUrlMode()
     {
-        assertEquals(CONTEXT_PATH, ParameterUtils.getBaseUrl(WebResourceManager.UrlMode.RELATIVE));
+        assertEquals(CONTEXT_PATH, ParameterUtils.getBaseUrl(UrlMode.RELATIVE));
     }
 
     public void testBaseUrlWithAutoUrlMode()
     {
-        assertEquals(CONTEXT_PATH, ParameterUtils.getBaseUrl(WebResourceManager.UrlMode.AUTO));
+        assertEquals(CONTEXT_PATH, ParameterUtils.getBaseUrl(UrlMode.AUTO));
     }
 }

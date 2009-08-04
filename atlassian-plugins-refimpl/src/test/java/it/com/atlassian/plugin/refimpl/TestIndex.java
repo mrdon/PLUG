@@ -1,7 +1,7 @@
 package it.com.atlassian.plugin.refimpl;
 
 import com.atlassian.plugin.refimpl.ParameterUtils;
-import com.atlassian.plugin.webresource.WebResourceManager;
+import com.atlassian.plugin.webresource.UrlMode;
 
 import net.sourceforge.jwebunit.junit.WebTestCase;
 
@@ -13,7 +13,7 @@ public class TestIndex extends WebTestCase
     }
 
     public void setUp() throws Exception {
-        getTestContext().setBaseUrl(ParameterUtils.getBaseUrl(WebResourceManager.UrlMode.ABSOLUTE));
+        getTestContext().setBaseUrl(ParameterUtils.getBaseUrl(UrlMode.ABSOLUTE));
     }
 
     public void testIndex()

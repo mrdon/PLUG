@@ -34,7 +34,7 @@ public interface WebResourceManager
      * Similarly for other supported resources
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link #includeResources(Writer,
-     * UrlMode)} with a {@code urlMode} value of {@link WebResourceManager.UrlMode#AUTO}.
+     * UrlMode)} with a {@code urlMode} value of {@link UrlMode#AUTO}.
      *
      * @param writer The writer to write the links to
      * @deprecated As of 2.3.0, replaced by {@link #includeResources(Writer, UrlMode)}
@@ -75,7 +75,7 @@ public interface WebResourceManager
      * Similarly for other supported resources
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link #getRequiredResources(UrlMode)}
-     * with a {@code urlMode} value of {@link WebResourceManager.UrlMode#AUTO}.
+     * with a {@code urlMode} value of {@link UrlMode#AUTO}.
      *
      * @return the resource tags for all resources previously required
      * @see #includeResources(Writer)
@@ -111,7 +111,7 @@ public interface WebResourceManager
      * a template, use {@link #getResourceTags(String)}.
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link #requireResource(String, Writer,
-     * UrlMode)} with a {@code urlMode} value of {@link WebResourceManager.UrlMode#AUTO}.
+     * UrlMode)} with a {@code urlMode} value of {@link UrlMode#AUTO}.
      *
      * @param moduleCompleteKey The fully qualified plugin web resource module (eg <code>jira.webresources:scriptaculous</code>)
      * @param writer            The writer to write the resource tags to.
@@ -140,7 +140,7 @@ public interface WebResourceManager
      * {@link #requireResource(String, java.io.Writer)}.
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link #getResourceTags(String, UrlMode)}
-     * with a {@code urlMode} value of {@link WebResourceManager.UrlMode#AUTO}.
+     * with a {@code urlMode} value of {@link UrlMode#AUTO}.
      *
      * @param moduleCompleteKey The fully qualified plugin web resource module (eg <code>jira.webresources:scriptaculous</code>)
      * @return the resource tags for the specified resource
@@ -180,7 +180,7 @@ public interface WebResourceManager
      * %>/styles/global.css}
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link #getStaticResourcePrefix(UrlMode)}
-     * with a {@code urlMode} value of {@link WebResourceManager.UrlMode#AUTO}.
+     * with a {@code urlMode} value of {@link UrlMode#AUTO}.
      *
      * @return A prefix that can be used to prefix 'static system' resources.
      * @deprecated As of 2.3.0, replaced by {@link #getStaticResourcePrefix(UrlMode)}
@@ -226,7 +226,7 @@ public interface WebResourceManager
      * %>/styles/global.css}
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link #getStaticResourcePrefix(String,
-     * UrlMode)} with a {@code urlMode} value of {@link WebResourceManager.UrlMode#AUTO}.
+     * UrlMode)} with a {@code urlMode} value of {@link UrlMode#AUTO}.
      *
      * @param resourceCounter A number that represents the unique version of the resource you require.  Every time this
      *                        resource changes, you need to increment the resource counter
@@ -276,7 +276,7 @@ public interface WebResourceManager
      * webResourceManager.getStaticPluginResource(descriptor, resourceName) %>}
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link #getStaticPluginResource(String,
-     * String, UrlMode)} with a {@code urlMode} value of {@link WebResourceManager.UrlMode#AUTO}.
+     * String, UrlMode)} with a {@code urlMode} value of {@link UrlMode#AUTO}.
      *
      * @param moduleCompleteKey complete plugin module key
      * @param resourceName      the name of the resource as defined in the plugin manifest
@@ -324,7 +324,7 @@ public interface WebResourceManager
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link
      * #getStaticPluginResource(ModuleDescriptor, String, UrlMode)} with a {@code urlMode} value of {@link
-     * WebResourceManager.UrlMode#AUTO}.
+     * UrlMode#AUTO}.
      *
      * @param moduleDescriptor plugin module descriptor that contains the resource
      * @param resourceName     the name of the resource as defined in the plugin manifest
@@ -359,35 +359,6 @@ public interface WebResourceManager
      * @since 2.3.0
      */
     public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName, UrlMode urlMode);
-
-    /**
-     * A formatting mode for URLs. Used to specify to {@code WebResourceManager} methods whether to use absolute URLs,
-     * relative URLs, or allow the concrete implementation to decide
-     *
-     * @since 2.3.0
-     */
-    enum UrlMode
-    {
-        /**
-         * Absolute URL format, with URL scheme, hostname, port (if non-standard for the scheme), and context path.
-         */
-        ABSOLUTE,
-        /**
-         * Relative URL format, containing just the context path.
-         */
-        RELATIVE,
-        /**
-         * Unspecified URL format, indicating that either absolute or relative URLs are acceptable.   Implementations
-         * are free to determine which mode to use based on any criteria of their choosing. For example, an
-         * implementation may choose to return a relative URL if it detects that it is running in the context of an HTTP
-         * request, and an absolute URL if it detects that it is not.  Or it may choose to always return an absolute
-         * URL, or always return a relative URL.  Callers should only use {@code WebResourceManager.UrlMode#AUTO} when
-         * they are sure that either an absolute or a relative URL will be appropriate, and should not rely on any
-         * particular observed behavior regarding how this value is interpreted, which may vary across different
-         * implementations.
-         */
-        AUTO
-    }
 
 
     // Deprecated methods

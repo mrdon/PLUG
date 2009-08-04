@@ -44,8 +44,8 @@ public interface WebResourceIntegration
      * value is interpreted, which may vary across different implementations.
      * <p/>
      * In general, the behavior of this method should be equivalent to calling {@link
-     * #getBaseUrl(com.atlassian.plugin.webresource.WebResourceManager.UrlMode)} with a {@code urlMode} value of {@link
-     * WebResourceManager.UrlMode#AUTO}.
+     * #getBaseUrl(UrlMode)} with a {@code urlMode} value of {@link
+     * UrlMode#AUTO}.
      *
      * @return the string value of the base URL of this application
      */
@@ -55,13 +55,13 @@ public interface WebResourceIntegration
      * Returns the base URL for this application in either relative or absolute format, depending on the value of {@code
      * urlMode}.
      * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#ABSOLUTE}}, this method returns an absolute URL, with URL
+     * If {@code urlMode == {@link UrlMode#ABSOLUTE}}, this method returns an absolute URL, with URL
      * scheme, hostname, port (if non-standard for the scheme), and context path.
      * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#RELATIVE}}, this method returns a relative URL containing
+     * If {@code urlMode == {@link UrlMode#RELATIVE}}, this method returns a relative URL containing
      * just the context path.
      * <p/>
-     * If {@code urlMode == {@link WebResourceManager.UrlMode#AUTO}}, this method may return either an absolute or a
+     * If {@code urlMode == {@link UrlMode#AUTO}}, this method may return either an absolute or a
      * relative URL.  Implementations are free to determine which mode to use based on any criteria of their choosing.
      * For example, an implementation may choose to return a relative URL if it detects that it is running in the
      * context of an HTTP request, and an absolute URL if it detects that it is not.  Or it may choose to always return
@@ -75,5 +75,5 @@ public interface WebResourceIntegration
      * @return the string value of the base URL of this application
      * @since 2.3.0
      */
-    String getBaseUrl(WebResourceManager.UrlMode urlMode);
+    String getBaseUrl(UrlMode urlMode);
 }

@@ -39,10 +39,9 @@ public class TestWebResourceManagerImpl extends TestCase
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, (WebResourceIntegration) mockWebResourceIntegration.proxy());
 
         mockWebResourceIntegration.matchAndReturn("getBaseUrl", BASEURL);
-        mockWebResourceIntegration.matchAndReturn("getBaseUrl", C.args(C.eq(WebResourceManager.UrlMode.ABSOLUTE)),
-                                                  BASEURL);
-        mockWebResourceIntegration.matchAndReturn("getBaseUrl", C.args(C.eq(WebResourceManager.UrlMode.RELATIVE)), "");
-        mockWebResourceIntegration.matchAndReturn("getBaseUrl", C.args(C.eq(WebResourceManager.UrlMode.AUTO)), "");
+        mockWebResourceIntegration.matchAndReturn("getBaseUrl", C.args(C.eq(UrlMode.ABSOLUTE)), BASEURL);
+        mockWebResourceIntegration.matchAndReturn("getBaseUrl", C.args(C.eq(UrlMode.RELATIVE)), "");
+        mockWebResourceIntegration.matchAndReturn("getBaseUrl", C.args(C.eq(UrlMode.AUTO)), "");
         mockWebResourceIntegration.matchAndReturn("getSystemBuildNumber", SYSTEM_BUILD_NUMBER);
         mockWebResourceIntegration.matchAndReturn("getSystemCounter", SYSTEM_COUNTER);
     }
@@ -302,20 +301,20 @@ public class TestWebResourceManagerImpl extends TestCase
 
     public void testRequireResourceAndResourceTagMethodsWithAbsoluteUrlMode() throws Exception
     {
-        testRequireResourceAndResourceTagMethods(WebResourceManager.UrlMode.ABSOLUTE, true);
+        testRequireResourceAndResourceTagMethods(UrlMode.ABSOLUTE, true);
     }
 
     public void testRequireResourceAndResourceTagMethodsWithRelativeUrlMode() throws Exception
     {
-        testRequireResourceAndResourceTagMethods(WebResourceManager.UrlMode.RELATIVE, false);
+        testRequireResourceAndResourceTagMethods(UrlMode.RELATIVE, false);
     }
 
     public void testRequireResourceAndResourceTagMethodsWithAutoUrlMode() throws Exception
     {
-        testRequireResourceAndResourceTagMethods(WebResourceManager.UrlMode.AUTO, false);
+        testRequireResourceAndResourceTagMethods(UrlMode.AUTO, false);
     }
 
-    private void testRequireResourceAndResourceTagMethods(WebResourceManager.UrlMode urlMode, boolean baseUrlExpected)
+    private void testRequireResourceAndResourceTagMethods(UrlMode urlMode, boolean baseUrlExpected)
         throws Exception
     {
         final String completeModuleKey = "test.atlassian:cool-resources";
@@ -377,20 +376,20 @@ public class TestWebResourceManagerImpl extends TestCase
 
     public void testRequireResourceWithCacheParameterAndAbsoluteUrlMode() throws Exception
     {
-        testRequireResourceWithCacheParameter(WebResourceManager.UrlMode.ABSOLUTE, true);
+        testRequireResourceWithCacheParameter(UrlMode.ABSOLUTE, true);
     }
 
     public void testRequireResourceWithCacheParameterAndRelativeUrlMode() throws Exception
     {
-        testRequireResourceWithCacheParameter(WebResourceManager.UrlMode.RELATIVE, false);
+        testRequireResourceWithCacheParameter(UrlMode.RELATIVE, false);
     }
 
     public void testRequireResourceWithCacheParameterAndAutoUrlMode() throws Exception
     {
-        testRequireResourceWithCacheParameter(WebResourceManager.UrlMode.AUTO, false);
+        testRequireResourceWithCacheParameter(UrlMode.AUTO, false);
     }
 
-    private void testRequireResourceWithCacheParameter(WebResourceManager.UrlMode urlMode, boolean baseUrlExpected)
+    private void testRequireResourceWithCacheParameter(UrlMode urlMode, boolean baseUrlExpected)
         throws Exception
     {
         final String completeModuleKey = "test.atlassian:no-cache-resources";
@@ -425,20 +424,20 @@ public class TestWebResourceManagerImpl extends TestCase
 
     public void testGetStaticResourcePrefixWithAbsoluteUrlMode()
     {
-        testGetStaticResourcePrefix(WebResourceManager.UrlMode.ABSOLUTE, true);
+        testGetStaticResourcePrefix(UrlMode.ABSOLUTE, true);
     }
 
     public void testGetStaticResourcePrefixWithRelativeUrlMode()
     {
-        testGetStaticResourcePrefix(WebResourceManager.UrlMode.RELATIVE, false);
+        testGetStaticResourcePrefix(UrlMode.RELATIVE, false);
     }
 
     public void testGetStaticResourcePrefixWithAutoUrlMode()
     {
-        testGetStaticResourcePrefix(WebResourceManager.UrlMode.AUTO, false);
+        testGetStaticResourcePrefix(UrlMode.AUTO, false);
     }
 
-    private void testGetStaticResourcePrefix(WebResourceManager.UrlMode urlMode, boolean baseUrlExpected)
+    private void testGetStaticResourcePrefix(UrlMode urlMode, boolean baseUrlExpected)
     {
         final String expectedPrefix = setupGetStaticResourcePrefix(baseUrlExpected);
         assertEquals(expectedPrefix, webResourceManager.getStaticResourcePrefix(urlMode));
@@ -462,20 +461,20 @@ public class TestWebResourceManagerImpl extends TestCase
 
     public void testGetStaticResourcePrefixWithCounterAndAbsoluteUrlMode()
     {
-        testGetStaticResourcePrefixWithCounter(WebResourceManager.UrlMode.ABSOLUTE, true);
+        testGetStaticResourcePrefixWithCounter(UrlMode.ABSOLUTE, true);
     }
 
     public void testGetStaticResourcePrefixWithCounterAndRelativeUrlMode()
     {
-        testGetStaticResourcePrefixWithCounter(WebResourceManager.UrlMode.RELATIVE, false);
+        testGetStaticResourcePrefixWithCounter(UrlMode.RELATIVE, false);
     }
 
     public void testGetStaticResourcePrefixWithCounterAndAutoUrlMode()
     {
-        testGetStaticResourcePrefixWithCounter(WebResourceManager.UrlMode.AUTO, false);
+        testGetStaticResourcePrefixWithCounter(UrlMode.AUTO, false);
     }
 
-    private void testGetStaticResourcePrefixWithCounter(WebResourceManager.UrlMode urlMode, boolean baseUrlExpected)
+    private void testGetStaticResourcePrefixWithCounter(UrlMode urlMode, boolean baseUrlExpected)
     {
         final String resourceCounter = "456";
         final String expectedPrefix = setupGetStaticResourcePrefixWithCounter(baseUrlExpected, resourceCounter);
@@ -504,20 +503,20 @@ public class TestWebResourceManagerImpl extends TestCase
 
     public void testGetStaticPluginResourcePrefixWithAbsoluteUrlMode()
     {
-        testGetStaticPluginResourcePrefix(WebResourceManager.UrlMode.ABSOLUTE, true);
+        testGetStaticPluginResourcePrefix(UrlMode.ABSOLUTE, true);
     }
 
     public void testGetStaticPluginResourcePrefixWithRelativeUrlMode()
     {
-        testGetStaticPluginResourcePrefix(WebResourceManager.UrlMode.RELATIVE, false);
+        testGetStaticPluginResourcePrefix(UrlMode.RELATIVE, false);
     }
 
     public void testGetStaticPluginResourcePrefixWithAutoUrlMode()
     {
-        testGetStaticPluginResourcePrefix(WebResourceManager.UrlMode.AUTO, false);
+        testGetStaticPluginResourcePrefix(UrlMode.AUTO, false);
     }
 
-    private void testGetStaticPluginResourcePrefix(WebResourceManager.UrlMode urlMode, boolean baseUrlExpected)
+    private void testGetStaticPluginResourcePrefix(UrlMode urlMode, boolean baseUrlExpected)
     {
         final String moduleKey = "confluence.extra.animal:animal";
         final String resourceName = "foo.js";
