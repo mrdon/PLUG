@@ -14,6 +14,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.HashMap;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -120,29 +121,70 @@ public class WebResourceManagerImpl implements WebResourceManager
         orderedResourceKeys.add(moduleKey);
     }
 
+    /**
+     * @see #includeResources(Writer, UrlMode, WebResourceType)
+     */
     public void includeResources(Writer writer)
     {
         includeResources(writer, UrlMode.AUTO);
     }
 
+    /**
+     * @see #includeResources(Writer, UrlMode, WebResourceType)
+     */
     public void includeResources(Writer writer, UrlMode urlMode)
     {
-        includeResources(writer, true, urlMode);
+        includeResources(writer, true, urlMode, WebResourceType.ALL);
     }
 
+    /**
+     * Writes out the resource tags to the previously required resources called via requireResource methods for the
+     * specified url mode and resource type. Note that this method will clear the list of previously required resources.
+     *
+     * @param writer the writer to write the links to
+     * @param urlMode the url mode to write resource url links in
+     * @param resourceType the resource type to
+     * @since 2.4
+     */
+    public void includeResources(Writer writer, UrlMode urlMode, WebResourceType resourceType)
+    {
+        includeResources(writer, true, urlMode, resourceType);
+    }
+
+    /**
+     * @see #getRequiredResources(UrlMode, WebResourceType)
+     */
     public String getRequiredResources()
     {
         return getRequiredResources(UrlMode.AUTO);
     }
 
+    /**
+     * @see #getRequiredResources(UrlMode, WebResourceType)
+     */
     public String getRequiredResources(UrlMode urlMode)
     {
+        return getRequiredResources(urlMode, WebResourceType.ALL);
+    }
+
+    /**
+     * Returns a String of the resources tags to the previously required resources called via requireResource methods
+     * for the specified url mode and resource type. Note that this method will NOT clear the list of previously
+     * required resources.
+     *
+     * @param urlMode the url mode to write out the resource tags
+     * @param webResourceType the web resource type to get resources for
+     * @return a String of the resource tags
+     * @since 2.4
+     */
+    public String getRequiredResources(UrlMode urlMode, WebResourceType webResourceType)
+    {
         StringWriter writer = new StringWriter();
-        includeResources(writer, false, urlMode);
+        includeResources(writer, false, urlMode, webResourceType);
         return writer.toString();
     }
 
-    private void includeResources(Writer writer, boolean clearResources, UrlMode urlMode)
+    private void includeResources(Writer writer, boolean clearResources, UrlMode urlMode, WebResourceType resourceType)
     {
         LinkedHashSet<String> webResourceNames = getWebResourceNames();
         if (webResourceNames == null || webResourceNames.isEmpty())
@@ -151,14 +193,28 @@ public class WebResourceManagerImpl implements WebResourceManager
             return;
         }
 
-        for (Object webResourceName : webResourceNames)
-        {
-            String resourceName = (String) webResourceName;
-            writeResourceTag(resourceName, writer, urlMode);
-        }
-        if (clearResources)
-        {
+        includeResources(writer, webResourceNames, urlMode, resourceType);
+
+        if(clearResources)
             webResourceNames.clear();
+    }
+
+    private void includeResources(Writer writer, LinkedHashSet<String> webResourceNames, UrlMode urlMode, WebResourceType resourceType)
+    {
+        Map<WebResourceType, Writer> writersForTypes = new HashMap<WebResourceType, Writer>();
+        for (WebResourceFormatter formatter : webResourceFormatters)
+        {
+            writersForTypes.put(formatter.getType(), new StringWriter());
+        }
+
+        for (String resourceName : webResourceNames)
+        {
+            writeResourceTag(resourceName, writersForTypes, urlMode, resourceType, writer);
+        }
+        // write tags out in the order of formatters i.e. css then js
+        for (WebResourceFormatter formatter : webResourceFormatters)
+        {
+            writeContentAndSwallowErrors(writersForTypes.get(formatter.getType()).toString(), writer);
         }
     }
 
@@ -171,20 +227,17 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         final LinkedHashSet<String> resourcesWithDeps = new LinkedHashSet<String>();
         addResourceWithDependencies(moduleCompleteKey, resourcesWithDeps, new Stack<String>());
-
-        for (final Object resource : resourcesWithDeps)
-        {
-            writeResourceTag((String) resource, writer, urlMode);
-        }
+        includeResources(writer, resourcesWithDeps, urlMode, WebResourceType.ALL);
     }
 
-    private void writeResourceTag(final String moduleCompleteKey, final Writer writer, UrlMode urlMode)
+    private void writeResourceTag(final String moduleCompleteKey, final Map<WebResourceType, Writer> writers,
+                                    final UrlMode urlMode, final WebResourceType type, final Writer errorHandler)
     {
         final List<PluginResource> resources = pluginResourceLocator.getPluginResources(moduleCompleteKey);
 
         if (resources == null)
         {
-            writeContentAndSwallowErrors("<!-- Error loading resource \"" + moduleCompleteKey + "\".  Resource not found -->\n", writer);
+            writeContentAndSwallowErrors("<!-- Error loading resource \"" + moduleCompleteKey + "\".  Resource not found -->\n", errorHandler);
             return;
         }
 
@@ -193,21 +246,24 @@ public class WebResourceManagerImpl implements WebResourceManager
             final WebResourceFormatter formatter = getWebResourceFormatter(resource.getResourceName());
             if (formatter == null)
             {
-                writeContentAndSwallowErrors("<!-- Error loading resource \"" + moduleCompleteKey + "\".  Resource formatter not found -->\n", writer);
+                writeContentAndSwallowErrors("<!-- Error loading resource \"" + moduleCompleteKey + "\".  Resource formatter not found -->\n", errorHandler);
                 continue;
             }
 
-            String url = resource.getUrl();
-            if (resource.isCacheSupported())
+            if (type.equals(WebResourceType.ALL) || type.equals(formatter.getType()))
             {
-                final Plugin plugin = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resource.getModuleCompleteKey()).getPlugin();
-                url = getStaticResourcePrefix(plugin.getPluginInformation().getVersion(), urlMode) + url;
+                String url = resource.getUrl();
+                if (resource.isCacheSupported())
+                {
+                    final Plugin plugin = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resource.getModuleCompleteKey()).getPlugin();
+                    url = getStaticResourcePrefix(plugin.getPluginInformation().getVersion(), urlMode) + url;
+                }
+                else
+                {
+                    url = webResourceIntegration.getBaseUrl(urlMode) + url;
+                }
+                writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writers.get(formatter.getType()));
             }
-            else
-            {
-                url = webResourceIntegration.getBaseUrl(urlMode) + url;
-            }
-            writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writer);
         }
     }
 

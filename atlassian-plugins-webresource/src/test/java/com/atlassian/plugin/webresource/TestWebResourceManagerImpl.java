@@ -542,4 +542,101 @@ public class TestWebResourceManagerImpl extends TestCase
             "/" + moduleKey + "/" + resourceName;
     }
 
+
+    public void testGetRequiredResourcesWithType() throws Exception
+    {
+        final String moduleKey = "cool-resources";
+        final String completeModuleKey = "test.atlassian:" + moduleKey;
+
+        final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.css", "cool.js", "more-cool.css");
+
+        final String pluginVersion = "1";
+        final Mock mockPlugin = new Mock(Plugin.class);
+        PluginInformation pluginInfo = new PluginInformation();
+        pluginInfo.setVersion(pluginVersion);
+        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
+
+        Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
+            TestUtils.createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(), resourceDescriptors1));
+
+        // test includeResources(writer, type) method
+        webResourceManager.requireResource(completeModuleKey);
+
+        String staticBase = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX  + "/" + SYSTEM_BUILD_NUMBER
+            + "/" + SYSTEM_COUNTER + "/" + pluginVersion + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
+
+        String cssRef = "href=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".css";
+        String jsRef = "src=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".js";
+
+        // CSS
+        String requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE, WebResourceType.CSS);
+        assertTrue(requiredResourceResult.contains(cssRef));
+        assertFalse(requiredResourceResult.contains(jsRef));
+
+        // JS
+        requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE, WebResourceType.JAVASCRIPT);
+        assertFalse(requiredResourceResult.contains(cssRef));
+        assertTrue(requiredResourceResult.contains(jsRef));
+
+        // BOTH
+        requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE);
+        assertTrue(requiredResourceResult.contains(cssRef));
+        assertTrue(requiredResourceResult.contains(jsRef));
+    }
+
+    public void testGetRequiredResourcesOrdersByType() throws Exception
+    {
+        final String moduleKey1 = "cool-resources";
+        final String moduleKey2 = "hot-resources";
+        final String completeModuleKey1 = "test.atlassian:" + moduleKey1;
+        final String completeModuleKey2 = "test.atlassian:" + moduleKey2;
+
+        final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.js", "cool.css", "more-cool.css");
+        final List<ResourceDescriptor> resourceDescriptors2 = TestUtils.createResourceDescriptors("hot.js", "hot.css", "more-hot.css");
+
+        final String pluginVersion = "1";
+        final Mock mockPlugin = new Mock(Plugin.class);
+        PluginInformation pluginInfo = new PluginInformation();
+        pluginInfo.setVersion(pluginVersion);
+        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
+
+        Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey1)),
+            TestUtils.createWebResourceModuleDescriptor(completeModuleKey1, (Plugin) mockPlugin.proxy(), resourceDescriptors1));
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey2)),
+                    TestUtils.createWebResourceModuleDescriptor(completeModuleKey2, (Plugin) mockPlugin.proxy(), resourceDescriptors2));
+
+        // test includeResources(writer, type) method
+        webResourceManager.requireResource(completeModuleKey1);
+        webResourceManager.requireResource(completeModuleKey2);
+
+        String staticBase = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX  + "/" + SYSTEM_BUILD_NUMBER
+            + "/" + SYSTEM_COUNTER + "/" + pluginVersion + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
+
+        String cssRef1 = "href=\"" + staticBase + "/" + completeModuleKey1 + "/" + completeModuleKey1 + ".css";
+        String cssRef2 = "href=\"" + staticBase + "/" + completeModuleKey2 + "/" + completeModuleKey2 + ".css";
+        String jsRef1 = "src=\"" + staticBase + "/" + completeModuleKey1 + "/" + completeModuleKey1 + ".js";
+        String jsRef2 = "src=\"" + staticBase + "/" + completeModuleKey2 + "/" + completeModuleKey2 + ".js";
+
+        String requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE);
+
+        assertTrue(requiredResourceResult.contains(cssRef1));
+        assertTrue(requiredResourceResult.contains(cssRef2));
+        assertTrue(requiredResourceResult.contains(jsRef1));
+        assertTrue(requiredResourceResult.contains(jsRef2));
+
+        int cssRef1Index = requiredResourceResult.indexOf(cssRef1);
+        int cssRef2Index = requiredResourceResult.indexOf(cssRef2);
+        int jsRef1Index = requiredResourceResult.indexOf(jsRef1);
+        int jsRef2Index = requiredResourceResult.indexOf(jsRef2);
+
+        assertTrue(cssRef1Index < jsRef1Index);
+        assertTrue(cssRef2Index < jsRef2Index);
+        assertTrue(cssRef2Index < jsRef1Index);
+    }
 }

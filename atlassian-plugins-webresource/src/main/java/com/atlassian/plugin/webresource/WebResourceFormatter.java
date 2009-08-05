@@ -25,4 +25,13 @@ interface WebResourceFormatter
      * @return a formatted resource {@link String}.
      */
     String formatResource(String url, Map<String, String> parameters);
+
+    /**
+     * Returns a {@link WebResourceType} of the resources supported by this formatter.
+     *
+     * @return a web resource type
+     * @since 2.4
+     */
+    WebResourceType getType();
+
 }

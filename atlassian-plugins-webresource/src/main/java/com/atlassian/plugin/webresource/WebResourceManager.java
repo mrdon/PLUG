@@ -43,25 +43,38 @@ public interface WebResourceManager
     public void includeResources(Writer writer);
 
     /**
-     * Writes out the resource tags to the previously required resources called via {@link #requireResource(String)}. If
-     * you need it as a String to embed the tags in a template, use {@link #getRequiredResources(UrlMode)}.
+     * This is the equivalent of calling {@link #includeResources(Writer, UrlMode, WebResourceType)} with
+     * {@link WebResourceType.ALL}.
+     *
+     * @see #includeResources(Writer, UrlMode, WebResourceType)
+     * @since 2.3.0
+     */
+    public void includeResources(Writer writer, UrlMode urlMode);
+
+    /**
+     * Writes out the resource tags to the previously required resources called via {@link #requireResource(String)} for
+     * the specified resource type. If you need it as a String to embed the tags in a template, use
+     * {@link #getRequiredResources(UrlMode)}.
      * <p/>
-     * Example - if a 'javascript' resource has been required earlier with requireResource(), this method should
-     * output:
+     * Example - if a 'javascript' resource has been required earlier with requireResource() and this method is called
+     *  with {@link WebResourceType.JAVASCRIPT}, it should output:
      * <pre>
      *  {@literal <script type="text/javascript" src="$contextPath/scripts/javascript.js"></script>}
      * </pre>
-     * Similarly for other supported resources
+     * Similarly for other supported resources.
      * <p/>
      * This method formats resource URLs in either relative or absolute format, depending on the value of {@code
      * urlMode}.  See {@link UrlMode} for details of the different options for URL format.
+     * <p/>
+     * Use {@link WebResourceType.ALL} to get all web resource types. See {@link WebResourceType} for other supported types.
      *
      * @param writer  The writer to write the links to
      * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
      *                decide
-     * @since 2.3.0
+     * @param webResourceType the web resource type to include resources for
+     * @since 2.4
      */
-    public void includeResources(Writer writer, UrlMode urlMode);
+    public void includeResources(Writer writer, UrlMode urlMode, WebResourceType webResourceType);
 
     /**
      * Returns the resource tags for the previously required resources called via {@link #requireResource(String)}. If
@@ -85,26 +98,41 @@ public interface WebResourceManager
     public String getRequiredResources();
 
     /**
-     * Returns the resource tags for the previously required resources called via {@link #requireResource(String)}. If
-     * you are outputting the value to a {@link Writer}, use {@link #includeResources(Writer, UrlMode)}.
+     * This is the equivalent of calling {@link #getRequiredResources(UrlMode, WebResourceType)} with the given url
+     * mode and {@link WebResourceType.ALL}.
+     *
+     * @return the resource tags for all resources previously required
+     * @see #includeResources(Writer, UrlMode)
+     * @see #getRequiredResources(UrlMode, WebResourceType)
+     * @since 2.4
+     */
+    public String getRequiredResources(UrlMode urlMode);
+
+    /**
+     * Returns the resource tags for the previously required resources called via {@link #requireResource(String)} for
+     * the specified web resource type. If you are outputting the value to a {@link Writer}, use
+     * {@link #includeResources(Writer, UrlMode)}.
      * <p/>
-     * Example - if a 'javascript' resource has been required earlier with requireResource(), this method should
-     * return:
+     * Example - if a 'javascript' resource has been required earlier with requireResource() and this method is called
+     *  with {@link WebResourceType.JAVASCRIPT}, it should return:
      * <pre>
      *  {@literal <script type="text/javascript" src="$contextPath/scripts/javascript.js"></script>}
      * </pre>
-     * Similarly for other supported resources
+     * Similarly for other supported resources.
      * <p/>
      * This method formats resource URLs in either relative or absolute format, depending on the value of {@code
      * urlMode}.  See {@link UrlMode} for details of the different options for URL format.
+     * <p/>
+     * Use {@link WebResourceType.ALL} to get all web resource types. See {@link WebResourceType} for other supported types.
      *
      * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
      *                decide
+     * @param webResourceType the web resource type to get resources for
      * @return the resource tags for all resources previously required
-     * @see #includeResources(Writer, UrlMode)
-     * @since 2.3.0
+     * @see #includeResources(Writer, UrlMode, WebResourceType)
+     * @since 2.3.1
      */
-    public String getRequiredResources(UrlMode urlMode);
+    public String getRequiredResources(UrlMode urlMode, WebResourceType webResourceType);
 
     /**
      * Writes the resource tags of the specified resource to the writer. If you need it as a String to embed the tags in
