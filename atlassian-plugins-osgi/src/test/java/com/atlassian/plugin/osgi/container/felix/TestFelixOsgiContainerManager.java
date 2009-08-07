@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.container.felix;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
+import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.test.PluginTestUtils;
 import junit.framework.TestCase;
@@ -51,6 +52,44 @@ public class TestFelixOsgiContainerManager extends TestCase
         felix = null;
         tmpdir = null;
         super.tearDown();
+    }
+
+    public void testDetectXercesOverride()
+    {
+        felix.detectXercesOverride("foo.bar,baz.jim");
+        felix.detectXercesOverride("foo.bar,org.apache.xerces.util;version=\"1.0\",baz.jim");
+        felix.detectXercesOverride("foo.bar,org.apache.xerces.util;version=\"1.0\"");
+
+        try
+        {
+            felix.detectXercesOverride("foo.bar,org.apache.xerces.util");
+            fail("Should fail validation");
+        }
+        catch (OsgiContainerException ex)
+        {
+            // should fail
+        }
+
+        try
+        {
+            felix.detectXercesOverride("org.apache.xerces.util");
+            fail("Should fail validation");
+        }
+        catch (OsgiContainerException ex)
+        {
+            // should fail
+        }
+
+        try
+        {
+            felix.detectXercesOverride("org.apache.xerces.util,bar.baz");
+            fail("Should fail validation");
+        }
+        catch (OsgiContainerException ex)
+        {
+            // should fail
+        }
+
     }
 
     public void testDeleteDirectory() throws IOException
