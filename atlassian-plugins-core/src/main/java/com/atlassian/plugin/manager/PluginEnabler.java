@@ -105,7 +105,7 @@ class PluginEnabler
 
                 public String getWaitMessage()
                 {
-                    return "Plugins that have yet to enabled: " + pluginsInEnablingState;
+                    return "Plugins that have yet to be enabled: " + pluginsInEnablingState;
                 }
             });
 
@@ -116,7 +116,7 @@ class PluginEnabler
                 for (final Plugin plugin : pluginsInEnablingState)
                 {
                     sb.append(plugin.getKey()).append(',');
-                    pluginController.disablePlugin(plugin.getKey());
+                    pluginController.disablePluginTemporarily(plugin.getKey());
                 }
                 sb.deleteCharAt(sb.length() - 1);
                 log.error("Unable to start the following plugins: " + sb.toString());

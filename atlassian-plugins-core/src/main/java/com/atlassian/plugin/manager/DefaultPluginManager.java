@@ -981,6 +981,16 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     public void disablePlugin(final String key)
     {
+        disablePluginInternal(key, true);
+    }
+
+    public void disablePluginTemporarily(final String key)
+    {
+        disablePluginInternal(key, false);
+    }
+
+    protected void disablePluginInternal(final String key, final boolean persistDisabledState)
+    {
         if (key == null)
         {
             throw new IllegalArgumentException("You must specify a plugin key to disable.");
@@ -999,7 +1009,10 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         final Plugin plugin = plugins.get(key);
 
         notifyPluginDisabled(plugin);
-        disablePluginState(plugin, getStore());
+        if (persistDisabledState)
+        {
+            disablePluginState(plugin, getStore());
+        }
     }
 
     protected void disablePluginState(final Plugin plugin, final PluginPersistentStateStore stateStore)
