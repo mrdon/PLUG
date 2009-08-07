@@ -7,8 +7,22 @@ import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 
-class CssWebResourceFormatter extends AbstractWebResourceFormatter
+public class CssWebResource extends AbstractWebResourceFormatter
 {
+    static final CssWebResource INSTANCE = new CssWebResource();
+
+    /**
+     * An instance of a WebResourceFormatter that formats CSS web resources
+     * @since 2.4
+     */
+    public static final WebResourceFormatter FORMATTER_INSTANCE = INSTANCE;
+
+    /**
+     * An instance of a WebResourceFilter that filters CSS web resources.
+     * @since 2.4
+     */
+    public static final WebResourceFilter FILTER_INSTANCE = INSTANCE;
+
     private static final String CSS_EXTENSION = ".css";
     private static final String MEDIA_PARAM = "media";
     private static final String IEONLY_PARAM = "ieonly";
@@ -45,11 +59,6 @@ class CssWebResourceFormatter extends AbstractWebResourceFormatter
         }
 
         return buffer.toString();
-    }
-
-    public WebResourceType getType()
-    {
-        return WebResourceType.CSS;
     }
 
     protected List<String> getAttributeParameters()

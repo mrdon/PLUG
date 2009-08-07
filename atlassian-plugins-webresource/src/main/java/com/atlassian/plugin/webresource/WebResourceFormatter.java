@@ -8,16 +8,8 @@ import java.util.Map;
  * The {@link #matches(String)} method should be called before calling {@link #formatResource(String, Map)},
  * to ensure correct formatting of the resource.
  */
-interface WebResourceFormatter
+interface WebResourceFormatter extends WebResourceFilter
 {
-    /**
-     * Returns a boolean indicating whether the WebResourceFormatter can support
-     * formatting of the resource.
-     * @param name name of the resource
-     * @return true if the formatter can format the resource, false otherwise.
-     */
-    boolean matches(String name);
-
     /**
      * Returns a formatted resource string.
      * @param url url path to the resource
@@ -25,13 +17,4 @@ interface WebResourceFormatter
      * @return a formatted resource {@link String}.
      */
     String formatResource(String url, Map<String, String> parameters);
-
-    /**
-     * Returns a {@link WebResourceType} of the resources supported by this formatter.
-     *
-     * @return a web resource type
-     * @since 2.4
-     */
-    WebResourceType getType();
-
 }

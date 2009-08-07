@@ -43,10 +43,10 @@ public interface WebResourceManager
     public void includeResources(Writer writer);
 
     /**
-     * This is the equivalent of calling {@link #includeResources(Writer, UrlMode, WebResourceType)} with
-     * {@link WebResourceType.ALL}.
+     * This is the equivalent of calling {@link #includeResources(Writer, UrlMode, WebResourceFilter)} with
+     * the given url mode and a default web resource filter that is dependent on the implementation.
      *
-     * @see #includeResources(Writer, UrlMode, WebResourceType)
+     * @see #includeResources(Writer, UrlMode, WebResourceFilter)
      * @since 2.3.0
      */
     public void includeResources(Writer writer, UrlMode urlMode);
@@ -57,7 +57,7 @@ public interface WebResourceManager
      * {@link #getRequiredResources(UrlMode)}.
      * <p/>
      * Example - if a 'javascript' resource has been required earlier with requireResource() and this method is called
-     *  with {@link WebResourceType.JAVASCRIPT}, it should output:
+     *  with {@link JavascriptWebResource.FILTER_INSTANCE}, it should output:
      * <pre>
      *  {@literal <script type="text/javascript" src="$contextPath/scripts/javascript.js"></script>}
      * </pre>
@@ -65,16 +65,14 @@ public interface WebResourceManager
      * <p/>
      * This method formats resource URLs in either relative or absolute format, depending on the value of {@code
      * urlMode}.  See {@link UrlMode} for details of the different options for URL format.
-     * <p/>
-     * Use {@link WebResourceType.ALL} to get all web resource types. See {@link WebResourceType} for other supported types.
      *
-     * @param writer  The writer to write the links to
+     * @param writer  the writer to write the links to
      * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
      *                decide
-     * @param webResourceType the web resource type to include resources for
+     * @param webResourceFilter the web resource filter to filter resources on
      * @since 2.4
      */
-    public void includeResources(Writer writer, UrlMode urlMode, WebResourceType webResourceType);
+    public void includeResources(Writer writer, UrlMode urlMode, WebResourceFilter webResourceFilter);
 
     /**
      * Returns the resource tags for the previously required resources called via {@link #requireResource(String)}. If
@@ -98,23 +96,23 @@ public interface WebResourceManager
     public String getRequiredResources();
 
     /**
-     * This is the equivalent of calling {@link #getRequiredResources(UrlMode, WebResourceType)} with the given url
-     * mode and {@link WebResourceType.ALL}.
+     * This is the equivalent of calling {@link #getRequiredResources(UrlMode, WebResourceFilter)} with the given url
+     * mode and a default filter that is dependent on the implementation.
      *
      * @return the resource tags for all resources previously required
      * @see #includeResources(Writer, UrlMode)
-     * @see #getRequiredResources(UrlMode, WebResourceType)
-     * @since 2.4
+     * @see #getRequiredResources(UrlMode, WebResourceFilter)
+     * @since 2.3.1
      */
     public String getRequiredResources(UrlMode urlMode);
 
     /**
-     * Returns the resource tags for the previously required resources called via {@link #requireResource(String)} for
-     * the specified web resource type. If you are outputting the value to a {@link Writer}, use
+     * Returns the resource tags for the previously required resources called via {@link #requireResource(String)} that
+     * match the specified web resource filter. If you are outputting the value to a {@link Writer}, use
      * {@link #includeResources(Writer, UrlMode)}.
      * <p/>
      * Example - if a 'javascript' resource has been required earlier with requireResource() and this method is called
-     *  with {@link WebResourceType.JAVASCRIPT}, it should return:
+     *  with {@link JavascriptWebResource.FILTER_INSTANCE}, it should return:
      * <pre>
      *  {@literal <script type="text/javascript" src="$contextPath/scripts/javascript.js"></script>}
      * </pre>
@@ -123,16 +121,15 @@ public interface WebResourceManager
      * This method formats resource URLs in either relative or absolute format, depending on the value of {@code
      * urlMode}.  See {@link UrlMode} for details of the different options for URL format.
      * <p/>
-     * Use {@link WebResourceType.ALL} to get all web resource types. See {@link WebResourceType} for other supported types.
      *
      * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
      *                decide
-     * @param webResourceType the web resource type to get resources for
+     * @param webResourceFilter the web resource filter to filter resources on
      * @return the resource tags for all resources previously required
-     * @see #includeResources(Writer, UrlMode, WebResourceType)
-     * @since 2.3.1
+     * @see #includeResources(Writer, UrlMode, WebResourceFilter)
+     * @since 2.4
      */
-    public String getRequiredResources(UrlMode urlMode, WebResourceType webResourceType);
+    public String getRequiredResources(UrlMode urlMode, WebResourceFilter webResourceFilter);
 
     /**
      * Writes the resource tags of the specified resource to the writer. If you need it as a String to embed the tags in
