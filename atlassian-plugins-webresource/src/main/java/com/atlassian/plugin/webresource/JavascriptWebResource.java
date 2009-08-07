@@ -14,13 +14,13 @@ public class JavascriptWebResource extends AbstractWebResourceFormatter
      * An instance of a WebResourceFormatter that formats Javascript web resources
      * @since 2.4
      */
-    public static final WebResourceFormatter FORMATTER_INSTANCE = INSTANCE;
+    public static final WebResourceFormatter FORMATTER = INSTANCE;
 
     /**
      * An instance of a WebResourceFilter that filters Javascript web resources.
      * @since 2.4
      */
-    public static final WebResourceFilter FILTER_INSTANCE = INSTANCE;
+    public static final WebResourceFilter FILTER = INSTANCE;
 
     private static final String JAVA_SCRIPT_EXTENSION = ".js";
     private static final List<String> HANDLED_PARAMETERS = Arrays.asList("charset");

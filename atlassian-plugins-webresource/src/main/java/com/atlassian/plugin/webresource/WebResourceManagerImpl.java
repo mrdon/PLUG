@@ -42,8 +42,8 @@ public class WebResourceManagerImpl implements WebResourceManager
     protected final WebResourceIntegration webResourceIntegration;
     protected final PluginResourceLocator pluginResourceLocator;
     protected static final List<WebResourceFormatter> webResourceFormatters = Arrays.asList(
-        CssWebResource.FORMATTER_INSTANCE,
-        JavascriptWebResource.FORMATTER_INSTANCE
+        CssWebResource.FORMATTER,
+        JavascriptWebResource.FORMATTER
     );
 
     public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration)

@@ -15,13 +15,13 @@ public class CssWebResource extends AbstractWebResourceFormatter
      * An instance of a WebResourceFormatter that formats CSS web resources
      * @since 2.4
      */
-    public static final WebResourceFormatter FORMATTER_INSTANCE = INSTANCE;
+    public static final WebResourceFormatter FORMATTER = INSTANCE;
 
     /**
      * An instance of a WebResourceFilter that filters CSS web resources.
      * @since 2.4
      */
-    public static final WebResourceFilter FILTER_INSTANCE = INSTANCE;
+    public static final WebResourceFilter FILTER = INSTANCE;
 
     private static final String CSS_EXTENSION = ".css";
     private static final String MEDIA_PARAM = "media";
