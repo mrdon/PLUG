@@ -20,6 +20,7 @@ public class TestWebResourceManagerImpl extends TestCase
     private Mock mockWebResourceIntegration;
     private Mock mockPluginAccessor;
     private WebResourceManager webResourceManager;
+    private Plugin testPlugin;
 
     private static final String ANIMAL_PLUGIN_VERSION = "2";
     private static final String BASEURL = "http://www.foo.com";
@@ -44,6 +45,8 @@ public class TestWebResourceManagerImpl extends TestCase
         mockWebResourceIntegration.matchAndReturn("getBaseUrl", C.args(C.eq(UrlMode.AUTO)), "");
         mockWebResourceIntegration.matchAndReturn("getSystemBuildNumber", SYSTEM_BUILD_NUMBER);
         mockWebResourceIntegration.matchAndReturn("getSystemCounter", SYSTEM_COUNTER);
+
+        testPlugin = createTestPlugin();
     }
 
     protected void tearDown() throws Exception
@@ -51,6 +54,7 @@ public class TestWebResourceManagerImpl extends TestCase
         webResourceManager = null;
         mockPluginAccessor = null;
         mockWebResourceIntegration = null;
+        testPlugin = null;
 
         super.tearDown();
     }
@@ -60,12 +64,10 @@ public class TestWebResourceManagerImpl extends TestCase
         String resource1 = "test.atlassian:cool-stuff";
         String resource2 = "test.atlassian:hot-stuff";
 
-        Mock mockPlugin = new Mock(Plugin.class);
-        Plugin p = (Plugin) mockPlugin.proxy();
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource1)),
-            TestUtils.createWebResourceModuleDescriptor(resource1, p));
+            TestUtils.createWebResourceModuleDescriptor(resource1, testPlugin));
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource2)),
-            TestUtils.createWebResourceModuleDescriptor(resource2, p));
+            TestUtils.createWebResourceModuleDescriptor(resource2, testPlugin));
 
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
@@ -84,14 +86,11 @@ public class TestWebResourceManagerImpl extends TestCase
         String resource = "test.atlassian:cool-stuff";
         String dependencyResource = "test.atlassian:hot-stuff";
 
-        Mock mockPlugin = new Mock(Plugin.class);
-        Plugin p = (Plugin) mockPlugin.proxy();
-
         // cool-stuff depends on hot-stuff
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource)),
-            TestUtils.createWebResourceModuleDescriptor(resource, p, Collections.EMPTY_LIST, Collections.singletonList(dependencyResource)));
+            TestUtils.createWebResourceModuleDescriptor(resource, testPlugin, Collections.EMPTY_LIST, Collections.singletonList(dependencyResource)));
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(dependencyResource)),
-            TestUtils.createWebResourceModuleDescriptor(dependencyResource, p));
+            TestUtils.createWebResourceModuleDescriptor(dependencyResource, testPlugin));
 
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
@@ -109,14 +108,11 @@ public class TestWebResourceManagerImpl extends TestCase
         String resource1 = "test.atlassian:cool-stuff";
         String resource2 = "test.atlassian:hot-stuff";
 
-        Mock mockPlugin = new Mock(Plugin.class);
-        Plugin p = (Plugin) mockPlugin.proxy();
-
         // cool-stuff and hot-stuff depend on each other
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource1)),
-            TestUtils.createWebResourceModuleDescriptor(resource1, p, Collections.EMPTY_LIST, Collections.singletonList(resource2)));
+            TestUtils.createWebResourceModuleDescriptor(resource1, testPlugin, Collections.EMPTY_LIST, Collections.singletonList(resource2)));
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource2)),
-            TestUtils.createWebResourceModuleDescriptor(resource2, p, Collections.EMPTY_LIST, Collections.singletonList(resource1)));
+            TestUtils.createWebResourceModuleDescriptor(resource2, testPlugin, Collections.EMPTY_LIST, Collections.singletonList(resource1)));
 
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
@@ -137,24 +133,21 @@ public class TestWebResourceManagerImpl extends TestCase
         String resourceD = "test.atlassian:d";
         String resourceE = "test.atlassian:e";
 
-        Mock mockPlugin = new Mock(Plugin.class);
-        Plugin p = (Plugin) mockPlugin.proxy();
-
         // A depends on B, C
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceA)),
-            TestUtils.createWebResourceModuleDescriptor(resourceA, p, Collections.EMPTY_LIST, Arrays.asList(resourceB, resourceC)));
+            TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, Collections.EMPTY_LIST, Arrays.asList(resourceB, resourceC)));
         // B depends on D
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)),
-            TestUtils.createWebResourceModuleDescriptor(resourceB, p, Collections.EMPTY_LIST, Collections.singletonList(resourceD)));
+            TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, Collections.EMPTY_LIST, Collections.singletonList(resourceD)));
         // C has no dependencies
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceC)),
-            TestUtils.createWebResourceModuleDescriptor(resourceC, p));
+            TestUtils.createWebResourceModuleDescriptor(resourceC, testPlugin));
         // D depends on E, A (cyclic dependency)
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceD)),
-            TestUtils.createWebResourceModuleDescriptor(resourceD, p, Collections.EMPTY_LIST, Arrays.asList(resourceE, resourceA)));
+            TestUtils.createWebResourceModuleDescriptor(resourceD, testPlugin, Collections.EMPTY_LIST, Arrays.asList(resourceE, resourceA)));
         // E has no dependencies
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceE)),
-            TestUtils.createWebResourceModuleDescriptor(resourceE, p));
+            TestUtils.createWebResourceModuleDescriptor(resourceE, testPlugin));
 
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
@@ -180,24 +173,21 @@ public class TestWebResourceManagerImpl extends TestCase
         String resourceD = "test.atlassian:d";
         String resourceE = "test.atlassian:e";
 
-        Mock mockPlugin = new Mock(Plugin.class);
-        Plugin p = (Plugin) mockPlugin.proxy();
-
         // A depends on B, C
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceA)),
-            TestUtils.createWebResourceModuleDescriptor(resourceA, p, Collections.EMPTY_LIST, Arrays.asList(resourceB, resourceC)));
+            TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, Collections.EMPTY_LIST, Arrays.asList(resourceB, resourceC)));
         // B depends on D
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)),
-            TestUtils.createWebResourceModuleDescriptor(resourceB, p, Collections.EMPTY_LIST, Collections.singletonList(resourceD)));
+            TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, Collections.EMPTY_LIST, Collections.singletonList(resourceD)));
         // C depends on E
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceC)),
-            TestUtils.createWebResourceModuleDescriptor(resourceC, p, Collections.EMPTY_LIST, Collections.singletonList(resourceE)));
+            TestUtils.createWebResourceModuleDescriptor(resourceC, testPlugin, Collections.EMPTY_LIST, Collections.singletonList(resourceE)));
         // D depends on C
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceD)),
-            TestUtils.createWebResourceModuleDescriptor(resourceD, p, Collections.EMPTY_LIST, Collections.singletonList(resourceC)));
+            TestUtils.createWebResourceModuleDescriptor(resourceD, testPlugin, Collections.EMPTY_LIST, Collections.singletonList(resourceC)));
         // E has no dependencies
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceE)),
-            TestUtils.createWebResourceModuleDescriptor(resourceE, p));
+            TestUtils.createWebResourceModuleDescriptor(resourceE, testPlugin));
 
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
@@ -218,22 +208,14 @@ public class TestWebResourceManagerImpl extends TestCase
         String resourceA = "test.atlassian:a";
         String resourceB = "test.atlassian:b";
 
-        final String pluginVersion = "1";
-        final Mock mockPlugin = new Mock(Plugin.class);
-        PluginInformation pluginInfo = new PluginInformation();
-        pluginInfo.setVersion(pluginVersion);
-        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
-
-        Plugin p = (Plugin) mockPlugin.proxy();
-
         final List<ResourceDescriptor> resourceDescriptorsA = TestUtils.createResourceDescriptors("resourceA.css");
         final List<ResourceDescriptor> resourceDescriptorsB = TestUtils.createResourceDescriptors("resourceB.css", "resourceB-more.css");
 
         // A depends on B
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceA)),
-            TestUtils.createWebResourceModuleDescriptor(resourceA, p, resourceDescriptorsA, Collections.singletonList(resourceB)));
+            TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA, Collections.singletonList(resourceB)));
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)),
-            TestUtils.createWebResourceModuleDescriptor(resourceB, p, resourceDescriptorsB, Collections.EMPTY_LIST));
+            TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, resourceDescriptorsB, Collections.EMPTY_LIST));
 
         String s = webResourceManager.getResourceTags(resourceA);
         int indexA = s.indexOf(resourceA);
@@ -251,24 +233,18 @@ public class TestWebResourceManagerImpl extends TestCase
 
         final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.css", "more-cool.css", "cool.js");
 
-        final String pluginVersion = "1";
-        final Mock mockPlugin = new Mock(Plugin.class);
-        PluginInformation pluginInfo = new PluginInformation();
-        pluginInfo.setVersion(pluginVersion);
-        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
-
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
 
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
-            TestUtils.createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(), resourceDescriptors1));
+            TestUtils.createWebResourceModuleDescriptor(completeModuleKey, testPlugin, resourceDescriptors1));
 
         // test requireResource() methods
         webResourceManager.requireResource(completeModuleKey);
-        webResourceManager.includeResources(new StringWriter());
+        webResourceManager.includeResources(new StringWriter(), UrlMode.RELATIVE);
         
         StringWriter requiredResourceWriter = new StringWriter();
-        webResourceManager.includeResources(requiredResourceWriter);
+        webResourceManager.includeResources(requiredResourceWriter, UrlMode.RELATIVE);
         assertEquals("", requiredResourceWriter.toString());
     }
 
@@ -282,8 +258,8 @@ public class TestWebResourceManagerImpl extends TestCase
         // test requireResource() methods
         StringWriter requiredResourceWriter = new StringWriter();
         webResourceManager.requireResource(completeModuleKey);
-        String requiredResourceResult = webResourceManager.getRequiredResources();
-        webResourceManager.includeResources(requiredResourceWriter);
+        String requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.RELATIVE);
+        webResourceManager.includeResources(requiredResourceWriter, UrlMode.RELATIVE);
         assertEquals(requiredResourceResult, requiredResourceWriter.toString());
 
         assertTrue(requiredResourceResult.contains("href=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".css"));
@@ -291,8 +267,8 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // test resourceTag() methods
         StringWriter resourceTagsWriter = new StringWriter();
-        webResourceManager.requireResource(completeModuleKey, resourceTagsWriter);
-        String resourceTagsResult = webResourceManager.getResourceTags(completeModuleKey);
+        webResourceManager.requireResource(completeModuleKey, resourceTagsWriter, UrlMode.RELATIVE);
+        String resourceTagsResult = webResourceManager.getResourceTags(completeModuleKey, UrlMode.RELATIVE);
         assertEquals(resourceTagsResult, resourceTagsWriter.toString());
 
         // calling requireResource() or resourceTag() on a single webresource should be the same
@@ -314,8 +290,7 @@ public class TestWebResourceManagerImpl extends TestCase
         testRequireResourceAndResourceTagMethods(UrlMode.AUTO, false);
     }
 
-    private void testRequireResourceAndResourceTagMethods(UrlMode urlMode, boolean baseUrlExpected)
-        throws Exception
+    private void testRequireResourceAndResourceTagMethods(UrlMode urlMode, boolean baseUrlExpected) throws Exception
     {
         final String completeModuleKey = "test.atlassian:cool-resources";
         final String staticBase = setupRequireResourceAndResourceTagMethods(baseUrlExpected, completeModuleKey);
@@ -343,24 +318,17 @@ public class TestWebResourceManagerImpl extends TestCase
     private String setupRequireResourceAndResourceTagMethods(boolean baseUrlExpected, String completeModuleKey)
         throws DocumentException
     {
-        final List<ResourceDescriptor> resourceDescriptors1 =
-            TestUtils.createResourceDescriptors("cool.css", "more-cool.css", "cool.js");
-
-        final String pluginVersion = "1";
-        final Mock mockPlugin = new Mock(Plugin.class);
-        final PluginInformation pluginInfo = new PluginInformation();
-        pluginInfo.setVersion(pluginVersion);
-        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
+        final List<ResourceDescriptor> descriptors = TestUtils.createResourceDescriptors("cool.css", "more-cool.css", "cool.js");
 
         final Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
 
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
-            TestUtils.createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(), resourceDescriptors1));
+            TestUtils.createWebResourceModuleDescriptor(completeModuleKey, testPlugin, descriptors));
 
         final String staticBase = (baseUrlExpected ? BASEURL : "") +
             "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX  + "/" + SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER +
-            "/" + pluginVersion + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
+            "/" + testPlugin.getPluginInformation().getVersion() + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
         return staticBase;
     }
 
@@ -389,8 +357,7 @@ public class TestWebResourceManagerImpl extends TestCase
         testRequireResourceWithCacheParameter(UrlMode.AUTO, false);
     }
 
-    private void testRequireResourceWithCacheParameter(UrlMode urlMode, boolean baseUrlExpected)
-        throws Exception
+    private void testRequireResourceWithCacheParameter(UrlMode urlMode, boolean baseUrlExpected) throws Exception
     {
         final String completeModuleKey = "test.atlassian:no-cache-resources";
         final String expectedResult = setupRequireResourceWithCacheParameter(baseUrlExpected, completeModuleKey);
@@ -400,14 +367,12 @@ public class TestWebResourceManagerImpl extends TestCase
     private String setupRequireResourceWithCacheParameter(boolean baseUrlExpected, String completeModuleKey)
         throws DocumentException
     {
-        final Mock mockPlugin = new Mock(Plugin.class);
-
         final Map<String, String> params = new HashMap<String, String>();
         params.put("cache", "false");
         ResourceDescriptor resourceDescriptor = TestUtils.createResourceDescriptor("no-cache.js", params);
 
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
-                TestUtils.createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(),
+                TestUtils.createWebResourceModuleDescriptor(completeModuleKey, testPlugin,
                 Collections.singletonList(resourceDescriptor)));
 
         return "src=\"" + (baseUrlExpected ? BASEURL : "") + BatchPluginResource.URL_PREFIX +
@@ -542,42 +507,36 @@ public class TestWebResourceManagerImpl extends TestCase
             "/" + moduleKey + "/" + resourceName;
     }
 
-
-    public void testGetRequiredResourcesWithType() throws Exception
+    public void testGetRequiredResourcesWithFilter() throws Exception
     {
         final String moduleKey = "cool-resources";
         final String completeModuleKey = "test.atlassian:" + moduleKey;
 
         final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.css", "cool.js", "more-cool.css");
 
-        final String pluginVersion = "1";
-        final Mock mockPlugin = new Mock(Plugin.class);
-        PluginInformation pluginInfo = new PluginInformation();
-        pluginInfo.setVersion(pluginVersion);
-        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
-
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
 
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
-            TestUtils.createWebResourceModuleDescriptor(completeModuleKey, (Plugin) mockPlugin.proxy(), resourceDescriptors1));
+            TestUtils.createWebResourceModuleDescriptor(completeModuleKey, testPlugin, resourceDescriptors1));
 
         // test includeResources(writer, type) method
         webResourceManager.requireResource(completeModuleKey);
 
         String staticBase = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX  + "/" + SYSTEM_BUILD_NUMBER
-            + "/" + SYSTEM_COUNTER + "/" + pluginVersion + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
+            + "/" + SYSTEM_COUNTER + "/" + testPlugin.getPluginInformation().getVersion() + "/"
+            + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
 
         String cssRef = "href=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".css";
         String jsRef = "src=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".js";
 
         // CSS
-        String requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE, WebResourceType.CSS);
+        String requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE, CssWebResource.FILTER);
         assertTrue(requiredResourceResult.contains(cssRef));
         assertFalse(requiredResourceResult.contains(jsRef));
 
         // JS
-        requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE, WebResourceType.JAVASCRIPT);
+        requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE, JavascriptWebResource.FILTER);
         assertFalse(requiredResourceResult.contains(cssRef));
         assertTrue(requiredResourceResult.contains(jsRef));
 
@@ -585,6 +544,57 @@ public class TestWebResourceManagerImpl extends TestCase
         requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE);
         assertTrue(requiredResourceResult.contains(cssRef));
         assertTrue(requiredResourceResult.contains(jsRef));
+    }
+
+    public void testGetRequiredResourcesWithCustomFilters() throws Exception
+    {
+        WebResourceFilter atlassianFilter = new WebResourceFilter(){
+            public boolean matches(String resourceName)
+            {
+                if (resourceName.contains("atlassian"))
+                    return true;
+                return false;
+            }
+        };
+        WebResourceFilter bogusFilter = new WebResourceFilter() {
+            public boolean matches(String resourceName)
+            {
+                return true;
+            }
+        };
+
+        final String moduleKey = "cool-resources";
+        final String completeModuleKey = "test.atlassian:" + moduleKey;
+
+        final List<ResourceDescriptor> resources = TestUtils.createResourceDescriptors(
+            "foo.css", "foo-bar.js",
+            "atlassian.css", "atlassian-plugins.js");
+
+        Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
+            TestUtils.createWebResourceModuleDescriptor(completeModuleKey, testPlugin, resources));
+
+        // easier to test which resources were included by the filter with batching turned off
+        System.setProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF, "true");
+        try
+        {
+            webResourceManager.requireResource(completeModuleKey);
+            String atlassianResources = webResourceManager.getRequiredResources(UrlMode.RELATIVE, atlassianFilter);
+            assertEquals(-1, atlassianResources.indexOf("foo"));
+            assertTrue(atlassianResources.contains("atlassian.css"));
+            assertTrue(atlassianResources.contains("atlassian-plugins.js"));
+
+            String allResources = webResourceManager.getRequiredResources(UrlMode.RELATIVE, bogusFilter);
+            for (ResourceDescriptor resource : resources)
+            {
+                assertTrue(allResources.contains(resource.getName()));
+            }
+        }
+        finally
+        {
+            System.setProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF, "false");
+        }
     }
 
     public void testGetRequiredResourcesOrdersByType() throws Exception
@@ -597,26 +607,23 @@ public class TestWebResourceManagerImpl extends TestCase
         final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.js", "cool.css", "more-cool.css");
         final List<ResourceDescriptor> resourceDescriptors2 = TestUtils.createResourceDescriptors("hot.js", "hot.css", "more-hot.css");
 
-        final String pluginVersion = "1";
-        final Mock mockPlugin = new Mock(Plugin.class);
-        PluginInformation pluginInfo = new PluginInformation();
-        pluginInfo.setVersion(pluginVersion);
-        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
+        final Plugin plugin = createTestPlugin();
 
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
 
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey1)),
-            TestUtils.createWebResourceModuleDescriptor(completeModuleKey1, (Plugin) mockPlugin.proxy(), resourceDescriptors1));
+            TestUtils.createWebResourceModuleDescriptor(completeModuleKey1, plugin, resourceDescriptors1));
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey2)),
-                    TestUtils.createWebResourceModuleDescriptor(completeModuleKey2, (Plugin) mockPlugin.proxy(), resourceDescriptors2));
+                    TestUtils.createWebResourceModuleDescriptor(completeModuleKey2, plugin, resourceDescriptors2));
 
         // test includeResources(writer, type) method
         webResourceManager.requireResource(completeModuleKey1);
         webResourceManager.requireResource(completeModuleKey2);
 
         String staticBase = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX  + "/" + SYSTEM_BUILD_NUMBER
-            + "/" + SYSTEM_COUNTER + "/" + pluginVersion + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
+            + "/" + SYSTEM_COUNTER + "/" + plugin.getPluginInformation().getVersion() + "/"
+            + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
 
         String cssRef1 = "href=\"" + staticBase + "/" + completeModuleKey1 + "/" + completeModuleKey1 + ".css";
         String cssRef2 = "href=\"" + staticBase + "/" + completeModuleKey2 + "/" + completeModuleKey2 + ".css";
@@ -638,5 +645,16 @@ public class TestWebResourceManagerImpl extends TestCase
         assertTrue(cssRef1Index < jsRef1Index);
         assertTrue(cssRef2Index < jsRef2Index);
         assertTrue(cssRef2Index < jsRef1Index);
+    }
+
+    private Plugin createTestPlugin()
+    {
+        final String pluginVersion = "1";
+        final Mock mockPlugin = new Mock(Plugin.class);
+        PluginInformation pluginInfo = new PluginInformation();
+        pluginInfo.setVersion(pluginVersion);
+        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
+
+        return (Plugin) mockPlugin.proxy();
     }
 }
