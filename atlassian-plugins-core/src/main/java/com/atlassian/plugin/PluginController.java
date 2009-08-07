@@ -1,6 +1,5 @@
 package com.atlassian.plugin;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -10,21 +9,41 @@ public interface PluginController
 {
     /**
      * Enable a plugin by key.
+     * @param key The plugin key.
      */
     void enablePlugin(String key);
 
     /**
-     * Disable a plugin by key.
+     * Disables the plugin with the given key.
+     *
+     * <p>Calling this method will persist the disabled state so that the plugin will also be disabled on next startup.
+     * This would normally be used when a user manually disables a plugin.
+     *
+     * @param key The plugin key.
+     * @see #disablePluginTemporarily(String)
      */
     void disablePlugin(String key);
 
     /**
+     * Disables the plugin with the given key without persisting the disabled state.
+     *
+     * <p>Calling this method will NOT persist the disabled state so that the framework will try to enable the plugin on next startup.
+     * This is used when a plugin has errors on startup.
+     *
+     * @param key The plugin key.
+     * @see #disablePlugin(String)
+     */
+    void disablePluginTemporarily(String key);
+
+    /**
      * Enable a plugin module by key.
+     * @param completeKey The "complete key" of the plugin module.
      */
     void enablePluginModule(String completeKey);
 
     /**
      * Disable a plugin module by key.
+     * @param completeKey The "complete key" of the plugin module.
      */
     void disablePluginModule(String completeKey);
 
@@ -50,6 +69,7 @@ public interface PluginController
 
     /**
      * Uninstall the plugin, disabling it first.
+     * @param plugin The plugin.
      * @throws PluginException if there was some problem uninstalling the plugin.
      */
     void uninstall(Plugin plugin) throws PluginException;
