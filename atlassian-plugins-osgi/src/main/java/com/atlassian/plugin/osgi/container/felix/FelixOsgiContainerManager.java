@@ -208,8 +208,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             return;
         }
 
-        detectIncorrectOsgiVersion();
-
         final DefaultComponentRegistrar registrar = collectHostComponents(hostComponentProvider);
         // Create a case-insensitive configuration property map.
         final StringMap configMap = new StringMap(false);
@@ -236,7 +234,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             log.debug("Felix configuration: " + configMap);
         }
 
-        validateCaches(configMap);
+        validateConfiguration(configMap);
 
         try
         {
@@ -279,14 +277,51 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     }
 
     /**
+     *
+     * @param configMap The Felix configuration
+     * @throws OsgiContainerException If any validation fails
+     */
+    private void validateConfiguration(StringMap configMap) throws OsgiContainerException
+    {
+        String systemExports = (String) configMap.get(Constants.FRAMEWORK_SYSTEMPACKAGES);
+        validateCaches(systemExports);
+        detectIncorrectOsgiVersion();
+        detectXercesOverride(systemExports);
+    }
+
+    /**
+     * Detect when xerces has no version, most likely due to an installation of Tomcat where an old version of xerces
+     * is installed into common/lib/endorsed in order to support Java 1.4.
+     *
+     * @param systemExports The system exports
+     * @throws OsgiContainerException If xerces has no version 
+     */
+    void detectXercesOverride(String systemExports) throws OsgiContainerException
+    {
+        int pos = systemExports.indexOf("org.apache.xerces.util");
+        if (pos > -1)
+        {
+            pos += "org.apache.xerces.util".length();
+
+            // only fail if no xerces found and xerces has no version
+            if (pos >= systemExports.length() || ';' != systemExports.charAt(pos))
+            {
+                throw new OsgiContainerException(
+                    "Detected an incompatible version of Apache Xerces on the classpath.  If using Tomcat, you may have " +
+                    "an old version of Xerces in $TOMCAT_HOME/common/lib/endorsed that will need to be removed.");
+            }
+        }
+    }
+
+    /**
      * Validate caches based on the list of packages exported from the application.  If the list has changed, the cache
      * directories should be cleared.
      *
-     * @param configMap The felix configuration
+     * @param systemExports The value of system exports in the header
      */
-    private void validateCaches(StringMap configMap)
+    private void validateCaches(String systemExports)
     {
-        String cacheKey = String.valueOf(configMap.get(Constants.FRAMEWORK_SYSTEMPACKAGES).hashCode());
+        String cacheKey = String.valueOf(systemExports.hashCode());
         persistentCache.validate(cacheKey);
 
         log.debug("Using Felix bundle cache directory :" + persistentCache.getOsgiBundleCache().getAbsolutePath());
