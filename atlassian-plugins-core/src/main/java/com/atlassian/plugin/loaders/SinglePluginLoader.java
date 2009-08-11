@@ -152,6 +152,8 @@ public class SinglePluginLoader implements PluginLoader
             }
             else if (parser.isSystemPlugin())
             {
+                // TODO: This is now done in XmlDescriptorParser.configurePlugin(). Are there other implementations of DescriptorParser?
+                // If not then this call is redundant.
                 plugin.setSystemPlugin(true);
             }
         }
