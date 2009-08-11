@@ -1,6 +1,7 @@
 package com.atlassian.plugin.event.impl;
 
 import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.NotificationException;
 import com.atlassian.plugin.util.ClassUtils;
 import com.atlassian.plugin.util.collect.Function;
 import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
@@ -45,15 +46,11 @@ public class DefaultPluginEventManager implements PluginEventManager
         listenerMethodSelectors = selectors;
     }
 
-    /**
-     * Broadcasts an event to all listeners, logging all exceptions as an ERROR.
-     *
-     * @param event The event object
-     */
-    public void broadcast(final Object event)
+    public void broadcast(final Object event) throws NotificationException
     {
         Validate.notNull(event, "The event to broadcast must not be null");
         final Set<Listener> calledListeners = new HashSet<Listener>();
+        NotificationException notificationException = null;
         for (final Class<?> type : ClassUtils.findAllTypes(event.getClass()))
         {
             final Set<Listener> registrations = eventsToListener.get(type);
@@ -66,9 +63,23 @@ public class DefaultPluginEventManager implements PluginEventManager
                         continue;
                     }
                     calledListeners.add(reg);
-                    reg.notify(event);
+                    try
+                    {
+                        reg.notify(event);
+                    }
+                    catch (NotificationException ex)
+                    {
+                        // remember this exception, but notify all other listeners before we throw it.
+                        notificationException = ex;
+                    }
                 }
             }
+        }
+
+        if (notificationException != null)
+        {
+            // One of the listeners threw an exception - we rethrow it now that we have notified other listeners.
+            throw notificationException;
         }
     }
 
@@ -169,7 +180,7 @@ public class DefaultPluginEventManager implements PluginEventManager
             this.method = method;
         }
 
-        public void notify(final Object event)
+        public void notify(final Object event) throws NotificationException
         {
             Validate.notNull(event);
             try
@@ -182,7 +193,8 @@ public class DefaultPluginEventManager implements PluginEventManager
             }
             catch (final InvocationTargetException e)
             {
-                log.error("Exception calling listener method", e.getCause());
+                // InvocationTargetException wraps an error thrown by the Event Listener. We re-wrap it in our NotificationException.
+                throw new NotificationException(e.getCause());
             }
         }
 

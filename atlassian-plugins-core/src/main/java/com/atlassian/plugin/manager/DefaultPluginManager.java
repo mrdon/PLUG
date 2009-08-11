@@ -24,6 +24,7 @@ import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.NotificationException;
 import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.event.events.PluginEnabledEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
@@ -117,13 +118,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         this.pluginEventManager.register(this);
     }
 
-    /**
-     * Initialize all plugins in all loaders
-     *
-     * @throws PluginParseException
-     * @throws IllegalStateException if already initialized or already in the process of initialization.
-     */
-    public void init() throws PluginParseException
+    public void init() throws PluginParseException, NotificationException
     {
         tracker.setState(StateTracker.State.STARTING);
         final StopWatch stopWatch = new StopWatch();

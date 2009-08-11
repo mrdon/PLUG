@@ -1,5 +1,7 @@
 package com.atlassian.plugin;
 
+import com.atlassian.plugin.event.NotificationException;
+
 /**
  * Controls the life-cycle of the plugin system.
  * 
@@ -10,8 +12,10 @@ public interface PluginSystemLifecycle
     /**
      * Initialise the plugin system. This <b>must</b> be called before anything else.
      * @throws PluginParseException If parsing the plugins failed.
+     * @throws IllegalStateException if already initialized or already in the process of initialization.
+     * @throws NotificationException If any of the Event Listeners throw an exception on the Framework startup events.
      */
-    void init() throws PluginParseException;
+    void init() throws PluginParseException, NotificationException;
 
     /**
      * Destroys the plugin manager. This <b>must</b> be called when getting rid of the manager instance and you
