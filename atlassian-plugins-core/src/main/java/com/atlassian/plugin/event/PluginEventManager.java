@@ -24,8 +24,9 @@ public interface PluginEventManager
     void unregister(Object listener);
 
     /**
-     * Broadcasts an event to all applicable listeners
+     * Broadcasts an event to all applicable listeners.
      * @param event The event object. Cannot be null.
+     * @throws NotificationException If an exception is thrown by one of the Event Listeners.
      */
-    void broadcast(Object event);
+    void broadcast(Object event) throws NotificationException;
 }
