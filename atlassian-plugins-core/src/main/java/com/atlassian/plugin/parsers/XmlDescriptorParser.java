@@ -109,6 +109,7 @@ public class XmlDescriptorParser implements DescriptorParser
         plugin.setName(pluginElement.attributeValue("name"));
         plugin.setKey(getKey());
         plugin.setPluginsVersion(getPluginsVersion());
+        plugin.setSystemPlugin(isSystemPlugin());
 
         if (pluginElement.attributeValue("i18n-name-key") != null)
         {
