@@ -148,4 +148,9 @@ public class DelegatingPluginServlet extends HttpServlet
     {
         return servlet.toString();
     }
+
+    public ServletModuleDescriptor getModuleDescriptor()
+ 	{
+     	return descriptor;
+ 	}
 }
