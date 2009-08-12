@@ -19,6 +19,7 @@ import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.event.events.PluginEnabledEvent;
+import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.event.listeners.FailListener;
 import com.atlassian.plugin.event.listeners.PassListener;
@@ -178,6 +179,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders.add(loader);
 
         pluginEventManager.register(new FailListener(PluginEnabledEvent.class));
+        pluginEventManager.register(new FailListener(PluginModuleEnabledEvent.class));
 
         manager.init();
 
