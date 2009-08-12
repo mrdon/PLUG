@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.atlassian.plugins</groupId>
         <artifactId>atlassian-plugins-parent</artifactId>
-        <version>2.3.0-SNAPSHOT</version>
+        <version>2.3.0.rc2</version>
     </parent>
 
     <artifactId>atlassian-plugins-osgi-bridge</artifactId>
