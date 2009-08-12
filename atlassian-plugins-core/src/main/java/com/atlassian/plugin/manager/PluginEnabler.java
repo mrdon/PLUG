@@ -116,7 +116,7 @@ class PluginEnabler
                 for (final Plugin plugin : pluginsInEnablingState)
                 {
                     sb.append(plugin.getKey()).append(',');
-                    pluginController.disablePluginTemporarily(plugin.getKey());
+                    pluginController.disablePluginWithoutPersisting(plugin.getKey());
                 }
                 sb.deleteCharAt(sb.length() - 1);
                 log.error("Unable to start the following plugins: " + sb.toString());

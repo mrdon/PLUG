@@ -979,7 +979,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         disablePluginInternal(key, true);
     }
 
-    public void disablePluginTemporarily(final String key)
+    public void disablePluginWithoutPersisting(final String key)
     {
         disablePluginInternal(key, false);
     }
