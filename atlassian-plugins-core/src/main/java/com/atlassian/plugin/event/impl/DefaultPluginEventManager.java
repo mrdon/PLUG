@@ -14,6 +14,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -50,7 +52,7 @@ public class DefaultPluginEventManager implements PluginEventManager
     {
         Validate.notNull(event, "The event to broadcast must not be null");
         final Set<Listener> calledListeners = new HashSet<Listener>();
-        NotificationException notificationException = null;
+        List<Throwable> allErrors = new ArrayList<Throwable>();
         for (final Class<?> type : ClassUtils.findAllTypes(event.getClass()))
         {
             final Set<Listener> registrations = eventsToListener.get(type);
@@ -69,17 +71,18 @@ public class DefaultPluginEventManager implements PluginEventManager
                     }
                     catch (NotificationException ex)
                     {
-                        // remember this exception, but notify all other listeners before we throw it.
-                        notificationException = ex;
+                        // This NotificationException will only hold a single cause.
+                        // Add this to our list of causes, but continue to notify other listeners of the event.
+                        allErrors.add(ex.getCause());
                     }
                 }
             }
         }
 
-        if (notificationException != null)
+        if (!allErrors.isEmpty())
         {
             // One of the listeners threw an exception - we rethrow it now that we have notified other listeners.
-            throw notificationException;
+            throw new NotificationException(allErrors);
         }
     }
 
@@ -180,6 +183,11 @@ public class DefaultPluginEventManager implements PluginEventManager
             this.method = method;
         }
 
+        /**
+         * Sends the given event to this Listener.
+         * @param event the event.
+         * @throws NotificationException if the listener method throws an Exception. This will wrap exactly one caused by Exception.
+         */
         public void notify(final Object event) throws NotificationException
         {
             Validate.notNull(event);
@@ -193,6 +201,10 @@ public class DefaultPluginEventManager implements PluginEventManager
             }
             catch (final InvocationTargetException e)
             {
+                // Log this error because we used to before, and there can be multiple listeners throwing errors.
+                // This will almost certainly lead to duplicate logging because we also rethrow the exception.
+                // PLUG-414: Because of the duplication and because this is used to pass on "expected" errors we don't include the stacktrace here.
+                log.error("Plugin Event Listener '" + listener + "' threw an error on event '" + event + "': " + e.getCause().getMessage());
                 // InvocationTargetException wraps an error thrown by the Event Listener. We re-wrap it in our NotificationException.
                 throw new NotificationException(e.getCause());
             }
