@@ -150,7 +150,7 @@ public class DelegatingPluginServlet extends HttpServlet
     }
 
     public ServletModuleDescriptor getModuleDescriptor()
- 	{
-     	return descriptor;
- 	}
+    {
+        return descriptor;
+    }
 }
