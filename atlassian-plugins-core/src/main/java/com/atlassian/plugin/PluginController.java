@@ -20,7 +20,7 @@ public interface PluginController
      * This would normally be used when a user manually disables a plugin.
      *
      * @param key The plugin key.
-     * @see #disablePluginTemporarily(String)
+     * @see #disablePluginWithoutPersisting(String)
      */
     void disablePlugin(String key);
 
@@ -33,7 +33,7 @@ public interface PluginController
      * @param key The plugin key.
      * @see #disablePlugin(String)
      */
-    void disablePluginTemporarily(String key);
+    void disablePluginWithoutPersisting(String key);
 
     /**
      * Enable a plugin module by key.
