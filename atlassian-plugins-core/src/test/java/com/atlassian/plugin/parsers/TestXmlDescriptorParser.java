@@ -182,7 +182,8 @@ public class TestXmlDescriptorParser extends TestCase
         // create a Plugin for testing
         Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
         parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
-        assertEquals("This plugin should not be a system plugin - only WEB-INF/lib plugins can be system plugins.", false, testPlugin.isSystemPlugin());
+        // PLUG-415 Plugins2 plugins now need to be able to be declared as system.
+        assertEquals("This plugin should be a system plugin - bundled plugins2 plugins are system plugins.", true, testPlugin.isSystemPlugin());
     }
 
     public void testPluginWithoutSystemAttribute()
