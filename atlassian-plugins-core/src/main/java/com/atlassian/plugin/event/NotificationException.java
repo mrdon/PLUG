@@ -26,6 +26,8 @@ public class NotificationException extends PluginException
     /**
      * Constructs a NotificationException with a List of the Exceptions that were thrown by the Listeners.
      * @param causes all Exceptions that were thrown by the Listeners.
+     * @throws NullPointerException If a null List is passed.
+     * @throws IndexOutOfBoundsException If an empty List is passed.
      */
     public NotificationException(final List<Throwable> causes)
     {

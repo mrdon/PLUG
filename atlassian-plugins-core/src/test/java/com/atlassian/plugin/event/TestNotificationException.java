@@ -36,4 +36,27 @@ public class TestNotificationException extends TestCase
         assertEquals(cause1, notificationException.getAllCauses().get(0));
         assertEquals(cause2, notificationException.getAllCauses().get(1));
     }
+
+    public void testListConstructorInvalid() throws Exception
+    {
+        try
+        {
+            new NotificationException((List) null);
+            fail("Expected NullPointerException");
+        }
+        catch (NullPointerException e)
+        {
+            // Expected.
+        }
+
+        try
+        {
+            new NotificationException(new ArrayList<Throwable>());
+            fail("Expected IndexOutOfBoundsException");
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            // Expected.
+        }
+    }
 }
