@@ -19,6 +19,8 @@ public interface PluginController
      * <p>Calling this method will persist the disabled state so that the plugin will also be disabled on next startup.
      * This would normally be used when a user manually disables a plugin.
      *
+     * <p>If you extend DefaultPluginManager and override this method, you will also need to override {@link #disablePluginWithoutPersisting(String)}.
+     *
      * @param key The plugin key.
      * @see #disablePluginWithoutPersisting(String)
      */
@@ -30,8 +32,11 @@ public interface PluginController
      * <p>Calling this method will NOT persist the disabled state so that the framework will try to enable the plugin on next startup.
      * This is used when a plugin has errors on startup.
      *
+     * <p>If you extend DefaultPluginManager and override {@link #disablePlugin(String)}, you will also need to override this method. 
+     *
      * @param key The plugin key.
      * @see #disablePlugin(String)
+     * @since 2.3.0
      */
     void disablePluginWithoutPersisting(String key);
 
