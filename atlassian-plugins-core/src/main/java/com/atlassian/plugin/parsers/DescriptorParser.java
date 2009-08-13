@@ -33,6 +33,9 @@ public interface DescriptorParser
      * @return true if this plugin is marked as a system plugin in the descriptor. This should only be
      * acted on by plugin loaders which can trust their plugins implicitly (e.g. a classpath plugin
      * loader).
+     *
+     * @deprecated The parser will set the SystemPlugin flag within the configurePlugin() method, so there is no need to use this externally.
+     *              See PLUG-415. Deprecated since 2.3.0
      */
     boolean isSystemPlugin();
 

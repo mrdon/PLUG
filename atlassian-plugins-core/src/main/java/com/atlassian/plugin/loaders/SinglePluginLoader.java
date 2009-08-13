@@ -26,14 +26,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * Loads a single plugin from the descriptor provided, which can either be an InputStream
  * or a resource on the classpath. The classes used by the plugin must already be available
  * on the classpath because this plugin loader does <b>not</b> load any classes.
- * <p/>
- * Because the code which is run by these plugins must already be in the classpath (and
- * is therefore more trusted than an uploaded plugin), if the plugin is marked as a system
- * plugin in the descriptor file, it will actually be marked as a system plugin at runtime.
  *
  * @see PluginLoader
  * @see ClassPathPluginLoader
- * @see DescriptorParser#isSystemPlugin()
  */
 public class SinglePluginLoader implements PluginLoader
 {
@@ -149,12 +144,6 @@ public class SinglePluginLoader implements PluginLoader
                 }
                 unloadablePlugin.setErrorText(errorText.toString());
                 plugin = unloadablePlugin;
-            }
-            else if (parser.isSystemPlugin())
-            {
-                // TODO: This is now done in XmlDescriptorParser.configurePlugin(). Are there other implementations of DescriptorParser?
-                // If not then this call is redundant.
-                plugin.setSystemPlugin(true);
             }
         }
         catch (final PluginParseException e)
