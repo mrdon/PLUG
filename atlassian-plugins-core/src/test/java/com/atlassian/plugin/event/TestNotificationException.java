@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * @since v2.3
+ * @since 2.3.0
  */
 @SuppressWarnings ({ "ThrowableResultOfMethodCallIgnored", "ThrowableInstanceNeverThrown" })
 public class TestNotificationException extends TestCase
