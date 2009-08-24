@@ -24,7 +24,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Version;
 
 import java.io.File;
 import java.io.InputStream;
