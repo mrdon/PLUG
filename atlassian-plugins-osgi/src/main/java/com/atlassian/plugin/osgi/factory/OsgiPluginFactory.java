@@ -203,7 +203,7 @@ public class OsgiPluginFactory implements PluginFactory
             // Catch all unknown descriptors as unrecognised
             factories.add(new UnrecognisedModuleDescriptorFallbackFactory());
 
-            return new ChainModuleDescriptorFactory(factories.toArray(new ModuleDescriptorFactory[]{}));
+            return new ChainModuleDescriptorFactory(factories.toArray(new ModuleDescriptorFactory[factories.size()]));
         }
         else
         {
