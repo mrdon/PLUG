@@ -203,6 +203,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
     public void start() throws OsgiContainerException
     {
+
+
         if (isRunning())
         {
             return;
@@ -211,24 +213,24 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         final DefaultComponentRegistrar registrar = collectHostComponents(hostComponentProvider);
         // Create a case-insensitive configuration property map.
         final StringMap configMap = new StringMap(false);
-        // Configure the Felix instance to be embedded.
-        configMap.put(FelixConstants.EMBEDDED_EXECUTION_PROP, "true");
+
         // Add the bundle provided service interface package and the core OSGi
         // packages to be exported from the class path via the system bundle.
-        configMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES, exportsBuilder.determineExports(registrar.getRegistry(), packageScannerConfig,
+        configMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, exportsBuilder.determineExports(registrar.getRegistry(), packageScannerConfig,
             persistentCache.getOsgiBundleCache()));
 
         // Explicitly specify the directory to use for caching bundles.
-        configMap.put(BundleCache.CACHE_PROFILE_DIR_PROP, persistentCache.getOsgiBundleCache().getAbsolutePath());
+        configMap.put(BundleCache.CACHE_ROOTDIR_PROP, persistentCache.getOsgiBundleCache().getAbsolutePath());
 
         configMap.put(FelixConstants.LOG_LEVEL_PROP, String.valueOf(felixLogger.getLogLevel()));
+        configMap.put(FelixConstants.LOG_LOGGER_PROP, felixLogger);
         String bootDelegation = getAtlassianSpecificOsgiSystemProperty(OSGI_BOOTDELEGATION);
         if ((bootDelegation == null) || (bootDelegation.trim().length() == 0))
         {
             bootDelegation = "weblogic.*,META-INF.services,com.yourkit.*,com.jprofiler.*,org.apache.xerces.*";
         }
 
-        configMap.put(Constants.FRAMEWORK_BOOTDELEGATION, bootDelegation);
+        configMap.put(FelixConstants.FRAMEWORK_BOOTDELEGATION, bootDelegation);
         if (log.isDebugEnabled())
         {
             log.debug("Felix configuration: " + configMap);
@@ -242,10 +244,11 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             registration = new BundleRegistration(frameworkBundlesUrl, persistentCache.getFrameworkBundleCache(), registrar);
             final List<BundleActivator> list = new ArrayList<BundleActivator>();
             list.add(registration);
+            configMap.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, list);
 
             // Now create an instance of the framework with
             // our configuration properties and activator.
-            felix = new Felix(felixLogger, configMap, list);
+            felix = new Felix(configMap);
 
             // Now start Felix instance.  Starting in a different thread to explicity set daemon status
             final Runnable start = new Runnable()
@@ -269,6 +272,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
             // Give it 10 seconds
             t.join(10 * 60 * 1000);
+
         }
         catch (final Exception ex)
         {
@@ -283,7 +287,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
      */
     private void validateConfiguration(StringMap configMap) throws OsgiContainerException
     {
-        String systemExports = (String) configMap.get(Constants.FRAMEWORK_SYSTEMPACKAGES);
+        String systemExports = (String) configMap.get(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
         validateCaches(systemExports);
         detectIncorrectOsgiVersion();
         detectXercesOverride(systemExports);
@@ -351,7 +355,14 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             {
                 tracker.close();
             }
-            felix.stopAndWait();
+            try
+            {
+                felix.stop(5000);
+            }
+            catch (BundleException e)
+            {
+                log.warn("Felix didn't stop in time", e);
+            }
         }
 
         felixRunning = false;
