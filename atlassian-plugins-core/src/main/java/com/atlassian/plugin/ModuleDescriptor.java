@@ -59,6 +59,14 @@ public interface ModuleDescriptor<T> extends Resourced
     Class<T> getModuleClass();
 
     /**
+     * Returns the class name of the module this descriptor creates.
+     *
+     * @return The class name of the module this descriptor creates.
+     * @see #getModuleClass()
+     */
+    String getModuleClassName();
+
+    /**
      * The particular module object created by this plugin.
      * 
      * @return The module object created by this plugin.
