@@ -21,6 +21,8 @@ import java.util.jar.JarFile;
 
 /**
  * A class loader used to load classes and resources from a given plugin.
+ *
+ * @see PluginsClassLoader
  */
 public final class PluginClassLoader extends ClassLoader
 {
