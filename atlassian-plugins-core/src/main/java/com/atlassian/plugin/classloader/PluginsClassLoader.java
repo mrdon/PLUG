@@ -17,7 +17,10 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
+ * A ClassLoader that will loop over all enabled Plugins, attempting to load the given class (or other resource) from
+ * the ClassLoader of each plugin in turn.
+ * 
+ * @see com.atlassian.plugin.classloader.PluginClassLoader
  */
 public class PluginsClassLoader extends AbstractClassLoader
 {
@@ -110,8 +113,16 @@ public class PluginsClassLoader extends AbstractClassLoader
             return null;
         }
         final Collection<Plugin> plugins = pluginAccessor.getEnabledPlugins();
+        if (log.isDebugEnabled())
+        {
+            log.debug("loadClassFromPlugins (" + className + ") looping through plugins...");
+        }
         for (final Plugin plugin : plugins)
         {
+            if (log.isDebugEnabled())
+            {
+                log.debug("loadClassFromPlugins (" + className + ") looking in plugin '" + plugin.getKey() + "'.");
+            }
             try
             {
                 final Class<?> result = plugin.getClassLoader().loadClass(className);
@@ -120,12 +131,20 @@ public class PluginsClassLoader extends AbstractClassLoader
                 {
                     pluginClassIndex.put(className, plugin);
                 }
+                if (log.isDebugEnabled())
+                {
+                    log.debug("loadClassFromPlugins (" + className + ") found in plugin '" + plugin.getKey() + "'.");
+                }
                 return result;
             }
             catch (final ClassNotFoundException e)
             {
                 // continue searching the other plugins
             }
+        }
+        if (log.isDebugEnabled())
+        {
+            log.debug("loadClassFromPlugins (" + className + ") not found - caching the miss.");
         }
         synchronized (this)
         {
