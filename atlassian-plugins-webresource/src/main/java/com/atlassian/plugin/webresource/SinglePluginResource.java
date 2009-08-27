@@ -1,11 +1,11 @@
 package com.atlassian.plugin.webresource;
 
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
-import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.RESOURCE_URL_PREFIX;
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
 
-import java.util.Map;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * Represents a single plugin resource.
@@ -28,12 +28,12 @@ public class SinglePluginResource implements PluginResource
     private final boolean cached;
     private final Map<String, String> params;
 
-    public SinglePluginResource(String resourceName, String moduleCompleteKey, boolean cached)
+    public SinglePluginResource(final String resourceName, final String moduleCompleteKey, final boolean cached)
     {
-        this(resourceName, moduleCompleteKey, cached, Collections.EMPTY_MAP);
+        this(resourceName, moduleCompleteKey, cached, Collections.<String, String> emptyMap());
     }
 
-    public SinglePluginResource(String resourceName, String moduleCompleteKey, boolean cached, Map<String, String> params)
+    public SinglePluginResource(final String resourceName, final String moduleCompleteKey, final boolean cached, final Map<String, String> params)
     {
         this.resourceName = resourceName;
         this.moduleCompleteKey = moduleCompleteKey;
@@ -71,7 +71,7 @@ public class SinglePluginResource implements PluginResource
         return URL_PREFIX + PATH_SEPARATOR + moduleCompleteKey + PATH_SEPARATOR + resourceName;
     }
 
-    public static boolean matches(String url)
+    public static boolean matches(final String url)
     {
         return url.indexOf(URL_PREFIX) != -1;
     }
@@ -81,9 +81,9 @@ public class SinglePluginResource implements PluginResource
      *
      * @param url the url to parse
      */
-    public static SinglePluginResource parse(String url)
+    public static SinglePluginResource parse(final String url)
     {
-        int indexOfPrefix = url.indexOf(SinglePluginResource.URL_PREFIX);
+        final int indexOfPrefix = url.indexOf(SinglePluginResource.URL_PREFIX);
         String libraryAndResource = url.substring(indexOfPrefix + SinglePluginResource.URL_PREFIX.length() + 1);
 
         if (libraryAndResource.indexOf('?') != -1) // remove query parameters
@@ -91,10 +91,12 @@ public class SinglePluginResource implements PluginResource
             libraryAndResource = libraryAndResource.substring(0, libraryAndResource.indexOf('?'));
         }
 
-        String[] parts = libraryAndResource.split("/", 2);
+        final String[] parts = libraryAndResource.split("/", 2);
 
         if (parts.length != 2)
+        {
             return null;
+        }
 
         return new SinglePluginResource(parts[1], parts[0], url.substring(0, indexOfPrefix).length() > 0);
     }
