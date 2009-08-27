@@ -40,10 +40,8 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     protected final WebResourceIntegration webResourceIntegration;
     protected final PluginResourceLocator pluginResourceLocator;
-    protected static final List<WebResourceFormatter> webResourceFormatters = Arrays.< WebResourceFormatter>asList(
-        new CssWebResourceFormatter(),
-        new JavascriptWebResourceFormatter()
-    );
+    protected static final List<WebResourceFormatter> webResourceFormatters = Arrays.<WebResourceFormatter> asList(new CssWebResourceFormatter(),
+        new JavascriptWebResourceFormatter());
 
     public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration)
     {
@@ -87,8 +85,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         if (stack.contains(moduleKey))
         {
-            log.warn("Cyclic plugin resource dependency has been detected with: " + moduleKey + "\n" +
-                "Stack trace: " + stack);
+            log.warn("Cyclic plugin resource dependency has been detected with: " + moduleKey + "\n" + "Stack trace: " + stack);
             return;
         }
 
@@ -120,12 +117,12 @@ public class WebResourceManagerImpl implements WebResourceManager
         orderedResourceKeys.add(moduleKey);
     }
 
-    public void includeResources(Writer writer)
+    public void includeResources(final Writer writer)
     {
         includeResources(writer, UrlMode.AUTO);
     }
 
-    public void includeResources(Writer writer, UrlMode urlMode)
+    public void includeResources(final Writer writer, final UrlMode urlMode)
     {
         includeResources(writer, true, urlMode);
     }
@@ -135,25 +132,25 @@ public class WebResourceManagerImpl implements WebResourceManager
         return getRequiredResources(UrlMode.AUTO);
     }
 
-    public String getRequiredResources(UrlMode urlMode)
+    public String getRequiredResources(final UrlMode urlMode)
     {
-        StringWriter writer = new StringWriter();
+        final StringWriter writer = new StringWriter();
         includeResources(writer, false, urlMode);
         return writer.toString();
     }
 
-    private void includeResources(Writer writer, boolean clearResources, UrlMode urlMode)
+    private void includeResources(final Writer writer, final boolean clearResources, final UrlMode urlMode)
     {
-        LinkedHashSet<String> webResourceNames = getWebResourceNames();
-        if (webResourceNames == null || webResourceNames.isEmpty())
+        final LinkedHashSet<String> webResourceNames = getWebResourceNames();
+        if ((webResourceNames == null) || webResourceNames.isEmpty())
         {
             log.debug("No resources required to write");
             return;
         }
 
-        for (Object webResourceName : webResourceNames)
+        for (final Object webResourceName : webResourceNames)
         {
-            String resourceName = (String) webResourceName;
+            final String resourceName = (String) webResourceName;
             writeResourceTag(resourceName, writer, urlMode);
         }
         if (clearResources)
@@ -167,7 +164,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         requireResource(moduleCompleteKey, writer, UrlMode.AUTO);
     }
 
-    public void requireResource(String moduleCompleteKey, Writer writer, UrlMode urlMode)
+    public void requireResource(final String moduleCompleteKey, final Writer writer, final UrlMode urlMode)
     {
         final LinkedHashSet<String> resourcesWithDeps = new LinkedHashSet<String>();
         addResourceWithDependencies(moduleCompleteKey, resourcesWithDeps, new Stack<String>());
@@ -178,7 +175,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         }
     }
 
-    private void writeResourceTag(final String moduleCompleteKey, final Writer writer, UrlMode urlMode)
+    private void writeResourceTag(final String moduleCompleteKey, final Writer writer, final UrlMode urlMode)
     {
         final List<PluginResource> resources = pluginResourceLocator.getPluginResources(moduleCompleteKey);
 
@@ -216,7 +213,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         return getResourceTags(moduleCompleteKey, UrlMode.AUTO);
     }
 
-    public String getResourceTags(String moduleCompleteKey, UrlMode urlMode)
+    public String getResourceTags(final String moduleCompleteKey, final UrlMode urlMode)
     {
         final StringWriter writer = new StringWriter();
         requireResource(moduleCompleteKey, writer, urlMode);
@@ -255,11 +252,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     public String getStaticResourcePrefix(final UrlMode urlMode)
     {
         // "{base url}/s/{build num}/{system counter}/_"
-        return webResourceIntegration.getBaseUrl(urlMode) + "/" +
-                STATIC_RESOURCE_PREFIX + "/" +
-                webResourceIntegration.getSystemBuildNumber() + "/" +
-                webResourceIntegration.getSystemCounter() + "/" +
-                STATIC_RESOURCE_SUFFIX;
+        return webResourceIntegration.getBaseUrl(urlMode) + "/" + STATIC_RESOURCE_PREFIX + "/" + webResourceIntegration.getSystemBuildNumber() + "/" + webResourceIntegration.getSystemCounter() + "/" + STATIC_RESOURCE_SUFFIX;
     }
 
     public String getStaticResourcePrefix(final String resourceCounter)
@@ -270,12 +263,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     public String getStaticResourcePrefix(final String resourceCounter, final UrlMode urlMode)
     {
         // "{base url}/s/{build num}/{system counter}/{resource counter}/_"
-        return webResourceIntegration.getBaseUrl(urlMode) + "/" +
-                STATIC_RESOURCE_PREFIX + "/" +
-                webResourceIntegration.getSystemBuildNumber() + "/" +
-                webResourceIntegration.getSystemCounter() + "/" +
-                resourceCounter + "/" +
-                STATIC_RESOURCE_SUFFIX;
+        return webResourceIntegration.getBaseUrl(urlMode) + "/" + STATIC_RESOURCE_PREFIX + "/" + webResourceIntegration.getSystemBuildNumber() + "/" + webResourceIntegration.getSystemCounter() + "/" + resourceCounter + "/" + STATIC_RESOURCE_SUFFIX;
     }
 
     public String getStaticPluginResource(final String moduleCompleteKey, final String resourceName)
@@ -286,7 +274,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     public String getStaticPluginResource(final String moduleCompleteKey, final String resourceName, final UrlMode urlMode)
     {
         final ModuleDescriptor<?> moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleCompleteKey);
-        if(moduleDescriptor == null)
+        if (moduleDescriptor == null)
         {
             return null;
         }
@@ -297,17 +285,15 @@ public class WebResourceManagerImpl implements WebResourceManager
     /**
      * @return "{base url}/s/{build num}/{system counter}/{plugin version}/_/download/resources/{plugin.key:module.key}/{resource.name}"
      */
-    @SuppressWarnings("unchecked")
-    public String getStaticPluginResource(final ModuleDescriptor moduleDescriptor, final String resourceName)
+    public String getStaticPluginResource(final ModuleDescriptor<?> moduleDescriptor, final String resourceName)
     {
         return getStaticPluginResource(moduleDescriptor, resourceName, UrlMode.AUTO);
     }
 
-    public String getStaticPluginResource(final ModuleDescriptor moduleDescriptor, final String resourceName, final UrlMode urlMode)
+    public String getStaticPluginResource(final ModuleDescriptor<?> moduleDescriptor, final String resourceName, final UrlMode urlMode)
     {
         // "{base url}/s/{build num}/{system counter}/{plugin version}/_"
-        final String staticUrlPrefix =
-            getStaticResourcePrefix(String.valueOf(moduleDescriptor.getPlugin().getPluginsVersion()), urlMode);
+        final String staticUrlPrefix = getStaticResourcePrefix(String.valueOf(moduleDescriptor.getPlugin().getPluginsVersion()), urlMode);
         // "/download/resources/plugin.key:module.key/resource.name"
         return staticUrlPrefix + pluginResourceLocator.getResourceUrl(moduleDescriptor.getCompleteKey(), resourceName);
     }
@@ -331,27 +317,11 @@ public class WebResourceManagerImpl implements WebResourceManager
     private static final String REQUEST_CACHE_MODE_KEY = "plugin.webresource.mode";
 
     /**
-     * @deprecated Since 2.2
-     */
-    @Deprecated
-    private static final IncludeMode DEFAULT_INCLUDE_MODE = WebResourceManager.DELAYED_INCLUDE_MODE;
-
-    /**
      * @deprecated Since 2.2.
      */
     @Deprecated
     public void setIncludeMode(final IncludeMode includeMode)
     {
         webResourceIntegration.getRequestCache().put(REQUEST_CACHE_MODE_KEY, includeMode);
-    }
-
-    IncludeMode getIncludeMode()
-    {
-        IncludeMode includeMode = (IncludeMode) webResourceIntegration.getRequestCache().get(REQUEST_CACHE_MODE_KEY);
-        if (includeMode == null)
-        {
-            includeMode = DEFAULT_INCLUDE_MODE;
-        }
-        return includeMode;
     }
 }

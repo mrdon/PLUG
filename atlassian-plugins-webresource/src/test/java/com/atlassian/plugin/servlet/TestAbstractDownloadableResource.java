@@ -2,12 +2,13 @@ package com.atlassian.plugin.servlet;
 
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.servlet.util.CapturingHttpServletResponse;
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+
+import junit.framework.AssertionFailedError;
+import junit.framework.TestCase;
 
 /**
  * A test for AbstractDownloadableResource
@@ -21,7 +22,7 @@ public class TestAbstractDownloadableResource extends TestCase
     private class MinifiedFileServingDownloableResource extends AbstractDownloadableResource
     {
 
-        public MinifiedFileServingDownloableResource(ResourceLocation resourceLocation)
+        public MinifiedFileServingDownloableResource(final ResourceLocation resourceLocation)
         {
             super(null, resourceLocation, null);
         }
@@ -55,6 +56,7 @@ public class TestAbstractDownloadableResource extends TestCase
             return new ByteArrayInputStream(s.getBytes());
         }
     }
+
     private class MyDownloableResource extends AbstractDownloadableResource
     {
         public String getPassedResourceLocation()
@@ -64,7 +66,7 @@ public class TestAbstractDownloadableResource extends TestCase
 
         private String passedResourceLocation;
 
-        public MyDownloableResource(ResourceLocation resourceLocation, boolean disableMinification)
+        public MyDownloableResource(final ResourceLocation resourceLocation, final boolean disableMinification)
         {
             super(null, resourceLocation, "", disableMinification);
         }
@@ -72,7 +74,7 @@ public class TestAbstractDownloadableResource extends TestCase
         @Override
         protected InputStream getResourceAsStream(final String resourceLocation)
         {
-            this.passedResourceLocation = resourceLocation;
+            passedResourceLocation = resourceLocation;
             return newStream(resourceLocation);
         }
 
@@ -158,8 +160,8 @@ public class TestAbstractDownloadableResource extends TestCase
 
     public void testMinificationStrategyWrongFileType() throws Exception
     {
-        ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred.jpg", "fred.jpg", "stuff", "stuff", "stuff", null);
-        MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
+        final ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred.jpg", "fred.jpg", "stuff", "stuff", "stuff", null);
+        final MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
         myDownloableResource.streamResource(new ByteArrayOutputStream());
 
         assertEquals("/flintstone/fred.jpg", myDownloableResource.passedResourceLocation);
@@ -167,8 +169,8 @@ public class TestAbstractDownloadableResource extends TestCase
 
     public void testMinificationStrategyCss() throws Exception
     {
-        ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred.css", "fred.css", "stuff", "stuff", "stuff", null);
-        MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
+        final ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred.css", "fred.css", "stuff", "stuff", "stuff", null);
+        final MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
         myDownloableResource.streamResource(new ByteArrayOutputStream());
 
         assertEquals("/flintstone/fred-min.css", myDownloableResource.passedResourceLocation);
@@ -176,8 +178,8 @@ public class TestAbstractDownloadableResource extends TestCase
 
     public void testMinificationStrategyWithTwoMinsInName() throws Exception
     {
-        ResourceLocation resourceLocation = new ResourceLocation("/flintstone-min./fred-min.js", "fred-min.js", "stuff", "stuff", "stuff", null);
-        MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
+        final ResourceLocation resourceLocation = new ResourceLocation("/flintstone-min./fred-min.js", "fred-min.js", "stuff", "stuff", "stuff", null);
+        final MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
         myDownloableResource.streamResource(new ByteArrayOutputStream());
 
         assertEquals("/flintstone-min./fred-min.js", myDownloableResource.passedResourceLocation);
@@ -185,8 +187,8 @@ public class TestAbstractDownloadableResource extends TestCase
 
     public void testMinificationStrategyAlreadyMinimised() throws Exception
     {
-        ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred-min.js", "fred-min.js", "stuff", "stuff", "stuff", null);
-        MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
+        final ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred-min.js", "fred-min.js", "stuff", "stuff", "stuff", null);
+        final MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
         myDownloableResource.streamResource(new ByteArrayOutputStream());
 
         assertEquals("/flintstone/fred-min.js", myDownloableResource.passedResourceLocation);
@@ -194,8 +196,8 @@ public class TestAbstractDownloadableResource extends TestCase
 
     public void testMinificationStrategyNotMinimisedAndEnabled() throws Exception
     {
-        ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred.js", "fred.js", "stuff", "stuff", "stuff", null);
-        MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
+        final ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred.js", "fred.js", "stuff", "stuff", "stuff", null);
+        final MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
         myDownloableResource.streamResource(new ByteArrayOutputStream());
 
         assertEquals("/flintstone/fred-min.js", myDownloableResource.passedResourceLocation);
@@ -203,8 +205,8 @@ public class TestAbstractDownloadableResource extends TestCase
 
     public void testMinificationStrategyNotMinimisedAndDisabled() throws Exception
     {
-        ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred.js", "fred.js", "stuff", "stuff", "stuff", null);
-        MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, true);
+        final ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred.js", "fred.js", "stuff", "stuff", "stuff", null);
+        final MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, true);
         myDownloableResource.streamResource(new ByteArrayOutputStream());
 
         assertEquals("/flintstone/fred.js", myDownloableResource.passedResourceLocation);
@@ -214,8 +216,8 @@ public class TestAbstractDownloadableResource extends TestCase
     {
         System.setProperty("atlassian.webresource.disable.minification", "true");
 
-        ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred.js", "fred.js", "stuff", "stuff", "stuff", null);
-        MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
+        final ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred.js", "fred.js", "stuff", "stuff", "stuff", null);
+        final MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
         myDownloableResource.streamResource(new ByteArrayOutputStream());
 
         assertEquals("/flintstone/fred.js", myDownloableResource.passedResourceLocation);
@@ -225,8 +227,8 @@ public class TestAbstractDownloadableResource extends TestCase
     {
         System.setProperty("atlassian.webresource.disable.minification", "false");
 
-        ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred.js", "fred.js", "stuff", "stuff", "stuff", null);
-        MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
+        final ResourceLocation resourceLocation = new ResourceLocation("/flintstone/fred.js", "fred.js", "stuff", "stuff", "stuff", null);
+        final MyDownloableResource myDownloableResource = new MyDownloableResource(resourceLocation, false);
         myDownloableResource.streamResource(new ByteArrayOutputStream());
 
         assertEquals("/flintstone/fred-min.js", myDownloableResource.passedResourceLocation);
@@ -235,12 +237,11 @@ public class TestAbstractDownloadableResource extends TestCase
     public void testWithMinifiedStrategyInPlay() throws DownloadException
     {
         // it should ask for -min files first and in this case get content back
-        MinifiedFileServingDownloableResource minifiedFileServingDownloableResource = new MinifiedFileServingDownloableResource(null);
+        final MinifiedFileServingDownloableResource minifiedFileServingDownloableResource = new MinifiedFileServingDownloableResource(null);
         assertContent(minifiedFileServingDownloableResource, MINIFIED_CONTENT);
 
-
         // it should ask for -min files first but get null and hence move on to the plain old content case.
-        NotMinifiedFileServingDownloableResouce notMinifiedFileServingDownloableResouce = new NotMinifiedFileServingDownloableResouce();
+        final NotMinifiedFileServingDownloableResouce notMinifiedFileServingDownloableResouce = new NotMinifiedFileServingDownloableResouce();
         assertContent(notMinifiedFileServingDownloableResouce, PLAIN_CONTENT);
 
     }
@@ -252,17 +253,15 @@ public class TestAbstractDownloadableResource extends TestCase
             System.setProperty("atlassian.webresource.disable.minification", "true");
 
             // now in this case it must never ask for minified files.  This class used will assert that.
-            NeverMinifiedFileServingDownloableResouce neverMinifiedFileServingDownloableResouce = new NeverMinifiedFileServingDownloableResouce();
+            final NeverMinifiedFileServingDownloableResouce neverMinifiedFileServingDownloableResouce = new NeverMinifiedFileServingDownloableResouce();
             assertContent(neverMinifiedFileServingDownloableResouce, NEVER_MINIFIED_CONTENT);
 
-            MinifiedFileServingDownloableResource minifiedFileServingDownloableResouce = new MinifiedFileServingDownloableResource(null);
+            final MinifiedFileServingDownloableResource minifiedFileServingDownloableResouce = new MinifiedFileServingDownloableResource(null);
             assertContent(minifiedFileServingDownloableResouce, PLAIN_CONTENT);
 
-
             // it should ask for -min files first but get null and hence move on to the plain old content case.
-            NotMinifiedFileServingDownloableResouce notMinifiedFileServingDownloableResouce = new NotMinifiedFileServingDownloableResouce();
+            final NotMinifiedFileServingDownloableResouce notMinifiedFileServingDownloableResouce = new NotMinifiedFileServingDownloableResouce();
             assertContent(notMinifiedFileServingDownloableResouce, PLAIN_CONTENT);
-
 
             System.setProperty("atlassian.webresource.disable.minification", "false");
 
@@ -282,7 +281,7 @@ public class TestAbstractDownloadableResource extends TestCase
 
                 fail("This should have barfed in NeverMinifiedFileServingDownloableResouce");
             }
-            catch (AssertionFailedError expected)
+            catch (final AssertionFailedError expected)
             {
                 // this is expected since the test class asserts tgat a -min file should never be called on it.
                 // and hence by inference the atlassian.webresource.disable.minification property is not taking effect
@@ -295,16 +294,16 @@ public class TestAbstractDownloadableResource extends TestCase
         }
     }
 
-    private void assertContent(AbstractDownloadableResource downloadableResource, String content)
+    private void assertContent(final AbstractDownloadableResource downloadableResource, final String content) throws DownloadException
     {
-        CapturingHttpServletResponse httpServletResponse = new CapturingHttpServletResponse();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final CapturingHttpServletResponse httpServletResponse = new CapturingHttpServletResponse();
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         try
         {
             downloadableResource.serveResource(null, httpServletResponse);
         }
-        catch (DownloadException e)
+        catch (final DownloadException e)
         {
             throw new RuntimeException(e);
         }

@@ -2,8 +2,10 @@ package com.atlassian.plugin.webresource;
 
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
+
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -13,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -47,7 +50,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * <p/>
      * Note that name of the batch does not identify what the batch includes and could have been static e.g. batch.js
      */
-    public BatchPluginResource(String moduleCompleteKey, String type, Map<String, String> params)
+    public BatchPluginResource(final String moduleCompleteKey, final String type, final Map<String, String> params)
     {
         this(moduleCompleteKey + "." + type, moduleCompleteKey, type, params);
     }
@@ -56,13 +59,13 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * This constructor should only ever be used internally within this class. It does not ensure that the resourceName's
      * file extension is the same as the given type. It is up to the calling code to ensure this.
      */
-    private BatchPluginResource(String resourceName, String moduleCompleteKey, String type, Map<String, String> params)
+    private BatchPluginResource(final String resourceName, final String moduleCompleteKey, final String type, final Map<String, String> params)
     {
         this.resourceName = resourceName;
         this.moduleCompleteKey = moduleCompleteKey;
         this.type = type;
         this.params = params;
-        this.resources = new ArrayList<DownloadableResource>();
+        resources = new ArrayList<DownloadableResource>();
     }
 
     /**
@@ -73,14 +76,14 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         return resources.isEmpty();
     }
 
-    public void add(DownloadableResource resource)
+    public void add(final DownloadableResource resource)
     {
         resources.add(resource);
     }
 
-    public boolean isResourceModified(HttpServletRequest request, HttpServletResponse response)
+    public boolean isResourceModified(final HttpServletRequest request, final HttpServletResponse response)
     {
-        for (DownloadableResource resource : resources)
+        for (final DownloadableResource resource : resources)
         {
             if (resource.isResourceModified(request, response))
             {
@@ -90,19 +93,19 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         return false;
     }
 
-    public void serveResource(HttpServletRequest request, HttpServletResponse response) throws DownloadException
+    public void serveResource(final HttpServletRequest request, final HttpServletResponse response) throws DownloadException
     {
         log.debug("Start to serve batch " + toString());
-        for (DownloadableResource resource : resources)
+        for (final DownloadableResource resource : resources)
         {
             resource.serveResource(request, response);
             writeNewLine(response);
         }
     }
 
-    public void streamResource(OutputStream out)
+    public void streamResource(final OutputStream out) throws DownloadException
     {
-        for (DownloadableResource resource : resources)
+        for (final DownloadableResource resource : resources)
         {
             resource.streamResource(out);
             writeNewLine(out);
@@ -116,33 +119,33 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      *
      * @param response the HTTP response
      */
-    private void writeNewLine(HttpServletResponse response)
+    private void writeNewLine(final HttpServletResponse response) throws DownloadException
     {
         try
         {
-            response.getOutputStream().write('\n');
+            writeNewLine(response.getOutputStream());
         }
-        catch (IOException e)
+        catch (final IOException e)
         {
-            log.error("Error serving the requested file", e);
+            throw new DownloadException(e);
         }
     }
 
-    private void writeNewLine(final OutputStream out)
+    private void writeNewLine(final OutputStream out) throws DownloadException
     {
         try
         {
             out.write('\n');
         }
-        catch (IOException e)
+        catch (final IOException e)
         {
-            log.error("Error serving the requested file", e);
+            throw new DownloadException(e);
         }
     }
 
     public String getContentType()
     {
-        String contentType = params.get("content-type");
+        final String contentType = params.get("content-type");
         if (contentType != null)
         {
             return contentType;
@@ -156,31 +159,31 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * @param url         the url to parse
      * @param queryParams a map of String key and value pairs representing the query parameters in the url
      */
-    public static BatchPluginResource parse(String url, Map<String, String> queryParams)
+    public static BatchPluginResource parse(String url, final Map<String, String> queryParams)
     {
-        int startIndex = url.indexOf(URL_PREFIX) + URL_PREFIX.length() + 1;
+        final int startIndex = url.indexOf(URL_PREFIX) + URL_PREFIX.length() + 1;
 
         if (url.indexOf('?') != -1) // remove query parameters
         {
             url = url.substring(0, url.indexOf('?'));
         }
 
-        String typeAndModuleKey = url.substring(startIndex);
-        String[] parts = typeAndModuleKey.split("/", 2);
+        final String typeAndModuleKey = url.substring(startIndex);
+        final String[] parts = typeAndModuleKey.split("/", 2);
 
         if (parts.length < 2)
         {
             return null;
         }
 
-        String moduleKey = parts[0];
-        String resourceName = parts[1];
-        String type = resourceName.substring(resourceName.lastIndexOf('.') + 1);
+        final String moduleKey = parts[0];
+        final String resourceName = parts[1];
+        final String type = resourceName.substring(resourceName.lastIndexOf('.') + 1);
 
         return new BatchPluginResource(resourceName, moduleKey, type, queryParams);
     }
 
-    public static boolean matches(String url)
+    public static boolean matches(final String url)
     {
         return url.indexOf(URL_PREFIX) != -1;
     }
@@ -197,17 +200,15 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      */
     public String getUrl()
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append(URL_PREFIX).append(PATH_SEPARATOR)
-                .append(moduleCompleteKey).append(PATH_SEPARATOR)
-                .append(resourceName);
+        final StringBuilder sb = new StringBuilder();
+        sb.append(URL_PREFIX).append(PATH_SEPARATOR).append(moduleCompleteKey).append(PATH_SEPARATOR).append(resourceName);
 
         if (params.size() > 0)
         {
             sb.append("?");
             int count = 0;
 
-            for (Map.Entry<String, String> entry : params.entrySet())
+            for (final Map.Entry<String, String> entry : params.entrySet())
             {
                 sb.append(entry.getKey()).append("=").append(entry.getValue());
 
@@ -246,18 +247,19 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         return type;
     }
 
-    public boolean equals(Object o)
+    @Override
+    public boolean equals(final Object o)
     {
         if (this == o)
         {
             return true;
         }
-        if (o == null || getClass() != o.getClass())
+        if ((o == null) || (getClass() != o.getClass()))
         {
             return false;
         }
 
-        BatchPluginResource that = (BatchPluginResource) o;
+        final BatchPluginResource that = (BatchPluginResource) o;
 
         if (moduleCompleteKey != null ? !moduleCompleteKey.equals(that.moduleCompleteKey) : that.moduleCompleteKey != null)
         {
@@ -275,6 +277,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         return true;
     }
 
+    @Override
     public int hashCode()
     {
         int result;
@@ -284,6 +287,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         return result;
     }
 
+    @Override
     public String toString()
     {
         return "[moduleCompleteKey=" + moduleCompleteKey + ", type=" + type + ", params=" + params + "]";

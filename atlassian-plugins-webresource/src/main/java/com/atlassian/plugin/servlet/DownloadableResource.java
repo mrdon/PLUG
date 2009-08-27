@@ -32,9 +32,10 @@ public interface DownloadableResource
      * Write the resource to the supplied OutputStream. Note that the OutputStream will not be closed by this method.
      * 
      * @param out the stream to write to
+     * @throws DownloadException if there were errors writing to the response. Since 2.3.
      * @since 2.2
      */
-    void streamResource(OutputStream out);
+    void streamResource(OutputStream out) throws DownloadException;
 
     /**
      * Returns the content type for the resource. May return null if it cannot resolve its own content type.
