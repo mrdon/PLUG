@@ -3,11 +3,12 @@ package com.atlassian.plugin.servlet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.IOException;
+import java.util.List;
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
 
 public abstract class AbstractFileServerServlet extends HttpServlet
 {
@@ -16,9 +17,10 @@ public abstract class AbstractFileServerServlet extends HttpServlet
     public static final String SERVLET_PATH = "download";
     private static final Log log = LogFactory.getLog(AbstractFileServerServlet.class);
 
-    protected final void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException
+    @Override
+    protected final void doGet(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException
     {
-        DownloadStrategy downloadStrategy = getDownloadStrategy(httpServletRequest);
+        final DownloadStrategy downloadStrategy = getDownloadStrategy(httpServletRequest);
         if (downloadStrategy == null)
         {
             httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND, "The file you were looking for was not found");
@@ -29,9 +31,9 @@ public abstract class AbstractFileServerServlet extends HttpServlet
         {
             downloadStrategy.serveFile(httpServletRequest, httpServletResponse);
         }
-        catch (DownloadException e)
+        catch (final DownloadException e)
         {
-            log.error("Error while serving file for request:" + httpServletRequest.getRequestURI(), e);
+            log.debug("Error while serving file for request:" + httpServletRequest.getRequestURI(), e);
             if (!httpServletResponse.isCommitted())
             {
                 httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while serving file");
@@ -45,10 +47,10 @@ public abstract class AbstractFileServerServlet extends HttpServlet
      */
     protected abstract List<DownloadStrategy> getDownloadStrategies();
 
-    private DownloadStrategy getDownloadStrategy(HttpServletRequest httpServletRequest)
+    private DownloadStrategy getDownloadStrategy(final HttpServletRequest httpServletRequest)
     {
-        String url = httpServletRequest.getRequestURI().toLowerCase();
-        for (DownloadStrategy downloadStrategy : getDownloadStrategies())
+        final String url = httpServletRequest.getRequestURI().toLowerCase();
+        for (final DownloadStrategy downloadStrategy : getDownloadStrategies())
         {
             if (downloadStrategy.matches(url))
             {

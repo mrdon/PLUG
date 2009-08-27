@@ -20,7 +20,7 @@ public interface WebResourceManager
      * @param moduleCompleteKey The fully qualified plugin web resource module (eg <code>jira.webresources:scriptaculous</code>)
      * @see #includeResources(Writer)
      */
-    public void requireResource(String moduleCompleteKey);
+    void requireResource(String moduleCompleteKey);
 
     /**
      * Writes out the resource tags to the previously required resources called via {@link #requireResource(String)}. If
@@ -40,7 +40,7 @@ public interface WebResourceManager
      * @deprecated As of 2.3.0, replaced by {@link #includeResources(Writer, UrlMode)}
      */
     @Deprecated
-    public void includeResources(Writer writer);
+    void includeResources(Writer writer);
 
     /**
      * This is the equivalent of calling {@link #includeResources(Writer, UrlMode, WebResourceFilter)} with
@@ -49,7 +49,7 @@ public interface WebResourceManager
      * @see #includeResources(Writer, UrlMode, WebResourceFilter)
      * @since 2.3.0
      */
-    public void includeResources(Writer writer, UrlMode urlMode);
+    void includeResources(Writer writer, UrlMode urlMode);
 
     /**
      * Writes out the resource tags to the previously required resources called via {@link #requireResource(String)} for
@@ -72,7 +72,7 @@ public interface WebResourceManager
      * @param webResourceFilter the web resource filter to filter resources on
      * @since 2.4
      */
-    public void includeResources(Writer writer, UrlMode urlMode, WebResourceFilter webResourceFilter);
+    void includeResources(Writer writer, UrlMode urlMode, WebResourceFilter webResourceFilter);
 
     /**
      * Returns the resource tags for the previously required resources called via {@link #requireResource(String)}. If
@@ -93,7 +93,7 @@ public interface WebResourceManager
      * @deprecated As of 2.3.0, replaced by {@link #getRequiredResources(UrlMode)}
      */
     @Deprecated
-    public String getRequiredResources();
+    String getRequiredResources();
 
     /**
      * This is the equivalent of calling {@link #getRequiredResources(UrlMode, WebResourceFilter)} with the given url
@@ -104,7 +104,7 @@ public interface WebResourceManager
      * @see #getRequiredResources(UrlMode, WebResourceFilter)
      * @since 2.3.1
      */
-    public String getRequiredResources(UrlMode urlMode);
+    String getRequiredResources(UrlMode urlMode);
 
     /**
      * Returns the resource tags for the previously required resources called via {@link #requireResource(String)} that
@@ -129,7 +129,7 @@ public interface WebResourceManager
      * @see #includeResources(Writer, UrlMode, WebResourceFilter)
      * @since 2.4
      */
-    public String getRequiredResources(UrlMode urlMode, WebResourceFilter webResourceFilter);
+    String getRequiredResources(UrlMode urlMode, WebResourceFilter webResourceFilter);
 
     /**
      * Writes the resource tags of the specified resource to the writer. If you need it as a String to embed the tags in
@@ -143,7 +143,7 @@ public interface WebResourceManager
      * @deprecated As of 2.3.0, replaced by {@link #requireResource(String, Writer, UrlMode)}
      */
     @Deprecated
-    public void requireResource(String moduleCompleteKey, Writer writer);
+    void requireResource(String moduleCompleteKey, Writer writer);
 
     /**
      * Writes the resource tags of the specified resource to the writer. If you need it as a String to embed the tags in
@@ -158,7 +158,7 @@ public interface WebResourceManager
      *                          implementation to decide
      * @since 2.3.0
      */
-    public void requireResource(String moduleCompleteKey, Writer writer, UrlMode urlMode);
+    void requireResource(String moduleCompleteKey, Writer writer, UrlMode urlMode);
 
     /**
      * Returns the resource tags of the specified resource. If you are outputting the value to a {@link Writer}, use
@@ -174,7 +174,7 @@ public interface WebResourceManager
      * @deprecated As of 2.3.0, replaced by {@link #getResourceTags(String, UrlMode)}
      */
     @Deprecated
-    public String getResourceTags(String moduleCompleteKey);
+    String getResourceTags(String moduleCompleteKey);
 
     /**
      * Returns the resource tags of the specified resource. If you are outputting the value to a {@link Writer}, use
@@ -190,7 +190,7 @@ public interface WebResourceManager
      * @see #requireResource(String, Writer, UrlMode)
      * @since 2.3.0
      */
-    public String getResourceTags(String moduleCompleteKey, UrlMode urlMode);
+    String getResourceTags(String moduleCompleteKey, UrlMode urlMode);
 
     /**
      * A helper method to return a prefix for 'system' static resources.  Generally the implementation will return
@@ -211,7 +211,7 @@ public interface WebResourceManager
      * @deprecated As of 2.3.0, replaced by {@link #getStaticResourcePrefix(UrlMode)}
      */
     @Deprecated
-    public String getStaticResourcePrefix();
+    String getStaticResourcePrefix();
 
     /**
      * A helper method to return a prefix for 'system' static resources.  Generally the implementation will return
@@ -233,7 +233,7 @@ public interface WebResourceManager
      * @return A prefix that can be used to prefix 'static system' resources.
      * @since 2.3.0
      */
-    public String getStaticResourcePrefix(UrlMode urlMode);
+    String getStaticResourcePrefix(UrlMode urlMode);
 
     /**
      * A helper method to return a prefix for 'system' static resources.  This method should be used for resources that
@@ -259,7 +259,7 @@ public interface WebResourceManager
      * @deprecated As of 2.3.0, replaced by {@link #getStaticResourcePrefix(String, UrlMode)}
      */
     @Deprecated
-    public String getStaticResourcePrefix(String resourceCounter);
+    String getStaticResourcePrefix(String resourceCounter);
 
     /**
      * A helper method to return a prefix for 'system' static resources.  This method should be used for resources that
@@ -286,7 +286,7 @@ public interface WebResourceManager
      * @return A prefix that can be used to prefix 'static system' resources.
      * @since 2.3.0
      */
-    public String getStaticResourcePrefix(String resourceCounter, UrlMode urlMode);
+    String getStaticResourcePrefix(String resourceCounter, UrlMode urlMode);
 
     /**
      * A helper method to return a url for 'plugin' resources.  Generally the implementation will return
@@ -309,7 +309,7 @@ public interface WebResourceManager
      * @deprecated As of 2.3.0, replaced by {@link #getStaticPluginResource(String, String, UrlMode)}
      */
     @Deprecated
-    public String getStaticPluginResource(String moduleCompleteKey, String resourceName);
+    String getStaticPluginResource(String moduleCompleteKey, String resourceName);
 
     /**
      * A helper method to return a url for 'plugin' resources.  Generally the implementation will return
@@ -333,7 +333,7 @@ public interface WebResourceManager
      * @return A url that can be used to request 'plugin' resources.
      * @since 2.3.0
      */
-    public String getStaticPluginResource(String moduleCompleteKey, String resourceName, UrlMode urlMode);
+    String getStaticPluginResource(String moduleCompleteKey, String resourceName, UrlMode urlMode);
 
     /**
      * A helper method to return a url for 'plugin' resources.  Generally the implementation will return
@@ -358,7 +358,7 @@ public interface WebResourceManager
      * @deprecated As of 2.3.0, replaced by {@link #getStaticPluginResource(ModuleDescriptor, String, UrlMode)}
      */
     @Deprecated
-    public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName);
+    String getStaticPluginResource(ModuleDescriptor<?> moduleDescriptor, String resourceName);
 
     /**
      * A helper method to return a url for 'plugin' resources.  Generally the implementation will return
@@ -383,8 +383,7 @@ public interface WebResourceManager
      * @see #getStaticPluginResource(String, String, UrlMode)
      * @since 2.3.0
      */
-    public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName, UrlMode urlMode);
-
+    String getStaticPluginResource(ModuleDescriptor<?> moduleDescriptor, String resourceName, UrlMode urlMode);
 
     // Deprecated methods
 
@@ -392,7 +391,7 @@ public interface WebResourceManager
      * @deprecated Use #getStaticPluginResource instead
      */
     @Deprecated
-    public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, String resourceName);
+    String getStaticPluginResourcePrefix(ModuleDescriptor<?> moduleDescriptor, String resourceName);
 
     /**
      * Whether resources should be included inline, or at the top of the page.  In most cases, you want to leave this
@@ -405,7 +404,7 @@ public interface WebResourceManager
      * @deprecated Since 2.2.
      */
     @Deprecated
-    public void setIncludeMode(IncludeMode includeMode);
+    void setIncludeMode(IncludeMode includeMode);
 
     /**
      * @deprecated Since 2.2. Use {@link #requireResource(String, Writer, UrlMode)} instead.
@@ -439,5 +438,4 @@ public interface WebResourceManager
     {
         public String getModeName();
     }
-
 }

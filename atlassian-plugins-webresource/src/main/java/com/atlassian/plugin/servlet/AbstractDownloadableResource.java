@@ -3,6 +3,7 @@ package com.atlassian.plugin.servlet;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.servlet.util.LastModifiedHandler;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -36,14 +38,14 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     protected ResourceLocation resourceLocation;
     private final boolean disableMinification;
 
-    public AbstractDownloadableResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath)
+    public AbstractDownloadableResource(final Plugin plugin, final ResourceLocation resourceLocation, final String extraPath)
     {
         this(plugin, resourceLocation, extraPath, false);
     }
 
-    public AbstractDownloadableResource(Plugin plugin, ResourceLocation resourceLocation, String extraPath, boolean disableMinification)
+    public AbstractDownloadableResource(final Plugin plugin, final ResourceLocation resourceLocation, String extraPath, final boolean disableMinification)
     {
-        if (extraPath != null && !"".equals(extraPath.trim()) && !resourceLocation.getLocation().endsWith("/"))
+        if ((extraPath != null) && !"".equals(extraPath.trim()) && !resourceLocation.getLocation().endsWith("/"))
         {
             extraPath = "/" + extraPath;
         }
@@ -53,11 +55,11 @@ abstract class AbstractDownloadableResource implements DownloadableResource
         this.resourceLocation = resourceLocation;
     }
 
-    public void serveResource(HttpServletRequest request, HttpServletResponse response) throws DownloadException
+    public void serveResource(final HttpServletRequest request, final HttpServletResponse response) throws DownloadException
     {
         log.debug("Serving: " + this);
 
-        InputStream resourceStream = getResourceAsStreamViaMinificationStrategy();
+        final InputStream resourceStream = getResourceAsStreamViaMinificationStrategy();
         if (resourceStream == null)
         {
             log.warn("Resource not found: " + this);
@@ -65,7 +67,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
         }
 
         final String contentType = getContentType();
-        if(StringUtils.isNotBlank(contentType))
+        if (StringUtils.isNotBlank(contentType))
         {
             response.setContentType(contentType);
         }
@@ -75,7 +77,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
         {
             out = response.getOutputStream();
         }
-        catch (IOException e)
+        catch (final IOException e)
         {
             throw new DownloadException(e);
         }
@@ -84,9 +86,9 @@ abstract class AbstractDownloadableResource implements DownloadableResource
         log.debug("Serving file done.");
     }
 
-    public void streamResource(OutputStream out)
+    public void streamResource(final OutputStream out) throws DownloadException
     {
-        InputStream resourceStream = getResourceAsStreamViaMinificationStrategy();
+        final InputStream resourceStream = getResourceAsStreamViaMinificationStrategy();
         if (resourceStream == null)
         {
             log.warn("Resource not found: " + this);
@@ -103,15 +105,15 @@ abstract class AbstractDownloadableResource implements DownloadableResource
      * @param in the stream to read from
      * @param out the stream to write to
      */
-    private void streamResource(InputStream in, OutputStream out)
+    private void streamResource(final InputStream in, final OutputStream out) throws DownloadException
     {
         try
         {
             IOUtils.copy(in, out);
         }
-        catch (IOException e)
+        catch (final IOException e)
         {
-            log.error("Error serving the requested file", e);
+            throw new DownloadException(e);
         }
         finally
         {
@@ -120,9 +122,9 @@ abstract class AbstractDownloadableResource implements DownloadableResource
             {
                 out.flush();
             }
-            catch (IOException e)
+            catch (final IOException e)
             {
-                log.warn("Error flushing output stream", e);
+                log.debug("Error flushing output stream", e);
             }
         }
     }
@@ -135,10 +137,10 @@ abstract class AbstractDownloadableResource implements DownloadableResource
      * If this method returns true, don't do any more processing on the request -- the response code has already been
      * set to "304 Not Modified" for you, and you don't need to serve the file.
      */
-    public boolean isResourceModified(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
+    public boolean isResourceModified(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse)
     {
-        Date resourceLastModifiedDate = (plugin.getDateLoaded() == null) ? new Date() : plugin.getDateLoaded();
-        LastModifiedHandler lastModifiedHandler = new LastModifiedHandler(resourceLastModifiedDate);
+        final Date resourceLastModifiedDate = (plugin.getDateLoaded() == null) ? new Date() : plugin.getDateLoaded();
+        final LastModifiedHandler lastModifiedHandler = new LastModifiedHandler(resourceLastModifiedDate);
         return lastModifiedHandler.checkRequest(httpServletRequest, httpServletResponse);
     }
 
@@ -182,7 +184,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     {
 
         InputStream inputStream = null;
-        String location = getLocation();
+        final String location = getLocation();
         if (minificationStrategyInPlay(location))
         {
             final String minifiedLocation = getMinifiedLocation(location);
@@ -194,7 +196,6 @@ abstract class AbstractDownloadableResource implements DownloadableResource
         }
         return inputStream;
     }
-
 
     /**
      * Returns true if the minification strategy should be applied to a given resource name
@@ -219,7 +220,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
                 return false;
             }
         }
-        catch (SecurityException se)
+        catch (final SecurityException se)
         {
             // some app servers might have protected access to system properties.  Unlikely but lets be defensive
         }
@@ -229,7 +230,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
             // Check if it is already the minified vesrion of the file
             return !(resourceLocation.endsWith("-min.js") || resourceLocation.endsWith(".min.js"));
         }
-        if (resourceLocation.endsWith(".css")) 
+        if (resourceLocation.endsWith(".css"))
         {
             // Check if it is already the minified vesrion of the file
             return !(resourceLocation.endsWith("-min.css") || resourceLocation.endsWith(".min.css"));
@@ -238,9 +239,9 @@ abstract class AbstractDownloadableResource implements DownloadableResource
         return false;
     }
 
-    private String getMinifiedLocation(String location)
+    private String getMinifiedLocation(final String location)
     {
-        int lastDot = location.lastIndexOf(".");
+        final int lastDot = location.lastIndexOf(".");
         // this can never but -1 since the method call is protected by a call to minificationStrategyInPlay() first
         return location.substring(0, lastDot) + "-min" + location.substring(lastDot);
     }
