@@ -160,6 +160,11 @@ abstract class AbstractCopyOnWriteMap<K, V, M extends Map<K, V>> implements Conc
         lock.lock();
         try
         {
+            final V oldValue = delegate.get(key);
+            if (value == oldValue)
+            {
+                return oldValue;
+            }
             if (delegate.containsKey(key))
             {
                 final M map = copy();
