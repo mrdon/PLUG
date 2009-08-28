@@ -270,17 +270,6 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         return moduleClass;
     }
 
-    /**
-     * Returns the class name of the module this descriptor creates.
-     *
-     * @return The class name of the module this descriptor creates.
-     * @see #getModuleClass()
-     */
-    public String getModuleClassName()
-    {
-        return moduleClassName;
-    }
-
     public abstract T getModule();
 
     public String getDescription()
