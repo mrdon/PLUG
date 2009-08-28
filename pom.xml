@@ -3,7 +3,7 @@
     <parent>
         <artifactId>atlassian-public-pom</artifactId>
         <groupId>com.atlassian.pom</groupId>
-        <version>16</version>
+        <version>20</version>
     </parent>
 
     <groupId>com.atlassian.plugins</groupId>
