@@ -135,11 +135,6 @@ public class DefaultAbstractWebFragmentModuleDescriptor<T> implements StateAware
         return decoratedDescriptor.getModuleClass();
     }
 
-    public String getModuleClassName()
-    {
-        return decoratedDescriptor.getModuleClassName();
-    }
-
     public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
         decoratedDescriptor.init(plugin, element);

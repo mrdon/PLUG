@@ -270,11 +270,6 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         return moduleClass;
     }
 
-    public String getModuleClassName()
-    {
-        return moduleClassName;
-    }
-
     public abstract T getModule();
 
     public String getDescription()
