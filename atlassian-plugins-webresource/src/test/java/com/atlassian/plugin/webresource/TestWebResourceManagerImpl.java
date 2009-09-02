@@ -531,12 +531,12 @@ public class TestWebResourceManagerImpl extends TestCase
         String jsRef = "src=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".js";
 
         // CSS
-        String requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE, CssWebResource.FILTER);
+        String requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE, new CssWebResource());
         assertTrue(requiredResourceResult.contains(cssRef));
         assertFalse(requiredResourceResult.contains(jsRef));
 
         // JS
-        requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE, JavascriptWebResource.FILTER);
+        requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE, new JavascriptWebResource());
         assertFalse(requiredResourceResult.contains(cssRef));
         assertTrue(requiredResourceResult.contains(jsRef));
 

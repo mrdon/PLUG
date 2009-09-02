@@ -14,6 +14,6 @@ public class DefaultWebResourceFilter implements WebResourceFilter
 
     public boolean matches(String resourceName)
     {
-        return JavascriptWebResource.FILTER.matches(resourceName) || CssWebResource.FILTER.matches(resourceName);
+        return JavascriptWebResource.FORMATTER.matches(resourceName) || CssWebResource.FORMATTER.matches(resourceName);
     }
 }

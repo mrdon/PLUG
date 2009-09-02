@@ -12,7 +12,7 @@ public class TestCssWebResource extends TestCase
     protected void setUp() throws Exception
     {
         super.setUp();
-        cssWebResource = CssWebResource.INSTANCE;
+        cssWebResource = new CssWebResource();
     }
 
     protected void tearDown() throws Exception

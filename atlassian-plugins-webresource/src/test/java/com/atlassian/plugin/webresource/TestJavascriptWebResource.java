@@ -11,7 +11,7 @@ public class TestJavascriptWebResource extends TestCase
     protected void setUp() throws Exception
     {
         super.setUp();
-        javascriptWebResource = JavascriptWebResource.INSTANCE;
+        javascriptWebResource = new JavascriptWebResource();
     }
 
     protected void tearDown() throws Exception

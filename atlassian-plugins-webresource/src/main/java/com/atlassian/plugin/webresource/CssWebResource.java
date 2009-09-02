@@ -9,19 +9,7 @@ import java.util.Arrays;
 
 public class CssWebResource extends AbstractWebResourceFormatter
 {
-    static final CssWebResource INSTANCE = new CssWebResource();
-
-    /**
-     * An instance of a WebResourceFormatter that formats CSS web resources
-     * @since 2.4
-     */
-    public static final WebResourceFormatter FORMATTER = INSTANCE;
-
-    /**
-     * An instance of a WebResourceFilter that filters CSS web resources.
-     * @since 2.4
-     */
-    public static final WebResourceFilter FILTER = INSTANCE;
+    static final WebResourceFormatter FORMATTER = new CssWebResource();
 
     private static final String CSS_EXTENSION = ".css";
     private static final String MEDIA_PARAM = "media";
