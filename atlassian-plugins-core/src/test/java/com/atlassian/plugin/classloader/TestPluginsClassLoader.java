@@ -5,6 +5,8 @@ import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.MockPluginAccessor;
+import com.atlassian.plugin.MockPlugin;
 
 import java.net.URL;
 import java.net.MalformedURLException;
@@ -124,6 +126,49 @@ public class TestPluginsClassLoader extends TestCase
         }
     }
 
+    public void testGetPluginForClass() throws Exception
+    {
+        final MockPluginAccessor mockPluginAccessor = new MockPluginAccessor();
+        PluginsClassLoader pluginsClassLoader = new PluginsClassLoader(mockPluginAccessor);
+        // Set up plugin A
+        MockClassLoader mockClassLoaderA = new MockClassLoader();
+        mockClassLoaderA.register("com.acme.Ant", String.class);
+        mockClassLoaderA.register("com.acme.Clash", String.class);
+        MockPlugin pluginA = new MockPlugin("A", mockClassLoaderA);
+        mockPluginAccessor.addPlugin(pluginA);
+        // Set up plugin B
+        MockClassLoader mockClassLoaderB = new MockClassLoader();
+        mockClassLoaderB.register("com.acme.Bat", String.class);
+        mockClassLoaderB.register("com.acme.Clash", String.class);
+        MockPlugin pluginB = new MockPlugin("B", mockClassLoaderB);
+        mockPluginAccessor.addPlugin(pluginB);
+
+        // With both plugins disabled, we should get Clash from no-one
+        assertEquals(null, pluginsClassLoader.getPluginForClass("com.acme.Ant"));
+        assertEquals(null, pluginsClassLoader.getPluginForClass("com.acme.Bat"));
+        assertEquals(null, pluginsClassLoader.getPluginForClass("com.acme.Clash"));
+
+        // Enable PluginB and it should give us Bat and Clash from pluginB
+        pluginB.enable();
+        pluginsClassLoader.notifyPluginOrModuleEnabled();
+        assertEquals(null, pluginsClassLoader.getPluginForClass("com.acme.Ant"));
+        assertEquals(pluginB, pluginsClassLoader.getPluginForClass("com.acme.Bat"));
+        assertEquals(pluginB, pluginsClassLoader.getPluginForClass("com.acme.Clash"));
+
+        // Enable PluginA and it should give us Clash from pluginB (because it is cached).
+        pluginA.enable();
+        pluginsClassLoader.notifyPluginOrModuleEnabled();
+        assertEquals(pluginA, pluginsClassLoader.getPluginForClass("com.acme.Ant"));
+        assertEquals(pluginB, pluginsClassLoader.getPluginForClass("com.acme.Bat"));
+        assertEquals(pluginB, pluginsClassLoader.getPluginForClass("com.acme.Clash"));
+
+        // flush the cache and we get Clash from plugin A instead (because it is earlier in the list).
+        pluginsClassLoader.notifyUninstallPlugin(pluginB);
+        assertEquals(pluginA, pluginsClassLoader.getPluginForClass("com.acme.Ant"));
+        assertEquals(pluginB, pluginsClassLoader.getPluginForClass("com.acme.Bat"));
+        assertEquals(pluginA, pluginsClassLoader.getPluginForClass("com.acme.Clash"));
+    }
+
     private void loadPluginResource(ClassLoader stubClassLoader)
     {
         mockPluginAccessor.expectAndReturn("getEnabledPlugins", Collections.singleton(mockPlugin.proxy()));
@@ -140,14 +185,14 @@ public class TestPluginsClassLoader extends TestCase
 
     private static final class StubClassLoader extends AbstractClassLoader
     {
-        private final Collection findResourceNames = new LinkedList();
+        private final Collection<String> findResourceNames = new LinkedList<String>();
 
         public Collection getFindClassNames()
         {
             return findClassNames;
         }
 
-        private final Collection findClassNames = new LinkedList();
+        private final Collection<String> findClassNames = new LinkedList<String>();
 
         public StubClassLoader()
         {
