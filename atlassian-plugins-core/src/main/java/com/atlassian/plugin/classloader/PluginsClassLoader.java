@@ -212,6 +212,41 @@ public class PluginsClassLoader extends AbstractClassLoader
         }
     }
 
+    /**
+     * Returns the Plugin that will be used to load the given class name.
+     *
+     * If no enabled plugin can load the given class, then null is returned.
+     *
+     * @param className the Class name
+     * @return the Plugin that will be used to load the given class name.
+     */
+    public Plugin getPluginForClass(String className)
+    {
+        Plugin indexedPlugin;
+        synchronized (this)
+        {
+            indexedPlugin = pluginClassIndex.get(className);
+        }
+
+        if (isPluginEnabled(indexedPlugin))
+        {
+            return indexedPlugin;
+        }
+        // Plugin not indexed, or disabled
+        // Try to load the class - this will cache the plugin it came from.
+        Class clazz = loadClassFromPlugins(className);
+        if (clazz == null)
+        {
+            // Class could not be loaded - so return null.
+            return null;
+        }
+        synchronized (this)
+        {
+            indexedPlugin = pluginClassIndex.get(className);
+        }
+        return indexedPlugin;
+    }
+
     public synchronized void notifyPluginOrModuleEnabled()
     {
         flushMissesCaches();
