@@ -242,6 +242,8 @@ public class PluginsClassLoader extends AbstractClassLoader
         }
         synchronized (this)
         {
+            // if we get here, then loadClassFromPlugins(0 has returned a non-null class, and the side effect is that
+            // the plugin for the class name is cached in pluginClassIndex.
             indexedPlugin = pluginClassIndex.get(className);
         }
         return indexedPlugin;
