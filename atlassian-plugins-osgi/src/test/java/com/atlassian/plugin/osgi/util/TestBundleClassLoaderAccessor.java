@@ -1,9 +1,8 @@
 package com.atlassian.plugin.osgi.util;
 
-import junit.framework.TestCase;
-import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
-import com.atlassian.plugin.osgi.util.BundleClassLoaderAccessor;
+import com.mockobjects.dynamic.Mock;
+import junit.framework.TestCase;
 import org.osgi.framework.Bundle;
 
 import java.io.IOException;
@@ -18,6 +17,5 @@ public class TestBundleClassLoaderAccessor extends TestCase
         BundleClassLoaderAccessor.getClassLoader((Bundle) mockBundle.proxy(), null).getResourceAsStream("/foo.txt");
         byte[] buffer = new byte[1024];
         assertTrue(buffer.length > 0);
-
     }
 }
