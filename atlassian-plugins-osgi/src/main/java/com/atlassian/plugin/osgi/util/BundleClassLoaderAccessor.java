@@ -41,7 +41,7 @@ public class BundleClassLoaderAccessor
     public static <T> Class<T> loadClass(final Bundle bundle, final String name) throws ClassNotFoundException
     {
         Validate.notNull(bundle, "The bundle is required");
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings ({ "unchecked", "UnnecessaryLocalVariable" })
         final Class<T> loadedClass = bundle.loadClass(name);
         return loadedClass;
     }
@@ -57,6 +57,8 @@ public class BundleClassLoaderAccessor
 
         public BundleClassLoader(final Bundle bundle, AlternativeResourceLoader altResourceLoader)
         {
+            // TODO: PLUG-433 Is this ClassLoader supposed to be able to load system classes?
+            // If not, force that there is no parent classloader with super(null);
             Validate.notNull(bundle, "The bundle must not be null");
             if (altResourceLoader == null)
             {
