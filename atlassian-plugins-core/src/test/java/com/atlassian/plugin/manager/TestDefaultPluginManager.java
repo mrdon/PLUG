@@ -428,16 +428,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testGetPluginsWithPluginMatchingPluginPredicate() throws Exception
     {
-        final Mock mockPlugin = new Mock(Plugin.class);
-        mockPlugin.matchAndReturn("getKey", "some-plugin-key");
-        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.emptyList());
-        mockPlugin.matchAndReturn("hashCode", 12);
-        mockPlugin.expect("install");
-        mockPlugin.expect("enable");
-        mockPlugin.expectAndReturn("isEnabledByDefault", true);
-        mockPlugin.matchAndReturn("isEnabled", true);
-        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
-
+        final Mock mockPlugin = mockTestPlugin(Collections.emptyList());
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockPluginPredicate = new Mock(PluginPredicate.class);
@@ -453,16 +444,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testGetPluginsWithPluginNotMatchingPluginPredicate() throws Exception
     {
-        final Mock mockPlugin = new Mock(Plugin.class);
-        mockPlugin.matchAndReturn("getKey", "some-plugin-key");
-        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.emptyList());
-        mockPlugin.matchAndReturn("hashCode", 12);
-        mockPlugin.expect("install");
-        mockPlugin.expect("enable");
-        mockPlugin.expectAndReturn("isEnabledByDefault", true);
-        mockPlugin.matchAndReturn("isEnabled", true);
-        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
-
+        final Mock mockPlugin = mockTestPlugin(Collections.emptyList());
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockPluginPredicate = new Mock(PluginPredicate.class);
@@ -477,8 +459,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testGetPluginModulesWithModuleMatchingPredicate() throws Exception
     {
-        final MockThing module = new MockThing()
-        {};
+        final MockThing module = new MockThing() {};
         final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         @SuppressWarnings("unchecked")
         final ModuleDescriptor<MockThing> moduleDescriptor = (ModuleDescriptor<MockThing>) mockModuleDescriptor.proxy();
@@ -486,16 +467,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockModuleDescriptor.matchAndReturn("getCompleteKey", "some-plugin-key:module");
         mockModuleDescriptor.matchAndReturn("isEnabledByDefault", true);
 
-        final Mock mockPlugin = new Mock(Plugin.class);
-        mockPlugin.matchAndReturn("getKey", "some-plugin-key");
-        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(moduleDescriptor));
+        final Mock mockPlugin = mockTestPlugin(Collections.singleton(moduleDescriptor));
         mockPlugin.matchAndReturn("getModuleDescriptor", "module", moduleDescriptor);
-        mockPlugin.matchAndReturn("hashCode", 12);
-        mockPlugin.expect("install");
-        mockPlugin.expect("enable");
-        mockPlugin.matchAndReturn("isEnabledByDefault", true);
-        mockPlugin.matchAndReturn("isEnabled", true);
-        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
 
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
@@ -553,17 +526,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockModuleDescriptor.matchAndReturn("getCompleteKey", "some-plugin-key:module");
         mockModuleDescriptor.matchAndReturn("isEnabledByDefault", true);
 
-        final Mock mockPlugin = new Mock(Plugin.class);
-        mockPlugin.matchAndReturn("getKey", "some-plugin-key");
-        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(moduleDescriptor));
+        final Mock mockPlugin = mockTestPlugin(Collections.singleton(moduleDescriptor));
         mockPlugin.matchAndReturn("getModuleDescriptor", "module", moduleDescriptor);
-        mockPlugin.matchAndReturn("hashCode", 12);
-        mockPlugin.expect("install");
-        mockPlugin.expect("enable");
-        mockPlugin.matchAndReturn("isEnabledByDefault", true);
-        mockPlugin.matchAndReturn("isEnabled", true);
-        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
-
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockModulePredicate = new Mock(ModuleDescriptorPredicate.class);
@@ -587,17 +551,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockModuleDescriptor.matchAndReturn("getCompleteKey", "some-plugin-key:module");
         mockModuleDescriptor.matchAndReturn("isEnabledByDefault", true);
 
-        final Mock mockPlugin = new Mock(Plugin.class);
-        mockPlugin.matchAndReturn("getKey", "some-plugin-key");
-        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(moduleDescriptor));
+        final Mock mockPlugin = mockTestPlugin(Collections.singleton(moduleDescriptor));
         mockPlugin.matchAndReturn("getModuleDescriptor", "module", moduleDescriptor);
-        mockPlugin.matchAndReturn("hashCode", 12);
-        mockPlugin.expect("install");
-        mockPlugin.expect("enable");
-        mockPlugin.matchAndReturn("isEnabledByDefault", true);
-        mockPlugin.matchAndReturn("isEnabled", true);
-        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
-
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockModulePredicate = new Mock(ModuleDescriptorPredicate.class);
@@ -622,17 +577,8 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockModuleDescriptor.matchAndReturn("getCompleteKey", "some-plugin-key:module");
         mockModuleDescriptor.matchAndReturn("isEnabledByDefault", true);
 
-        final Mock mockPlugin = new Mock(Plugin.class);
-        mockPlugin.matchAndReturn("getKey", "some-plugin-key");
-        mockPlugin.matchAndReturn("getModuleDescriptors", Collections.singleton(moduleDescriptor));
+        final Mock mockPlugin = mockTestPlugin(Collections.singleton(moduleDescriptor));
         mockPlugin.matchAndReturn("getModuleDescriptor", "module", moduleDescriptor);
-        mockPlugin.matchAndReturn("hashCode", 12);
-        mockPlugin.expect("install");
-        mockPlugin.expect("enable");
-        mockPlugin.matchAndReturn("isEnabledByDefault", true);
-        mockPlugin.matchAndReturn("isEnabled", true);
-        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
-
         final Plugin plugin = (Plugin) mockPlugin.proxy();
 
         final Mock mockModulePredicate = new Mock(ModuleDescriptorPredicate.class);
@@ -646,6 +592,21 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(0, modules.size());
 
         mockModulePredicate.verify();
+    }
+
+    private Mock mockTestPlugin(Collection moduleDescriptors)
+    {
+        final Mock mockPlugin = new Mock(Plugin.class);
+        mockPlugin.matchAndReturn("getKey", "some-plugin-key");
+        mockPlugin.matchAndReturn("hashCode", 12);
+        mockPlugin.expect("install");
+        mockPlugin.expect("enable");
+        mockPlugin.expectAndReturn("isSystemPlugin", false);
+        mockPlugin.matchAndReturn("isEnabledByDefault", true);
+        mockPlugin.matchAndReturn("isEnabled", true);
+        mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
+        mockPlugin.matchAndReturn("getModuleDescriptors", moduleDescriptors);
+        return mockPlugin;
     }
 
     public void testGetPluginAndModules() throws PluginParseException
@@ -1192,7 +1153,6 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testComparePluginOlder()
     {
-
         final Plugin p1 = createPluginWithVersion("1.0");
         final Plugin p2 = createPluginWithVersion("1.1");
         assertTrue(p1.compareTo(p2) == -1);
@@ -1216,7 +1176,6 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
     public void testComparePluginEqual()
     {
-
         final Plugin p1 = createPluginWithVersion("1.0");
         final Plugin p2 = createPluginWithVersion("1.0");
         assertTrue(p1.compareTo(p2) == 0);
@@ -1233,7 +1192,6 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     // If we can't understand the version of a plugin, then take the new one.
     public void testComparePluginNoVersion()
     {
-
         final Plugin p1 = createPluginWithVersion("1.0");
         final Plugin p2 = createPluginWithVersion("#$%");
         assertEquals(1, p1.compareTo(p2));
@@ -1241,19 +1199,16 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         p1.getPluginInformation().setVersion("#$%");
         p2.getPluginInformation().setVersion("1.0");
         assertEquals(-1, p1.compareTo(p2));
-
     }
 
     public void testComparePluginBadPlugin()
     {
-
         final Plugin p1 = createPluginWithVersion("1.0");
         final Plugin p2 = createPluginWithVersion("1.0");
 
         // Compare against something with a different key
         p2.setKey("bad.key");
         assertTrue(p1.compareTo(p2) != 0);
-
     }
 
     public void testInvalidationOfDynamicResourceCache() throws IOException, PluginException
@@ -1373,6 +1328,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
         mockPlugin.expect("install");
         mockPlugin.expect("enable");
+        mockPlugin.expectAndReturn("isSystemPlugin", false);
         mockPlugin.expectAndReturn("isEnabledByDefault", true);
         mockPlugin.matchAndReturn("isEnabled", true);
         mockPlugin.matchAndReturn("getPluginState", PluginState.ENABLED);
