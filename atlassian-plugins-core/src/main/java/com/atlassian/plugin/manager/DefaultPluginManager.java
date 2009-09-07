@@ -527,11 +527,15 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             }
 
             plugin.install();
-            if (getState().isEnabled(plugin))
+            boolean isPluginEnabled = getState().isEnabled(plugin);
+            if (isPluginEnabled)
             {
                 pluginsToEnable.add(plugin);
             }
-
+            if (plugin.isSystemPlugin() && !isPluginEnabled)
+            {
+                log.warn("System plugin is disabled: " + plugin.getKey());
+            }
             if (pluginUpgraded)
             {
                 pluginEventManager.broadcast(new PluginUpgradedEvent(plugin));
@@ -964,7 +968,11 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             // We only want to re-enable modules that weren't explicitly disabled by the user.
             if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
             {
-                if (log.isDebugEnabled())
+                if(plugin.isSystemPlugin())
+                {
+                    log.warn("System plugin module disabled: " + descriptor.getCompleteKey());
+                }
+                else if (log.isDebugEnabled())
                 {
                     log.debug("Plugin module '" + descriptor.getName() + "' is explicitly disabled, so not re-enabling.");
                 }
