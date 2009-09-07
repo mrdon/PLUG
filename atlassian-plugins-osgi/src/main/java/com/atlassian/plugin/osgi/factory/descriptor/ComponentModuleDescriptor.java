@@ -22,4 +22,15 @@ public class ComponentModuleDescriptor extends AbstractModuleDescriptor<Void>
     {
         // do nothing
     }
+
+    /**
+     * @deprecated - BEWARE that this is a temporary method that will not exist for long. Deprecated since 2.3.0
+     *
+     * @return Module Class Name
+     * @since 2.3.0
+     */
+    public String getModuleClassName()
+    {
+        return moduleClassName;
+    }
 }

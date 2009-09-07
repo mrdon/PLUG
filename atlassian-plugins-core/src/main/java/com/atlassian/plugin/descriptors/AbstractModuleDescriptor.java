@@ -24,7 +24,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     protected Plugin plugin;
     String key;
     String name;
-    String moduleClassName;
+    protected String moduleClassName;
     Class<T> moduleClass;
     String description;
     boolean enabledByDefault = true;
