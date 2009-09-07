@@ -33,6 +33,7 @@ public class PluginsClassLoader extends AbstractClassLoader
 
     private final Set<String> missedPluginResource = new HashSet<String>();
     private final Set<String> missedPluginClass = new HashSet<String>();
+    private ClassLoader parentClassLoader;
 
     public PluginsClassLoader(final PluginAccessor pluginAccessor)
     {
@@ -42,6 +43,7 @@ public class PluginsClassLoader extends AbstractClassLoader
     public PluginsClassLoader(final ClassLoader parent, final PluginAccessor pluginAccessor)
     {
         super(parent);
+        this.parentClassLoader = parent;
         this.pluginAccessor = notNull("pluginAccessor", pluginAccessor);
     }
 
@@ -232,6 +234,10 @@ public class PluginsClassLoader extends AbstractClassLoader
         {
             return indexedPlugin;
         }
+        if (isSystemClass(className))
+        {
+            return null;
+        }
         // Plugin not indexed, or disabled
         // Try to load the class - this will cache the plugin it came from.
         Class clazz = loadClassFromPlugins(className);
@@ -242,11 +248,43 @@ public class PluginsClassLoader extends AbstractClassLoader
         }
         synchronized (this)
         {
-            // if we get here, then loadClassFromPlugins(0 has returned a non-null class, and the side effect is that
+            // if we get here, then loadClassFromPlugins() has returned a non-null class, and the side effect is that
             // the plugin for the class name is cached in pluginClassIndex.
             indexedPlugin = pluginClassIndex.get(className);
         }
         return indexedPlugin;
+    }
+
+    private boolean isSystemClass(final String className)
+    {
+        try
+        {
+            getSystemClassLoader().loadClass(className);
+            // SystemClassLoader was able to load the class
+            return true;
+        }
+        catch (ClassNotFoundException ex)
+        {
+            // Look in the parentClassLoader (if any) - when is this actually used anyway? DefaultPluginManager sets it to null.
+            if (parentClassLoader != null)
+            {
+                try
+                {
+                    parentClassLoader.loadClass(className);
+                    // parentClassLoader was able to load the class
+                    return true;
+                }
+                catch (ClassNotFoundException ex2)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // parentClassLoader == null. This is normal. 
+                return false;
+            }
+        }
     }
 
     public synchronized void notifyPluginOrModuleEnabled()

@@ -147,6 +147,7 @@ public class TestPluginsClassLoader extends TestCase
         assertEquals(null, pluginsClassLoader.getPluginForClass("com.acme.Ant"));
         assertEquals(null, pluginsClassLoader.getPluginForClass("com.acme.Bat"));
         assertEquals(null, pluginsClassLoader.getPluginForClass("com.acme.Clash"));
+        assertEquals(null, pluginsClassLoader.getPluginForClass("java.lang.String"));
 
         // Enable PluginB and it should give us Bat and Clash from pluginB
         pluginB.enable();
@@ -154,6 +155,7 @@ public class TestPluginsClassLoader extends TestCase
         assertEquals(null, pluginsClassLoader.getPluginForClass("com.acme.Ant"));
         assertEquals(pluginB, pluginsClassLoader.getPluginForClass("com.acme.Bat"));
         assertEquals(pluginB, pluginsClassLoader.getPluginForClass("com.acme.Clash"));
+        assertEquals(null, pluginsClassLoader.getPluginForClass("java.lang.String"));
 
         // Enable PluginA and it should give us Clash from pluginB (because it is cached).
         pluginA.enable();
@@ -161,12 +163,14 @@ public class TestPluginsClassLoader extends TestCase
         assertEquals(pluginA, pluginsClassLoader.getPluginForClass("com.acme.Ant"));
         assertEquals(pluginB, pluginsClassLoader.getPluginForClass("com.acme.Bat"));
         assertEquals(pluginB, pluginsClassLoader.getPluginForClass("com.acme.Clash"));
+        assertEquals(null, pluginsClassLoader.getPluginForClass("java.lang.String"));
 
         // flush the cache and we get Clash from plugin A instead (because it is earlier in the list).
         pluginsClassLoader.notifyUninstallPlugin(pluginB);
         assertEquals(pluginA, pluginsClassLoader.getPluginForClass("com.acme.Ant"));
         assertEquals(pluginB, pluginsClassLoader.getPluginForClass("com.acme.Bat"));
         assertEquals(pluginA, pluginsClassLoader.getPluginForClass("com.acme.Clash"));
+        assertEquals(null, pluginsClassLoader.getPluginForClass("java.lang.String"));
     }
 
     private void loadPluginResource(ClassLoader stubClassLoader)
