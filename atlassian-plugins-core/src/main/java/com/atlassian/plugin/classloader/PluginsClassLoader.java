@@ -259,8 +259,9 @@ public class PluginsClassLoader extends AbstractClassLoader
     {
         try
         {
-            getSystemClassLoader().loadClass(className);
-            // SystemClassLoader was able to load the class
+            // Assume that we are loaded by the core classloader
+            getClass().getClassLoader().loadClass(className);
+            // Standard ClassLoader was able to load the class
             return true;
         }
         catch (ClassNotFoundException ex)
