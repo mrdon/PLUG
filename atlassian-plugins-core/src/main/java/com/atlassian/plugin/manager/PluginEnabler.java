@@ -94,9 +94,9 @@ class PluginEnabler
                             i.remove();
                         }
                     }
-                    if (pluginsInEnablingState.size() == 1 && singlePluginTimeout == 0)
+                    if (isAtlassianDevMode() && pluginsInEnablingState.size() == 1 && singlePluginTimeout == 0)
                     {
-                        log.debug("Only one plugin left not enabled.  Resetting the timeout to " +
+                        log.info("Only one plugin left not enabled. Resetting the timeout to " +
                                 (LAST_PLUGIN_TIMEOUT/1000) + " seconds.");
                         singlePluginTimeout = System.currentTimeMillis() + LAST_PLUGIN_TIMEOUT;
                     }
@@ -106,6 +106,11 @@ class PluginEnabler
                 public String getWaitMessage()
                 {
                     return "Plugins that have yet to be enabled: " + pluginsInEnablingState;
+                }
+
+                private boolean isAtlassianDevMode()
+                {
+                    return Boolean.getBoolean("atlassian.dev.mode");
                 }
             });
 
@@ -119,7 +124,7 @@ class PluginEnabler
                     pluginController.disablePluginWithoutPersisting(plugin.getKey());
                 }
                 sb.deleteCharAt(sb.length() - 1);
-                log.error("Unable to start the following plugins: " + sb.toString());
+                log.error("Unable to start the following plugins due to timeout while waiting for plugin to enable: " + sb.toString());
             }
         }
     }
