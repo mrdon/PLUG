@@ -118,6 +118,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * to put a new line between files
      *
      * @param response the HTTP response
+     * @throws com.atlassian.plugin.servlet.DownloadException wraps an IOException (probably client abort)
      */
     private void writeNewLine(final HttpServletResponse response) throws DownloadException
     {
@@ -158,6 +159,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * passed in through the map, any in the url String will be ignored.
      * @param url         the url to parse
      * @param queryParams a map of String key and value pairs representing the query parameters in the url
+     * @return the parsed BatchPluginResource
      */
     public static BatchPluginResource parse(String url, final Map<String, String> queryParams)
     {
@@ -173,6 +175,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
 
         if (parts.length < 2)
         {
+            // TODO: It would be better to use Exceptions rather than returning nulls to indicate an error.
             return null;
         }
 

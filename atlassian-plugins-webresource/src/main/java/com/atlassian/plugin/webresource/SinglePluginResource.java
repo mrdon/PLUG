@@ -30,7 +30,7 @@ public class SinglePluginResource implements PluginResource
 
     public SinglePluginResource(final String resourceName, final String moduleCompleteKey, final boolean cached)
     {
-        this(resourceName, moduleCompleteKey, cached, Collections.<String, String> emptyMap());
+        this(resourceName, moduleCompleteKey, cached, Collections.<String, String>emptyMap());
     }
 
     public SinglePluginResource(final String resourceName, final String moduleCompleteKey, final boolean cached, final Map<String, String> params)
@@ -80,6 +80,7 @@ public class SinglePluginResource implements PluginResource
      * Parses the given url into a SinglePluginResource.
      *
      * @param url the url to parse
+     * @return The parsed SinglePluginResource.
      */
     public static SinglePluginResource parse(final String url)
     {
@@ -93,6 +94,7 @@ public class SinglePluginResource implements PluginResource
 
         final String[] parts = libraryAndResource.split("/", 2);
 
+        // TODO: It would be better to use Exceptions rather than returning nulls to indicate an error.
         if (parts.length != 2)
         {
             return null;

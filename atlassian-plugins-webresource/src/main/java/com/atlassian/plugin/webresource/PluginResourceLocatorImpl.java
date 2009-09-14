@@ -55,16 +55,27 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         if (BatchPluginResource.matches(url))
         {
             BatchPluginResource batchResource = BatchPluginResource.parse(url, queryParams);
+            if (batchResource == null)
+            {
+                log.error("Unable to parse the URL '" + url + "'.");
+                return null;
+            }
             return locateBatchPluginResource(batchResource);
         }
 
         if (SinglePluginResource.matches(url))
         {
             SinglePluginResource resource = SinglePluginResource.parse(url);
+            if (resource == null)
+            {
+                log.error("Unable to parse the URL '" + url + "'.");
+                return null;
+            }
             return locatePluginResource(resource.getModuleCompleteKey(), resource.getResourceName());
         }
 
         log.error("Cannot locate resource for unknown url: " + url);
+        // TODO: It would be better to use Exceptions rather than returning nulls to indicate an error.
         return null;
     }
 
