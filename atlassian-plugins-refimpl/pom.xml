@@ -227,7 +227,7 @@
             <plugin>
                 <groupId>org.twdata.maven</groupId>
                 <artifactId>maven-itblast-plugin</artifactId>
-                <version>0.5</version>
+                <version>0.6</version>
                 <executions>
                     <execution>
                         <id>download-bundled-plugins</id>
