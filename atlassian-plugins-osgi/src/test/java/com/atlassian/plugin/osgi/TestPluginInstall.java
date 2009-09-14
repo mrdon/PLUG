@@ -928,9 +928,19 @@ public class TestPluginInstall extends PluginInContainerTestBase
                 .build(pluginsDir);
 
         long start = System.currentTimeMillis();
-        initPluginManager();
+        // Set dev mode temporarily
+        System.setProperty("atlassian.dev.mode", "true");
+        try
+        {
+            initPluginManager();
 
-        assertTrue(start + (60 * 1000) > System.currentTimeMillis());
+            assertTrue(start + (60 * 1000) > System.currentTimeMillis());
+        }
+        finally
+        {
+            // Undo dev mode
+            System.setProperty("atlassian.dev.mode", "false");
+        }
     }
     public void testInstallSimplePluginNoSpring() throws Exception
     {
