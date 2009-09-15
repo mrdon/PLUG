@@ -9,7 +9,7 @@
 
    <artifactId>atlassian-plugins-main</artifactId>
    <packaging>jar</packaging>
-   <name>Atlassian Plugins Main API</name>
+   <name>Atlassian Plugins - Main API</name>
    <description>
        Simplified API for interacting with the plugin framework.  Also includes a standalone executable jar for
        simple testing.
