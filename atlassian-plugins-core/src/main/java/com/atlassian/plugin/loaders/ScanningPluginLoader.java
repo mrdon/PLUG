@@ -35,7 +35,7 @@ import java.util.TreeMap;
  */
 public class ScanningPluginLoader implements DynamicPluginLoader
 {
-    private final Log log = LogFactory.getLog(this.getClass());
+    private static final Log log = LogFactory.getLog(ScanningPluginLoader.class);
 
     protected final com.atlassian.plugin.loaders.classloading.Scanner scanner;
     protected final Map<DeploymentUnit, Plugin> plugins;

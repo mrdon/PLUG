@@ -25,8 +25,9 @@ import org.springframework.osgi.service.importer.support.AbstractOsgiServiceImpo
  */
 public class SpringContextEventBridge implements OsgiBundleApplicationContextListener
 {
+    private static final Log log = LogFactory.getLog(SpringContextEventBridge.class);
+
     private final PluginEventManager pluginEventManager;
-    private final Log log = LogFactory.getLog(SpringContextEventBridge.class);
 
     public SpringContextEventBridge(PluginEventManager pluginEventManager)
     {

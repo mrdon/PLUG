@@ -15,9 +15,10 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  */
 class ModuleDescriptorServiceTrackerCustomizer implements ServiceTrackerCustomizer
 {
+    private static final Log log = LogFactory.getLog(ModuleDescriptorServiceTrackerCustomizer.class);
+
     private final Bundle bundle;
     private final OsgiPlugin plugin;
-    private final Log log = LogFactory.getLog(ModuleDescriptorServiceTrackerCustomizer.class);
 
     public ModuleDescriptorServiceTrackerCustomizer(OsgiPlugin plugin)
     {

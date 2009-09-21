@@ -52,6 +52,8 @@ import javax.servlet.http.HttpServlet;
  */
 public class DefaultServletModuleManager implements ServletModuleManager
 {
+    private static final Log log = LogFactory.getLog(DefaultServletModuleManager.class);
+
     private final PathMapper servletMapper;
     private final Map<String, ServletModuleDescriptor> servletDescriptors = new HashMap<String, ServletModuleDescriptor>();
     private final ConcurrentMap<String, LazyLoadedReference<HttpServlet>> servletRefs = new ConcurrentHashMap<String, LazyLoadedReference<HttpServlet>>();
@@ -61,7 +63,6 @@ public class DefaultServletModuleManager implements ServletModuleManager
     private final ConcurrentMap<String, LazyLoadedReference<Filter>> filterRefs = new ConcurrentHashMap<String, LazyLoadedReference<Filter>>();
 
     private final ConcurrentMap<Plugin, ContextLifecycleReference> pluginContextRefs = new ConcurrentHashMap<Plugin, ContextLifecycleReference>();
-    private final Log log = LogFactory.getLog(getClass());
 
     /**
      * Constructor that sets itself in the servlet context for later use in dispatching servlets and filters.
@@ -202,7 +203,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         int insertIndex = Collections.binarySearch(list, e, comparator);
         if (insertIndex < 0)
         {
-            // no entry already there, so the insertIndex is the negative value of where it should be inserted 
+            // no entry already there, so the insertIndex is the negative value of where it should be inserted
             insertIndex = -insertIndex - 1;
         }
         else
@@ -268,7 +269,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
             servletRef = new LazyLoadedServletReference(descriptor, servletContext);
 
             // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
-            // want to use that so there is only ever one reference 
+            // want to use that so there is only ever one reference
             if (servletRefs.putIfAbsent(descriptor.getCompleteKey(), servletRef) != null)
             {
                 servletRef = servletRefs.get(descriptor.getCompleteKey());
@@ -309,7 +310,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
             filterRef = new LazyLoadedFilterReference(descriptor, servletContext);
 
             // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
-            // want to use that so there is only ever one reference 
+            // want to use that so there is only ever one reference
             if (filterRefs.putIfAbsent(descriptor.getCompleteKey(), filterRef) != null)
             {
                 filterRef = filterRefs.get(descriptor.getCompleteKey());

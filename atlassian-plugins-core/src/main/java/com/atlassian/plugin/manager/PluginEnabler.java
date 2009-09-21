@@ -19,10 +19,11 @@ import java.util.*;
  */
 class PluginEnabler
 {
+    private static final Log log = LogFactory.getLog(PluginEnabler.class);
+    private static final long LAST_PLUGIN_TIMEOUT = 5 * 1000;
+
     private final PluginAccessor pluginAccessor;
     private final PluginController pluginController;
-    private Log log = LogFactory.getLog(PluginEnabler.class);
-    private static final long LAST_PLUGIN_TIMEOUT = 5 * 1000;
 
     public PluginEnabler(PluginAccessor pluginAccessor, PluginController pluginController)
     {
@@ -138,7 +139,7 @@ class PluginEnabler
     private void scanDependencies(Plugin plugin, Set<String> dependentKeys)
     {
         dependentKeys.add(plugin.getKey());
-        
+
         // Ensure dependent plugins are enabled first
         for (String dependencyKey : plugin.getRequiredPlugins())
         {
