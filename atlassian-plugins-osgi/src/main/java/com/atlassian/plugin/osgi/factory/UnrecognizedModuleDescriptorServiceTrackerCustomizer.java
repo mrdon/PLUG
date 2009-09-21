@@ -23,10 +23,10 @@ import java.util.ArrayList;
  */
 class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTrackerCustomizer
 {
+    private static final Log log = LogFactory.getLog(UnrecognizedModuleDescriptorServiceTrackerCustomizer.class);
 
     private final Bundle bundle;
     private final OsgiPlugin plugin;
-    private final Log log = LogFactory.getLog(UnrecognizedModuleDescriptorServiceTrackerCustomizer.class);
 
     public UnrecognizedModuleDescriptorServiceTrackerCustomizer(OsgiPlugin plugin)
     {

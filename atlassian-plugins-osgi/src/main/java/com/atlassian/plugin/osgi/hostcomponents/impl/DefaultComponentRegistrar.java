@@ -27,9 +27,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class DefaultComponentRegistrar implements ComponentRegistrar
 {
-    private final List<HostComponentRegistration> registry = new CopyOnWriteArrayList<HostComponentRegistration>();
+    private static final Log log = LogFactory.getLog(DefaultComponentRegistrar.class);
 
-    private final Log log = LogFactory.getLog(DefaultComponentRegistrar.class);
+    private final List<HostComponentRegistration> registry = new CopyOnWriteArrayList<HostComponentRegistration>();
 
     public InstanceBuilder register(final Class<?>... mainInterfaces)
     {
