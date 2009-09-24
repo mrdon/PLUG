@@ -13,7 +13,6 @@ import com.atlassian.plugin.loaders.ClassPathPluginLoader;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
@@ -22,8 +21,6 @@ import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 import org.apache.log4j.Logger;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -82,14 +79,14 @@ public class AtlassianPlugins
         // classpath plugins
         pluginLoaders.add(new ClassPathPluginLoader());
 
-        // osgi/v2 plugins
-        pluginLoaders.add(new DirectoryPluginLoader(config.getPluginDirectory(), pluginDeployers, pluginEventManager));
-
         // bundled plugins
         if (config.getBundledPluginUrl() != null)
         {
             pluginLoaders.add(new BundledPluginLoader(config.getBundledPluginUrl(), config.getBundledPluginCacheDirectory(), pluginDeployers, pluginEventManager));
         }
+
+        // osgi/v2 plugins
+        pluginLoaders.add(new DirectoryPluginLoader(config.getPluginDirectory(), pluginDeployers, pluginEventManager));
 
         pluginManager = new DefaultPluginManager(
                 config.getPluginStateStore(),
