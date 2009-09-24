@@ -3,11 +3,10 @@ package com.atlassian.plugin.util;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.descriptors.RequiresRestart;
+import org.apache.commons.lang.Validate;
+import org.dom4j.Element;
 
 import java.util.Set;
-
-import org.dom4j.Element;
-import org.apache.commons.lang.Validate;
 
 /**
  * General plugin utility methods
@@ -16,6 +15,8 @@ import org.apache.commons.lang.Validate;
  */
 public class PluginUtils
 {
+    public static final String ATLASSIAN_DEV_MODE = "atlassian.dev.mode";
+
     /**
      * Determines if a plugin requires a restart after being installed at runtime.  Looks for the annotation
      * {@link RequiresRestart} on the plugin's module descriptors.
@@ -26,6 +27,12 @@ public class PluginUtils
      */
     public static boolean doesPluginRequireRestart(final Plugin plugin)
     {
+        //PLUG-451: When in dev mode, plugins will should not require a restart.
+        if (Boolean.getBoolean(ATLASSIAN_DEV_MODE))
+        {
+            return false;
+        }
+
         for (final ModuleDescriptor<?> descriptor : plugin.getModuleDescriptors())
         {
             if (descriptor.getClass().getAnnotation(RequiresRestart.class) != null)
