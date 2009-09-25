@@ -4,11 +4,17 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.WaitUntil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Helper class that handles the problem of enabling a set of plugins at once.  This functionality is used for both
@@ -111,7 +117,7 @@ class PluginEnabler
 
                 private boolean isAtlassianDevMode()
                 {
-                    return Boolean.getBoolean("atlassian.dev.mode");
+                    return Boolean.getBoolean(PluginUtils.ATLASSIAN_DEV_MODE);
                 }
             });
 
