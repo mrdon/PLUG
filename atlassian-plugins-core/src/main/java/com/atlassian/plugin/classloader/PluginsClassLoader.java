@@ -221,6 +221,7 @@ public class PluginsClassLoader extends AbstractClassLoader
      *
      * @param className the Class name
      * @return the Plugin that will be used to load the given class name.
+     * @since 2.3
      */
     public Plugin getPluginForClass(String className)
     {
