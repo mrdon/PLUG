@@ -39,6 +39,17 @@ public class TestOsgiHeaderUtil extends TestCase
 
     }
 
+    public void testFindReferredPackagesWithVersion() throws IOException
+    {
+        String foundPackages = OsgiHeaderUtil.findReferredPackages(new ArrayList<HostComponentRegistration>()
+        {{
+            add(new StubHostComponentRegistration(OsgiHeaderUtil.class));
+        }}, Collections.singletonMap(HostComponentRegistration.class.getPackage().getName(), "1.0"));
+
+        assertTrue(foundPackages.contains(HostComponentRegistration.class.getPackage().getName()+";version=1.0"));
+
+    }
+
     public void testGetPluginKeyBundle()
     {
         Dictionary headers = new Hashtable();
