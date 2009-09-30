@@ -660,7 +660,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
 
     public void testPluginWithHostComponentUsingOldPackageImport() throws Exception
     {
-        final PluginJarBuilder firstBuilder = new PluginJarBuilder("first");
+        final PluginJarBuilder firstBuilder = new PluginJarBuilder("oldpkgfirst");
         firstBuilder
                 .addFormattedResource("atlassian-plugin.xml",
                     "<atlassian-plugin name='Test' key='first' pluginsVersion='2'>",
@@ -679,7 +679,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
                         "public interface MyInterface {}")
                 .build(pluginsDir);
 
-        new PluginJarBuilder("asecond", firstBuilder.getClassLoader())
+        new PluginJarBuilder("oldpkgsecond", firstBuilder.getClassLoader())
                 .addPluginInformation("second", "Some name", "1.0")
                 .addFormattedJava("second.MyImpl",
                         "package second;",
