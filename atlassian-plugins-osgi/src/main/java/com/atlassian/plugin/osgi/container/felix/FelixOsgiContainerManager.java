@@ -512,8 +512,17 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             {
                 try
                 {
-                    final JarFile jar = new JarFile(path);
-                    final String pluginKey = OsgiHeaderUtil.getPluginKey(jar.getManifest());
+                    JarFile jar = null;
+                    String pluginKey = null;
+                    try
+                    {
+                        jar = new JarFile(path);
+                        pluginKey = OsgiHeaderUtil.getPluginKey(jar.getManifest());
+                    }
+                    finally
+                    {
+                        jar.close();
+                    }
                     for (final Bundle oldBundle : bundleContext.getBundles())
                     {
                         if (pluginKey.equals(OsgiHeaderUtil.getPluginKey(oldBundle)))
