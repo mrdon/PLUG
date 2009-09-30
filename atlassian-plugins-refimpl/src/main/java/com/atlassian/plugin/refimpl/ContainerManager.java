@@ -99,10 +99,14 @@ public class ContainerManager
         final List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
         packageIncludes.add("org.bouncycastle*");
         packageIncludes.add("org.dom4j*");
-        packageIncludes.add("javax.servlet.jsp*");
+        packageIncludes.add("javax.servlet*");
         packageIncludes.add("com.opensymphony.module.sitemesh*");
 
         scannerConfig.setPackageIncludes(packageIncludes);
+        scannerConfig.setPackageVersions(new HashMap<String,String>() {{
+            put("javax.servlet", "2.5");
+            put("javax.servlet.http", "2.5");
+        }});
         hostComponentProvider = new SimpleHostComponentProvider();
 
         File osgiCache;

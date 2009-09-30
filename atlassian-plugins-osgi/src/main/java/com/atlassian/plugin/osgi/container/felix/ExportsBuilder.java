@@ -73,7 +73,7 @@ class ExportsBuilder
 
         try
         {
-            origExports.append(OsgiHeaderUtil.findReferredPackages(regs));
+            origExports.append(OsgiHeaderUtil.findReferredPackages(regs, packageScannerConfig.getPackageVersions()));
 
             Analyzer analyzer = new Analyzer();
             analyzer.setJar(new Jar("somename.jar"));
