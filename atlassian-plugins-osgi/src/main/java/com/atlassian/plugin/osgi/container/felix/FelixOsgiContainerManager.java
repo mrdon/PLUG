@@ -357,11 +357,11 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             }
             try
             {
-                felix.stop(5000);
+                felix.waitForStop(5000);
             }
-            catch (BundleException e)
+            catch (InterruptedException e)
             {
-                log.warn("Felix didn't stop in time", e);
+                log.warn("Interrupting Felix shutdown", e);
             }
         }
 
