@@ -17,7 +17,6 @@ import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,6 +48,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Collection;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -69,7 +69,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private final URL frameworkBundlesUrl;
     private final PackageScannerConfiguration packageScannerConfig;
     private final HostComponentProvider hostComponentProvider;
-    private final Set<ServiceTracker> trackers;
+    private final List<ServiceTracker> trackers;
     private final ExportsBuilder exportsBuilder;
     private final ThreadFactory threadFactory = new ThreadFactory()
     {
@@ -161,7 +161,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         this.packageScannerConfig = packageScannerConfig;
         this.persistentCache = persistentCache;
         hostComponentProvider = provider;
-        trackers = Collections.synchronizedSet(new HashSet<ServiceTracker>());
+        trackers = Collections.synchronizedList(new ArrayList<ServiceTracker>());
         eventManager.register(this);
         felixLogger = new FelixLoggerBridge(log);
         exportsBuilder = new ExportsBuilder();
@@ -573,7 +573,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             return bundleContext.getBundles();
         }
 
-        public ServiceTracker getServiceTracker(final String clazz, final Set<ServiceTracker> trackedTrackers)
+        public ServiceTracker getServiceTracker(final String clazz, final Collection<ServiceTracker> trackedTrackers)
         {
             return new ServiceTracker(bundleContext, clazz, null)
             {
