@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.Collections;
 
 /**
  * Utility methods for accessing a bundle as if it was a classloader.
@@ -57,8 +58,7 @@ public class BundleClassLoaderAccessor
 
         public BundleClassLoader(final Bundle bundle, AlternativeResourceLoader altResourceLoader)
         {
-            // TODO: PLUG-433 Is this ClassLoader supposed to be able to load system classes?
-            // If not, force that there is no parent classloader with super(null);
+            super(null);
             Validate.notNull(bundle, "The bundle must not be null");
             if (altResourceLoader == null)
             {
@@ -81,14 +81,21 @@ public class BundleClassLoaderAccessor
         {
             Enumeration<URL> e = bundle.getResources(name);
 
-            // For some reason, getResources() sometimes returns nothing, yet getResource() will return one.  This code
-            // handles that strange case
-            if (!e.hasMoreElements())
+            if (e == null)
             {
-                final URL resource = findResource(name);
-                if (resource != null)
+                e = new IteratorEnumeration(Collections.emptyList().iterator());
+            }
+            else
+            {
+                // For some reason, getResources() sometimes returns nothing, yet getResource() will return one.  This code
+                // handles that strange case
+                if (!e.hasMoreElements())
                 {
-                    e = new IteratorEnumeration(Arrays.asList(resource).iterator());
+                    final URL resource = findResource(name);
+                    if (resource != null)
+                    {
+                        e = new IteratorEnumeration(Arrays.asList(resource).iterator());
+                    }
                 }
             }
             return e;
