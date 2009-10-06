@@ -227,10 +227,16 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         String bootDelegation = getAtlassianSpecificOsgiSystemProperty(OSGI_BOOTDELEGATION);
         if ((bootDelegation == null) || (bootDelegation.trim().length() == 0))
         {
-            bootDelegation = "weblogic.*,META-INF.services,com.yourkit.*,com.jprofiler.*,org.apache.xerces.*";
+            bootDelegation = "weblogic,weblogic.*," +
+                             "META-INF.services," +
+                             "com.yourkit,com.yourkit.*," +
+                             "com.jprofiler,com.jprofiler.*," +
+                             "org.apache.xerces,org.apache.xerces.*";
         }
 
         configMap.put(FelixConstants.FRAMEWORK_BOOTDELEGATION, bootDelegation);
+
+        configMap.put(FelixConstants.FRAMEWORK_BUNDLE_PARENT, FelixConstants.FRAMEWORK_BUNDLE_PARENT_FRAMEWORK);
         if (log.isDebugEnabled())
         {
             log.debug("Felix configuration: " + configMap);
@@ -357,11 +363,16 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             }
             try
             {
+                felix.stop();
                 felix.waitForStop(5000);
             }
             catch (InterruptedException e)
             {
                 log.warn("Interrupting Felix shutdown", e);
+            }
+            catch (BundleException e)
+            {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
         }
 
