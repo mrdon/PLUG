@@ -175,24 +175,28 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         disableMultipleBundleVersions = val;
     }
 
+    @SuppressWarnings ({ "UnusedDeclaration" })
     @PluginEventListener
     public void onStart(final PluginFrameworkStartingEvent event)
     {
         start();
     }
 
+    @SuppressWarnings ({ "UnusedDeclaration" })
     @PluginEventListener
     public void onShutdown(final PluginFrameworkShutdownEvent event)
     {
         stop();
     }
 
+    @SuppressWarnings ({ "UnusedDeclaration" })
     @PluginEventListener
     public void onPluginUpgrade(PluginUpgradedEvent event)
     {
         registration.refreshPackages();
     }
 
+    @SuppressWarnings ({ "UnusedDeclaration" })
     @PluginEventListener
     public void onPluginFrameworkWarmRestarting(PluginFrameworkWarmRestartingEvent event)
     {
@@ -369,9 +373,9 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             {
                 log.warn("Interrupting Felix shutdown", e);
             }
-            catch (BundleException e)
+            catch (BundleException ex)
             {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                log.error("An error occurred while stopping the Felix OSGi Container. ", ex);
             }
         }
 
@@ -533,11 +537,10 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             {
                 try
                 {
-                    JarFile jar = null;
+                    JarFile jar = new JarFile(path);
                     String pluginKey = null;
                     try
                     {
-                        jar = new JarFile(path);
                         pluginKey = OsgiHeaderUtil.getPluginKey(jar.getManifest());
                     }
                     finally
@@ -677,6 +680,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             }
         }
 
+        @SuppressWarnings ({ "ThrowableResultOfMethodCallIgnored" })
         public void frameworkEvent(FrameworkEvent event)
         {
             String bundleBits = "";
