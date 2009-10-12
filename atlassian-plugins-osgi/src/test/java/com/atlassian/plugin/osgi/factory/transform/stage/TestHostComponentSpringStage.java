@@ -13,9 +13,12 @@ import com.atlassian.plugin.test.PluginJarBuilder;
 import org.dom4j.DocumentException;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.swing.table.TableModel;
 import javax.servlet.Servlet;
@@ -74,6 +77,37 @@ public class TestHostComponentSpringStage extends TestCase
             },
             null,
             "beans:bean[@id='foo']/beans:property[@name='filter']/@value='(&(bean-name=foo)(plugins-host=true))'");
+    }
+
+    public void testTransformWithInnerJarContainingInnerJar() throws Exception
+    {
+        // creates the jar file that is to be embedded in the inner jar
+        final File embeddedJar = File.createTempFile("temp", ".jar", new File(System.getProperty("java.io.tmpdir")));
+        final ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(embeddedJar));
+        zout.putNextEntry(new ZipEntry("somefile"));
+        zout.write("somefile".getBytes());
+        zout.close();
+
+        // create the inner jar embedding the jar file created in the previous step
+        // this should be exactly the same as in the setUp() method, except for the temp.jar file entry.
+        jar = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  public Foo(com.atlassian.plugin.osgi.SomeInterface bar) {}",
+                        "}")
+                .addPluginInformation("my.plugin", "my.plugin", "1.0")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                    "Manifest-Version: 1.0",
+                    "Bundle-Version: 1.0",
+                    "Bundle-SymbolicName: my.server",
+                    "Bundle-ManifestVersion: 2",
+                    "Bundle-ClassPath: .\n")
+                .addFile("temp.jar", embeddedJar)
+                .build();
+
+        // delegates to the test method that tests transformation with inner jar, the assertions should be the same
+        testTransformWithInnerJar();
     }
 
     public void testTransform() throws IOException, DocumentException
