@@ -231,7 +231,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                              "META-INF.services," +
                              "com.yourkit,com.yourkit.*," +
                              "com.jprofiler,com.jprofiler.*," +
-                             "org.apache.xerces,org.apache.xerces.*";
+                             "org.apache.xerces,org.apache.xerces.*," +
+                             "com.icl.saxon";
         }
 
         configMap.put(FelixConstants.FRAMEWORK_BOOTDELEGATION, bootDelegation);
