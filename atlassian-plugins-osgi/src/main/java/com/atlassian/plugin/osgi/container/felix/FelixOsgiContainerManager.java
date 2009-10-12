@@ -225,7 +225,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         String bootDelegation = getAtlassianSpecificOsgiSystemProperty(OSGI_BOOTDELEGATION);
         if ((bootDelegation == null) || (bootDelegation.trim().length() == 0))
         {
-            bootDelegation = "weblogic.*,META-INF.services,com.yourkit.*,com.jprofiler.*,org.apache.xerces.*";
+            bootDelegation = "weblogic.*,META-INF.services,com.yourkit.*,com.jprofiler.*,org.apache.xerces.*,com.icl.saxon";
         }
 
         configMap.put(Constants.FRAMEWORK_BOOTDELEGATION, bootDelegation);
