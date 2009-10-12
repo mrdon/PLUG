@@ -194,7 +194,7 @@ public class HostComponentSpringStage implements TransformStage
                 }
                 else if (path.endsWith(".jar") && innerJarPaths.contains(path))
                 {
-                    findUsedHostComponents(allHostComponents, matchedHostComponents, null, new UnclosableInputStream(zin));
+                    findUsedHostComponents(allHostComponents, matchedHostComponents, Collections.<String>emptyList(), new UnclosableInputStream(zin));
                 }
             }
         }
