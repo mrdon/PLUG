@@ -1,6 +1,7 @@
 package com.atlassian.plugin.servlet;
 
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.servlet.util.LastModifiedHandler;
 
@@ -215,7 +216,8 @@ abstract class AbstractDownloadableResource implements DownloadableResource
         // secondly CHECK if we have a System property set to true that DISABLES the minification
         try
         {
-            if (Boolean.getBoolean(ATLASSIAN_WEBRESOURCE_DISABLE_MINIFICATION))
+            if (Boolean.getBoolean(ATLASSIAN_WEBRESOURCE_DISABLE_MINIFICATION) ||
+                Boolean.getBoolean(PluginUtils.ATLASSIAN_DEV_MODE))
             {
                 return false;
             }

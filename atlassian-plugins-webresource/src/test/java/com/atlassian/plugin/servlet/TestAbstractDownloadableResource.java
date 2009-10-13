@@ -2,6 +2,7 @@ package com.atlassian.plugin.servlet;
 
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.servlet.util.CapturingHttpServletResponse;
+import com.atlassian.plugin.util.PluginUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -248,9 +249,20 @@ public class TestAbstractDownloadableResource extends TestCase
 
     public void testWhenSystemPropertyIsSet() throws DownloadException
     {
+        verifySystemPropertyRespected("atlassian.webresource.disable.minification");
+    }
+
+    public void testWhenDevModeSystemPropertyIsSet() throws DownloadException
+    {
+        verifySystemPropertyRespected(PluginUtils.ATLASSIAN_DEV_MODE);
+    }
+
+    private void verifySystemPropertyRespected(String sysprop)
+            throws DownloadException
+    {
         try
         {
-            System.setProperty("atlassian.webresource.disable.minification", "true");
+            System.setProperty(sysprop, "true");
 
             // now in this case it must never ask for minified files.  This class used will assert that.
             final NeverMinifiedFileServingDownloableResouce neverMinifiedFileServingDownloableResouce = new NeverMinifiedFileServingDownloableResouce();
@@ -263,7 +275,7 @@ public class TestAbstractDownloadableResource extends TestCase
             final NotMinifiedFileServingDownloableResouce notMinifiedFileServingDownloableResouce = new NotMinifiedFileServingDownloableResouce();
             assertContent(notMinifiedFileServingDownloableResouce, PLAIN_CONTENT);
 
-            System.setProperty("atlassian.webresource.disable.minification", "false");
+            System.setProperty(sysprop, "false");
 
             // it should ask for -min files first and in this case get content back
             assertContent(minifiedFileServingDownloableResouce, MINIFIED_CONTENT);
@@ -290,7 +302,7 @@ public class TestAbstractDownloadableResource extends TestCase
         finally
         {
             // reset for this test
-            System.setProperty("atlassian.webresource.disable.minification", "false");
+            System.setProperty(sysprop, "false");
         }
     }
 
