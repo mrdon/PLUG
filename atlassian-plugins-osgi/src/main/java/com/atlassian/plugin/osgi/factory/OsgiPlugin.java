@@ -15,6 +15,8 @@ import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitTimedOutEvent;
 import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.lang.Validate;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.dom4j.Element;
 import org.osgi.framework.*;
 import org.osgi.service.packageadmin.PackageAdmin;
@@ -49,6 +51,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
     private volatile OsgiPluginHelper helper;
     public static final String SPRING_CONTEXT = "Spring-Context";
     public static final String ATLASSIAN_PLUGIN_KEY = "Atlassian-Plugin-Key";
+    private final Log log = LogFactory.getLog(this.getClass());
 
     public OsgiPlugin(final String key, final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginEventManager pluginEventManager)
     {
@@ -232,7 +235,15 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
         {
             outstandingDependencies.clear();
             helper.setPluginContainer(event.getContainer());
-            setPluginState(PluginState.ENABLED);
+            if (!compareAndSetPluginState(PluginState.ENABLING, PluginState.ENABLED) &&
+                getPluginState() != PluginState.ENABLED)
+            {
+                log.warn("Ignoring the Spring context that was just created for plugin " + getKey() + ".  The plugin " +
+                          "is in an invalid state, " + getPluginState() + ", that doesn't support a transition to " +
+                          "enabled.  Most likely, it was disabled due to a timeout.");
+                helper.setPluginContainer(null);
+                return;
+            }
 
             // Only send refresh event on second creation
             if (treatSpringBeanFactoryCreationAsRefresh)

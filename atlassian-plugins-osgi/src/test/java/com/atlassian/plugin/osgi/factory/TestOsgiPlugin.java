@@ -4,6 +4,7 @@ import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
 import junit.framework.TestCase;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -81,6 +82,28 @@ public class TestOsgiPlugin extends TestCase
         when(bundle.getState()).thenReturn(Bundle.ACTIVE);
         plugin.uninstall();
         assertEquals(plugin.getPluginState(), PluginState.UNINSTALLED);
+    }
+
+    public void testOnSpringRefresh()
+    {
+        plugin.setKey("plugin-key");
+        when(bundle.getState()).thenReturn(Bundle.RESOLVED);
+        plugin.enable();
+        PluginContainerRefreshedEvent event = new PluginContainerRefreshedEvent(new Object(), "plugin-key");
+        //when(bundle.getState()).thenReturn(Bundle.ACTIVE);
+        //plugin.disable();
+        plugin.onSpringContextRefresh(event);
+        assertEquals(PluginState.ENABLED, plugin.getPluginState());
+    }
+
+    public void testOnSpringRefreshNotEnabling()
+    {
+        plugin.setKey("plugin-key");
+        PluginContainerRefreshedEvent event = new PluginContainerRefreshedEvent(new Object(), "plugin-key");
+        when(bundle.getState()).thenReturn(Bundle.ACTIVE);
+        plugin.disable();
+        plugin.onSpringContextRefresh(event);
+        assertEquals(PluginState.DISABLED, plugin.getPluginState());
     }
 
     @RequiresRestart
