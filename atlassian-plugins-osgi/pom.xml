@@ -24,13 +24,33 @@
     </properties>
 
     <profiles>
+        <!-- If a 1.6 JDK is available, use the faster JMeter-->
+        <profile>
+            <id>jmeter-java-1.5</id>
+            <activation>
+                <jdk>1.5</jdk>
+            </activation>
+            <properties>
+                <jmeter.version>2.3.4</jmeter.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>jmeter-java-1.6</id>
+            <activation>
+                <jdk>1.6</jdk>
+            </activation>
+            <properties>
+                <jmeter.version>2.3.4-atlassian-1</jmeter.version>
+            </properties>
+        </profile>
+    
         <profile>
             <id>perfprofile</id>
             <properties>
                 <jvm.opts1>-agentlib:jprofilerti=offline,id=${jprofiler.profileid},config=${jprofiler.configfile}</jvm.opts1>
                 <jvm.opts2>-Xbootclasspath/a:${jprofiler.home}/bin/agent.jar</jvm.opts2>
                 <jprofiler.home>${project.build.directory}/jprofiler5/</jprofiler.home>
-                <jprofiler.version>5.2.2</jprofiler.version>
+                <jprofiler.version>5.2.4</jprofiler.version>
                 <jprofiler.profileid>111</jprofiler.profileid>
                 <jprofiler.configfile>${project.build.directory}/test-classes/jprofilerconfig.xml</jprofiler.configfile>
                 <setuptest.runtime>100</setuptest.runtime>
