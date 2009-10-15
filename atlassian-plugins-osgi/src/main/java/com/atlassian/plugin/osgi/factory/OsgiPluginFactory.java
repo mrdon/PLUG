@@ -215,6 +215,10 @@ public class OsgiPluginFactory implements PluginFactory
                             }
                         }
                     }
+                    else
+                    {
+                        factories.add((ModuleDescriptorFactory) fac);
+                    }
                 }
             }
 
