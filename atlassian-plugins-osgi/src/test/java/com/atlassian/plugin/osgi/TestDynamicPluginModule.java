@@ -442,6 +442,70 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
     }
 
+    public void testDynamicPluginModuleUsingModuleTypeDescriptorInSamePluginWithRestart() throws Exception
+    {
+        initPluginManager(new HostComponentProvider()
+        {
+            public void provide(final ComponentRegistrar registrar)
+            {
+            }
+        });
+
+        final File pluginJar = new PluginJarBuilder("pluginType")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <module-type key='foo' class='foo.MyModuleDescriptor' />",
+                        "    <foo key='dum2' />",
+                        "</atlassian-plugin>")
+                .addFormattedJava("foo.MyModuleDescriptor",
+                        "package foo;",
+                        "public class MyModuleDescriptor extends com.atlassian.plugin.descriptors.AbstractModuleDescriptor {",
+                        "  public Object getModule(){return null;}",
+                        "}")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("test.plugin")
+                        .getModuleDescriptor("dum2")
+                        .getClass()
+                        .getSimpleName()
+                        .equals("MyModuleDescriptor");
+            }
+        });
+        Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin")
+                .getModuleDescriptors();
+        assertEquals(2, descriptors.size());
+        ModuleDescriptor<?> descriptor = pluginManager.getPlugin("test.plugin")
+                .getModuleDescriptor("dum2");
+        assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("test.plugin")
+                        .getModuleDescriptor("dum2")
+                        .getClass()
+                        .getSimpleName()
+                        .equals("MyModuleDescriptor");
+            }
+        });
+        descriptors = pluginManager.getPlugin("test.plugin")
+                .getModuleDescriptors();
+        assertEquals(2, descriptors.size());
+        ModuleDescriptor<?> newdescriptor = pluginManager.getPlugin("test.plugin")
+                .getModuleDescriptor("dum2");
+        assertEquals("MyModuleDescriptor", newdescriptor.getClass().getSimpleName());
+        assertTrue(descriptor.getClass() != newdescriptor.getClass());
+    }
+
     public void testDynamicModuleDescriptor() throws Exception
     {
         initPluginManager(null);

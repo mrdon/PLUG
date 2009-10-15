@@ -16,6 +16,7 @@ import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.factory.descriptor.ComponentModuleDescriptor;
 import com.atlassian.plugin.osgi.factory.descriptor.ModuleTypeModuleDescriptor;
 import com.atlassian.plugin.osgi.factory.descriptor.ComponentImportModuleDescriptor;
+import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import org.apache.commons.io.IOUtils;
@@ -145,7 +146,7 @@ public class OsgiPluginFactory implements PluginFactory
                 throw new PluginParseException("No descriptor found in classloader for : " + pluginArtifact);
             }
 
-            ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory);
+            ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory, pluginArtifact);
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys.toArray(new String[applicationKeys.size()]));
 
             Plugin osgiPlugin = new OsgiPlugin(parser.getKey(), osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager);
@@ -168,9 +169,10 @@ public class OsgiPluginFactory implements PluginFactory
      * Get a chained module descriptor factory that includes any dynamically available descriptor factories
      *
      * @param originalFactory The factory provided by the host application
+     * @param pluginArtifact
      * @return The composite factory
      */
-    private ModuleDescriptorFactory getChainedModuleDescriptorFactory(ModuleDescriptorFactory originalFactory)
+    private ModuleDescriptorFactory getChainedModuleDescriptorFactory(ModuleDescriptorFactory originalFactory, PluginArtifact pluginArtifact)
     {
         // we really don't want two of these
         synchronized (this)
@@ -195,7 +197,24 @@ public class OsgiPluginFactory implements PluginFactory
             {
                 for (Object fac : serviceObjs)
                 {
-                    factories.add((ModuleDescriptorFactory) fac);
+                    ModuleDescriptorFactory dynFactory = (ModuleDescriptorFactory) fac;
+                    if (dynFactory instanceof ListableModuleDescriptorFactory)
+                    {
+                        for (Class<ModuleDescriptor<?>> descriptor : ((ListableModuleDescriptorFactory)dynFactory).getModuleDescriptorClasses())
+                        {
+                            // This will only work for classes not in inner jars and breaks on first non-match
+                            if (!pluginArtifact.doesResourceExist(descriptor.getName().replace('.','/') + ".class"))
+                            {
+                                factories.add((ModuleDescriptorFactory) fac);
+                                break;
+                            }
+                            else
+                            {
+                                log.info("Detected a module descriptor - " + descriptor.getName() + " - which is also present in " +
+                                         "jar to be installed.  Skipping its module descriptor factory.");
+                            }
+                        }
+                    }
                 }
             }
 
