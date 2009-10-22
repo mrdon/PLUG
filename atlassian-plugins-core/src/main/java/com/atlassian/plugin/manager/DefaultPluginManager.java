@@ -734,7 +734,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     public Plugin getPlugin(final String key)
     {
-        return plugins.get(key);
+        return key == null ? null : plugins.get(key);
     }
 
     public Plugin getEnabledPlugin(final String pluginKey)

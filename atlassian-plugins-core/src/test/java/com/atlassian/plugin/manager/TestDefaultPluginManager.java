@@ -1545,6 +1545,11 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         {}
     }
 
+    public void testGetPluginWithNullKey()
+    {
+        manager.init();
+        assertNull(manager.getPlugin(null));
+    }
     public Plugin createPluginWithVersion(final String version)
     {
         final Plugin p = new StaticPlugin();
