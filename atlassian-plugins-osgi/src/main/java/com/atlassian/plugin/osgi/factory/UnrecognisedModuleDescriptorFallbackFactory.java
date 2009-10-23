@@ -21,7 +21,7 @@ class UnrecognisedModuleDescriptorFallbackFactory implements ModuleDescriptorFac
 
     public UnrecognisedModuleDescriptor getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException
     {
-        log.info("Unknown module descriptor of type " + type + " registered as a unrecognised descriptor.");
+        log.info("Unknown module descriptor of type " + type + " registered as an unrecognised descriptor.");
         final UnrecognisedModuleDescriptor descriptor = new UnrecognisedModuleDescriptor();
         descriptor.setErrorText(DESCRIPTOR_TEXT);
         return descriptor;
