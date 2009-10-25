@@ -16,17 +16,30 @@ public class TestUtils
 {
     static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey, final Plugin p)
     {
-        return createWebResourceModuleDescriptor(completeKey, p, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        return createWebResourceModuleDescriptor(completeKey, p, Collections.<ResourceDescriptor>emptyList(), Collections.<String>emptyList(), false);
     }
 
     static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
         final Plugin p, final List<ResourceDescriptor> resourceDescriptors)
     {
-        return createWebResourceModuleDescriptor(completeKey, p, resourceDescriptors, Collections.EMPTY_LIST);
+        return createWebResourceModuleDescriptor(completeKey, p, resourceDescriptors, Collections.<String>emptyList(), false);
     }
 
     static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
+        final Plugin p, final List<ResourceDescriptor> resourceDescriptors, boolean superBatch)
+    {
+        return createWebResourceModuleDescriptor(completeKey, p, resourceDescriptors, Collections.<String>emptyList(), superBatch);
+    }
+
+
+    static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
         final Plugin p, final List<ResourceDescriptor> resourceDescriptors, final List<String> dependencies)
+    {
+        return createWebResourceModuleDescriptor(completeKey, p, resourceDescriptors, dependencies, false);
+
+    }
+    static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
+        final Plugin p, final List<ResourceDescriptor> resourceDescriptors, final List<String> dependencies, final boolean superBatch)
     {
         return new WebResourceModuleDescriptor() {
             public String getCompleteKey()
@@ -47,6 +60,12 @@ public class TestUtils
             public List<String> getDependencies()
             {
                 return dependencies;
+            }
+
+            public boolean isSuperBatch()
+            {
+                return superBatch;
+
             }
         };
     }

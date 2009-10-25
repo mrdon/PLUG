@@ -42,12 +42,7 @@ import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescrip
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.util.Assertions;
-import com.atlassian.plugin.webresource.PluginResourceLocator;
-import com.atlassian.plugin.webresource.PluginResourceLocatorImpl;
-import com.atlassian.plugin.webresource.WebResourceIntegration;
-import com.atlassian.plugin.webresource.WebResourceManager;
-import com.atlassian.plugin.webresource.WebResourceManagerImpl;
-import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
+import com.atlassian.plugin.webresource.*;
 
 /**
  * A simple class that behaves like Spring's ContainerManager class.
@@ -142,7 +137,7 @@ public class ContainerManager
         final PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(pluginAccessor, new SimpleServletContextFactory(servletContext));
         final PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
 
-        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration);
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration, new DefaultResourceBatchingConfiguration());
 
         publicContainer = new HashMap<Class<?>, Object>();
         publicContainer.put(PluginController.class, plugins.getPluginController());

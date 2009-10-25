@@ -3,6 +3,7 @@ package com.atlassian.plugin.webresource;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.RESOURCE_URL_PREFIX;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
+import com.atlassian.plugin.Plugin;
 
 import java.util.Collections;
 import java.util.Map;
@@ -54,6 +55,12 @@ public class SinglePluginResource implements PluginResource
     public Map<String, String> getParams()
     {
         return Collections.unmodifiableMap(params);
+    }
+
+    public String getVersion(WebResourceIntegration integration)
+    {
+        final Plugin plugin = integration.getPluginAccessor().getEnabledPluginModule(getModuleCompleteKey()).getPlugin();
+        return plugin.getPluginInformation().getVersion();
     }
 
     public boolean isCacheSupported()

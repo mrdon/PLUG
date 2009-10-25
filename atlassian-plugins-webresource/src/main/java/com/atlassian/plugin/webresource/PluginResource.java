@@ -33,4 +33,9 @@ public interface PluginResource
      * @return a map of parameter key and value pairs for this resource.
      */
     Map<String, String> getParams();
+
+    /**
+     * @return the version prefix string for a cached resource
+     */
+    String getVersion(WebResourceIntegration integration);
 }

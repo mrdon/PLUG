@@ -1,7 +1,6 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -9,12 +8,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -41,12 +35,19 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     protected final WebResourceIntegration webResourceIntegration;
     protected final PluginResourceLocator pluginResourceLocator;
+    protected final ResourceBatchingConfiguration batchingConfiguration;
     protected static final List<WebResourceFormatter> webResourceFormatters = Arrays.asList(CssWebResource.FORMATTER, JavascriptWebResource.FORMATTER);
 
-    public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration)
+    public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration)
+    {
+        this(pluginResourceLocator,  webResourceIntegration, new DefaultResourceBatchingConfiguration());
+    }
+
+    public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration, ResourceBatchingConfiguration batchingConfiguration)
     {
         this.pluginResourceLocator = pluginResourceLocator;
         this.webResourceIntegration = webResourceIntegration;
+        this.batchingConfiguration = batchingConfiguration;
     }
 
     public void requireResource(final String moduleCompleteKey)
@@ -83,38 +84,45 @@ public class WebResourceManagerImpl implements WebResourceManager
      */
     private void addResourceWithDependencies(final String moduleKey, final LinkedHashSet<String> orderedResourceKeys, final Stack<String> stack)
     {
-        if (stack.contains(moduleKey))
+        if (batchingConfiguration.isSuperBatchingEnabled() && batchingConfiguration.getSuperBatchModuleCompleteKeys().contains(moduleKey))
         {
-            log.warn("Cyclic plugin resource dependency has been detected with: " + moduleKey + "\n" + "Stack trace: " + stack);
-            return;
+            log.debug("Not requiring resource: " + moduleKey + " because it is part of a super-batch");
         }
-
-        final ModuleDescriptor<?> moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleKey);
-        if (!(moduleDescriptor instanceof WebResourceModuleDescriptor))
+        else
         {
-            log.warn("Cannot find web resource module for: " + moduleKey);
-            return;
-        }
-
-        final List<String> dependencies = ((WebResourceModuleDescriptor) moduleDescriptor).getDependencies();
-        log.debug("About to add resource [" + moduleKey + "] and its dependencies: " + dependencies);
-
-        stack.push(moduleKey);
-        try
-        {
-            for (final String dependency : dependencies)
+            if (stack.contains(moduleKey))
             {
-                if (!orderedResourceKeys.contains(dependency))
+                log.warn("Cyclic plugin resource dependency has been detected with: " + moduleKey + "\n" + "Stack trace: " + stack);
+                return;
+            }
+
+            final ModuleDescriptor<?> moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleKey);
+            if (!(moduleDescriptor instanceof WebResourceModuleDescriptor))
+            {
+                log.warn("Cannot find web resource module for: " + moduleKey);
+                return;
+            }
+
+            final List<String> dependencies = ((WebResourceModuleDescriptor) moduleDescriptor).getDependencies();
+            log.debug("About to add resource [" + moduleKey + "] and its dependencies: " + dependencies);
+
+            stack.push(moduleKey);
+            try
+            {
+                for (final String dependency : dependencies)
                 {
-                    addResourceWithDependencies(dependency, orderedResourceKeys, stack);
+                    if (!orderedResourceKeys.contains(dependency))
+                    {
+                        addResourceWithDependencies(dependency, orderedResourceKeys, stack);
+                    }
                 }
             }
+            finally
+            {
+                stack.pop();
+            }
+            orderedResourceKeys.add(moduleKey);
         }
-        finally
-        {
-            stack.pop();
-        }
-        orderedResourceKeys.add(moduleKey);
     }
 
     /**
@@ -194,6 +202,10 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     private void includeResources(final Writer writer, final boolean clearResources, final UrlMode urlMode, final WebResourceFilter filter)
     {
+        List<PluginResource> superBatchResources = getSuperBatchResources(filter);
+
+        includeSuperBatchResources(writer, urlMode, superBatchResources,  filter);
+
         final LinkedHashSet<String> webResourceNames = getWebResourceNames();
         if ((webResourceNames == null) || webResourceNames.isEmpty())
         {
@@ -210,6 +222,63 @@ public class WebResourceManagerImpl implements WebResourceManager
         }
     }
 
+    private List<PluginResource> getSuperBatchResources(WebResourceFilter filter)
+    {
+        List<PluginResource> resources = new ArrayList<PluginResource>();
+
+        List<String> superBatchModuleKeys = batchingConfiguration.getSuperBatchModuleCompleteKeys();
+
+        for (WebResourceFormatter formatter : webResourceFormatters)
+        {
+            Set<Map<String, String>> alreadyIncluded = new HashSet<Map<String, String>>();
+            for (String moduleKey : superBatchModuleKeys)
+            {
+                final ModuleDescriptor<?> moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleKey);
+                if (moduleDescriptor instanceof WebResourceModuleDescriptor)
+                {
+                    for (PluginResource pluginResource : pluginResourceLocator.getPluginResources(moduleDescriptor.getCompleteKey()))
+                    {
+                        if (formatter.matches(pluginResource.getResourceName()) && filter.matches(pluginResource.getResourceName()))
+                        {
+                            Map<String, String> batchParamsMap = new HashMap<String, String>(PluginResourceLocator.BATCH_PARAMS.length);
+
+                            for (String s : PluginResourceLocator.BATCH_PARAMS)
+                            {
+                                batchParamsMap.put(s, pluginResource.getParams().get(s));
+                            }
+
+                            if (!alreadyIncluded.contains(batchParamsMap))
+                            {
+                                resources.add(SuperBatchPluginResource.createBatchFor(pluginResource));
+                                alreadyIncluded.add(batchParamsMap);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return resources;
+    }
+
+    private void includeSuperBatchResources(Writer writer, UrlMode urlMode, List<PluginResource> resources, WebResourceFilter filter)
+    {
+        final Map<WebResourceFilter, Writer> writersForTypes = new HashMap<WebResourceFilter, Writer>();
+        for (final WebResourceFormatter formatter : webResourceFormatters)
+        {
+            writersForTypes.put(formatter, new StringWriter());
+        }
+
+        for (PluginResource resource : resources)
+        {
+            writeResourceTag(resource.getModuleCompleteKey(), writersForTypes, urlMode, filter, writer, resource);
+        }
+        // write tags out in the order of formatters i.e. css then js
+        for (final WebResourceFormatter formatter : webResourceFormatters)
+        {
+            writeContentAndSwallowErrors(writersForTypes.get(formatter).toString(), writer);
+        }
+    }
+
     private void includeResources(final Writer writer, final LinkedHashSet<String> webResourceNames, final UrlMode urlMode, final WebResourceFilter filter)
     {
         final Map<WebResourceFilter, Writer> writersForTypes = new HashMap<WebResourceFilter, Writer>();
@@ -220,7 +289,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
         for (final String resourceName : webResourceNames)
         {
-            writeResourceTag(resourceName, writersForTypes, urlMode, filter, writer);
+            writeResourceTag(resourceName, writersForTypes, urlMode, filter, writer, pluginResourceLocator.getPluginResources(resourceName));
         }
         // write tags out in the order of formatters i.e. css then js
         for (final WebResourceFormatter formatter : webResourceFormatters)
@@ -241,10 +310,8 @@ public class WebResourceManagerImpl implements WebResourceManager
         includeResources(writer, resourcesWithDeps, urlMode, DefaultWebResourceFilter.INSTANCE);
     }
 
-    private void writeResourceTag(final String moduleCompleteKey, final Map<WebResourceFilter, Writer> writers, final UrlMode urlMode, final WebResourceFilter filter, final Writer errorHandler)
+    private void writeResourceTag(final String moduleCompleteKey, final Map<WebResourceFilter, Writer> writers, final UrlMode urlMode, final WebResourceFilter filter, final Writer errorHandler, List<PluginResource> resources)
     {
-        final List<PluginResource> resources = pluginResourceLocator.getPluginResources(moduleCompleteKey);
-
         if (resources == null)
         {
             writeContentAndSwallowErrors("<!-- Error loading resource \"" + moduleCompleteKey + "\".  Resource not found -->\n", errorHandler);
@@ -253,33 +320,37 @@ public class WebResourceManagerImpl implements WebResourceManager
 
         for (final PluginResource resource : resources)
         {
-            final String resourceName = resource.getResourceName();
-            if (filter.matches(resourceName)) // only include resources that match the given filter
-            {
-                final WebResourceFormatter formatter = getWebResourceFormatter(resourceName);
-                if (formatter == null)
-                {
-                    writeContentAndSwallowErrors("<!-- Error loading resource \"" + moduleCompleteKey + "\".  Resource formatter not found -->\n",
-                        errorHandler);
-                    continue;
-                }
+            writeResourceTag(moduleCompleteKey, writers, urlMode, filter, errorHandler, resource);
+        }
+    }
 
-                String url = resource.getUrl();
-                if (resource.isCacheSupported())
-                {
-                    final Plugin plugin = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(resource.getModuleCompleteKey()).getPlugin();
-                    url = getStaticResourcePrefix(plugin.getPluginInformation().getVersion(), urlMode) + url;
-                }
-                else
-                {
-                    url = webResourceIntegration.getBaseUrl(urlMode) + url;
-                }
-                writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writers.get(formatter));
-            }
-            else if (log.isDebugEnabled())
+    private void writeResourceTag(String moduleCompleteKey, Map<WebResourceFilter, Writer> writers, UrlMode urlMode, WebResourceFilter filter, Writer errorHandler, PluginResource resource)
+    {
+        final String resourceName = resource.getResourceName();
+        if (filter.matches(resourceName)) // only include resources that match the given filter
+        {
+            final WebResourceFormatter formatter = getWebResourceFormatter(resourceName);
+            if (formatter == null)
             {
-                log.debug("Resource [" + resourceName + "] excluded by filter.");
+                writeContentAndSwallowErrors("<!-- Error loading resource \"" + moduleCompleteKey + "\".  Resource formatter not found -->\n",
+                    errorHandler);
+                return;
             }
+
+            String url = resource.getUrl();
+            if (resource.isCacheSupported())
+            {
+                url = getStaticResourcePrefix(resource.getVersion(webResourceIntegration), urlMode) + url;
+            }
+            else
+            {
+                url = webResourceIntegration.getBaseUrl(urlMode) + url;
+            }
+            writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writers.get(formatter));
+        }
+        else if (log.isDebugEnabled())
+        {
+            log.debug("Resource [" + resourceName + "] excluded by filter.");
         }
     }
 

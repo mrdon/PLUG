@@ -76,4 +76,12 @@ public interface WebResourceIntegration
      * @since 2.3.0
      */
     String getBaseUrl(UrlMode urlMode);
+
+    /**
+     * This version number is used for caching URL generation, and needs to be incremented every time the contents
+     * of the superbatch may have changed. Practically this means updating every time the plugin system state changes
+     *
+     * @return a version number
+     */
+    String getSuperBatchVersion();
 }

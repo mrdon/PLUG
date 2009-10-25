@@ -32,26 +32,44 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     private static final String DOWNLOAD_TYPE = "download";
 
-    private static String[] BATCH_PARAMS = new String[] { "ieonly", "media", "content-type", "cache" };
-
     final private PluginAccessor pluginAccessor;
     final private ServletContextFactory servletContextFactory;
+    final private ResourceBatchingConfiguration configuration;
+
     private static final String RESOURCE_SOURCE_PARAM = "source";
     private static final String RESOURCE_BATCH_PARAM = "batch";
 
     public PluginResourceLocatorImpl(PluginAccessor pluginAccessor, ServletContextFactory servletContextFactory)
     {
+        this(pluginAccessor, servletContextFactory, new DefaultResourceBatchingConfiguration());
+    }
+
+    public PluginResourceLocatorImpl(PluginAccessor pluginAccessor, ServletContextFactory servletContextFactory, ResourceBatchingConfiguration configuration)
+    {
         this.pluginAccessor = pluginAccessor;
         this.servletContextFactory = servletContextFactory;
+        this.configuration = configuration;
     }
 
     public boolean matches(String url)
     {
-        return SinglePluginResource.matches(url) || BatchPluginResource.matches(url);
+        return SuperBatchPluginResource.matches(url) || SinglePluginResource.matches(url) || BatchPluginResource.matches(url);
     }
 
     public DownloadableResource getDownloadableResource(String url, Map<String, String> queryParams)
     {
+        if (SuperBatchPluginResource.matches(url))
+        {
+            SuperBatchPluginResource superBatchResource = SuperBatchPluginResource.parse(url, queryParams);
+            if (superBatchResource == null)
+            {
+                log.error("Unable to parse the URL '" + url + "'");
+                return null;
+            }
+
+            return locateSuperBatchPluginResource(superBatchResource);
+        }
+
         if (BatchPluginResource.matches(url))
         {
             BatchPluginResource batchResource = BatchPluginResource.parse(url, queryParams);
@@ -79,6 +97,30 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         return null;
     }
 
+    private DownloadableResource locateSuperBatchPluginResource(SuperBatchPluginResource resource)
+    {
+        List<String> moduleKeys = configuration.getSuperBatchModuleCompleteKeys();
+
+        for (String moduleKey : moduleKeys)
+        {
+            ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(moduleKey);
+            if (moduleDescriptor == null)
+            {
+                log.info("Resource batching configuration refers to plugin that does not exist: " + moduleKey);
+            }
+            else
+            {
+                for (ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors(DOWNLOAD_TYPE))
+                {
+                    if (isResourceInBatch(resourceDescriptor, resource))
+                        resource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
+                }
+            }
+        }
+
+        return resource;
+    }
+
     private DownloadableResource locateBatchPluginResource(BatchPluginResource batchResource)
     {
         ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(batchResource.getModuleCompleteKey());
@@ -99,9 +141,9 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         return batchResource;
     }
 
-    private boolean isResourceInBatch(ResourceDescriptor resourceDescriptor, BatchPluginResource batchResource)
+    private boolean isResourceInBatch(ResourceDescriptor resourceDescriptor, BatchResource batchResource)
     {
-        if (!resourceDescriptor.getName().endsWith("." + batchResource.getType()))
+        if (!descriptorTypeMatchesResourceType(resourceDescriptor, batchResource.getType()))
             return false;
 
         if (skipBatch(resourceDescriptor))
@@ -120,6 +162,12 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         }
 
         return true;
+    }
+
+
+    private boolean descriptorTypeMatchesResourceType(ResourceDescriptor resourceDescriptor, String type)
+    {
+        return resourceDescriptor.getName().endsWith("." + type);
     }
 
     private DownloadableResource locatePluginResource(String moduleCompleteKey, String resourceName)

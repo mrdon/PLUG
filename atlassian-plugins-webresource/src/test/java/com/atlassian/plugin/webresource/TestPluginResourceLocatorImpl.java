@@ -13,10 +13,7 @@ import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class TestPluginResourceLocatorImpl extends TestCase
 {
@@ -36,8 +33,8 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
 
         pluginResourceLocator = new PluginResourceLocatorImpl(
-            (PluginAccessor) mockPluginAccessor.proxy(),
-            (ServletContextFactory) mockServletContextFactory.proxy()
+                (PluginAccessor) mockPluginAccessor.proxy(),
+                (ServletContextFactory) mockServletContextFactory.proxy()
         );
     }
 
@@ -64,7 +61,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("master-ie.css", "master.css", "comments.css");
 
         mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)),
-            TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, (Plugin) mockPlugin.proxy(), resourceDescriptors));
+                TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, (Plugin) mockPlugin.proxy(), resourceDescriptors));
 
         System.setProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF, "true");
         try
@@ -94,7 +91,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("master-ie.css", "master.css", "comments.css");
 
         mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)),
-            TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, (Plugin) mockPlugin.proxy(), resourceDescriptors));
+                TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, (Plugin) mockPlugin.proxy(), resourceDescriptors));
 
         List<PluginResource> resources = pluginResourceLocator.getPluginResources(TEST_MODULE_COMPLETE_KEY);
         assertEquals(2, resources.size());
@@ -122,12 +119,12 @@ public class TestPluginResourceLocatorImpl extends TestCase
         resourceDescriptors.add(TestUtils.createResourceDescriptor("nonbatch.css", nonBatchParams));
 
         mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)),
-            TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, (Plugin) mockPlugin.proxy(), resourceDescriptors));
+                TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, (Plugin) mockPlugin.proxy(), resourceDescriptors));
 
         List<PluginResource> resources = pluginResourceLocator.getPluginResources(TEST_MODULE_COMPLETE_KEY);
         assertEquals(2, resources.size());
 
-                
+
         BatchPluginResource batch = (BatchPluginResource) resources.get(0);
         assertEquals(TEST_MODULE_COMPLETE_KEY, batch.getModuleCompleteKey());
         assertEquals("css", batch.getType());
@@ -148,7 +145,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         resourceDescriptors.add(TestUtils.createResourceDescriptor("forward.css", params));
 
         mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)),
-            TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, (Plugin) mockPlugin.proxy(), resourceDescriptors));
+                TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, (Plugin) mockPlugin.proxy(), resourceDescriptors));
 
         List<PluginResource> resources = pluginResourceLocator.getPluginResources(TEST_MODULE_COMPLETE_KEY);
         assertEquals(2, resources.size());
@@ -174,7 +171,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         mockModuleDescriptor.expectAndReturn("getPluginKey", TEST_PLUGIN_KEY);
         mockModuleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq(resourceName)),
-            new ResourceLocation("", resourceName, "download", "text/css", "", params));
+                new ResourceLocation("", resourceName, "download", "text/css", "", params));
 
         mockPluginAccessor.expectAndReturn("getPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
         mockPluginAccessor.expectAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
@@ -195,7 +192,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
         mockModuleDescriptor.expectAndReturn("getPluginKey", TEST_PLUGIN_KEY);
         mockModuleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq(resourceName)),
-            new ResourceLocation("", resourceName, "download", "text/css", "", Collections.EMPTY_MAP));
+                new ResourceLocation("", resourceName, "download", "text/css", "", Collections.EMPTY_MAP));
 
         mockPluginAccessor.expectAndReturn("getPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
         mockPluginAccessor.expectAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
@@ -221,7 +218,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         mockModuleDescriptor.expectAndReturn("getCompleteKey", TEST_MODULE_COMPLETE_KEY);
         mockModuleDescriptor.expectAndReturn("getResourceDescriptors", C.args(C.eq("download")), resourceDescriptors);
         mockModuleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq(ieResourceName)),
-            new ResourceLocation("", ieResourceName, "download", "text/css", "", Collections.EMPTY_MAP));
+                new ResourceLocation("", ieResourceName, "download", "text/css", "", Collections.EMPTY_MAP));
 
         mockPluginAccessor.matchAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
@@ -244,7 +241,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         mockModuleDescriptor.expectAndReturn("getCompleteKey", TEST_MODULE_COMPLETE_KEY);
         mockModuleDescriptor.expectAndReturn("getResourceDescriptors", C.args(C.eq("download")), Collections.EMPTY_LIST);
         mockModuleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq(resourceName)),
-            new ResourceLocation("", resourceName, "download", "text/css", "", Collections.EMPTY_MAP));
+                new ResourceLocation("", resourceName, "download", "text/css", "", Collections.EMPTY_MAP));
 
         mockPluginAccessor.matchAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());

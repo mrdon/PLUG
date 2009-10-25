@@ -5,6 +5,7 @@ import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PAT
 
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
+import com.atlassian.plugin.Plugin;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,7 +30,7 @@ import javax.servlet.http.HttpServletResponse;
  * 
  * @since 2.2
  */
-public class BatchPluginResource implements DownloadableResource, PluginResource
+public class BatchPluginResource implements DownloadableResource, PluginResource, BatchResource
 {
     private static final Log log = LogFactory.getLog(BatchPluginResource.class);
 
@@ -206,6 +207,13 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         final StringBuilder sb = new StringBuilder();
         sb.append(URL_PREFIX).append(PATH_SEPARATOR).append(moduleCompleteKey).append(PATH_SEPARATOR).append(resourceName);
 
+        addParamsToUrl(sb, params);
+
+        return sb.toString();
+    }
+
+    protected void addParamsToUrl(StringBuilder sb, Map<String, String> params)
+    {
         if (params.size() > 0)
         {
             sb.append("?");
@@ -221,8 +229,6 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
                 }
             }
         }
-
-        return sb.toString();
     }
 
     public String getResourceName()
@@ -233,6 +239,12 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
     public Map<String, String> getParams()
     {
         return Collections.unmodifiableMap(params);
+    }
+
+    public String getVersion(WebResourceIntegration integration)
+    {
+        final Plugin plugin = integration.getPluginAccessor().getEnabledPluginModule(getModuleCompleteKey()).getPlugin();
+        return plugin.getPluginInformation().getVersion();
     }
 
     public String getModuleCompleteKey()

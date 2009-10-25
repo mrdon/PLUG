@@ -37,7 +37,7 @@ public class TestWebResourceManagerImpl extends TestCase
         mockWebResourceIntegration.matchAndReturn("getPluginAccessor", mockPluginAccessor.proxy());
 
         PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl((PluginAccessor) mockPluginAccessor.proxy(), null);
-        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, (WebResourceIntegration) mockWebResourceIntegration.proxy());
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, (WebResourceIntegration) mockWebResourceIntegration.proxy(), new DefaultResourceBatchingConfiguration());
 
         mockWebResourceIntegration.matchAndReturn("getBaseUrl", BASEURL);
         mockWebResourceIntegration.matchAndReturn("getBaseUrl", C.args(C.eq(UrlMode.ABSOLUTE)), BASEURL);
