@@ -217,6 +217,27 @@ public class TestXmlDescriptorParser extends TestCase
         assertEquals(1, parser.getPluginsVersion());
     }
     
+    public void testPluginsResourcesAvailableToModuleDescriptors()
+    {
+        XmlDescriptorParser parser = parse(null,
+                 "<atlassian-plugin key='foo'>",
+                "  <resource type='velocity' name='edit'>Show an input box here.</resource>",
+                "  <animal key='bear' />",
+                "</atlassian-plugin>");
+        // mock up some supporting objects
+        PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
+        Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
+        MockAnimalModuleDescriptor descriptor = new MockAnimalModuleDescriptor("velocity", "edit");
+        mockFactory.expectAndReturn("getModuleDescriptor", C.args(C.eq("animal")), descriptor);
+
+        // create a Plugin for testing
+        Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
+        parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
+        assertNotNull(testPlugin.getModuleDescriptor("bear"));
+        
+        mockFactory.verify();
+    }
+    
 
     private String getTestFile(String filename)
     {

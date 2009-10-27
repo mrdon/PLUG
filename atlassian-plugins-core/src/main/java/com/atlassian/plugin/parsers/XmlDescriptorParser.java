@@ -125,7 +125,9 @@ public class XmlDescriptorParser implements DescriptorParser
         {
             plugin.setEnabledByDefault(false);
         }
-
+        
+        plugin.setResources(Resources.fromXml(pluginElement));
+        
         for (final Iterator i = pluginElement.elementIterator(); i.hasNext();)
         {
             final Element element = (Element) i.next();
@@ -159,9 +161,7 @@ public class XmlDescriptorParser implements DescriptorParser
                 }
             }
         }
-
-        plugin.setResources(Resources.fromXml(pluginElement));
-
+        
         return plugin;
     }
 

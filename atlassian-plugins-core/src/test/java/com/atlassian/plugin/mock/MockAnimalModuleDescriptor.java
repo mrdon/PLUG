@@ -1,5 +1,7 @@
 package com.atlassian.plugin.mock;
 
+import junit.framework.Assert;
+
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
@@ -13,11 +15,29 @@ public class MockAnimalModuleDescriptor extends AbstractModuleDescriptor<MockAni
     MockAnimal module;
     public boolean disabled;
     public boolean enabled;
+    
+    private final String type;
+    private final String name;
+    
+
+    public MockAnimalModuleDescriptor()
+    {
+      this(null, null);
+    }
+    
+    public MockAnimalModuleDescriptor(String type, String name)
+    {
+      this.type = type;
+      this.name = name;
+    }
 
     @Override
     public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
         super.init(plugin, element);
+        if (type != null && name != null) {
+          Assert.assertNotNull(plugin.getResourceDescriptor(type, name));
+        }
     }
 
     @Override
