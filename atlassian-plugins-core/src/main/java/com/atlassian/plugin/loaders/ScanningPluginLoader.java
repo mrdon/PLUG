@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Collections;
 
 /**
  * Plugin loader that delegates the detection of plugins to a Scanner instance. The scanner may monitor the contents
@@ -95,7 +96,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
             log.info("No plugins found to be deployed");
         }
 
-        return plugins.values();
+        return Collections.unmodifiableCollection(plugins.values());
     }
 
     protected Plugin deployPluginFromUnit(final DeploymentUnit deploymentUnit, final ModuleDescriptorFactory moduleDescriptorFactory)
