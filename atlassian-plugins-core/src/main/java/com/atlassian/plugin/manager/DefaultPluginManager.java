@@ -138,6 +138,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             {
                 if (getState().getPluginRestartState(plugin.getKey()) == PluginRestartState.REMOVE)
                 {
+                    log.info("Plugin " + plugin.getKey() + " was marked to be removed on restart.  Removing now.");
                     loader.removePlugin(plugin);
 
                     // PLUG-13: Plugins should not save state across uninstalls.
