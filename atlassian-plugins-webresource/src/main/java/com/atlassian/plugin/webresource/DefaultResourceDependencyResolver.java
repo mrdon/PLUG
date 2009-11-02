@@ -7,6 +7,8 @@ import org.apache.commons.logging.LogFactory;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Stack;
+import java.util.Collections;
+import java.util.Set;
 
 public class DefaultResourceDependencyResolver implements ResourceDependencyResolver
 {
@@ -31,45 +33,57 @@ public class DefaultResourceDependencyResolver implements ResourceDependencyReso
 
     public LinkedHashSet<String> getSuperBatchDependencies()
     {
+        if (!batchingConfiguration.isSuperBatchingEnabled())
+        {
+            log.warn("Super batching not enabled, but getSuperBatchDependencies() called. Returning empty set.");
+            return new LinkedHashSet<String>();
+        }
+
         String version = webResourceIntegration.getSuperBatchVersion();
         if (superBatchVersion == null || !superBatchVersion.equals(version))
         {
             LinkedHashSet<String> webResourceNames = new LinkedHashSet<String>();
-            for (String moduleKey : batchingConfiguration.getSuperBatchModuleCompleteKeys())
+            if (batchingConfiguration.getSuperBatchModuleCompleteKeys() != null)
             {
-                resolveDependencies(moduleKey, webResourceNames, false, new Stack<String>());
+                for (String moduleKey : batchingConfiguration.getSuperBatchModuleCompleteKeys())
+                {
+                    resolveDependencies(moduleKey, webResourceNames, Collections.emptySet(), new Stack<String>());
+                }
             }
-
             synchronized (this)
             {
                 superBatchResources = webResourceNames;
-                superBatchVersion = webResourceIntegration.getSuperBatchVersion();
+                superBatchVersion = version;
             }
         }
-        return superBatchResources;
+        return new LinkedHashSet(superBatchResources);
     }
 
     public LinkedHashSet<String> getDependencies(String moduleKey, boolean excludeSuperBatchedResources)
     {
         LinkedHashSet<String> orderedResourceKeys = new LinkedHashSet<String>();
-        resolveDependencies(moduleKey, orderedResourceKeys, excludeSuperBatchedResources, new Stack<String>());
+        Set<String> superBatchResources = excludeSuperBatchedResources ? getSuperBatchDependencies() : Collections.<String>emptySet();
+        resolveDependencies(moduleKey, orderedResourceKeys, superBatchResources, new Stack<String>());
         return orderedResourceKeys;
     }
 
     /**
-     * Adds the resources as well as its dependencies in order to the given set. This method uses recursion
+     * Adds the resources as well as its dependencies in order to the given ordered set. This method uses recursion
      * to add a resouce's dependent resources also to the set. You should call this method with a new stack
      * passed to the last parameter.
      *
+     * Note that resources already in the given super batch will be exluded when resolving dependencies. You
+     * should pass in an empty set for the super batch to include super batch resources.
+     *
      * @param moduleKey the module complete key to add as well as its dependencies
      * @param orderedResourceKeys an ordered list set where the resources are added in order
-     * @param excludeSuperBatchedResources true if resources contained in the superbatch should be excluded
+     * @param superBatchResources the set of super batch resources to exclude when resolving dependencies
      * @param stack where we are in the dependency tree
      */
-    private void resolveDependencies(String moduleKey, LinkedHashSet<String> orderedResourceKeys,
-        boolean excludeSuperBatchedResources, Stack<String> stack)
+    private void resolveDependencies(final String moduleKey, final LinkedHashSet<String> orderedResourceKeys,
+        final Set superBatchResources, final Stack<String> stack)
     {
-        if (excludeSuperBatchedResources && getSuperBatchDependencies().contains(moduleKey))
+        if (superBatchResources.contains(moduleKey))
         {
             log.debug("Not requiring resource: " + moduleKey + " because it is part of a super-batch");
             return;
@@ -92,8 +106,9 @@ public class DefaultResourceDependencyResolver implements ResourceDependencyReso
 
         final List<String> dependencies = ((WebResourceModuleDescriptor) moduleDescriptor).getDependencies();
         if (log.isDebugEnabled())
+        {
             log.debug("About to add resource [" + moduleKey + "] and its dependencies: " + dependencies);
-
+        }
         stack.push(moduleKey);
         try
         {
@@ -101,7 +116,7 @@ public class DefaultResourceDependencyResolver implements ResourceDependencyReso
             {
                 if (!orderedResourceKeys.contains(dependency))
                 {
-                    resolveDependencies(dependency, orderedResourceKeys, excludeSuperBatchedResources, stack);
+                    resolveDependencies(dependency, orderedResourceKeys, superBatchResources, stack);
                 }
             }
         }
