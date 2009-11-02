@@ -176,8 +176,10 @@ public class WebResourceManagerImpl implements WebResourceManager
     /**
      * Get all super-batch resources that match the given filter. If superbatching is disabled this will just
      * return the empty list.
+     *
+     * Package private so it can be tested independently.
      */
-    private List<PluginResource> getSuperBatchResources(WebResourceFilter filter)
+    List<PluginResource> getSuperBatchResources(WebResourceFilter filter)
     {
         if (!batchingConfiguration.isSuperBatchingEnabled())
             return Collections.emptyList();

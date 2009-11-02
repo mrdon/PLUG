@@ -178,8 +178,8 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         // resource from the module
         if (moduleCompleteKey.indexOf(":") > -1)
         {
-            ModuleDescriptor moduleDescriptor = pluginAccessor.getPluginModule(moduleCompleteKey);
-            if (moduleDescriptor != null && pluginAccessor.isPluginModuleEnabled(moduleCompleteKey))
+            ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(moduleCompleteKey);
+            if (moduleDescriptor != null)
             {
                 resource = getResourceFromModule(moduleDescriptor, resourceName, "");
             }

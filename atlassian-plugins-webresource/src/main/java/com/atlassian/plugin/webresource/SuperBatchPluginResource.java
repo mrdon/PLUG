@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.List;
 
 /**
  * Creates a batch of all like-typed resources that are declared as "super-batch="true"" in their plugin

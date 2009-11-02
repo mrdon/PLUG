@@ -5,54 +5,26 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginInformation;
 import com.mockobjects.dynamic.Mock;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.Collections;
+import java.util.*;
 
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 
 public class TestUtils
 {
-    static Plugin createTestPlugin()
-    {
-        final String pluginVersion = "1";
-        final Mock mockPlugin = new Mock(Plugin.class);
-        PluginInformation pluginInfo = new PluginInformation();
-        pluginInfo.setVersion(pluginVersion);
-        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
-
-        return (Plugin) mockPlugin.proxy();
-    }
-    
     static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey, final Plugin p)
     {
-        return createWebResourceModuleDescriptor(completeKey, p, Collections.<ResourceDescriptor>emptyList(), Collections.<String>emptyList(), false);
+        return createWebResourceModuleDescriptor(completeKey, p, Collections.<ResourceDescriptor>emptyList(), Collections.<String>emptyList());
     }
 
     static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
         final Plugin p, final List<ResourceDescriptor> resourceDescriptors)
     {
-        return createWebResourceModuleDescriptor(completeKey, p, resourceDescriptors, Collections.<String>emptyList(), false);
+        return createWebResourceModuleDescriptor(completeKey, p, resourceDescriptors, Collections.<String>emptyList());
     }
-
-    static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
-        final Plugin p, final List<ResourceDescriptor> resourceDescriptors, boolean superBatch)
-    {
-        return createWebResourceModuleDescriptor(completeKey, p, resourceDescriptors, Collections.<String>emptyList(), superBatch);
-    }
-
 
     static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
         final Plugin p, final List<ResourceDescriptor> resourceDescriptors, final List<String> dependencies)
-    {
-        return createWebResourceModuleDescriptor(completeKey, p, resourceDescriptors, dependencies, false);
-
-    }
-    static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
-        final Plugin p, final List<ResourceDescriptor> resourceDescriptors, final List<String> dependencies, final boolean superBatch)
     {
         return new WebResourceModuleDescriptor() {
             public String getCompleteKey()
@@ -60,9 +32,19 @@ public class TestUtils
                 return completeKey;
             }
 
-            public List getResourceDescriptors()
+            public List<ResourceDescriptor> getResourceDescriptors()
             {
                 return resourceDescriptors;
+            }
+
+            public List<ResourceDescriptor> getResourceDescriptors(String type)
+            {
+                return resourceDescriptors;
+            }
+
+            public String getPluginKey()
+            {
+                return p.getKey();
             }
 
             public Plugin getPlugin()
@@ -73,12 +55,6 @@ public class TestUtils
             public List<String> getDependencies()
             {
                 return dependencies;
-            }
-
-            public boolean isSuperBatch()
-            {
-                return superBatch;
-
             }
         };
     }
@@ -115,8 +91,41 @@ public class TestUtils
         return new ResourceDescriptor(DocumentHelper.parseText(xml).getRootElement());
     }
 
+    static void setupSuperbatchTestContent(TestResourceBatchingConfiguration resourceBatchingConfiguration, Mock mockPluginAccessor, Plugin testPlugin)
+            throws DocumentException
+    {
+        resourceBatchingConfiguration.enabled = true;
+
+        ResourceDescriptor masterCssResource = TestUtils.createResourceDescriptor("master.css");
+        ResourceDescriptor ieOnlyasterCssResource = TestUtils.createResourceDescriptor("master.css", Collections.singletonMap("ieonly", "true"));
+        ResourceDescriptor irrelevantParameterCssResource = TestUtils.createResourceDescriptor("two.css", Collections.singletonMap("fish", "true"));
+        ResourceDescriptor masterJavascriptResource = TestUtils.createResourceDescriptor("master.js");
+
+        ResourceDescriptor pluginCssResource = TestUtils.createResourceDescriptor("plugin.css");
+        ResourceDescriptor pluginJsResource = TestUtils.createResourceDescriptor("plugin.js");
+
+        WebResourceModuleDescriptor master = TestUtils.createWebResourceModuleDescriptor("test.atlassian:superbatch", testPlugin, Arrays.asList(masterCssResource, ieOnlyasterCssResource, masterJavascriptResource, irrelevantParameterCssResource));
+        WebResourceModuleDescriptor plugin = TestUtils.createWebResourceModuleDescriptor("test.atlassian:superbatch2", testPlugin, Arrays.asList(pluginCssResource, pluginJsResource));
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", "test.atlassian:superbatch", master);
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", "test.atlassian:superbatch2", plugin);
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", "test.atlassian:missing-plugin", null);
+    }
+
     private static String escapeXMLCharacters(String input)
     {
         return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt");
+    }
+
+    static Plugin createTestPlugin()
+    {
+        final String pluginVersion = "1";
+        final Mock mockPlugin = new Mock(Plugin.class);
+        PluginInformation pluginInfo = new PluginInformation();
+        pluginInfo.setVersion(pluginVersion);
+        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
+        mockPlugin.matchAndReturn("getKey", "test.atlassian");
+
+        return (Plugin) mockPlugin.proxy();
     }
 }

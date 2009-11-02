@@ -21,6 +21,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
     private Mock mockWebResourceIntegration;
     private Mock mockPluginAccessor;
     private Mock mockServletContextFactory;
+
     private static final String TEST_PLUGIN_KEY = "test.plugin";
     private static final String TEST_MODULE_KEY = "web-resources";
     private static final String TEST_MODULE_COMPLETE_KEY = TEST_PLUGIN_KEY + ":" + TEST_MODULE_KEY;
@@ -177,8 +178,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         mockModuleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq(resourceName)),
                 new ResourceLocation("", resourceName, "download", "text/css", "", params));
 
-        mockPluginAccessor.expectAndReturn("getPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
-        mockPluginAccessor.expectAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
+        mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
         mockPluginAccessor.expectAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), mockPlugin.proxy());
 
         DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
@@ -198,8 +198,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         mockModuleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq(resourceName)),
                 new ResourceLocation("", resourceName, "download", "text/css", "", Collections.EMPTY_MAP));
 
-        mockPluginAccessor.expectAndReturn("getPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
-        mockPluginAccessor.expectAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
+        mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
         mockPluginAccessor.expectAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), mockPlugin.proxy());
 
         DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
