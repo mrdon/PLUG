@@ -36,6 +36,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     protected final WebResourceIntegration webResourceIntegration;
     protected final PluginResourceLocator pluginResourceLocator;
     protected final ResourceBatchingConfiguration batchingConfiguration;
+    protected final ResourceDependencyResolver dependencyResolver;
     protected static final List<WebResourceFormatter> webResourceFormatters = Arrays.asList(CssWebResource.FORMATTER, JavascriptWebResource.FORMATTER);
 
     private static final boolean IGNORE_SUPERBATCHING = false;
@@ -47,22 +48,22 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration, ResourceBatchingConfiguration batchingConfiguration)
     {
+        this(pluginResourceLocator, webResourceIntegration, batchingConfiguration, new DefaultResourceDependencyResolver(webResourceIntegration, batchingConfiguration));
+    }
+
+    public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration,
+        ResourceBatchingConfiguration batchingConfiguration, ResourceDependencyResolver dependencyResolver)
+    {
         this.pluginResourceLocator = pluginResourceLocator;
         this.webResourceIntegration = webResourceIntegration;
         this.batchingConfiguration = batchingConfiguration;
+        this.dependencyResolver = dependencyResolver;
     }
 
     public void requireResource(String moduleCompleteKey)
     {
         log.debug("Requiring resource: " + moduleCompleteKey);
-        getIncludedResourceNames().addAll(getResourceWithDependencies(moduleCompleteKey, batchingConfiguration.isSuperBatchingEnabled()));
-    }
-
-    private LinkedHashSet<String> getResourceWithDependencies(String moduleCompleteKey, boolean excludeSuperBatchedResources)
-    {
-        final LinkedHashSet<String> resources = new LinkedHashSet<String>();
-        addResourceWithDependencies(moduleCompleteKey, resources, new Stack<String>(), excludeSuperBatchedResources);
-        return resources;
+        getIncludedResourceNames().addAll(dependencyResolver.getDependencies(moduleCompleteKey, batchingConfiguration.isSuperBatchingEnabled()));
     }
 
     private LinkedHashSet<String> getIncludedResourceNames()
@@ -82,59 +83,6 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         log.debug("Clearing included resources");
         getIncludedResourceNames().clear();
-    }
-
-    /**
-     * Adds the resources as well as its dependencies in order to the given set. This method uses recursion
-     * to add a resouce's dependent resources also to the set. You should call this method with a new stack
-     * passed to the last parameter.
-     *
-     * @param moduleKey the module complete key to add as well as its dependencies
-     * @param orderedResourceKeys an ordered list set where the resources are added in order
-     * @param stack where we are in the dependency tree
-     * @param excludeSuperBatchedResources true if resources contained in the superbatch should be excluded
-     */
-    private void addResourceWithDependencies(String moduleKey, LinkedHashSet<String> orderedResourceKeys, Stack<String> stack, boolean excludeSuperBatchedResources)
-    {
-        if (excludeSuperBatchedResources && batchingConfiguration.getSuperBatchModuleCompleteKeys().contains(moduleKey))
-        {
-            log.debug("Not requiring resource: " + moduleKey + " because it is part of a super-batch");
-        }
-        else
-        {
-            if (stack.contains(moduleKey))
-            {
-                log.warn("Cyclic plugin resource dependency has been detected with: " + moduleKey + "\n" + "Stack trace: " + stack);
-                return;
-            }
-
-            final ModuleDescriptor<?> moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleKey);
-            if (!(moduleDescriptor instanceof WebResourceModuleDescriptor))
-            {
-                log.warn("Cannot find web resource module for: " + moduleKey);
-                return;
-            }
-
-            final List<String> dependencies = ((WebResourceModuleDescriptor) moduleDescriptor).getDependencies();
-            log.debug("About to add resource [" + moduleKey + "] and its dependencies: " + dependencies);
-
-            stack.push(moduleKey);
-            try
-            {
-                for (final String dependency : dependencies)
-                {
-                    if (!orderedResourceKeys.contains(dependency))
-                    {
-                        addResourceWithDependencies(dependency, orderedResourceKeys, stack, excludeSuperBatchedResources);
-                    }
-                }
-            }
-            finally
-            {
-                stack.pop();
-            }
-            orderedResourceKeys.add(moduleKey);
-        }
     }
 
     /**
@@ -234,9 +182,8 @@ public class WebResourceManagerImpl implements WebResourceManager
         if (!batchingConfiguration.isSuperBatchingEnabled())
             return Collections.emptyList();
 
+        LinkedHashSet<String> superBatchModuleKeys = dependencyResolver.getSuperBatchDependencies();
         List<PluginResource> resources = new ArrayList<PluginResource>();
-
-        List<String> superBatchModuleKeys = batchingConfiguration.getSuperBatchModuleCompleteKeys();
 
         // This is necessarily quite complicated. We need distinct superbatch resources for each combination of
         // resourceFormatter (i.e. separate CSS or JS resources), and also each unique combination of
@@ -255,7 +202,6 @@ public class WebResourceManagerImpl implements WebResourceManager
                         if (formatter.matches(pluginResource.getResourceName()) && filter.matches(pluginResource.getResourceName()))
                         {
                             Map<String, String> batchParamsMap = new HashMap<String, String>(PluginResourceLocator.BATCH_PARAMS.length);
-
                             for (String s : PluginResourceLocator.BATCH_PARAMS)
                             {
                                 batchParamsMap.put(s, pluginResource.getParams().get(s));
@@ -265,6 +211,10 @@ public class WebResourceManagerImpl implements WebResourceManager
                             {
                                 resources.add(SuperBatchPluginResource.createBatchFor(pluginResource));
                                 alreadyIncluded.add(batchParamsMap);
+                                if (log.isDebugEnabled())
+                                {
+                                    log.debug("Superbatch: " + pluginResource.getModuleCompleteKey());
+                                }
                             }
                         }
                     }
@@ -338,7 +288,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void requireResource(String moduleCompleteKey, Writer writer, UrlMode urlMode)
     {
-        LinkedHashSet<String> allDependentModuleKeys = getResourceWithDependencies(moduleCompleteKey, IGNORE_SUPERBATCHING);
+        LinkedHashSet<String> allDependentModuleKeys = dependencyResolver.getDependencies(moduleCompleteKey, IGNORE_SUPERBATCHING);
         List<PluginResource> resourcesToInclude = getModuleResources(allDependentModuleKeys, DefaultWebResourceFilter.INSTANCE);
         writeResourceTags(resourcesToInclude, writer, urlMode);
     }

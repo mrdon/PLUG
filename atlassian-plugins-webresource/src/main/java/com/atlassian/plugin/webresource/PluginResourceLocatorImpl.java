@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.LinkedHashSet;
 
 /**
  * Default implementation of {@link PluginResourceLocator}.
@@ -34,21 +35,21 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     final private PluginAccessor pluginAccessor;
     final private ServletContextFactory servletContextFactory;
-    final private ResourceBatchingConfiguration configuration;
+    final private ResourceDependencyResolver dependencyResolver;
 
     private static final String RESOURCE_SOURCE_PARAM = "source";
     private static final String RESOURCE_BATCH_PARAM = "batch";
 
-    public PluginResourceLocatorImpl(PluginAccessor pluginAccessor, ServletContextFactory servletContextFactory)
+    public PluginResourceLocatorImpl(WebResourceIntegration webResourceIntegration, ServletContextFactory servletContextFactory)
     {
-        this(pluginAccessor, servletContextFactory, new DefaultResourceBatchingConfiguration());
+        this(webResourceIntegration, servletContextFactory, new DefaultResourceDependencyResolver(webResourceIntegration));
     }
 
-    public PluginResourceLocatorImpl(PluginAccessor pluginAccessor, ServletContextFactory servletContextFactory, ResourceBatchingConfiguration configuration)
+    public PluginResourceLocatorImpl(WebResourceIntegration webResourceIntegration, ServletContextFactory servletContextFactory, ResourceDependencyResolver dependencyResolver)
     {
-        this.pluginAccessor = pluginAccessor;
+        this.pluginAccessor = webResourceIntegration.getPluginAccessor();
         this.servletContextFactory = servletContextFactory;
-        this.configuration = configuration;
+        this.dependencyResolver = dependencyResolver;
     }
 
     public boolean matches(String url)
@@ -99,7 +100,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     private DownloadableResource locateSuperBatchPluginResource(SuperBatchPluginResource resource)
     {
-        List<String> moduleKeys = configuration.getSuperBatchModuleCompleteKeys();
+        LinkedHashSet<String> moduleKeys = dependencyResolver.getSuperBatchDependencies();
 
         for (String moduleKey : moduleKeys)
         {

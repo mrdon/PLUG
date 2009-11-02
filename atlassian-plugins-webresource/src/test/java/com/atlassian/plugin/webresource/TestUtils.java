@@ -2,6 +2,8 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginInformation;
+import com.mockobjects.dynamic.Mock;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -14,6 +16,17 @@ import org.dom4j.DocumentHelper;
 
 public class TestUtils
 {
+    static Plugin createTestPlugin()
+    {
+        final String pluginVersion = "1";
+        final Mock mockPlugin = new Mock(Plugin.class);
+        PluginInformation pluginInfo = new PluginInformation();
+        pluginInfo.setVersion(pluginVersion);
+        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
+
+        return (Plugin) mockPlugin.proxy();
+    }
+    
     static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey, final Plugin p)
     {
         return createWebResourceModuleDescriptor(completeKey, p, Collections.<ResourceDescriptor>emptyList(), Collections.<String>emptyList(), false);

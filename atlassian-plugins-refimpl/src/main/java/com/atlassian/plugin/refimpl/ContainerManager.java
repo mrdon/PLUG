@@ -134,7 +134,7 @@ public class ContainerManager
         servletModuleManager = new DefaultServletModuleManager(servletContext, pluginEventManager);
         pluginAccessor = plugins.getPluginAccessor();
 
-        final PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(pluginAccessor, new SimpleServletContextFactory(servletContext));
+        final PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl(webResourceIntegration, new SimpleServletContextFactory(servletContext));
         final PluginResourceDownload pluginDownloadStrategy = new PluginResourceDownload(pluginResourceLocator, new SimpleContentTypeResolver(), "UTF-8");
 
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, webResourceIntegration, new DefaultResourceBatchingConfiguration());

@@ -18,6 +18,7 @@ import java.util.*;
 public class TestPluginResourceLocatorImpl extends TestCase
 {
     private PluginResourceLocatorImpl pluginResourceLocator;
+    private Mock mockWebResourceIntegration;
     private Mock mockPluginAccessor;
     private Mock mockServletContextFactory;
     private static final String TEST_PLUGIN_KEY = "test.plugin";
@@ -29,11 +30,13 @@ public class TestPluginResourceLocatorImpl extends TestCase
         super.setUp();
 
         mockPluginAccessor = new Mock(PluginAccessor.class);
+
+        mockWebResourceIntegration = new Mock(WebResourceIntegration.class);
+        mockWebResourceIntegration.matchAndReturn("getPluginAccessor", mockPluginAccessor.proxy());
         mockServletContextFactory = new Mock(ServletContextFactory.class);
 
-
         pluginResourceLocator = new PluginResourceLocatorImpl(
-                (PluginAccessor) mockPluginAccessor.proxy(),
+                (WebResourceIntegration) mockWebResourceIntegration.proxy(),
                 (ServletContextFactory) mockServletContextFactory.proxy()
         );
     }
@@ -41,6 +44,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
     protected void tearDown() throws Exception
     {
         pluginResourceLocator = null;
+        mockWebResourceIntegration = null;
         mockPluginAccessor = null;
         mockServletContextFactory = null;
 

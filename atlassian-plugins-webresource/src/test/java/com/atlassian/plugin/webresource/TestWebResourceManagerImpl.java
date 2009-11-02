@@ -36,7 +36,7 @@ public class TestWebResourceManagerImpl extends TestCase
         mockWebResourceIntegration = new Mock(WebResourceIntegration.class);
         mockWebResourceIntegration.matchAndReturn("getPluginAccessor", mockPluginAccessor.proxy());
 
-        PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl((PluginAccessor) mockPluginAccessor.proxy(), null);
+        PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl((WebResourceIntegration) mockWebResourceIntegration.proxy(), null);
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, (WebResourceIntegration) mockWebResourceIntegration.proxy(), new DefaultResourceBatchingConfiguration());
 
         mockWebResourceIntegration.matchAndReturn("getBaseUrl", BASEURL);
@@ -46,7 +46,7 @@ public class TestWebResourceManagerImpl extends TestCase
         mockWebResourceIntegration.matchAndReturn("getSystemBuildNumber", SYSTEM_BUILD_NUMBER);
         mockWebResourceIntegration.matchAndReturn("getSystemCounter", SYSTEM_COUNTER);
 
-        testPlugin = createTestPlugin();
+        testPlugin = TestUtils.createTestPlugin();
     }
 
     protected void tearDown() throws Exception
@@ -607,7 +607,7 @@ public class TestWebResourceManagerImpl extends TestCase
         final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.js", "cool.css", "more-cool.css");
         final List<ResourceDescriptor> resourceDescriptors2 = TestUtils.createResourceDescriptors("hot.js", "hot.css", "more-hot.css");
 
-        final Plugin plugin = createTestPlugin();
+        final Plugin plugin = TestUtils.createTestPlugin();
 
         Map requestCache = new HashMap();
         mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
@@ -645,16 +645,5 @@ public class TestWebResourceManagerImpl extends TestCase
         assertTrue(cssRef1Index < jsRef1Index);
         assertTrue(cssRef2Index < jsRef2Index);
         assertTrue(cssRef2Index < jsRef1Index);
-    }
-
-    private Plugin createTestPlugin()
-    {
-        final String pluginVersion = "1";
-        final Mock mockPlugin = new Mock(Plugin.class);
-        PluginInformation pluginInfo = new PluginInformation();
-        pluginInfo.setVersion(pluginVersion);
-        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
-
-        return (Plugin) mockPlugin.proxy();
     }
 }
