@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.performance;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
@@ -10,6 +11,7 @@ import com.atlassian.plugin.osgi.SomeInterface;
 import com.atlassian.plugin.test.PluginJarBuilder;
 
 import org.apache.commons.io.FileUtils;
+import org.osgi.framework.Bundle;
 
 import java.io.IOException;
 import java.io.File;
@@ -58,6 +60,11 @@ public abstract class FrameworkRestartTestBase extends PluginInContainerTestBase
     protected void startPluginFramework() throws Exception
     {
         initPluginManager(prov, factory);
+        assertEquals(pluginManager.getPlugins().size(), pluginManager.getEnabledPlugins().size());
+        for (Bundle bundle : osgiContainerManager.getBundles())
+        {
+            assertEquals("Bundle " + bundle.getSymbolicName() + " was not active: " + bundle.getState(), Bundle.ACTIVE, bundle.getState());
+        }
     }
 
     @Override
