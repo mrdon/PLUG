@@ -213,10 +213,6 @@ public class WebResourceManagerImpl implements WebResourceManager
                             {
                                 resources.add(SuperBatchPluginResource.createBatchFor(pluginResource));
                                 alreadyIncluded.add(batchParamsMap);
-                                if (log.isDebugEnabled())
-                                {
-                                    log.debug("Superbatch: " + pluginResource.getModuleCompleteKey());
-                                }
                             }
                         }
                     }

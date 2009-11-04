@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
 import java.util.Map;
-import java.util.List;
 
 /**
  * Creates a batch of all like-typed resources that are declared as "super-batch="true"" in their plugin
@@ -110,5 +109,11 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
     public String getModuleCompleteKey()
     {
         return "superbatch";
+    }
+
+    @Override
+    public String toString()
+    {
+        return "[Superbatch type=" + getType() + ", params=" + getParams() + "]";
     }
 }

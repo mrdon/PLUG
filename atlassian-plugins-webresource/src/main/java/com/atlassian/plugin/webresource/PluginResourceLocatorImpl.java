@@ -42,10 +42,17 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     public PluginResourceLocatorImpl(WebResourceIntegration webResourceIntegration, ServletContextFactory servletContextFactory)
     {
-        this(webResourceIntegration, servletContextFactory, new DefaultResourceDependencyResolver(webResourceIntegration));
+        this(webResourceIntegration, servletContextFactory, new DefaultResourceDependencyResolver(webResourceIntegration, new DefaultResourceBatchingConfiguration()));
     }
 
-    public PluginResourceLocatorImpl(WebResourceIntegration webResourceIntegration, ServletContextFactory servletContextFactory, ResourceDependencyResolver dependencyResolver)
+    public PluginResourceLocatorImpl(WebResourceIntegration webResourceIntegration, ServletContextFactory servletContextFactory,
+        ResourceBatchingConfiguration resourceBatchingConfiguration)
+    {
+        this(webResourceIntegration, servletContextFactory, new DefaultResourceDependencyResolver(webResourceIntegration, resourceBatchingConfiguration));
+    }
+
+    private PluginResourceLocatorImpl(WebResourceIntegration webResourceIntegration, ServletContextFactory servletContextFactory,
+        ResourceDependencyResolver dependencyResolver)
     {
         this.pluginAccessor = webResourceIntegration.getPluginAccessor();
         this.servletContextFactory = servletContextFactory;
@@ -100,8 +107,10 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     private DownloadableResource locateSuperBatchPluginResource(SuperBatchPluginResource resource)
     {
-        LinkedHashSet<String> moduleKeys = dependencyResolver.getSuperBatchDependencies();
+        if (log.isDebugEnabled())
+            log.debug(resource.toString());
 
+        LinkedHashSet<String> moduleKeys = dependencyResolver.getSuperBatchDependencies();
         for (String moduleKey : moduleKeys)
         {
             ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(moduleKey);
@@ -111,10 +120,15 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             }
             else
             {
+                if (log.isDebugEnabled())
+                    log.debug("including: " + moduleKey);
+
                 for (ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors(DOWNLOAD_TYPE))
                 {
                     if (isResourceInBatch(resourceDescriptor, resource))
+                    {
                         resource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
+                    }
                 }
             }
         }

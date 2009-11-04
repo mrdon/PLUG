@@ -20,11 +20,6 @@ public class DefaultResourceDependencyResolver implements ResourceDependencyReso
     private String superBatchVersion;
     private LinkedHashSet<String> superBatchResources;
 
-    public DefaultResourceDependencyResolver(WebResourceIntegration webResourceIntegration)
-    {
-        this(webResourceIntegration, new DefaultResourceBatchingConfiguration());
-    }
-
     public DefaultResourceDependencyResolver(WebResourceIntegration webResourceIntegration, ResourceBatchingConfiguration batchingConfiguration)
     {
         this.webResourceIntegration = webResourceIntegration;
