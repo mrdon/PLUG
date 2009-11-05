@@ -22,9 +22,10 @@ import java.util.Map;
 public class SuperBatchPluginResource implements DownloadableResource, BatchResource, PluginResource
 {
     static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + "superbatch" + PATH_SEPARATOR;
-    static final String RESOURCE_NAME_PREFIX = "batch";
+    static final String DEFAULT_RESOURCE_NAME_PREFIX = "batch";
 
-    private BatchPluginResource delegate;
+    private final BatchPluginResource delegate;
+    private final String resourceName;
 
     public static boolean matches(String path)
     {
@@ -40,11 +41,28 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
     public static SuperBatchPluginResource parse(String path, Map<String, String> params)
     {
         String type = path.substring(path.lastIndexOf(".") + 1);
+        if (path.indexOf('?') != -1) // remove query parameters
+        {
+            path = path.substring(0, path.indexOf('?'));
+        }
+        // we can get image requests from a CSS super batch
+        if (!path.endsWith(DEFAULT_RESOURCE_NAME_PREFIX + "." + type))
+        {
+            int startIndex = path.indexOf(URL_PREFIX) + URL_PREFIX.length();
+            String resourceName = path.substring(startIndex);
+            return new SuperBatchPluginResource(resourceName, type, params);
+        }
         return new SuperBatchPluginResource(type, params);
     }
 
     public SuperBatchPluginResource(String type, Map<String, String> params)
     {
+        this(DEFAULT_RESOURCE_NAME_PREFIX + "." + type, type, params);
+    }
+
+    private SuperBatchPluginResource(String resourceName, String type, Map<String, String> params)
+    {
+        this.resourceName = resourceName;
         this.delegate = new BatchPluginResource(null, type, params);
     }
 
@@ -73,10 +91,15 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
         delegate.add(downloadableResource);
     }
 
+    public boolean isEmpty()
+    {
+        return delegate.isEmpty();
+    }
+
     public String getUrl()
     {
         StringBuilder buf = new StringBuilder(URL_PREFIX.length() + 20);
-        buf.append(URL_PREFIX).append(getType()).append(PATH_SEPARATOR).append(RESOURCE_NAME_PREFIX).append(".").append(getType());
+        buf.append(URL_PREFIX).append(getType()).append(PATH_SEPARATOR).append(resourceName);
         delegate.addParamsToUrl(buf, delegate.getParams());
         return buf.toString();
     }
@@ -103,7 +126,7 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
 
     public String getResourceName()
     {
-        return "batch" + "." + getType();
+        return resourceName;
     }
 
     public String getModuleCompleteKey()
@@ -114,6 +137,6 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
     @Override
     public String toString()
     {
-        return "[Superbatch type=" + getType() + ", params=" + getParams() + "]";
+        return "[Superbatch name=" + resourceName + ", type=" + getType() + ", params=" + getParams() + "]";
     }
 }

@@ -105,13 +105,13 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         return null;
     }
 
-    private DownloadableResource locateSuperBatchPluginResource(SuperBatchPluginResource resource)
+    private DownloadableResource locateSuperBatchPluginResource(SuperBatchPluginResource batchResource)
     {
         if (log.isDebugEnabled())
-            log.debug(resource.toString());
+            log.debug(batchResource.toString());
 
-        LinkedHashSet<String> moduleKeys = dependencyResolver.getSuperBatchDependencies();
-        for (String moduleKey : moduleKeys)
+        LinkedHashSet<String> superBatchModuleKeys = dependencyResolver.getSuperBatchDependencies();
+        for (String moduleKey : superBatchModuleKeys)
         {
             ModuleDescriptor moduleDescriptor = pluginAccessor.getEnabledPluginModule(moduleKey);
             if (moduleDescriptor == null)
@@ -121,19 +121,31 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             else
             {
                 if (log.isDebugEnabled())
-                    log.debug("including: " + moduleKey);
+                    log.debug("searching resources in: " + moduleKey);
 
                 for (ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors(DOWNLOAD_TYPE))
                 {
-                    if (isResourceInBatch(resourceDescriptor, resource))
+                    if (isResourceInBatch(resourceDescriptor, batchResource))
                     {
-                        resource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
+                        batchResource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
                     }
                 }
             }
         }
+        // if batch is empty, check if we can locate a plugin resource
+        if (batchResource.isEmpty())
+        {
+            if (log.isDebugEnabled())
+                log.debug("coudn't find super batch resources, searching as plugin resource instead");
 
-        return resource;
+            for (String moduleKey : superBatchModuleKeys)
+            {
+                DownloadableResource pluginResource = locatePluginResource(moduleKey, batchResource.getResourceName());
+                if (pluginResource != null)
+                    return pluginResource;
+            }
+        }
+        return batchResource;
     }
 
     private DownloadableResource locateBatchPluginResource(BatchPluginResource batchResource)

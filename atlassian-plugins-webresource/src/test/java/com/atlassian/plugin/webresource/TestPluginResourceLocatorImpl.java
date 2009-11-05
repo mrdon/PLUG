@@ -15,12 +15,15 @@ import junit.framework.TestCase;
 
 import java.util.*;
 
+import org.dom4j.DocumentHelper;
+
 public class TestPluginResourceLocatorImpl extends TestCase
 {
     private PluginResourceLocatorImpl pluginResourceLocator;
     private Mock mockWebResourceIntegration;
     private Mock mockPluginAccessor;
     private Mock mockServletContextFactory;
+    private Mock mockBatchingConfiguration;
 
     private static final String TEST_PLUGIN_KEY = "test.plugin";
     private static final String TEST_MODULE_KEY = "web-resources";
@@ -35,10 +38,12 @@ public class TestPluginResourceLocatorImpl extends TestCase
         mockWebResourceIntegration = new Mock(WebResourceIntegration.class);
         mockWebResourceIntegration.matchAndReturn("getPluginAccessor", mockPluginAccessor.proxy());
         mockServletContextFactory = new Mock(ServletContextFactory.class);
+        mockBatchingConfiguration = new Mock(ResourceBatchingConfiguration.class);
 
         pluginResourceLocator = new PluginResourceLocatorImpl(
                 (WebResourceIntegration) mockWebResourceIntegration.proxy(),
-                (ServletContextFactory) mockServletContextFactory.proxy()
+                (ServletContextFactory) mockServletContextFactory.proxy(),
+                (ResourceBatchingConfiguration) mockBatchingConfiguration.proxy()
         );
     }
 
@@ -253,6 +258,55 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
         DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
 
+        assertTrue(resource instanceof DownloadableClasspathResource);
+    }
+
+    public void testGetDownloadableSuperBatchResource() throws Exception
+    {
+        String url = "/download/superbatch/css/batch.css";
+
+        Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
+        List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("atlassian.css", "master.css");
+
+        WebResourceModuleDescriptor webModuleDescriptor = TestUtils.createWebResourceModuleDescriptor(
+            TEST_MODULE_COMPLETE_KEY, testPlugin, resourceDescriptors);
+
+        mockWebResourceIntegration.expectAndReturn("getSuperBatchVersion", "1.0");
+        mockBatchingConfiguration.expectAndReturn("isSuperBatchingEnabled", true);
+        mockBatchingConfiguration.matchAndReturn("getSuperBatchModuleCompleteKeys", Arrays.asList(TEST_MODULE_COMPLETE_KEY));
+
+        mockPluginAccessor.matchAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), webModuleDescriptor);
+        mockPluginAccessor.matchAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), testPlugin);
+
+        DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String>emptyMap());
+        assertTrue(resource instanceof SuperBatchPluginResource);
+
+        SuperBatchPluginResource superBatchPluginResource = (SuperBatchPluginResource) resource;
+        assertFalse(superBatchPluginResource.isEmpty());
+    }
+
+    public void testGetDownloadableSuperBatchFallbacksToPluginResource() throws Exception
+    {
+        String url = "/download/superbatch/css/images/foo.png";
+        String cssResourcesXml = "<resource name=\"css/\" type=\"download\" location=\"css/images/\" />";
+
+        List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("atlassian.css", "master.css");
+        resourceDescriptors.add(new ResourceDescriptor(DocumentHelper.parseText(cssResourcesXml).getRootElement()));
+
+        Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
+        WebResourceModuleDescriptor webModuleDescriptor = TestUtils.createWebResourceModuleDescriptor(
+            TEST_MODULE_COMPLETE_KEY, testPlugin, resourceDescriptors);
+
+        mockWebResourceIntegration.expectAndReturn("getSuperBatchVersion", "1.0");
+        mockBatchingConfiguration.expectAndReturn("isSuperBatchingEnabled", true);
+        mockBatchingConfiguration.matchAndReturn("getSuperBatchModuleCompleteKeys", Arrays.asList(TEST_MODULE_COMPLETE_KEY));
+
+        mockPluginAccessor.matchAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), webModuleDescriptor);
+        mockPluginAccessor.matchAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), testPlugin);
+
+        DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String>emptyMap());
         assertTrue(resource instanceof DownloadableClasspathResource);
     }
 

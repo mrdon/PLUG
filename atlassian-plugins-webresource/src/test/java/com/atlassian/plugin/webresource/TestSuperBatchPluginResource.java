@@ -59,6 +59,15 @@ public class TestSuperBatchPluginResource extends TestCase
         assertEquals("batch.js", resource.getResourceName());
     }
 
+    public void testParsePluginResource()
+    {
+        String path = "/download/superbatch/css/images/foo.png";
+        assertTrue(SuperBatchPluginResource.matches(path));
+        SuperBatchPluginResource resource = SuperBatchPluginResource.parse(path, Collections.<String, String>emptyMap());
+        assertEquals("png", resource.getType());
+        assertEquals("css/images/foo.png", resource.getResourceName());
+    }
+
     public void testNotSuperbatches()
     {
         assertFalse("wrong path", SuperBatchPluginResource.matches("/download/superbitch/css/batch.css"));

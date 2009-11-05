@@ -1,6 +1,7 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginInformation;
 import com.mockobjects.dynamic.Mock;
@@ -55,6 +56,16 @@ public class TestUtils
             public List<String> getDependencies()
             {
                 return dependencies;
+            }
+
+            @Override
+            public ResourceLocation getResourceLocation(String type, String name)
+            {
+                if ("download".equals(type))
+                {
+                    return new ResourceLocation("", name, type, "", "", Collections.<String, String>emptyMap());
+                }
+                return super.getResourceLocation(type, name);
             }
         };
     }
@@ -119,12 +130,16 @@ public class TestUtils
 
     static Plugin createTestPlugin()
     {
-        final String pluginVersion = "1";
+        return createTestPlugin("test.atlassian", "1");
+    }
+
+    static Plugin createTestPlugin(String pluginKey, String version)
+    {
         final Mock mockPlugin = new Mock(Plugin.class);
         PluginInformation pluginInfo = new PluginInformation();
-        pluginInfo.setVersion(pluginVersion);
+        pluginInfo.setVersion(version);
         mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
-        mockPlugin.matchAndReturn("getKey", "test.atlassian");
+        mockPlugin.matchAndReturn("getKey", pluginKey);
 
         return (Plugin) mockPlugin.proxy();
     }
