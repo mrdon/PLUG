@@ -171,8 +171,17 @@ class DirectoryScanner implements com.atlassian.plugin.loaders.classloading.Scan
 
     public void remove(DeploymentUnit unit) throws PluginException
     {
-        if (!unit.getPath().delete())
-            throw new PluginException("Unable to delete file: " + unit.getPath());
+        if (unit.getPath().exists())
+        {
+            if (!unit.getPath().delete())
+            {
+                throw new PluginException("Unable to delete file: " + unit.getPath());
+            }
+        }
+        else
+        {
+            log.debug("Plugin file " + unit.getPath().getPath() + " doesn't exist to delete.  Ignoring.");
+        }
 
         clear(unit.getPath());
     }
