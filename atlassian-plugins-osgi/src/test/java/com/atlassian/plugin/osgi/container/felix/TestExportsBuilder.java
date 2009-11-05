@@ -10,7 +10,6 @@ import org.twdata.pkgscanner.ExportPackage;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
-import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 
@@ -51,8 +50,8 @@ public class TestExportsBuilder extends TestCase
     public void testConstructAutoExports()
     {
         List<ExportPackage> exports = new ArrayList<ExportPackage>();
-        exports.add(new ExportPackage("foo.bar", "1.0"));
-        exports.add(new ExportPackage("foo.bar", "1.0-asdf-asdf"));
+        exports.add(new ExportPackage("foo.bar", "1.0", new File("/whatever/foobar-1.0.jar")));
+        exports.add(new ExportPackage("foo.bar", "1.0-asdf-asdf", new File("/whatever/foobar-1.0-asdf-asdf.jar")));
         StringBuilder sb = new StringBuilder();
         builder.constructAutoExports(sb, exports);
 
@@ -112,14 +111,14 @@ public class TestExportsBuilder extends TestCase
 
             Collection<ExportPackage> exports = builder.generateExports(config);
             assertNotNull(exports);
-            assertTrue(exports.contains(new ExportPackage("org.apache.log4j", "1.2.15")));
+            assertTrue(exports.contains(new ExportPackage("org.apache.log4j", "1.2.15", new File("/whatever/log4j-1.2.15.jar"))));
 
             // Test falling through to servlet context scanning
             config.setJarIncludes(Arrays.asList("testlog*"));
             config.setJarExcludes(Arrays.asList("log4j*"));
             exports = builder.generateExports(config);
             assertNotNull(exports);
-            assertTrue(exports.contains(new ExportPackage("org.apache.log4j", "1.2.15")));
+            assertTrue(exports.contains(new ExportPackage("org.apache.log4j", "1.2.15", new File("/whatever/log4j-1.2.15.jar"))));
 
             // Test failure when even servlet context scanning fails
             mockServletContext.expectAndReturn("getResource", C.args(C.eq("/WEB-INF/lib")), getClass().getClassLoader().getResource("scanbase/WEB-INF/lib"));
