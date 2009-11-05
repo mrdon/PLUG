@@ -173,7 +173,8 @@ public class ScanningPluginLoader implements DynamicPluginLoader
         {
             if (!plugins.containsKey(deploymentUnit))
             {
-                final Plugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
+                Plugin plugin = deployPluginFromUnit(deploymentUnit, moduleDescriptorFactory);
+                plugin = postProcess(plugin);
                 plugins.put(deploymentUnit, plugin);
                 foundPlugins.add(plugin);
             }
