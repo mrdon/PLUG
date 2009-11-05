@@ -32,7 +32,6 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
     private final ClassLoader bundleClassLoader;
     private final Bundle bundle;
     private final PackageAdmin packageAdmin;
-    private final boolean requireSpring;
 
     private volatile SpringContextAccessor springContextAccessor;
     private ServiceTracker[] serviceTrackers;
@@ -40,16 +39,14 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
     /**
      * @param bundle The bundle
      * @param packageAdmin The package admin
-     * @param requireSpring Whether spring is required for autowiring
      */
-    public OsgiPluginInstalledHelper(final Bundle bundle, final PackageAdmin packageAdmin, final boolean requireSpring)
+    public OsgiPluginInstalledHelper(final Bundle bundle, final PackageAdmin packageAdmin)
     {
         Validate.notNull(bundle);
         Validate.notNull(packageAdmin);
         this.bundle = bundle;
         bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
         this.packageAdmin = packageAdmin;
-        this.requireSpring = requireSpring;
     }
 
     public Bundle getBundle()
@@ -118,26 +115,8 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
      */
     public <T> T autowire(final Class<T> clazz, final AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalPluginStateException
     {
-        if (requireSpring)
-        {
-            assertSpringContextAvailable();
-            return springContextAccessor.createBean(clazz, autowireStrategy);
-        }
-        else
-        {
-            try
-            {
-                return clazz.newInstance();
-            }
-            catch (final InstantiationException e)
-            {
-                throw new PluginException("Unable to instantiate " + clazz, e);
-            }
-            catch (final IllegalAccessException e)
-            {
-                throw new PluginException("Unable to access " + clazz, e);
-            }
-        }
+        assertSpringContextAvailable();
+        return springContextAccessor.createBean(clazz, autowireStrategy);
     }
 
     /**
@@ -151,12 +130,8 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
      */
     public void autowire(final Object instance, final AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalPluginStateException
     {
-        // Only do anything if spring is required
-        if (requireSpring)
-        {
-            assertSpringContextAvailable();
-            springContextAccessor.createBean(instance, autowireStrategy);
-        }
+        assertSpringContextAvailable();
+        springContextAccessor.createBean(instance, autowireStrategy);
     }
 
     public Set<String> getRequiredPlugins()

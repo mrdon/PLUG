@@ -39,7 +39,7 @@ public class TestOsgiPluginInstalledHelper extends TestCase
 
         packageAdmin = mock(PackageAdmin.class);
 
-        helper = new OsgiPluginInstalledHelper(bundle, packageAdmin, true);
+        helper = new OsgiPluginInstalledHelper(bundle, packageAdmin);
     }
 
     @Override
@@ -62,21 +62,6 @@ public class TestOsgiPluginInstalledHelper extends TestCase
         SetterInjectedBean bean = new SetterInjectedBean();
         helper.autowire(bean, AutowireCapablePlugin.AutowireStrategy.AUTOWIRE_BY_NAME);
         assertNotNull(bean.getChild());
-    }
-
-    public void testAutowireNoSpring()
-    {
-        helper = new OsgiPluginInstalledHelper(bundle, packageAdmin, false);
-        Object obj = new Object();
-        try
-        {
-            helper.autowire(obj, AutowireCapablePlugin.AutowireStrategy.AUTOWIRE_AUTODETECT);
-        }
-        catch (RuntimeException ex)
-        {
-            fail("Shouldn't throw any exceptions");
-            throw ex;
-        }
     }
 
     public void testAutowireNoSpringButThereShouldBe()

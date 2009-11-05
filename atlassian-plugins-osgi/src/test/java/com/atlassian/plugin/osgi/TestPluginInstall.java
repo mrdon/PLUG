@@ -20,6 +20,8 @@ import com.atlassian.plugin.util.WaitUntil;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import org.osgi.util.tracker.ServiceTracker;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -652,6 +654,13 @@ public class TestPluginInstall extends PluginInContainerTestBase
         initPluginManager(prov);
         pluginManager.installPlugin(new JarPluginArtifact(servletJar));
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getEnabledPlugins().size() == 2;
+            }
+        });
 
         assertEquals(2, pluginManager.getEnabledPlugins().size());
         assertNotNull(pluginManager.getPlugin("first-4.0.0"));
@@ -785,13 +794,10 @@ public class TestPluginInstall extends PluginInContainerTestBase
             }
         };
 
-        Mock mockServletContext = new Mock(ServletContext.class);
-        mockServletContext.expectAndReturn("getInitParameterNames", Collections.enumeration(Collections.emptyList()));
-        mockServletContext.expect("log", C.ANY_ARGS);
-        mockServletContext.expect("log", C.ANY_ARGS);
-        mockServletContext.expect("log", C.ANY_ARGS);
-        Mock mockServletConfig = new Mock(ServletConfig.class);
-        mockServletConfig.matchAndReturn("getServletContext", mockServletContext.proxy());
+        ServletContext ctx = mock(ServletContext.class);
+        when(ctx.getInitParameterNames()).thenReturn(Collections.enumeration(Collections.emptyList()));
+        ServletConfig servletConfig = mock(ServletConfig.class);
+        when(servletConfig.getServletContext()).thenReturn(ctx);
 
         ServletModuleManager mgr = new DefaultServletModuleManager(pluginEventManager);
         Mock mockHostContainer = new Mock(HostContainer.class);
@@ -804,7 +810,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
         assertEquals(2, pluginManager.getEnabledPlugins().size());
         assertTrue(pluginManager.getPlugin("first").getPluginState() == PluginState.ENABLED);
         assertNotNull(pluginManager.getPlugin("asecond").getPluginState() == PluginState.ENABLED);
-        assertEquals("hi bob", mgr.getServlet("/foo", (ServletConfig) mockServletConfig.proxy()).getServletInfo());
+        assertEquals("hi bob", mgr.getServlet("/foo", servletConfig).getServletInfo());
 
 
 
@@ -831,7 +837,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
 
         });
 
-        assertEquals("hi bob", mgr.getServlet("/foo", (ServletConfig) mockServletConfig.proxy()).getServletInfo());
+        assertEquals("hi bob", mgr.getServlet("/foo", servletConfig).getServletInfo());
     }
 
     public void testLotsOfHostComponents() throws Exception

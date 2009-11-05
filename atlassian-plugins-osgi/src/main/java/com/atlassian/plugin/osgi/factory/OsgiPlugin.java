@@ -325,7 +325,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
     protected void installInternal() throws IllegalPluginStateException
     {
         Bundle bundle = helper.install();
-        helper = new OsgiPluginInstalledHelper(bundle, packageAdmin, shouldHaveSpringContext(bundle));
+        helper = new OsgiPluginInstalledHelper(bundle, packageAdmin);
     }
 
     /**
@@ -351,8 +351,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
             {
                 pluginEventManager.register(this);
                 getBundle().start();
-                boolean requireSpring = shouldHaveSpringContext(getBundle());
-                if (requireSpring && !treatSpringBeanFactoryCreationAsRefresh)
+                if (!treatSpringBeanFactoryCreationAsRefresh)
                 {
                     stateResult = PluginState.ENABLING;
                 }
@@ -490,16 +489,6 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
     Map<String, Element> getModuleElements()
     {
         return moduleElements;
-    }
-
-    /**
-     * @param bundle The bundle
-     * @return True if the OSGi bundle should have a spring context
-     */
-    static boolean shouldHaveSpringContext(Bundle bundle)
-    {
-        return (bundle.getHeaders().get(SPRING_CONTEXT) != null) ||
-                (bundle.getEntry("META-INF/spring/") != null);
     }
 
     /**

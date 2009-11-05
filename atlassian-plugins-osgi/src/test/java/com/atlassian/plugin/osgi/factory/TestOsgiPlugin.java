@@ -116,16 +116,4 @@ public class TestOsgiPlugin extends TestCase
     }
 
 
-    public void testShouldHaveSpringContext() throws MalformedURLException
-    {
-        dict.put(OsgiPlugin.SPRING_CONTEXT, "*;timeout:=60");
-        assertTrue(OsgiPlugin.shouldHaveSpringContext(bundle));
-
-        dict.remove(OsgiPlugin.SPRING_CONTEXT);
-        assertFalse(OsgiPlugin.shouldHaveSpringContext(bundle));
-        when(bundle.getEntry("META-INF/spring/")).thenReturn(new URL("http://foo"));
-        assertTrue(OsgiPlugin.shouldHaveSpringContext(bundle));
-
-
-    }
 }

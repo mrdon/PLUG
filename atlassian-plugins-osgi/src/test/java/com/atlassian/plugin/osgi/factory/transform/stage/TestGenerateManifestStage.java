@@ -117,24 +117,6 @@ public class TestGenerateManifestStage extends TestCase
 
     }
 
-    public void testGenerateManifestNoSpring() throws Exception
-    {
-        final File plugin = new PluginJarBuilder("plugin")
-                .addFormattedResource("META-INF/MANIFEST.MF",
-                        "Manifest-Version: 1.0",
-                        "Bundle-SymbolicName: my.foo.symbolicName",
-                        "Bundle-Version: 1.0",
-                        "Bundle-ClassPath: .,foo")
-                .addResource("foo/bar.txt", "Something")
-                .addPluginInformation("innerjarcp", "Some name", "1.0")
-                .build();
-
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
-        final Attributes attrs = executeStage(context);
-        assertEquals("innerjarcp", attrs.getValue("Atlassian-Plugin-Key"));
-
-    }
-
     public void testGenerateManifestInvalidVersionWithExisting() throws Exception
     {
         final File plugin = new PluginJarBuilder("plugin")
@@ -180,7 +162,46 @@ public class TestGenerateManifestStage extends TestCase
 
     }
 
-    public void testGenerateManifestSimplePluginNoSpring() throws Exception
+    public void testGenerateManifestWithExistingManifestNoSpringButDescriptor() throws Exception
+    {
+        final File plugin = new PluginJarBuilder("plugin")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0",
+                        "Bundle-SymbolicName: my.foo.symbolicName",
+                        "Bundle-Version: 1.0",
+                        "Bundle-ClassPath: .,foo")
+                .addResource("foo/bar.txt", "Something")
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
+
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final Attributes attrs = executeStage(context);
+        assertEquals("innerjarcp", attrs.getValue("Atlassian-Plugin-Key"));
+        assertNotNull(attrs.getValue("Spring-Context"));
+
+    }
+
+    public void testGenerateManifestWithExistingManifestWithSpringWithDescriptor() throws Exception
+    {
+        final File plugin = new PluginJarBuilder("plugin")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0",
+                        "Bundle-SymbolicName: my.foo.symbolicName",
+                        "Bundle-Version: 1.0",
+                        "Spring-Context: *",
+                        "Bundle-ClassPath: .,foo")
+                .addResource("foo/bar.txt", "Something")
+                .addPluginInformation("innerjarcp", "Some name", "1.0")
+                .build();
+
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final Attributes attrs = executeStage(context);
+        assertEquals("innerjarcp", attrs.getValue("Atlassian-Plugin-Key"));
+        assertEquals("*", attrs.getValue("Spring-Context"));
+
+    }
+
+    public void testGenerateManifestNoExistingManifestButDescriptor() throws Exception
     {
         final File plugin = new PluginJarBuilder("plugin")
                 .addResource("foo/bar.txt", "Something")
@@ -190,11 +211,13 @@ public class TestGenerateManifestStage extends TestCase
         final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
         final Attributes attrs = executeStage(context);
         assertEquals("innerjarcp", attrs.getValue("Atlassian-Plugin-Key"));
-        assertNull(attrs.getValue("Spring-Context"));
+        assertNotNull(attrs.getValue("Spring-Context"));
 
     }
 
-    public void testGenerateManifestWarnNoSpringWithExisting() throws Exception
+
+
+    /*public void testGenerateManifestWarnNoSpringWithExisting() throws Exception
     {
         Log log = mock(Log.class);
         GenerateManifestStage.log = log;
@@ -217,6 +240,7 @@ public class TestGenerateManifestStage extends TestCase
         assertEquals("innerjarcp", attrs.getValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY));
         verify(log).debug(contains("'Spring-Context' is missing"));
     }
+    */
 
     public void testGenerateManifestWarnNoTimeout() throws Exception
     {

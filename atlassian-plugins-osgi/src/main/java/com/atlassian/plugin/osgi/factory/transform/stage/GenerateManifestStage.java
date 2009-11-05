@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.HashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.Manifest;
 
@@ -54,7 +55,10 @@ public class GenerateManifestStage implements TransformStage
                 if (context.getExtraImports().isEmpty())
                 {
                     final Manifest mf = builder.getJar().getManifest();
-                    mf.getMainAttributes().putValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, parser.getKey());
+                    for (Map.Entry<String,String> entry : getRequiredOsgiHeaders(context, parser.getKey()).entrySet())
+                    {
+                        mf.getMainAttributes().putValue(entry.getKey(), entry.getValue());
+                    }
                     validateOsgiVersionIsValid(mf);
                     writeManifestOverride(context, mf);
                     // skip any manifest manipulation by bnd
@@ -67,7 +71,10 @@ public class GenerateManifestStage implements TransformStage
                     final String imports = addExtraImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), context.getExtraImports());
                     builder.setProperty(Constants.IMPORT_PACKAGE, imports);
 
-                    builder.setProperty(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, parser.getKey());
+                    for (Map.Entry<String,String> entry : getRequiredOsgiHeaders(context, parser.getKey()).entrySet())
+                    {
+                        builder.setProperty(entry.getKey(), entry.getValue());
+                    }
                     builder.mergeManifest(builder.getJar().getManifest());
                 }
             }
@@ -78,9 +85,9 @@ public class GenerateManifestStage implements TransformStage
                 final Properties properties = new Properties();
 
                 // Setup defaults
-                if (SpringHelper.isSpringUsed(context))
+                for (Map.Entry<String,String> entry : getRequiredOsgiHeaders(context, parser.getKey()).entrySet())
                 {
-                    properties.put("Spring-Context", SPRING_CONTEXT_DEFAULT);
+                    properties.put(entry.getKey(), entry.getValue());
                 }
 
                 properties.put(Analyzer.BUNDLE_SYMBOLICNAME, parser.getKey());
@@ -98,7 +105,6 @@ public class GenerateManifestStage implements TransformStage
                 header(properties, Analyzer.BUNDLE_NAME, parser.getKey());
                 header(properties, Analyzer.BUNDLE_VENDOR, info.getVendorName());
                 header(properties, Analyzer.BUNDLE_DOCURL, info.getVendorUrl());
-                header(properties, OsgiPlugin.ATLASSIAN_PLUGIN_KEY, parser.getKey());
 
                 // Scan for embedded jars
                 final StringBuilder classpath = new StringBuilder();
@@ -146,6 +152,37 @@ public class GenerateManifestStage implements TransformStage
             builder.close();
         }
 
+    }
+
+    private Map<String,String> getRequiredOsgiHeaders(TransformContext context, String pluginKey)
+    {
+        Map<String, String> props = new HashMap<String, String>();
+        props.put(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, pluginKey);
+        String springHeader = getDesiredSpringContextValue(context);
+        if (springHeader != null)
+        {
+            props.put("Spring-Context", springHeader);
+        }
+        return props;
+    }
+
+    private String getDesiredSpringContextValue(TransformContext context)
+    {
+        // Check for the explicit context value
+        final String header = context.getManifest().getMainAttributes().getValue("Spring-Context");
+        if (header != null)
+        {
+            return header;
+        }
+
+        // Check for the spring files, as the default header value looks here
+        if (context.getPluginArtifact().doesResourceExist("META-INF/spring/") ||
+            context.shouldRequireSpring() ||
+            context.getDescriptorDocument() != null)
+        {
+            return SPRING_CONTEXT_DEFAULT;
+        }
+        return null;
     }
 
     private void validateOsgiVersionIsValid(Manifest mf)
