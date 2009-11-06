@@ -82,7 +82,8 @@ public class TestDirectoryScanner extends AbstractTestClassLoader
         scanner.scan();
         assertEquals(2, scanner.getDeploymentUnits().size());
         DeploymentUnit paddingtonUnit = scanner.locateDeploymentUnit(paddington);
-        paddington.delete();
+        assertTrue(paddington.exists());
+        assertTrue(paddington.delete());
         scanner.remove(paddingtonUnit);
 
         assertFalse(paddington.exists());
