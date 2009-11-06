@@ -61,46 +61,39 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     public boolean matches(String url)
     {
-        return SuperBatchPluginResource.matches(url) || SinglePluginResource.matches(url) || BatchPluginResource.matches(url);
+        return SuperBatchPluginResource.matches(url) || SuperBatchSubResource.matches(url) ||
+            SinglePluginResource.matches(url) || BatchPluginResource.matches(url);
     }
 
     public DownloadableResource getDownloadableResource(String url, Map<String, String> queryParams)
     {
-        if (SuperBatchPluginResource.matches(url))
+        try
         {
-            SuperBatchPluginResource superBatchResource = SuperBatchPluginResource.parse(url, queryParams);
-            if (superBatchResource == null)
+            if (SuperBatchPluginResource.matches(url))
             {
-                log.error("Unable to parse the URL '" + url + "'");
-                return null;
+                SuperBatchPluginResource superBatchResource = SuperBatchPluginResource.parse(url, queryParams);
+                return locateSuperBatchPluginResource(superBatchResource);
             }
-
-            return locateSuperBatchPluginResource(superBatchResource);
+            if (SuperBatchSubResource.matches(url))
+            {
+                SuperBatchSubResource superBatchSubResource = SuperBatchSubResource.parse(url, queryParams);
+                return locateSuperBatchSubPluginResource(superBatchSubResource);
+            }
+            if (BatchPluginResource.matches(url))
+            {
+                BatchPluginResource batchResource = BatchPluginResource.parse(url, queryParams);
+                return locateBatchPluginResource(batchResource);
+            }
+            if (SinglePluginResource.matches(url))
+            {
+                SinglePluginResource resource = SinglePluginResource.parse(url);
+                return locatePluginResource(resource.getModuleCompleteKey(), resource.getResourceName());
+            }
         }
-
-        if (BatchPluginResource.matches(url))
+        catch (UrlParseException e)
         {
-            BatchPluginResource batchResource = BatchPluginResource.parse(url, queryParams);
-            if (batchResource == null)
-            {
-                log.error("Unable to parse the URL '" + url + "'.");
-                return null;
-            }
-            return locateBatchPluginResource(batchResource);
+            log.error(e);
         }
-
-        if (SinglePluginResource.matches(url))
-        {
-            SinglePluginResource resource = SinglePluginResource.parse(url);
-            if (resource == null)
-            {
-                log.error("Unable to parse the URL '" + url + "'.");
-                return null;
-            }
-            return locatePluginResource(resource.getModuleCompleteKey(), resource.getResourceName());
-        }
-
-        log.error("Cannot locate resource for unknown url: " + url);
         // TODO: It would be better to use Exceptions rather than returning nulls to indicate an error.
         return null;
     }
@@ -132,20 +125,21 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
                 }
             }
         }
-        // if batch is empty, check if we can locate a plugin resource
-        if (batchResource.isEmpty())
-        {
-            if (log.isDebugEnabled())
-                log.debug("coudn't find super batch resources, searching as plugin resource instead");
-
-            for (String moduleKey : superBatchModuleKeys)
-            {
-                DownloadableResource pluginResource = locatePluginResource(moduleKey, batchResource.getResourceName());
-                if (pluginResource != null)
-                    return pluginResource;
-            }
-        }
         return batchResource;
+    }
+
+    private DownloadableResource locateSuperBatchSubPluginResource(SuperBatchSubResource superBatchSubResource)
+    {
+        LinkedHashSet<String> superBatchModuleKeys = dependencyResolver.getSuperBatchDependencies();
+
+        for (String moduleKey : superBatchModuleKeys)
+        {
+            DownloadableResource pluginResource = locatePluginResource(moduleKey, superBatchSubResource.getResourceName());
+            if (pluginResource != null)
+                return pluginResource;
+        }
+        log.warn("Could not locate resource in superbatch: " + superBatchSubResource.getResourceName());
+        return superBatchSubResource;
     }
 
     private DownloadableResource locateBatchPluginResource(BatchPluginResource batchResource)

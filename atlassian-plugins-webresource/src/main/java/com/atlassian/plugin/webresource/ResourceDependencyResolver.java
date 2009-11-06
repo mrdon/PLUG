@@ -2,7 +2,7 @@ package com.atlassian.plugin.webresource;
 
 import java.util.LinkedHashSet;
 
-public interface ResourceDependencyResolver
+interface ResourceDependencyResolver
 {
     /**
      * Returns an ordered set of the super batch resources and its dependencies.

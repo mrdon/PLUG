@@ -6,9 +6,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-/**
- *
- */
 public class TestSuperBatchPluginResource extends TestCase
 {
     public void testParseCss()
@@ -59,17 +56,17 @@ public class TestSuperBatchPluginResource extends TestCase
         assertEquals("batch.js", resource.getResourceName());
     }
 
-    public void testParsePluginResource()
-    {
-        String path = "/download/superbatch/css/images/foo.png";
-        assertTrue(SuperBatchPluginResource.matches(path));
-        SuperBatchPluginResource resource = SuperBatchPluginResource.parse(path, Collections.<String, String>emptyMap());
-        assertEquals("png", resource.getType());
-        assertEquals("css/images/foo.png", resource.getResourceName());
-    }
-
     public void testNotSuperbatches()
     {
         assertFalse("wrong path", SuperBatchPluginResource.matches("/download/superbitch/css/batch.css"));
+        assertFalse("wrong path", SuperBatchPluginResource.matches("/download/superbatch/css/images/foo.png"));
+    }
+
+    public void testGetType()
+    {
+        assertEquals("css", SuperBatchPluginResource.getType("/foo.css"));
+        assertEquals("js", SuperBatchPluginResource.getType("/superbatch/js/foo.js"));
+        assertEquals("", SuperBatchPluginResource.getType("/superbatch/js/foo."));
+        assertEquals("", SuperBatchPluginResource.getType("/superbatch/js/foo"));
     }
 }

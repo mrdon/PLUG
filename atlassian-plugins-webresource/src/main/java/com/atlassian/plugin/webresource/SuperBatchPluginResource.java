@@ -29,30 +29,28 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
 
     public static boolean matches(String path)
     {
-        return path.indexOf(URL_PREFIX) != -1;
+        String type = getType(path);
+        return path.indexOf(URL_PREFIX) != -1 && path.endsWith(DEFAULT_RESOURCE_NAME_PREFIX + "." + type);
     }
 
     public static SuperBatchPluginResource createBatchFor(PluginResource pluginResource)
     {
-        String type = pluginResource.getResourceName().substring(pluginResource.getResourceName().lastIndexOf(".") + 1);
-        return new SuperBatchPluginResource(type, pluginResource.getParams());
+        return new SuperBatchPluginResource(getType(pluginResource.getResourceName()), pluginResource.getParams());
     }
 
     public static SuperBatchPluginResource parse(String path, Map<String, String> params)
     {
         String type = path.substring(path.lastIndexOf(".") + 1);
-        if (path.indexOf('?') != -1) // remove query parameters
-        {
-            path = path.substring(0, path.indexOf('?'));
-        }
-        // we can get image requests from a CSS super batch
-        if (!path.endsWith(DEFAULT_RESOURCE_NAME_PREFIX + "." + type))
-        {
-            int startIndex = path.indexOf(URL_PREFIX) + URL_PREFIX.length();
-            String resourceName = path.substring(startIndex);
-            return new SuperBatchPluginResource(resourceName, type, params);
-        }
         return new SuperBatchPluginResource(type, params);
+    }
+
+    protected static String getType(String path)
+    {
+        int index = path.lastIndexOf('.');
+        if (index > -1 && index < path.length())
+            return path.substring(index + 1);
+
+        return "";
     }
 
     public SuperBatchPluginResource(String type, Map<String, String> params)
@@ -60,7 +58,7 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
         this(DEFAULT_RESOURCE_NAME_PREFIX + "." + type, type, params);
     }
 
-    private SuperBatchPluginResource(String resourceName, String type, Map<String, String> params)
+    protected SuperBatchPluginResource(String resourceName, String type, Map<String, String> params)
     {
         this.resourceName = resourceName;
         this.delegate = new BatchPluginResource(null, type, params);

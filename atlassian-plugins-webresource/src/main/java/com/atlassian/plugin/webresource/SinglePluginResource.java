@@ -88,8 +88,9 @@ public class SinglePluginResource implements PluginResource
      *
      * @param url the url to parse
      * @return The parsed SinglePluginResource.
+     * @throws UrlParseException if the url passed in is not a valid plugin resource url
      */
-    public static SinglePluginResource parse(final String url)
+    public static SinglePluginResource parse(final String url) throws UrlParseException
     {
         final int indexOfPrefix = url.indexOf(SinglePluginResource.URL_PREFIX);
         String libraryAndResource = url.substring(indexOfPrefix + SinglePluginResource.URL_PREFIX.length() + 1);
@@ -101,10 +102,9 @@ public class SinglePluginResource implements PluginResource
 
         final String[] parts = libraryAndResource.split("/", 2);
 
-        // TODO: It would be better to use Exceptions rather than returning nulls to indicate an error.
         if (parts.length != 2)
         {
-            return null;
+            throw new UrlParseException("Could not parse invalid plugin resource url: " + url);
         }
 
         return new SinglePluginResource(parts[1], parts[0], url.substring(0, indexOfPrefix).length() > 0);

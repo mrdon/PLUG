@@ -14,7 +14,7 @@ import junit.framework.TestCase;
 
 public class TestBatchPluginResource extends TestCase
 {
-    public void testIsCacheSupported()
+    public void testIsCacheSupported() throws Exception
     {
         final BatchPluginResource resource = BatchPluginResource.parse("/download/batch/test.plugin:webresources/test.plugin:webresources.css",
             Collections.<String, String>emptyMap());
@@ -27,7 +27,7 @@ public class TestBatchPluginResource extends TestCase
         assertFalse(resource2.isCacheSupported());
     }
 
-    public void testParse()
+    public void testParse() throws Exception
     {
         final BatchPluginResource resource = BatchPluginResource.parse("/download/batch/test.plugin:webresources/test.plugin:webresources.css",
             Collections.<String, String>emptyMap());
@@ -39,7 +39,7 @@ public class TestBatchPluginResource extends TestCase
         assertEquals(0, params.size());
     }
 
-    public void testParseWithParams()
+    public void testParseWithParams() throws Exception
     {
         final Map<String, String> queryParams = new TreeMap<String, String>();
         queryParams.put("ieonly", "true");
@@ -57,7 +57,7 @@ public class TestBatchPluginResource extends TestCase
         assertEquals(params, resource.getParams());
     }
 
-    public void testParseWithParams2()
+    public void testParseWithParams2() throws Exception
     {
         final Map<String, String> queryParams = new TreeMap<String, String>();
         queryParams.put("ieonly", "true");
@@ -75,7 +75,7 @@ public class TestBatchPluginResource extends TestCase
         assertEquals(params, resource.getParams());
     }
 
-    public void testParseWithParamsAndRandomPrefix()
+    public void testParseWithParamsAndRandomPrefix() throws Exception
     {
         final Map<String, String> queryParams = new TreeMap<String, String>();
         queryParams.put("ieonly", "true");
@@ -109,7 +109,7 @@ public class TestBatchPluginResource extends TestCase
         assertEquals("/download/batch/test.plugin:webresources/test.plugin:webresources.js?foo=bar&moo=cow", resource.getUrl());
     }
 
-    public void testRoundTrip()
+    public void testRoundTrip() throws Exception
     {
         final Map<String, String> params = new TreeMap<String, String>();
         params.put("foo", "bar");
@@ -179,5 +179,18 @@ public class TestBatchPluginResource extends TestCase
 
         final String actualResponse = baos.toString();
         assertEquals("Test1\nTest2\n", actualResponse);
+    }
+
+    public void testParseInvlaidUrlThrowsException()
+    {
+        try
+        {
+            BatchPluginResource.parse("/download/batch/blah.css", Collections.<String, String>emptyMap());
+            fail("Should have thrown exception for invalid url");
+        }
+        catch (UrlParseException e)
+        {
+            //expected
+        }
     }
 }

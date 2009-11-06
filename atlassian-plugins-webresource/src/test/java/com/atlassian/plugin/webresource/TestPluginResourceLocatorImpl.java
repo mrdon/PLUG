@@ -57,6 +57,20 @@ public class TestPluginResourceLocatorImpl extends TestCase
         super.tearDown();
     }
 
+    public void testMatches()
+    {
+        assertTrue(pluginResourceLocator.matches("/download/superbatch/css/batch.css"));
+        assertTrue(pluginResourceLocator.matches("/download/superbatch/css/images/background/blah.gif"));
+        assertTrue(pluginResourceLocator.matches("/download/batch/plugin.key:module-key/plugin.key.js"));
+        assertTrue(pluginResourceLocator.matches("/download/resources/plugin.key:module-key/foo.png"));
+    }
+
+    public void testNotMatches()
+    {
+        assertFalse(pluginResourceLocator.matches("/superbatch/batch.css"));
+        assertFalse(pluginResourceLocator.matches("/download/blah.css"));
+    }
+
     public void testGetAndParseUrl()
     {
         String url = pluginResourceLocator.getResourceUrl("plugin.key:my-resources", "foo.css");
@@ -275,7 +289,6 @@ public class TestPluginResourceLocatorImpl extends TestCase
         mockBatchingConfiguration.expectAndReturn("isSuperBatchingEnabled", true);
         mockBatchingConfiguration.matchAndReturn("getSuperBatchModuleCompleteKeys", Arrays.asList(TEST_MODULE_COMPLETE_KEY));
 
-        mockPluginAccessor.matchAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), webModuleDescriptor);
         mockPluginAccessor.matchAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), testPlugin);
 
@@ -286,7 +299,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         assertFalse(superBatchPluginResource.isEmpty());
     }
 
-    public void testGetDownloadableSuperBatchFallbacksToPluginResource() throws Exception
+    public void testGetDownloadableSuperBatchSubResource() throws Exception
     {
         String url = "/download/superbatch/css/images/foo.png";
         String cssResourcesXml = "<resource name=\"css/\" type=\"download\" location=\"css/images/\" />";
@@ -302,7 +315,6 @@ public class TestPluginResourceLocatorImpl extends TestCase
         mockBatchingConfiguration.expectAndReturn("isSuperBatchingEnabled", true);
         mockBatchingConfiguration.matchAndReturn("getSuperBatchModuleCompleteKeys", Arrays.asList(TEST_MODULE_COMPLETE_KEY));
 
-        mockPluginAccessor.matchAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), webModuleDescriptor);
         mockPluginAccessor.matchAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), testPlugin);
 

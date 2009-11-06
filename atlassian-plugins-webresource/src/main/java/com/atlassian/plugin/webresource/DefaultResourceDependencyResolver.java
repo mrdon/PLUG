@@ -10,7 +10,7 @@ import java.util.Stack;
 import java.util.Collections;
 import java.util.Set;
 
-public class DefaultResourceDependencyResolver implements ResourceDependencyResolver
+class DefaultResourceDependencyResolver implements ResourceDependencyResolver
 {
     private static final Log log = LogFactory.getLog(DefaultResourceDependencyResolver.class);
 

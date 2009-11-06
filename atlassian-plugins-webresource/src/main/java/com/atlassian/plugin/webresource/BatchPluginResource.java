@@ -161,8 +161,9 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * @param url         the url to parse
      * @param queryParams a map of String key and value pairs representing the query parameters in the url
      * @return the parsed BatchPluginResource
+     * @throws UrlParseException if the url passed in is not a valid batch resource url
      */
-    public static BatchPluginResource parse(String url, final Map<String, String> queryParams)
+    public static BatchPluginResource parse(String url, final Map<String, String> queryParams) throws UrlParseException
     {
         final int startIndex = url.indexOf(URL_PREFIX) + URL_PREFIX.length() + 1;
 
@@ -176,8 +177,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
 
         if (parts.length < 2)
         {
-            // TODO: It would be better to use Exceptions rather than returning nulls to indicate an error.
-            return null;
+            throw new UrlParseException("Could not parse invalid batch resource url: " + url);
         }
 
         final String moduleKey = parts[0];
