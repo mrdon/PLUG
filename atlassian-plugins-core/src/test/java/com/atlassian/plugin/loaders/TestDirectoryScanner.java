@@ -71,6 +71,24 @@ public class TestDirectoryScanner extends AbstractTestClassLoader
         assertEquals(1, scanner.getDeploymentUnits().size());
     }
 
+    public void testRemoveNoErrorWhenNotExist()
+    {
+        File pluginsDirectory = pluginsTestDir;
+        File paddington = new File(pluginsDirectory, "paddington-test-plugin.jar");
+
+        assertTrue(paddington.exists());
+
+        DirectoryScanner scanner = new DirectoryScanner(pluginsDirectory);
+        scanner.scan();
+        assertEquals(2, scanner.getDeploymentUnits().size());
+        DeploymentUnit paddingtonUnit = scanner.locateDeploymentUnit(paddington);
+        paddington.delete();
+        scanner.remove(paddingtonUnit);
+
+        assertFalse(paddington.exists());
+        assertEquals(1, scanner.getDeploymentUnits().size());
+    }
+
     public void testAddAndRemoveJarFromOutsideScanner() throws Exception
     {
         File pluginsDirectory = pluginsTestDir;
