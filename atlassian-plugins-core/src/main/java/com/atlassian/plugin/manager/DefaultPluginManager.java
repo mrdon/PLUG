@@ -57,6 +57,7 @@ import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -735,7 +736,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     public Plugin getPlugin(final String key)
     {
-        return key == null ? null : plugins.get(key);
+        Validate.notNull(key, "The plugin key must be specified");
+        return plugins.get(key);
     }
 
     public Plugin getEnabledPlugin(final String pluginKey)
@@ -1179,6 +1181,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     public boolean isPluginEnabled(final String key)
     {
+        Validate.notNull(key, "The plugin key must be specified");
         final Plugin plugin = plugins.get(key);
 
         return (plugin != null) && ((plugin.getPluginState() == PluginState.ENABLED) && getState().isEnabled(plugin));

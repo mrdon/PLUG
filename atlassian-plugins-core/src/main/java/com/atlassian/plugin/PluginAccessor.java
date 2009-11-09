@@ -66,15 +66,19 @@ public interface PluginAccessor
 
     /**
      * Retrieve a given plugin (whether enabled or not).
+     *
+     * @param key The plugin key.  Cannot be null.
      * @return The enabled plugin, or null if that plugin does not exist.
+     * @throws IllegalArgumentException If the plugin key is null
      */
-    Plugin getPlugin(String key);
+    Plugin getPlugin(String key) throws IllegalArgumentException;
 
     /**
      * Retrieve a given plugin if it is enabled.
      * @return The enabled plugin, or null if that plugin does not exist or is disabled.
+     * @throws IllegalArgumentException If the plugin key is null
      */
-    Plugin getEnabledPlugin(String pluginKey);
+    Plugin getEnabledPlugin(String pluginKey) throws IllegalArgumentException;
 
     /**
      * Retrieve any plugin module by complete module key.
@@ -90,8 +94,10 @@ public interface PluginAccessor
 
     /**
      * Whether or not a given plugin is currently enabled.
+     *
+     * @throws IllegalArgumentException If the plugin key is null
      */
-    boolean isPluginEnabled(String key);
+    boolean isPluginEnabled(String key) throws IllegalArgumentException;
 
     /**
      * Whether or not a given plugin module is currently enabled.  This also checks
