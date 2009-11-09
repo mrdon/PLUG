@@ -215,33 +215,6 @@ public class TestGenerateManifestStage extends TestCase
 
     }
 
-
-
-    /*public void testGenerateManifestWarnNoSpringWithExisting() throws Exception
-    {
-        Log log = mock(Log.class);
-        GenerateManifestStage.log = log;
-        
-        final File plugin = new PluginJarBuilder("plugin")
-                .addFormattedResource("META-INF/MANIFEST.MF",
-                        "Manifest-Version: 1.0",
-                        "Import-Package: javax.swing",
-                        "Bundle-SymbolicName: my.foo.symbolicName",
-                        "Bundle-ClassPath: .,foo")
-                .addResource("foo/bar.txt", "Something")
-                .addPluginInformation("innerjarcp", "Some name", "1.0")
-                .build();
-
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
-        context.setShouldRequireSpring(true);
-        context.getExtraImports().add(AttributeSet.class.getPackage().getName());
-
-        Attributes attrs = executeStage(context);
-        assertEquals("innerjarcp", attrs.getValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY));
-        verify(log).debug(contains("'Spring-Context' is missing"));
-    }
-    */
-
     public void testGenerateManifestWarnNoTimeout() throws Exception
     {
         Log log = mock(Log.class);

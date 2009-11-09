@@ -39,6 +39,7 @@ public class GenerateManifestStage implements TransformStage
 {
     private static final String SPRING_CONTEXT_DEFAULT = "*;timeout:=60";
     static Log log = LogFactory.getLog(GenerateManifestStage.class);
+    public static final String SPRING_CONTEXT = "Spring-Context";
 
     public void execute(final TransformContext context) throws PluginTransformationException
     {
@@ -161,7 +162,7 @@ public class GenerateManifestStage implements TransformStage
         String springHeader = getDesiredSpringContextValue(context);
         if (springHeader != null)
         {
-            props.put("Spring-Context", springHeader);
+            props.put(SPRING_CONTEXT, springHeader);
         }
         return props;
     }
@@ -169,7 +170,7 @@ public class GenerateManifestStage implements TransformStage
     private String getDesiredSpringContextValue(TransformContext context)
     {
         // Check for the explicit context value
-        final String header = context.getManifest().getMainAttributes().getValue("Spring-Context");
+        final String header = context.getManifest().getMainAttributes().getValue(SPRING_CONTEXT);
         if (header != null)
         {
             return header;
@@ -295,7 +296,7 @@ public class GenerateManifestStage implements TransformStage
     {
         if (context.shouldRequireSpring())
         {
-            final String header = context.getManifest().getMainAttributes().getValue("Spring-Context");
+            final String header = context.getManifest().getMainAttributes().getValue(SPRING_CONTEXT);
             if (header == null)
             {
                 log.debug("The Spring Manifest header 'Spring-Context' is missing in jar '" +
