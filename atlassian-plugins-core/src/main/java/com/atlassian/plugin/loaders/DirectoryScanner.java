@@ -180,7 +180,7 @@ class DirectoryScanner implements com.atlassian.plugin.loaders.classloading.Scan
         }
         else
         {
-            log.debug("Plugin file " + unit.getPath().getPath() + " doesn't exist to delete.  Ignoring.");
+            log.debug("Plugin file <" + unit.getPath().getPath() + "> doesn't exist to delete.  Ignoring.");
         }
 
         clear(unit.getPath());
