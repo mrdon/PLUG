@@ -1548,7 +1548,15 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     public void testGetPluginWithNullKey()
     {
         manager.init();
-        assertNull(manager.getPlugin(null));
+        try
+        {
+            manager.getPlugin(null);
+            fail();
+        }
+        catch (IllegalArgumentException ex)
+        {
+            // test passed
+        }
     }
     public Plugin createPluginWithVersion(final String version)
     {
