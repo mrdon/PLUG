@@ -7,6 +7,7 @@
         <url>http://bamboo.developer.atlassian.com</url>
         <use-favourites>false</use-favourites>
         <bamboo2>true</bamboo2>
+        <isBamboo2M9>false</isBamboo2M9>
         <plans>
           <plan key="ATLASSIANPLUGINS-OPTIMIZED" />
           <plan key="ATLASSIANPLUGINS-COV" />
@@ -24,7 +25,9 @@
         <server-id>14dc6747-2f1a-4882-9dca-a0df3dc96b9e</server-id>
         <name>StAC</name>
         <url>https://studio.atlassian.com</url>
+        <dontUseBasicAuth>false</dontUseBasicAuth>
       </jira>
     </servers>
+    <default-jira-server>14dc6747-2f1a-4882-9dca-a0df3dc96b9e</default-jira-server>
   </project-configuration>
 </atlassian-ide-plugin>

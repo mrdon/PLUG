@@ -43,6 +43,17 @@ public interface WebResourceManager
     void includeResources(Writer writer);
 
     /**
+     * Writes out the resource tags for a specified set of required resources and their dependencies. Does not write out
+     * tags for resources specified in calls to {@link #requireResource(String)}.
+     *
+     * @param moduleCompleteKeys The set of web resource modules to include
+     * @param writer the writer to write the links to
+     * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
+     *                decide
+     */
+    void includeResources(Iterable<String> moduleCompleteKeys, Writer writer, UrlMode urlMode);
+
+    /**
      * Writes out the resource tags to the previously required resources called via {@link #requireResource(String)}. If
      * you need it as a String to embed the tags in a template, use {@link #getRequiredResources(UrlMode)}.
      * <p/>

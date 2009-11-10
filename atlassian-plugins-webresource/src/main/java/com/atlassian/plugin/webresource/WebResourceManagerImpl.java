@@ -122,6 +122,19 @@ public class WebResourceManagerImpl implements WebResourceManager
         includeResources(writer, UrlMode.AUTO);
     }
 
+    public void includeResources(Iterable<String> moduleCompleteKeys, Writer writer, UrlMode urlMode)
+    {
+        final LinkedHashSet<String> resources = new LinkedHashSet<String>();
+        for (String moduleCompleteKey : moduleCompleteKeys)
+        {
+            addResourceWithDependencies(moduleCompleteKey, resources, new Stack<String>());
+        }
+        for (String resourceName : resources)
+        {
+            writeResourceTag(resourceName, writer, urlMode);
+        }
+    }
+
     public void includeResources(final Writer writer, final UrlMode urlMode)
     {
         includeResources(writer, true, urlMode);
