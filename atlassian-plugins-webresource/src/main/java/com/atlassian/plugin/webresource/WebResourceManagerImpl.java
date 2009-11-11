@@ -196,24 +196,20 @@ public class WebResourceManagerImpl implements WebResourceManager
             Set<Map<String, String>> alreadyIncluded = new HashSet<Map<String, String>>();
             for (String moduleKey : superBatchModuleKeys)
             {
-                final ModuleDescriptor<?> moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleKey);
-                if (moduleDescriptor instanceof WebResourceModuleDescriptor)
+                for (PluginResource pluginResource : pluginResourceLocator.getPluginResources(moduleKey))
                 {
-                    for (PluginResource pluginResource : pluginResourceLocator.getPluginResources(moduleDescriptor.getCompleteKey()))
+                    if (formatter.matches(pluginResource.getResourceName()) && filter.matches(pluginResource.getResourceName()))
                     {
-                        if (formatter.matches(pluginResource.getResourceName()) && filter.matches(pluginResource.getResourceName()))
+                        Map<String, String> batchParamsMap = new HashMap<String, String>(PluginResourceLocator.BATCH_PARAMS.length);
+                        for (String s : PluginResourceLocator.BATCH_PARAMS)
                         {
-                            Map<String, String> batchParamsMap = new HashMap<String, String>(PluginResourceLocator.BATCH_PARAMS.length);
-                            for (String s : PluginResourceLocator.BATCH_PARAMS)
-                            {
-                                batchParamsMap.put(s, pluginResource.getParams().get(s));
-                            }
+                            batchParamsMap.put(s, pluginResource.getParams().get(s));
+                        }
 
-                            if (!alreadyIncluded.contains(batchParamsMap))
-                            {
-                                resources.add(SuperBatchPluginResource.createBatchFor(pluginResource));
-                                alreadyIncluded.add(batchParamsMap);
-                            }
+                        if (!alreadyIncluded.contains(batchParamsMap))
+                        {
+                            resources.add(SuperBatchPluginResource.createBatchFor(pluginResource));
+                            alreadyIncluded.add(batchParamsMap);
                         }
                     }
                 }
