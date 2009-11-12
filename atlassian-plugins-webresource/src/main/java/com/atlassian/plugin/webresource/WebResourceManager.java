@@ -50,6 +50,7 @@ public interface WebResourceManager
      * @param writer the writer to write the links to
      * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
      *                decide
+     * @since 2.4.0
      */
     void includeResources(Iterable<String> moduleCompleteKeys, Writer writer, UrlMode urlMode);
 

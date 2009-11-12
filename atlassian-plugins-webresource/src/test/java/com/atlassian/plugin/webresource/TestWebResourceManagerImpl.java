@@ -9,8 +9,13 @@ import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 
-import java.util.*;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.dom4j.DocumentException;
 
@@ -230,6 +235,69 @@ public class TestWebResourceManagerImpl extends TestCase
         assertNotSame(-1, indexA);
         assertNotSame(-1, indexB);
         assertTrue(indexB < indexA);
+    }
+
+    public void testIncludeResourcesWithResourceList() throws Exception
+    {
+        String resourceA = "test.atlassian:a";
+
+        final List<ResourceDescriptor> resourceDescriptorsA = TestUtils.createResourceDescriptors("resourceA.css");
+        final List<ResourceDescriptor> resourceDescriptorsB = TestUtils.createResourceDescriptors("resourceB.css", "resourceB-more.css");
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceA)),
+            TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA, Collections.<String>emptyList()));
+
+        StringWriter requiredResourceWriter = new StringWriter();
+        webResourceManager.includeResources(Arrays.<String>asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);
+        String result = requiredResourceWriter.toString();
+        assertTrue(result.contains(resourceA));
+    }
+
+    public void testIncludeResourcesWithResourceListIgnoresRequireResource() throws Exception
+    {
+        String resourceA = "test.atlassian:a";
+        String resourceB = "test.atlassian:b";
+
+        final List<ResourceDescriptor> resourceDescriptorsA = TestUtils.createResourceDescriptors("resourceA.css");
+        final List<ResourceDescriptor> resourceDescriptorsB = TestUtils.createResourceDescriptors("resourceB.css", "resourceB-more.css");
+
+        final Map requestCache = new HashMap();
+        mockWebResourceIntegration.matchAndReturn("getRequestCache", requestCache);
+        
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceA)),
+            TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA, Collections.<String>emptyList()));
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)),
+            TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, resourceDescriptorsB, Collections.<String>emptyList()));
+
+
+        StringWriter requiredResourceWriter = new StringWriter();
+        webResourceManager.requireResource(resourceB);
+        webResourceManager.includeResources(Arrays.<String>asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);
+        String result = requiredResourceWriter.toString();
+        assertFalse(result.contains(resourceB));
+    }
+
+
+    public void testIncludeResourcesWithResourceListIncludesDependences() throws Exception
+    {
+        String resourceA = "test.atlassian:a";
+        String resourceB = "test.atlassian:b";
+
+        final List<ResourceDescriptor> resourceDescriptorsA = TestUtils.createResourceDescriptors("resourceA.css");
+        final List<ResourceDescriptor> resourceDescriptorsB = TestUtils.createResourceDescriptors("resourceB.css", "resourceB-more.css");
+        
+        // A depends on B
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceA)),
+            TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA, Collections.singletonList(resourceB)));
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)),
+            TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, resourceDescriptorsB, Collections.EMPTY_LIST));
+
+        StringWriter requiredResourceWriter = new StringWriter();
+        webResourceManager.includeResources(Arrays.<String>asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);
+        String result = requiredResourceWriter.toString();
+        assertTrue(result.contains(resourceB));
     }
     
     public void testRequireResourcesAreClearedAfterIncludesResourcesIsCalled() throws Exception
