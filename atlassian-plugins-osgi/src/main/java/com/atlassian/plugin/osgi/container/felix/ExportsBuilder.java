@@ -1,31 +1,32 @@
 package com.atlassian.plugin.osgi.container.felix;
 
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import aQute.lib.osgi.Analyzer;
+import aQute.lib.osgi.Jar;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.ClassLoaderUtils;
-
-import java.util.List;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.jar.Manifest;
-import java.io.*;
-import java.net.MalformedURLException;
-
-import org.twdata.pkgscanner.ExportPackage;
-import org.twdata.pkgscanner.PackageScanner;
-import static org.twdata.pkgscanner.PackageScanner.jars;
-import static org.twdata.pkgscanner.PackageScanner.include;
-import static org.twdata.pkgscanner.PackageScanner.exclude;
-import static org.twdata.pkgscanner.PackageScanner.packages;
-import org.osgi.framework.Constants;
-import org.osgi.framework.Version;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Jar;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
+import org.twdata.pkgscanner.ExportPackage;
+import org.twdata.pkgscanner.PackageScanner;
+import static org.twdata.pkgscanner.PackageScanner.exclude;
+import static org.twdata.pkgscanner.PackageScanner.include;
+import static org.twdata.pkgscanner.PackageScanner.jars;
+import static org.twdata.pkgscanner.PackageScanner.packages;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.util.Collection;
+import java.util.List;
+import java.util.jar.Manifest;
 import javax.servlet.ServletContext;
 
 /**
@@ -37,7 +38,41 @@ class ExportsBuilder
     static final String JDK_PACKAGES_PATH = "jdk-packages.txt";
     static final String JDK6_PACKAGES_PATH = "jdk6-packages.txt";
     private static Log log = LogFactory.getLog(ExportsBuilder.class);
-    private static final String EXPORTS_TXT = "exports.txt";
+    /** caches the package Exports in a static field */
+    private static String exportStringCache;
+
+    /**
+     * Gets the framework exports taking into account host components and package scanner configuration.
+     * <p>
+     * This information cannot change without a system restart, so we determine this once and then cache the value.
+     * The cache is only useful if the plugin system is thrown away and re-initialised. This is done thousands of times
+     * during JIRA functional testing, and the cache was added to speed this up.
+     *
+     * @param regs The list of host component registrations
+     * @param packageScannerConfig The configuration for the package scanning
+     * @return A list of exports, in a format compatible with OSGi headers
+     */
+    public String getExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig) {
+        if (exportStringCache == null)
+        {
+            exportStringCache = determineExports(regs, packageScannerConfig);
+        }
+        return exportStringCache;
+    }
+
+    /**
+     * Determines framework exports taking into account host components and package scanner configuration.
+     *
+     * @param regs The list of host component registrations
+     * @param packageScannerConfig The configuration for the package scanning
+     * @param cacheDir No longer used. (method deprecated).
+     * @return A list of exports, in a format compatible with OSGi headers
+     * @deprecated Please use {@link #getExports}. Deprecated since 2.3.6
+     */
+    @SuppressWarnings ({ "UnusedDeclaration" })
+    public String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig, File cacheDir) {
+        return determineExports(regs, packageScannerConfig);
+    }
 
     /**
      * Determines framework exports taking into account host components and package scanner configuration.
@@ -46,8 +81,7 @@ class ExportsBuilder
      * @param packageScannerConfig The configuration for the package scanning
      * @return A list of exports, in a format compatible with OSGi headers
      */
-    public String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig, File cacheDir){
-
+    String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig) {
         String exports = null;
 
         StringBuilder origExports = new StringBuilder();
@@ -97,8 +131,7 @@ class ExportsBuilder
     }
 
     void constructAutoExports(StringBuilder sb, Collection<ExportPackage> packageExports) {
-        for (Iterator<ExportPackage> i = packageExports.iterator(); i.hasNext(); ) {
-            ExportPackage pkg = i.next();
+        for (ExportPackage pkg : packageExports) {
             sb.append(pkg.getPackageName());
             if (pkg.getVersion() != null) {
                 try {
@@ -132,6 +165,7 @@ class ExportsBuilder
         }
 
         Collection<ExportPackage> exports = scanner.scan();
+        log.info("Package scan completed. Found " + exports.size() + " packages to export.");
 
         if (!isPackageScanSuccessful(exports) && packageScannerConfig.getServletContext() != null)
         {
