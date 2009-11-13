@@ -1,49 +1,45 @@
 package com.atlassian.plugin.osgi.container.felix;
 
-import junit.framework.TestCase;
-
-import java.io.File;
-import java.util.*;
-
-import org.apache.commons.io.FileUtils;
-import org.twdata.pkgscanner.ExportPackage;
+import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
-import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
-import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
+import com.mockobjects.dynamic.Mock;
+import junit.framework.TestCase;
+import org.twdata.pkgscanner.ExportPackage;
 
-import javax.print.attribute.HashAttributeSet;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import javax.print.attribute.AttributeSet;
+import javax.print.attribute.HashAttributeSet;
+import javax.servlet.ServletContext;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-import javax.servlet.ServletContext;
 
 public class TestExportsBuilder extends TestCase
 {
-    private File tmpDir;
     private ExportsBuilder builder;
 
     @Override
     public void setUp() throws Exception
     {
-        tmpDir = new File("target/temp");
-        if (tmpDir.exists())  FileUtils.cleanDirectory(tmpDir);
-        tmpDir.mkdirs();
         builder = new ExportsBuilder();
     }
 
     @Override
     public void tearDown() throws Exception
     {
-        tmpDir = null;
         builder = null;
     }
     public void testDetermineExports()
     {
         DefaultPackageScannerConfiguration config = new DefaultPackageScannerConfiguration("0.0");
 
-        String exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), config, tmpDir);
+        String exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), config);
         assertFalse(exports.contains(",,"));
     }
 
@@ -64,7 +60,7 @@ public class TestExportsBuilder extends TestCase
             add(new MockRegistration(new HashAttributeSet(), AttributeSet.class));
             add(new MockRegistration(new DefaultTableModel(), TableModel.class));
         }};
-        String imports = builder.determineExports(regs, new DefaultPackageScannerConfiguration(), tmpDir);
+        String imports = builder.determineExports(regs, new DefaultPackageScannerConfiguration());
         assertNotNull(imports);
         System.out.println(imports.replace(',','\n'));
         assertTrue(imports.contains(AttributeSet.class.getPackage().getName()));
@@ -87,10 +83,10 @@ public class TestExportsBuilder extends TestCase
         try
         {
             System.setProperty("java.specification.version", "1.5");
-            String exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration(), tmpDir);
+            String exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
             assertFalse(exports.contains("javax.script"));
             System.setProperty("java.specification.version", "1.6");
-            exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration(), tmpDir);
+            exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
             assertTrue(exports.contains("javax.script"));
         }
         finally
