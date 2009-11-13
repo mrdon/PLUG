@@ -96,6 +96,18 @@ public class WebResourceManagerImpl implements WebResourceManager
         includeResources(writer, UrlMode.AUTO);
     }
 
+    public void includeResources(Iterable<String> moduleCompleteKeys, Writer writer, UrlMode urlMode)
+    {
+        LinkedHashSet<String> resources = new LinkedHashSet<String>();
+        for (String moduleCompleteKey : moduleCompleteKeys)
+        {
+            // Include resources from the super batch as we don't include the super batch itself
+            Set<String> dependencies = dependencyResolver.getDependencies(moduleCompleteKey, false);
+            resources.addAll(dependencies);
+        }
+        writeResourceTags(getModuleResources(resources, DefaultWebResourceFilter.INSTANCE), writer, urlMode);
+    }
+
     /**
      * This is the equivalent of of calling {@link #includeResources(Writer, UrlMode, WebResourceFilter)} with
      * the given url mode and a {@link DefaultWebResourceFilter}.

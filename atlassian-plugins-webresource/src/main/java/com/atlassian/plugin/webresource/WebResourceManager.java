@@ -42,6 +42,18 @@ public interface WebResourceManager
     @Deprecated
     void includeResources(Writer writer);
 
+	/**
+     * Writes out the resource tags for a specified set of required resources and their dependencies. Does not write out
+     * tags for resources specified in calls to {@link #requireResource(String)}.
+     *
+     * @param moduleCompleteKeys The set of web resource modules to include
+     * @param writer the writer to write the links to
+     * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
+     *                decide
+     * @since 2.4.0
+     */
+    void includeResources(Iterable<String> moduleCompleteKeys, Writer writer, UrlMode urlMode);
+
     /**
      * This is the equivalent of calling {@link #includeResources(Writer, UrlMode, WebResourceFilter)} with
      * the given url mode and a default web resource filter that is dependent on the implementation.
