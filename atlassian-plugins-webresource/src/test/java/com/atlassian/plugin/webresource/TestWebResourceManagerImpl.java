@@ -25,6 +25,7 @@ public class TestWebResourceManagerImpl extends TestCase
     private Mock mockWebResourceIntegration;
     private Mock mockPluginAccessor;
     private WebResourceManagerImpl webResourceManager;
+    private PluginResourceLocator pluginResourceLocator;
     private TestResourceBatchingConfiguration resourceBatchingConfiguration;
     private Plugin testPlugin;
 
@@ -43,7 +44,7 @@ public class TestWebResourceManagerImpl extends TestCase
         mockWebResourceIntegration.matchAndReturn("getPluginAccessor", mockPluginAccessor.proxy());
 
         resourceBatchingConfiguration = new TestResourceBatchingConfiguration();
-        PluginResourceLocator pluginResourceLocator = new PluginResourceLocatorImpl((WebResourceIntegration) mockWebResourceIntegration.proxy(), null);
+        pluginResourceLocator = new PluginResourceLocatorImpl((WebResourceIntegration) mockWebResourceIntegration.proxy(), null);
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, (WebResourceIntegration) mockWebResourceIntegration.proxy(), resourceBatchingConfiguration);
 
         mockWebResourceIntegration.matchAndReturn("getBaseUrl", BASEURL);
@@ -293,6 +294,41 @@ public class TestWebResourceManagerImpl extends TestCase
             TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA, Collections.singletonList(resourceB)));
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)),
             TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, resourceDescriptorsB, Collections.EMPTY_LIST));
+
+        StringWriter requiredResourceWriter = new StringWriter();
+        webResourceManager.includeResources(Arrays.<String>asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);
+        String result = requiredResourceWriter.toString();
+        assertTrue(result.contains(resourceB));
+    }
+    
+    public void testIncludeResourcesWithResourceListIncludesDependencesFromSuperBatch() throws Exception
+    {
+        final String resourceA = "test.atlassian:a";
+        final String resourceB = "test.atlassian:b";
+
+        ResourceBatchingConfiguration batchingConfiguration = new ResourceBatchingConfiguration()
+        {
+            public boolean isSuperBatchingEnabled()
+            {
+                return true;
+            }
+            
+            public List<String> getSuperBatchModuleCompleteKeys()
+            {
+                return Arrays.asList(resourceB);
+            }
+        };
+        
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, (WebResourceIntegration) mockWebResourceIntegration.proxy(), batchingConfiguration);
+        
+        final List<ResourceDescriptor> resourceDescriptorsA = TestUtils.createResourceDescriptors("resourceA.css");
+        final List<ResourceDescriptor> resourceDescriptorsB = TestUtils.createResourceDescriptors("resourceB.css");
+        
+        // A depends on B
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceA)),
+            TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA, Collections.singletonList(resourceB)));
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)),
+            TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, resourceDescriptorsB, Collections.<String>emptyList()));
 
         StringWriter requiredResourceWriter = new StringWriter();
         webResourceManager.includeResources(Arrays.<String>asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);

@@ -101,7 +101,9 @@ public class WebResourceManagerImpl implements WebResourceManager
         LinkedHashSet<String> resources = new LinkedHashSet<String>();
         for (String moduleCompleteKey : moduleCompleteKeys)
         {
-            resources.addAll(dependencyResolver.getDependencies(moduleCompleteKey, true));
+            // Include resources from the super batch as we don't include the super batch itself
+            Set<String> dependencies = dependencyResolver.getDependencies(moduleCompleteKey, false);
+            resources.addAll(dependencies);
         }
         writeResourceTags(getModuleResources(resources, DefaultWebResourceFilter.INSTANCE), writer, urlMode);
     }
