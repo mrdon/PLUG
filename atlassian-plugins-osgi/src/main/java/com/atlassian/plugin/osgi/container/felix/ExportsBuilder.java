@@ -38,6 +38,40 @@ class ExportsBuilder
     static final String JDK6_PACKAGES_PATH = "jdk6-packages.txt";
     private static Log log = LogFactory.getLog(ExportsBuilder.class);
     private static final String EXPORTS_TXT = "exports.txt";
+    private static String exportStringCache;
+
+    /**
+     * Gets the framework exports taking into account host components and package scanner configuration.
+     * <p>
+     * This information cannot change without a system restart, so we determine this once and then cache the value.
+     * The cache is only useful if the plugin system is thrown away and re-initialised. This is done thousands of times
+     * during JIRA functional testing, and the cache was added to speed this up.
+     *
+     * @param regs The list of host component registrations
+     * @param packageScannerConfig The configuration for the package scanning
+     * @return A list of exports, in a format compatible with OSGi headers
+     */
+    public String getExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig) {
+        if (exportStringCache == null)
+        {
+            exportStringCache = determineExports(regs, packageScannerConfig);
+        }
+        return exportStringCache;
+    }
+
+    /**
+     * Determines framework exports taking into account host components and package scanner configuration.
+     *
+     * @param regs The list of host component registrations
+     * @param packageScannerConfig The configuration for the package scanning
+     * @param cacheDir No longer used. (method deprecated).
+     * @return A list of exports, in a format compatible with OSGi headers
+     * @deprecated Please use {@link #getExports}. Deprecated since 2.3.6
+     */
+    @SuppressWarnings ({ "UnusedDeclaration" })
+    public String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig, File cacheDir){
+        return determineExports(regs, packageScannerConfig);
+    }
 
     /**
      * Determines framework exports taking into account host components and package scanner configuration.
@@ -46,7 +80,7 @@ class ExportsBuilder
      * @param packageScannerConfig The configuration for the package scanning
      * @return A list of exports, in a format compatible with OSGi headers
      */
-    public String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig, File cacheDir){
+    private String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig){
 
         String exports = null;
 
@@ -132,6 +166,7 @@ class ExportsBuilder
         }
 
         Collection<ExportPackage> exports = scanner.scan();
+        log.info("Package scan completed. Found " + exports.size() + " packages to export.");
 
         if (!isPackageScanSuccessful(exports) && packageScannerConfig.getServletContext() != null)
         {

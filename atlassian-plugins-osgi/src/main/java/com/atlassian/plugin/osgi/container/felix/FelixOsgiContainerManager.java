@@ -215,8 +215,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         configMap.put(FelixConstants.EMBEDDED_EXECUTION_PROP, "true");
         // Add the bundle provided service interface package and the core OSGi
         // packages to be exported from the class path via the system bundle.
-        configMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES, exportsBuilder.determineExports(registrar.getRegistry(), packageScannerConfig,
-            persistentCache.getOsgiBundleCache()));
+        configMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES, exportsBuilder.getExports(registrar.getRegistry(), packageScannerConfig));
 
         // Explicitly specify the directory to use for caching bundles.
         configMap.put(BundleCache.CACHE_PROFILE_DIR_PROP, persistentCache.getOsgiBundleCache().getAbsolutePath());
