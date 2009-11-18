@@ -96,6 +96,8 @@ public class ContainerManager
         moduleDescriptorFactory.addModuleDescriptor("web-resource", WebResourceModuleDescriptor.class);
 
         final DefaultPackageScannerConfiguration scannerConfig = new DefaultPackageScannerConfiguration(determineVersion());
+        scannerConfig.setServletContext(servletContext);
+        
         final List<String> packageIncludes = new ArrayList<String>(scannerConfig.getPackageIncludes());
         packageIncludes.add("org.bouncycastle*");
         packageIncludes.add("org.dom4j*");
