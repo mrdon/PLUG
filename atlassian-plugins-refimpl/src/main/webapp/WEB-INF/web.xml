@@ -99,6 +99,17 @@
         <servlet-class>com.atlassian.plugin.refimpl.servlet.FileServerServlet</servlet-class>
         <load-on-startup>4</load-on-startup>
     </servlet>
+
+    <!--
+      - WebSphere responds with a 404 for any URLs that are not mapped to servlets, even if they are handled or
+      - rewritten by filters.  Any URL patterns that are expected to be handled by filters alone should be mapped to
+      - this servlet as well.
+      - See: PLUG-487, CONF-7953, JRA-12039
+      -->
+    <servlet>
+        <servlet-name>noop</servlet-name>
+        <servlet-class>com.atlassian.plugin.refimpl.servlet.NoOpServlet</servlet-class>
+    </servlet>
     
     <servlet-mapping>
         <servlet-name>file-server</servlet-name>
@@ -108,6 +119,11 @@
     <servlet-mapping>
         <servlet-name>plugins</servlet-name>
         <url-pattern>/plugins/servlet/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>noop</servlet-name>
+        <url-pattern>/s/*</url-pattern>
     </servlet-mapping>
 
     <listener>
