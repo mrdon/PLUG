@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,9 +29,9 @@ import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.refimpl.servlet.SimpleContentTypeResolver;
 import com.atlassian.plugin.refimpl.servlet.SimpleServletContextFactory;
 import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
-import com.atlassian.plugin.servlet.ContentTypeResolver;
 import com.atlassian.plugin.servlet.DefaultServletModuleManager;
 import com.atlassian.plugin.servlet.DownloadStrategy;
 import com.atlassian.plugin.servlet.PluginResourceDownload;
@@ -259,28 +258,6 @@ public class ContainerManager
     void shutdown()
     {
         plugins.stop();
-    }
-
-    /**
-     * A simple content type resolver that can identify css and js resources.
-     */
-    private class SimpleContentTypeResolver implements ContentTypeResolver
-    {
-        private final Map<String, String> mimeTypes;
-
-        SimpleContentTypeResolver()
-        {
-            final Map<String, String> types = new HashMap<String, String>();
-            types.put("js", "application/x-javascript");
-            types.put("css", "text/css");
-            mimeTypes = Collections.unmodifiableMap(types);
-        }
-
-        public String getContentType(final String requestUrl)
-        {
-            final String extension = requestUrl.substring(requestUrl.lastIndexOf('.'));
-            return mimeTypes.get(extension);
-        }
     }
 
     private class SimpleHostComponentProvider implements HostComponentProvider

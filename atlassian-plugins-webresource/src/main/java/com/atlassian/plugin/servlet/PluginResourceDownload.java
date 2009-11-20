@@ -66,7 +66,11 @@ public class PluginResourceDownload implements DownloadStrategy
                 return;
             }
 
-            response.setContentType(getContentType(requestUri, downloadableResource));
+            String contentType = getContentType(requestUri, downloadableResource);
+            if (contentType != null)
+            {
+                response.setContentType(contentType);
+            }
             downloadableResource.serveResource(request, response);
         }
         catch(IOException e)
