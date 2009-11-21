@@ -123,6 +123,11 @@
 
     <servlet-mapping>
         <servlet-name>noop</servlet-name>
+        <url-pattern>/rest/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>noop</servlet-name>
         <url-pattern>/s/*</url-pattern>
     </servlet-mapping>
 
