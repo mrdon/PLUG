@@ -4,6 +4,8 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
@@ -11,6 +13,8 @@ import junit.framework.TestCase;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.mockito.Mockito.mock;
 
 public class TestPluginEnabler extends TestCase
 {
@@ -32,6 +36,33 @@ public class TestPluginEnabler extends TestCase
 
         enabler.enable(Arrays.asList(plugin));
         assertEquals(PluginState.ENABLED, plugin.getPluginState());
+    }
+
+    public void testEnableWithCustomTimeout()
+    {
+
+        Plugin plugin = new MyPlugin("foo") {
+            @Override
+            protected PluginState enableInternal() throws PluginException
+            {
+                return PluginState.ENABLING;
+            }
+        };
+
+        try
+        {
+            System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "1");
+            long start = System.currentTimeMillis();
+            enabler = new PluginEnabler(mock(PluginAccessor.class), mock(PluginController.class));
+            enabler.enable(Arrays.asList(plugin));
+            long end = System.currentTimeMillis();
+            assertTrue(end - start < 5000);
+            assertEquals(PluginState.ENABLING, plugin.getPluginState());
+        }
+        finally
+        {
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+        }
     }
 
     public void testRecursiveEnable()

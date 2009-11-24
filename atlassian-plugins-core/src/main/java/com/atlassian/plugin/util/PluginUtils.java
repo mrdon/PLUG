@@ -17,6 +17,13 @@ import org.apache.commons.lang.Validate;
 public class PluginUtils
 {
     /**
+     * System property for storing and retrieving the time the plugin system will wait for the enabling of a plugin in
+     * seconds
+     * @since 2.3.6
+     */
+    public static final String ATLASSIAN_PLUGINS_ENABLE_WAIT = "atlassian.plugins.enable.wait";
+
+    /**
      * Determines if a plugin requires a restart after being installed at runtime.  Looks for the annotation
      * {@link RequiresRestart} on the plugin's module descriptors.
      *
@@ -50,5 +57,14 @@ public class PluginUtils
         Validate.notNull(element);
         String key = element.attributeValue("application");
         return !(key != null && !keys.contains(key));
+    }
+
+    /**
+     * @return The default enabling waiting period in seconds
+     * @since 2.3.6
+     */
+    public static int getDefaultEnablingWaitPeriod()
+    {
+        return Integer.parseInt(System.getProperty(ATLASSIAN_PLUGINS_ENABLE_WAIT, "60"));
     }
 }
