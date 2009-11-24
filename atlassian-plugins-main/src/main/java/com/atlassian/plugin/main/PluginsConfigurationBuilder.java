@@ -164,7 +164,7 @@ public class PluginsConfigurationBuilder
      */
     public PluginsConfigurationBuilder hotDeployPollingFrequency(final long hotDeployPollingFrequency, final TimeUnit timeUnit)
     {
-        hotDeployPollingPeriod = hotDeployPollingFrequency * timeUnit.toMillis(hotDeployPollingFrequency);
+        hotDeployPollingPeriod = timeUnit.toMillis(hotDeployPollingFrequency);
         return this;
     }
 
