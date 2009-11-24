@@ -6,15 +6,12 @@ import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.WaitUntil;
+import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Helper class that handles the problem of enabling a set of plugins at once.  This functionality is used for both
@@ -119,7 +116,7 @@ class PluginEnabler
                 {
                     return Boolean.getBoolean(PluginUtils.ATLASSIAN_DEV_MODE);
                 }
-            });
+            }, PluginUtils.getDefaultEnablingWaitPeriod(), TimeUnit.SECONDS, 1);
 
             // Disable any plugins that aren't enabled by now
             if (!pluginsInEnablingState.isEmpty())

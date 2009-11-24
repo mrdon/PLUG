@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
@@ -84,12 +85,33 @@ public class TestGenerateManifestStage extends TestCase
 
     public void testGenerateManifestWithProperInferredImports() throws Exception
     {
+
         final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0").build();
         final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
         context.getExtraImports().add(AttributeSet.class.getPackage().getName());
         final Attributes attrs = executeStage(context);
 
         assertTrue(attrs.getValue(Constants.IMPORT_PACKAGE).contains(AttributeSet.class.getPackage().getName()));
+
+    }
+
+    public void testGenerateManifestWithCustomTimeout() throws Exception
+    {
+        try
+        {
+            System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "333");
+            stage = new GenerateManifestStage();
+            final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0").build();
+            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+            context.setShouldRequireSpring(true);
+            final Attributes attrs = executeStage(context);
+
+            assertEquals("*;timeout:=333", attrs.getValue("Spring-Context"));
+        }
+        finally
+        {
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+        }
 
     }
 

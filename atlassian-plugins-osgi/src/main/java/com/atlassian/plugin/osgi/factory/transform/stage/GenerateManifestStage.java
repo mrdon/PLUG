@@ -22,6 +22,7 @@ import aQute.lib.osgi.Jar;
 
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
@@ -37,7 +38,8 @@ import com.atlassian.plugin.parsers.XmlDescriptorParser;
  */
 public class GenerateManifestStage implements TransformStage
 {
-    private static final String SPRING_CONTEXT_DEFAULT = "*;timeout:=60";
+    private final int SPRING_TIMEOUT = PluginUtils.getDefaultEnablingWaitPeriod();
+    private final String SPRING_CONTEXT_DEFAULT = "*;timeout:=" + SPRING_TIMEOUT;
     static Log log = LogFactory.getLog(GenerateManifestStage.class);
 
     public void execute(final TransformContext context) throws PluginTransformationException
@@ -291,7 +293,7 @@ public class GenerateManifestStage implements TransformStage
         properties.put(key, value.toString().replaceAll("[\r\n]", ""));
     }
 
-    private static void assertSpringAvailableIfRequired(final TransformContext context)
+    private void assertSpringAvailableIfRequired(final TransformContext context)
     {
         if (context.shouldRequireSpring())
         {
@@ -302,10 +304,11 @@ public class GenerateManifestStage implements TransformStage
                         context.getPluginArtifact().toString() + "'.  If you experience any problems, please add it and set it to '" +
                         SPRING_CONTEXT_DEFAULT + "'");
             }
-            else if (!header.contains(";timeout:=60"))
+            else if (!header.contains(";timeout:=" + SPRING_TIMEOUT))
             {
                 log.warn("The Spring Manifest header in jar '" +  context.getPluginArtifact().toString() + "' isn't " +
-                        "set for a 60 second timeout waiting for  dependencies.  Please add ';timeout:=60'");
+                        "set for a " + SPRING_TIMEOUT + " second timeout waiting for  dependencies.  " +
+                        "Please add ';timeout:=" + SPRING_TIMEOUT + "'");
             }
         }
     }
