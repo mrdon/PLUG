@@ -3,22 +3,23 @@ package com.atlassian.plugin.osgi.container.felix;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
-import com.mockobjects.dynamic.C;
-import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import org.twdata.pkgscanner.ExportPackage;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import javax.print.attribute.AttributeSet;
 import javax.print.attribute.HashAttributeSet;
 import javax.servlet.ServletContext;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class TestExportsBuilder extends TestCase
 {
@@ -96,54 +97,86 @@ public class TestExportsBuilder extends TestCase
     }
 
 
-    public void testGenerateExports()
+    public void testGenerateExports() throws MalformedURLException
+    {
+        ServletContext ctx = mock(ServletContext.class);
+        when(ctx.getMajorVersion()).thenReturn(5);
+        when(ctx.getMinorVersion()).thenReturn(3);
+        when(ctx.getResource("/WEB-INF/lib")).thenReturn(getClass().getClassLoader().getResource("scanbase/WEB-INF/lib"));
+        when(ctx.getResource("/WEB-INF/classes")).thenReturn(getClass().getClassLoader().getResource("scanbase/WEB-INF/classes"));
+        DefaultPackageScannerConfiguration config = new DefaultPackageScannerConfiguration("1.0");
+        config.setServletContext(ctx);
+        config.setPackageIncludes(Arrays.asList("javax.*", "org.*"));
+
+        Collection<ExportPackage> exports = builder.generateExports(config);
+        assertNotNull(exports);
+        assertTrue(exports.contains(new ExportPackage("org.apache.log4j", "1.2.15", new File("/whatever/log4j-1.2.15.jar"))));
+
+        // Test falling through to servlet context scanning
+        config.setJarIncludes(Arrays.asList("testlog*"));
+        config.setJarExcludes(Arrays.asList("log4j*"));
+        exports = builder.generateExports(config);
+        assertNotNull(exports);
+        assertTrue(exports.contains(new ExportPackage("org.apache.log4j", "1.2.15", new File("/whatever/log4j-1.2.15.jar"))));
+
+        // Test failure when even servlet context scanning fails
+        config.setJarIncludes(Arrays.asList("testlog4j23*"));
+        config.setJarExcludes(Collections.<String>emptyList());
+        try
         {
-            Mock mockServletContext = new Mock(ServletContext.class);
-            mockServletContext.expectAndReturn("getResource", C.args(C.eq("/WEB-INF/lib")), getClass().getClassLoader().getResource("scanbase/WEB-INF/lib"));
-            mockServletContext.expectAndReturn("getResource", C.args(C.eq("/WEB-INF/classes")), getClass().getClassLoader().getResource("scanbase/WEB-INF/classes"));
-            DefaultPackageScannerConfiguration config = new DefaultPackageScannerConfiguration();
-            config.setPackageIncludes(Arrays.asList("org.*"));
-            config.setServletContext((ServletContext) mockServletContext.proxy());
-
-            Collection<ExportPackage> exports = builder.generateExports(config);
-            assertNotNull(exports);
-            assertTrue(exports.contains(new ExportPackage("org.apache.log4j", "1.2.15", new File("/whatever/log4j-1.2.15.jar"))));
-
-            // Test falling through to servlet context scanning
-            config.setJarIncludes(Arrays.asList("testlog*"));
-            config.setJarExcludes(Arrays.asList("log4j*"));
             exports = builder.generateExports(config);
-            assertNotNull(exports);
-            assertTrue(exports.contains(new ExportPackage("org.apache.log4j", "1.2.15", new File("/whatever/log4j-1.2.15.jar"))));
-
-            // Test failure when even servlet context scanning fails
-            mockServletContext.expectAndReturn("getResource", C.args(C.eq("/WEB-INF/lib")), getClass().getClassLoader().getResource("scanbase/WEB-INF/lib"));
-            mockServletContext.expectAndReturn("getResource", C.args(C.eq("/WEB-INF/classes")), getClass().getClassLoader().getResource("scanbase/WEB-INF/classes"));
-            config.setJarIncludes(Arrays.asList("testlog4j23*"));
-            config.setJarExcludes(Collections.<String>emptyList());
-            try
-            {
-                exports = builder.generateExports(config);
-                fail("Should have thrown an exception");
-            } catch (IllegalStateException ex)
-            {
-                // good stuff
-            }
-
-            // Test failure when no servlet context
-            config.setJarIncludes(Arrays.asList("testlog4j23*"));
-            config.setJarExcludes(Collections.<String>emptyList());
-            config.setServletContext(null);
-            try
-            {
-                exports = builder.generateExports(config);
-                fail("Should have thrown an exception");
-            } catch (IllegalStateException ex)
-            {
-                // good stuff
-            }
-
-            mockServletContext.verify();
+            fail("Should have thrown an exception");
         }
+        catch (IllegalStateException ex)
+        {
+            // good stuff
+        }
+
+        // Test failure when no servlet context
+        config.setJarIncludes(Arrays.asList("testlog4j23*"));
+        config.setJarExcludes(Collections.<String>emptyList());
+        config.setServletContext(null);
+        try
+        {
+            exports = builder.generateExports(config);
+            fail("Should have thrown an exception");
+        }
+        catch (IllegalStateException ex)
+        {
+            // good stuff
+        }
+    }
+
+    public void testGenerateExportsWithCorrectServletVersion() throws MalformedURLException
+    {
+        ServletContext ctx = mock(ServletContext.class);
+        when(ctx.getMajorVersion()).thenReturn(5);
+        when(ctx.getMinorVersion()).thenReturn(3);
+        when(ctx.getResource("/WEB-INF/lib")).thenReturn(getClass().getClassLoader().getResource("scanbase/WEB-INF/lib"));
+        when(ctx.getResource("/WEB-INF/classes")).thenReturn(getClass().getClassLoader().getResource("scanbase/WEB-INF/classes"));
+
+        DefaultPackageScannerConfiguration config = new DefaultPackageScannerConfiguration("1.0");
+        config.setServletContext(ctx);
+        config.setPackageIncludes(Arrays.asList("javax.*", "org.*"));
+
+        Collection<ExportPackage> exports = builder.generateExports(config);
+
+        int pkgsToFind = 2;
+        for (ExportPackage pkg : exports)
+        {
+            if ("javax.servlet".equals(pkg.getPackageName())) {
+                assertEquals("5.3.0", pkg.getVersion());
+                pkgsToFind--;
+            }
+            if ("javax.servlet.http".equals(pkg.getPackageName())) {
+                assertEquals("5.3.0", pkg.getVersion());
+                pkgsToFind--;
+            }
+        }
+        assertEquals(0, pkgsToFind);
+    }
+
+
+
 
 }
