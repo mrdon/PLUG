@@ -41,6 +41,37 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
 
         assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
     }
+
+    public void testEnableDisableEnableWithPublicComponent() throws Exception
+    {
+        File pluginJar = new PluginJarBuilder("enabledisabletest")
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test 2' key='enabledisablewithcomponent' pluginsVersion='2'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "    </plugin-info>",
+                    "    <component key='foo' class='my.Foo' public='true' interface='my.Fooable'/>",
+                    "</atlassian-plugin>")
+                .addJava("my.Fooable", "package my;" +
+                        "public interface Fooable {}")
+                .addFormattedJava("my.Foo", "package my;",
+                        "public class Foo implements Fooable, org.springframework.beans.factory.DisposableBean {",
+                        "  public void destroy() throws Exception { Thread.sleep(500); }",
+                        "}")
+                .build();
+        initPluginManager(null);
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        Plugin plugin = pluginManager.getPlugin("enabledisablewithcomponent");
+        assertEquals(PluginState.ENABLED, plugin.getPluginState());
+        assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
+        pluginManager.disablePlugin("enabledisablewithcomponent");
+        pluginManager.enablePlugin("enabledisablewithcomponent");
+
+        plugin = pluginManager.getPlugin("enabledisablewithcomponent");
+        assertEquals(PluginState.ENABLED, plugin.getPluginState());
+
+        assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
+    }
     
     public void testDisableEnableOfPluginThatRequiresRestart() throws Exception, IOException
     {
