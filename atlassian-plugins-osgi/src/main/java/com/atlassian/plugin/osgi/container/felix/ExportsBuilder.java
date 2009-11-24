@@ -26,6 +26,8 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.jar.Manifest;
 import javax.servlet.ServletContext;
 
@@ -148,6 +150,14 @@ class ExportsBuilder
     Collection<ExportPackage> generateExports(PackageScannerConfiguration packageScannerConfig)
     {
         String[] arrType = new String[0];
+
+        Map<String,String> pkgVersions = new HashMap<String,String>(packageScannerConfig.getPackageVersions());
+        if (packageScannerConfig.getServletContext() != null)
+        {
+            String ver = packageScannerConfig.getServletContext().getMajorVersion() + "." + packageScannerConfig.getServletContext().getMinorVersion();
+            pkgVersions.put("javax.servlet*", ver);
+        }
+
         PackageScanner scanner = new PackageScanner()
            .select(
                jars(
@@ -157,7 +167,7 @@ class ExportsBuilder
                        include(packageScannerConfig.getPackageIncludes().toArray(arrType)),
                        exclude(packageScannerConfig.getPackageExcludes().toArray(arrType)))
            )
-           .withMappings(packageScannerConfig.getPackageVersions());
+           .withMappings(pkgVersions);
 
         if (log.isDebugEnabled())
         {
