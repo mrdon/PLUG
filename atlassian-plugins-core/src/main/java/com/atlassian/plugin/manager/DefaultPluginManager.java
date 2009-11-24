@@ -1042,6 +1042,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void notifyPluginDisabled(final Plugin plugin)
     {
+        log.info("Disabling " + plugin.getKey());
         disablePluginModules(plugin);
 
         // This needs to happen after modules are disabled to prevent errors

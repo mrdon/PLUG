@@ -350,15 +350,17 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
             else if ((getBundle().getState() == Bundle.RESOLVED) || (getBundle().getState() == Bundle.INSTALLED))
             {
                 pluginEventManager.register(this);
-                getBundle().start();
                 if (!treatSpringBeanFactoryCreationAsRefresh)
                 {
                     stateResult = PluginState.ENABLING;
+                    // Set it immediately, since the Spring context refresh event could happen at any time
+                    setPluginState(stateResult);
                 }
                 else
                 {
                     stateResult = PluginState.ENABLED;
                 }
+                getBundle().start();
                 final BundleContext ctx = getBundle().getBundleContext();
                 helper.onEnable(
                         new ServiceTracker(ctx, ModuleDescriptor.class.getName(),

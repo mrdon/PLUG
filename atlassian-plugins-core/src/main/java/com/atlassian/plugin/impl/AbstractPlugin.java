@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 {
@@ -127,6 +128,10 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 
     protected void setPluginState(final PluginState state)
     {
+        if (log.isDebugEnabled())
+        {
+            log.debug("Plugin " + getKey() + " going from " + getPluginState() + " to " + state);
+        }
         pluginState.set(state);
     }
 
@@ -140,6 +145,10 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
      */
     protected boolean compareAndSetPluginState(final PluginState requiredExistingState, final PluginState desiredState)
     {
+        if (log.isDebugEnabled())
+        {
+            log.debug("Plugin " + getKey() + " trying to go from " + getPluginState() + " to " + desiredState + " but only if in " + requiredExistingState);
+        }
         return pluginState.compareAndSet(requiredExistingState, desiredState);
     }
 
@@ -230,7 +239,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
             {
                 log.warn("Illegal state transition to "+desiredState+" for plugin '" + getKey() + "' on enable()");
             }
-            pluginState.set(desiredState);
+            setPluginState(desiredState);
         }
         catch (final PluginException ex)
         {
@@ -268,7 +277,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         try
         {
             disableInternal();
-            pluginState.set(PluginState.DISABLED);
+            setPluginState(PluginState.DISABLED);
         }
         catch (final PluginException ex)
         {
@@ -314,7 +323,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         try
         {
             installInternal();
-            pluginState.set(PluginState.INSTALLED);
+            setPluginState(PluginState.INSTALLED);
         }
         catch (final PluginException ex)
         {
@@ -350,7 +359,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         try
         {
             uninstallInternal();
-            pluginState.set(PluginState.UNINSTALLED);
+            setPluginState(PluginState.UNINSTALLED);
         }
         catch (final PluginException ex)
         {

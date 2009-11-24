@@ -10,6 +10,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
+import org.mockito.stubbing.Answer;
+import org.mockito.invocation.InvocationOnMock;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -19,6 +22,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Semaphore;
 
 public class TestOsgiPlugin extends TestCase
 {
@@ -90,9 +97,50 @@ public class TestOsgiPlugin extends TestCase
         when(bundle.getState()).thenReturn(Bundle.RESOLVED);
         plugin.enable();
         PluginContainerRefreshedEvent event = new PluginContainerRefreshedEvent(new Object(), "plugin-key");
-        //when(bundle.getState()).thenReturn(Bundle.ACTIVE);
-        //plugin.disable();
         plugin.onSpringContextRefresh(event);
+        assertEquals(PluginState.ENABLED, plugin.getPluginState());
+    }
+
+    public void testQuickOnSpringRefresh() throws BundleException, InterruptedException
+    {
+        plugin.setKey("plugin-key");
+        when(bundle.getState()).thenReturn(Bundle.RESOLVED);
+
+        final ConcurrentStateEngine states = new ConcurrentStateEngine("bundle-starting", "spring-created", "bundle-started", "mid-start", "end");
+        when(bundle.getBundleContext()).thenAnswer(new Answer()
+        {
+            public Object answer(InvocationOnMock invocation) throws Throwable
+            {
+                states.tryNextState("bundle-started", "mid-start");
+                return mock(BundleContext.class);
+            }
+        });
+
+        doAnswer(new Answer()
+        {
+            public Object answer(InvocationOnMock invocation) throws Throwable
+            {
+                states.state("bundle-starting");
+                Thread t = new Thread()
+                {
+                    public void run()
+                    {
+                        PluginContainerRefreshedEvent event = new PluginContainerRefreshedEvent(new Object(), "plugin-key");
+                        states.tryNextState("bundle-starting", "spring-created");
+                        plugin.onSpringContextRefresh(event);
+                    }
+                };
+                t.start();
+                states.tryNextState("spring-created", "bundle-started");
+                return null;
+            }
+        }).when(bundle).start();
+
+        plugin.enable();
+
+
+        states.tryNextState("mid-start", "end");
+
         assertEquals(PluginState.ENABLED, plugin.getPluginState());
     }
 
