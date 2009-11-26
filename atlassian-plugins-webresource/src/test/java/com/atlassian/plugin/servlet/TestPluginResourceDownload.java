@@ -15,6 +15,7 @@ public class TestPluginResourceDownload extends TestCase
 {
     private static final String SINGLE_RESOURCE = "/download/resources/com.atlassian.plugin:foo-resources/foo.js";
     private static final String BATCH_RESOURCE = "/download/batch/js/com.atlassian.plugin:bar-resources.js";
+    private static final String JS_CONTENT_TYPE = "text/javascript";
 
     private PluginResourceDownload pluginResourceDownload;
     private Mock mockPluginResourceLocator;
@@ -63,7 +64,6 @@ public class TestPluginResourceDownload extends TestCase
 
     public void testServeFile() throws Exception
     {
-        String jsContentType = "text/javascript";
         Map<String, String[]> params = new HashMap<String, String[]>();
         params.put("aaa", new String[] {"bbb"});
 
@@ -72,14 +72,65 @@ public class TestPluginResourceDownload extends TestCase
         mockRequest.expectAndReturn("getParameterMap", params);
 
         Mock mockResponse = new Mock(HttpServletResponse.class);
-        mockResponse.expect("setContentType", C.args(C.eq(jsContentType)));
+        mockResponse.expect("setContentType", C.args(C.eq(JS_CONTENT_TYPE)));
 
         Mock mockDownloadableResource = new Mock(DownloadableResource.class);
         mockDownloadableResource.expectAndReturn("isResourceModified", C.args(C.eq(mockRequest.proxy()), C.eq(mockResponse.proxy())), false);
-        mockDownloadableResource.expectAndReturn("getContentType", jsContentType);
+        mockDownloadableResource.expectAndReturn("getContentType", JS_CONTENT_TYPE);
         mockDownloadableResource.expect("serveResource", C.args(C.eq(mockRequest.proxy()), C.eq(mockResponse.proxy())));
         mockPluginResourceLocator.expectAndReturn("getDownloadableResource", C.ANY_ARGS, mockDownloadableResource.proxy());
 
         pluginResourceDownload.serveFile((HttpServletRequest) mockRequest.proxy(), (HttpServletResponse) mockResponse.proxy());
+    }
+
+    public void testServeFileContentTypeUsesContentTypeResolverWhenResourceContentTypeIsNull() throws DownloadException
+    {
+        Mock mockRequest = new Mock(HttpServletRequest.class);
+        mockRequest.matchAndReturn("getRequestURI", SINGLE_RESOURCE);
+        mockRequest.expectAndReturn("getParameterMap", Collections.EMPTY_MAP);
+
+        Mock mockResponse = new Mock(HttpServletResponse.class);
+        mockResponse.expect("setContentType", C.args(C.eq(JS_CONTENT_TYPE)));
+
+        Mock mockDownloadableResource = new Mock(DownloadableResource.class);
+        mockDownloadableResource.expectAndReturn("isResourceModified",
+                                                 C.args(C.eq(mockRequest.proxy()), C.eq(mockResponse.proxy())),
+                                                 false);
+        mockDownloadableResource.expectAndReturn("getContentType", null);
+        mockDownloadableResource.expect("serveResource", C.args(C.eq(mockRequest.proxy()), C.eq(mockResponse.proxy())));
+        mockPluginResourceLocator.expectAndReturn("getDownloadableResource",
+                                                  C.ANY_ARGS,
+                                                  mockDownloadableResource.proxy());
+
+        mockContentTypeResolver.expectAndReturn("getContentType", C.args(C.eq(SINGLE_RESOURCE)), JS_CONTENT_TYPE);
+        
+        pluginResourceDownload.serveFile((HttpServletRequest) mockRequest.proxy(),
+                                         (HttpServletResponse) mockResponse.proxy());
+
+        mockResponse.verify();
+    }
+
+    public void testServeFileDoesNotCallSetContentTypeWithNullContentType() throws DownloadException
+    {
+        Mock mockRequest = new Mock(HttpServletRequest.class);
+        mockRequest.matchAndReturn("getRequestURI", SINGLE_RESOURCE);
+        mockRequest.expectAndReturn("getParameterMap", Collections.EMPTY_MAP);
+
+        Mock mockResponse = new Mock(HttpServletResponse.class);
+
+        Mock mockDownloadableResource = new Mock(DownloadableResource.class);
+        mockDownloadableResource.expectAndReturn("isResourceModified",
+                                                 C.args(C.eq(mockRequest.proxy()), C.eq(mockResponse.proxy())),
+                                                 false);
+        mockDownloadableResource.expectAndReturn("getContentType", null);
+        mockDownloadableResource.expect("serveResource", C.args(C.eq(mockRequest.proxy()), C.eq(mockResponse.proxy())));
+        mockPluginResourceLocator.expectAndReturn("getDownloadableResource",
+                                                  C.ANY_ARGS,
+                                                  mockDownloadableResource.proxy());
+
+        mockContentTypeResolver.expectAndReturn("getContentType", C.args(C.eq(SINGLE_RESOURCE)), null);
+
+        pluginResourceDownload.serveFile((HttpServletRequest) mockRequest.proxy(),
+                                         (HttpServletResponse) mockResponse.proxy());
     }
 }
