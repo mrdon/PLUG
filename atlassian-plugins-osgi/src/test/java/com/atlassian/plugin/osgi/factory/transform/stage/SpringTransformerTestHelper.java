@@ -52,12 +52,19 @@ public class SpringTransformerTestHelper
 
         transformer.execute(context);
 
-        final Iterator<byte[]> itr = context.getFileOverrides().values().iterator();
-        if (!itr.hasNext())
+        byte[] content = null;
+        for (byte[] entry : context.getFileOverrides().values())
+        {
+            if (entry.length > 0)
+            {
+                content = entry;
+            }
+        }
+        if (content == null)
         {
             return null;
         }
-        final Document springDoc = DocumentHelper.parseText(new String(itr.next()));
+        final Document springDoc = DocumentHelper.parseText(new String(content));
         final Element springRoot = springDoc.getRootElement();
 
         for (final String xp : xpaths)
