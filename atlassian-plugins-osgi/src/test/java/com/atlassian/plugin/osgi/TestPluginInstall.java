@@ -5,7 +5,6 @@ import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
-import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
@@ -28,7 +27,6 @@ import java.io.File;
 import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -873,6 +871,46 @@ public class TestPluginInstall extends PluginInContainerTestBase
         }, factory);
 
         assertEquals(2, pluginManager.getEnabledPlugins().size());
+    }
+
+    public void testInstallWithManifestNoSpringContextAndComponents() throws Exception
+    {
+        final BooleanFlag flag = new DefaultBooleanFlag(false);
+        new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test' key='first' pluginsVersion='2'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "    </plugin-info>",
+                    "    <component key='foo' class='first.MyClass' interface='first.MyInterface' public='true'/>",
+                    "</atlassian-plugin>")
+                .addFormattedJava("first.MyInterface",
+                        "package first;",
+                        "public interface MyInterface {}")
+                .addFormattedJava("first.MyClass",
+                        "package first;",
+                        "public class MyClass implements MyInterface{",
+                        "  public MyClass(com.atlassian.plugin.osgi.BooleanFlag bool) { bool.set(true); }",
+                        "}")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                    "Manifest-Version: 1.0",
+                    "Bundle-SymbolicName: foo",
+                    "Bundle-Version: 1.0",
+                    "Export-Package: first",
+                    "")
+                .build(pluginsDir);
+
+        initPluginManager(new HostComponentProvider()
+        {
+            public void provide(ComponentRegistrar registrar)
+            {
+                registrar.register(BooleanFlag.class).forInstance(flag).withName("bob");
+            }
+        });
+
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+        assertNotNull(pluginManager.getPlugin("first"));
+        assertTrue(flag.get());
     }
 
     public void testInstallWithStrangePath() throws Exception
