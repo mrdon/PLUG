@@ -182,6 +182,7 @@ public class TransformContext
     public void setShouldRequireSpring(final boolean shouldRequireSpring)
     {
         this.shouldRequireSpring = shouldRequireSpring;
+        getFileOverrides().put("META-INF/spring/", new byte[0]);
     }
 
     private static class DocumentExposingDescriptorParser extends XmlDescriptorParser
