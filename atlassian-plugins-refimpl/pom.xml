@@ -128,6 +128,7 @@
             <groupId>net.sourceforge.jwebunit</groupId>
             <artifactId>jwebunit-core</artifactId>
             <version>1.4.1</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -140,6 +141,7 @@
                     <artifactId>xom</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
