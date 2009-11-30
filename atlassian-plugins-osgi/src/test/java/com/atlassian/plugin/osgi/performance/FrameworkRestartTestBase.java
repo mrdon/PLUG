@@ -15,6 +15,10 @@ import org.osgi.framework.Bundle;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests the plugin framework handling restarts correctly
@@ -44,18 +48,34 @@ public abstract class FrameworkRestartTestBase extends PluginInContainerTestBase
             }
         };
 
+        ExecutorService executor = Executors.newFixedThreadPool(8);
         for (int x = 0; x < NUM_PLUGINS; x++)
         {
-            addPlugin(pluginsDir, x);
+            final int run = x;
+            executor.execute(new Runnable()
+            {
+                public void run()
+                {
+                    try
+                    {
+                        addPlugin(pluginsDir, run);
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    }
+                }
+            });
+
         }
-
-
+        executor.shutdown();
+        executor.awaitTermination(300, TimeUnit.SECONDS);
         // warm up the cache
         startPluginFramework();
         pluginManager.shutdown();
     }
 
-    protected abstract void addPlugin(File dir, int x) throws IOException;
+    protected abstract void addPlugin(File dir, int x) throws Exception;
 
     protected void startPluginFramework() throws Exception
     {

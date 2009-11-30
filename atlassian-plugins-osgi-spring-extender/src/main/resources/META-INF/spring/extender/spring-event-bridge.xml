@@ -9,4 +9,5 @@
        default-autowire="autodetect">
 
     <bean id="osgiApplicationEventMulticaster" class="com.atlassian.plugin.osgi.spring.PluginBridgeEventMulticaster"/>
+    <bean id="taskExecutor" class="com.atlassian.plugin.osgi.spring.ThreadPoolAsyncTaskExecutor" />
 </beans>

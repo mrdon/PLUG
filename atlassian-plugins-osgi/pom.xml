@@ -276,18 +276,24 @@
 
                                     <version>${springDmVersion}</version>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.springframework.osgi</groupId>
+                                    <artifactId>spring-osgi-extender</artifactId>
 
+                                    <version>${springDmVersion}</version>
+                                </artifactItem>
                                 <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
                                     <artifactId>spring-osgi-io</artifactId>
                                     <version>${springDmVersion}</version>
                                 </artifactItem>
-
+                                <!--
                                 <artifactItem>
                                     <groupId>org.aopalliance</groupId>
                                     <artifactId>com.springsource.org.aopalliance</artifactId>
                                     <version>1.0.0</version>
                                 </artifactItem>
+                                -->
                             </artifactItems>
                             <outputDirectory>${frameworkBundleDirectory}</outputDirectory>
 

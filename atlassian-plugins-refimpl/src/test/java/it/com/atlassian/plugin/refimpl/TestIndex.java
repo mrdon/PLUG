@@ -21,7 +21,6 @@ public class TestIndex extends WebTestCase
         beginAt("/");
         assertTextPresent("com.atlassian.plugin.osgi.bridge");
 
-        assertTextNotPresent("Resolved");
         assertTextNotPresent("Installed");
         assertTextPresent("General Decorator");
     }

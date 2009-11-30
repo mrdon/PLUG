@@ -633,9 +633,14 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 bundles.add(install(bundleFile, false));
             }
 
+            packageAdmin.resolveBundles(null);
+
             for (final Bundle bundle : bundles)
             {
-                bundle.start();
+                if (bundle.getHeaders().get(Constants.FRAGMENT_HOST) == null)
+                {
+                    bundle.start();
+                }
             }
         }
 
