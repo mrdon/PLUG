@@ -3,7 +3,6 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -11,6 +10,8 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
@@ -23,7 +24,7 @@ import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 class SpringHelper
 {
 
-    private static final Logger log = Logger.getLogger(SpringHelper.class);
+    private static final Logger log = LoggerFactory.getLogger(SpringHelper.class);
 
     /**
      * Creates a basic spring document with the usual namespaces

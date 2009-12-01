@@ -4,8 +4,6 @@ import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitEndedEvent;
 import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitStartingEvent;
 import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitTimedOutEvent;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.Bundle;
 import org.springframework.osgi.context.ConfigurableOsgiBundleApplicationContext;
 import org.springframework.osgi.context.event.OsgiBundleApplicationContextEvent;
@@ -16,6 +14,8 @@ import org.springframework.osgi.service.importer.event.OsgiServiceDependencyWait
 import org.springframework.osgi.service.importer.event.OsgiServiceDependencyWaitStartingEvent;
 import org.springframework.osgi.service.importer.event.OsgiServiceDependencyWaitTimedOutEvent;
 import org.springframework.osgi.service.importer.support.AbstractOsgiServiceImportFactoryBean;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * Bridge for internal spring context events and the plugin framework event system, specifically when the internal
@@ -25,7 +25,7 @@ import org.springframework.osgi.service.importer.support.AbstractOsgiServiceImpo
  */
 public class SpringContextEventBridge implements OsgiBundleApplicationContextListener
 {
-    private static final Log log = LogFactory.getLog(SpringContextEventBridge.class);
+    private static final Logger log = LoggerFactory.getLogger(SpringContextEventBridge.class);
 
     private final PluginEventManager pluginEventManager;
 

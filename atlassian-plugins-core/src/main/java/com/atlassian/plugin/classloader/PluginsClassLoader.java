@@ -5,9 +5,6 @@ import static com.atlassian.plugin.util.Assertions.notNull;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,6 +12,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * A ClassLoader that will loop over all enabled Plugins, attempting to load the given class (or other resource) from
@@ -24,7 +24,7 @@ import java.util.Set;
  */
 public class PluginsClassLoader extends AbstractClassLoader
 {
-    private static final Log log = LogFactory.getLog(PluginsClassLoader.class);
+    private static final Logger log = LoggerFactory.getLogger(PluginsClassLoader.class);
 
     private final PluginAccessor pluginAccessor;
 

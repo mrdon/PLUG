@@ -6,8 +6,8 @@ import com.atlassian.plugin.web.descriptors.*;
 
 import java.util.*;
 
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Stores and manages flexible web interface sections available in the system.
@@ -18,7 +18,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
     private WebFragmentHelper webFragmentHelper;
     private Map<String,List<WebSectionModuleDescriptor>> sections;
     private Map<String,List<WebItemModuleDescriptor>> items;
-    private static final Log log = LogFactory.getLog(DefaultWebInterfaceManager.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultWebInterfaceManager.class);
 
     public static final WeightedDescriptorComparator WEIGHTED_DESCRIPTOR_COMPARATOR = new WeightedDescriptorComparator();
 

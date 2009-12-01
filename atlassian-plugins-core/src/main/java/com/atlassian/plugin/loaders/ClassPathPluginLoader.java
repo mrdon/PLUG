@@ -5,11 +5,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.util.ClassLoaderUtils;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.net.URL;
@@ -18,12 +14,15 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Loads plugins from the classpath
  */
 public class ClassPathPluginLoader implements PluginLoader
 {
-    private static Log log = LogFactory.getLog(ClassPathPluginLoader.class);
+    private static Logger log = LoggerFactory.getLogger(ClassPathPluginLoader.class);
 
     private final String fileNameToLoad;
     private List<Plugin> plugins;

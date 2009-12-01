@@ -8,14 +8,14 @@ import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadStrategy;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A download strategy which maintains a list of {@link DownloadStrategyModuleDescriptor}s
@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class PluggableDownloadStrategy implements DownloadStrategy
 {
-    private static final Log log = LogFactory.getLog(PluggableDownloadStrategy.class);
+    private static final Logger log = LoggerFactory.getLogger(PluggableDownloadStrategy.class);
     private final Map<String, DownloadStrategy> strategies = new ConcurrentHashMap<String, DownloadStrategy>();
 
     public PluggableDownloadStrategy(final PluginEventManager pluginEventManager)

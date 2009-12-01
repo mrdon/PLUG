@@ -5,15 +5,15 @@
 package com.atlassian.plugin.util.zip;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.io.*;
 import java.util.zip.ZipEntry;
 
 public class FileUnzipper extends AbstractUnzipper
 {
-    private static final Log log = LogFactory.getLog(FileUnzipper.class);
+    private static final Logger log = LoggerFactory.getLogger(FileUnzipper.class);
 
     private File zipFile;
     private File destDir;

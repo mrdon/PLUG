@@ -9,8 +9,9 @@ import java.net.URLDecoder;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * A downloadable plugin resource, as described here: http://confluence.atlassian.com/display/JIRA/Downloadable+plugin+resource
@@ -25,7 +26,7 @@ import org.apache.commons.logging.Log;
  */
 public class PluginResourceDownload implements DownloadStrategy
 {
-    private static final Log log = LogFactory.getLog(PluginResourceDownload.class);
+    private static final Logger log = LoggerFactory.getLogger(PluginResourceDownload.class);
     private String characterEncoding = "UTF-8"; // default to sensible encoding
     private PluginResourceLocator pluginResourceLocator;
     private ContentTypeResolver contentTypeResolver;

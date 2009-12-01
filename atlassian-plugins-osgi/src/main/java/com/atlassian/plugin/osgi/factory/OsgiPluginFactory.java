@@ -21,10 +21,10 @@ import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.framework.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
@@ -35,7 +35,7 @@ import java.util.*;
  */
 public class OsgiPluginFactory implements PluginFactory
 {
-    private static final Log log = LogFactory.getLog(OsgiPluginFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(OsgiPluginFactory.class);
 
     private final OsgiContainerManager osgi;
     private final String pluginDescriptorFileName;

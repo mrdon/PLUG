@@ -14,12 +14,12 @@ import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.util.PluginUtils;
 
 import org.apache.commons.lang.Validate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.util.Arrays;
@@ -38,7 +38,7 @@ import java.util.Set;
  */
 public class XmlDescriptorParser implements DescriptorParser
 {
-    private static final Log log = LogFactory.getLog(XmlDescriptorParser.class);
+    private static final Logger log = LoggerFactory.getLogger(XmlDescriptorParser.class);
 
     private final Document document;
     private final Set<String> applicationKeys;

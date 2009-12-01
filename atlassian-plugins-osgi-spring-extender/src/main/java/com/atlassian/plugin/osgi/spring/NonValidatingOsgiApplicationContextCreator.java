@@ -1,7 +1,5 @@
 package com.atlassian.plugin.osgi.spring;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.springframework.osgi.context.DelegatedExecutionOsgiBundleApplicationContext;
@@ -13,6 +11,8 @@ import org.springframework.osgi.extender.support.scanning.DefaultConfigurationSc
 import org.springframework.osgi.util.OsgiStringUtils;
 import org.springframework.osgi.atlassian.NonValidatingOsgiBundleXmlApplicationContext;
 import org.springframework.util.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Application context creator that will use a special application context that disables XML Schema validation
@@ -21,7 +21,7 @@ import org.springframework.util.ObjectUtils;
  */
 public class NonValidatingOsgiApplicationContextCreator implements OsgiApplicationContextCreator
 {
-    private static final Log log = LogFactory.getLog(DefaultOsgiApplicationContextCreator.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultOsgiApplicationContextCreator.class);
 
 	private ConfigurationScanner configurationScanner = new DefaultConfigurationScanner();
 

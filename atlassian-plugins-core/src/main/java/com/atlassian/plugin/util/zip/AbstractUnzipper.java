@@ -2,8 +2,8 @@ package com.atlassian.plugin.util.zip;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.io.*;
 import java.util.zip.ZipEntry;
@@ -12,7 +12,7 @@ import java.util.*;
 
 public abstract class AbstractUnzipper implements Unzipper
 {
-    protected static Log log = LogFactory.getLog(FileUnzipper.class);
+    protected static Logger log = LoggerFactory.getLogger(FileUnzipper.class);
     protected File destDir;
 
     protected File saveEntry(InputStream is, ZipEntry entry) throws IOException

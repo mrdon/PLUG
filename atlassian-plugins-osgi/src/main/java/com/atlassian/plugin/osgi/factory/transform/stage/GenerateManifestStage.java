@@ -11,10 +11,10 @@ import java.util.jar.JarEntry;
 import java.util.jar.Manifest;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;
@@ -40,7 +40,7 @@ public class GenerateManifestStage implements TransformStage
 {
     private final int SPRING_TIMEOUT = PluginUtils.getDefaultEnablingWaitPeriod();
     private final String SPRING_CONTEXT_DEFAULT = "*;timeout:=" + SPRING_TIMEOUT;
-    static Log log = LogFactory.getLog(GenerateManifestStage.class);
+    static Logger log = LoggerFactory.getLogger(GenerateManifestStage.class);
     public static final String SPRING_CONTEXT = "Spring-Context";
 
     public void execute(final TransformContext context) throws PluginTransformationException

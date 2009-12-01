@@ -5,21 +5,21 @@ import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Default implementation of a descriptor factory that allows filtering of descriptor keys
  */
 public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
 {
-    private static Log log = LogFactory.getLog(DefaultModuleDescriptorFactory.class);
+    private static Logger log = LoggerFactory.getLogger(DefaultModuleDescriptorFactory.class);
 
     private final Map<String, Class<? extends ModuleDescriptor>> moduleDescriptorClasses = CopyOnWriteMap.newHashMap();
     private final List<String> permittedModuleKeys = new ArrayList<String>();

@@ -1,7 +1,7 @@
 package com.atlassian.plugin.util.resource;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +21,7 @@ import java.util.List;
 public class AlternativeDirectoryResourceLoader implements AlternativeResourceLoader
 {
     private final List<File> resourceDirectories;
-    private static final Log log = LogFactory.getLog(AlternativeDirectoryResourceLoader.class);
+    private static final Logger log = LoggerFactory.getLogger(AlternativeDirectoryResourceLoader.class);
     public static final String PLUGIN_RESOURCE_DIRECTORIES = "plugin.resource.directories";
 
     public AlternativeDirectoryResourceLoader()

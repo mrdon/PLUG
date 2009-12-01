@@ -1,8 +1,8 @@
 package com.atlassian.plugin.loaders;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -18,7 +18,7 @@ import com.atlassian.plugin.PluginException;
  */
 class DirectoryScanner implements com.atlassian.plugin.loaders.classloading.Scanner
 {
-    private static Log log = LogFactory.getLog(DirectoryScanner.class);
+    private static Logger log = LoggerFactory.getLogger(DirectoryScanner.class);
 
     /**
      * Tracks the classloading

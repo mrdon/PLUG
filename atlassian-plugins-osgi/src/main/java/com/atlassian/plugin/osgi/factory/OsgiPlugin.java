@@ -15,12 +15,12 @@ import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitTimedOutEvent;
 import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.lang.Validate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.dom4j.Element;
 import org.osgi.framework.*;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -51,7 +51,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
     private volatile OsgiPluginHelper helper;
     public static final String SPRING_CONTEXT = "Spring-Context";
     public static final String ATLASSIAN_PLUGIN_KEY = "Atlassian-Plugin-Key";
-    private final Log log = LogFactory.getLog(this.getClass());
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     public OsgiPlugin(final String key, final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginEventManager pluginEventManager)
     {

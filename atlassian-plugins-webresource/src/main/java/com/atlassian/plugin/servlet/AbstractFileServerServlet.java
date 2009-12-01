@@ -1,7 +1,8 @@
 package com.atlassian.plugin.servlet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -15,7 +16,7 @@ public abstract class AbstractFileServerServlet extends HttpServlet
     public static final String PATH_SEPARATOR = "/";
     public static final String RESOURCE_URL_PREFIX = "resources";
     public static final String SERVLET_PATH = "download";
-    private static final Log log = LogFactory.getLog(AbstractFileServerServlet.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractFileServerServlet.class);
 
     @Override
     protected final void doGet(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException

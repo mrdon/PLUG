@@ -58,8 +58,8 @@ import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.lang.Validate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -87,7 +87,7 @@ import java.util.LinkedHashMap;
  */
 public class DefaultPluginManager implements PluginController, PluginAccessor, PluginSystemLifecycle
 {
-    private static final Log log = LogFactory.getLog(DefaultPluginManager.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultPluginManager.class);
 
     private final List<PluginLoader> pluginLoaders;
     private final PluginPersistentStateStore store;

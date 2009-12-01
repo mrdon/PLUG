@@ -11,8 +11,8 @@ import com.atlassian.plugin.servlet.DownloadableWebResource;
 import com.atlassian.plugin.servlet.ForwardableResource;
 import com.atlassian.plugin.servlet.ServletContextFactory;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,7 +27,7 @@ import java.util.LinkedHashSet;
  */
 public class PluginResourceLocatorImpl implements PluginResourceLocator
 {
-    private static final Log log = LogFactory.getLog(PluginResourceLocatorImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(PluginResourceLocatorImpl.class);
 
     public static final String PLUGIN_WEBRESOURCE_BATCHING_OFF = "plugin.webresource.batching.off";
 
@@ -92,7 +92,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         }
         catch (UrlParseException e)
         {
-            log.error(e);
+            log.error("Unable to parse URL: " + url, e);
         }
         // TODO: It would be better to use Exceptions rather than returning nulls to indicate an error.
         return null;

@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.BufferedOutputStream;
 import java.util.zip.ZipOutputStream;
 import java.util.zip.ZipEntry;
+import java.util.Collections;
 
 import junit.framework.TestCase;
 
@@ -23,11 +24,12 @@ public class TestAtlassianPlugins extends TestCase
     private AtlassianPlugins plugins;
 
     @Override
-    public void setUp()
+    public void setUp() throws IOException
     {
         final File targetDir = new File("target");
         pluginDir = new File(targetDir, "plugins");
         pluginDir.mkdirs();
+        FileUtils.cleanDirectory(pluginDir);
         bundledPluginDir = new File(targetDir, "bundled-plugins");
         bundledPluginDir.mkdirs();
         bundledPluginZip = new File(targetDir, "atlassian-bundled-plugins.zip");
@@ -49,8 +51,14 @@ public class TestAtlassianPlugins extends TestCase
     {
         //tests
         new PluginJarBuilder().addPluginInformation("mykey", "mykey", "1.0").build(pluginDir);
-        final PluginsConfiguration config = pluginsConfiguration().pluginDirectory(pluginDir).packageScannerConfiguration(
-            new PackageScannerConfigurationBuilder().packagesToInclude("org.apache.*", "com.atlassian.*", "org.dom4j*").build()).build();
+        final PluginsConfiguration config = pluginsConfiguration()
+                .pluginDirectory(pluginDir)
+                .packageScannerConfiguration(
+                    new PackageScannerConfigurationBuilder()
+                            .packagesToInclude("org.apache.*", "com.atlassian.*", "org.dom4j*")
+                            .packagesVersions(Collections.singletonMap("org.apache.commons.logging", "1.1.1"))
+                            .build())
+                .build();
         plugins = new AtlassianPlugins(config);
         plugins.start();
         assertEquals(1, plugins.getPluginAccessor().getPlugins().size());
@@ -92,7 +100,8 @@ public class TestAtlassianPlugins extends TestCase
             .bundledPluginCacheDirectory(bundledPluginDir)
             .packageScannerConfiguration(
                 new PackageScannerConfigurationBuilder()
-                    .packagesToInclude("com.atlassian.*")
+                    .packagesToInclude("com.atlassian.*", "org.slf4j", "org.apache.commons.logging")
+                    .packagesVersions(Collections.singletonMap("org.apache.commons.logging", "1.1.1"))
                     .build())
             .build();
         plugins = new AtlassianPlugins(config);

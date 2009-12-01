@@ -7,8 +7,8 @@ import com.atlassian.plugin.util.collect.Function;
 import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 
 import org.apache.commons.lang.Validate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class DefaultPluginEventManager implements PluginEventManager
 {
-    private static final Log log = LogFactory.getLog(DefaultPluginEventManager.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultPluginEventManager.class);
 
     private final EventsToListener eventsToListener = new EventsToListener();
     private final ListenerMethodSelector[] listenerMethodSelectors;

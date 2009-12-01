@@ -1,39 +1,32 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
+import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.JarPluginArtifact;
-import com.atlassian.plugin.util.PluginUtils;
+import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
-import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.test.PluginJarBuilder;
-
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.Filter;
-import org.apache.commons.logging.Log;
-import org.osgi.framework.Constants;
+import com.atlassian.plugin.util.PluginUtils;
+import junit.framework.TestCase;
+import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Matchers.contains;
+import org.osgi.framework.Constants;
+import org.slf4j.Logger;
+import org.apache.log4j.spi.Filter;
 
+import javax.print.attribute.AttributeSet;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.ByteArrayOutputStream;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
-import java.lang.reflect.Field;
-
-import javax.print.attribute.AttributeSet;
-
-import junit.framework.TestCase;
 
 public class TestGenerateManifestStage extends TestCase
 {
@@ -239,7 +232,7 @@ public class TestGenerateManifestStage extends TestCase
 
     public void testGenerateManifestWarnNoTimeout() throws Exception
     {
-        Log log = mock(Log.class);
+        org.slf4j.Logger log = mock(org.slf4j.Logger.class);
         GenerateManifestStage.log = log;
 
         final File plugin = new PluginJarBuilder("plugin")
@@ -311,7 +304,7 @@ public class TestGenerateManifestStage extends TestCase
 
         final Collection imports = Arrays.asList(attrs.getValue("Import-Package").split(","));
         assertEquals(2, imports.size());
-        assertTrue(imports.contains(Logger.class.getPackage().getName() + ";resolution:=\"optional\""));
+        assertTrue(imports.contains(org.apache.log4j.Logger.class.getPackage().getName() + ";resolution:=\"optional\""));
         assertTrue(imports.contains(Filter.class.getPackage().getName() + ";resolution:=\"optional\""));
     }
 

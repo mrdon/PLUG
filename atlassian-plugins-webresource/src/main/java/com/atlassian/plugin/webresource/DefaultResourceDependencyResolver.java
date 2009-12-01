@@ -1,8 +1,6 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -10,9 +8,12 @@ import java.util.Stack;
 import java.util.Collections;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 class DefaultResourceDependencyResolver implements ResourceDependencyResolver
 {
-    private static final Log log = LogFactory.getLog(DefaultResourceDependencyResolver.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultResourceDependencyResolver.class);
 
     private final WebResourceIntegration webResourceIntegration;
     private final ResourceBatchingConfiguration batchingConfiguration;

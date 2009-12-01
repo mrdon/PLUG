@@ -308,7 +308,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${frameworkBundleDirectory}</outputDirectory>
-                            <includeArtifactIds>atlassian-plugins-osgi-bridge,atlassian-plugins-osgi-logging,atlassian-plugins-osgi-spring-extender</includeArtifactIds>
+                            <includeArtifactIds>atlassian-plugins-osgi-bridge,atlassian-plugins-osgi-spring-extender</includeArtifactIds>
                         </configuration>
                     </execution>
                     <execution>
@@ -388,13 +388,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.atlassian.plugins</groupId>
-            <artifactId>atlassian-plugins-osgi-logging</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
             <groupId>biz.aQute</groupId>
             <artifactId>bndlib</artifactId>
 
@@ -448,44 +441,12 @@
         <dependency>
             <groupId>org.twdata.pkgscanner</groupId>
             <artifactId>package-scanner</artifactId>
-            <version>0.8.0</version>
+            <version>0.9.0</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-
             <version>1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.15</version>
-            <exclusions>
-
-                <exclusion>
-                    <groupId>com.sun.jdmk</groupId>
-                    <artifactId>jmxtools</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.sun.jmx</groupId>
-                    <artifactId>jmxri</artifactId>
-
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.jms</groupId>
-                    <artifactId>jms</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.mail</groupId>
-
-                    <artifactId>mail</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.activation</groupId>
-                    <artifactId>activation</artifactId>
-                </exclusion>
-            </exclusions>
-
         </dependency>
 
         <dependency>

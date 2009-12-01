@@ -7,9 +7,6 @@ import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.Plugin;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -19,6 +16,9 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents a batch of plugin resources. <p/>
@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class BatchPluginResource implements DownloadableResource, PluginResource, BatchResource
 {
-    private static final Log log = LogFactory.getLog(BatchPluginResource.class);
+    private static final Logger log = LoggerFactory.getLogger(BatchPluginResource.class);
 
     /**
      * The url prefix for a batch of plugin resources: "/download/batch/"

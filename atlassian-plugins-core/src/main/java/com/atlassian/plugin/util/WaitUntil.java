@@ -1,7 +1,7 @@
 package com.atlassian.plugin.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.lang.Thread.sleep;
 import java.util.concurrent.TimeUnit;
@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class WaitUntil
 {
-    private static final Log log = LogFactory.getLog(WaitUntil.class);
+    private static final Logger log = LoggerFactory.getLogger(WaitUntil.class);
 
     /**
      * Default {@link #STARTUP_WAIT}

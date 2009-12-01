@@ -1,33 +1,25 @@
 package com.atlassian.plugin.osgi.util;
 
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
-import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
+import aQute.lib.header.OSGiHeader;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.util.ClassUtils;
-
-import java.util.*;
-import java.util.jar.Manifest;
-import java.io.*;
-import java.net.MalformedURLException;
-
-import org.twdata.pkgscanner.ExportPackage;
-import org.twdata.pkgscanner.PackageScanner;
-import static org.twdata.pkgscanner.PackageScanner.jars;
-import static org.twdata.pkgscanner.PackageScanner.include;
-import static org.twdata.pkgscanner.PackageScanner.exclude;
-import static org.twdata.pkgscanner.PackageScanner.packages;
-import org.osgi.framework.Version;
-import org.osgi.framework.Constants;
-import org.osgi.framework.Bundle;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.IOUtils;
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Jar;
-import aQute.lib.header.OSGiHeader;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletContext;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.jar.Manifest;
 
 /**
  * Utilities to help create OSGi headers
@@ -36,7 +28,7 @@ public class OsgiHeaderUtil
 {
     static final String JDK_PACKAGES_PATH = "jdk-packages.txt";
     static final String JDK6_PACKAGES_PATH = "jdk6-packages.txt";
-    static Log log = LogFactory.getLog(OsgiHeaderUtil.class);
+    static Logger log = LoggerFactory.getLogger(OsgiHeaderUtil.class);
 
     /**
      * Finds all referred packages for host component registrations by scanning their declared interfaces' bytecode.

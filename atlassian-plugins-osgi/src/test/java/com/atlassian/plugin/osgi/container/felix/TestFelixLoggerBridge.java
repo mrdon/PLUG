@@ -1,7 +1,6 @@
 package com.atlassian.plugin.osgi.container.felix;
 
 import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.moduleloader.ResourceNotFoundException;
 import static org.mockito.Mockito.mock;
@@ -11,13 +10,13 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class TestFelixLoggerBridge extends TestCase
 {
-    private Log log;
+    private org.slf4j.Logger log;
 
     @Override
     protected void setUp() throws Exception
     {
         super.setUp();
-        log = mock(Log.class);
+        log = mock(org.slf4j.Logger.class);
     }
 
     public void testFrameworkLogInfo()

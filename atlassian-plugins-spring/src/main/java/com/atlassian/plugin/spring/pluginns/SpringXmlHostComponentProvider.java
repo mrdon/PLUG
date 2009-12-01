@@ -3,12 +3,13 @@ package com.atlassian.plugin.spring.pluginns;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import org.apache.commons.lang.ClassUtils;
-import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.HierarchicalBeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,7 +24,7 @@ import java.util.Map;
  */
 public class SpringXmlHostComponentProvider implements HostComponentProvider, BeanFactoryAware
 {
-    private static final Logger log = Logger.getLogger(SpringXmlHostComponentProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(SpringXmlHostComponentProvider.class);
 
     public static final String HOST_COMPONENT_PROVIDER = "hostComponentProvider";
     private BeanFactory beanFactory;

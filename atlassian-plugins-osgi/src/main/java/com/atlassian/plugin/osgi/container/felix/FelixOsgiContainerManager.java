@@ -17,8 +17,6 @@ import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.apache.commons.lang.Validate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.cache.BundleCache;
@@ -37,6 +35,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -59,7 +58,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 {
     public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "osgi-framework-bundles.zip";
 
-    private static final Log log = LogFactory.getLog(FelixOsgiContainerManager.class);
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(FelixOsgiContainerManager.class);
     private static final String OSGI_BOOTDELEGATION = "org.osgi.framework.bootdelegation";
     private static final String ATLASSIAN_PREFIX = "atlassian.";
 

@@ -19,12 +19,14 @@ import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Facade interface to the Atlassian Plugins framework.  See the package Javadocs for usage information.
@@ -37,7 +39,7 @@ public class AtlassianPlugins
     private PluginsConfiguration pluginsConfiguration;
     private HotDeployer hotDeployer;
 
-    private static final Logger log = Logger.getLogger(AtlassianPlugins.class);
+    private static final Logger log = LoggerFactory.getLogger(AtlassianPlugins.class);
 
     /**
      * Suffix for temporary directories which will be removed on shutdown

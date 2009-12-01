@@ -3,11 +3,11 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.dom4j.Attribute;
 import org.dom4j.DocumentHelper;
 import org.dom4j.XPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class ScanDescriptorForHostClassesStage implements TransformStage
 {
-    private static final Log log = LogFactory.getLog(ScanDescriptorForHostClassesStage.class);
+    private static final Logger log = LoggerFactory.getLogger(ScanDescriptorForHostClassesStage.class);
 
     public void execute(TransformContext context) throws PluginTransformationException
     {

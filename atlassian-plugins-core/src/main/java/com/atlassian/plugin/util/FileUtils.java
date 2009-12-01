@@ -1,16 +1,17 @@
 package com.atlassian.plugin.util;
 
 import com.atlassian.plugin.util.zip.UrlUnzipper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class FileUtils
 {
-    private static final Log log = LogFactory.getLog(FileUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(FileUtils.class);
 
     /**
      * Extract the zip from the URL into the destination directory, but only if the contents haven't already been

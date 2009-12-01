@@ -193,6 +193,7 @@ public abstract class PluginInContainerTestBase extends TestCase
         scannerConfig.getPackageIncludes().add("javax.servlet*");
         scannerConfig.getPackageIncludes().add("com_cenqua_clover");
         scannerConfig.getPackageExcludes().add("com.atlassian.plugin.osgi.bridge*");
+        scannerConfig.getPackageVersions().put("org.apache.commons.logging", "1.1.1");
         return scannerConfig;
     }
 }

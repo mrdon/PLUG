@@ -12,8 +12,6 @@ import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
 import static com.atlassian.plugin.util.Assertions.notNull;
 import com.atlassian.plugin.util.ClassLoaderUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +19,9 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Loads a single plugin from the descriptor provided, which can either be an InputStream
@@ -46,7 +47,7 @@ public class SinglePluginLoader implements PluginLoader
 
     private final DescriptorParserFactory descriptorParserFactory = new XmlDescriptorParserFactory();
 
-    private static final Log log = LogFactory.getLog(SinglePluginLoader.class);
+    private static final Logger log = LoggerFactory.getLogger(SinglePluginLoader.class);
 
     /**
      * @deprecated use URL instead.
@@ -130,7 +131,7 @@ public class SinglePluginLoader implements PluginLoader
         Plugin plugin;
         try
         {
-            final DescriptorParser parser = descriptorParserFactory.getInstance(source, null);
+            final DescriptorParser parser = descriptorParserFactory.getInstance(source);
             plugin = parser.configurePlugin(moduleDescriptorFactory, getNewPlugin());
             if (plugin.getPluginsVersion() == 2)
             {

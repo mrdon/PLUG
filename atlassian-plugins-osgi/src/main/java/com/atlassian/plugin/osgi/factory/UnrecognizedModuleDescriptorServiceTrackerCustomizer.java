@@ -4,9 +4,9 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Bundle;
 import org.dom4j.Element;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptor;
@@ -23,7 +23,7 @@ import java.util.ArrayList;
  */
 class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTrackerCustomizer
 {
-    private static final Log log = LogFactory.getLog(UnrecognizedModuleDescriptorServiceTrackerCustomizer.class);
+    private static final Logger log = LoggerFactory.getLogger(UnrecognizedModuleDescriptorServiceTrackerCustomizer.class);
 
     private final Bundle bundle;
     private final OsgiPlugin plugin;

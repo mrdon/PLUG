@@ -113,7 +113,7 @@ public class TestExportsBuilder extends TestCase
         assertTrue(exports.contains(new ExportPackage("org.apache.log4j", "1.2.15", new File("/whatever/log4j-1.2.15.jar"))));
 
         // Test falling through to servlet context scanning
-        config.setJarIncludes(Arrays.asList("testlog*"));
+        config.setJarIncludes(Arrays.asList("testlog*", "mock*"));
         config.setJarExcludes(Arrays.asList("log4j*"));
         exports = builder.generateExports(config);
         assertNotNull(exports);

@@ -15,9 +15,9 @@ import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.jar.Manifest;
@@ -30,7 +30,7 @@ import java.lang.reflect.Method;
 
 public class HostComponentSpringStage implements TransformStage
 {
-    private static final Log log = LogFactory.getLog(HostComponentSpringStage.class);
+    private static final Logger log = LoggerFactory.getLogger(HostComponentSpringStage.class);
 
     /** Path of generated Spring XML file */
     static final String SPRING_XML = "META-INF/spring/atlassian-plugins-host-components.xml";

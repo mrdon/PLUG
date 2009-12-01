@@ -1,12 +1,12 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.ModuleDescriptor;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tracks module descriptors registered as services, then updates the descriptors map accordingly
@@ -15,7 +15,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  */
 class ModuleDescriptorServiceTrackerCustomizer implements ServiceTrackerCustomizer
 {
-    private static final Log log = LogFactory.getLog(ModuleDescriptorServiceTrackerCustomizer.class);
+    private static final Logger log = LoggerFactory.getLogger(ModuleDescriptorServiceTrackerCustomizer.class);
 
     private final Bundle bundle;
     private final OsgiPlugin plugin;

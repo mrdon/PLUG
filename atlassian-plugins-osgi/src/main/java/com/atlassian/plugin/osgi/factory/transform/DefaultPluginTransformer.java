@@ -8,7 +8,8 @@ import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginArtifact;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
@@ -21,7 +22,7 @@ import java.util.zip.ZipOutputStream;
  */
 public class DefaultPluginTransformer implements PluginTransformer
 {
-    private static final Logger log = Logger.getLogger(DefaultPluginTransformer.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultPluginTransformer.class);
 
     private final String pluginDescriptorPath;
     private final List<TransformStage> stages;

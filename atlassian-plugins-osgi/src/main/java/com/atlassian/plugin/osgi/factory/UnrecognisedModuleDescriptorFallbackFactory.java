@@ -4,8 +4,9 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.log4j.Logger;
 
 /**
  * Module descriptor factory for deferred modules.  Turns every request for a module descriptor into a deferred
@@ -16,7 +17,7 @@ import org.apache.log4j.Logger;
  */
 class UnrecognisedModuleDescriptorFallbackFactory implements ModuleDescriptorFactory
 {
-    private static final Logger log = Logger.getLogger(UnrecognisedModuleDescriptorFallbackFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(UnrecognisedModuleDescriptorFallbackFactory.class);
     public static final String DESCRIPTOR_TEXT = "Support for this module is not currently installed.";
 
     public UnrecognisedModuleDescriptor getModuleDescriptor(final String type) throws PluginParseException, IllegalAccessException, InstantiationException, ClassNotFoundException

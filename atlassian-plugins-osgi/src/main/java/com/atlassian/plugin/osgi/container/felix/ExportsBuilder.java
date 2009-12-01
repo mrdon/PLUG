@@ -7,10 +7,10 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.twdata.pkgscanner.ExportPackage;
 import org.twdata.pkgscanner.PackageScanner;
 import static org.twdata.pkgscanner.PackageScanner.exclude;
@@ -18,15 +18,6 @@ import static org.twdata.pkgscanner.PackageScanner.include;
 import static org.twdata.pkgscanner.PackageScanner.jars;
 import static org.twdata.pkgscanner.PackageScanner.packages;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.util.Collection;
-import java.util.List;
-import java.util.jar.Manifest;
 import javax.servlet.ServletContext;
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,7 +27,6 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.Manifest;
@@ -49,7 +39,7 @@ class ExportsBuilder
 
     static final String JDK_PACKAGES_PATH = "jdk-packages.txt";
     static final String JDK6_PACKAGES_PATH = "jdk6-packages.txt";
-    private static Log log = LogFactory.getLog(ExportsBuilder.class);
+    private static Logger log = LoggerFactory.getLogger(ExportsBuilder.class);
     private static String exportStringCache;
 
     /**
@@ -197,7 +187,7 @@ class ExportsBuilder
             }
             catch (MalformedURLException e)
             {
-                log.warn(e);
+                log.warn("Unable to scan webapp for packages", e);
             }
         }
 
@@ -210,23 +200,23 @@ class ExportsBuilder
     }
 
     /**
-     * Tests to see if a scan of packages to export was successful, using the presence of log4j as the criteria.
+     * Tests to see if a scan of packages to export was successful, using the presence of slf4j as the criteria.
      *
      * @param exports The exports found so far
-     * @return True if log4j is present, false otherwise
+     * @return True if slf4j is present, false otherwise
      */
     private static boolean isPackageScanSuccessful(Collection<ExportPackage> exports)
     {
-        boolean log4jFound = false;
+        boolean slf4jFound = false;
         for (ExportPackage export : exports)
         {
-            if (export.getPackageName().equals("org.apache.log4j"))
+            if (export.getPackageName().equals("org.slf4j"))
             {
-                log4jFound = true;
+                slf4jFound = true;
                 break;
             }
         }
-        return log4jFound;
+        return slf4jFound;
     }
 
     void constructJdkExports(StringBuilder sb, String packageListPath)

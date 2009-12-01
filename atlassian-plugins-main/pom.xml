@@ -60,6 +60,7 @@
               <artifactId>activation</artifactId>
             </exclusion>
           </exclusions>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

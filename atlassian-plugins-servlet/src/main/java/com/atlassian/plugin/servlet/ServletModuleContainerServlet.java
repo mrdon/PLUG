@@ -9,9 +9,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Applications need to create a concrete subclass of this for use in their webapp.  This servlets responsiblity
@@ -20,7 +20,7 @@ import com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAcces
  */
 public class ServletModuleContainerServlet extends HttpServlet
 {
-    private static final Log log = LogFactory.getLog(ServletModuleContainerServlet.class);
+    private static final Logger log = LoggerFactory.getLogger(ServletModuleContainerServlet.class);
     private ServletConfig servletConfig;
 
     public void init(ServletConfig servletConfig) throws ServletException
@@ -53,12 +53,12 @@ public class ServletModuleContainerServlet extends HttpServlet
         }
         catch (UnavailableException e) // prevent this servlet from unloading itself (PLUG-79)
         {
-            log.error(e);
+            log.error(e.getMessage(), e);
             response.sendError(500, e.getMessage());
         }
         catch (ServletException e)
         {
-            log.error(e);
+            log.error(e.getMessage(), e);
             response.sendError(500, e.getMessage());
         }
     }

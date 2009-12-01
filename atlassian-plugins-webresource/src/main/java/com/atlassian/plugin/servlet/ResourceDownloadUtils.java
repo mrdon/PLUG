@@ -1,8 +1,8 @@
 package com.atlassian.plugin.servlet;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class ResourceDownloadUtils
 {
-    private static final Log log = LogFactory.getLog(ResourceDownloadUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(ResourceDownloadUtils.class);
     private static final long TEN_YEARS = 1000L * 60L * 60L * 24L * 365L * 10L;
 
     /**

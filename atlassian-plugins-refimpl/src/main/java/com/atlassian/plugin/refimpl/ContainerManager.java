@@ -102,6 +102,7 @@ public class ContainerManager
         scannerConfig.setPackageVersions(new HashMap<String,String>() {{
             put("javax.servlet", "2.5");
             put("javax.servlet.http", "2.5");
+            put("org.apache.commons.logging", "1.1.1");
         }});
         hostComponentProvider = new SimpleHostComponentProvider();
 

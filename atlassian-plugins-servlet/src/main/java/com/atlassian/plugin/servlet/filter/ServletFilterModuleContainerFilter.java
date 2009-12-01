@@ -2,13 +2,14 @@ package com.atlassian.plugin.servlet.filter;
 
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Applications need to create a concrete subclass of this for use in their filter stack.  This filters responsiblity
@@ -25,7 +26,7 @@ import java.io.IOException;
  */
 public class ServletFilterModuleContainerFilter implements Filter
 {
-    private static final Log log = LogFactory.getLog(ServletFilterModuleContainerFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(ServletFilterModuleContainerFilter.class);
 
     private FilterConfig filterConfig;
     private FilterLocation location;

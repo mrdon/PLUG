@@ -7,10 +7,10 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -27,7 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class DefaultComponentRegistrar implements ComponentRegistrar
 {
-    private static final Log log = LogFactory.getLog(DefaultComponentRegistrar.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultComponentRegistrar.class);
 
     private final List<HostComponentRegistration> registry = new CopyOnWriteArrayList<HostComponentRegistration>();
 

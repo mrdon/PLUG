@@ -14,8 +14,8 @@ import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.util.VersionStringComparator;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 {
@@ -41,7 +40,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     private final Date dateLoaded = new Date();
     private final AtomicReference<PluginState> pluginState = new AtomicReference<PluginState>(PluginState.UNINSTALLED);
 
-    private final Log log = LogFactory.getLog(this.getClass());
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     public String getName()
     {
@@ -56,7 +55,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     /**
      * @return the logger used internally
      */
-    protected Log getLog()
+    protected Logger getLog()
     {
         return log;
     }

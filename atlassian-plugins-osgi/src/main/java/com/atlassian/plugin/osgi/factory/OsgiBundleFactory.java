@@ -8,12 +8,12 @@ import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.io.IOUtils;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Bundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +27,7 @@ import java.util.Hashtable;
  */
 public class OsgiBundleFactory implements PluginFactory
 {
-    private static final Log log = LogFactory.getLog(OsgiBundleFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(OsgiBundleFactory.class);
 
     private final OsgiContainerManager osgi;
     private final PluginEventManager pluginEventManager;

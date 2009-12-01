@@ -20,9 +20,6 @@ import com.atlassian.plugin.servlet.util.LazyLoadedReference;
 import com.atlassian.plugin.servlet.util.PathMapper;
 import com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -45,6 +42,9 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A simple servletModuleManager to track and retrieve the loaded servlet plugin modules.
  *
@@ -52,7 +52,7 @@ import javax.servlet.http.HttpServlet;
  */
 public class DefaultServletModuleManager implements ServletModuleManager
 {
-    private static final Log log = LogFactory.getLog(DefaultServletModuleManager.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultServletModuleManager.class);
 
     private final PathMapper servletMapper;
     private final Map<String, ServletModuleDescriptor> servletDescriptors = new HashMap<String, ServletModuleDescriptor>();

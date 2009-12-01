@@ -13,8 +13,8 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
 
     private List<String> jarIncludes = Arrays.asList("*.jar");
     private List<String> jarExcludes = Collections.emptyList();
-    private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "org.apache.*", "org.jdom*");
-    private List<String> packageExcludes = Arrays.asList("com.springframework*", "org.apache.commons.logging*");
+    private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "org.apache.*", "org.jdom*", "org.slf4j");
+    private List<String> packageExcludes = Arrays.asList("com.springframework*");
     private Map<String, String> packageVersions;
     private String hostVersion;
     private ServletContext servletContext;

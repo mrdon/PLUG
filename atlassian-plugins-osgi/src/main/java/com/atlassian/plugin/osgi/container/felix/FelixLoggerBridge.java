@@ -1,10 +1,10 @@
 package com.atlassian.plugin.osgi.container.felix;
 
-import org.apache.commons.logging.Log;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.moduleloader.ResourceNotFoundException;
 import org.osgi.framework.BundleException;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Arrays;
@@ -13,7 +13,7 @@ import java.util.Arrays;
  * Bridges Felix logging messages with the Commons Logging
  */
 public class FelixLoggerBridge extends Logger {
-    private final Log log;
+    private final org.slf4j.Logger log;
 
     private static final List<String> messagesToIgnore = Arrays.asList(
             "BeanInfo",
@@ -32,7 +32,7 @@ public class FelixLoggerBridge extends Logger {
             "[Lorg.springframework.osgi.service.importer.OsgiServiceLifecycleListener;Editor"
     );
 
-    public FelixLoggerBridge(Log log) {
+    public FelixLoggerBridge(org.slf4j.Logger log) {
         this.log = log;
         setLogLevel(
                 log.isDebugEnabled() ? Logger.LOG_DEBUG :

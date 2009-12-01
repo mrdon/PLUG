@@ -1,8 +1,8 @@
 package com.atlassian.plugin.classloader;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.util.Enumeration;
  */
 public class DelegationClassLoader extends ClassLoader
 {
-    private static final Log log = LogFactory.getLog(DelegationClassLoader.class);
+    private static final Logger log = LoggerFactory.getLogger(DelegationClassLoader.class);
 
     private ClassLoader delegateClassLoader = DelegationClassLoader.class.getClassLoader();
 

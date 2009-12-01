@@ -1,26 +1,23 @@
 package com.atlassian.plugin.osgi.bridge.external;
 
+import com.atlassian.plugin.PluginException;
+import org.apache.commons.lang.Validate;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import static org.osgi.framework.ServiceEvent.REGISTERED;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.osgi.context.BundleContextAware;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceListener;
-import org.osgi.framework.Filter;
-import org.osgi.framework.ServiceEvent;
-import static org.osgi.framework.ServiceEvent.*;
-import org.apache.commons.lang.Validate;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-import com.atlassian.plugin.PluginException;
 
-import java.util.Arrays;
-import java.util.List;
-import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 
 /**
  * Simple factory bean to resolve host components.  Since we know host components won't change during the bundle's
@@ -107,7 +104,7 @@ public class HostComponentFactoryBean implements FactoryBean, BundleContextAware
      */
     static class DynamicServiceInvocationHandler implements InvocationHandler
     {
-        private static final Log log = LogFactory.getLog(DynamicServiceInvocationHandler.class);
+        private static final Logger log = LoggerFactory.getLogger(DynamicServiceInvocationHandler.class);
         private volatile Object service;
 
 

@@ -2,9 +2,9 @@ package com.atlassian.plugin.servlet.descriptors;
 
 import javax.servlet.ServletContextListener;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.hostcontainer.HostContainer;
@@ -19,7 +19,7 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
  */
 public class ServletContextListenerModuleDescriptor extends AbstractModuleDescriptor<ServletContextListener>
 {
-    protected static final Log log = LogFactory.getLog(ServletContextListenerModuleDescriptor.class);
+    protected static final Logger log = LoggerFactory.getLogger(ServletContextListenerModuleDescriptor.class);
 
     protected final HostContainer hostContainer;
 

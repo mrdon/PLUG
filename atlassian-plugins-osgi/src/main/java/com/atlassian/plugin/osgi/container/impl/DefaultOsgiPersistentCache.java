@@ -5,7 +5,8 @@ import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.Validate;
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +21,7 @@ public class DefaultOsgiPersistentCache implements OsgiPersistentCache
     private final File osgiBundleCache;
     private final File frameworkBundleCache;
     private final File transformedPluginCache;
-    private final Logger log = Logger.getLogger(DefaultOsgiPersistentCache.class);
+    private final Logger log = LoggerFactory.getLogger(DefaultOsgiPersistentCache.class);
 
     /**
      * Constructs a cache, using the passed file as the base directory for cache subdirectories

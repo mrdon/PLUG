@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
@@ -24,7 +24,7 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
  */
 public abstract class BaseServletModuleDescriptor<T> extends AbstractModuleDescriptor<T>
 {
-    protected static final Log log = LogFactory.getLog(BaseServletModuleDescriptor.class);
+    protected static final Logger log = LoggerFactory.getLogger(BaseServletModuleDescriptor.class);
 
     private List<String> paths;
     private Map<String,String> initParams;
