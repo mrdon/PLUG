@@ -75,7 +75,8 @@
                             org.springframework.util;version="[2.5.6,4.0)",
                             org.springframework.beans.factory.xml;version="[2.5.6,4.0)",
                             org.springframework.core*;version="[2.5.6,4.0)",
-                            org.springframework.osgi*;version="[1.2.0,1.2.0]"
+                            org.springframework.osgi*;version="[1.2.0,1.2.0]",
+                            com_cenqua_clover;resolution:=optional
                         </Import-Package>
                         <Export-Package />
                         <Private-Package>com.atlassian.plugin.osgi.spring,org.springframework.osgi.atlassian</Private-Package>
