@@ -51,6 +51,7 @@ public class ComponentSpringStage implements TransformStage
                 bean.addAttribute("id", component.attributeValue("key"));
                 bean.addAttribute("alias", component.attributeValue("alias"));
                 bean.addAttribute("class", component.attributeValue("class"));
+                bean.addAttribute("autowire", "default");
                 if ("true".equalsIgnoreCase(component.attributeValue("public")))
                 {
                     Element osgiService = root.addElement("osgi:service");

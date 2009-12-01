@@ -89,15 +89,21 @@ public class PluginJarBuilder
         }
         classLoader = compiler.getClassLoader();
 
+
+        // jar files use '/' as a directory separator, regardless of platform
+        jarContents.put(className.replace('.', '/') + ".class", getClassFile(className));
+        return this;
+    }
+
+    public byte[] getClassFile(String className) throws NoSuchFieldException, IllegalAccessException
+    {
         // Silly hack because I'm too lazy to do it the "proper" janino way
-        ByteArrayClassLoader cl = (ByteArrayClassLoader) compiler.getClassLoader();
+        ByteArrayClassLoader cl = (ByteArrayClassLoader) classLoader;
         Field field = cl.getClass().getDeclaredField("classes");
         field.setAccessible(true);
         Map classes = (Map) field.get(cl);
 
-        // jar files use '/' as a directory separator, regardless of platform
-        jarContents.put(className.replace('.', '/') + ".class", (byte[]) classes.get(className));
-        return this;
+        return (byte[]) classes.get(className);
     }
 
     /**

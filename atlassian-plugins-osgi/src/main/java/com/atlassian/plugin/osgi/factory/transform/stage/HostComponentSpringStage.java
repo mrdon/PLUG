@@ -99,6 +99,7 @@ public class HostComponentSpringStage implements TransformStage
 
                     Element osgiService = root.addElement("beans:bean");
                     osgiService.addAttribute("id", determineId(context.getComponentImports().keySet(), beanName, index));
+                    osgiService.addAttribute("lazy-init", "true");
 
                     // These are strings since we aren't compiling against the osgi-bridge jar
                     osgiService.addAttribute("class", "com.atlassian.plugin.osgi.bridge.external.HostComponentFactoryBean");
@@ -106,6 +107,7 @@ public class HostComponentSpringStage implements TransformStage
 
                     Element e = osgiService.addElement("beans:property");
                     e.addAttribute("name", "filter");
+
                     e.addAttribute("value", "(&(bean-name=" + beanName + ")(" + ComponentRegistrar.HOST_COMPONENT_FLAG + "=true))");
 
                     Element listProp = osgiService.addElement("beans:property");

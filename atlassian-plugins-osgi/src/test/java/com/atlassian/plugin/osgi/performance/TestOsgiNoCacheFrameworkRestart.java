@@ -21,6 +21,7 @@ import java.util.Random;
 public class TestOsgiNoCacheFrameworkRestart extends FrameworkRestartTestBase
 {
     private final Random rnd = new Random(System.currentTimeMillis());
+
     protected void addPlugin(File dir, int pluginId) throws Exception
     {
         System.out.println("building plugin " + pluginId);
@@ -52,11 +53,18 @@ public class TestOsgiNoCacheFrameworkRestart extends FrameworkRestartTestBase
             }
             apxml.append("/>\n");
         }
-        for (int x=0; x<10; x++)
+        if (pluginId != 49)
         {
-            int refid = 50 - rnd.nextInt(50 - pluginId) - 1;
-            if (refid != pluginId)
+
+            for (int x=0; x<10; x++)
             {
+                int refid;
+                do
+                {
+                    refid = 50 - rnd.nextInt(50 - pluginId) - 1;
+                }
+                while (refid == pluginId);
+                    
                 apxml.append("  <component-import key='ref" + x + "' interface='" + pkg(refid, x) + ".MyInterface'/>\n");
             }
         }
