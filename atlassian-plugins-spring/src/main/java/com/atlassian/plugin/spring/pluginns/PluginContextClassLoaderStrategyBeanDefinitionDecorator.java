@@ -11,7 +11,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Node;
 
 /**
- * Processes an "ccls" (Context Class Loader Strategy) attribute in the plugin namespace.
+ * Processes an "contextClassLoader" strategy attribute in the plugin namespace.
  * Also handles registering the {@link com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider} through
  * the {@link com.atlassian.plugin.spring.SpringHostComponentProviderFactoryBean}.
  *
