@@ -1,7 +1,7 @@
 package com.atlassian.plugin.spring.pluginns;
 
 import com.atlassian.plugin.osgi.hostcomponents.ContextClassLoaderStrategy;
-import com.atlassian.plugin.spring.SpringHostComponentProviderBeanDefinitionUtils;
+import com.atlassian.plugin.spring.PluginBeanDefinitionRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -33,7 +33,7 @@ public class PluginContextClassLoaderStrategyBeanDefinitionDecorator implements 
         final String contextClassLoaderStrategy = ((Attr) source).getValue();
         if (contextClassLoaderStrategy != null)
         {
-            SpringHostComponentProviderBeanDefinitionUtils.addContextClassLoaderStrategy(ctx.getRegistry(), holder.getBeanName(), getContextClassLoaderStrategy(contextClassLoaderStrategy));
+            new PluginBeanDefinitionRegistry(ctx.getRegistry()).addContextClassLoaderStrategy(holder.getBeanName(), getContextClassLoaderStrategy(contextClassLoaderStrategy));
         }
         return holder;
 

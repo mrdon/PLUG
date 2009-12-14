@@ -26,7 +26,7 @@ import java.util.Set;
 import static com.atlassian.plugin.osgi.hostcomponents.ContextClassLoaderStrategy.USE_HOST;
 import static com.atlassian.plugin.util.Assertions.notNull;
 
-@Component(SpringHostComponentProviderBeanDefinitionUtils.HOST_COMPONENT_PROVIDER)
+@Component(PluginBeanDefinitionRegistry.HOST_COMPONENT_PROVIDER)
 public class SpringHostComponentProviderFactoryBean extends AbstractFactoryBean
 {
     private static final Logger log = LoggerFactory.getLogger(SpringHostComponentProviderFactoryBean.class);
@@ -122,7 +122,7 @@ public class SpringHostComponentProviderFactoryBean extends AbstractFactoryBean
                 {
                     try
                     {
-                        HostComponentProvider provider = (HostComponentProvider) parentBeanFactory.getBean(SpringHostComponentProviderBeanDefinitionUtils.HOST_COMPONENT_PROVIDER);
+                        HostComponentProvider provider = (HostComponentProvider) parentBeanFactory.getBean(PluginBeanDefinitionRegistry.HOST_COMPONENT_PROVIDER);
                         if (provider != null)
                         {
                             provider.provide(registrar);
@@ -130,7 +130,7 @@ public class SpringHostComponentProviderFactoryBean extends AbstractFactoryBean
                     }
                     catch (NoSuchBeanDefinitionException e)
                     {
-                        log.debug("Unable to find '" + SpringHostComponentProviderBeanDefinitionUtils.HOST_COMPONENT_PROVIDER + "' in the parent bean factory " + parentBeanFactory);
+                        log.debug("Unable to find '" + PluginBeanDefinitionRegistry.HOST_COMPONENT_PROVIDER + "' in the parent bean factory " + parentBeanFactory);
                     }
                 }
             }
