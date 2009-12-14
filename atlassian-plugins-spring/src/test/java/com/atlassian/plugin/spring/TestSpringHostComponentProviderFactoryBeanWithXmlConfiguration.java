@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import static com.atlassian.plugin.spring.SpringHostComponentProviderBeanDefinitionUtils.HOST_COMPONENT_PROVIDER;
+import static com.atlassian.plugin.spring.PluginBeanDefinitionRegistry.HOST_COMPONENT_PROVIDER;
 
 public class TestSpringHostComponentProviderFactoryBeanWithXmlConfiguration extends TestCase
 {

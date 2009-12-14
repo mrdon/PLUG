@@ -1,6 +1,6 @@
 package com.atlassian.plugin.spring.pluginns;
 
-import com.atlassian.plugin.spring.SpringHostComponentProviderBeanDefinitionUtils;
+import com.atlassian.plugin.spring.PluginBeanDefinitionRegistry;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.xml.BeanDefinitionDecorator;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -28,7 +28,7 @@ public class PluginAvailableBeanDefinitionDecorator implements BeanDefinitionDec
         final String isAvailable = ((Attr) source).getValue();
         if (Boolean.parseBoolean(isAvailable))
         {
-            SpringHostComponentProviderBeanDefinitionUtils.addBeanName(ctx.getRegistry(), holder.getBeanName());
+            new PluginBeanDefinitionRegistry(ctx.getRegistry()).addBeanName(holder.getBeanName());
         }
         return holder;
     }
