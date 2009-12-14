@@ -8,7 +8,7 @@
           http://atlassian.com/schema/spring/plugin http://atlassian.com/schema/spring/plugin.xsd
           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
 
-    <bean name="foo" class="com.atlassian.plugin.spring.FooableBean" plugin:available="true" plugin:ccls="USE_PLUGIN"/>
+    <bean name="foo" class="com.atlassian.plugin.spring.FooableBean" plugin:available="true" plugin:contextClassLoader="USE_PLUGIN"/>
 
     <bean name="foo2" class="com.atlassian.plugin.spring.FooableBean" plugin:available="false"/>
 

@@ -13,7 +13,7 @@
         </xsd:annotation>
     </xsd:attribute>
 
-    <xsd:attribute name="ccls" default="USE_HOST">
+    <xsd:attribute name="contextClassLoader" default="USE_HOST">
         <xsd:annotation>
             <xsd:documentation><![CDATA[
             The context class loader strategy for this bean.
