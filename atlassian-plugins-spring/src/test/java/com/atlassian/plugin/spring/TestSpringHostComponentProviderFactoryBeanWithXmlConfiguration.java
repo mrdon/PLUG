@@ -79,9 +79,32 @@ public class TestSpringHostComponentProviderFactoryBeanWithXmlConfiguration exte
         List<HostComponentRegistration> list = registrar.getRegistry();
         assertNotNull(list);
         assertEquals(2, list.size());
-        assertEquals("foo", list.get(0).getProperties().get("bean-name"));
-        assertEquals(1, list.get(0).getMainInterfaces().length);
-        assertEquals(BeanFactoryAware.class.getName(), list.get(0).getMainInterfaces()[0]);
+
+        if ("foo".equals(list.get(0).getProperties().get("bean-name")))
+        {
+            assertFoo(list.get(0));
+            assertFooMultipleInterfaces(list.get(1));
+        }
+        else
+        {
+            assertFoo(list.get(1));
+            assertFooMultipleInterfaces(list.get(0));
+        }
+    }
+
+    private void assertFoo(HostComponentRegistration registration)
+    {
+        assertEquals("foo", registration.getProperties().get("bean-name"));
+        assertEquals(1, registration.getMainInterfaces().length);
+        assertEquals(BeanFactoryAware.class.getName(), registration.getMainInterfaces()[0]);
+    }
+
+    private void assertFooMultipleInterfaces(HostComponentRegistration registration)
+    {
+        assertEquals("fooMultipleInterface", registration.getProperties().get("bean-name"));
+        assertEquals(2, registration.getMainInterfaces().length);
+        assertEquals(BeanFactoryAware.class.getName(), registration.getMainInterfaces()[0]);
+        assertEquals(Barable.class.getName(), registration.getMainInterfaces()[1]);
     }
 
     public void testProvideWithInterfaceOnSuperClass()
@@ -99,23 +122,6 @@ public class TestSpringHostComponentProviderFactoryBeanWithXmlConfiguration exte
         assertEquals("foobarable", list.get(0).getProperties().get("bean-name"));
         assertEquals(2, list.get(0).getMainInterfaces().length);
         assertEquals(FOO_BARABLE_INTERFACES, new HashSet<Class>(Arrays.asList(list.get(0).getMainInterfaceClasses())));
-    }
-
-    public void testProvideWithMultipleCustomInterfaces()
-    {
-        XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("com/atlassian/plugin/spring/pluginns/plugins-spring-test-interface.xml"));
-
-        HostComponentProvider provider = getHostProvider(factory);
-
-        DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
-        provider.provide(registrar);
-
-        List<HostComponentRegistration> list = registrar.getRegistry();
-        assertNotNull(list);
-        assertEquals("fooMultipleInterface", list.get(1).getProperties().get("bean-name"));
-        assertEquals(2, list.get(1).getMainInterfaces().length);
-        assertTrue(Arrays.asList(list.get(1).getMainInterfaces()).contains(BeanFactoryAware.class.getName()));
-        assertTrue(Arrays.asList(list.get(1).getMainInterfaces()).contains(Barable.class.getName()));
     }
 
     public void testProvideWithNestedContexts()
@@ -136,5 +142,4 @@ public class TestSpringHostComponentProviderFactoryBeanWithXmlConfiguration exte
         assertNotNull(list);
         assertEquals(2, list.size());
     }
-
 }
