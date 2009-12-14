@@ -12,7 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SpringHostComponentProviderBeanDefinitionUtils
+import static com.atlassian.plugin.util.Assertions.notNull;
+
+public class PluginBeanDefinitionRegistry
 {
     public static final String HOST_COMPONENT_PROVIDER = "hostComponentProvider";
 
@@ -20,7 +22,14 @@ public class SpringHostComponentProviderBeanDefinitionUtils
     private static final String BEAN_INTERFACES = "beanInterfaces";
     private static final String BEAN_CONTEXT_CLASS_LOADER_STRATEGIES = "beanContextClassLoaderStrategies";
 
-    public static BeanDefinition getBeanDefinition(BeanDefinitionRegistry registry)
+    private final BeanDefinitionRegistry registry;
+
+    public PluginBeanDefinitionRegistry(BeanDefinitionRegistry registry)
+    {
+        this.registry = notNull("registry", registry);
+    }
+
+    public BeanDefinition getBeanDefinition()
     {
         if (!registry.containsBeanDefinition(HOST_COMPONENT_PROVIDER))
         {
@@ -41,19 +50,19 @@ public class SpringHostComponentProviderBeanDefinitionUtils
         return beanDef;
     }
 
-    public static void addBeanName(BeanDefinitionRegistry registry, String beanName)
+    public void addBeanName(String beanName)
     {
-        getBeanNames(registry).add(beanName);
+        getBeanNames().add(beanName);
     }
 
-    public static void addBeanInterface(BeanDefinitionRegistry registry, String beanName, String ifce)
+    public void addBeanInterface(String beanName, String ifce)
     {
-        addBeanInterfaces(registry, beanName, Collections.singleton(ifce));
+        addBeanInterfaces(beanName, Collections.singleton(ifce));
     }
 
-    public static void addBeanInterfaces(BeanDefinitionRegistry registry, String beanName, Collection<String> ifces)
+    public void addBeanInterfaces(String beanName, Collection<String> ifces)
     {
-        final Map<String, List<String>> beanInterfaces = getBeanInterfaces(registry);
+        final Map<String, List<String>> beanInterfaces = getBeanInterfaces();
 
         List<String> interfaces = beanInterfaces.get(beanName);
         if (interfaces == null)
@@ -64,31 +73,31 @@ public class SpringHostComponentProviderBeanDefinitionUtils
         interfaces.addAll(ifces);
     }
 
-    public static void addContextClassLoaderStrategy(BeanDefinitionRegistry registry, String beanName, ContextClassLoaderStrategy strategy)
+    public void addContextClassLoaderStrategy(String beanName, ContextClassLoaderStrategy strategy)
     {
-        getBeanContextClassLoaderStrategies(registry).put(beanName, strategy);
+        getBeanContextClassLoaderStrategies().put(beanName, strategy);
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, ContextClassLoaderStrategy> getBeanContextClassLoaderStrategies(BeanDefinitionRegistry registry)
+    private Map<String, ContextClassLoaderStrategy> getBeanContextClassLoaderStrategies()
     {
-        return (Map<String, ContextClassLoaderStrategy>) getPropertyValue(registry, BEAN_CONTEXT_CLASS_LOADER_STRATEGIES);
+        return (Map<String, ContextClassLoaderStrategy>) getPropertyValue(BEAN_CONTEXT_CLASS_LOADER_STRATEGIES);
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, List<String>> getBeanInterfaces(BeanDefinitionRegistry registry)
+    private Map<String, List<String>> getBeanInterfaces()
     {
-        return (Map<String, List<String>>) getPropertyValue(registry, BEAN_INTERFACES);
+        return (Map<String, List<String>>) getPropertyValue(BEAN_INTERFACES);
     }
 
     @SuppressWarnings("unchecked")
-    private static List<String> getBeanNames(BeanDefinitionRegistry registry)
+    private List<String> getBeanNames()
     {
-        return (List<String>) getPropertyValue(registry, BEAN_NAMES);
+        return (List<String>) getPropertyValue(BEAN_NAMES);
     }
 
-    private static Object getPropertyValue(BeanDefinitionRegistry registry, String propertyName)
+    private Object getPropertyValue(String propertyName)
     {
-        return getBeanDefinition(registry).getPropertyValues().getPropertyValue(propertyName).getValue();
+        return getBeanDefinition().getPropertyValues().getPropertyValue(propertyName).getValue();
     }
 }

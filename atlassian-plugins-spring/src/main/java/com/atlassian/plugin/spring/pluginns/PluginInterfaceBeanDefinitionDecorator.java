@@ -1,6 +1,6 @@
 package com.atlassian.plugin.spring.pluginns;
 
-import com.atlassian.plugin.spring.SpringHostComponentProviderBeanDefinitionUtils;
+import com.atlassian.plugin.spring.PluginBeanDefinitionRegistry;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.xml.BeanDefinitionDecorator;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -23,7 +23,7 @@ public class PluginInterfaceBeanDefinitionDecorator implements BeanDefinitionDec
         final String inf = source.getTextContent();
         if (inf != null)
         {
-            SpringHostComponentProviderBeanDefinitionUtils.addBeanInterface(ctx.getRegistry(), holder.getBeanName(), inf.trim());
+            new PluginBeanDefinitionRegistry(ctx.getRegistry()).addBeanInterface(holder.getBeanName(), inf.trim());
         }
         return holder;
     }
