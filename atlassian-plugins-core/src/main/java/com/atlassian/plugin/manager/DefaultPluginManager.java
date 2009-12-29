@@ -966,6 +966,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     private boolean enablePluginModules(final Plugin plugin)
     {
         boolean success = true;
+        Set<ModuleDescriptor<?>> enabledDescriptors = new HashSet<ModuleDescriptor<?>>();
         for (final ModuleDescriptor<?> descriptor : plugin.getModuleDescriptors())
         {
             // We only want to re-enable modules that weren't explicitly disabled by the user.
@@ -985,11 +986,19 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             try
             {
                 notifyModuleEnabled(descriptor);
+                enabledDescriptors.add(descriptor);
             }
             catch (final Throwable exception) // catch any errors and insert an UnloadablePlugin (PLUG-7)
             {
                 log.error("There was an error loading the descriptor '" + descriptor.getName() + "' of plugin '" + plugin.getKey() + "'. Disabling.",
                     exception);
+
+                // Disable all previously enabled descriptors
+                for (ModuleDescriptor<?> desc : enabledDescriptors)
+                {
+                    notifyModuleDisabled(desc);
+                }
+
                 replacePluginWithUnloadablePlugin(plugin, descriptor, exception);
                 success = false;
             }
