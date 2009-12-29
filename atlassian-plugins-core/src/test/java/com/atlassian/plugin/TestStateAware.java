@@ -4,10 +4,11 @@ import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
-import com.mockobjects.dynamic.Mock;
+import static org.mockito.Mockito.*;
 import junit.framework.TestCase;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,9 +19,9 @@ import java.util.Collection;
  */
 public class TestStateAware extends TestCase
 {
-    private Mock mockEnabling;
-    private Mock mockDisabled;
-    private Mock mockThwarted;
+    private Combination mockEnabling;
+    private Combination mockDisabled;
+    private ModuleDescriptor mockThwarted;
     private com.atlassian.plugin.manager.DefaultPluginManager manager;
     private Plugin plugin1;
 
@@ -45,9 +46,9 @@ public class TestStateAware extends TestCase
         ArrayList pluginLoaders = new ArrayList();
         pluginLoaders.add(pluginLoader);
 
-        Mock mockModuleDescriptor = new Mock(ModuleDescriptorFactory.class);
+        ModuleDescriptorFactory moduleDescriptorFactory = mock(ModuleDescriptorFactory.class);
 
-        manager = new com.atlassian.plugin.manager.DefaultPluginManager(new MemoryPluginPersistentStateStore(), pluginLoaders, (ModuleDescriptorFactory) mockModuleDescriptor.proxy(), new DefaultPluginEventManager());
+        manager = new com.atlassian.plugin.manager.DefaultPluginManager(new MemoryPluginPersistentStateStore(), pluginLoaders, moduleDescriptorFactory, new DefaultPluginEventManager());
 
     }
 
@@ -57,13 +58,11 @@ public class TestStateAware extends TestCase
      */
     public void testStateAwareOnInit() throws PluginParseException
     {
-        plugin1.addModuleDescriptor((ModuleDescriptor) mockEnabling.proxy());
-        plugin1.addModuleDescriptor((ModuleDescriptor) mockThwarted.proxy());
-        plugin1.addModuleDescriptor((ModuleDescriptor) mockDisabled.proxy());
-
-        mockEnabling.expect("enabled");
+        plugin1.addModuleDescriptor(mockEnabling);
+        plugin1.addModuleDescriptor(mockThwarted);
+        plugin1.addModuleDescriptor(mockDisabled);
         manager.init();
-        verifyMocks();
+        verify(mockEnabling).enabled();
     }
 
     /**
@@ -72,18 +71,15 @@ public class TestStateAware extends TestCase
      */
     public void testStateAwareOnPluginModule() throws PluginParseException
     {
-        ModuleDescriptor disabledModule = (ModuleDescriptor) mockDisabled.proxy();
-        plugin1.addModuleDescriptor(disabledModule);
+        plugin1.addModuleDescriptor(mockDisabled);
         manager.init();
 
-        mockDisabled.expectAndReturn("satisfiesMinJavaVersion", true);
-        mockDisabled.expect("enabled");
-        manager.enablePluginModule(disabledModule.getCompleteKey());
-        mockDisabled.verify();
+        when(mockDisabled.satisfiesMinJavaVersion()).thenReturn(true);
+        manager.enablePluginModule(mockDisabled.getCompleteKey());
+        verify(mockDisabled).enabled();
 
-        mockDisabled.expect("disabled");
-        manager.disablePluginModule(disabledModule.getCompleteKey());
-        mockDisabled.verify();
+        manager.disablePluginModule(mockDisabled.getCompleteKey());
+        verify(mockDisabled).disabled();
     }
 
     /**
@@ -92,16 +88,14 @@ public class TestStateAware extends TestCase
      */
     public void testStateAwareOnPluginDisable() throws PluginParseException
     {
-        plugin1.addModuleDescriptor((ModuleDescriptor) mockEnabling.proxy());
-        plugin1.addModuleDescriptor((ModuleDescriptor) mockDisabled.proxy());
+        plugin1.addModuleDescriptor(mockEnabling);
+        plugin1.addModuleDescriptor(mockDisabled);
 
-        mockEnabling.expect("enabled");
         manager.init();
-        mockEnabling.verify();
+        verify(mockEnabling).enabled();
 
-        mockEnabling.expect("disabled");
         manager.disablePlugin(plugin1.getKey());
-        mockEnabling.verify();
+        verify(mockEnabling).disabled();
     }
 
     /**
@@ -110,33 +104,23 @@ public class TestStateAware extends TestCase
      */
     public void testDisabledModuleDescriptorsAreEnabled() throws PluginParseException
     {
-        plugin1.addModuleDescriptor((ModuleDescriptor) mockEnabling.proxy());
-        plugin1.addModuleDescriptor((ModuleDescriptor) mockDisabled.proxy());
+        plugin1.addModuleDescriptor(mockEnabling);
+        plugin1.addModuleDescriptor(mockDisabled);
         plugin1.setEnabledByDefault(false);
 
         manager.init();
 
-        mockEnabling.expect("enabled");
         manager.enablePlugin(plugin1.getKey());
-
-        mockEnabling.verify();
-        mockDisabled.verify();
+        verify(mockEnabling).enabled();
     }
 
-    private void verifyMocks()
+    private <T extends ModuleDescriptor> T makeMockModule(Class<T> moduleClass, String pluginKey, String moduleKey, boolean enabledByDefault)
     {
-        mockEnabling.verify();
-        mockDisabled.verify();
-        mockThwarted.verify();
-    }
-
-    private Mock makeMockModule(Class moduleClass, String pluginKey, String moduleKey, boolean enabledByDefault)
-    {
-        Mock mock = new Mock(moduleClass);
-        mock.matchAndReturn("getKey", moduleKey);
-        mock.matchAndReturn("getCompleteKey", pluginKey + ":" + moduleKey);
-        mock.matchAndReturn("isEnabledByDefault", enabledByDefault);
-        return mock;
+        ModuleDescriptor mock = Mockito.mock(moduleClass);
+        when(mock.getKey()).thenReturn(moduleKey);
+        when(mock.getCompleteKey()).thenReturn(pluginKey + ":" + moduleKey);
+        when(mock.isEnabledByDefault()).thenReturn(enabledByDefault);
+        return (T) mock;
     }
 
     private PluginLoader setupPluginLoader(final Plugin plugin1)
