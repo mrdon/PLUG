@@ -12,12 +12,13 @@ javax.lang.model.type
 javax.lang.model.util
 javax.script
 javax.tools
-javax.xml.bind
-javax.xml.bind.annotation
-javax.xml.bind.annotation.adapters
-javax.xml.bind.attachment
-javax.xml.bind.helpers
-javax.xml.bind.util
+# JAXB commented out since the REST plugin already provides JAXB
+# javax.xml.bind
+# javax.xml.bind.annotation
+# javax.xml.bind.annotation.adapters
+# javax.xml.bind.attachment
+# javax.xml.bind.helpers
+# javax.xml.bind.util
 javax.xml.crypto
 javax.xml.crypto.dom
 javax.xml.crypto.dsig
