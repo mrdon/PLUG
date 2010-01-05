@@ -168,12 +168,13 @@ public class SpringHostComponentProviderFactoryBean extends AbstractFactoryBean
                 {
                     try
                     {
-                        if (beanFactory.isSingleton(beanName))
+                        final Class beanClass = getBeanClass(beanFactory.getBean(beanName));
+                        final AvailableToPlugins annotation = AnnotationUtils.findAnnotation(beanClass, AvailableToPlugins.class);
+                        if (annotation != null)
                         {
-                            final Class beanClass = getBeanClass(beanFactory.getBean(beanName));
-                            final AvailableToPlugins annotation = AnnotationUtils.findAnnotation(beanClass, AvailableToPlugins.class);
-                            if (annotation != null)
+                            if (beanFactory.isSingleton(beanName))
                             {
+
                                 beansToProvide.add(beanName);
                                 if (annotation.value() != Void.class) // an interface is defined in the annotation
                                 {
@@ -198,7 +199,7 @@ public class SpringHostComponentProviderFactoryBean extends AbstractFactoryBean
                             }
                             else
                             {
-                                log.warn("Cannot make bean '{}' available to plugins as it is not scoped 'singleton'", beanName);
+                                log.warn("Could not make bean '{}' available to plugins as it is not scoped 'singleton'", beanName);
                             }
                         }
                     }
