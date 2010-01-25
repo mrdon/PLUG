@@ -1,8 +1,8 @@
 package com.atlassian.plugin.servlet;
 
 import com.atlassian.plugin.servlet.util.ClassLoaderStack;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Enumeration;
 import javax.servlet.ServletContext;
@@ -18,7 +18,7 @@ import javax.servlet.http.HttpSession;
 public class PluginHttpSessionWrapper implements HttpSession
 {
     private HttpSession delegate;
-    private static final Log log = LogFactory.getLog(PluginHttpSessionWrapper.class);
+    private static final Logger log = LoggerFactory.getLogger(PluginHttpSessionWrapper.class);
 
     public PluginHttpSessionWrapper(final HttpSession session)
     {
