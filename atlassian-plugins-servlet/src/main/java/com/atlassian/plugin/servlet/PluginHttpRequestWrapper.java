@@ -2,20 +2,25 @@ package com.atlassian.plugin.servlet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpSession;
 
 import com.atlassian.plugin.servlet.descriptors.BaseServletModuleDescriptor;
 
 /**
  * A request wrapper for requests bound for servlets declared in plugins.  Does the necessary path
  * munging for requests so that they look like they are
+ * <p>
+ * Also wraps the HttpSession in order to work around the Weblogic Session Attribute serialization problem (see PLUG-515)
  */
 public class PluginHttpRequestWrapper extends HttpServletRequestWrapper
 {
     private final String basePath;
+    private HttpServletRequest delegate;
 
     public PluginHttpRequestWrapper(HttpServletRequest request, BaseServletModuleDescriptor<?> descriptor)
     {
         super(request);
+        this.delegate = request;
         this.basePath = findBasePath(descriptor);
     }
 
@@ -96,5 +101,27 @@ public class PluginHttpRequestWrapper extends HttpServletRequestWrapper
     private String getMappingRootPath(String pathMapping)
     {
         return pathMapping.substring(0, pathMapping.length() - 2);
+    }
+
+    @Override
+    public HttpSession getSession()
+    {
+        return this.getSession(true);
+    }
+
+    @Override
+    public HttpSession getSession(final boolean create)
+    {
+        HttpSession session = delegate.getSession(create);
+        if (session == null)
+        {
+            // The delegate returned a null session - so do we.
+            return null;
+        }
+        else
+        {
+            // Wrap this non-null HttpSession
+            return new PluginHttpSessionWrapper(session);
+        }
     }
 }
