@@ -50,7 +50,17 @@ public abstract class AbstractFileServerServlet extends HttpServlet
 
     private DownloadStrategy getDownloadStrategy(final HttpServletRequest httpServletRequest)
     {
-        final String url = httpServletRequest.getRequestURI().toLowerCase();
+        final String url = httpServletRequest.getRequestURI();
+        DownloadStrategy strategy = findStrategy(url);
+
+        if(strategy==null){
+            strategy = findStrategy(url.toLowerCase());
+        }
+        
+        return strategy;
+    }
+
+    private DownloadStrategy findStrategy(String url){
         for (final DownloadStrategy downloadStrategy : getDownloadStrategies())
         {
             if (downloadStrategy.matches(url))
