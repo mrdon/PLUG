@@ -234,7 +234,7 @@
             <plugin>
                 <groupId>org.twdata.maven</groupId>
                 <artifactId>maven-itblast-plugin</artifactId>
-                <version>0.5</version>
+                <version>0.6</version>
                 <executions>
                     <execution>
                         <id>download-bundled-plugins</id>
@@ -244,7 +244,7 @@
                         </goals>
                         <configuration>
                             <!-- disabled jboss4x and resin3x due to hardcoded port conflicts -->
-                            <containers>tomcat5x</containers>
+                            <containers>tomcat5x,tomcat6x</containers>
                         </configuration>
                     </execution>
                 </executions>
