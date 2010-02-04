@@ -170,7 +170,14 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     {
         tracker.setState(StateTracker.State.SHUTTING_DOWN);
         log.info("Shutting down the plugin system");
-        pluginEventManager.broadcast(new PluginFrameworkShutdownEvent(this, this));
+        try
+        {
+            pluginEventManager.broadcast(new PluginFrameworkShutdownEvent(this, this));
+        }
+        catch (NotificationException ex)
+        {
+            log.error("At least one error occured while broadcasting the PluginFrameworkShutdownEvent. We will continue to shutdown the Plugin Manager anyway.");
+        }
         plugins.clear();
         pluginEventManager.unregister(this);
         tracker.setState(StateTracker.State.SHUTDOWN);

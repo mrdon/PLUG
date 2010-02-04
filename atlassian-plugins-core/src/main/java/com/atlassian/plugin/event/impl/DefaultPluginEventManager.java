@@ -201,10 +201,9 @@ public class DefaultPluginEventManager implements PluginEventManager
             }
             catch (final InvocationTargetException e)
             {
-                // Log this error because we used to before, and there can be multiple listeners throwing errors.
-                // This will almost certainly lead to duplicate logging because we also rethrow the exception.
-                // PLUG-414: Because of the duplication and because this is used to pass on "expected" errors we don't include the stacktrace here.
-                log.error("Plugin Event Listener '" + listener + "' threw an error on event '" + event + "': " + e.getCause().getMessage());
+                // Log this error with full stacktrace. Sometimes the NotificationException will cause this to get logged
+                // again (see PLUG-414), other times the NotificationException will get ignored (eg PluginManager.shutdown() - see PLUG-526)
+                log.error("Plugin Event Listener '" + listener + "' threw an error on event '" + event + "': " + e.getCause().getMessage(), e.getCause());
                 // InvocationTargetException wraps an error thrown by the Event Listener. We re-wrap it in our NotificationException.
                 throw new NotificationException(e.getCause());
             }
