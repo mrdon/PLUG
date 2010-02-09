@@ -77,6 +77,19 @@ public class TestOsgiPluginInstalledHelper extends TestCase
             // test passed
         }
     }
+    
+    public void testOnDisableWithoutEnabling()
+    {
+        // needs to work without onEnable being called first.
+        try
+        {
+            helper.onDisable();
+        }
+        catch(NullPointerException e)
+        {
+            fail("NullPointerException encountered.");
+        }
+    }
 
     public static class ChildBean {
     }

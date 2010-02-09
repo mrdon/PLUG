@@ -36,6 +36,8 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
     private volatile SpringContextAccessor springContextAccessor;
     private ServiceTracker[] serviceTrackers;
 
+    private final Object serviceTrackersLock = new Object();
+
     /**
      * @param bundle The bundle
      * @param packageAdmin The package admin
@@ -82,20 +84,29 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
     public void onEnable(final ServiceTracker... serviceTrackers) throws OsgiContainerException
     {
         Validate.notNull(serviceTrackers);
-        this.serviceTrackers = serviceTrackers;
-        for (final ServiceTracker svc : serviceTrackers)
+        
+        synchronized(serviceTrackersLock)
         {
-            svc.open();
+            this.serviceTrackers = serviceTrackers;
+            for (final ServiceTracker svc : serviceTrackers)
+            {
+                svc.open();
+            }
         }
     }
 
     public void onDisable() throws OsgiContainerException
     {
-        for (final ServiceTracker svc : serviceTrackers)
-        {
-            svc.close();
+        synchronized(serviceTrackersLock){
+            if(serviceTrackers != null)
+            {
+                for (final ServiceTracker svc : serviceTrackers)
+                {
+                    svc.close();
+                }
+                serviceTrackers = null;
+            }
         }
-        serviceTrackers = null;
         setPluginContainer(null);
     }
 
