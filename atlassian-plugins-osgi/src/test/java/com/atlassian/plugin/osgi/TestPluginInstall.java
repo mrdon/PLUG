@@ -2,11 +2,13 @@ package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.hostcontainer.HostContainer;
+import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
@@ -991,6 +993,18 @@ public class TestPluginInstall extends PluginInContainerTestBase
         File jar = new PluginJarBuilder("strangePath")
                 .addPluginInformation("no-spring", "foo", "1.0")
                 .build();
+
+        initPluginManager();
+        pluginManager.installPlugin(new JarPluginArtifact(jar));
+
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+    }
+
+    public void testInstallSimplePluginWithNoManifest() throws Exception
+    {
+        File jar = new PluginJarBuilder("strangePath")
+                .addPluginInformation("no-spring", "foo", "1.0")
+                .buildWithNoManifest();
 
         initPluginManager();
         pluginManager.installPlugin(new JarPluginArtifact(jar));

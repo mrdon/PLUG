@@ -63,7 +63,15 @@ public class TransformContext
         try
         {
             jarFile = new JarFile(pluginArtifact.toFile());
-            this.manifest = jarFile.getManifest();
+            Manifest manifest = jarFile.getManifest();
+            if (manifest == null)
+            {
+                this.manifest = new Manifest();
+            }
+            else
+            {
+                this.manifest = manifest;
+            }
         }
         catch (final IOException e)
         {

@@ -185,6 +185,11 @@ public class PluginJarBuilder
      */
     public File build() throws IOException
     {
+        return build(createBaseDir());
+    }
+
+    private File createBaseDir()
+    {
         File baseDir = new File("target");
         if (!baseDir.exists())
             baseDir = new File(System.getProperty("java.io.tmpdir"));
@@ -194,7 +199,12 @@ public class PluginJarBuilder
             if (!baseDir.exists())
                 baseDir.mkdir();
         }
-        return build(baseDir);
+        return baseDir;
+    }
+
+    public File buildWithNoManifest() throws IOException
+    {
+        return build(createBaseDir(), false);
     }
 
     /**
@@ -207,9 +217,13 @@ public class PluginJarBuilder
      */
     public File build(File baseDir) throws IOException
     {
+        return build(baseDir, true);
+    }
 
-        // Ensure there is a manifest
-        if (!jarContents.containsKey("META-INF/MANIFEST.MF"))
+    private File build(File baseDir, boolean createManifest) throws IOException
+    {
+         // Ensure there is a manifest
+        if (createManifest && !jarContents.containsKey("META-INF/MANIFEST.MF"))
         {
             jarContents.put("META-INF/MANIFEST.MF", "Manifest-Version: 1.0".getBytes());
         }

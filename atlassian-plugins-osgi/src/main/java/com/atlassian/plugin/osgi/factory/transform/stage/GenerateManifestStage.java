@@ -53,7 +53,7 @@ public class GenerateManifestStage implements TransformStage
             // We don't care about the modules, so we pass null
             final XmlDescriptorParser parser = new XmlDescriptorParser(context.getDescriptorDocument(), null);
 
-            if (isOsgiBundle(builder.getJar().getManifest()))
+            if (isOsgiBundle(context.getManifest()))
             {
                 if (context.getExtraImports().isEmpty())
                 {

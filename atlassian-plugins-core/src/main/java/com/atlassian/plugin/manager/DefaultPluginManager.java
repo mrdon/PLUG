@@ -278,7 +278,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         }
         catch (PluginParseException ex)
         {
-            throw new PluginParseException("All plugins could not validated", ex);
+            throw new PluginParseException("All plugins could not be validated", ex);
         }
 
         for (Map.Entry<String,PluginArtifact> entry : validatedArtifacts.entrySet())
