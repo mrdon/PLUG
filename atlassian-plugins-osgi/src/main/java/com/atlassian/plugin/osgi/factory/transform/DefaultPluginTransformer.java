@@ -6,6 +6,7 @@ import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -26,9 +27,10 @@ public class DefaultPluginTransformer implements PluginTransformer
 
     private final String pluginDescriptorPath;
     private final List<TransformStage> stages;
-    private final File bundleCache;
+    private final File bundleCacheDir;
     private final SystemExports systemExports;
     private final Set<String> applicationKeys;
+    private final OsgiPersistentCache osgiCache;
 
     /**
      * Constructs a transformer with the default stages
@@ -67,10 +69,78 @@ public class DefaultPluginTransformer implements PluginTransformer
         Validate.notNull(stages, "A list of stages is required");
         this.pluginDescriptorPath = pluginDescriptorPath;
         this.stages = Collections.unmodifiableList(new ArrayList<TransformStage>(stages));
-        this.bundleCache = cache.getTransformedPluginCache();
+        this.osgiCache = cache;
+        this.bundleCacheDir = cache.getTransformedPluginCache();
         this.systemExports = systemExports;
         this.applicationKeys = applicationKeys;
+        persistTimeout();
+    }
 
+    private void persistTimeout()
+    {
+        final File timeoutFile = new File(bundleCacheDir.getAbsoluteFile().getParentFile(), ".properties");
+        final String timeout = System.getProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+
+        if (timeout == null && !timeoutFile.exists())
+        {
+            return;
+        }
+
+        final Properties properties = new Properties();
+        Integer newTimeout;
+        Integer currentTimeout = null;
+
+        try
+        {
+            newTimeout = PluginUtils.getDefaultEnablingWaitPeriod();
+
+            if (timeoutFile.exists())
+            {
+                //read existing value
+                final FileInputStream fileInputStream = new FileInputStream(timeoutFile);
+                properties.load(fileInputStream);
+                currentTimeout = Integer.parseInt(properties.getProperty("spring.timeout"));
+            }
+
+            if (!newTimeout.equals(currentTimeout))
+            {
+                osgiCache.clear();
+            }
+
+            if (timeout != null)
+            {
+                //store new value
+                FileOutputStream fileOutputStream = null;
+                try
+                {
+                    properties.setProperty("spring.timeout", timeout);
+                    fileOutputStream = new FileOutputStream(timeoutFile);
+                    properties.store(fileOutputStream, null);
+                }
+                finally
+                {
+                    if (fileOutputStream != null)
+                    {
+                        try
+                        {
+                            fileOutputStream.close();
+                        }
+                        catch (IOException ignore)
+                        {
+                            //ignored
+                        }
+                    }
+                }
+            }
+            else
+            {
+                timeoutFile.delete();
+            }
+        }
+        catch (Exception e)
+        {
+            log.warn("Failed to set spring timeout using system property '" + PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT + "' .", e);
+        }
     }
 
     /**
@@ -142,7 +212,7 @@ public class DefaultPluginTransformer implements PluginTransformer
     private File getFromCache(File artifact)
     {
         String name = generateCacheName(artifact);
-        for (File child : bundleCache.listFiles())
+        for (File child : bundleCacheDir.listFiles())
         {
             if (child.getName().equals(name))
                 return child;
@@ -181,7 +251,7 @@ public class DefaultPluginTransformer implements PluginTransformer
                                       Map<String, byte[]> files) throws IOException
     {
         // get a temp file
-        File tempFile = new File(bundleCache, generateCacheName(zipFile));
+        File tempFile = new File(bundleCacheDir, generateCacheName(zipFile));
         // delete it, otherwise you cannot rename your existing zip to it.
         byte[] buf = new byte[1024];
 
@@ -245,5 +315,4 @@ public class DefaultPluginTransformer implements PluginTransformer
         return tempFile;
     }
 
-    
 }

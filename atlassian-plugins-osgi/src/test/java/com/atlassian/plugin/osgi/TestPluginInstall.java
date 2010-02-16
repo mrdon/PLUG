@@ -2,6 +2,8 @@ package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.event.PluginEventListener;
@@ -17,9 +19,11 @@ import com.atlassian.plugin.servlet.DefaultServletModuleManager;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.test.PluginJarBuilder;
+import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.WaitUntil;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
+import org.osgi.framework.Bundle;
 import org.osgi.util.tracker.ServiceTracker;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -28,11 +32,19 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.InputStream;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.jar.Manifest;
 
 public class TestPluginInstall extends PluginInContainerTestBase
 {
@@ -1011,6 +1023,242 @@ public class TestPluginInstall extends PluginInContainerTestBase
 
         assertEquals(1, pluginManager.getEnabledPlugins().size());
     }
+
+    public void testInstallPluginTakesTooLong() throws Exception
+    {
+        System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "3");
+        try
+        {
+            final PluginJarBuilder builder = new PluginJarBuilder("first")
+                    .addFormattedResource("atlassian-plugin.xml",
+                            "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                            "    <plugin-info>",
+                            "        <version>1.0</version>",
+                            "    </plugin-info>",
+                            "    <component key='svc' class='my.ServiceImpl' public='true'>",
+                            "    <interface>my.Service</interface>",
+                            "    </component>",
+                            "</atlassian-plugin>")
+                    .addFormattedJava("my.Service",
+                            "package my;",
+                            "public interface Service {",
+                            "    public Object call() throws Exception;",
+                            "}")
+                    .addFormattedJava("my.ServiceImpl",
+                            "package my;",
+                            "public class ServiceImpl implements Service {",
+                            "public ServiceImpl(){",
+                            "try{",
+                            "Thread.sleep(10000);",
+                            "}catch(Exception e){}",
+                            "}",
+                            "    public Object call() throws Exception { ",
+                            "   return 'hi';}",
+                            "}");
+            final File jar = builder.build();
+            initPluginManager();
+
+            pluginManager.installPlugin(new JarPluginArtifact(jar));
+
+            assertEquals(0, pluginManager.getEnabledPlugins().size());
+        }
+        finally
+        {
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+        }
+    }
+
+    public void testPersistTimeoutSystemProperty() throws Exception
+    {
+        System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "300");
+        try
+        {
+            final File propertiesFile = new File(cacheDir, ".properties");
+
+            assertFalse(propertiesFile.exists());
+
+            final PluginJarBuilder firstBuilder = new PluginJarBuilder("first");
+
+            final File jar = firstBuilder
+                    .addPluginInformation("first", "Some name", "1.0")
+                    .addFormattedJava("first.MyInterface",
+                            "package first;",
+                            "public interface MyInterface {}")
+                    .addFormattedResource("META-INF/MANIFEST.MF",
+                            "Manifest-Version: 1.0",
+                            "Bundle-SymbolicName: first",
+                            "Bundle-Version: 1.0",
+                            "Export-Package: first",
+                            "").build();
+            initPluginManager();
+
+            pluginManager.installPlugin(new JarPluginArtifact(jar));
+
+            Bundle bundle = findBundleByName("first");
+            Dictionary headers = bundle.getHeaders();
+            assertEquals("*;timeout:=300", headers.get("Spring-Context"));
+
+            assertTrue(propertiesFile.exists());
+
+            Properties properties = new Properties();
+            properties.load(new FileInputStream(propertiesFile));
+            assertEquals("300", properties.getProperty("spring.timeout"));
+
+            final File testFile = new File(new File(cacheDir, "transformed-plugins"), ".test");
+            assertTrue(testFile.createNewFile());
+            assertTrue(testFile.exists());
+
+            initPluginManager();
+            pluginManager.installPlugin(new JarPluginArtifact(jar));
+
+            bundle = findBundleByName("first");
+            headers = bundle.getHeaders();
+            assertEquals("*;timeout:=300", headers.get("Spring-Context"));
+
+            assertTrue(propertiesFile.exists());
+            assertTrue(testFile.exists());
+        }
+        finally
+        {
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+        }
+    }
+
+    public void testDeleteTimeoutFileWhenNoSystemPropertySpecified() throws Exception
+    {
+        System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "300");
+        try
+        {
+            final File propertiesFile = new File(cacheDir, ".properties");
+
+            assertFalse(propertiesFile.exists());
+
+            final PluginJarBuilder firstBuilder = new PluginJarBuilder("first");
+
+            final File jar = firstBuilder
+                    .addPluginInformation("first", "Some name", "1.0")
+                    .addFormattedJava("first.MyInterface",
+                            "package first;",
+                            "public interface MyInterface {}")
+                    .addFormattedResource("META-INF/MANIFEST.MF",
+                            "Manifest-Version: 1.0",
+                            "Bundle-SymbolicName: first",
+                            "Bundle-Version: 1.0",
+                            "Export-Package: first",
+                            "Spring-Context: *;create-asynchrously:=false",
+                            "").build();
+
+            initPluginManager();
+            pluginManager.installPlugin(new JarPluginArtifact(jar));
+
+            assertTrue(propertiesFile.exists());
+
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+            initPluginManager();
+            pluginManager.installPlugin(new JarPluginArtifact(jar));
+
+            assertFalse(propertiesFile.exists());
+
+            Bundle bundle = findBundleByName("first");
+            Dictionary headers = bundle.getHeaders();
+            assertEquals("*;create-asynchrously:=false", headers.get("Spring-Context"));
+        }
+        finally
+        {
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+        }
+    }
+
+    private Bundle findBundleByName(final String name)
+    {
+        final Bundle[] bundles = osgiContainerManager.getBundles();
+        for (int i = 0; i < bundles.length; i++)
+        {
+            Bundle bundle = bundles[i];
+            if (name.equals(bundle.getSymbolicName()))
+            {
+                return bundle;
+            }
+        }
+        return null;
+    }
+
+    public void testPersistTimeoutSystemPropertyUpdateExistingTimeout() throws Exception
+    {
+        System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "300");
+        try
+        {
+            final File dummySpringXMLFile = File.createTempFile("temp", "account-data-context.xml", new File(System.getProperty("java.io.tmpdir")));
+            FileWriter fileWriter = new FileWriter(dummySpringXMLFile);
+            fileWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                    + "<beans xmlns=\"http://www.springframework.org/schema/beans\"\n"
+                    + "       xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                    + "       xmlns:osgi=\"http://www.springframework.org/schema/osgi\"\n"
+                    + "       xsi:schemaLocation=\"http://www.springframework.org/schema/beans\n"
+                    + "           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd\n"
+                    + "           http://www.springframework.org/schema/osgi\n"
+                    + "           http://www.springframework.org/schema/osgi/spring-osgi.xsd\"\n"
+                    + ">\n"
+                    + "</beans>");
+            fileWriter.close();
+            final File propertiesFile = new File(cacheDir, ".properties");
+
+            assertFalse(propertiesFile.exists());
+
+            final PluginJarBuilder firstBuilder = new PluginJarBuilder("first");
+
+            final File jar = firstBuilder
+                    .addPluginInformation("first", "Some name", "1.0")
+                    .addFormattedJava("first.MyInterface",
+                            "package first;",
+                            "public interface MyInterface {}")
+                    .addFormattedResource("META-INF/MANIFEST.MF",
+                            "Manifest-Version: 1.0",
+                            "Bundle-SymbolicName: first",
+                            "Bundle-Version: 1.0",
+                            "Export-Package: first",
+                            "Spring-Context: config/account-data-context.xml;create-asynchrously:=false",
+                            "")
+                    .addFile("config/account-data-context.xml", dummySpringXMLFile)
+                    .build();
+            initPluginManager();
+
+            pluginManager.installPlugin(new JarPluginArtifact(jar));
+
+            Bundle bundle = findBundleByName("first");
+            Dictionary headers = bundle.getHeaders();
+            assertEquals("config/account-data-context.xml;create-asynchrously:=false;timeout:=300", headers.get("Spring-Context"));
+
+            assertTrue(propertiesFile.exists());
+
+            Properties properties = new Properties();
+            properties.load(new FileInputStream(propertiesFile));
+            assertEquals("300", properties.getProperty("spring.timeout"));
+
+            final File testFile = new File(new File(cacheDir, "transformed-plugins"), ".test");
+            assertTrue(testFile.createNewFile());
+            assertTrue(testFile.exists());
+
+            System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "301");
+
+            initPluginManager();
+            pluginManager.installPlugin(new JarPluginArtifact(jar));
+
+            bundle = findBundleByName("first");
+            headers = bundle.getHeaders();
+            assertEquals("config/account-data-context.xml;create-asynchrously:=false;timeout:=301", headers.get("Spring-Context"));
+
+            assertTrue(propertiesFile.exists());
+            properties.load(new FileInputStream(propertiesFile));
+            assertEquals("301", properties.getProperty("spring.timeout"));
+        }
+        finally
+        {
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+        }
+    }
+    
+
 
     public static class Callable3Aware
     {

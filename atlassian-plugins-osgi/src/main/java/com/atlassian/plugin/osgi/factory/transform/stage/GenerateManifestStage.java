@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.HashMap;
+import java.util.StringTokenizer;
 import java.util.jar.JarEntry;
 import java.util.jar.Manifest;
 
@@ -39,9 +40,11 @@ import com.atlassian.plugin.parsers.XmlDescriptorParser;
 public class GenerateManifestStage implements TransformStage
 {
     private final int SPRING_TIMEOUT = PluginUtils.getDefaultEnablingWaitPeriod();
-    private final String SPRING_CONTEXT_DEFAULT = "*;timeout:=" + SPRING_TIMEOUT;
+    private final String SPRING_CONTEXT_DEFAULT = "*;"+ SPRING_CONTEXT_TIMEOUT + SPRING_TIMEOUT;
     static Logger log = LoggerFactory.getLogger(GenerateManifestStage.class);
     public static final String SPRING_CONTEXT = "Spring-Context";
+    private static final String SPRING_CONTEXT_TIMEOUT = "timeout:=";
+    private static final String SPRING_CONTEXT_DELIM = ";";
 
     public void execute(final TransformContext context) throws PluginTransformationException
     {
@@ -175,7 +178,7 @@ public class GenerateManifestStage implements TransformStage
         final String header = context.getManifest().getMainAttributes().getValue(SPRING_CONTEXT);
         if (header != null)
         {
-            return header;
+            return ensureDefaultTimeout(header);
         }
 
         // Check for the spring files, as the default header value looks here
@@ -186,6 +189,46 @@ public class GenerateManifestStage implements TransformStage
             return SPRING_CONTEXT_DEFAULT;
         }
         return null;
+    }
+
+    private String ensureDefaultTimeout(final String header)
+    {
+        final boolean noTimeOutSpecified = StringUtils.isEmpty(System.getProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT));
+
+        if (noTimeOutSpecified)
+        {
+            return header;
+        }
+        else
+        {
+            StringBuffer headerBuf;
+            //Override existing timeout
+            if (header.indexOf(SPRING_CONTEXT_TIMEOUT) != -1)
+            {
+                StringTokenizer tokenizer = new StringTokenizer(header, SPRING_CONTEXT_DELIM);
+                headerBuf = new StringBuffer();
+                while (tokenizer.hasMoreElements())
+                {
+                    String directive = (String) tokenizer.nextElement();
+                    if (directive.startsWith(SPRING_CONTEXT_TIMEOUT))
+                    {
+                        directive = SPRING_CONTEXT_TIMEOUT + SPRING_TIMEOUT;
+                    }
+                    headerBuf.append(directive);
+                    if (tokenizer.hasMoreElements())
+                    {
+                        headerBuf.append(SPRING_CONTEXT_DELIM);
+                    }
+                }
+            }
+            else
+            {
+                //Append new timeout
+                headerBuf = new StringBuffer(header);
+                headerBuf.append(SPRING_CONTEXT_DELIM + SPRING_CONTEXT_TIMEOUT + SPRING_TIMEOUT);
+            }
+            return headerBuf.toString();
+        }
     }
 
     private void validateOsgiVersionIsValid(Manifest mf)

@@ -108,6 +108,121 @@ public class TestGenerateManifestStage extends TestCase
 
     }
 
+    public void testGenerateManifestWithExistingSpringContextTimeout() throws Exception
+    {
+        try
+        {
+            System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "333");
+            stage = new GenerateManifestStage();
+            final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0")
+                    .addFormattedResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0",
+                            "Spring-Context: *;timeout:=60",
+                            "Bundle-Version: 4.2.0.jira40",
+                        "Bundle-SymbolicName: my.foo.symbolicName")
+                    .build();
+            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+            context.setShouldRequireSpring(true);
+            final Attributes attrs = executeStage(context);
+
+            assertEquals("*;timeout:=333", attrs.getValue("Spring-Context"));
+        }
+        finally
+        {
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+        }
+    }
+
+    public void testGenerateManifestWithExistingSpringContextTimeoutNoSystemProperty() throws Exception
+    {
+        stage = new GenerateManifestStage();
+        final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0",
+                        "Spring-Context: *;timeout:=60",
+                        "Bundle-Version: 4.2.0.jira40",
+                        "Bundle-SymbolicName: my.foo.symbolicName")
+                .build();
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+        context.setShouldRequireSpring(true);
+        final Attributes attrs = executeStage(context);
+
+        assertEquals("*;timeout:=60", attrs.getValue("Spring-Context"));
+    }
+
+    public void testGenerateManifestSpringContextTimeoutNoTimeoutInHeader() throws Exception
+    {
+        try
+        {
+            System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "789");
+            stage = new GenerateManifestStage();
+            final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0")
+                    .addFormattedResource("META-INF/MANIFEST.MF",
+                            "Manifest-Version: 1.0",
+                            "Spring-Context: *;create-asynchronously:=false",
+                            "Bundle-Version: 4.2.0.jira40",
+                            "Bundle-SymbolicName: my.foo.symbolicName")
+                    .build();
+            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+            context.setShouldRequireSpring(true);
+            final Attributes attrs = executeStage(context);
+            assertEquals("*;create-asynchronously:=false;timeout:=789", attrs.getValue("Spring-Context"));
+        }
+        finally
+        {
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+        }
+    }
+
+    public void testGenerateManifestSpringContextTimeoutTimeoutAtTheBeginning() throws Exception
+    {
+        try
+        {
+            System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "789");
+            stage = new GenerateManifestStage();
+            final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0")
+                    .addFormattedResource("META-INF/MANIFEST.MF",
+                            "Manifest-Version: 1.0",
+                            "Spring-Context: timeout:=123;config/account-data-context.xml;create-asynchrously:=false",
+                            "Bundle-Version: 4.2.0.jira40",
+                            "Bundle-SymbolicName: my.foo.symbolicName")
+                    .build();
+            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+            context.setShouldRequireSpring(true);
+            final Attributes attrs = executeStage(context);
+            assertEquals("timeout:=789;config/account-data-context.xml;create-asynchrously:=false", attrs.getValue("Spring-Context"));
+        }
+        finally
+        {
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+        }
+    }
+
+    public void testGenerateManifestSpringContextTimeoutTimeoutInTheMiddle() throws Exception
+    {
+        try
+        {
+            System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "789");
+            stage = new GenerateManifestStage();
+            final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0")
+                    .addFormattedResource("META-INF/MANIFEST.MF",
+                            "Manifest-Version: 1.0",
+                            "Spring-Context: config/account-data-context.xml;timeout:=123;create-asynchrously:=false",
+                            "Bundle-Version: 4.2.0.jira40",
+                            "Bundle-SymbolicName: my.foo.symbolicName")
+                    .build();
+            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+            context.setShouldRequireSpring(true);
+            final Attributes attrs = executeStage(context);
+            assertEquals("config/account-data-context.xml;timeout:=789;create-asynchrously:=false", attrs.getValue("Spring-Context"));
+        }
+        finally
+        {
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+        }
+    }
+
+
     public void testGenerateManifestMergeHostComponentImportsWithExisting() throws Exception
     {
         final File plugin = new PluginJarBuilder("plugin")
