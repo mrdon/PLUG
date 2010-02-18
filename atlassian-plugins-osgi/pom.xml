@@ -441,7 +441,7 @@
         <dependency>
             <groupId>org.twdata.pkgscanner</groupId>
             <artifactId>package-scanner</artifactId>
-            <version>0.9.3</version>
+            <version>0.9.4</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
