@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.AutowireCapablePlugin;
+import com.atlassian.plugin.module.ContainerAccessor;
 
 import org.osgi.framework.Bundle;
 import org.osgi.util.tracker.ServiceTracker;
@@ -78,16 +79,6 @@ interface OsgiPluginHelper
     void onUninstall();
 
     /**
-     * Creates and autowires the class using the bundle's spring context
-     * @param clazz The class to autowire
-     * @param autowireStrategy The autowire strategy to use
-     * @param <T> The type of class
-     * @return The class instance
-     * @throws IllegalStateException If autowiring is not available
-     */
-    <T> T autowire(final Class<T> clazz, final AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalStateException;
-
-    /**
      * Autowires a class instance
      * @param instance The instance to autowire
      * @param autowireStrategy The autowire strategy to use
@@ -104,4 +95,6 @@ interface OsgiPluginHelper
      * @param container the plugin container (spring context)
      */
     void setPluginContainer(Object container);
+
+    ContainerAccessor getContainerAccessor();
 }

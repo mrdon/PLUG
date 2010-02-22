@@ -3,6 +3,11 @@ package com.atlassian.plugin.main;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.module.ModulePrefixProvider;
+import com.atlassian.plugin.module.ClassModulePrefixProvider;
+import com.atlassian.plugin.module.DefaultModuleCreator;
+import com.atlassian.plugin.module.ModuleCreator;
 import com.atlassian.plugin.manager.DefaultPluginManager;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
@@ -18,6 +23,7 @@ import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
+import com.atlassian.plugin.osgi.module.SpringBeanModulePrefixProvider;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 
 import java.util.ArrayList;
@@ -62,13 +68,18 @@ public class AtlassianPlugins
                 new CriticalHostComponentProvider(config.getHostComponentProvider(), pluginEventManager),
                 pluginEventManager);
 
+        List<ModulePrefixProvider> providers = new ArrayList<ModulePrefixProvider>();
+        providers.add(new ClassModulePrefixProvider(new DefaultHostContainer()));
+        providers.add(new SpringBeanModulePrefixProvider());
+        ModuleCreator moduleCreator = new DefaultModuleCreator(providers);
+
         // plugin factories/deployers
         final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(
                 config.getPluginDescriptorFilename(),
                 config.getApplicationKey(),
                 config.getOsgiPersistentCache(),
                 osgiContainerManager,
-                pluginEventManager);
+                pluginEventManager, moduleCreator);
         final OsgiBundleFactory osgiBundleDeployer = new OsgiBundleFactory(osgiContainerManager, pluginEventManager);
         final List<PluginFactory> pluginDeployers = new LinkedList<PluginFactory>(Arrays.asList(osgiPluginDeployer, osgiBundleDeployer));
         if (config.isUseLegacyDynamicPluginDeployer())

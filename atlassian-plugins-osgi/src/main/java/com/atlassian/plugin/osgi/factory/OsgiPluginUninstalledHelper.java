@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.factory;
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.IllegalPluginStateException;
 import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.module.ContainerAccessor;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
@@ -88,11 +89,6 @@ class OsgiPluginUninstalledHelper implements OsgiPluginHelper
         throw new IllegalPluginStateException(getNotInstalledMessage());
     }
 
-    public <T> T autowire(Class<T> clazz, AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalStateException
-    {
-        throw new IllegalPluginStateException(getNotInstalledMessage());
-    }
-
     public void autowire(Object instance, AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalStateException
     {
         throw new IllegalPluginStateException(getNotInstalledMessage());
@@ -104,6 +100,11 @@ class OsgiPluginUninstalledHelper implements OsgiPluginHelper
     }
 
     public void setPluginContainer(Object container)
+    {
+        throw new IllegalPluginStateException(getNotInstalledMessage());
+    }
+
+    public ContainerAccessor getContainerAccessor()
     {
         throw new IllegalPluginStateException(getNotInstalledMessage());
     }

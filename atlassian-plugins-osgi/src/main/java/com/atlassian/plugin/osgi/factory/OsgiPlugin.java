@@ -1,6 +1,10 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.module.ModuleCreator;
+import com.atlassian.plugin.module.ContainerManagedPlugin;
+import com.atlassian.plugin.module.ContainerAccessor;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginContainerFailedEvent;
@@ -40,7 +44,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * leaves this class to manage the {@link PluginState} and interactions with the event system.
  */
 //@Threadsafe
-public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
+public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin, ContainerManagedPlugin
 {
     private final Map<String, Element> moduleElements = new HashMap<String, Element>();
     private final PluginEventManager pluginEventManager;
@@ -52,17 +56,22 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
     public static final String SPRING_CONTEXT = "Spring-Context";
     public static final String ATLASSIAN_PLUGIN_KEY = "Atlassian-Plugin-Key";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final ModuleCreator moduleCreator;
+    private final ModuleDescriptor unknownModuleDescriptor;
 
-    public OsgiPlugin(final String key, final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginEventManager pluginEventManager)
+    public OsgiPlugin(final String key, final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginEventManager pluginEventManager, ModuleCreator moduleCreator)
     {
         Validate.notNull(key, "The plugin key is required");
         Validate.notNull(mgr, "The osgi container is required");
         Validate.notNull(artifact, "The osgi container is required");
         Validate.notNull(pluginEventManager, "The osgi container is required");
+        Validate.notNull(moduleCreator, "The module creator is required");
 
         this.helper = new OsgiPluginUninstalledHelper(key, mgr, artifact);
         this.pluginEventManager = pluginEventManager;
         this.packageAdmin = extractPackageAdminFromOsgi(mgr);
+        this.moduleCreator = moduleCreator;
+        this.unknownModuleDescriptor = new UnknownModuleDescriptor();
     }
 
     /**
@@ -73,7 +82,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
     {
         this.helper = helper;
         this.pluginEventManager = pluginEventManager;
+        this.unknownModuleDescriptor = new UnknownModuleDescriptor();
         this.packageAdmin = null;
+        this.moduleCreator = null;
     }
 
     /**
@@ -274,7 +285,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
      */
     public <T> T autowire(final Class<T> clazz, final AutowireStrategy autowireStrategy) throws IllegalPluginStateException
     {
-        return helper.autowire(clazz, autowireStrategy);
+        return (T) moduleCreator.create(clazz.getName(), unknownModuleDescriptor);
     }
 
     /**
@@ -510,6 +521,11 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
                 .getService(ref);
     }
 
+    public ContainerAccessor getContainerAccessor()
+    {
+        return helper.getContainerAccessor();
+    }
+
     private static class OutstandingDependency
     {
         private final String beanName;
@@ -563,6 +579,20 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin
             int result = beanName != null ? beanName.hashCode() : 0;
             result = 31 * result + filter.hashCode();
             return result;
+        }
+    }
+
+    private final class UnknownModuleDescriptor extends AbstractModuleDescriptor<Void>
+    {
+        @Override
+        public Plugin getPlugin()
+        {
+            return OsgiPlugin.this;
+        }
+
+        public Void getModule()
+        {
+            return null;
         }
     }
 }

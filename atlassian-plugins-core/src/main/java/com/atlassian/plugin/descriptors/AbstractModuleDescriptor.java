@@ -82,7 +82,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         }
         else
         {
-            singleton = isSingletonByDefault();
+                      singleton = isSingletonByDefault();
         }
 
         resources = Resources.fromXml(element);

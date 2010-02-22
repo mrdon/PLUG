@@ -2,10 +2,13 @@ package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.IllegalPluginStateException;
-import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.osgi.util.BundleClassLoaderAccessor;
+import com.atlassian.plugin.module.ContainerAccessor;
+import com.atlassian.plugin.module.ModuleCreator;
+import com.atlassian.plugin.osgi.spring.DefaultSpringContainerAccessor;
+import com.atlassian.plugin.osgi.spring.SpringContainerAccessor;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
 
 import org.apache.commons.lang.Validate;
@@ -16,8 +19,6 @@ import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,7 +34,7 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
     private final Bundle bundle;
     private final PackageAdmin packageAdmin;
 
-    private volatile SpringContextAccessor springContextAccessor;
+    private volatile SpringContainerAccessor containerAccessor;
     private ServiceTracker[] serviceTrackers;
 
     private final Object serviceTrackersLock = new Object();
@@ -115,22 +116,6 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
     }
 
     /**
-     * If spring is required, it looks for the spring application context, and calls createBean().  If not, the class
-     * is instantiated with its default constructor.
-     *
-     * @param clazz The class to autowire The class to create
-     * @param autowireStrategy The autowire strategy to use The strategy to use, only respected if spring is available
-     * @param <T> The class type
-     * @return The autowired instance
-     * @throws IllegalPluginStateException If spring is required but not available
-     */
-    public <T> T autowire(final Class<T> clazz, final AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalPluginStateException
-    {
-        assertSpringContextAvailable();
-        return springContextAccessor.createBean(clazz, autowireStrategy);
-    }
-
-    /**
      * If spring is required, it looks for the spring application context and calls autowire().  If not, the object
      * is untouched.
      *
@@ -142,7 +127,7 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
     public void autowire(final Object instance, final AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalPluginStateException
     {
         assertSpringContextAvailable();
-        springContextAccessor.createBean(instance, autowireStrategy);
+        containerAccessor.autowireBean(instance, autowireStrategy);
     }
 
     public Set<String> getRequiredPlugins()
@@ -187,12 +172,17 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
     {
         if (container == null)
         {
-            springContextAccessor = null;
+            containerAccessor = null;
         }
         else
         {
-            springContextAccessor = new SpringContextAccessor(container);
+            containerAccessor = new DefaultSpringContainerAccessor(container);
         }
+    }
+
+    public ContainerAccessor getContainerAccessor()
+    {
+        return containerAccessor;
     }
 
     /**
@@ -200,120 +190,10 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
      */
     private void assertSpringContextAvailable() throws IllegalPluginStateException
     {
-        if (springContextAccessor == null)
+        if (containerAccessor == null)
         {
             throw new IllegalStateException("Cannot autowire object because the Spring context is unavailable.  " +
                 "Ensure your OSGi bundle contains the 'Spring-Context' header.");
-        }
-    }
-
-    /**
-     * Manages spring context access, including autowiring.
-     *
-     * @since 2.2.0
-     */
-    private static final class SpringContextAccessor
-    {
-        private final Object nativeBeanFactory;
-        private final Method nativeCreateBeanMethod;
-        private final Method nativeAutowireBeanMethod;
-
-        public SpringContextAccessor(final Object applicationContext)
-        {
-            Object beanFactory = null;
-            try
-            {
-                final Method m = applicationContext.getClass().getMethod("getAutowireCapableBeanFactory");
-                beanFactory = m.invoke(applicationContext);
-            }
-            catch (final NoSuchMethodException e)
-            {
-                // Should never happen
-                throw new PluginException("Cannot find createBean method on registered bean factory: " + beanFactory, e);
-            }
-            catch (final IllegalAccessException e)
-            {
-                // Should never happen
-                throw new PluginException("Cannot access createBean method", e);
-            }
-            catch (final InvocationTargetException e)
-            {
-                handleSpringMethodInvocationError(e);
-            }
-
-            nativeBeanFactory = beanFactory;
-            try
-            {
-                nativeCreateBeanMethod = beanFactory.getClass().getMethod("createBean", Class.class, int.class, boolean.class);
-                nativeAutowireBeanMethod = beanFactory.getClass().getMethod("autowireBeanProperties", Object.class, int.class, boolean.class);
-            }
-            catch (final NoSuchMethodException e)
-            {
-                // Should never happen
-                throw new PluginException("Cannot find createBean method on registered bean factory: " + nativeBeanFactory, e);
-            }
-        }
-
-        private void handleSpringMethodInvocationError(final InvocationTargetException e)
-        {
-            if (e.getCause() instanceof Error)
-            {
-                throw (Error) e.getCause();
-            }
-            else if (e.getCause() instanceof RuntimeException)
-            {
-                throw (RuntimeException) e.getCause();
-            }
-            else
-            {
-                // Should never happen as Spring methods only throw runtime exceptions
-                throw new PluginException("Unable to invoke createBean", e.getCause());
-            }
-        }
-
-        public <T> T createBean(final Class<T> clazz, final AutowireCapablePlugin.AutowireStrategy autowireStrategy)
-        {
-            if (nativeBeanFactory == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                return clazz.cast(nativeCreateBeanMethod.invoke(nativeBeanFactory, clazz, autowireStrategy.ordinal(), false));
-            }
-            catch (final IllegalAccessException e)
-            {
-                // Should never happen
-                throw new PluginException("Unable to access createBean method", e);
-            }
-            catch (final InvocationTargetException e)
-            {
-                handleSpringMethodInvocationError(e);
-                return null;
-            }
-        }
-
-        public void createBean(final Object instance, final AutowireCapablePlugin.AutowireStrategy autowireStrategy)
-        {
-            if (nativeBeanFactory == null)
-            {
-                return;
-            }
-
-            try
-            {
-                nativeAutowireBeanMethod.invoke(nativeBeanFactory, instance, autowireStrategy.ordinal(), false);
-            }
-            catch (final IllegalAccessException e)
-            {
-                // Should never happen
-                throw new PluginException("Unable to access createBean method", e);
-            }
-            catch (final InvocationTargetException e)
-            {
-                handleSpringMethodInvocationError(e);
-            }
         }
     }
 
