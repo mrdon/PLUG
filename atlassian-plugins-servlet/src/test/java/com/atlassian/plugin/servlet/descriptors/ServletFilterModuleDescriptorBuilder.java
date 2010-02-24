@@ -9,6 +9,8 @@ import javax.servlet.Filter;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.servlet.ObjectFactories;
+import com.atlassian.plugin.servlet.ObjectFactory;
 import com.atlassian.plugin.servlet.PluginBuilder;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
@@ -18,7 +20,7 @@ public class ServletFilterModuleDescriptorBuilder
 {
     private Plugin plugin = new PluginBuilder().build();
     private String key = "test.servlet.context.listener";
-    private Filter filter;
+    private ObjectFactory<Filter> filterFactory;
     private FilterLocation location = FilterLocation.BEFORE_DISPATCH;
     private int weight = 100;
     private List<String> paths = new LinkedList<String>();
@@ -38,7 +40,7 @@ public class ServletFilterModuleDescriptorBuilder
 
     public ServletFilterModuleDescriptorBuilder with(Filter filter)
     {
-        this.filter = filter;
+        this.filterFactory = ObjectFactories.createSingleton(filter);
         return this;
     }
 
@@ -66,15 +68,21 @@ public class ServletFilterModuleDescriptorBuilder
         return this;
     }
 
+    public ServletFilterModuleDescriptorBuilder withFactory(ObjectFactory<Filter> mutable)
+    {
+        this.filterFactory = mutable;
+        return this;
+    }
+
     public ServletFilterModuleDescriptor build()
     {
-        return new Descriptor(plugin, key, filter, location, weight, immutableList(paths), servletModuleManager);
+        return new Descriptor(plugin, key, filterFactory, location, weight, immutableList(paths), servletModuleManager);
     }
-    
+
     static final class Descriptor extends ServletFilterModuleDescriptor
     {
         final String key;
-        final Filter filter; 
+        final ObjectFactory<Filter> filterFactory;
         final List<String> paths;
         final FilterLocation location;
         final int weight;
@@ -83,7 +91,7 @@ public class ServletFilterModuleDescriptorBuilder
         public Descriptor(
             Plugin plugin,
             String key,
-            Filter filter,
+            ObjectFactory<Filter> filterFactory,
             FilterLocation location,
             int weight,
             List<String> paths,
@@ -92,7 +100,7 @@ public class ServletFilterModuleDescriptorBuilder
             super(new DefaultHostContainer(), servletModuleManager);
             this.plugin = plugin;
             this.key = key;
-            this.filter = filter;
+            this.filterFactory = filterFactory;
             this.location = location;
             this.weight = weight;
             this.paths = paths;
@@ -120,7 +128,7 @@ public class ServletFilterModuleDescriptorBuilder
         @Override
         public Filter getModule()
         {
-            return filter;
+            return filterFactory.create();
         }
         
         @Override

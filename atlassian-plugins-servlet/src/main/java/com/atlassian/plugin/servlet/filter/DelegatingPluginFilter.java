@@ -91,4 +91,9 @@ public class DelegatingPluginFilter implements Filter
             ClassLoaderStack.pop();
         }
     }
+
+    public Filter getDelegatingFilter()
+    {
+        return filter;
+    }
 }

@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServlet;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.servlet.ObjectFactories;
+import com.atlassian.plugin.servlet.ObjectFactory;
 import com.atlassian.plugin.servlet.PluginBuilder;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.mockobjects.dynamic.Mock;
@@ -19,11 +21,11 @@ public class ServletModuleDescriptorBuilder
 {
     private Plugin plugin = new PluginBuilder().build();
     private String key = "test.servlet";
-    private HttpServlet servlet;
     private List<String> paths = new LinkedList<String>();
     private ServletModuleManager servletModuleManager = (ServletModuleManager) new Mock(ServletModuleManager.class).proxy();
     private Map<String, String> initParams = new HashMap<String, String>();
-    
+    private ObjectFactory<HttpServlet> servletFactory;
+
     public ServletModuleDescriptorBuilder with(Plugin plugin)
     {
         this.plugin = plugin;
@@ -36,9 +38,15 @@ public class ServletModuleDescriptorBuilder
         return this;
     }
 
-    public ServletModuleDescriptorBuilder with(HttpServlet servlet)
+    public ServletModuleDescriptorBuilder with(final HttpServlet servlet)
     {
-        this.servlet = servlet;
+        this.servletFactory = ObjectFactories.createSingleton(servlet);
+        return this;
+    }
+
+    public ServletModuleDescriptorBuilder withFactory(ObjectFactory<HttpServlet> servlet)
+    {
+        this.servletFactory = servlet;
         return this;
     }
 
@@ -62,7 +70,7 @@ public class ServletModuleDescriptorBuilder
 
     public ServletModuleDescriptor build()
     {
-        Descriptor d = new Descriptor(plugin, key, servlet, immutableList(paths), immutableMap(initParams), servletModuleManager);
+        Descriptor d = new Descriptor(plugin, key, servletFactory, immutableList(paths), immutableMap(initParams), servletModuleManager);
         plugin.addModuleDescriptor(d);
         return d;
     }
@@ -82,7 +90,7 @@ public class ServletModuleDescriptorBuilder
     static final class Descriptor extends ServletModuleDescriptor
     {
         final String key;
-        final HttpServlet servlet; 
+        final ObjectFactory<HttpServlet> servletFactory;
         final List<String> paths;
         final ServletModuleManager servletModuleManager;
         final Map<String, String> initParams;
@@ -90,7 +98,7 @@ public class ServletModuleDescriptorBuilder
         public Descriptor(
             Plugin plugin,
             String key,
-            HttpServlet servlet,
+            ObjectFactory<HttpServlet> servletFactory,
             List<String> paths,
             Map<String, String> initParams,
             ServletModuleManager servletModuleManager)
@@ -98,7 +106,7 @@ public class ServletModuleDescriptorBuilder
             super(new DefaultHostContainer(), servletModuleManager);
             this.plugin = plugin;
             this.key = key;
-            this.servlet = servlet;
+            this.servletFactory = servletFactory;
             this.paths = paths;
             this.initParams = initParams;
             this.servletModuleManager = servletModuleManager;
@@ -125,7 +133,7 @@ public class ServletModuleDescriptorBuilder
         @Override
         public HttpServlet getModule()
         {
-            return servlet;
+            return servletFactory.create();
         }
 
 

@@ -26,6 +26,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static com.atlassian.plugin.util.PluginUtils.*;
+
+import com.atlassian.plugin.servlet.filter.DelegatingPluginFilter;
 import junit.framework.TestCase;
 
 import com.atlassian.plugin.Plugin;
@@ -50,7 +53,7 @@ public class TestDefaultServletModuleManager extends TestCase
     ServletModuleManager servletModuleManager;
     
     Mock mockPluginEventManager;
-    
+
     public void setUp()
     {
         mockPluginEventManager = new Mock(PluginEventManager.class);
@@ -106,6 +109,88 @@ public class TestDefaultServletModuleManager extends TestCase
         HttpServlet wrappedServlet = servletModuleManager.getServlet("/servlet", (ServletConfig) mockServletConfig.proxy());
         wrappedServlet.service((HttpServletRequest) mockHttpServletRequest.proxy(), (HttpServletResponse) mockHttpServletResponse.proxy());
         assertTrue(servlet.serviceCalled);
+    }
+
+    public void testGettingServletNoDevMode()
+    {
+        System.setProperty(ATLASSIAN_DEV_MODE, "false");
+        getServletTwice(false);
+        System.setProperty(ATLASSIAN_DEV_MODE, "true");
+    }
+
+    public void testGettingServletDevMode()
+    {
+        System.setProperty(ATLASSIAN_DEV_MODE, "true");
+        getServletTwice(true);
+        System.setProperty(ATLASSIAN_DEV_MODE, "false");
+    }
+
+    private void getServletTwice(boolean expectNewServletEachCall)
+    {
+        mockPluginEventManager.expect("register", C.anyArgs(1));
+        DefaultServletModuleManager mgr = new DefaultServletModuleManager((PluginEventManager) mockPluginEventManager.proxy());
+
+        AtomicReference<HttpServlet> servletRef = new AtomicReference<HttpServlet>();
+        TestHttpServlet firstServlet = new TestHttpServlet();
+        servletRef.set(firstServlet);
+        ServletModuleDescriptor descriptor = new ServletModuleDescriptorBuilder()
+            .withFactory(ObjectFactories.createMutable(servletRef))
+            .withPath("/servlet")
+            .with(mgr)
+            .build();
+
+        final ServletConfig servletConfig = mock(ServletConfig.class);
+        final ServletContext servletContext = mock(ServletContext.class);
+        when(servletContext.getInitParameterNames()).thenReturn(Collections.enumeration(Collections.emptyList()));
+        when(servletConfig.getServletContext()).thenReturn(servletContext);
+
+        assertTrue(firstServlet == ((DelegatingPluginServlet)mgr.getServlet(descriptor, servletConfig)).getDelegatingServlet());
+
+        TestHttpServlet secondServlet = new TestHttpServlet();
+        servletRef.set(secondServlet);
+        HttpServlet expectedServlet = (expectNewServletEachCall ? secondServlet : firstServlet);
+        assertTrue(expectedServlet == ((DelegatingPluginServlet)mgr.getServlet(descriptor, servletConfig)).getDelegatingServlet());
+    }
+
+    public void testGettingFilterNoDevMode()
+    {
+        System.setProperty(ATLASSIAN_DEV_MODE, "false");
+        getFilterTwice(false);
+        System.setProperty(ATLASSIAN_DEV_MODE, "true");
+    }
+
+    public void testGettingFilterDevMode()
+    {
+        System.setProperty(ATLASSIAN_DEV_MODE, "true");
+        getFilterTwice(true);
+        System.setProperty(ATLASSIAN_DEV_MODE, "false");
+    }
+
+    private void getFilterTwice(boolean expectNewFilterEachCall)
+    {
+        mockPluginEventManager.expect("register", C.anyArgs(1));
+        DefaultServletModuleManager mgr = new DefaultServletModuleManager((PluginEventManager) mockPluginEventManager.proxy());
+
+        AtomicReference<Filter> filterRef = new AtomicReference<Filter>();
+        TestHttpFilter firstFilter = new TestHttpFilter();
+        filterRef.set(firstFilter);
+        ServletFilterModuleDescriptor descriptor = new ServletFilterModuleDescriptorBuilder()
+            .withFactory(ObjectFactories.createMutable(filterRef))
+            .withPath("/servlet")
+            .with(mgr)
+            .build();
+
+        final FilterConfig filterConfig = mock(FilterConfig.class);
+        final ServletContext servletContext = mock(ServletContext.class);
+        when(servletContext.getInitParameterNames()).thenReturn(Collections.enumeration(Collections.emptyList()));
+        when(filterConfig.getServletContext()).thenReturn(servletContext);
+
+        assertTrue(firstFilter == ((DelegatingPluginFilter)mgr.getFilter(descriptor, filterConfig)).getDelegatingFilter());
+
+        TestHttpFilter secondFilter = new TestHttpFilter();
+        filterRef.set(secondFilter);
+        Filter expectedFilter = (expectNewFilterEachCall ? secondFilter : firstFilter);
+        assertTrue(expectedFilter == ((DelegatingPluginFilter)mgr.getFilter(descriptor, filterConfig)).getDelegatingFilter());
     }
 
     public void testGettingServletWithException() throws Exception
@@ -444,6 +529,21 @@ public class TestDefaultServletModuleManager extends TestCase
         public void init(FilterConfig filterConfig) throws ServletException
         {
             throw new RuntimeException("exception thrown");
+        }
+
+        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException
+        {
+        }
+
+        public void destroy()
+        {
+        }
+    }
+
+    static class TestHttpFilter implements Filter
+    {
+        public void init(FilterConfig filterConfig) throws ServletException
+        {
         }
 
         public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException

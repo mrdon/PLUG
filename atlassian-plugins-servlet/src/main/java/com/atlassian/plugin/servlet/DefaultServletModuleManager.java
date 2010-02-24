@@ -20,6 +20,10 @@ import com.atlassian.plugin.servlet.util.LazyLoadedReference;
 import com.atlassian.plugin.servlet.util.PathMapper;
 import com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor;
 
+import com.atlassian.plugin.util.PluginUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,9 +46,6 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * A simple servletModuleManager to track and retrieve the loaded servlet plugin modules.
  *
@@ -63,6 +64,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
     private final ConcurrentMap<String, LazyLoadedReference<Filter>> filterRefs = new ConcurrentHashMap<String, LazyLoadedReference<Filter>>();
 
     private final ConcurrentMap<Plugin, ContextLifecycleReference> pluginContextRefs = new ConcurrentHashMap<Plugin, ContextLifecycleReference>();
+    private final boolean inDevMode;
 
     /**
      * Constructor that sets itself in the servlet context for later use in dispatching servlets and filters.
@@ -103,6 +105,11 @@ public class DefaultServletModuleManager implements ServletModuleManager
         servletMapper = servletPathMapper;
         filterMapper = filterPathMapper;
         pluginEventManager.register(this);
+        inDevMode = Boolean.getBoolean(PluginUtils.ATLASSIAN_DEV_MODE);
+        if (inDevMode)
+        {
+            log.warn("Dev mode detected - servlet and filter instances won't be cached");
+        }
     }
 
     public void addServletModule(final ServletModuleDescriptor descriptor)
@@ -257,7 +264,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * @param servletConfig
      * @return
      */
-    private HttpServlet getServlet(final ServletModuleDescriptor descriptor, final ServletConfig servletConfig)
+    HttpServlet getServlet(final ServletModuleDescriptor descriptor, final ServletConfig servletConfig)
     {
         // check for an existing reference, if there is one it's either in the process of loading, in which case
         // servletRef.get() below will block until it's available, otherwise we go about creating a new ref to use
@@ -268,11 +275,15 @@ public class DefaultServletModuleManager implements ServletModuleManager
             final ServletContext servletContext = getWrappedContext(descriptor.getPlugin(), servletConfig.getServletContext());
             servletRef = new LazyLoadedServletReference(descriptor, servletContext);
 
-            // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
-            // want to use that so there is only ever one reference
-            if (servletRefs.putIfAbsent(descriptor.getCompleteKey(), servletRef) != null)
+            // in dev mode, don't cache the retrieved servlet
+            if (!inDevMode)
             {
-                servletRef = servletRefs.get(descriptor.getCompleteKey());
+                // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
+                // want to use that so there is only ever one reference
+                if (servletRefs.putIfAbsent(descriptor.getCompleteKey(), servletRef) != null)
+                {
+                    servletRef = servletRefs.get(descriptor.getCompleteKey());
+                }
             }
         }
         HttpServlet servlet = null;
@@ -298,7 +309,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * @param filterConfig
      * @return The filter, or null if the filter is invalid and should be removed
      */
-    private Filter getFilter(final ServletFilterModuleDescriptor descriptor, final FilterConfig filterConfig)
+    Filter getFilter(final ServletFilterModuleDescriptor descriptor, final FilterConfig filterConfig)
     {
         // check for an existing reference, if there is one it's either in the process of loading, in which case
         // filterRef.get() below will block until it's available, otherwise we go about creating a new ref to use
@@ -309,11 +320,14 @@ public class DefaultServletModuleManager implements ServletModuleManager
             final ServletContext servletContext = getWrappedContext(descriptor.getPlugin(), filterConfig.getServletContext());
             filterRef = new LazyLoadedFilterReference(descriptor, servletContext);
 
-            // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
-            // want to use that so there is only ever one reference
-            if (filterRefs.putIfAbsent(descriptor.getCompleteKey(), filterRef) != null)
+            if (!inDevMode)
             {
-                filterRef = filterRefs.get(descriptor.getCompleteKey());
+                // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
+                // want to use that so there is only ever one reference
+                if (filterRefs.putIfAbsent(descriptor.getCompleteKey(), filterRef) != null)
+                {
+                    filterRef = filterRefs.get(descriptor.getCompleteKey());
+                }
             }
         }
         try

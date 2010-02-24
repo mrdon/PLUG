@@ -153,4 +153,9 @@ public class DelegatingPluginServlet extends HttpServlet
     {
         return descriptor;
     }
+
+    HttpServlet getDelegatingServlet()
+    {
+        return servlet;
+    }
 }
