@@ -42,7 +42,7 @@ public class DefaultModuleClassFactory implements ModuleClassFactory
         }
         else
         {
-            throw new IllegalArgumentException("Module Creator with the prefix" + moduleCreator.getPrefix() + "' is already registered.");
+            throw new IllegalArgumentException("Module Creator with the prefix '" + moduleCreator.getPrefix() + "' is already registered.");
         }
     }
 

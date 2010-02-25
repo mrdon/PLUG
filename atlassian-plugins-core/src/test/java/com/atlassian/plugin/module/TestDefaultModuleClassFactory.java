@@ -17,7 +17,7 @@ import static org.mockito.Mockito.when;
  */
 public class TestDefaultModuleClassFactory extends TestCase
 {
-    ModuleClassFactory moduleCreator;
+    ModuleClassFactory moduleClassFactory;
 
     @Override
     protected void setUp() throws Exception
@@ -41,9 +41,9 @@ public class TestDefaultModuleClassFactory extends TestCase
         ModuleDescriptor moduleDescriptor = mock(ModuleDescriptor.class);
         when(moduleCreator.getPrefix()).thenReturn("jira");
         when(moduleCreator.createBean("doSomething", moduleDescriptor)).thenReturn(bean);
-        this.moduleCreator = new DefaultModuleClassFactory(creators);
+        this.moduleClassFactory = new DefaultModuleClassFactory(creators);
 
-        final Object returnedBean = this.moduleCreator.createModuleClass("jira:doSomething", moduleDescriptor);
+        final Object returnedBean = this.moduleClassFactory.createModuleClass("jira:doSomething", moduleDescriptor);
         assertEquals(bean, returnedBean);
     }
 
@@ -55,11 +55,11 @@ public class TestDefaultModuleClassFactory extends TestCase
         ModuleDescriptor moduleDescriptor = mock(ModuleDescriptor.class);
 
         when(moduleCreator.getPrefix()).thenReturn("bob");
-        this.moduleCreator = new DefaultModuleClassFactory(creators);
+        this.moduleClassFactory = new DefaultModuleClassFactory(creators);
 
         try
         {
-            this.moduleCreator.createModuleClass("jira:doSomething", moduleDescriptor);
+            this.moduleClassFactory.createModuleClass("jira:doSomething", moduleDescriptor);
 
             fail("Should not return, there is no module prefix provider for jira");
         }
@@ -70,6 +70,49 @@ public class TestDefaultModuleClassFactory extends TestCase
         }
         verify(moduleCreator, times(2)).getPrefix();
         verify(moduleCreator, never()).createBean("doSomething", moduleDescriptor);
+    }
+
+    public void testModuleCreatorWithSamePrefix() throws Exception
+    {
+        ModuleCreator moduleCreator1 = mock(ModuleCreator.class);
+        ModuleCreator moduleCreator2 = mock(ModuleCreator.class);
+
+        List<ModuleCreator> moduleCreators = new ArrayList<ModuleCreator>();
+        moduleCreators.add(moduleCreator1);
+        moduleCreators.add(moduleCreator2);
+
+        when(moduleCreator1.getPrefix()).thenReturn("blah");
+        when(moduleCreator2.getPrefix()).thenReturn("blah");
+
+        try
+        {
+            moduleClassFactory = new DefaultModuleClassFactory(moduleCreators);
+            fail("DefaultModuleClassFactory should not allow register same prefix twice");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals("Module Creator with the prefix 'blah' is already registered.", ex.getMessage());
+        }
+    }
+
+    public void testModuleCreatorWithNullPrefix() throws Exception
+    {
+        ModuleCreator moduleCreator1 = mock(ModuleCreator.class);
+
+        List<ModuleCreator> moduleCreators = new ArrayList<ModuleCreator>();
+        moduleCreators.add(moduleCreator1);
+
+        when(moduleCreator1.getPrefix()).thenReturn(null);
+
+        try
+        {
+            moduleClassFactory = new DefaultModuleClassFactory(moduleCreators);
+            fail("DefaultModuleClassFactory should not allow register same prefix twice");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals("Module Creator cannot have a NULL prefix", ex.getMessage());
+        }
     }
 
 }
