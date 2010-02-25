@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Default implementation of a descriptor factory that allows filtering of descriptor keys
  */
-public class DefaultModuleDescriptorFactory implements HostContainerManagedModuleDescriptorFactory
+public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
 {
     private static Logger log = LoggerFactory.getLogger(DefaultModuleDescriptorFactory.class);
 
