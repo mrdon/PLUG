@@ -1,6 +1,6 @@
 package com.atlassian.plugin.osgi.external;
 
-import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.HostContainerManagedModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptor;
 
 import java.util.Set;
@@ -10,7 +10,7 @@ import java.util.Set;
  *
  * @since 2.1.2
  */
-public interface ListableModuleDescriptorFactory extends ModuleDescriptorFactory
+public interface ListableModuleDescriptorFactory extends HostContainerManagedModuleDescriptorFactory
 {
     Set<Class<ModuleDescriptor<?>>> getModuleDescriptorClasses();
 }

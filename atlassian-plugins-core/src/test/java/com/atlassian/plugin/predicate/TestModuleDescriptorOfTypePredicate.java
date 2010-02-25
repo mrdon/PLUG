@@ -3,6 +3,7 @@ package com.atlassian.plugin.predicate;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
+import com.atlassian.plugin.module.ModuleClassFactory;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 
@@ -30,7 +31,7 @@ public class TestModuleDescriptorOfTypePredicate extends TestCase
 
         final ModuleDescriptorPredicate<Object> moduleDescriptorPredicate = new ModuleDescriptorOfTypePredicate<Object>(
             (ModuleDescriptorFactory) mockModuleDescriptorFactory.proxy(), "test-module-type");
-        assertFalse(moduleDescriptorPredicate.matches(new AbstractModuleDescriptor<Object>()
+        assertFalse(moduleDescriptorPredicate.matches(new AbstractModuleDescriptor<Object>(ModuleClassFactory.NOOP_MODULE_CREATOR)
         {
             @Override
             public Object getModule()
@@ -42,6 +43,11 @@ public class TestModuleDescriptorOfTypePredicate extends TestCase
 
     private static class ModuleDescriptorStubA extends AbstractModuleDescriptor<Object>
     {
+        public ModuleDescriptorStubA()
+        {
+            super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+        }
+
         @Override
         public Object getModule()
         {

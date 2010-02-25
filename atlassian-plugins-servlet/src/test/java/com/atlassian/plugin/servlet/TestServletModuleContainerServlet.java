@@ -9,11 +9,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.atlassian.plugin.module.ModuleClassFactory;
+import com.mockobjects.dynamic.AnyConstraintMatcher;
 import junit.framework.TestCase;
 
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 
@@ -23,14 +24,9 @@ public class TestServletModuleContainerServlet extends TestCase
     public void testServletDoesntUnloadItself() throws IOException, ServletException
     {
         Mock mockServletModuleManager = new Mock(ServletModuleManager.class);
-        ServletModuleDescriptor servletModuleDescriptor = new ServletModuleDescriptor(new DefaultHostContainer()
-        {
-            @Override
-            public <T> T create(Class<T> moduleClass) throws IllegalArgumentException
-            {
-                return null;
-            }
-        }, (ServletModuleManager) mockServletModuleManager.proxy());
+        Mock mockModuleClassFactory = new Mock(ModuleClassFactory.class);
+        mockModuleClassFactory.expectAndReturn("createModuleClass", new AnyConstraintMatcher(), null);
+        ServletModuleDescriptor servletModuleDescriptor = new ServletModuleDescriptor((ModuleClassFactory) mockModuleClassFactory.proxy(), (ServletModuleManager) mockServletModuleManager.proxy());
 
 
         final DelegatingPluginServlet delegatingPluginServlet = new DelegatingPluginServlet(servletModuleDescriptor)

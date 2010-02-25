@@ -5,13 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.atlassian.plugin.module.ModuleClassFactory;
 import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
-import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
 import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 import com.atlassian.plugin.util.validation.ValidationPattern;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
@@ -28,6 +28,15 @@ public abstract class BaseServletModuleDescriptor<T> extends AbstractModuleDescr
 
     private List<String> paths;
     private Map<String,String> initParams;
+
+    /**
+     * @since 2.5.0
+     * @param moduleCreator
+     */
+    public BaseServletModuleDescriptor(ModuleClassFactory moduleCreator)
+    {
+        super(moduleCreator);
+    }
 
     public void init(Plugin plugin, Element element) throws PluginParseException
     {

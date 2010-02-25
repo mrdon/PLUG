@@ -1,7 +1,6 @@
 package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.test.PluginJarBuilder;
@@ -12,7 +11,7 @@ public class TestPluginFrameworkWarmRestart extends PluginInContainerTestBase
 {
     public void testWarmRestart() throws Exception
     {
-        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(hostContainer);
         factory.addModuleDescriptor("object", ObjectModuleDescriptor.class);
 
         final HostComponentProvider prov = new HostComponentProvider()

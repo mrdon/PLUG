@@ -1,5 +1,6 @@
 package com.atlassian.plugin.mock;
 
+import com.atlassian.plugin.module.ModuleClassFactory;
 import junit.framework.Assert;
 
 import com.atlassian.plugin.ModuleDescriptor;
@@ -27,6 +28,7 @@ public class MockAnimalModuleDescriptor extends AbstractModuleDescriptor<MockAni
     
     public MockAnimalModuleDescriptor(String type, String name)
     {
+      super(ModuleClassFactory.NOOP_MODULE_CREATOR);
       this.type = type;
       this.name = name;
     }

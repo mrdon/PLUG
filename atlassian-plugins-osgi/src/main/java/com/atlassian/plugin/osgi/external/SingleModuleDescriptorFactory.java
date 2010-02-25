@@ -62,4 +62,9 @@ public class SingleModuleDescriptorFactory<T extends ModuleDescriptor<?>> implem
     {
         return Collections.singleton((Class<ModuleDescriptor<?>>) moduleDescriptorClass);
     }
+
+    public HostContainer getHostContainer()
+    {
+        return hostContainer;
+    }
 }

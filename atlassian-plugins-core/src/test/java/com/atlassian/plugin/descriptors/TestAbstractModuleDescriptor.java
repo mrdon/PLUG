@@ -6,6 +6,7 @@
  */
 package com.atlassian.plugin.descriptors;
 
+import com.atlassian.plugin.module.ModuleClassFactory;
 import junit.framework.TestCase;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginParseException;
@@ -25,7 +26,7 @@ public class TestAbstractModuleDescriptor extends TestCase
 {
     public void testAssertModuleClassImplements() throws DocumentException, PluginParseException
     {
-        ModuleDescriptor descriptor = new AbstractModuleDescriptor() {
+        ModuleDescriptor descriptor = new AbstractModuleDescriptor(ModuleClassFactory.NOOP_MODULE_CREATOR) {
             public void init(Plugin plugin, Element element) throws PluginParseException
             {
                 super.init(plugin, element);
@@ -113,7 +114,7 @@ public class TestAbstractModuleDescriptor extends TestCase
 
     private ModuleDescriptor makeSingletonDescriptor()
     {
-        ModuleDescriptor descriptor = new AbstractModuleDescriptor() {
+        ModuleDescriptor descriptor = new AbstractModuleDescriptor(ModuleClassFactory.NOOP_MODULE_CREATOR) {
             Object module;
 
             public void init(Plugin plugin, Element element) throws PluginParseException

@@ -2,6 +2,7 @@ package com.atlassian.plugin;
 
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.module.ContainerAccessor;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 
@@ -17,7 +18,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Default implementation of a descriptor factory that allows filtering of descriptor keys
  */
-public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
+public class DefaultModuleDescriptorFactory implements HostContainerManagedModuleDescriptorFactory
 {
     private static Logger log = LoggerFactory.getLogger(DefaultModuleDescriptorFactory.class);
 
@@ -150,5 +151,10 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
             this.permittedModuleKeys.clear();
             this.permittedModuleKeys.addAll(permittedModuleKeys);
         }
+    }
+
+    public HostContainer getHostContainer()
+    {
+        return hostContainer;
     }
 }

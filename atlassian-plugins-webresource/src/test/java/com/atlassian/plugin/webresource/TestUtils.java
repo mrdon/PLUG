@@ -4,6 +4,7 @@ import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.module.ModuleClassFactory;
 import com.mockobjects.dynamic.Mock;
 
 import java.util.*;
@@ -27,7 +28,8 @@ public class TestUtils
     static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
         final Plugin p, final List<ResourceDescriptor> resourceDescriptors, final List<String> dependencies)
     {
-        return new WebResourceModuleDescriptor() {
+        return new WebResourceModuleDescriptor(ModuleClassFactory.NOOP_MODULE_CREATOR) {
+
             public String getCompleteKey()
             {
                 return completeKey;

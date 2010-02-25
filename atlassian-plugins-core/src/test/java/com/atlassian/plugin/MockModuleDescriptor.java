@@ -1,6 +1,7 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.module.ModuleClassFactory;
 
 public class MockModuleDescriptor<T> extends AbstractModuleDescriptor<T>
 {
@@ -10,6 +11,7 @@ public class MockModuleDescriptor<T> extends AbstractModuleDescriptor<T>
 
     public MockModuleDescriptor(Plugin plugin, String key, T module)
     {
+        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
         this.module = module;
         this.plugin = plugin;
         this.key = key;

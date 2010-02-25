@@ -1,5 +1,9 @@
 package com.atlassian.plugin.servlet.download.plugin;
 
+import com.atlassian.plugin.module.ClassModuleCreator;
+import com.atlassian.plugin.module.DefaultModuleClassFactory;
+import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleCreator;
 import junit.framework.TestCase;
 import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
@@ -15,6 +19,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestPluggableDownloadStrategy extends TestCase
 {
@@ -50,9 +56,17 @@ public class TestPluggableDownloadStrategy extends TestCase
         assertFalse(strategy.matches("/monkey/something"));
     }
 
+    protected ModuleClassFactory getDefaultModuleClassFactory()
+    {
+        final List<ModuleCreator> moduleCreators = new ArrayList<ModuleCreator>();
+        moduleCreators.add(new ClassModuleCreator(new DefaultHostContainer()));
+        return new DefaultModuleClassFactory(moduleCreators);
+    }
+
     public void testPluginModuleEnabled() throws Exception
     {
-        ModuleDescriptor module = new DownloadStrategyModuleDescriptor(new DefaultHostContainer()) {
+
+        ModuleDescriptor module = new DownloadStrategyModuleDescriptor(getDefaultModuleClassFactory()) {
             public String getCompleteKey()
             {
                 return "jungle.plugin:lion-strategy";
@@ -80,7 +94,7 @@ public class TestPluggableDownloadStrategy extends TestCase
 
     public void testPluginModuleDisabled() throws Exception
     {
-        ModuleDescriptor module = new DownloadStrategyModuleDescriptor(new DefaultHostContainer()) {
+        ModuleDescriptor module = new DownloadStrategyModuleDescriptor(getDefaultModuleClassFactory()) {
             public String getCompleteKey()
             {
                 return "jungle.plugin:lion-strategy";
@@ -101,7 +115,7 @@ public class TestPluggableDownloadStrategy extends TestCase
 
     public void testUnregisterPluginModule() throws Exception
     {
-        ModuleDescriptor module = new DownloadStrategyModuleDescriptor(new DefaultHostContainer()) {
+        ModuleDescriptor module = new DownloadStrategyModuleDescriptor(getDefaultModuleClassFactory()) {
             public String getCompleteKey()
             {
                 return "jungle.plugin:lion-strategy";

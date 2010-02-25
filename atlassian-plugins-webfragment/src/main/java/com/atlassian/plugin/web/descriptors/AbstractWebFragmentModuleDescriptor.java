@@ -5,6 +5,7 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.loaders.LoaderUtils;
+import com.atlassian.plugin.module.ModuleClassFactory;
 import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.WebInterfaceManager;
@@ -39,11 +40,14 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
 
     protected AbstractWebFragmentModuleDescriptor(final WebInterfaceManager webInterfaceManager)
     {
+        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
         this.webInterfaceManager = webInterfaceManager;
     }
 
     public AbstractWebFragmentModuleDescriptor()
-    {}
+    {
+        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+    }
 
     @Override
     public void init(final Plugin plugin, final Element element) throws PluginParseException

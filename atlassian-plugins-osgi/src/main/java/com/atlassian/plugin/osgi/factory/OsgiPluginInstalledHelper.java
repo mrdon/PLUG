@@ -6,7 +6,6 @@ import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.osgi.util.BundleClassLoaderAccessor;
 import com.atlassian.plugin.module.ContainerAccessor;
-import com.atlassian.plugin.module.ModuleCreator;
 import com.atlassian.plugin.osgi.spring.DefaultSpringContainerAccessor;
 import com.atlassian.plugin.osgi.spring.SpringContainerAccessor;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;

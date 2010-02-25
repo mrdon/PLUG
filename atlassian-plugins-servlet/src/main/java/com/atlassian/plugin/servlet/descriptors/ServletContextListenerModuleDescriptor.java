@@ -2,12 +2,10 @@ package com.atlassian.plugin.servlet.descriptors;
 
 import javax.servlet.ServletContextListener;
 
-import org.apache.commons.lang.Validate;
+import com.atlassian.plugin.module.ModuleClassFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
 /**
@@ -21,32 +19,21 @@ public class ServletContextListenerModuleDescriptor extends AbstractModuleDescri
 {
     protected static final Logger log = LoggerFactory.getLogger(ServletContextListenerModuleDescriptor.class);
 
-    protected final HostContainer hostContainer;
-
     /**
-     * Creates a descriptor that uses a module factory to create instances
      *
-     * @param hostContainer The module factory
-     * @since 2.2.0
+     * @param moduleClassFactory
+     *
+     * @since 2.5.0
      */
-    public ServletContextListenerModuleDescriptor(HostContainer hostContainer)
+    public ServletContextListenerModuleDescriptor(ModuleClassFactory moduleClassFactory)
     {
-        Validate.notNull(hostContainer);
-        this.hostContainer = hostContainer;
+        super(moduleClassFactory);
     }
 
     @Override
     public ServletContextListener getModule()
     {
-        ServletContextListener obj;
-        // Give the plugin a go first
-        if (plugin instanceof AutowireCapablePlugin)
-            obj = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
-        else
-        {
-            obj = hostContainer.create(getModuleClass());
-        }
-        return obj;
+        return moduleClassFactory.createModuleClass(moduleClassName, this);
     }
 
 }

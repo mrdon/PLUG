@@ -1,5 +1,7 @@
 package com.atlassian.plugin.servlet.descriptors;
 
+import com.atlassian.plugin.module.DefaultModuleClassFactory;
+import com.atlassian.plugin.module.ModuleCreator;
 import junit.framework.TestCase;
 
 import org.dom4j.Element;
@@ -7,12 +9,13 @@ import org.dom4j.dom.DOMElement;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
 import com.atlassian.plugin.servlet.filter.FilterTestUtils.FilterAdapter;
 import com.mockobjects.dynamic.Mock;
+
+import java.util.Collections;
 
 public class TestServletFilterModuleDescriptor extends TestCase
 {
@@ -21,7 +24,8 @@ public class TestServletFilterModuleDescriptor extends TestCase
     @Override
     public void setUp()
     {
-        descriptor = new ServletFilterModuleDescriptor(new DefaultHostContainer(), (ServletModuleManager) new Mock(ServletModuleManager.class).proxy());
+        descriptor = new ServletFilterModuleDescriptor
+                ( new DefaultModuleClassFactory(Collections.<ModuleCreator>emptyList()), (ServletModuleManager) new Mock(ServletModuleManager.class).proxy());
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.atlassian.plugin.impl.StaticPlugin;
 
 import java.util.Map;
 
+import com.atlassian.plugin.module.ModuleClassFactory;
 import junit.framework.TestCase;
 
 public class TestDefaultPluginPersistentState extends TestCase
@@ -109,7 +110,7 @@ public class TestDefaultPluginPersistentState extends TestCase
 
     private <T> ModuleDescriptor<T> createModule(final String pluginKey, final String moduleKey)
     {
-        return new AbstractModuleDescriptor<T>()
+        return new AbstractModuleDescriptor<T>(ModuleClassFactory.NOOP_MODULE_CREATOR)
         {
             @Override
             public T getModule()

@@ -3,6 +3,7 @@ package com.atlassian.plugin.descriptors;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 
+import com.atlassian.plugin.module.ModuleClassFactory;
 import org.dom4j.Element;
 
 /**
@@ -12,6 +13,11 @@ import org.dom4j.Element;
 public class UnloadableModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
     private String errorText;
+
+    public UnloadableModuleDescriptor()
+    {
+        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+    }
 
     @Override
     public Void getModule()

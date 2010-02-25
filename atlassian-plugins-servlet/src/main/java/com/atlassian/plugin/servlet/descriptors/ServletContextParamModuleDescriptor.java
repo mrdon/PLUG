@@ -1,10 +1,10 @@
 package com.atlassian.plugin.servlet.descriptors;
 
+import com.atlassian.plugin.module.ModuleClassFactory;
 import org.dom4j.Element;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
-import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
 import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 import com.atlassian.plugin.util.validation.ValidationPattern;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
@@ -18,7 +18,12 @@ public class ServletContextParamModuleDescriptor extends AbstractModuleDescripto
 {
     private String paramName;
     private String paramValue;
-    
+
+    public ServletContextParamModuleDescriptor()
+    {
+        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+    }
+
     @Override
     public void init(Plugin plugin, Element element) throws PluginParseException
     {

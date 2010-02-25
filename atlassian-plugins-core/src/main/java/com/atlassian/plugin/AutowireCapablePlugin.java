@@ -3,7 +3,10 @@ package com.atlassian.plugin;
 /**
  * Defines a plugin that is capable of creating and autowiring beans.  The name and autowire types copied from Spring's
  * AutowireCapableBeanFactory.
+ * @deprecated Since 2.5.0, use {@link com.atlassian.plugin.module.ContainerManagedPlugin} instead.
+ *                              getContainerAccessor provides access to the container.
  */
+@Deprecated
 public interface AutowireCapablePlugin
 {
     /**
@@ -32,7 +35,9 @@ public interface AutowireCapablePlugin
      * Creates and autowires a class using the default strategy.
      * @param clazz The class to create
      * @return The created and wired bean
+     * @deprecated Since 2.5.0, use {@link com.atlassian.plugin.module.ContainerManagedPlugin.getContainerAccessor()} instead.
      */
+    @Deprecated
     <T> T autowire(Class<T> clazz);
 
     /**
@@ -41,13 +46,17 @@ public interface AutowireCapablePlugin
      * @param clazz The class to create
      * @param autowireStrategy The autowire strategy
      * @return The created and wired bean
+     * @deprecated Since 2.5.0, use {@link com.atlassian.plugin.module.ContainerManagedPlugin.getContainerAccessor()} instead.
      */
+    @Deprecated
     <T> T autowire(Class<T> clazz, AutowireStrategy autowireStrategy);
 
     /**
      * Autowires an existing object using the default strategy.
      * @param instance The object to inject
+     * @deprecated Since 2.5.0, use {@link com.atlassian.plugin.module.ContainerManagedPlugin.getContainerAccessor()} instead.
      */
+    @Deprecated
     void autowire(Object instance);
 
     /**
@@ -55,6 +64,8 @@ public interface AutowireCapablePlugin
      *
      * @param instance The object to autowire
      * @param autowireStrategy The autowire strategy, must not be constructor
+     * @deprecated Since 2.5.0, use {@link com.atlassian.plugin.module.ContainerManagedPlugin.getContainerAccessor()} instead.
      */
+    @Deprecated
     void autowire(Object instance, AutowireStrategy autowireStrategy);
 }

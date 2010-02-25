@@ -8,16 +8,18 @@ import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.loaders.LoaderUtils;
+import com.atlassian.plugin.module.ModuleClassFactory;
 import com.atlassian.plugin.util.JavaVersionUtils;
-import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
-import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 import com.atlassian.plugin.util.validation.ValidationPattern;
-
+import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
+
+import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
 public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>, StateAware
 {
@@ -41,6 +43,24 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     private String descriptionKey;
     private String completeKey;
     boolean enabled = false;
+    protected final ModuleClassFactory moduleClassFactory;
+
+    public AbstractModuleDescriptor(ModuleClassFactory moduleClassFactory)
+    {
+        Validate.notNull(moduleClassFactory, "Module creator factory cannot be null");
+        this.moduleClassFactory = moduleClassFactory;
+    }
+
+    /**
+     * @Deprecated since 2.5.0 use the constructor which requires a {@link com.atlassian.plugin.module.ModuleClassFactory}
+     */
+    @Deprecated
+    public AbstractModuleDescriptor()
+    {
+        this(ModuleClassFactory.NOOP_MODULE_CREATOR);
+    }
+
+
 
     public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
@@ -126,34 +146,51 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
 
     /**
      * Override this for module descriptors which don't expect to be able to load a class successfully
-     * @param plugin
-     * @param clazz The module class name to load
-     * @since 2.1.0
+     * @since 2.5.0
      */
+    protected void loadModuleClass()
+    {
+        if (moduleClassName != null) //not all plugins have to have a class
+        {
+            if ( !(moduleClassFactory instanceof ModuleClassFactory.NoOpModuleClassFactory))
+            {
+                moduleClass = (Class<T>) moduleClassFactory.getModuleClass(moduleClassName, this);
+            }
+            else
+            {
+                loadClass(plugin, moduleClassName);
+            }
+        }
+    }
+
+    /**
+     * Override this for module descriptors which don't expect to be able to load a class successfully
+     *
+     * @param clazz The module class name to load
+     * @Deprecated since 2.5.0 use the {@link com.atlassian.plugin.module.ModuleClassFactory} to create the module class
+     */
+    @Deprecated
     protected void loadClass(final Plugin plugin, final String clazz) throws PluginParseException
     {
         try
         {
-            if (clazz != null) //not all plugins have to have a class
-            {
-                // First try and load the class, to make sure the class exists
-                @SuppressWarnings("unchecked")
-                final Class<T> loadedClass = (Class<T>) plugin.loadClass(clazz, getClass());
-                moduleClass = loadedClass;
+            // First try and load the class, to make sure the class exists
+            @SuppressWarnings ("unchecked")
+            final Class<T> loadedClass = (Class<T>) plugin.loadClass(clazz, getClass());
+            moduleClass = loadedClass;
 
-                // Then instantiate the class, so we can see if there are any dependencies that aren't satisfied
-                try
+            // Then instantiate the class, so we can see if there are any dependencies that aren't satisfied
+            try
+            {
+                final Constructor<T> noargConstructor = moduleClass.getConstructor(new Class[] { });
+                if (noargConstructor != null)
                 {
-                    final Constructor<T> noargConstructor = moduleClass.getConstructor(new Class[] {});
-                    if (noargConstructor != null)
-                    {
-                        moduleClass.newInstance();
-                    }
+                    moduleClass.newInstance();
                 }
-                catch (final NoSuchMethodException e)
-                {
-                    // If there is no "noarg" constructor then don't do the check
-                }
+            }
+            catch (final NoSuchMethodException e)
+            {
+                // If there is no "noarg" constructor then don't do the check
             }
         }
         catch (final ClassNotFoundException e)
@@ -357,7 +394,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
      */
     public void enabled()
     {
-        loadClass(plugin, moduleClassName);
+        loadModuleClass();
         enabled = true;
     }
 

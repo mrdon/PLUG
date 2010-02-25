@@ -5,15 +5,10 @@ import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.module.ModulePrefixProvider;
-import com.atlassian.plugin.module.ClassModulePrefixProvider;
-import com.atlassian.plugin.module.DefaultModuleCreator;
-import com.atlassian.plugin.module.ModuleCreator;
+import com.atlassian.plugin.module.ModuleClassFactory;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
-import com.atlassian.plugin.osgi.module.SpringBeanModulePrefixProvider;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.test.PluginTestUtils;
 import com.mockobjects.dynamic.C;
@@ -32,7 +27,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.List;
 
 public class TestOsgiPluginFactory extends TestCase
 {
@@ -49,7 +43,7 @@ public class TestOsgiPluginFactory extends TestCase
     {
         tmpDir = PluginTestUtils.createTempDirectory(TestOsgiPluginFactory.class);
         mockOsgi = new Mock(OsgiContainerManager.class);
-        ModuleCreator moduleCreator = mock(ModuleCreator.class);
+        ModuleClassFactory moduleCreator = mock(ModuleClassFactory.class);
         factory = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, (String) null, new DefaultOsgiPersistentCache(tmpDir), (OsgiContainerManager) mockOsgi.proxy(), new DefaultPluginEventManager(), moduleCreator);
         jar = new PluginJarBuilder("someplugin").addPluginInformation("plugin.key", "My Plugin", "1.0").build();
 

@@ -1,17 +1,15 @@
 package com.atlassian.plugin.descriptors;
 
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.Resources;
-import com.atlassian.plugin.elements.ResourceDescriptor;
-
-import org.dom4j.Element;
-
-import java.util.Collections;
+import com.atlassian.plugin.module.ModuleClassFactory;
 
 public final class UnrecognisedModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
     private String errorText;
+
+    public UnrecognisedModuleDescriptor()
+    {
+        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+    }
 
     @Override
     public Void getModule()

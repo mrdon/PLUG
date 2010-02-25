@@ -1,7 +1,7 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.module.ModuleCreator;
+import com.atlassian.plugin.module.ModuleClassFactory;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.descriptors.ChainModuleDescriptorFactory;
@@ -54,21 +54,21 @@ public class OsgiPluginFactory implements PluginFactory
     private volatile PluginTransformer pluginTransformer;
 
     private ServiceTracker moduleDescriptorFactoryTracker;
-    private final ModuleCreator moduleCreator;
+    private final ModuleClassFactory moduleClassFactory;
 
-    public OsgiPluginFactory(String pluginDescriptorFileName, String applicationKey, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager, ModuleCreator moduleCreator)
+    public OsgiPluginFactory(String pluginDescriptorFileName, String applicationKey, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager, ModuleClassFactory moduleClassFactory)
     {
-        this(pluginDescriptorFileName, new HashSet<String>(Arrays.asList(applicationKey)), persistentCache, osgi, pluginEventManager, moduleCreator);
+        this(pluginDescriptorFileName, new HashSet<String>(Arrays.asList(applicationKey)), persistentCache, osgi, pluginEventManager, moduleClassFactory);
     }
 
-    public OsgiPluginFactory(String pluginDescriptorFileName, Set<String> applicationKeys, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager, ModuleCreator moduleCreator)
+    public OsgiPluginFactory(String pluginDescriptorFileName, Set<String> applicationKeys, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager, ModuleClassFactory moduleClassFactory)
     {
         Validate.notNull(pluginDescriptorFileName, "Plugin descriptor is required");
         Validate.notNull(osgi, "The OSGi container is required");
         Validate.notNull(applicationKeys, "The application keys are required");
         Validate.notNull(persistentCache, "The osgi persistent cache is required");
         Validate.notNull(persistentCache, "The plugin event manager is required");
-        Validate.notNull(moduleCreator, "The module creator is required");
+        Validate.notNull(moduleClassFactory, "The module creator is required");
 
         this.osgi = osgi;
         this.pluginDescriptorFileName = pluginDescriptorFileName;
@@ -76,7 +76,7 @@ public class OsgiPluginFactory implements PluginFactory
         this.pluginEventManager = pluginEventManager;
         this.applicationKeys = applicationKeys;
         this.persistentCache = persistentCache;
-        this.moduleCreator = moduleCreator;
+        this.moduleClassFactory = moduleClassFactory;
     }
 
     private PluginTransformer getPluginTransformer()
@@ -153,7 +153,7 @@ public class OsgiPluginFactory implements PluginFactory
             ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory, pluginArtifact);
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys.toArray(new String[applicationKeys.size()]));
 
-            Plugin osgiPlugin = new OsgiPlugin(parser.getKey(), osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager, moduleCreator);
+            Plugin osgiPlugin = new OsgiPlugin(parser.getKey(), osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager, moduleClassFactory);
 
             // Temporarily configure plugin until it can be properly installed
             plugin = parser.configurePlugin(combinedFactory, osgiPlugin);

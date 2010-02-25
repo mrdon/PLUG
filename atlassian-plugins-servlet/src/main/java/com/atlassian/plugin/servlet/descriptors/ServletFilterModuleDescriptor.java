@@ -4,11 +4,11 @@ import java.util.Comparator;
 
 import javax.servlet.Filter;
 
+import com.atlassian.plugin.module.ModuleClassFactory;
 import org.dom4j.Element;
 import org.apache.commons.lang.Validate;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
 
@@ -42,19 +42,16 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
 
     private int weight;
     private final ServletModuleManager servletModuleManager;
-    private final HostContainer hostContainer;
 
     /**
-     * Creates a descriptor that uses a module factory to create instances
+     * Creates a descriptor that uses a module class factory to create instances.
      *
-     * @param hostContainer The module factory
-     * @since 2.2.0
+     * @since 2.5.0
      */
-    public ServletFilterModuleDescriptor(HostContainer hostContainer, ServletModuleManager servletModuleManager)
+    public ServletFilterModuleDescriptor(ModuleClassFactory moduleCreator, ServletModuleManager servletModuleManager)
     {
-        Validate.notNull(hostContainer);
+        super(moduleCreator);
         Validate.notNull(servletModuleManager);
-        this.hostContainer = hostContainer;
         this.servletModuleManager = servletModuleManager;
     }
 
@@ -95,15 +92,7 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
     @Override
     public Filter getModule()
     {
-        Filter filter = null;
-        // Give the plugin a go first
-        if (plugin instanceof AutowireCapablePlugin)
-            filter = ((AutowireCapablePlugin)plugin).autowire(getModuleClass());
-        else
-        {
-            filter = hostContainer.create(getModuleClass());
-        }
-        return filter;
+        return moduleClassFactory.createModuleClass(getModuleClass().getName(), this);
     }
 
     public FilterLocation getLocation()

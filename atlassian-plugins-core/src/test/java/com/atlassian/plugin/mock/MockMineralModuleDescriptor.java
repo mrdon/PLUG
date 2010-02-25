@@ -4,11 +4,17 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
+import com.atlassian.plugin.module.ModuleClassFactory;
 import org.dom4j.Element;
 
 public class MockMineralModuleDescriptor extends AbstractModuleDescriptor<MockMineral>
 {
     String weight;
+
+    public MockMineralModuleDescriptor()
+    {
+        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+    }
 
     @Override
     public void init(final Plugin plugin, final Element element) throws PluginParseException

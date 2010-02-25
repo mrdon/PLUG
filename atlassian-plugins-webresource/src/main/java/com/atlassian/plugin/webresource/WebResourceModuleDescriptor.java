@@ -3,6 +3,7 @@ package com.atlassian.plugin.webresource;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.module.ModuleClassFactory;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 
@@ -18,6 +19,11 @@ public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
     private List<String> dependencies = new ArrayList<String>();
     private boolean disableMinification;
+
+    public WebResourceModuleDescriptor(ModuleClassFactory moduleCreator)
+    {
+        super(moduleCreator);
+    }
 
     @Override
     public void init(final Plugin plugin, final Element element) throws PluginParseException

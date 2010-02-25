@@ -1,26 +1,38 @@
 package com.atlassian.plugin.osgi.factory.descriptor;
 
-import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.osgi.module.SpringModuleCreator;
 
 /**
  * Module descriptor for Spring components.  Shouldn't be directly used outside providing read-only information.
  *
  * @since 2.2.0
  */
-public class ComponentModuleDescriptor extends AbstractModuleDescriptor<Void>
+public class ComponentModuleDescriptor<Object> extends AbstractModuleDescriptor
 {
-
-    public Void getModule()
+    /**
+     * @since 2.5.0
+     */
+    public ComponentModuleDescriptor()
     {
-        throw new UnsupportedOperationException();
+        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
     }
+
+
 
     @Override
     protected void loadClass(Plugin plugin, String clazz) throws PluginParseException
     {
         // do nothing
+    }
+
+    @Override
+    public Object getModule()
+    {
+        return (Object) new SpringModuleCreator().createBean(getKey(), this);
     }
 
     /**

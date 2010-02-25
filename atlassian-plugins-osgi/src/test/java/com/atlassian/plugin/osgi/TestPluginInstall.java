@@ -2,15 +2,15 @@ package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.hostcontainer.HostContainer;
-import com.atlassian.plugin.impl.UnloadablePlugin;
+import com.atlassian.plugin.module.ClassModuleCreator;
+import com.atlassian.plugin.module.DefaultModuleClassFactory;
+import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleCreator;
 import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
@@ -25,32 +25,31 @@ import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import org.osgi.framework.Bundle;
 import org.osgi.util.tracker.ServiceTracker;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServlet;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.InputStream;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.jar.Manifest;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServlet;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TestPluginInstall extends PluginInContainerTestBase
 {
     public void testUpgradeOfBundledPlugin() throws Exception
     {
-        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(hostContainer);
         factory.addModuleDescriptor("object", ObjectModuleDescriptor.class);
 
         final File pluginJar = new PluginJarBuilder("testUpgradeOfBundledPlugin")
@@ -136,9 +135,11 @@ public class TestPluginInstall extends PluginInContainerTestBase
             public void provide(final ComponentRegistrar registrar)
             {
                 registrar.register(SomeInterface.class).forInstance(new SomeInterface()
-                {});
+                {
+                });
                 registrar.register(AnotherInterface.class).forInstance(new AnotherInterface()
-                {});
+                {
+                });
             }
         }, factory);
 
@@ -255,7 +256,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
                 {
                     while (!lock.tryLock(10, TimeUnit.SECONDS))
                         pluginManager.isPluginEnabled("test.plugin");
-                }
+                    }
                 catch (InterruptedException e)
                 {
                     fail();
@@ -813,7 +814,10 @@ public class TestPluginInstall extends PluginInContainerTestBase
 
         ServletModuleManager mgr = new DefaultServletModuleManager(pluginEventManager);
         Mock mockHostContainer = new Mock(HostContainer.class);
-        mockHostContainer.matchAndReturn("create", C.args(C.eq(ServletModuleDescriptor.class)), new StubServletModuleDescriptor(mgr));
+        final List<ModuleCreator> creator = new ArrayList<ModuleCreator>();
+        creator.add(new ClassModuleCreator((HostContainer) mockHostContainer.proxy()));
+        ModuleClassFactory moduleClassFactory = new DefaultModuleClassFactory(creator);
+        mockHostContainer.matchAndReturn("create", C.args(C.eq(ServletModuleDescriptor.class)), new StubServletModuleDescriptor((ModuleClassFactory) moduleClassFactory,mgr));
         initPluginManager(prov, new SingleModuleDescriptorFactory(
                 (HostContainer) mockHostContainer.proxy(),
                 "servlet",
@@ -913,11 +917,11 @@ public class TestPluginInstall extends PluginInContainerTestBase
                         "  public MyClass(com.atlassian.plugin.osgi.BooleanFlag bool) { bool.set(true); }",
                         "}")
                 .addFormattedResource("META-INF/MANIFEST.MF",
-                    "Manifest-Version: 1.0",
-                    "Bundle-SymbolicName: foo",
-                    "Bundle-Version: 1.0",
-                    "Export-Package: first",
-                    "")
+                        "Manifest-Version: 1.0",
+                        "Bundle-SymbolicName: foo",
+                        "Bundle-Version: 1.0",
+                        "Export-Package: first",
+                        "")
                 .build(pluginsDir);
 
         initPluginManager(new HostComponentProvider()
@@ -945,7 +949,6 @@ public class TestPluginInstall extends PluginInContainerTestBase
             cacheDir.mkdir();
             pluginsDir = new File(tmpDir, "plugins");
             pluginsDir.mkdir();
-
 
             new PluginJarBuilder("strangePath")
                     .addFormattedResource("atlassian-plugin.xml",
@@ -1000,6 +1003,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
             System.setProperty("atlassian.dev.mode", "false");
         }
     }
+
     public void testInstallSimplePluginNoSpring() throws Exception
     {
         File jar = new PluginJarBuilder("strangePath")
@@ -1257,8 +1261,6 @@ public class TestPluginInstall extends PluginInContainerTestBase
             System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
         }
     }
-    
-
 
     public static class Callable3Aware
     {
@@ -1278,6 +1280,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
     public static class RefreshHappened
     {
         public volatile boolean refreshHappened = false;
+
         @PluginEventListener
         public void foo(PluginRefreshedEvent evt)
         {

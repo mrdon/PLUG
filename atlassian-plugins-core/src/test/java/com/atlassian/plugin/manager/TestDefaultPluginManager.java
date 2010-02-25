@@ -21,7 +21,6 @@ import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.event.events.PluginEnabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
-import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.event.listeners.FailListener;
 import com.atlassian.plugin.event.listeners.PassListener;
@@ -43,6 +42,7 @@ import com.atlassian.plugin.mock.MockBear;
 import com.atlassian.plugin.mock.MockMineral;
 import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 import com.atlassian.plugin.mock.MockThing;
+import com.atlassian.plugin.module.ModuleClassFactory;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
@@ -131,7 +131,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     public void testEnableModuleFailed() throws PluginParseException
     {
         final Mock mockPluginLoader = new Mock(PluginLoader.class);
-        final ModuleDescriptor<Object> badModuleDescriptor = new AbstractModuleDescriptor<Object>()
+        final ModuleDescriptor<Object> badModuleDescriptor = new AbstractModuleDescriptor<Object>(ModuleClassFactory.NOOP_MODULE_CREATOR)
         {
             @Override
             public String getKey()

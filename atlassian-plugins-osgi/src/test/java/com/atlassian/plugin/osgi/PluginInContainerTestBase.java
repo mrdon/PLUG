@@ -3,13 +3,13 @@ package com.atlassian.plugin.osgi;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
+import com.atlassian.plugin.module.ClassModuleCreator;
+import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.DefaultModuleClassFactory;
 import com.atlassian.plugin.module.ModuleCreator;
-import com.atlassian.plugin.module.DefaultModuleCreator;
-import com.atlassian.plugin.module.ModulePrefixProvider;
-import com.atlassian.plugin.module.ClassModulePrefixProvider;
 import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
 import com.atlassian.plugin.manager.DefaultPluginManager;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
@@ -28,7 +28,7 @@ import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
-import com.atlassian.plugin.osgi.module.SpringBeanModulePrefixProvider;
+import com.atlassian.plugin.osgi.module.SpringModuleCreator;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 
 import org.apache.commons.io.FileUtils;
@@ -36,8 +36,10 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.zip.ZipOutputStream;
 import java.util.zip.ZipEntry;
 
@@ -55,7 +57,8 @@ public abstract class PluginInContainerTestBase extends TestCase
     protected ModuleDescriptorFactory moduleDescriptorFactory;
     protected DefaultPluginManager pluginManager;
     protected PluginEventManager pluginEventManager;
-    private ModuleCreator moduleCreator;
+    private ModuleClassFactory moduleClassFactory;
+    protected SimpleConstructorHostContainer hostContainer;
 
     @Override
     public void setUp() throws Exception
@@ -71,10 +74,13 @@ public abstract class PluginInContainerTestBase extends TestCase
         pluginsDir = new File(tmpDir, "plugins");
         pluginsDir.mkdir();
         this.pluginEventManager = new DefaultPluginEventManager();
-        List<ModulePrefixProvider> providers = new ArrayList<ModulePrefixProvider>();
-        providers.add(new ClassModulePrefixProvider(new DefaultHostContainer()));
-        providers.add(new SpringBeanModulePrefixProvider());
-        moduleCreator = new DefaultModuleCreator(providers);
+        List<ModuleCreator> providers = new ArrayList<ModuleCreator>();
+        moduleClassFactory = new DefaultModuleClassFactory(providers);
+        Map<Class<?>, Object> context = new HashMap<Class<?>, Object>();
+        context.put(ModuleClassFactory.class, moduleClassFactory);
+        hostContainer = new SimpleConstructorHostContainer(context);
+        ((DefaultModuleClassFactory) moduleClassFactory).registerModuleCreator(new ClassModuleCreator(hostContainer));
+        ((DefaultModuleClassFactory) moduleClassFactory).registerModuleCreator(new SpringModuleCreator());
     }
 
     @Override
@@ -91,41 +97,48 @@ public abstract class PluginInContainerTestBase extends TestCase
         moduleDescriptorFactory = null;
         pluginManager = null;
         pluginEventManager = null;
-        moduleCreator = null;
+        moduleClassFactory = null;
     }
 
     protected void initPluginManager() throws Exception
     {
-        initPluginManager(null, new DefaultModuleDescriptorFactory(new DefaultHostContainer()));
+        initPluginManager(null, new DefaultModuleDescriptorFactory(hostContainer));
     }
 
     protected void initPluginManager(final HostComponentProvider hostComponentProvider) throws Exception
     {
-        initPluginManager(hostComponentProvider, new DefaultModuleDescriptorFactory(new DefaultHostContainer()));
+        initPluginManager(hostComponentProvider, new DefaultModuleDescriptorFactory(hostContainer));
     }
 
-    protected void initPluginManager(final HostComponentProvider hostComponentProvider, final ModuleDescriptorFactory moduleDescriptorFactory) throws Exception
+    protected void initPluginManager(final HostComponentProvider hostComponentProvider, final ModuleDescriptorFactory moduleDescriptorFactory, final String version)
+            throws Exception
     {
-        initPluginManager(hostComponentProvider, moduleDescriptorFactory, null);
-    }
-
-    protected void initPluginManager(final HostComponentProvider hostComponentProvider, final ModuleDescriptorFactory moduleDescriptorFactory, final String version) throws Exception
-    {
-        this.moduleDescriptorFactory = moduleDescriptorFactory;
         final PackageScannerConfiguration scannerConfig = buildScannerConfiguration(version);
         HostComponentProvider requiredWrappingProvider = getWrappingHostComponentProvider(hostComponentProvider);
         OsgiPersistentCache cache = new DefaultOsgiPersistentCache(cacheDir);
         osgiContainerManager = new FelixOsgiContainerManager(cache, scannerConfig, requiredWrappingProvider, pluginEventManager);
 
         final LegacyDynamicPluginFactory legacyFactory = new LegacyDynamicPluginFactory(PluginAccessor.Descriptor.FILENAME, tmpDir);
-        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, (String) null, cache, osgiContainerManager, pluginEventManager, moduleCreator);
+        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, (String) null, cache, osgiContainerManager, pluginEventManager, moduleClassFactory);
         final OsgiBundleFactory osgiBundleFactory = new OsgiBundleFactory(osgiContainerManager, pluginEventManager);
 
         final DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Arrays.asList(legacyFactory, osgiPluginDeployer, osgiBundleFactory),
-            new DefaultPluginEventManager());
+                new DefaultPluginEventManager());
+        initPluginManager(moduleDescriptorFactory, loader);
+    }
 
-        pluginManager = new DefaultPluginManager(new MemoryPluginPersistentStateStore(), Arrays.<PluginLoader> asList(loader), moduleDescriptorFactory,
-            pluginEventManager);
+    protected void initPluginManager(final HostComponentProvider hostComponentProvider, final ModuleDescriptorFactory moduleDescriptorFactory)
+            throws Exception
+    {
+        initPluginManager(hostComponentProvider, moduleDescriptorFactory, (String) null);
+    }
+
+    protected void initPluginManager(final ModuleDescriptorFactory moduleDescriptorFactory, PluginLoader loader)
+            throws Exception
+    {
+        this.moduleDescriptorFactory = moduleDescriptorFactory;
+        pluginManager = new DefaultPluginManager(new MemoryPluginPersistentStateStore(), Arrays.<PluginLoader>asList(loader), moduleDescriptorFactory,
+                pluginEventManager);
         pluginManager.setPluginInstaller(new FilePluginInstaller(pluginsDir));
         pluginManager.init();
     }
@@ -138,7 +151,7 @@ public abstract class PluginInContainerTestBase extends TestCase
         OsgiPersistentCache cache = new DefaultOsgiPersistentCache(cacheDir);
         osgiContainerManager = new FelixOsgiContainerManager(cache, scannerConfig, requiredWrappingProvider, pluginEventManager);
 
-        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, (String) null, cache, osgiContainerManager, pluginEventManager, moduleCreator);
+        final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, (String) null, cache, osgiContainerManager, pluginEventManager, moduleClassFactory);
 
         final DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Arrays.<PluginFactory>asList(osgiPluginDeployer),
             new DefaultPluginEventManager());

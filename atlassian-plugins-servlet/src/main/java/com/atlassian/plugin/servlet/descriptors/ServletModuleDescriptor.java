@@ -1,8 +1,7 @@
 package com.atlassian.plugin.servlet.descriptors;
 
-import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.StateAware;
-import com.atlassian.plugin.hostcontainer.HostContainer;
+import com.atlassian.plugin.module.ModuleClassFactory;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 
 import org.apache.commons.lang.Validate;
@@ -16,19 +15,18 @@ import javax.servlet.http.HttpServlet;
 public class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpServlet> implements StateAware
 {
     private final ServletModuleManager servletModuleManager;
-    private final HostContainer hostContainer;
 
     /**
      * Creates a descriptor that uses a module factory to create instances
      *
      * @param hostContainer The module factory
+     * @param moduleClassFactory
      * @since 2.2.0
      */
-    public ServletModuleDescriptor(final HostContainer hostContainer, final ServletModuleManager servletModuleManager)
+    public ServletModuleDescriptor(final ModuleClassFactory moduleClassFactory, final ServletModuleManager servletModuleManager)
     {
-        Validate.notNull(hostContainer);
+        super(moduleClassFactory);
         Validate.notNull(servletModuleManager);
-        this.hostContainer = hostContainer;
         this.servletModuleManager = servletModuleManager;
     }
 
@@ -49,12 +47,7 @@ public class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpSer
     @Override
     public HttpServlet getModule()
     {
-        // Give the plugin a go first
-        if (plugin instanceof AutowireCapablePlugin)
-        {
-            return ((AutowireCapablePlugin) plugin).autowire(getModuleClass());
-        }
-        return hostContainer.create(getModuleClass());
+        return moduleClassFactory.createModuleClass(moduleClassName, this);
     }
 
     /**

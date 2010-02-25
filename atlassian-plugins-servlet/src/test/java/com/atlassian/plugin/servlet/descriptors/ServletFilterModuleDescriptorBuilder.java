@@ -1,20 +1,22 @@
 package com.atlassian.plugin.servlet.descriptors;
 
-import static com.atlassian.plugin.servlet.filter.FilterTestUtils.immutableList;
-
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.servlet.Filter;
-
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.module.DefaultModuleClassFactory;
+import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleCreator;
 import com.atlassian.plugin.servlet.ObjectFactories;
 import com.atlassian.plugin.servlet.ObjectFactory;
 import com.atlassian.plugin.servlet.PluginBuilder;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
 import com.mockobjects.dynamic.Mock;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import javax.servlet.Filter;
+
+import static com.atlassian.plugin.servlet.filter.FilterTestUtils.immutableList;
 
 public class ServletFilterModuleDescriptorBuilder
 {
@@ -76,7 +78,7 @@ public class ServletFilterModuleDescriptorBuilder
 
     public ServletFilterModuleDescriptor build()
     {
-        return new Descriptor(plugin, key, filterFactory, location, weight, immutableList(paths), servletModuleManager);
+        return new Descriptor(plugin, key, filterFactory, location, weight, immutableList(paths), servletModuleManager, new DefaultModuleClassFactory(Collections.<ModuleCreator>emptyList()));
     }
 
     static final class Descriptor extends ServletFilterModuleDescriptor
@@ -95,9 +97,10 @@ public class ServletFilterModuleDescriptorBuilder
             FilterLocation location,
             int weight,
             List<String> paths,
-            ServletModuleManager servletModuleManager)
+            ServletModuleManager servletModuleManager,
+            ModuleClassFactory moduleClassFactory)
         {
-            super(new DefaultHostContainer(), servletModuleManager);
+            super(moduleClassFactory, servletModuleManager);
             this.plugin = plugin;
             this.key = key;
             this.filterFactory = filterFactory;
