@@ -3,6 +3,8 @@ package com.atlassian.plugin.module;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginParseException;
 import org.apache.commons.lang.Validate;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.Map;
  */
 public class DefaultModuleClassFactory implements ModuleClassFactory
 {
+    Logger log = LoggerFactory.getLogger(DefaultModuleClassFactory.class);
     private final Map<String, ModuleCreator> moduleCreators = new HashMap<String, ModuleCreator>();
 
     public DefaultModuleClassFactory(List<ModuleCreator> creators)
@@ -56,7 +59,19 @@ public class DefaultModuleClassFactory implements ModuleClassFactory
         Object result = null;
 
         final ModuleCreator moduleCreator = getModuleCreatorForPrefix(beanReference);
-        result = moduleCreator.createBean(beanReference.beanIdentifier, moduleDescriptor);
+        try
+        {
+            result = moduleCreator.createBean(beanReference.beanIdentifier, moduleDescriptor);
+        }
+        catch (NoClassDefFoundError error)
+        {
+            log.error("Detected an error (NoClassDefFoundError) instantiating the module for plugin '" + moduleDescriptor.getPlugin().getKey() + "'" +
+                     " for module '" + moduleDescriptor.getKey() + "': " + error.getMessage() + ".  This error is usually caused by your" +
+                     " plugin using a imported component class that itself relies on other packages in the product. You can probably fix this by" +
+                     " adding the missing class's package to your <Import-Package> instructions; for more details on how to fix this, see" +
+                     " http://confluence.atlassian.com/x/QRS-Cg.");
+            throw error;
+        }
 
         if (result != null)
         {
