@@ -86,7 +86,7 @@ public class OsgiPluginFactory implements PluginFactory
             String exportString = (String) osgi.getBundles()[0].getHeaders()
                     .get(Constants.EXPORT_PACKAGE);
             SystemExports exports = new SystemExports(exportString);
-            pluginTransformer = new DefaultPluginTransformer(persistentCache, exports, applicationKeys, pluginDescriptorFileName);
+            pluginTransformer = new DefaultPluginTransformer(persistentCache, exports, applicationKeys, pluginDescriptorFileName, osgi);
         }
         return pluginTransformer;
     }

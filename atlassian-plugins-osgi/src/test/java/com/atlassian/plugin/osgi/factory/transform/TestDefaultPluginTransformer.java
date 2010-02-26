@@ -4,11 +4,15 @@ import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.test.PluginTestUtils;
 
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,8 +36,10 @@ public class TestDefaultPluginTransformer extends TestCase
     protected void setUp() throws Exception
     {
         super.setUp();
+        OsgiContainerManager osgiContainerManager = mock(OsgiContainerManager.class);
+        when(osgiContainerManager.getRegisteredServices()).thenReturn(new ServiceReference[0]);
         tmpDir = PluginTestUtils.createTempDirectory("plugin-transformer");
-        transformer = new DefaultPluginTransformer(new DefaultOsgiPersistentCache(tmpDir), SystemExports.NONE, null, PluginAccessor.Descriptor.FILENAME);
+        transformer = new DefaultPluginTransformer(new DefaultOsgiPersistentCache(tmpDir), SystemExports.NONE, null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
     }
 
     @Override

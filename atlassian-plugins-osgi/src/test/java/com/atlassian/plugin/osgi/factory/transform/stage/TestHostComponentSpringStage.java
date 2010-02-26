@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.SomeInterface;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.factory.transform.*;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.factory.transform.test.SomeClass;
@@ -11,6 +12,9 @@ import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
 import com.atlassian.plugin.test.PluginJarBuilder;
 
 import org.dom4j.DocumentException;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import org.osgi.framework.ServiceReference;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,10 +35,13 @@ public class TestHostComponentSpringStage extends TestCase
     private HostComponentSpringStage transformer = new HostComponentSpringStage();
     private File jar;
     private SystemExports systemExports;
+    private OsgiContainerManager osgiContainerManager;
 
     @Override
     public void setUp() throws Exception
     {
+        osgiContainerManager = mock(OsgiContainerManager.class);
+        when(osgiContainerManager.getRegisteredServices()).thenReturn(new ServiceReference[0]);
         jar = new PluginJarBuilder()
                 .addFormattedJava("my.Foo",
                         "package my;",
@@ -139,7 +146,7 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         transformer.execute(context);
         assertTrue(context.getExtraImports().contains("javax.swing.event"));
 
@@ -163,7 +170,7 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         transformer.execute(context);
         assertTrue(context.getExtraImports().contains("javax.servlet;version=\"[2.3,2.3]\""));
 
@@ -187,7 +194,7 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         transformer.execute(context);
         assertTrue(context.getExtraImports().contains(SomeClass.class.getPackage().getName()));
 
@@ -210,7 +217,7 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         transformer.execute(context);
         assertTrue(context.getExtraImports().contains(FooChild.class.getPackage().getName()));
     }
@@ -236,7 +243,7 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         transformer.execute(context);
         assertEquals(0, context.getExtraImports().size());
 
@@ -265,7 +272,7 @@ public class TestHostComponentSpringStage extends TestCase
             }
         };
 
-        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         transformer.execute(context);
         assertEquals(0, context.getExtraImports().size());
 

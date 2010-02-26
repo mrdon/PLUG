@@ -4,6 +4,7 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.factory.transform.stage.*;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.util.PluginUtils;
@@ -31,6 +32,7 @@ public class DefaultPluginTransformer implements PluginTransformer
     private final SystemExports systemExports;
     private final Set<String> applicationKeys;
     private final OsgiPersistentCache osgiCache;
+    private final OsgiContainerManager osgiContainerManager;
 
     /**
      * Constructs a transformer with the default stages
@@ -40,9 +42,11 @@ public class DefaultPluginTransformer implements PluginTransformer
      * @param pluginDescriptorPath The path to the plugin descriptor
      * @since 2.2.0
      */
-    public DefaultPluginTransformer(OsgiPersistentCache cache, SystemExports systemExports, Set<String> applicationKeys, String pluginDescriptorPath)
+    public DefaultPluginTransformer(OsgiPersistentCache cache, SystemExports systemExports, Set<String> applicationKeys, String pluginDescriptorPath,
+        OsgiContainerManager osgiContainerManager
+    )
     {
-        this(cache, systemExports, applicationKeys, pluginDescriptorPath, new ArrayList<TransformStage>()
+        this(cache, systemExports, applicationKeys, pluginDescriptorPath, osgiContainerManager, new ArrayList<TransformStage>()
         {{
             add(new AddBundleOverridesStage());
             add(new ComponentImportSpringStage());
@@ -63,10 +67,12 @@ public class DefaultPluginTransformer implements PluginTransformer
      * @param stages A set of stages
      * @since 2.2.0
      */
-    public DefaultPluginTransformer(OsgiPersistentCache cache, SystemExports systemExports, Set<String> applicationKeys, String pluginDescriptorPath, List<TransformStage> stages)
+    public DefaultPluginTransformer(OsgiPersistentCache cache, SystemExports systemExports, Set<String> applicationKeys, String pluginDescriptorPath,
+        OsgiContainerManager osgiContainerManager, List<TransformStage> stages)
     {
         Validate.notNull(pluginDescriptorPath, "The plugin descriptor path is required");
         Validate.notNull(stages, "A list of stages is required");
+        this.osgiContainerManager = osgiContainerManager;
         this.pluginDescriptorPath = pluginDescriptorPath;
         this.stages = Collections.unmodifiableList(new ArrayList<TransformStage>(stages));
         this.osgiCache = cache;
@@ -178,7 +184,7 @@ public class DefaultPluginTransformer implements PluginTransformer
             return cachedPlugin;
         }
 
-        TransformContext context = new TransformContext(regs, systemExports, pluginArtifact, applicationKeys, pluginDescriptorPath);
+        TransformContext context = new TransformContext(regs, systemExports, pluginArtifact, applicationKeys, pluginDescriptorPath, osgiContainerManager);
         for (TransformStage stage : stages)
         {
             stage.execute(context);

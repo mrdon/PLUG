@@ -4,17 +4,17 @@ import junit.framework.TestCase;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import org.osgi.framework.ServiceReference;
 
 import java.io.IOException;
-import java.io.File;
 import java.io.ByteArrayInputStream;
-import java.util.Collections;
 
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.util.validation.ValidationException;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.mockobjects.dynamic.Mock;
@@ -139,7 +139,9 @@ public class TestComponentSpringStage extends TestCase
         mockPluginArtifact.expectAndReturn("getResourceAsStream", C.args(C.eq("foo")),
                 new ByteArrayInputStream(SpringTransformerTestHelper.elementToString(pluginRoot).getBytes()));
         mockPluginArtifact.expectAndReturn("doesResourceExist", C.args(C.eq("my/IFoo.class")), true);
-        TransformContext ctx = new TransformContext(null, SystemExports.NONE, (PluginArtifact) mockPluginArtifact.proxy(), null, "foo");
+        OsgiContainerManager osgiContainerManager = mock(OsgiContainerManager.class);
+        when(osgiContainerManager.getRegisteredServices()).thenReturn(new ServiceReference[0]);
+        TransformContext ctx = new TransformContext(null, SystemExports.NONE, (PluginArtifact) mockPluginArtifact.proxy(), null, "foo", osgiContainerManager);
         transformer.execute(ctx);
 
         assertTrue(ctx.getExtraExports().contains("my"));
@@ -162,7 +164,9 @@ public class TestComponentSpringStage extends TestCase
         mockPluginArtifact.expectAndReturn("getResourceAsStream", C.args(C.eq("foo")),
                 new ByteArrayInputStream(SpringTransformerTestHelper.elementToString(pluginRoot).getBytes()));
         mockPluginArtifact.expectAndReturn("doesResourceExist", C.args(C.eq("my/IFoo.class")), false);
-        TransformContext ctx = new TransformContext(null, SystemExports.NONE, (PluginArtifact) mockPluginArtifact.proxy(), null, "foo");
+        OsgiContainerManager osgiContainerManager = mock(OsgiContainerManager.class);
+        when(osgiContainerManager.getRegisteredServices()).thenReturn(new ServiceReference[0]);
+        TransformContext ctx = new TransformContext(null, SystemExports.NONE, (PluginArtifact) mockPluginArtifact.proxy(), null, "foo", osgiContainerManager);
         transformer.execute(ctx);
 
         assertFalse(ctx.getExtraExports().contains("my"));
@@ -184,7 +188,9 @@ public class TestComponentSpringStage extends TestCase
         mockPluginArtifact.matchAndReturn("toFile", new PluginJarBuilder().build());
         mockPluginArtifact.expectAndReturn("getResourceAsStream", C.args(C.eq("foo")),
                 new ByteArrayInputStream(SpringTransformerTestHelper.elementToString(pluginRoot).getBytes()));
-        TransformContext ctx = new TransformContext(null, SystemExports.NONE, (PluginArtifact) mockPluginArtifact.proxy(), null, "foo");
+        OsgiContainerManager osgiContainerManager = mock(OsgiContainerManager.class);
+        when(osgiContainerManager.getRegisteredServices()).thenReturn(new ServiceReference[0]);
+        TransformContext ctx = new TransformContext(null, SystemExports.NONE, (PluginArtifact) mockPluginArtifact.proxy(), null, "foo", osgiContainerManager);
         ctx.getExtraExports().add("my");
         transformer.execute(ctx);
 

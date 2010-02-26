@@ -5,12 +5,16 @@ import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.test.PluginJarBuilder;
 
 import java.io.File;
 import java.util.Collections;
 
 import junit.framework.TestCase;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import org.osgi.framework.ServiceReference;
 
 public class TestAddBundleOverridesStage extends TestCase
 {
@@ -22,8 +26,10 @@ public class TestAddBundleOverridesStage extends TestCase
             "    </plugin-info>", "</atlassian-plugin>").build();
 
         final AddBundleOverridesStage stage = new AddBundleOverridesStage();
+        OsgiContainerManager osgiContainerManager = mock(OsgiContainerManager.class);
+        when(osgiContainerManager.getRegisteredServices()).thenReturn(new ServiceReference[0]);
         final TransformContext context = new TransformContext(Collections.<HostComponentRegistration> emptyList(), SystemExports.NONE, new JarPluginArtifact(plugin),
-            null, PluginAccessor.Descriptor.FILENAME);
+            null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         stage.execute(context);
         assertEquals("!*.internal.*,*", context.getBndInstructions().get("Export-Package"));
     }

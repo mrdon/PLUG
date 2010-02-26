@@ -6,6 +6,7 @@ import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.test.PluginJarBuilder;
 
 import org.dom4j.Document;
@@ -16,6 +17,9 @@ import org.dom4j.Node;
 import org.dom4j.XPath;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import org.osgi.framework.ServiceReference;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,7 +52,11 @@ public class SpringTransformerTestHelper
             pluginJar = new PluginJarBuilder().addResource(PluginAccessor.Descriptor.FILENAME, swriter).build();
         }
         Set<String> keys = new HashSet<String>(Arrays.asList("foo"));
-        final TransformContext context = new TransformContext(regs, SystemExports.NONE, new JarPluginArtifact(pluginJar), keys, PluginAccessor.Descriptor.FILENAME);
+
+        OsgiContainerManager osgiContainerManager = mock(OsgiContainerManager.class);
+        when(osgiContainerManager.getRegisteredServices()).thenReturn(new ServiceReference[0]);
+
+        final TransformContext context = new TransformContext(regs, SystemExports.NONE, new JarPluginArtifact(pluginJar), keys, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
 
         transformer.execute(context);
 

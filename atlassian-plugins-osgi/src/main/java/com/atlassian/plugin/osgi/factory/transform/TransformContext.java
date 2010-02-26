@@ -24,6 +24,7 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.osgi.factory.transform.model.ComponentImport;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 
 /**
@@ -46,10 +47,13 @@ public class TransformContext
     private final SystemExports systemExports;
     private final Set<String> applicationKeys;
     private boolean shouldRequireSpring = false;
+    private final OsgiContainerManager osgiContainerManager;
 
     public TransformContext(final List<HostComponentRegistration> regs, final SystemExports systemExports,
-                            final PluginArtifact pluginArtifact, final Set<String> applicationKeys, final String descriptorPath)
+                            final PluginArtifact pluginArtifact, final Set<String> applicationKeys, final String descriptorPath,
+                            final OsgiContainerManager osgiContainerManager)
     {
+        this.osgiContainerManager = osgiContainerManager;
         Validate.notNull(pluginArtifact, "The plugin artifact must be specified");
         Validate.notNull(descriptorPath, "The plugin descriptor path must be specified");
         Validate.notNull(systemExports, "The system exports must be specified");
@@ -195,6 +199,11 @@ public class TransformContext
             getFileOverrides().put("META-INF/spring/", new byte[0]);
         }
 
+    }
+
+    public OsgiContainerManager getOsgiContainerManager()
+    {
+        return osgiContainerManager;
     }
 
     private static class DocumentExposingDescriptorParser extends XmlDescriptorParser

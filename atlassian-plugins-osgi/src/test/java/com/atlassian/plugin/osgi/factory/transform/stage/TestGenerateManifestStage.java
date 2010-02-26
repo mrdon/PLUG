@@ -7,14 +7,16 @@ import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.util.PluginUtils;
 import junit.framework.TestCase;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.osgi.framework.Constants;
-import org.slf4j.Logger;
+import org.osgi.framework.ServiceReference;
 import org.apache.log4j.spi.Filter;
 
 import javax.print.attribute.AttributeSet;
@@ -31,12 +33,16 @@ import java.util.jar.Manifest;
 public class TestGenerateManifestStage extends TestCase
 {
     private GenerateManifestStage stage;
+    private OsgiContainerManager osgiContainerManager;
 
     @Override
     public void setUp()
     {
         stage = new GenerateManifestStage();
+        osgiContainerManager = mock(OsgiContainerManager.class);
+        when(osgiContainerManager.getRegisteredServices()).thenReturn(new ServiceReference[0]);
     }
+
 
     public void testGenerateManifest() throws Exception
     {
@@ -58,7 +64,7 @@ public class TestGenerateManifestStage extends TestCase
                 .build();
 
         final TransformContext context = new TransformContext(Collections.<HostComponentRegistration> emptyList(), SystemExports.NONE, new JarPluginArtifact(file),
-            null, PluginAccessor.Descriptor.FILENAME);
+            null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         context.setShouldRequireSpring(true);
 
         final Attributes attrs = executeStage(context);
@@ -80,7 +86,7 @@ public class TestGenerateManifestStage extends TestCase
     {
 
         final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0").build();
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         context.getExtraImports().add(AttributeSet.class.getPackage().getName());
         final Attributes attrs = executeStage(context);
 
@@ -95,7 +101,7 @@ public class TestGenerateManifestStage extends TestCase
             System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "333");
             stage = new GenerateManifestStage();
             final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0").build();
-            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
             context.setShouldRequireSpring(true);
             final Attributes attrs = executeStage(context);
 
@@ -121,7 +127,7 @@ public class TestGenerateManifestStage extends TestCase
                             "Bundle-Version: 4.2.0.jira40",
                         "Bundle-SymbolicName: my.foo.symbolicName")
                     .build();
-            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
             context.setShouldRequireSpring(true);
             final Attributes attrs = executeStage(context);
 
@@ -143,7 +149,7 @@ public class TestGenerateManifestStage extends TestCase
                         "Bundle-Version: 4.2.0.jira40",
                         "Bundle-SymbolicName: my.foo.symbolicName")
                 .build();
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         context.setShouldRequireSpring(true);
         final Attributes attrs = executeStage(context);
 
@@ -163,7 +169,7 @@ public class TestGenerateManifestStage extends TestCase
                             "Bundle-Version: 4.2.0.jira40",
                             "Bundle-SymbolicName: my.foo.symbolicName")
                     .build();
-            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
             context.setShouldRequireSpring(true);
             final Attributes attrs = executeStage(context);
             assertEquals("*;create-asynchronously:=false;timeout:=789", attrs.getValue("Spring-Context"));
@@ -187,7 +193,7 @@ public class TestGenerateManifestStage extends TestCase
                             "Bundle-Version: 4.2.0.jira40",
                             "Bundle-SymbolicName: my.foo.symbolicName")
                     .build();
-            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
             context.setShouldRequireSpring(true);
             final Attributes attrs = executeStage(context);
             assertEquals("timeout:=789;config/account-data-context.xml;create-asynchrously:=false", attrs.getValue("Spring-Context"));
@@ -211,7 +217,7 @@ public class TestGenerateManifestStage extends TestCase
                             "Bundle-Version: 4.2.0.jira40",
                             "Bundle-SymbolicName: my.foo.symbolicName")
                     .build();
-            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME);
+            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
             context.setShouldRequireSpring(true);
             final Attributes attrs = executeStage(context);
             assertEquals("config/account-data-context.xml;timeout:=789;create-asynchrously:=false", attrs.getValue("Spring-Context"));
@@ -235,7 +241,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         context.getExtraImports().add(AttributeSet.class.getPackage().getName());
         final Attributes attrs = executeStage(context);
         assertEquals("my.foo.symbolicName", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
@@ -259,7 +265,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         try
         {
             executeStage(context);
@@ -278,7 +284,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addPluginInformation("innerjarcp", "Some name", "beta1.0")
                 .build();
 
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         try
         {
             executeStage(context);
@@ -304,7 +310,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         final Attributes attrs = executeStage(context);
         assertEquals("innerjarcp", attrs.getValue("Atlassian-Plugin-Key"));
         assertNotNull(attrs.getValue("Spring-Context"));
@@ -324,7 +330,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         final Attributes attrs = executeStage(context);
         assertEquals("innerjarcp", attrs.getValue("Atlassian-Plugin-Key"));
         assertEquals("*", attrs.getValue("Spring-Context"));
@@ -338,7 +344,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         final Attributes attrs = executeStage(context);
         assertEquals("innerjarcp", attrs.getValue("Atlassian-Plugin-Key"));
         assertNotNull(attrs.getValue("Spring-Context"));
@@ -361,7 +367,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         context.setShouldRequireSpring(true);
         context.getExtraImports().add(AttributeSet.class.getPackage().getName());
         executeStage(context);
@@ -379,7 +385,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         final Attributes attrs = executeStage(context);
 
         final Collection classpathEntries = Arrays.asList(attrs.getValue(Constants.BUNDLE_CLASSPATH).split(","));
@@ -406,7 +412,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
                 .build();
 
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         final Attributes attrs = executeStage(context);
 
         assertEquals("1.0", attrs.getValue(Constants.BUNDLE_VERSION));
@@ -431,7 +437,7 @@ public class TestGenerateManifestStage extends TestCase
                 .addJava("foo.internal.MyPrivateClass", "package foo.internal; public class MyPrivateClass{}")
                 .build();
 
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         context.getBndInstructions().put("Export-Package", "!*.internal.*,*");
         final Attributes attrs = executeStage(context);
         assertEquals("test.plugin", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
@@ -445,7 +451,7 @@ public class TestGenerateManifestStage extends TestCase
                 .build();
 
         SystemExports exports = new SystemExports("foo.bar,foo.baz;version=\"1.0\"");
-        final TransformContext context = new TransformContext(null, exports, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME);
+        final TransformContext context = new TransformContext(null, exports, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         context.getBndInstructions().put("Import-Package", "foo.bar,foo.baz");
         final Attributes attrs = executeStage(context);
         assertEquals("test.plugin", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
