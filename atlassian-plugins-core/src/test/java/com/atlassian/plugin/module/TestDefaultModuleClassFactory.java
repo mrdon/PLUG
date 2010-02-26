@@ -79,6 +79,35 @@ public class TestDefaultModuleClassFactory extends TestCase
         }
     }
 
+    public void testCreateBeanThrowsUnsatisfiedDependencyException() throws Exception
+    {
+        ModuleCreator moduleCreator = mock(ModuleCreator.class);
+        Logger log = mock(Logger.class);
+
+        final List<ModuleCreator> creators = new ArrayList<ModuleCreator>();
+        creators.add(moduleCreator);
+
+        Plugin plugin = mock(Plugin.class);
+        ModuleDescriptor moduleDescriptor = mock(ModuleDescriptor.class);
+        when(moduleCreator.getPrefix()).thenReturn("jira");
+        when(moduleDescriptor.getPlugin()).thenReturn(plugin);
+        when(moduleCreator.createBean("doSomething", moduleDescriptor)).thenThrow(new UnsatisfiedDependencyException());
+
+        this.moduleClassFactory = new DefaultModuleClassFactory(creators);
+        this.moduleClassFactory.log = log;
+
+        try
+        {
+            this.moduleClassFactory.createModuleClass("jira:doSomething", moduleDescriptor);
+
+            fail("Should not return");
+        }
+        catch (UnsatisfiedDependencyException err)
+        {
+            verify(log).error(anyString());
+        }
+    }
+
     public void testCreateBeanFailed() throws Exception
     {
         ModuleCreator moduleCreator = mock(ModuleCreator.class);
@@ -147,4 +176,6 @@ public class TestDefaultModuleClassFactory extends TestCase
         }
     }
 
+    private static class UnsatisfiedDependencyException extends RuntimeException
+    {}
 }

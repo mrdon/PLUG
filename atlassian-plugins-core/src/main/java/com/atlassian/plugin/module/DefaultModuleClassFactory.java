@@ -72,6 +72,16 @@ public class DefaultModuleClassFactory implements ModuleClassFactory
                      " http://confluence.atlassian.com/x/QRS-Cg.");
             throw error;
         }
+        catch (RuntimeException ex)
+        {
+            if (ex.getClass().getSimpleName().equals("UnsatisfiedDependencyException"))
+            {
+                log.error("Detected an error instantiating the module via Spring. This usually means that you haven't created a " +
+                    "<component-import> for the interface you're trying to use. See http://confluence.atlassian.com/x/kgL3CQ " +
+                    " for more details.");
+            }
+            throw ex;
+        }
 
         if (result != null)
         {
