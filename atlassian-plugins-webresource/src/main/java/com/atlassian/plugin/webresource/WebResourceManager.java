@@ -14,11 +14,11 @@ import java.io.Writer;
 public interface WebResourceManager
 {
     /**
-     * Indicates to that a given plugin web resource is required. All resources called via this method must be included
+     * Indicates that a given plugin web resource is required. All resources called via this method must be included
      * when {@link #includeResources(Writer)} is called.
      *
      * @param moduleCompleteKey The fully qualified plugin web resource module (eg <code>jira.webresources:scriptaculous</code>)
-     * @see #includeResources(Writer)
+     * @see #includeResources(Writer, UrlMode)
      */
     void requireResource(String moduleCompleteKey);
 
@@ -171,6 +171,14 @@ public interface WebResourceManager
      * @since 2.3.0
      */
     void requireResource(String moduleCompleteKey, Writer writer, UrlMode urlMode);
+
+    /**
+     * Writes the resource tags of all resources that have the given context specified in their descriptor.
+     *
+     * @param context The name of the context for which you want to require resources (eg "atl.admin")
+     * @since 2.5.0
+     */
+    void requireResourcesForContext(String context);
 
     /**
      * Returns the resource tags of the specified resource. If you are outputting the value to a {@link Writer}, use

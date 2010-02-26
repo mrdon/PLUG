@@ -66,6 +66,20 @@ public class WebResourceManagerImpl implements WebResourceManager
         getIncludedResourceNames().addAll(dependencyResolver.getDependencies(moduleCompleteKey, batchingConfiguration.isSuperBatchingEnabled()));
     }
 
+    public void requireResourcesForContext(String context)
+    {
+        final List<WebResourceModuleDescriptor> webResourceModuleDescriptors =
+                webResourceIntegration.getPluginAccessor().getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class);
+
+        for (WebResourceModuleDescriptor webResourceModuleDescriptor : webResourceModuleDescriptors)
+        {
+            if (webResourceModuleDescriptor.getContexts().contains(context))
+            {
+                requireResource(webResourceModuleDescriptor.getCompleteKey());
+            }
+        }
+	}
+
     private LinkedHashSet<String> getIncludedResourceNames()
     {
         final Map<String, Object> cache = webResourceIntegration.getRequestCache();

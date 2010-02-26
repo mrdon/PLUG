@@ -8,7 +8,10 @@ import org.dom4j.Attribute;
 import org.dom4j.Element;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A way of linking to web 'resources', such as javascript or css.  This allows us to include resources once
@@ -17,8 +20,9 @@ import java.util.List;
  */
 public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
-    private List<String> dependencies = new ArrayList<String>();
+    private List<String> dependencies = Collections.EMPTY_LIST;
     private boolean disableMinification;
+    private Set<String> contexts = Collections.EMPTY_SET;
 
     public WebResourceModuleDescriptor(ModuleClassFactory moduleCreator)
     {
@@ -30,12 +34,19 @@ public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
     {
         super.init(plugin, element);
 
-        @SuppressWarnings("unchecked")
-        List<Element> dependencyElements = element.elements("dependency");
-        for (Element dependency : dependencyElements)
+        final List<String> deps = new ArrayList<String>();
+        for (Element dependency : (List<Element>) element.elements("dependency"))
         {
-            dependencies.add(dependency.getTextTrim());
+            deps.add(dependency.getTextTrim());
         }
+        dependencies = Collections.unmodifiableList(deps);
+
+        final Set<String> ctxs = new HashSet<String>();
+        for (Element contextElement : (List<Element>) element.elements("context"))
+        {
+            ctxs.add(contextElement.getTextTrim());
+        }
+        contexts = Collections.unmodifiableSet(ctxs);
 
         final Attribute minifiedAttribute = element.attribute("disable-minification");
         disableMinification = minifiedAttribute == null ? false : Boolean.valueOf(minifiedAttribute.getValue());
@@ -48,6 +59,16 @@ public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
     public Void getModule()
     {
         throw new UnsupportedOperationException("There is no module for Web Resources");
+    }
+
+    /**
+     * Returns the web resource contexts this resource is associated with.
+     *
+     * @return  the web resource contexts this resource is associated with.
+     */
+    public Set<String> getContexts()
+    {
+        return contexts;
     }
 
     /**

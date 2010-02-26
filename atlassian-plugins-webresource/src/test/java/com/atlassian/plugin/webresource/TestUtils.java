@@ -26,38 +26,54 @@ public class TestUtils
     }
 
     static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
-        final Plugin p, final List<ResourceDescriptor> resourceDescriptors, final List<String> dependencies)
+        final Plugin p, final List<ResourceDescriptor> resourceDescriptors, final List<String> dependencies) {
+        return createWebResourceModuleDescriptor(completeKey, p, resourceDescriptors, dependencies, Collections.<String>emptySet());
+    }
+
+    static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
+        final Plugin p, final List<ResourceDescriptor> resourceDescriptors, final List<String> dependencies, final Set<String> contexts)
     {
         return new WebResourceModuleDescriptor(ModuleClassFactory.NOOP_MODULE_CREATOR) {
 
+            @Override
             public String getCompleteKey()
             {
                 return completeKey;
             }
 
+            @Override
             public List<ResourceDescriptor> getResourceDescriptors()
             {
                 return resourceDescriptors;
             }
 
+            @Override
             public List<ResourceDescriptor> getResourceDescriptors(String type)
             {
                 return resourceDescriptors;
             }
 
+            @Override
             public String getPluginKey()
             {
                 return p.getKey();
             }
 
+            @Override
             public Plugin getPlugin()
             {
                 return p;
             }
 
+            @Override
             public List<String> getDependencies()
             {
                 return dependencies;
+            }
+
+            @Override
+            public Set<String> getContexts() {
+                return contexts;
             }
 
             @Override

@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * The integration layer between Plugin's Web Resource Handler, and specific applications (eg JIRA, Confluence).
  *
- * @see WebResourceManagerImpl#WebResourceManagerImpl(WebResourceIntegration)
+ * @see WebResourceManagerImpl#WebResourceManagerImpl(PluginResourceLocator, WebResourceIntegration)
  */
 public interface WebResourceIntegration
 {

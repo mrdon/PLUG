@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -170,6 +171,52 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(resourceB, resourceArray[2]);
         assertEquals(resourceC, resourceArray[3]);
         assertEquals(resourceA, resourceArray[4]);
+    }
+
+    public void testGetResourceContext() throws Exception
+    {
+        final String resourceA = "test.atlassian:a";
+        final String resourceB = "test.atlassian:b";
+        final String resourceC = "test.atlassian:c";
+
+        final WebResourceModuleDescriptor descriptor1 = TestUtils.createWebResourceModuleDescriptor(
+                resourceA, testPlugin, TestUtils.createResourceDescriptors("resourceA.css"), Collections.EMPTY_LIST, Collections.EMPTY_SET);
+        final WebResourceModuleDescriptor descriptor2 = TestUtils.createWebResourceModuleDescriptor(
+                resourceB, testPlugin, TestUtils.createResourceDescriptors("resourceB.css"), Collections.EMPTY_LIST, new HashSet<String>() {{
+                    add("foo");
+                }});
+        final WebResourceModuleDescriptor descriptor3 = TestUtils.createWebResourceModuleDescriptor(
+                resourceC, testPlugin, TestUtils.createResourceDescriptors("resourceC.css"), Collections.EMPTY_LIST, new HashSet<String>() {{
+                    add("foo");
+                    add("bar");
+                }});
+
+        final List<WebResourceModuleDescriptor> descriptors = Arrays.asList(descriptor1, descriptor2, descriptor3);
+
+        mockPluginAccessor.matchAndReturn("getEnabledModuleDescriptorsByClass", C.args(C.eq(WebResourceModuleDescriptor.class)), descriptors);
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceA)), descriptor1);
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceB)), descriptor2);
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resourceC)), descriptor3);
+
+        setupRequestCache();
+
+        // write includes for all resources for "foo":
+        webResourceManager.requireResourcesForContext("foo");
+        StringWriter writer = new StringWriter();
+        webResourceManager.includeResources(writer);
+        String resources = writer.toString();
+        assertFalse(resources.contains(resourceA + ".css"));
+        assertTrue(resources.contains(resourceB + ".css"));
+        assertTrue(resources.contains(resourceC + ".css"));
+
+        // write includes for all resources for "bar":
+        webResourceManager.requireResourcesForContext("bar");
+        writer = new StringWriter();
+        webResourceManager.includeResources(writer);
+        resources = writer.toString();
+        assertFalse(resources.contains(resourceA + ".css"));
+        assertFalse(resources.contains(resourceB + ".css"));
+        assertTrue(resources.contains(resourceC + ".css"));
     }
 
     private Map setupRequestCache()
@@ -344,7 +391,7 @@ public class TestWebResourceManagerImpl extends TestCase
 
         final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.css", "more-cool.css", "cool.js");
 
-        Map requestCache = setupRequestCache();
+        setupRequestCache();
 
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
             TestUtils.createWebResourceModuleDescriptor(completeModuleKey, testPlugin, resourceDescriptors1));
@@ -624,7 +671,7 @@ public class TestWebResourceManagerImpl extends TestCase
 
         final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.css", "cool.js", "more-cool.css");
 
-        Map requestCache = setupRequestCache();
+        setupRequestCache();
 
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
             TestUtils.createWebResourceModuleDescriptor(completeModuleKey, testPlugin, resourceDescriptors1));
@@ -679,7 +726,7 @@ public class TestWebResourceManagerImpl extends TestCase
             "foo.css", "foo-bar.js",
             "atlassian.css", "atlassian-plugins.js");
 
-        Map requestCache = setupRequestCache();
+        setupRequestCache();
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey)),
             TestUtils.createWebResourceModuleDescriptor(completeModuleKey, testPlugin, resources));
 
@@ -717,7 +764,7 @@ public class TestWebResourceManagerImpl extends TestCase
 
         final Plugin plugin = TestUtils.createTestPlugin();
 
-        Map requestCache = setupRequestCache();
+        setupRequestCache();
 
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(completeModuleKey1)),
             TestUtils.createWebResourceModuleDescriptor(completeModuleKey1, plugin, resourceDescriptors1));
