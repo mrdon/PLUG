@@ -28,12 +28,12 @@ public class ClassModuleCreator implements ModuleCreator
         return PREFIX;
     }
 
-    public <T> T createBean(String name, ModuleDescriptor<T> moduleDescriptor) throws PluginParseException
+    public <T> T createModule(String name, ModuleDescriptor<T> moduleDescriptor) throws PluginParseException
     {
         Class<T> cls = moduleDescriptor.getModuleClass();
         if (cls == null)
         {
-            cls = getBeanClass(name, moduleDescriptor);
+            cls = getModuleClass(name, moduleDescriptor);
         }
         
         if (moduleDescriptor.getPlugin() instanceof ContainerManagedPlugin)
@@ -48,7 +48,7 @@ public class ClassModuleCreator implements ModuleCreator
         return null;
     }
 
-    public Class getBeanClass(final String name, final ModuleDescriptor moduleDescriptor) throws ModuleClassNotFoundException
+    public Class getModuleClass(final String name, final ModuleDescriptor moduleDescriptor) throws ModuleClassNotFoundException
     {
         try
         {
@@ -56,8 +56,18 @@ public class ClassModuleCreator implements ModuleCreator
         }
         catch (ClassNotFoundException e)
         {
-            throw new ModuleClassNotFoundException(name, moduleDescriptor.getPluginKey(), moduleDescriptor.getKey(), e);
+            throw new ModuleClassNotFoundException(name, moduleDescriptor.getPluginKey(), moduleDescriptor.getKey(), e, createErrorMsg(name));
         }
+    }
+
+    private String createErrorMsg(String className)
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Couldn't load the class '").append(className).append("'. ");
+        builder.append("This could mean that you misspelled the name of the class (doublecheck) or that ");
+        builder.append("you're using a class in your plugin that you haven't provided bundle instructions for.");
+        builder.append("See http://confluence.atlassian.com/x/QRS-Cg for more details on how to fix this.");
+        return builder.toString();
     }
 
 }

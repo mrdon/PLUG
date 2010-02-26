@@ -41,7 +41,7 @@ public class TestClassModuleCreator extends TestCase
         final Object object = new Object();
         when(hostContainer.create(Object.class)).thenReturn(object);
 
-        final Object bean = moduleCreator.createBean("myBean", moduleDescriptor);
+        final Object bean = moduleCreator.createModule("myBean", moduleDescriptor);
         assertEquals(object, bean);
     }
 
@@ -54,7 +54,7 @@ public class TestClassModuleCreator extends TestCase
         when(moduleDescriptor.getPlugin()).thenReturn(plugin);
         final Object beanObject = new Object();
         when(containerAccessor.createBean(Object.class)).thenReturn(beanObject);
-        final Object bean = moduleCreator.createBean("java.lang.Object", moduleDescriptor);
+        final Object bean = moduleCreator.createModule("java.lang.Object", moduleDescriptor);
         assertEquals(beanObject, bean);
     }
 

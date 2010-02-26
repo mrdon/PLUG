@@ -61,7 +61,7 @@ public class DefaultModuleClassFactory implements ModuleClassFactory
         final ModuleCreator moduleCreator = getModuleCreatorForPrefix(beanReference);
         try
         {
-            result = moduleCreator.createBean(beanReference.beanIdentifier, moduleDescriptor);
+            result = moduleCreator.createModule(beanReference.beanIdentifier, moduleDescriptor);
         }
         catch (NoClassDefFoundError error)
         {
@@ -131,7 +131,7 @@ public class DefaultModuleClassFactory implements ModuleClassFactory
         final BeanReference beanReference = getBeanReference(name);
 
         final ModuleCreator moduleCreator = getModuleCreatorForPrefix(beanReference);
-        Object result = moduleCreator.getBeanClass(beanReference.beanIdentifier, moduleDescriptor);
+        Object result = moduleCreator.getModuleClass(beanReference.beanIdentifier, moduleDescriptor);
 
 
         if (result != null)

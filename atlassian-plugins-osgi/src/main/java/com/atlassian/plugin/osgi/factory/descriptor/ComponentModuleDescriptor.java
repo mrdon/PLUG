@@ -32,7 +32,7 @@ public class ComponentModuleDescriptor<Object> extends AbstractModuleDescriptor
     @Override
     public Object getModule()
     {
-        return (Object) new SpringModuleCreator().createBean(getKey(), this);
+        return (Object) new SpringModuleCreator().createModule(getKey(), this);
     }
 
     /**

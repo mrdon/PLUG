@@ -1,3 +1,5 @@
+package com.atlassian.plugin.osgi;
+
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.Plugin;
@@ -8,10 +10,6 @@ import com.atlassian.plugin.module.ClassModuleCreator;
 import com.atlassian.plugin.module.DefaultModuleClassFactory;
 import com.atlassian.plugin.module.ModuleClassFactory;
 import com.atlassian.plugin.module.ModuleCreator;
-import com.atlassian.plugin.osgi.PluginInContainerTestBase;
-import com.atlassian.plugin.osgi.SomeInterface;
-import com.atlassian.plugin.osgi.StubServletModuleDescriptor;
-import com.atlassian.plugin.osgi.factory.descriptor.ComponentModuleDescriptor;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.module.SpringModuleCreator;
@@ -261,5 +259,60 @@ public class TestPluginModuleClassCreation extends PluginInContainerTestBase
         assertEquals(2, pluginManager.getEnabledPlugins().size());
         assertEquals("first.MyServlet", pluginManager.getPlugin("first").getModuleDescriptor("obj").getModule().getClass().getName());
         assertTrue(pluginManager.getPlugin("second").getModuleDescriptor("obj").getModule() instanceof SomeInterface);
+    }
+
+    public void testFailToGetModuleClassFromSpring() throws Exception
+    {
+        final PluginJarBuilder firstBuilder = new PluginJarBuilder("first");
+        final File jar = firstBuilder
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='first' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <servlet key='foo' class='bean:beanId' name='spring bean for servlet'>",
+                        "       <url-pattern>/foo</url-pattern>",
+                        "    </servlet>",
+                        "<component key='obj' class='first.MyServlet' />",
+                        "</atlassian-plugin>")
+                .addFormattedJava("first.MyServlet",
+                        "package first;",
+                        "import javax.servlet.http.HttpServlet;",
+                        "public class MyServlet extends javax.servlet.http.HttpServlet {",
+                        "   public String getServletInfo() {",
+                        "       return 'bob';",
+                        "   }",
+                        "}")
+                .build();
+
+        HostContainer hostContainer = mock(HostContainer.class);
+        final ServletModuleManager servletModuleManager = mock(ServletModuleManager.class);
+        final List<ModuleCreator> providers = new ArrayList<ModuleCreator>();
+        ModuleCreator classModuleCreator = new ClassModuleCreator(hostContainer);
+        providers.add(classModuleCreator);
+        ModuleCreator springBeanModuleCreator = new SpringModuleCreator();
+        providers.add(springBeanModuleCreator);
+
+        final ModuleClassFactory moduleCreator = new DefaultModuleClassFactory(providers);
+        when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleCreator, servletModuleManager));
+
+        final DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(hostContainer);
+        moduleDescriptorFactory.addModuleDescriptor("servlet", StubServletModuleDescriptor.class);
+
+        initPluginManager(new HostComponentProvider()
+        {
+            public void provide(final ComponentRegistrar registrar)
+            {
+            }
+        }, moduleDescriptorFactory);
+
+        pluginManager.installPlugin(new JarPluginArtifact(jar));
+        assertEquals(0, pluginManager.getEnabledPlugins().size());
+        final Plugin plugin = pluginManager.getPlugins().iterator().next();
+        assertTrue(plugin instanceof UnloadablePlugin);
+        UnloadablePlugin unloadablePlugin = (UnloadablePlugin) plugin;
+        assertEquals("There was a problem loading the descriptor for module 'spring bean for servlet' in plugin 'Test'.\n"
+                + " Couldn't find the spring bean reference with the id 'beanId'. Please make sure you have defined a spring bean with this id within this plugin. Either using a native spring configuration or the component module descriptor, the spring bean id is the key of the module descriptor.If the spring bean you refer to is not part of this plugin, please make sure it is declared as public so it is visible to other plugins.", unloadablePlugin.getErrorText());
+
     }
 }

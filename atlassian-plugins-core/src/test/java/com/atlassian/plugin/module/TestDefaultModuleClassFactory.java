@@ -43,7 +43,7 @@ public class TestDefaultModuleClassFactory extends TestCase
 
         ModuleDescriptor moduleDescriptor = mock(ModuleDescriptor.class);
         when(moduleCreator.getPrefix()).thenReturn("jira");
-        when(moduleCreator.createBean("doSomething", moduleDescriptor)).thenReturn(bean);
+        when(moduleCreator.createModule("doSomething", moduleDescriptor)).thenReturn(bean);
         this.moduleClassFactory = new DefaultModuleClassFactory(creators);
 
         final Object returnedBean = this.moduleClassFactory.createModuleClass("jira:doSomething", moduleDescriptor);
@@ -77,7 +77,7 @@ public class TestDefaultModuleClassFactory extends TestCase
         ModuleDescriptor moduleDescriptor = mock(ModuleDescriptor.class);
         when(moduleCreator.getPrefix()).thenReturn("jira");
         when(moduleDescriptor.getPlugin()).thenReturn(plugin);
-        when(moduleCreator.createBean("doSomething", moduleDescriptor)).thenThrow(throwable);
+        when(moduleCreator.createModule("doSomething", moduleDescriptor)).thenThrow(throwable);
 
         this.moduleClassFactory = new DefaultModuleClassFactory(creators);
         this.moduleClassFactory.log = log;
@@ -116,7 +116,7 @@ public class TestDefaultModuleClassFactory extends TestCase
             assertEquals("Failed to create a module class. Prefix 'jira' not supported", ex.getMessage());
         }
         verify(moduleCreator, times(2)).getPrefix();
-        verify(moduleCreator, never()).createBean("doSomething", moduleDescriptor);
+        verify(moduleCreator, never()).createModule("doSomething", moduleDescriptor);
     }
 
     public void testModuleCreatorWithSamePrefix() throws Exception

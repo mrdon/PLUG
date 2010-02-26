@@ -26,18 +26,20 @@ public interface ModuleCreator
      * @param name the name of the bean. Cannot contain a prefix. Cannot be null.
      * @param moduleDescriptor the ModuleDescriptor of the plugin. Cannot be null.
      * @return a new bean.
+     * 
      * @throws PluginParseException Thrown if unable to parse the value or instantiate the bean name
      */
-    <T> T createBean(String name, ModuleDescriptor<T> moduleDescriptor) throws PluginParseException;
+    <T> T createModule(String name, ModuleDescriptor<T> moduleDescriptor) throws PluginParseException;
 
     /**
-     * Returns the class for this module class.
+     * Returns the class for this module.
      *
      * @param name the name of the bean. Cannot contain a prefix. Cannot be null.
      * @param moduleDescriptor the ModuleDescriptor of the plugin. Cannot be null.
-     * @return the Class for the module class.
+     * @return the Class of the module.
+     *
      * @throws ModuleClassNotFoundException Thrown if the bean class could not be found
      */
-    Class getBeanClass(String name, final ModuleDescriptor moduleDescriptor) throws ModuleClassNotFoundException;
+    Class getModuleClass(String name, final ModuleDescriptor moduleDescriptor) throws ModuleClassNotFoundException;
 
 }

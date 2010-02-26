@@ -46,7 +46,7 @@ public class TestSpringModuleCreator extends TestCase
 
         try
         {
-            moduleCreator.createBean("springBean", moduleDescriptor);
+            moduleCreator.createModule("springBean", moduleDescriptor);
             fail("Spring not available for non osgi plugins. Bean creation should have failed");
         }
         catch(IllegalArgumentException e)
@@ -63,7 +63,7 @@ public class TestSpringModuleCreator extends TestCase
         when(moduleDescriptor.getPlugin()).thenReturn(plugin);
         final Object springBean = new Object();
         when(springContextAccessor.getBean("springBean")).thenReturn(springBean);
-        final Object obj = moduleCreator.createBean("springBean", moduleDescriptor);
+        final Object obj = moduleCreator.createModule("springBean", moduleDescriptor);
         verify(springContextAccessor).getBean("springBean");
         assertEquals(obj, springBean);
     }

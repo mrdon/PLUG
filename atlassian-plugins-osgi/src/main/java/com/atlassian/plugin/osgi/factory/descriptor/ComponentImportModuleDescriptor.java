@@ -21,7 +21,7 @@ public class ComponentImportModuleDescriptor extends AbstractModuleDescriptor<Ob
 
     public Object getModule()
     {
-        return new SpringModuleCreator().createBean(getKey(), this);
+        return new SpringModuleCreator().createModule(getKey(), this);
     }
 
 }
