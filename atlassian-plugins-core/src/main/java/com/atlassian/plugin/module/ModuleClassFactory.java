@@ -37,8 +37,9 @@ public interface ModuleClassFactory
      * @param moduleDescriptor   the {@link com.atlassian.plugin.ModuleDescriptor}. Cannot be null
      *
      * @return the module class.
+     * @throws ModuleClassNotFoundException If the module class could not be found
      */
-    <T> T getModuleClass(String name, ModuleDescriptor<T> moduleDescriptor);
+    <T> T getModuleClass(String name, ModuleDescriptor<T> moduleDescriptor) throws ModuleClassNotFoundException;
 
 
 

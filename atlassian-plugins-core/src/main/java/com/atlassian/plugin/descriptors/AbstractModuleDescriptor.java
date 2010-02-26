@@ -148,7 +148,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
      * Override this for module descriptors which don't expect to be able to load a class successfully
      * @since 2.5.0
      */
-    protected void loadModuleClass()
+    protected void loadModuleClass() throws PluginParseException
     {
         if (moduleClassName != null) //not all plugins have to have a class
         {

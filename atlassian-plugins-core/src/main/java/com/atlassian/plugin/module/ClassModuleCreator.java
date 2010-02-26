@@ -1,6 +1,7 @@
 package com.atlassian.plugin.module;
 
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 
 /**
@@ -27,7 +28,7 @@ public class ClassModuleCreator implements ModuleCreator
         return PREFIX;
     }
 
-    public <T> T createBean(String name, ModuleDescriptor<T> moduleDescriptor)
+    public <T> T createBean(String name, ModuleDescriptor<T> moduleDescriptor) throws PluginParseException
     {
         Class<T> cls = moduleDescriptor.getModuleClass();
         if (cls == null)
@@ -38,7 +39,7 @@ public class ClassModuleCreator implements ModuleCreator
         if (moduleDescriptor.getPlugin() instanceof ContainerManagedPlugin)
         {
             ContainerManagedPlugin cmPlugin = (ContainerManagedPlugin) moduleDescriptor.getPlugin();
-            return (T) cmPlugin.getContainerAccessor().createBean(cls);
+            return cmPlugin.getContainerAccessor().createBean(cls);
         }
         else if (cls != null)
         {
@@ -47,18 +48,16 @@ public class ClassModuleCreator implements ModuleCreator
         return null;
     }
 
-    public Class getBeanClass(final String name, final ModuleDescriptor moduleDescriptor)
+    public Class getBeanClass(final String name, final ModuleDescriptor moduleDescriptor) throws ModuleClassNotFoundException
     {
-        Class cls = null;
         try
         {
-            cls = moduleDescriptor.getPlugin().loadClass(name, null);
+            return moduleDescriptor.getPlugin().loadClass(name, null);
         }
         catch (ClassNotFoundException e)
         {
-            throw new RuntimeException(e);
+            throw new ModuleClassNotFoundException(name, moduleDescriptor.getPluginKey(), moduleDescriptor.getKey(), e);
         }
-        return cls;
     }
 
 }

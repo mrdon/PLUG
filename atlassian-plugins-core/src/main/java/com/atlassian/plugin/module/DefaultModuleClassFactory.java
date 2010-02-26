@@ -49,7 +49,7 @@ public class DefaultModuleClassFactory implements ModuleClassFactory
         }
     }
 
-    public <T> T createModuleClass(String className, final ModuleDescriptor<T> moduleDescriptor)
+    public <T> T createModuleClass(String className, final ModuleDescriptor<T> moduleDescriptor) throws PluginParseException
     {
         Validate.notNull(className, "The className cannot be null");
         Validate.notNull(moduleDescriptor, "The moduleDescriptor cannot be null");
@@ -105,17 +105,16 @@ public class DefaultModuleClassFactory implements ModuleClassFactory
         return new BeanReference(prefix, className);
     }
 
-    public <T> T getModuleClass(final String name, final ModuleDescriptor<T> moduleDescriptor)
+    public <T> T getModuleClass(final String name, final ModuleDescriptor<T> moduleDescriptor) throws ModuleClassNotFoundException
     {
         Validate.notNull(name, "The class name cannot be null");
         Validate.notNull(moduleDescriptor, "The module descriptor cannot be null");
 
         final BeanReference beanReference = getBeanReference(name);
 
-        Object result = null;
-
         final ModuleCreator moduleCreator = getModuleCreatorForPrefix(beanReference);
-        result = moduleCreator.getBeanClass(beanReference.beanIdentifier, moduleDescriptor);
+        Object result = moduleCreator.getBeanClass(beanReference.beanIdentifier, moduleDescriptor);
+
 
         if (result != null)
         {

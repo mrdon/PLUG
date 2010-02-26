@@ -1,6 +1,7 @@
 package com.atlassian.plugin.module;
 
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.PluginParseException;
 
 /**
  * A ModuleCreator is used when instantiating the module class object of a {@link com.atlassian.plugin.ModuleDescriptor}.
@@ -25,8 +26,9 @@ public interface ModuleCreator
      * @param name the name of the bean. Cannot contain a prefix. Cannot be null.
      * @param moduleDescriptor the ModuleDescriptor of the plugin. Cannot be null.
      * @return a new bean.
+     * @throws PluginParseException Thrown if unable to parse the value or instantiate the bean name
      */
-    <T> T createBean(String name, ModuleDescriptor<T> moduleDescriptor);
+    <T> T createBean(String name, ModuleDescriptor<T> moduleDescriptor) throws PluginParseException;
 
     /**
      * Returns the class for this module class.
@@ -34,7 +36,8 @@ public interface ModuleCreator
      * @param name the name of the bean. Cannot contain a prefix. Cannot be null.
      * @param moduleDescriptor the ModuleDescriptor of the plugin. Cannot be null.
      * @return the Class for the module class.
+     * @throws ModuleClassNotFoundException Thrown if the bean class could not be found
      */
-    Class getBeanClass(String name, final ModuleDescriptor moduleDescriptor);
+    Class getBeanClass(String name, final ModuleDescriptor moduleDescriptor) throws ModuleClassNotFoundException;
 
 }
