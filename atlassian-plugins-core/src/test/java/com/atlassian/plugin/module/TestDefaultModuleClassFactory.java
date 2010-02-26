@@ -52,34 +52,20 @@ public class TestDefaultModuleClassFactory extends TestCase
 
     public void testCreateBeanThrowsNoClassDefFoundError() throws Exception
     {
-        ModuleCreator moduleCreator = mock(ModuleCreator.class);
-        Logger log = mock(Logger.class);
-
-        final List<ModuleCreator> creators = new ArrayList<ModuleCreator>();
-        creators.add(moduleCreator);
-
-        Plugin plugin = mock(Plugin.class);
-        ModuleDescriptor moduleDescriptor = mock(ModuleDescriptor.class);
-        when(moduleCreator.getPrefix()).thenReturn("jira");
-        when(moduleDescriptor.getPlugin()).thenReturn(plugin);
-        when(moduleCreator.createBean("doSomething", moduleDescriptor)).thenThrow(new NoClassDefFoundError("foo/Bar"));
-
-        this.moduleClassFactory = new DefaultModuleClassFactory(creators);
-        this.moduleClassFactory.log = log;
-
-        try
-        {
-            this.moduleClassFactory.createModuleClass("jira:doSomething", moduleDescriptor);
-
-            fail("Should not return");
-        }
-        catch (NoClassDefFoundError err)
-        {
-            verify(log).error(anyString());
-        }
+        _testCreateWithThrowableCausingErrorLogMessage(new NoClassDefFoundError());
     }
 
     public void testCreateBeanThrowsUnsatisfiedDependencyException() throws Exception
+    {
+        _testCreateWithThrowableCausingErrorLogMessage(new UnsatisfiedDependencyException());
+    }
+
+    public void testCreateBeanThrowsLinkageError() throws Exception
+    {
+        _testCreateWithThrowableCausingErrorLogMessage(new LinkageError());
+    }
+
+    private void _testCreateWithThrowableCausingErrorLogMessage(Throwable throwable)
     {
         ModuleCreator moduleCreator = mock(ModuleCreator.class);
         Logger log = mock(Logger.class);
@@ -91,7 +77,7 @@ public class TestDefaultModuleClassFactory extends TestCase
         ModuleDescriptor moduleDescriptor = mock(ModuleDescriptor.class);
         when(moduleCreator.getPrefix()).thenReturn("jira");
         when(moduleDescriptor.getPlugin()).thenReturn(plugin);
-        when(moduleCreator.createBean("doSomething", moduleDescriptor)).thenThrow(new UnsatisfiedDependencyException());
+        when(moduleCreator.createBean("doSomething", moduleDescriptor)).thenThrow(throwable);
 
         this.moduleClassFactory = new DefaultModuleClassFactory(creators);
         this.moduleClassFactory.log = log;
@@ -102,7 +88,7 @@ public class TestDefaultModuleClassFactory extends TestCase
 
             fail("Should not return");
         }
-        catch (UnsatisfiedDependencyException err)
+        catch (Throwable err)
         {
             verify(log).error(anyString());
         }

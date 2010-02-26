@@ -69,7 +69,15 @@ public class DefaultModuleClassFactory implements ModuleClassFactory
                      " for module '" + moduleDescriptor.getKey() + "': " + error.getMessage() + ".  This error is usually caused by your" +
                      " plugin using a imported component class that itself relies on other packages in the product. You can probably fix this by" +
                      " adding the missing class's package to your <Import-Package> instructions; for more details on how to fix this, see" +
-                     " http://confluence.atlassian.com/x/QRS-Cg.");
+                     " http://confluence.atlassian.com/x/QRS-Cg .");
+            throw error;
+        }
+        catch (LinkageError error)
+        {
+            log.error("Detected an error (LinkageError) instantiating the module for plugin '" + moduleDescriptor.getPlugin().getKey() + "'" +
+                     " for module '" + moduleDescriptor.getKey() + "': " + error.getMessage() + ".  This error is usually caused by your" +
+                     " plugin including copies of libraries in META-INF/lib unnecessarily. For more details on how to fix this, see" +
+                     " http://confluence.atlassian.com/x/yQEhCw .");
             throw error;
         }
         catch (RuntimeException ex)
