@@ -65,6 +65,7 @@ public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
      * Returns the web resource contexts this resource is associated with.
      *
      * @return  the web resource contexts this resource is associated with.
+     * @since 2.5.0
      */
     public Set<String> getContexts()
     {
