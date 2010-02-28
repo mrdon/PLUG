@@ -111,18 +111,9 @@ public class TestDefaultServletModuleManager extends TestCase
         assertTrue(servlet.serviceCalled);
     }
 
-    public void testGettingServletNoDevMode()
+    public void testGettingServlet()
     {
-        System.setProperty(ATLASSIAN_DEV_MODE, "false");
         getServletTwice(false);
-        System.setProperty(ATLASSIAN_DEV_MODE, "true");
-    }
-
-    public void testGettingServletDevMode()
-    {
-        System.setProperty(ATLASSIAN_DEV_MODE, "true");
-        getServletTwice(true);
-        System.setProperty(ATLASSIAN_DEV_MODE, "false");
     }
 
     private void getServletTwice(boolean expectNewServletEachCall)
@@ -152,18 +143,9 @@ public class TestDefaultServletModuleManager extends TestCase
         assertTrue(expectedServlet == ((DelegatingPluginServlet)mgr.getServlet(descriptor, servletConfig)).getDelegatingServlet());
     }
 
-    public void testGettingFilterNoDevMode()
+    public void testGettingFilter()
     {
-        System.setProperty(ATLASSIAN_DEV_MODE, "false");
         getFilterTwice(false);
-        System.setProperty(ATLASSIAN_DEV_MODE, "true");
-    }
-
-    public void testGettingFilterDevMode()
-    {
-        System.setProperty(ATLASSIAN_DEV_MODE, "true");
-        getFilterTwice(true);
-        System.setProperty(ATLASSIAN_DEV_MODE, "false");
     }
 
     private void getFilterTwice(boolean expectNewFilterEachCall)

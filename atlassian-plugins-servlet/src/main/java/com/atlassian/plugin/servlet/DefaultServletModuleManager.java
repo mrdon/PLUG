@@ -64,7 +64,6 @@ public class DefaultServletModuleManager implements ServletModuleManager
     private final ConcurrentMap<String, LazyLoadedReference<Filter>> filterRefs = new ConcurrentHashMap<String, LazyLoadedReference<Filter>>();
 
     private final ConcurrentMap<Plugin, ContextLifecycleReference> pluginContextRefs = new ConcurrentHashMap<Plugin, ContextLifecycleReference>();
-    private final boolean inDevMode;
 
     /**
      * Constructor that sets itself in the servlet context for later use in dispatching servlets and filters.
@@ -105,11 +104,6 @@ public class DefaultServletModuleManager implements ServletModuleManager
         servletMapper = servletPathMapper;
         filterMapper = filterPathMapper;
         pluginEventManager.register(this);
-        inDevMode = Boolean.getBoolean(PluginUtils.ATLASSIAN_DEV_MODE);
-        if (inDevMode)
-        {
-            log.warn("Dev mode detected - servlet and filter instances won't be cached");
-        }
     }
 
     public void addServletModule(final ServletModuleDescriptor descriptor)
@@ -275,15 +269,11 @@ public class DefaultServletModuleManager implements ServletModuleManager
             final ServletContext servletContext = getWrappedContext(descriptor.getPlugin(), servletConfig.getServletContext());
             servletRef = new LazyLoadedServletReference(descriptor, servletContext);
 
-            // in dev mode, don't cache the retrieved servlet
-            if (!inDevMode)
+            // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
+            // want to use that so there is only ever one reference
+            if (servletRefs.putIfAbsent(descriptor.getCompleteKey(), servletRef) != null)
             {
-                // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
-                // want to use that so there is only ever one reference
-                if (servletRefs.putIfAbsent(descriptor.getCompleteKey(), servletRef) != null)
-                {
-                    servletRef = servletRefs.get(descriptor.getCompleteKey());
-                }
+                servletRef = servletRefs.get(descriptor.getCompleteKey());
             }
         }
         HttpServlet servlet = null;
@@ -320,14 +310,11 @@ public class DefaultServletModuleManager implements ServletModuleManager
             final ServletContext servletContext = getWrappedContext(descriptor.getPlugin(), filterConfig.getServletContext());
             filterRef = new LazyLoadedFilterReference(descriptor, servletContext);
 
-            if (!inDevMode)
+            // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
+            // want to use that so there is only ever one reference
+            if (filterRefs.putIfAbsent(descriptor.getCompleteKey(), filterRef) != null)
             {
-                // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
-                // want to use that so there is only ever one reference
-                if (filterRefs.putIfAbsent(descriptor.getCompleteKey(), filterRef) != null)
-                {
-                    filterRef = filterRefs.get(descriptor.getCompleteKey());
-                }
+                filterRef = filterRefs.get(descriptor.getCompleteKey());
             }
         }
         try
