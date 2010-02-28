@@ -7,6 +7,7 @@ import com.atlassian.plugin.PluginArtifactFactory;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.PluginFactory;
+import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.ScanningPluginLoader;
 import junit.framework.TestCase;
 import static org.mockito.Matchers.anyObject;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.never;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.net.URI;
@@ -53,6 +55,38 @@ public class TestScanningPluginLoader extends TestCase
         loader.loadAllPlugins(null);
         loader.onShutdown(null);
         verify(plugin).uninstall();
+    }
+
+    public void testFactoryThrowsRuntimeException()
+    {
+        testFactoryThrowsThrowable(new IllegalArgumentException());
+    }
+
+    public void testFactoryThrowsError()
+    {
+        testFactoryThrowsThrowable(new NoClassDefFoundError());
+    }
+
+    private void testFactoryThrowsThrowable(Throwable e)
+    {
+        PluginArtifactFactory artFactory = mock(PluginArtifactFactory.class);
+        PluginArtifact art = mock(PluginArtifact.class);
+        when(artFactory.create((URI)anyObject())).thenReturn(art);
+
+
+        DeploymentUnit unit = new DeploymentUnit(new File("foo.jar"));
+        Scanner scanner = mock(Scanner.class);
+        when(scanner.getDeploymentUnits()).thenReturn(Collections.singletonList(unit));
+        PluginFactory factory = mock(PluginFactory.class);
+
+        when(factory.canCreate(art)).thenReturn("foo");
+        when(factory.create(art, null)).thenThrow(e);
+
+        ScanningPluginLoader loader = new ScanningPluginLoader(scanner, Arrays.asList(factory), artFactory, pluginEventManager);
+        Collection<Plugin> plugins = loader.loadAllPlugins(null);
+        assertNotNull(plugins);
+        assertEquals(1, plugins.size());
+        assertTrue(plugins.iterator().next() instanceof UnloadablePlugin);
     }
 
     public void testOnShutdownButUninstallable()

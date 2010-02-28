@@ -120,7 +120,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
                     }
                 }
             }
-            catch (final RuntimeException ex)
+            catch (final Throwable ex)
             {
                 log.error("Unable to deploy plugin '" + pluginKey + "', file " + deploymentUnit, ex);
                 errorText = ex.getMessage();
