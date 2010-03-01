@@ -4,6 +4,8 @@ import junit.framework.TestCase;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.event.impl.ListenerMethodSelector;
 import com.atlassian.plugin.event.impl.MethodNameListenerMethodSelector;
+import com.atlassian.plugin.event.PluginEventListener;
+import com.atlassian.event.api.EventListener;
 
 import java.lang.reflect.Method;
 
@@ -20,38 +22,39 @@ public class TestPluginEventManagerImpl extends TestCase
     {
         eventManager = null;
     }
+
     public void testRegister()
     {
-        Foo foo = new Foo();
-        eventManager.register(foo);
+        MethodTestListener methodTestListener = new MethodTestListener();
+        eventManager.register(methodTestListener);
         eventManager.broadcast(new Object());
-        assertEquals(1, foo.called);
+        assertEquals(1, methodTestListener.called);
     }
 
     public void testRegisterWithBroadcastSupertype()
     {
-        Foo foo = new Foo();
-        eventManager.register(foo);
+        MethodTestListener methodTestListener = new MethodTestListener();
+        eventManager.register(methodTestListener);
         eventManager.broadcast(new String());
-        assertEquals(1, foo.called);
+        assertEquals(1, methodTestListener.called);
     }
 
     public void testRegisterWithFooBroadcastSupertype()
     {
-        Foo foo = new Foo();
-        eventManager.register(foo);
-        eventManager.broadcast(new Foo());
-        assertEquals(1, foo.fooCalled);
-        assertEquals(1, foo.called);
+        MethodTestListener methodTestListener = new MethodTestListener();
+        eventManager.register(methodTestListener);
+        eventManager.broadcast(new MethodTestListener());
+        assertEquals(1, methodTestListener.fooCalled);
+        assertEquals(1, methodTestListener.called);
     }
 
     public void testRegisterTwice()
     {
-        Foo foo = new Foo();
-        eventManager.register(foo);
-        eventManager.register(foo);
+        MethodTestListener methodTestListener = new MethodTestListener();
+        eventManager.register(methodTestListener);
+        eventManager.register(methodTestListener);
         eventManager.broadcast(new Object());
-        assertEquals(1, foo.called);
+        assertEquals(1, methodTestListener.called);
     }
 
     public void testRegisterWithBadListener()
@@ -79,46 +82,55 @@ public class TestPluginEventManagerImpl extends TestCase
                     }
                 }
         });
-        Foo foo = new Foo();
-        eventManager.register(foo);
+        MethodTestListener methodTestListener = new MethodTestListener();
+        eventManager.register(methodTestListener);
         eventManager.broadcast("jim");
-        assertEquals(1, foo.jimCalled);
+        assertEquals(1, methodTestListener.jimCalled);
     }
 
-    public void testRegisterWithOverlappingSelectors()
+    public void testRegisterWithOverlappingSelectorsBroadcastsTwoMessages()
     {
         eventManager = new DefaultPluginEventManager(new ListenerMethodSelector[]{
                 new MethodNameListenerMethodSelector(), new MethodNameListenerMethodSelector()});
-        Foo foo = new Foo();
-        eventManager.register(foo);
+        MethodTestListener methodTestListener = new MethodTestListener();
+        eventManager.register(methodTestListener);
         eventManager.broadcast(new Object());
-        assertEquals(1, foo.called);
+        assertEquals(2, methodTestListener.called);
     }
 
     public void testRegisterWithCustom()
     {
-        Foo foo = new Foo();
-        eventManager.register(foo);
+        MethodTestListener methodTestListener = new MethodTestListener();
+        eventManager.register(methodTestListener);
         eventManager.broadcast(new Object());
-        assertEquals(1, foo.called);
+        assertEquals(1, methodTestListener.called);
+    }
+
+    public void testRegisterAnnotatedListener()
+    {
+        AnnotationTestListener listener = new AnnotationTestListener();
+        eventManager.register(listener);
+        eventManager.broadcast(new Object());
+        assertEquals(1, listener.eventListenerCalled);
+        assertEquals(1, listener.pluginEventListenerCalled);
     }
 
     public void testUnregister()
     {
-        Foo foo = new Foo();
-        eventManager.register(foo);
+        MethodTestListener methodTestListener = new MethodTestListener();
+        eventManager.register(methodTestListener);
         eventManager.broadcast(new Object());
-        eventManager.unregister(foo);
+        eventManager.unregister(methodTestListener);
         eventManager.broadcast(new Object());
-        assertEquals(1, foo.called);
+        assertEquals(1, methodTestListener.called);
     }
 
     public void testSuperEvent()
     {
-        Foo foo = new Foo();
-        eventManager.register(foo);
-        eventManager.broadcast(new Foo());
-        assertEquals(1, foo.called);
+        MethodTestListener methodTestListener = new MethodTestListener();
+        eventManager.register(methodTestListener);
+        eventManager.broadcast(new MethodTestListener());
+        assertEquals(1, methodTestListener.called);
     }
 
     public void testRegisterNull()
@@ -127,13 +139,45 @@ public class TestPluginEventManagerImpl extends TestCase
         {
             eventManager.register(null);
             fail("should have thrown exception");
-        } catch (IllegalArgumentException ex)
+        }
+        catch (IllegalArgumentException ex)
         {
             // test passed
         }
     }
 
-    public static class Foo
+    public void testUnregisterNull()
+    {
+        try
+        {
+            eventManager.unregister(null);
+            fail("should have thrown an exception");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // passes
+        }
+    }
+
+    public static class AnnotationTestListener
+    {
+        int pluginEventListenerCalled = 0;
+        int eventListenerCalled = 0;
+
+        @PluginEventListener
+        public void doEventOld(Object obj)
+        {
+            ++pluginEventListenerCalled;
+        }
+
+        @EventListener
+        public void doEventNew(Object obj)
+        {
+            ++eventListenerCalled;
+        }
+    }
+
+    public static class MethodTestListener
     {
         int called = 0;
         int fooCalled = 0;
@@ -144,7 +188,7 @@ public class TestPluginEventManagerImpl extends TestCase
             called++;
         }
 
-        public void channel(Foo obj)
+        public void channel(MethodTestListener obj)
         {
             fooCalled++;
         }

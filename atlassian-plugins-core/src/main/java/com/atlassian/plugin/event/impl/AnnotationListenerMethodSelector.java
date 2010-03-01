@@ -21,6 +21,7 @@ public class AnnotationListenerMethodSelector implements ListenerMethodSelector
     {
         this.markerAnnotation = markerAnnotation;
     }
+
     public boolean isListenerMethod(Method method)
     {
         return (method.getAnnotation(markerAnnotation) != null);

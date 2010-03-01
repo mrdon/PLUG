@@ -24,7 +24,6 @@ import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

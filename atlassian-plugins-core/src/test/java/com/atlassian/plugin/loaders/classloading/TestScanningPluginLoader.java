@@ -1,6 +1,5 @@
 package com.atlassian.plugin.loaders.classloading;
 
-import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.PluginArtifactFactory;

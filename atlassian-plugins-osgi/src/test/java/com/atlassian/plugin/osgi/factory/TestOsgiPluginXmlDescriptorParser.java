@@ -1,22 +1,16 @@
 package com.atlassian.plugin.osgi.factory;
 
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.PluginParseException;
 import junit.framework.TestCase;
+import org.dom4j.Element;
+import org.dom4j.tree.DefaultElement;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
-
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.impl.StaticPlugin;
-import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
-import com.mockobjects.dynamic.Mock;
-import com.mockobjects.dynamic.C;
-import org.dom4j.tree.DefaultElement;
-import org.dom4j.Element;
-import org.osgi.framework.Bundle;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
 
 public class TestOsgiPluginXmlDescriptorParser extends TestCase
 {

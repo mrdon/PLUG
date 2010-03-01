@@ -1,10 +1,8 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.*;
-import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.impl.UnloadablePlugin;
-import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.test.PluginJarBuilder;
