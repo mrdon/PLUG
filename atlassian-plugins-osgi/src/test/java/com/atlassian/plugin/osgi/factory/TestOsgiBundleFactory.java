@@ -47,6 +47,18 @@ public class TestOsgiBundleFactory extends TestCase {
         assertEquals("my.foo.symbolicName-1.0", deployer.canCreate(new JarPluginArtifact(bundle)));
     }
 
+    public void testCanDeployStaticPluginWithManifest() throws PluginParseException, IOException
+    {
+        File bundle = new PluginJarBuilder("someplugin")
+            .addResource("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n" +
+                        "Import-Package: javax.swing\n" +
+                        "Bundle-SymbolicName: my.foo.symbolicName\n" +
+                        "Bundle-Version: 1.0\n")
+            .addPluginInformation("foo", "Foo", "1.0", 1)
+            .build();
+        assertEquals(null, deployer.canCreate(new JarPluginArtifact(bundle)));
+    }
+
     public void testCanDeployNoBundle() throws IOException, PluginParseException {
 
         File plugin = new PluginJarBuilder("someplugin")

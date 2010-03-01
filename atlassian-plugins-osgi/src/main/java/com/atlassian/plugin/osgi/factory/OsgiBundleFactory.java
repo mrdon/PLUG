@@ -8,6 +8,7 @@ import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
+import com.atlassian.plugin.parsers.DescriptorParser;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.io.IOUtils;
 import org.osgi.framework.Constants;
@@ -31,19 +32,29 @@ public class OsgiBundleFactory implements PluginFactory
 
     private final OsgiContainerManager osgi;
     private final PluginEventManager pluginEventManager;
+    private final OsgiPluginXmlDescriptorParserFactory descriptorParserFactory;
+    private final String pluginDescriptorFileName;
 
     public OsgiBundleFactory(OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
+        this(PluginAccessor.Descriptor.FILENAME, osgi, pluginEventManager);
+    }
+
+    public OsgiBundleFactory(String pluginDescriptorFileName, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
+    {
+        this.pluginDescriptorFileName = pluginDescriptorFileName;
         Validate.notNull(osgi, "The osgi container is required");
         Validate.notNull(pluginEventManager, "The plugin event manager is required");
         this.osgi = osgi;
         this.pluginEventManager = pluginEventManager;
+        this.descriptorParserFactory = new OsgiPluginXmlDescriptorParserFactory();
     }
 
     public String canCreate(PluginArtifact pluginArtifact) throws PluginParseException {
         Validate.notNull(pluginArtifact, "The plugin artifact is required");
         String pluginKey = null;
         InputStream manifestStream = null;
+        InputStream descriptorStream = null;
 
         try
         {
@@ -60,6 +71,19 @@ public class OsgiBundleFactory implements PluginFactory
                 if (symName != null)
                 {
                     pluginKey = OsgiHeaderUtil.getPluginKey(mf);
+
+                    // Check for a descriptor in case it really is a version 1 plugin
+                    descriptorStream = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
+                    if (descriptorStream != null)
+                    {
+                        final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
+                        if (descriptorParser.getPluginsVersion() == 1)
+                        {
+                            // Nope, it isn't a bundle
+                            pluginKey = null;
+                        }
+                    }
+
                 }
             }
             return pluginKey;
@@ -67,6 +91,7 @@ public class OsgiBundleFactory implements PluginFactory
         finally
         {
             IOUtils.closeQuietly(manifestStream);
+            IOUtils.closeQuietly(descriptorStream);
         }
     }
 
