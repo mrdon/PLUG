@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.LinkedHashSet;
 
+import static com.atlassian.plugin.util.EfficientStringUtils.endsWith;
+
 /**
  * Default implementation of {@link PluginResourceLocator}.
  * @since 2.2
@@ -188,8 +190,9 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     private boolean descriptorTypeMatchesResourceType(ResourceDescriptor resourceDescriptor, String type)
     {
-        return resourceDescriptor.getName().endsWith("." + type);
+        return endsWith(resourceDescriptor.getName(), ".", type);
     }
+
 
     private DownloadableResource locatePluginResource(String moduleCompleteKey, String resourceName)
     {
