@@ -1,37 +1,21 @@
 package com.atlassian.plugin.event.impl;
 
-import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.event.NotificationException;
-import com.atlassian.plugin.util.ClassUtils;
-import com.atlassian.plugin.util.collect.Function;
-import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
-import com.atlassian.event.api.EventPublisher;
 import com.atlassian.event.api.EventListener;
-import com.atlassian.event.internal.EventPublisherImpl;
+import com.atlassian.event.api.EventPublisher;
+import com.atlassian.event.config.EventThreadPoolConfiguration;
+import com.atlassian.event.config.ListenerHandlersConfiguration;
 import com.atlassian.event.internal.AsynchronousAbleEventDispatcher;
 import com.atlassian.event.internal.EventExecutorFactoryImpl;
+import com.atlassian.event.internal.EventPublisherImpl;
 import com.atlassian.event.internal.EventThreadPoolConfigurationImpl;
-import com.atlassian.event.internal.AnnotatedMethodsListenerHandler;
-import com.atlassian.event.config.ListenerHandlersConfiguration;
-import com.atlassian.event.config.EventThreadPoolConfiguration;
-import com.atlassian.event.spi.ListenerHandler;
 import com.atlassian.event.spi.EventDispatcher;
 import com.atlassian.event.spi.EventExecutorFactory;
-import com.google.common.collect.Collections2;
+import com.atlassian.event.spi.ListenerHandler;
+import com.atlassian.plugin.event.NotificationException;
+import com.atlassian.plugin.event.PluginEventManager;
 
-import org.apache.commons.lang.Validate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.List;
 
 /**
  * Simple, synchronous event manager that uses one or more method selectors to determine event listeners.  The default
