@@ -10,7 +10,7 @@ public class ObjectModuleDescriptor extends AbstractModuleDescriptor<Object>
 {
     public ObjectModuleDescriptor()
     {
-        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
     }
 
     public ObjectModuleDescriptor(ModuleClassFactory moduleCreator)

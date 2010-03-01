@@ -3,12 +3,6 @@ package com.atlassian.plugin.main;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.module.ClassModuleCreator;
-import com.atlassian.plugin.module.DefaultModuleClassFactory;
-import com.atlassian.plugin.module.ModuleCreator;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.manager.DefaultPluginManager;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
@@ -17,22 +11,21 @@ import com.atlassian.plugin.loaders.BundledPluginLoader;
 import com.atlassian.plugin.loaders.ClassPathPluginLoader;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
+import com.atlassian.plugin.manager.DefaultPluginManager;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
-import com.atlassian.plugin.osgi.module.SpringModuleCreator;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Facade interface to the Atlassian Plugins framework.  See the package Javadocs for usage information.
@@ -42,7 +35,6 @@ public class AtlassianPlugins
     private OsgiContainerManager osgiContainerManager;
     private PluginEventManager pluginEventManager;
     private DefaultPluginManager pluginManager;
-    private PluginsConfiguration pluginsConfiguration;
     private HotDeployer hotDeployer;
 
     private static final Logger log = LoggerFactory.getLogger(AtlassianPlugins.class);
@@ -68,18 +60,13 @@ public class AtlassianPlugins
                 new CriticalHostComponentProvider(config.getHostComponentProvider(), pluginEventManager),
                 pluginEventManager);
 
-        List<ModuleCreator> providers = new ArrayList<ModuleCreator>();
-        providers.add(new ClassModuleCreator(new DefaultHostContainer()));
-        providers.add(new SpringModuleCreator());
-        ModuleClassFactory moduleCreator = new DefaultModuleClassFactory(providers);
-
         // plugin factories/deployers
         final OsgiPluginFactory osgiPluginDeployer = new OsgiPluginFactory(
                 config.getPluginDescriptorFilename(),
                 config.getApplicationKey(),
                 config.getOsgiPersistentCache(),
                 osgiContainerManager,
-                pluginEventManager, moduleCreator);
+                pluginEventManager);
         final OsgiBundleFactory osgiBundleDeployer = new OsgiBundleFactory(osgiContainerManager, pluginEventManager);
         final List<PluginFactory> pluginDeployers = new LinkedList<PluginFactory>(Arrays.asList(osgiPluginDeployer, osgiBundleDeployer));
         if (config.isUseLegacyDynamicPluginDeployer())
@@ -113,9 +100,6 @@ public class AtlassianPlugins
         {
             hotDeployer = new HotDeployer(pluginManager, config.getHotDeployPollingPeriod());
         }
-        this.pluginsConfiguration = config;
-
-
     }
 
     /**

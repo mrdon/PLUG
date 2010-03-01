@@ -39,24 +39,10 @@ public interface ModuleClassFactory
      * @return the module class.
      * @throws ModuleClassNotFoundException If the module class could not be found
      */
-    <T> T getModuleClass(String name, ModuleDescriptor<T> moduleDescriptor) throws ModuleClassNotFoundException;
+    <T> Class<T> getModuleClass(String name, ModuleDescriptor<T> moduleDescriptor) throws ModuleClassNotFoundException;
 
 
 
-    static final ModuleClassFactory NOOP_MODULE_CREATOR  = new NoOpModuleClassFactory();
+    static final ModuleClassFactory LEGACY_MODULE_CLASS_FACTORY = new LegacyModuleClassFactory();
 
-    static class NoOpModuleClassFactory implements ModuleClassFactory
-    {
-
-        public <T> T createModuleClass(final String name, final ModuleDescriptor<T> moduleDescriptor)
-                throws PluginParseException
-        {
-            return null;
-        }
-
-        public <T> T getModuleClass(final String name, final ModuleDescriptor<T> moduleDescriptor)
-        {
-            return null;
-        }
-    }
 }

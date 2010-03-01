@@ -11,7 +11,7 @@ public class MockModuleDescriptor<T> extends AbstractModuleDescriptor<T>
 
     public MockModuleDescriptor(Plugin plugin, String key, T module)
     {
-        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
         this.module = module;
         this.plugin = plugin;
         this.key = key;

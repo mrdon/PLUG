@@ -2,14 +2,13 @@ package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.IllegalPluginStateException;
-import com.atlassian.plugin.osgi.container.OsgiContainerException;
-import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
-import com.atlassian.plugin.osgi.util.BundleClassLoaderAccessor;
 import com.atlassian.plugin.module.ContainerAccessor;
+import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.spring.DefaultSpringContainerAccessor;
 import com.atlassian.plugin.osgi.spring.SpringContainerAccessor;
+import com.atlassian.plugin.osgi.util.BundleClassLoaderAccessor;
+import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
-
 import org.apache.commons.lang.Validate;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -112,6 +111,12 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
 
     public void onUninstall() throws OsgiContainerException
     {
+    }
+
+    public <T> T autowire(final Class<T> clazz, final AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalPluginStateException
+    {
+        assertSpringContextAvailable();
+        return containerAccessor.createBean(clazz);
     }
 
     /**

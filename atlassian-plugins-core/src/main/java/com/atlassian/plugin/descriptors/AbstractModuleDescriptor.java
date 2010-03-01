@@ -14,7 +14,6 @@ import com.atlassian.plugin.util.validation.ValidationPattern;
 import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
 
-import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
 
@@ -57,7 +56,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     @Deprecated
     public AbstractModuleDescriptor()
     {
-        this(ModuleClassFactory.NOOP_MODULE_CREATOR);
+        this(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
     }
 
 
@@ -144,24 +143,6 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         loadClass(plugin, element.attributeValue("class"));
     }
 
-    /**
-     * Override this for module descriptors which don't expect to be able to load a class successfully
-     * @since 2.5.0
-     */
-    protected void loadModuleClass() throws PluginParseException
-    {
-        if (moduleClassName != null) //not all plugins have to have a class
-        {
-            if ( !(moduleClassFactory instanceof ModuleClassFactory.NoOpModuleClassFactory))
-            {
-                moduleClass = (Class<T>) moduleClassFactory.getModuleClass(moduleClassName, this);
-            }
-            else
-            {
-                loadClass(plugin, moduleClassName);
-            }
-        }
-    }
 
     /**
      * Override this for module descriptors which don't expect to be able to load a class successfully
@@ -172,42 +153,9 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     @Deprecated
     protected void loadClass(final Plugin plugin, final String clazz) throws PluginParseException
     {
-        try
+        if (moduleClassName != null) //not all plugins have to have a class
         {
-            // First try and load the class, to make sure the class exists
-            @SuppressWarnings ("unchecked")
-            final Class<T> loadedClass = (Class<T>) plugin.loadClass(clazz, getClass());
-            moduleClass = loadedClass;
-
-            // Then instantiate the class, so we can see if there are any dependencies that aren't satisfied
-            try
-            {
-                final Constructor<T> noargConstructor = moduleClass.getConstructor(new Class[] { });
-                if (noargConstructor != null)
-                {
-                    moduleClass.newInstance();
-                }
-            }
-            catch (final NoSuchMethodException e)
-            {
-                // If there is no "noarg" constructor then don't do the check
-            }
-        }
-        catch (final ClassNotFoundException e)
-        {
-            throw new PluginParseException("Could not load class: " + clazz, e);
-        }
-        catch (final NoClassDefFoundError e)
-        {
-            throw new PluginParseException("Error retrieving dependency of class: " + clazz + ". Missing class: " + e.getMessage(), e);
-        }
-        catch (final UnsupportedClassVersionError e)
-        {
-            throw new PluginParseException("Class version is incompatible with current JVM: " + clazz, e);
-        }
-        catch (final Throwable t)
-        {
-            throw new PluginParseException(t);
+            moduleClass = moduleClassFactory.getModuleClass(moduleClassName, this);
         }
     }
 
@@ -289,7 +237,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
 
     public String getPluginKey()
     {
-        return plugin.getKey();
+        return getPlugin().getKey();
     }
 
     public String getKey()
@@ -394,7 +342,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
      */
     public void enabled()
     {
-        loadModuleClass();
+        loadClass(plugin, moduleClassName);
         enabled = true;
     }
 

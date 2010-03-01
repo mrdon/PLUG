@@ -1,35 +1,44 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.ChainModuleDescriptorFactory;
+import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.factories.PluginFactory;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
+import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
+import com.atlassian.plugin.osgi.factory.descriptor.ComponentImportModuleDescriptor;
+import com.atlassian.plugin.osgi.factory.descriptor.ComponentModuleDescriptor;
+import com.atlassian.plugin.osgi.factory.descriptor.ModuleTypeModuleDescriptor;
 import com.atlassian.plugin.osgi.factory.transform.DefaultPluginTransformer;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformer;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
-import com.atlassian.plugin.osgi.factory.descriptor.ComponentModuleDescriptor;
-import com.atlassian.plugin.osgi.factory.descriptor.ModuleTypeModuleDescriptor;
-import com.atlassian.plugin.osgi.factory.descriptor.ComponentImportModuleDescriptor;
-import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
-import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.framework.Constants;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Plugin loader that starts an OSGi container and loads plugins into it, wrapped as OSGi bundles.
@@ -54,21 +63,19 @@ public class OsgiPluginFactory implements PluginFactory
     private volatile PluginTransformer pluginTransformer;
 
     private ServiceTracker moduleDescriptorFactoryTracker;
-    private final ModuleClassFactory moduleClassFactory;
 
-    public OsgiPluginFactory(String pluginDescriptorFileName, String applicationKey, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager, ModuleClassFactory moduleClassFactory)
+    public OsgiPluginFactory(String pluginDescriptorFileName, String applicationKey, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
-        this(pluginDescriptorFileName, new HashSet<String>(Arrays.asList(applicationKey)), persistentCache, osgi, pluginEventManager, moduleClassFactory);
+        this(pluginDescriptorFileName, new HashSet<String>(Arrays.asList(applicationKey)), persistentCache, osgi, pluginEventManager);
     }
 
-    public OsgiPluginFactory(String pluginDescriptorFileName, Set<String> applicationKeys, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager, ModuleClassFactory moduleClassFactory)
+    public OsgiPluginFactory(String pluginDescriptorFileName, Set<String> applicationKeys, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
         Validate.notNull(pluginDescriptorFileName, "Plugin descriptor is required");
         Validate.notNull(osgi, "The OSGi container is required");
         Validate.notNull(applicationKeys, "The application keys are required");
         Validate.notNull(persistentCache, "The osgi persistent cache is required");
         Validate.notNull(persistentCache, "The plugin event manager is required");
-        Validate.notNull(moduleClassFactory, "The module creator is required");
 
         this.osgi = osgi;
         this.pluginDescriptorFileName = pluginDescriptorFileName;
@@ -76,7 +83,6 @@ public class OsgiPluginFactory implements PluginFactory
         this.pluginEventManager = pluginEventManager;
         this.applicationKeys = applicationKeys;
         this.persistentCache = persistentCache;
-        this.moduleClassFactory = moduleClassFactory;
     }
 
     private PluginTransformer getPluginTransformer()
@@ -153,7 +159,7 @@ public class OsgiPluginFactory implements PluginFactory
             ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory, pluginArtifact);
             DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys.toArray(new String[applicationKeys.size()]));
 
-            Plugin osgiPlugin = new OsgiPlugin(parser.getKey(), osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager, moduleClassFactory);
+            final Plugin osgiPlugin = new OsgiPlugin(parser.getKey(), osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager);
 
             // Temporarily configure plugin until it can be properly installed
             plugin = parser.configurePlugin(combinedFactory, osgiPlugin);

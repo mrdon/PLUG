@@ -1,7 +1,6 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.module.ModuleClassFactory;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
 import org.dom4j.DocumentHelper;
@@ -18,9 +17,7 @@ public class TestWebResourceModuleDescriptor extends TestCase
     protected void setUp() throws Exception
     {
         super.setUp();
-        Mock mockModuleCreator = new Mock(ModuleClassFactory.class);
-
-        descriptor = new WebResourceModuleDescriptor((ModuleClassFactory) mockModuleCreator.proxy());
+        descriptor = new WebResourceModuleDescriptor();
         mockPlugin = new Mock(Plugin.class);
         mockPlugin.matchAndReturn("getKey", TEST_PLUGIN_KEY);
     }

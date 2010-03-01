@@ -1,19 +1,5 @@
 package com.atlassian.plugin.refimpl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.servlet.ServletContext;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
@@ -25,10 +11,15 @@ import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
 import com.atlassian.plugin.main.AtlassianPlugins;
 import com.atlassian.plugin.main.PluginsConfiguration;
 import com.atlassian.plugin.main.PluginsConfigurationBuilder;
+import com.atlassian.plugin.module.ClassModuleCreator;
+import com.atlassian.plugin.module.DefaultModuleClassFactory;
+import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleCreator;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.osgi.module.SpringModuleCreator;
 import com.atlassian.plugin.refimpl.servlet.SimpleContentTypeResolver;
 import com.atlassian.plugin.refimpl.servlet.SimpleServletContextFactory;
 import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
@@ -41,7 +32,26 @@ import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescrip
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.util.Assertions;
-import com.atlassian.plugin.webresource.*;
+import com.atlassian.plugin.webresource.DefaultResourceBatchingConfiguration;
+import com.atlassian.plugin.webresource.PluginResourceLocator;
+import com.atlassian.plugin.webresource.PluginResourceLocatorImpl;
+import com.atlassian.plugin.webresource.WebResourceIntegration;
+import com.atlassian.plugin.webresource.WebResourceManager;
+import com.atlassian.plugin.webresource.WebResourceManagerImpl;
+import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+
+import javax.servlet.ServletContext;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * A simple class that behaves like Spring's ContainerManager class.
@@ -128,6 +138,9 @@ public class ContainerManager
                 .pluginStateStore(new DefaultPluginPersistentStateStore(osgiCache))
                 .applicationKey("refapp")
                 .build();
+
+        DefaultModuleClassFactory moduleClassFactory = new DefaultModuleClassFactory(Collections.<ModuleCreator>emptyList());
+
         plugins = new AtlassianPlugins(config);
 
         final PluginEventManager pluginEventManager = plugins.getPluginEventManager();
@@ -147,8 +160,12 @@ public class ContainerManager
         publicContainer.put(ServletModuleManager.class, servletModuleManager);
         publicContainer.put(WebResourceManager.class, webResourceManager);
         publicContainer.put(Map.class, publicContainer);
+        publicContainer.put(ModuleClassFactory.class, moduleClassFactory);
 
         hostContainer = new SimpleConstructorHostContainer(publicContainer);
+
+        moduleClassFactory.registerModuleCreator(new ClassModuleCreator(hostContainer));
+        moduleClassFactory.registerModuleCreator(new SpringModuleCreator());
 
         try
         {

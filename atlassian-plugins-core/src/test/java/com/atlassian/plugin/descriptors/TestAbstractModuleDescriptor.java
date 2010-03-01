@@ -6,18 +6,18 @@
  */
 package com.atlassian.plugin.descriptors;
 
-import com.atlassian.plugin.module.ModuleClassFactory;
-import junit.framework.TestCase;
 import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.mock.MockMineral;
-import org.dom4j.DocumentHelper;
+import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.util.ClassLoaderUtils;
+import junit.framework.TestCase;
 import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import java.util.List;
@@ -26,7 +26,7 @@ public class TestAbstractModuleDescriptor extends TestCase
 {
     public void testAssertModuleClassImplements() throws DocumentException, PluginParseException
     {
-        ModuleDescriptor descriptor = new AbstractModuleDescriptor(ModuleClassFactory.NOOP_MODULE_CREATOR) {
+        ModuleDescriptor descriptor = new AbstractModuleDescriptor(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY) {
             public void init(Plugin plugin, Element element) throws PluginParseException
             {
                 super.init(plugin, element);
@@ -114,7 +114,7 @@ public class TestAbstractModuleDescriptor extends TestCase
 
     private ModuleDescriptor makeSingletonDescriptor()
     {
-        ModuleDescriptor descriptor = new AbstractModuleDescriptor(ModuleClassFactory.NOOP_MODULE_CREATOR) {
+        ModuleDescriptor descriptor = new AbstractModuleDescriptor(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY) {
             Object module;
 
             public void init(Plugin plugin, Element element) throws PluginParseException

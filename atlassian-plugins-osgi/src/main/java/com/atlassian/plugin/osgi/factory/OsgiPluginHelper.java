@@ -1,8 +1,8 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.AutowireCapablePlugin;
+import com.atlassian.plugin.IllegalPluginStateException;
 import com.atlassian.plugin.module.ContainerAccessor;
-
 import org.osgi.framework.Bundle;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -77,6 +77,18 @@ interface OsgiPluginHelper
      * Notification the bundle has been uninstalled
      */
     void onUninstall();
+
+    /**
+     * If spring is required, it looks for the spring application context, and calls createBean().  If not, the class
+     * is instantiated with its default constructor.
+     *
+     * @param clazz The class to autowire The class to create
+     * @param autowireStrategy The autowire strategy to use The strategy to use, only respected if spring is available
+     * @param <T> The class type
+     * @return The autowired instance
+     * @throws IllegalPluginStateException If spring is required but not available
+     */
+    <T> T autowire(final Class<T> clazz, final AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalPluginStateException;
 
     /**
      * Autowires a class instance

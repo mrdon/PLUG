@@ -1,13 +1,13 @@
 package com.atlassian.plugin.servlet.descriptors;
 
-import com.atlassian.plugin.module.ModuleClassFactory;
-import org.dom4j.Element;
-
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
-import static com.atlassian.plugin.util.validation.ValidationPattern.test;
-import com.atlassian.plugin.util.validation.ValidationPattern;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.util.validation.ValidationPattern;
+import org.dom4j.Element;
+
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
 /**
  * Allows plugin developers to specify init parameters they would like added to the plugin local {@link javax.servlet.ServletContext}.
@@ -21,7 +21,7 @@ public class ServletContextParamModuleDescriptor extends AbstractModuleDescripto
 
     public ServletContextParamModuleDescriptor()
     {
-        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
     }
 
     @Override

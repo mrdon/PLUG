@@ -7,9 +7,9 @@ import com.atlassian.plugin.module.ContainerAccessor;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
+import org.apache.commons.lang.Validate;
 import org.osgi.framework.Bundle;
 import org.osgi.util.tracker.ServiceTracker;
-import org.apache.commons.lang.Validate;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -90,6 +90,11 @@ class OsgiPluginUninstalledHelper implements OsgiPluginHelper
     }
 
     public void autowire(Object instance, AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalStateException
+    {
+        throw new IllegalPluginStateException(getNotInstalledMessage());
+    }
+
+    public <T> T autowire(Class<T> clazz, AutowireCapablePlugin.AutowireStrategy autowireStrategy) throws IllegalPluginStateException
     {
         throw new IllegalPluginStateException(getNotInstalledMessage());
     }

@@ -1,16 +1,20 @@
 package com.atlassian.plugin.webresource;
 
-import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginInformation;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
 import com.mockobjects.dynamic.Mock;
-
-import java.util.*;
-
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 public class TestUtils
 {
@@ -34,7 +38,7 @@ public class TestUtils
     static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
         final Plugin p, final List<ResourceDescriptor> resourceDescriptors, final List<String> dependencies, final Set<String> contexts)
     {
-        return new WebResourceModuleDescriptor(ModuleClassFactory.NOOP_MODULE_CREATOR)
+        return new WebResourceModuleDescriptor()
         {
             @Override
             public String getCompleteKey()

@@ -17,7 +17,6 @@ import com.atlassian.plugin.web.model.DefaultWebLabel;
 import com.atlassian.plugin.web.model.DefaultWebParam;
 import com.atlassian.plugin.web.model.WebLabel;
 import com.atlassian.plugin.web.model.WebParam;
-
 import org.dom4j.Element;
 
 import java.util.Iterator;
@@ -40,13 +39,13 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
 
     protected AbstractWebFragmentModuleDescriptor(final WebInterfaceManager webInterfaceManager)
     {
-        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
         this.webInterfaceManager = webInterfaceManager;
     }
 
     public AbstractWebFragmentModuleDescriptor()
     {
-        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
     }
 
     @Override

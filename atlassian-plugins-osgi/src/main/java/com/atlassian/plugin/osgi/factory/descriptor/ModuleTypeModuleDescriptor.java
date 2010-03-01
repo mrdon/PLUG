@@ -12,7 +12,7 @@ public class ModuleTypeModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
     public ModuleTypeModuleDescriptor()
     {
-        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
     }
 
     public Void getModule()

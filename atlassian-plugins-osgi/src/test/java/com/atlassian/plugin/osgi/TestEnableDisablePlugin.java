@@ -1,23 +1,21 @@
 package com.atlassian.plugin.osgi;
 
-import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginState;
-import com.atlassian.plugin.PluginRestartState;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.descriptors.RequiresRestart;
+import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginRestartState;
+import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
+import com.atlassian.plugin.descriptors.RequiresRestart;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.test.PluginJarBuilder;
+import org.osgi.util.tracker.ServiceTracker;
 
 import java.io.File;
 import java.io.IOException;
-
-import org.osgi.util.tracker.ServiceTracker;
 
 public class TestEnableDisablePlugin extends PluginInContainerTestBase
 {
@@ -262,11 +260,6 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
     @RequiresRestart
     public static class RequiresRestartModuleDescriptor extends AbstractModuleDescriptor
     {
-        public RequiresRestartModuleDescriptor()
-        {
-            super(ModuleClassFactory.NOOP_MODULE_CREATOR);
-        }
-
         @Override
         public Void getModule()
         {

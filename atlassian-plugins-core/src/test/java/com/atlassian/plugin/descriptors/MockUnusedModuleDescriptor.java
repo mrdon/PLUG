@@ -7,7 +7,7 @@ public class MockUnusedModuleDescriptor extends AbstractModuleDescriptor<MockThi
 {
     public MockUnusedModuleDescriptor()
     {
-        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
     }
 
     @Override

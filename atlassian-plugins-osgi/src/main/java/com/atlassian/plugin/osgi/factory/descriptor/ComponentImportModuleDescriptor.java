@@ -16,7 +16,7 @@ public class ComponentImportModuleDescriptor extends AbstractModuleDescriptor<Ob
      */
     public ComponentImportModuleDescriptor()
     {
-        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
     }
 
     public Object getModule()

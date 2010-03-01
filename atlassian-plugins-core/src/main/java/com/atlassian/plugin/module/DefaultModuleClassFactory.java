@@ -3,8 +3,8 @@ package com.atlassian.plugin.module;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginParseException;
 import org.apache.commons.lang.Validate;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -123,7 +123,7 @@ public class DefaultModuleClassFactory implements ModuleClassFactory
         return new BeanReference(prefix, className);
     }
 
-    public <T> T getModuleClass(final String name, final ModuleDescriptor<T> moduleDescriptor) throws ModuleClassNotFoundException
+    public <T> Class<T> getModuleClass(final String name, final ModuleDescriptor<T> moduleDescriptor) throws ModuleClassNotFoundException
     {
         Validate.notNull(name, "The class name cannot be null");
         Validate.notNull(moduleDescriptor, "The module descriptor cannot be null");
@@ -131,12 +131,12 @@ public class DefaultModuleClassFactory implements ModuleClassFactory
         final BeanReference beanReference = getBeanReference(name);
 
         final ModuleCreator moduleCreator = getModuleCreatorForPrefix(beanReference);
-        Object result = moduleCreator.getModuleClass(beanReference.beanIdentifier, moduleDescriptor);
+        Class<T> result = moduleCreator.getModuleClass(beanReference.beanIdentifier, moduleDescriptor);
 
 
         if (result != null)
         {
-            return (T) result;
+            return result;
         }
         else
         {

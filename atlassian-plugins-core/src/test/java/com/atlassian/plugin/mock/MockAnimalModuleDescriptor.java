@@ -1,14 +1,12 @@
 package com.atlassian.plugin.mock;
 
-import com.atlassian.plugin.module.ModuleClassFactory;
-import junit.framework.Assert;
-
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-
+import com.atlassian.plugin.module.ModuleClassFactory;
+import junit.framework.Assert;
 import org.dom4j.Element;
 
 public class MockAnimalModuleDescriptor extends AbstractModuleDescriptor<MockAnimal> implements StateAware, ModuleDescriptor<MockAnimal>
@@ -28,7 +26,7 @@ public class MockAnimalModuleDescriptor extends AbstractModuleDescriptor<MockAni
     
     public MockAnimalModuleDescriptor(String type, String name)
     {
-      super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+      super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
       this.type = type;
       this.name = name;
     }

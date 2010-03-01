@@ -13,15 +13,10 @@ import com.atlassian.plugin.osgi.module.SpringModuleCreator;
  */
 public class ComponentModuleDescriptor<Object> extends AbstractModuleDescriptor
 {
-    /**
-     * @since 2.5.0
-     */
     public ComponentModuleDescriptor()
     {
-        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
     }
-
-
 
     @Override
     protected void loadClass(Plugin plugin, String clazz) throws PluginParseException

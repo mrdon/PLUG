@@ -1,20 +1,20 @@
 package com.atlassian.plugin.servlet.descriptors;
 
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.util.validation.ValidationPattern;
+import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.atlassian.plugin.module.ModuleClassFactory;
-import org.dom4j.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginParseException;
 import static com.atlassian.plugin.util.validation.ValidationPattern.test;
-import com.atlassian.plugin.util.validation.ValidationPattern;
-import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 
 /**
  * Acts as a base for other servlet type module descriptors to inherit.  It adds parsing and retrieval of any paths
@@ -28,6 +28,13 @@ public abstract class BaseServletModuleDescriptor<T> extends AbstractModuleDescr
 
     private List<String> paths;
     private Map<String,String> initParams;
+
+    /**
+     * @deprecated  Since 2.5.0, use {@link BaseServletModuleDescriptor( com.atlassian.plugin.module.ModuleClassFactory)} instead (as of 2.5.0).
+     */
+    public BaseServletModuleDescriptor()
+    {
+    }
 
     /**
      * @since 2.5.0

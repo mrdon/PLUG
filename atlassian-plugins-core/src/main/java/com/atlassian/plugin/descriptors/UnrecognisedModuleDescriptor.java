@@ -1,15 +1,8 @@
 package com.atlassian.plugin.descriptors;
 
-import com.atlassian.plugin.module.ModuleClassFactory;
-
 public final class UnrecognisedModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
     private String errorText;
-
-    public UnrecognisedModuleDescriptor()
-    {
-        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
-    }
 
     @Override
     public Void getModule()

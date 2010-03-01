@@ -10,7 +10,7 @@ public class StubServletModuleDescriptor extends ServletModuleDescriptor
 {
     public StubServletModuleDescriptor()
     {
-        this(ModuleClassFactory.NOOP_MODULE_CREATOR, new DefaultServletModuleManager(new DefaultPluginEventManager()));
+        this(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY, new DefaultServletModuleManager(new DefaultPluginEventManager()));
     }
 
     public StubServletModuleDescriptor(final ModuleClassFactory moduleCreator, final ServletModuleManager mgr)

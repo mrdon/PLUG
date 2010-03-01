@@ -5,15 +5,9 @@ import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
-import com.atlassian.plugin.module.ModuleClassFactory;
 import junit.framework.TestCase;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doAnswer;
-import org.mockito.stubbing.Answer;
 import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -21,6 +15,8 @@ import org.osgi.framework.Constants;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+
+import static org.mockito.Mockito.*;
 
 public class TestOsgiPlugin extends TestCase
 {
@@ -152,11 +148,6 @@ public class TestOsgiPlugin extends TestCase
     @RequiresRestart
     public static class StaticModuleDescriptor<Object> extends AbstractModuleDescriptor
     {
-        public StaticModuleDescriptor()
-        {
-            super(ModuleClassFactory.NOOP_MODULE_CREATOR);
-        }
-
         public Object getModule()
         {
             return null;

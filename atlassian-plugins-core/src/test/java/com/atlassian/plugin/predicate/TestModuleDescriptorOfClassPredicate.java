@@ -2,7 +2,6 @@ package com.atlassian.plugin.predicate;
 
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
 import junit.framework.TestCase;
 
 /**
@@ -52,11 +51,6 @@ public class TestModuleDescriptorOfClassPredicate extends TestCase
 
     private static class ModuleDescriptorStubA extends AbstractModuleDescriptor
     {
-        public ModuleDescriptorStubA()
-        {
-            super(ModuleClassFactory.NOOP_MODULE_CREATOR);
-        }
-
         public Object getModule()
         {
             return null;

@@ -1,16 +1,18 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.module.ContainerManagedPlugin;
-import com.atlassian.plugin.module.ContainerAccessor;
+import com.atlassian.plugin.AutowireCapablePlugin;
+import com.atlassian.plugin.IllegalPluginStateException;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginContainerFailedEvent;
 import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.impl.AbstractPlugin;
+import com.atlassian.plugin.module.ContainerAccessor;
+import com.atlassian.plugin.module.ContainerManagedPlugin;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.event.PluginServiceDependencyWaitEndedEvent;
@@ -20,7 +22,12 @@ import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.BundleListener;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
@@ -56,22 +63,17 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     public static final String SPRING_CONTEXT = "Spring-Context";
     public static final String ATLASSIAN_PLUGIN_KEY = "Atlassian-Plugin-Key";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private final ModuleClassFactory moduleClassFactory;
-    private final ModuleDescriptor unknownModuleDescriptor;
 
-    public OsgiPlugin(final String key, final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginEventManager pluginEventManager, ModuleClassFactory moduleClassFactory)
+    public OsgiPlugin(final String key, final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginEventManager pluginEventManager)
     {
         Validate.notNull(key, "The plugin key is required");
         Validate.notNull(mgr, "The osgi container is required");
         Validate.notNull(artifact, "The osgi container is required");
         Validate.notNull(pluginEventManager, "The osgi container is required");
-        Validate.notNull(moduleClassFactory, "The module class factory is required");
 
         this.helper = new OsgiPluginUninstalledHelper(key, mgr, artifact);
         this.pluginEventManager = pluginEventManager;
         this.packageAdmin = extractPackageAdminFromOsgi(mgr);
-        this.moduleClassFactory = moduleClassFactory;
-        this.unknownModuleDescriptor = new UnknownModuleDescriptor();
     }
 
     /**
@@ -82,9 +84,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     {
         this.helper = helper;
         this.pluginEventManager = pluginEventManager;
-        this.unknownModuleDescriptor = new UnknownModuleDescriptor();
         this.packageAdmin = null;
-        this.moduleClassFactory = null;
     }
 
     /**
@@ -285,7 +285,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
      */
     public <T> T autowire(final Class<T> clazz, final AutowireStrategy autowireStrategy) throws IllegalPluginStateException
     {
-        return (T) moduleClassFactory.createModuleClass(clazz.getName(), unknownModuleDescriptor);
+        return helper.autowire(clazz, autowireStrategy);
     }
 
     /**
@@ -584,25 +584,6 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             int result = beanName != null ? beanName.hashCode() : 0;
             result = 31 * result + filter.hashCode();
             return result;
-        }
-    }
-
-    private final class UnknownModuleDescriptor extends AbstractModuleDescriptor<Void>
-    {
-        public UnknownModuleDescriptor()
-        {
-            super(ModuleClassFactory.NOOP_MODULE_CREATOR);
-        }
-
-        @Override
-        public Plugin getPlugin()
-        {
-            return OsgiPlugin.this;
-        }
-
-        public Void getModule()
-        {
-            return null;
         }
     }
 }

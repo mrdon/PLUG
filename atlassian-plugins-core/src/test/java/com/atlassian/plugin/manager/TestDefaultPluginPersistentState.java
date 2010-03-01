@@ -4,11 +4,9 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginRestartState;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.impl.StaticPlugin;
+import junit.framework.TestCase;
 
 import java.util.Map;
-
-import com.atlassian.plugin.module.ModuleClassFactory;
-import junit.framework.TestCase;
 
 public class TestDefaultPluginPersistentState extends TestCase
 {
@@ -110,7 +108,7 @@ public class TestDefaultPluginPersistentState extends TestCase
 
     private <T> ModuleDescriptor<T> createModule(final String pluginKey, final String moduleKey)
     {
-        return new AbstractModuleDescriptor<T>(ModuleClassFactory.NOOP_MODULE_CREATOR)
+        return new AbstractModuleDescriptor<T>()
         {
             @Override
             public T getModule()

@@ -48,18 +48,10 @@ import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.predicate.PluginPredicate;
 import com.atlassian.plugin.test.PluginJarBuilder;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.doThrow;
-
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,6 +61,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
+import static org.mockito.Mockito.*;
 
 public class TestDefaultPluginManager extends AbstractTestClassLoader
 {
@@ -131,7 +125,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     public void testEnableModuleFailed() throws PluginParseException
     {
         final Mock mockPluginLoader = new Mock(PluginLoader.class);
-        final ModuleDescriptor<Object> badModuleDescriptor = new AbstractModuleDescriptor<Object>(ModuleClassFactory.NOOP_MODULE_CREATOR)
+        final ModuleDescriptor<Object> badModuleDescriptor = new AbstractModuleDescriptor<Object>(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY)
         {
             @Override
             public String getKey()

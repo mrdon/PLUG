@@ -1,16 +1,18 @@
 package com.atlassian.plugin.servlet.descriptors;
 
-import java.util.Comparator;
-
-import javax.servlet.Filter;
-
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.StateAware;
+import com.atlassian.plugin.hostcontainer.HostContainer;
+import com.atlassian.plugin.module.HostContainerLegacyAdaptor;
 import com.atlassian.plugin.module.ModuleClassFactory;
-import org.dom4j.Element;
-import org.apache.commons.lang.Validate;
-
-import com.atlassian.plugin.*;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
+import org.apache.commons.lang.Validate;
+import org.dom4j.Element;
+
+import javax.servlet.Filter;
+import java.util.Comparator;
 
 /**
  * A module descriptor that allows plugin developers to define servlet filters.  Developers can define what urls the 
@@ -48,11 +50,23 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
      *
      * @since 2.5.0
      */
-    public ServletFilterModuleDescriptor(ModuleClassFactory moduleCreator, ServletModuleManager servletModuleManager)
+    public ServletFilterModuleDescriptor(ModuleClassFactory moduleClassFactory, ServletModuleManager servletModuleManager)
     {
-        super(moduleCreator);
+        super(moduleClassFactory);
         Validate.notNull(servletModuleManager);
         this.servletModuleManager = servletModuleManager;
+    }
+
+    /**
+     * Creates a descriptor that uses a module factory to create instances
+     *
+     * @param hostContainer The module factory
+     * @since 2.2.0
+     * @deprecated use {@link com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor#ServletFilterModuleDescriptor(com.atlassian.plugin.module.ModuleClassFactory, com.atlassian.plugin.servlet.ServletModuleManager)} instead
+     */
+    public ServletFilterModuleDescriptor(HostContainer hostContainer, ServletModuleManager servletModuleManager)
+    {
+        this (new HostContainerLegacyAdaptor(hostContainer), servletModuleManager);
     }
 
     public static final Comparator<ServletFilterModuleDescriptor> byWeight = new Comparator<ServletFilterModuleDescriptor>()

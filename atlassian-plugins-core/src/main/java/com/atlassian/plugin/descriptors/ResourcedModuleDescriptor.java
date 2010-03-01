@@ -10,6 +10,6 @@ public abstract class ResourcedModuleDescriptor<T> extends AbstractModuleDescrip
 {
     public ResourcedModuleDescriptor()
     {
-        super(ModuleClassFactory.NOOP_MODULE_CREATOR);
+        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
     }
 }
