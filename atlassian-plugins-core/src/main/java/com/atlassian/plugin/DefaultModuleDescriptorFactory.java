@@ -2,7 +2,6 @@ package com.atlassian.plugin;
 
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.module.ContainerAccessor;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 
@@ -151,10 +150,5 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
             this.permittedModuleKeys.clear();
             this.permittedModuleKeys.addAll(permittedModuleKeys);
         }
-    }
-
-    public HostContainer getHostContainer()
-    {
-        return hostContainer;
     }
 }
