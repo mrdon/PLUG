@@ -19,9 +19,9 @@ import java.util.Set;
  */
 public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
-    private List<String> dependencies = Collections.EMPTY_LIST;
+    private List<String> dependencies = Collections.emptyList();
     private boolean disableMinification;
-    private Set<String> contexts = Collections.EMPTY_SET;
+    private Set<String> contexts = Collections.emptySet();
 
     @Override
     public void init(final Plugin plugin, final Element element) throws PluginParseException
@@ -76,7 +76,7 @@ public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
     }
 
     /**
-     * @return true if the minified form of the resources should be returned if they exist.
+     * @return <code>true</code> if resource minification should be skipped, <code>false</code> otherwise.
      */
     public boolean isDisableMinification()
     {
