@@ -407,7 +407,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         {
             log.error("Detected an error (BundleException) enabling the plugin '" + getKey() + "' : " + e.getMessage() + ". " +
                       " This error usually occurs when your plugin imports a package from another bundle with a specific version constraint " +
-                    "and either the bundle providing that package doesn't meet those version constraints, or there is no bundle" +
+                    "and either the bundle providing that package doesn't meet those version constraints, or there is no bundle " +
                     "available that provides the specified package. For more details on how to fix this, see " +
                     "http://confluence.atlassian.com/x/1xy6D");
             throw new OsgiContainerException("Cannot start plugin: " + getKey(), e);
