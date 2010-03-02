@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
  * This class is used internally by the {@link DefaultPluginEventManager} to adapt {@link ListenerMethodSelector}s to
  * the {@code ListenerHandler} interface used in Atlassian Event.
  *
+ * @since 2.5.0
  */
 final class MethodSelectorListenerHandler implements ListenerHandler
 {
