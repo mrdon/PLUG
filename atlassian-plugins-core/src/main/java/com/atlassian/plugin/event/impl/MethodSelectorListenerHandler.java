@@ -64,7 +64,7 @@ final class MethodSelectorListenerHandler implements ListenerHandler
                             }
                             else
                             {
-                                throw new RuntimeException(e.getCause().getMessage());
+                                throw new RuntimeException(e.getCause().getMessage(), e);
                             }
                         }
                     }
