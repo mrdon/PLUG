@@ -15,16 +15,14 @@ public class EfficientStringUtils
     public static boolean endsWith(final String src, final String... suffixes)
     {
         int pos = src.length();
+
         for (int i = suffixes.length - 1; i >= 0; i--)
         {
             final String suffix = suffixes[i];
-            for (int j = suffix.length() - 1; j >= 0; j--)
+            pos -= suffix.length();
+            if (!src.startsWith(suffix, pos))
             {
-                final char c = suffix.charAt(j);
-                if (c != src.charAt(--pos))
-                {
-                    return false;
-                }
+                return false;
             }
         }
         return true;
