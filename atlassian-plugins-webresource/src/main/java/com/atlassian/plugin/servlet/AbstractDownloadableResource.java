@@ -34,9 +34,14 @@ abstract class AbstractDownloadableResource implements DownloadableResource
      */
     private static final String ATLASSIAN_WEBRESOURCE_DISABLE_MINIFICATION = "atlassian.webresource.disable.minification";
 
-    protected Plugin plugin;
-    protected String extraPath;
-    protected ResourceLocation resourceLocation;
+    /* the following protected fields are marked final since 2.5 */
+
+    protected final Plugin plugin;
+    protected final String extraPath;
+    protected final ResourceLocation resourceLocation;
+
+    // PLUG-538 cache this so we don't recreate the string every time it is called
+    private final String location;
     private final boolean disableMinification;
 
     public AbstractDownloadableResource(final Plugin plugin, final ResourceLocation resourceLocation, final String extraPath)
@@ -54,6 +59,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
         this.plugin = plugin;
         this.extraPath = extraPath;
         this.resourceLocation = resourceLocation;
+        this.location = resourceLocation.getLocation() + extraPath;
     }
 
     public void serveResource(final HttpServletRequest request, final HttpServletResponse response) throws DownloadException
@@ -105,6 +111,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
      *
      * @param in the stream to read from
      * @param out the stream to write to
+     * @throws DownloadException if an IOException is encountered writing to the out stream
      */
     private void streamResource(final InputStream in, final OutputStream out) throws DownloadException
     {
@@ -166,7 +173,7 @@ abstract class AbstractDownloadableResource implements DownloadableResource
      */
     protected String getLocation()
     {
-        return resourceLocation.getLocation() + extraPath;
+        return location;
     }
 
     @Override
