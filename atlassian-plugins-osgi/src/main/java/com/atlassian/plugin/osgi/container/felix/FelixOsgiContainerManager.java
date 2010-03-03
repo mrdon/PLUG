@@ -227,12 +227,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         String bootDelegation = getAtlassianSpecificOsgiSystemProperty(OSGI_BOOTDELEGATION);
         if ((bootDelegation == null) || (bootDelegation.trim().length() == 0))
         {
-            bootDelegation = "weblogic,weblogic.*," +
-                             "META-INF.services," +
-                             "com.yourkit,com.yourkit.*," +
-                             "com.jprofiler,com.jprofiler.*," +
-                             "org.apache.xerces,org.apache.xerces.*," +
-                             "com.icl.saxon";
+            bootDelegation = "com.yourkit,com.yourkit.*," +
+                             "com.jprofiler,com.jprofiler.*";
         }
 
         configMap.put(FelixConstants.FRAMEWORK_BOOTDELEGATION, bootDelegation);
@@ -305,7 +301,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
      * is installed into common/lib/endorsed in order to support Java 1.4.
      *
      * @param systemExports The system exports
-     * @throws OsgiContainerException If xerces has no version 
+     * @throws OsgiContainerException If xerces has no version
      */
     void detectXercesOverride(String systemExports) throws OsgiContainerException
     {
