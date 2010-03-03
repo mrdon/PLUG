@@ -89,7 +89,7 @@ public class TestAbstractDownloadableResource extends TestCase
     {
         public NotMinifiedFileServingDownloableResouce()
         {
-            super(null, null, null);
+            super(null, new ResourceLocation("/flintstone/fred.jpg", "fred.jpg", "stuff", "stuff", "stuff", null), null);
         }
 
         @Override
@@ -127,7 +127,7 @@ public class TestAbstractDownloadableResource extends TestCase
     {
         public NeverMinifiedFileServingDownloableResouce()
         {
-            super(null, null, null);
+            super(null, new ResourceLocation("/flintstone/fred.jpg", "fred.jpg", "stuff", "stuff", "stuff", null), null);
         }
 
         @Override
@@ -238,7 +238,7 @@ public class TestAbstractDownloadableResource extends TestCase
     public void testWithMinifiedStrategyInPlay() throws DownloadException
     {
         // it should ask for -min files first and in this case get content back
-        final MinifiedFileServingDownloableResource minifiedFileServingDownloableResource = new MinifiedFileServingDownloableResource(null);
+        final MinifiedFileServingDownloableResource minifiedFileServingDownloableResource = new MinifiedFileServingDownloableResource(new ResourceLocation("/flintstone/fred.jpg", "fred.jpg", "stuff", "stuff", "stuff", null));
         assertContent(minifiedFileServingDownloableResource, MINIFIED_CONTENT);
 
         // it should ask for -min files first but get null and hence move on to the plain old content case.
@@ -268,7 +268,7 @@ public class TestAbstractDownloadableResource extends TestCase
             final NeverMinifiedFileServingDownloableResouce neverMinifiedFileServingDownloableResouce = new NeverMinifiedFileServingDownloableResouce();
             assertContent(neverMinifiedFileServingDownloableResouce, NEVER_MINIFIED_CONTENT);
 
-            final MinifiedFileServingDownloableResource minifiedFileServingDownloableResouce = new MinifiedFileServingDownloableResource(null);
+            final MinifiedFileServingDownloableResource minifiedFileServingDownloableResouce = new MinifiedFileServingDownloableResource(new ResourceLocation("/flintstone/fred.jpg", "fred.jpg", "stuff", "stuff", "stuff", null));
             assertContent(minifiedFileServingDownloableResouce, PLAIN_CONTENT);
 
             // it should ask for -min files first but get null and hence move on to the plain old content case.
