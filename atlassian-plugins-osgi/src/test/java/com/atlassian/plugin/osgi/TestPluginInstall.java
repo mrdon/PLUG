@@ -175,6 +175,74 @@ public class TestPluginInstall extends PluginInContainerTestBase
         assertEquals("Test 2", pluginManager.getPlugin("test.plugin").getName());
     }
 
+    public void testInstallWithClassConstructorReferencingHostClassWithHostComponent() throws Exception
+    {
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(hostContainer);
+        factory.addModuleDescriptor("object", ObjectModuleDescriptor.class);
+        initPluginManager(new HostComponentProvider()
+        {
+            public void provide(final ComponentRegistrar registrar)
+            {
+                registrar.register(SomeInterface.class).forInstance(new SomeInterface()
+                {
+                });
+            }
+        }, factory);
+
+        final File pluginJar = new PluginJarBuilder("testUpgradeOfBundledPlugin")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='hostClass' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <object key='hostClass' class='com.atlassian.plugin.osgi.HostClassUsingHostComponentConstructor'/>",
+                        "</atlassian-plugin>")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+        assertEquals("Test", pluginManager.getPlugin("hostClass").getName());
+        assertEquals(1, pluginManager.getPlugin("hostClass").getModuleDescriptors().size());
+        
+        HostClassUsingHostComponentConstructor module = (HostClassUsingHostComponentConstructor) pluginManager.getPlugin("hostClass").getModuleDescriptor("hostClass").getModule();
+        assertNotNull(module);
+    }
+
+    public void testInstallWithClassSetterReferencingHostClassWithHostComponent() throws Exception
+    {
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(hostContainer);
+        factory.addModuleDescriptor("object", ObjectModuleDescriptor.class);
+
+        initPluginManager(new HostComponentProvider()
+        {
+            public void provide(final ComponentRegistrar registrar)
+            {
+                registrar.register(SomeInterface.class).forInstance(new SomeInterface()
+                {
+                });
+            }
+        }, factory);
+
+        final File pluginJar = new PluginJarBuilder("testUpgradeOfBundledPlugin")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='hostClass' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <object key='hostClass' class='com.atlassian.plugin.osgi.HostClassUsingHostComponentSetter'/>",
+                        "</atlassian-plugin>")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+        assertEquals("Test", pluginManager.getPlugin("hostClass").getName());
+        assertEquals(1, pluginManager.getPlugin("hostClass").getModuleDescriptors().size());
+
+        HostClassUsingHostComponentSetter module = (HostClassUsingHostComponentSetter) pluginManager.getPlugin("hostClass").getModuleDescriptor("hostClass").getModule();
+        assertNotNull(module);
+        assertNotNull(module.getSomeInterface());
+    }
+
     /* Enable for manual memory leak profiling
     public void testNoMemoryLeak() throws Exception
     {

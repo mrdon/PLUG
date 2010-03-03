@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,6 +49,7 @@ public class TransformContext
     private final Set<String> applicationKeys;
     private boolean shouldRequireSpring = false;
     private final OsgiContainerManager osgiContainerManager;
+    private Set<HostComponentRegistration> requiredHostComponents;
 
     public TransformContext(final List<HostComponentRegistration> regs, final SystemExports systemExports,
                             final PluginArtifact pluginArtifact, final Set<String> applicationKeys, final String descriptorPath,
@@ -91,6 +93,7 @@ public class TransformContext
         this.extraExports = new ArrayList<String>();
 
         this.componentImports = Collections.unmodifiableMap(parseComponentImports(descriptorDocument));
+        requiredHostComponents = new HashSet<HostComponentRegistration>();
     }
 
     private Map<String, ComponentImport> parseComponentImports(final Document descriptorDocument)
@@ -276,5 +279,15 @@ public class TransformContext
         {
             // ignore
         }
+    }
+
+    public void addRequiredHostComponent(HostComponentRegistration hostComponent)
+    {
+        requiredHostComponents.add(hostComponent);
+    }
+
+    public Set<HostComponentRegistration> getRequiredHostComponents()
+    {
+        return requiredHostComponents;
     }
 }

@@ -51,9 +51,9 @@ public class DefaultPluginTransformer implements PluginTransformer
             add(new AddBundleOverridesStage());
             add(new ComponentImportSpringStage());
             add(new ComponentSpringStage());
-            add(new HostComponentSpringStage());
-            add(new ModuleTypeSpringStage());
             add(new ScanDescriptorForHostClassesStage());
+            add(new ModuleTypeSpringStage());
+            add(new HostComponentSpringStage());
             add(new GenerateManifestStage());
         }});
     }

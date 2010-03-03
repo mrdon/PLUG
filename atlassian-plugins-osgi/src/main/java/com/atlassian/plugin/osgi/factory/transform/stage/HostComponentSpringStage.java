@@ -69,7 +69,7 @@ public class HostComponentSpringStage implements TransformStage
                     boolean found = false;
                     for (String name : reg.getMainInterfaces())
                     {
-                        if (matchedInterfaceNames.contains(name))
+                        if (matchedInterfaceNames.contains(name) || isRequiredHostComponent(context, name))
                         {
                             found = true;
                         }
@@ -317,4 +317,15 @@ public class HostComponentSpringStage implements TransformStage
         return id;
     }
 
+    private boolean isRequiredHostComponent(TransformContext context, String name)
+    {
+        for (HostComponentRegistration registration : context.getRequiredHostComponents())
+        {
+            if (Arrays.asList(registration.getMainInterfaces()).contains(name))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }
