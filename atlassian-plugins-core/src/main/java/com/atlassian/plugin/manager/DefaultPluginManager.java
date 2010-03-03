@@ -758,9 +758,12 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     public ModuleDescriptor<?> getPluginModule(final String completeKey)
     {
-        final ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
-        final Plugin plugin = getPlugin(key.getPluginKey());
+        return getPluginModule(new ModuleCompleteKey(completeKey));
+    }
 
+    private ModuleDescriptor<?> getPluginModule(final ModuleCompleteKey key)
+    {
+        final Plugin plugin = getPlugin(key.getPluginKey());
         if (plugin == null)
         {
             return null;
@@ -773,7 +776,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         final ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
 
         // If it's disabled, return null
-        if (!isPluginModuleEnabled(completeKey))
+        if (!isPluginModuleEnabled(key))
         {
             return null;
         }
@@ -1180,14 +1183,17 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     public boolean isPluginModuleEnabled(final String completeKey)
     {
         // completeKey may be null
-        if (completeKey == null)
+        return (completeKey == null) ? false : isPluginModuleEnabled(new ModuleCompleteKey(completeKey));
+    }
+
+    private boolean isPluginModuleEnabled(final ModuleCompleteKey key)
+    {
+        if (!isPluginEnabled(key.getPluginKey()))
         {
             return false;
         }
-        final ModuleCompleteKey key = new ModuleCompleteKey(completeKey);
-
-        final ModuleDescriptor<?> pluginModule = getPluginModule(completeKey);
-        return isPluginEnabled(key.getPluginKey()) && (pluginModule != null) && getState().isEnabled(pluginModule);
+        final ModuleDescriptor<?> pluginModule = getPluginModule(key);
+        return (pluginModule != null) && getState().isEnabled(pluginModule);
     }
 
     /**
