@@ -71,7 +71,7 @@ public class ScanDescriptorForHostClassesStage implements TransformStage
         Map<Class<?>, HostComponentRegistration> hostComponentInterfaces = new HashMap<Class<?>, HostComponentRegistration>();
         for (HostComponentRegistration registration : context.getHostComponentRegistrations())
         {
-            for(Class<?> cls : registration.getMainInterfaceClasses())
+            for (Class<?> cls : registration.getMainInterfaceClasses())
             {
                 hostComponentInterfaces.put(cls, registration);
             }
