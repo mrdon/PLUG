@@ -63,6 +63,7 @@ public class ScanDescriptorForHostClassesStage implements TransformStage
 
     private void scanForHostComponents(TransformContext context, String className)
     {
+        // Class name can be prefixed with 'bean:' to reference a spring bean, in this case don't attempt to load it. 
         if (className != null && className.indexOf(":") != -1)
         {
             return;
