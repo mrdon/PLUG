@@ -16,6 +16,7 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.DefaultComponentRegistrar;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.ClassLoaderUtils;
+import com.atlassian.plugin.util.ContextClassLoaderSwitchingUtil;
 import org.apache.commons.lang.Validate;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
@@ -590,27 +591,21 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         {
             // Unregister any existing host components
             if (hostServicesReferences != null)
-            {
+            {  
                 for (final ServiceRegistration reg : hostServicesReferences)
                 {
                     reg.unregister();
                 }
             }
 
-            // Swap the old classloader back in when creating proxies for host components
-            ClassLoader oldCl = Thread.currentThread().getContextClassLoader();
-            try
+            ContextClassLoaderSwitchingUtil.switchClassLoader(initializedClassLoader, new Runnable()
             {
-                Thread.currentThread().setContextClassLoader(initializedClassLoader);
-                // Register host components as OSGi services
-                hostServicesReferences = registrar.writeRegistry(bundleContext);
-                hostComponentRegistrations = registrar.getRegistry();
-            }
-            finally
-            {
-                Thread.currentThread().setContextClassLoader(oldCl);
-            }
-
+                public void run()
+                {
+                    hostServicesReferences = registrar.writeRegistry(bundleContext);
+                    hostComponentRegistrations = registrar.getRegistry();
+                }
+            });
         }
 
         private void extractAndInstallFrameworkBundles() throws BundleException

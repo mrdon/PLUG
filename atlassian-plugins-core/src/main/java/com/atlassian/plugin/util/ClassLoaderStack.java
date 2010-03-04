@@ -1,4 +1,7 @@
-package com.atlassian.plugin.servlet.util;
+package com.atlassian.plugin.util;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * This utility provides a thread local stack of {@link ClassLoader}s.
@@ -7,13 +10,18 @@ package com.atlassian.plugin.servlet.util;
  * that need to set the {@link ClassLoader} to the {@link com.atlassian.plugin.classloader.PluginClassLoader} the filter
  * or servlet is declared in.
  *
- * @deprecated Moved to atlassian-plugins-core: com.atlassian.plugin.util.ClassLoaderStack. This impl delegates to the new impl.
- *
- * @since 2.1.0
+ * @since 2.5.0
  */
-@Deprecated
 public class ClassLoaderStack
 {
+    private static final ThreadLocal<List<ClassLoader>> classLoaderStack = new ThreadLocal<List<ClassLoader>>()
+    {
+        protected List<ClassLoader> initialValue()
+        {
+            return new LinkedList<ClassLoader>();
+        }
+    };
+
     /**
      * Makes the given classLoader the new ContextClassLoader for this thread, and pushes the current ContextClassLoader
      * onto a ThreadLocal stack so that we can do a {@link #pop} operation later to return to that ContextClassLoader.
@@ -26,7 +34,13 @@ public class ClassLoaderStack
      */
     public static void push(ClassLoader loader)
     {
-        com.atlassian.plugin.util.ClassLoaderStack.push(loader);
+        if (loader == null)
+        {
+            return;
+        }
+
+        classLoaderStack.get().add(0, Thread.currentThread().getContextClassLoader());
+        Thread.currentThread().setContextClassLoader(loader);
     }
 
     /**
@@ -40,6 +54,12 @@ public class ClassLoaderStack
      */
     public static ClassLoader pop()
     {
-        return com.atlassian.plugin.util.ClassLoaderStack.pop();
+        if (classLoaderStack.get().isEmpty())
+        {
+            return null;
+        }
+        ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(classLoaderStack.get().remove(0));
+        return currentClassLoader;
     }
 }
