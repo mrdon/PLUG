@@ -36,12 +36,7 @@ import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.loaders.SinglePluginLoader;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
-import com.atlassian.plugin.mock.MockAnimal;
-import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
-import com.atlassian.plugin.mock.MockBear;
-import com.atlassian.plugin.mock.MockMineral;
-import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
-import com.atlassian.plugin.mock.MockThing;
+import com.atlassian.plugin.mock.*;
 import com.atlassian.plugin.module.ModuleClassFactory;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
@@ -246,12 +241,36 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertFalse(manager.isPluginEnabled("foo"));
     }
 
+    public void testDisablePluginModuleWithCannotDisableAnnotation()
+    {
+        pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("bullshit", MockUnusedModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("vegetable", MockVegetableModuleDescriptor.class);
+
+        manager.init();
+
+        final String pluginKey = "test.atlassian.plugin";
+        final String disablableModuleKey = pluginKey + ":bear";
+        final String moduleKey = pluginKey + ":veg";
+
+        // First, make sure we can disable the bear module
+        manager.disablePluginModule(disablableModuleKey);
+        assertNull(manager.getEnabledPluginModule(disablableModuleKey));
+
+        // Now, make sure we can't disable the veg module
+        manager.disablePluginModule(moduleKey);
+        assertNotNull(manager.getEnabledPluginModule(moduleKey));
+    }
+
     public void testEnabledDisabledRetrieval() throws PluginParseException
     {
         pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("bullshit", MockUnusedModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("vegetable", MockVegetableModuleDescriptor.class);
 
         final PassListener enabledListener = new PassListener(PluginEnabledEvent.class);
         final PassListener disabledListener = new PassListener(PluginDisabledEvent.class);
@@ -260,7 +279,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        // check non existant plugins don't show
+        // check non existent plugins don't show
         assertNull(manager.getPlugin("bull:shit"));
         assertNull(manager.getEnabledPlugin("bull:shit"));
         assertNull(manager.getPluginModule("bull:shit"));

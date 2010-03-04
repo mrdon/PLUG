@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.factory.descriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.descriptors.CannotDisable;
 import com.atlassian.plugin.module.ModuleClassFactory;
 import com.atlassian.plugin.osgi.module.SpringModuleCreator;
 
@@ -11,6 +12,7 @@ import com.atlassian.plugin.osgi.module.SpringModuleCreator;
  *
  * @since 2.2.0
  */
+@CannotDisable
 public class ComponentModuleDescriptor<Object> extends AbstractModuleDescriptor
 {
     public ComponentModuleDescriptor()

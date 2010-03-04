@@ -17,13 +17,15 @@ public class TestClassPathPluginLoader extends TestCase
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("vegetable", MockMineralModuleDescriptor.class);
+
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         Plugin plugin = (Plugin) plugins.iterator().next();
         assertEquals("Test Plugin", plugin.getName());
         assertEquals("test.atlassian.plugin", plugin.getKey());
         assertEquals("This plugin descriptor is just used for test purposes!", plugin.getPluginInformation().getDescription());
-        assertEquals(2, plugin.getModuleDescriptors().size());
+        assertEquals(3, plugin.getModuleDescriptors().size());
 
         assertEquals("Bear Animal", plugin.getModuleDescriptor("bear").getName());
     }

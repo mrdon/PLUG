@@ -1,5 +1,6 @@
 package com.atlassian.plugin.manager;
 
+import com.atlassian.plugin.mock.MockVegetableModuleDescriptor;
 import junit.framework.TestCase;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.loaders.SinglePluginLoader;
@@ -55,6 +56,7 @@ public class TestDefaultPluginManagerEvents extends TestCase
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("vegetable", MockVegetableModuleDescriptor.class);
 
         File pluginTempDirectory = DirectoryPluginLoaderUtils.copyTestPluginsToTempDirectory();
         List<PluginLoader> pluginLoaders = buildPluginLoaders(pluginEventManager, pluginTempDirectory);
@@ -97,6 +99,7 @@ public class TestDefaultPluginManagerEvents extends TestCase
         assertListEquals(listener.getEventClasses(),
             PluginModuleEnabledEvent.class,
             PluginModuleEnabledEvent.class,
+            PluginModuleEnabledEvent.class,
             PluginEnabledEvent.class,
             PluginModuleEnabledEvent.class,
             PluginEnabledEvent.class,
@@ -105,6 +108,7 @@ public class TestDefaultPluginManagerEvents extends TestCase
         assertListEquals(listener.getEventPluginOrModuleKeys(),
             "test.atlassian.plugin:bear",
             "test.atlassian.plugin:gold",
+            "test.atlassian.plugin:veg",
             "test.atlassian.plugin",
             "test.atlassian.plugin.classloaded:paddington",
             "test.atlassian.plugin.classloaded",
@@ -119,8 +123,10 @@ public class TestDefaultPluginManagerEvents extends TestCase
         assertListEquals(listener.getEventClasses(),
             PluginModuleDisabledEvent.class,
             PluginModuleDisabledEvent.class,
+            PluginModuleDisabledEvent.class,
             PluginDisabledEvent.class);
         assertListEquals(listener.getEventPluginOrModuleKeys(),
+            "test.atlassian.plugin:veg",  // a  module that can't be individually disabled can still be disabled with the plugin
             "test.atlassian.plugin:gold", // modules in reverse order to enable
             "test.atlassian.plugin:bear",
             "test.atlassian.plugin");
@@ -135,10 +141,12 @@ public class TestDefaultPluginManagerEvents extends TestCase
         assertListEquals(listener.getEventClasses(),
             PluginModuleEnabledEvent.class,
             PluginModuleEnabledEvent.class,
+            PluginModuleEnabledEvent.class,
             PluginEnabledEvent.class);
         assertListEquals(listener.getEventPluginOrModuleKeys(),
             "test.atlassian.plugin:bear",
             "test.atlassian.plugin:gold",
+            "test.atlassian.plugin:veg",
             "test.atlassian.plugin");
     }
 
@@ -162,6 +170,12 @@ public class TestDefaultPluginManagerEvents extends TestCase
 
         assertListEquals(listener.getEventClasses(), PluginModuleDisabledEvent.class);
         assertListEquals(listener.getEventPluginOrModuleKeys(), "test.atlassian.plugin:bear");
+    }
+
+    public void testDisableModuleWithCannotDisableDoesNotFireEvent() throws Exception
+    {
+        manager.disablePluginModule("test.atlassian.plugin:veg");
+        assertEquals(listener.getEventClasses().size(), 0);    
     }
 
     public void testEnableModule() throws Exception

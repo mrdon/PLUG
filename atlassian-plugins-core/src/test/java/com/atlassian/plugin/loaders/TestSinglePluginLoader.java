@@ -51,6 +51,7 @@ public class TestSinglePluginLoader extends TestCase
         DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("vegetable", MockVegetableModuleDescriptor.class);
         Collection plugins = loader.loadAllPlugins(moduleDescriptorFactory);
 
         assertEquals(1, plugins.size());
@@ -69,7 +70,7 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals("http://www.atlassian.com", plugin.getPluginInformation().getVendorUrl());
         assertEquals(3f, plugin.getPluginInformation().getMinVersion(), 0);
         assertEquals(3.1f, plugin.getPluginInformation().getMaxVersion(), 0);
-        assertEquals(2, plugin.getModuleDescriptors().size());
+        assertEquals(3, plugin.getModuleDescriptors().size());
 
         ModuleDescriptor bearDescriptor = plugin.getModuleDescriptor("bear");
         assertEquals("test.atlassian.plugin:bear", bearDescriptor.getCompleteKey());

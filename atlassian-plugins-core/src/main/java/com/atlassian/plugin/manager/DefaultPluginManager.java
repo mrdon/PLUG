@@ -20,6 +20,7 @@ import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.PluginSystemLifecycle;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.classloader.PluginsClassLoader;
+import com.atlassian.plugin.descriptors.CannotDisable;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.event.PluginEventListener;
@@ -1104,6 +1105,17 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
             return;
         }
+
+        if (module.getClass().isAnnotationPresent(CannotDisable.class))
+        {
+            if (log.isInfoEnabled())
+            {
+                log.info("Plugin module " + completeKey + " cannot be disabled; it " +
+                        "is annotated with" + CannotDisable.class.getName());
+            }
+            return;
+        }
+
         disablePluginModuleState(module, getStore());
         notifyModuleDisabled(module);
     }
