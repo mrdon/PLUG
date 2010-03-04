@@ -598,7 +598,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 }
             }
 
-            ContextClassLoaderSwitchingUtil.switchClassLoader(initializedClassLoader, new Runnable()
+            ContextClassLoaderSwitchingUtil.runInContext(initializedClassLoader, new Runnable()
             {
                 public void run()
                 {

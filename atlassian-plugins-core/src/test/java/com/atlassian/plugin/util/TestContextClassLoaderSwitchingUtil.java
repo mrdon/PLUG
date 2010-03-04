@@ -18,7 +18,7 @@ public class TestContextClassLoaderSwitchingUtil extends TestCase
     public void testSwitchClassLoader()
     {
         ClassLoader currentLoader = Thread.currentThread().getContextClassLoader();
-        ContextClassLoaderSwitchingUtil.switchClassLoader(newLoader, new Runnable()
+        ContextClassLoaderSwitchingUtil.runInContext(newLoader, new Runnable()
         {
             public void run()
             {

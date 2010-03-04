@@ -17,7 +17,7 @@ public class ContextClassLoaderSwitchingUtil
      * @param newClassLoader The {@link ClassLoader} to run the specified {@link Runnable} in.
      * @param runnable The implementation to be run in the specified {@link ClassLoader}
      */
-    public static void switchClassLoader(ClassLoader newClassLoader, Runnable runnable)
+    public static void runInContext(ClassLoader newClassLoader, Runnable runnable)
     {
         ClassLoaderStack.push(newClassLoader);
         try
