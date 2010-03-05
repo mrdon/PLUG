@@ -1,29 +1,5 @@
 package com.atlassian.plugin.manager;
 
-import static com.atlassian.plugin.util.Assertions.notNull;
-import static com.atlassian.plugin.util.collect.CollectionUtil.toList;
-import static com.google.common.collect.Iterables.concat;
-import static com.google.common.collect.Iterables.filter;
-import static com.google.common.collect.Iterables.transform;
-import static com.google.common.collect.Maps.filterKeys;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
-import org.apache.commons.lang.time.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.atlassian.plugin.ModuleCompleteKey;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
@@ -73,6 +49,27 @@ import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import org.apache.commons.lang.time.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
+import static com.atlassian.plugin.util.Assertions.notNull;
+import static com.atlassian.plugin.util.collect.CollectionUtil.toList;
+import static com.google.common.collect.Iterables.*;
+import static com.google.common.collect.Maps.filterKeys;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -956,38 +953,55 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         });
     }
 
-    public void enablePlugin(final String key)
+    /**
+     * Enable a set of plugins by key. This will implicitly and recursively enable all dependent plugins
+     * @param keys The plugin keys
+     * @since 2.5.0
+     */
+    public void enablePlugins(final String... keys)
     {
-        if (key == null)
-        {
-            throw new IllegalArgumentException("You must specify a plugin key to disable.");
-        }
+        Collection<Plugin> pluginsToEnable = new ArrayList<Plugin>(keys.length);
 
-        if (!plugins.containsKey(key))
+        for (String key : keys)
         {
-            if (log.isInfoEnabled())
+            if (key == null)
             {
-                log.info("No plugin was found for key '" + key + "'. Not enabling.");
+                throw new IllegalArgumentException("Keys passed to enablePlugins must be non-null");
             }
 
-            return;
+            if (!plugins.containsKey(key))
+            {
+                if (log.isInfoEnabled())
+                {
+                    log.info("No plugin was found for key '" + key + "'. Not enabling.");
+                }
+                continue;
+            }
+
+            final Plugin plugin = plugins.get(key);
+            if (!plugin.getPluginInformation().satisfiesMinJavaVersion())
+            {
+                log.error("Minimum Java version of '" + plugin.getPluginInformation().getMinJavaVersion() + "' was not satisfied for module '" + key + "'. Not enabling.");
+                continue;
+            }
+            pluginsToEnable.add(plugin);
         }
+        Collection<Plugin> enabledPlugins = pluginEnabler.enableAllRecursively(pluginsToEnable);
 
-        final Plugin plugin = plugins.get(key);
-
-        if (!plugin.getPluginInformation().satisfiesMinJavaVersion())
-        {
-            log.error("Minimum Java version of '" + plugin.getPluginInformation().getMinJavaVersion() + "' was not satisfied for module '" + key + "'. Not enabling.");
-            return;
-        }
-
-        pluginEnabler.enableRecursively(plugin);
-
-        if (plugin.getPluginState().equals(PluginState.ENABLED))
+        for (Plugin plugin : enabledPlugins)
         {
             enablePluginState(plugin, getStore());
             notifyPluginEnabled(plugin);
         }
+    }
+
+    /**
+     * @deprecated since 2.5.0, use {#link enablePlugins(String[]keys)} instead
+     */
+    @Deprecated
+    public void enablePlugin(final String key)
+    {
+        enablePlugins(key);
     }
 
     protected void enablePluginState(final Plugin plugin, final PluginPersistentStateStore stateStore)

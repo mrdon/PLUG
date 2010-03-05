@@ -84,7 +84,7 @@ public class ComponentImportSpringStage implements TransformStage
         {
             log.warn("Couldn't confirm that '" + interfaceName + "' (used as a <component-import> in the plugin with name '" + pluginName +
                 "') is a public component in the product's OSGi exports. If this is an interface you expect to be" +
-                " provided from the product, doublecheck the spelling of '" + interfaceName + "'; if this class" +
+                " provided from the product, double check the spelling of '" + interfaceName + "'; if this class" +
                 " is supposed to come from another plugin, you can probably ignore this warning.");
         }
 

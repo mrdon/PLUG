@@ -1,10 +1,11 @@
 package com.atlassian.plugin.manager;
 
+import com.atlassian.plugin.MockPluginAccessor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginController;
-import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.mockobjects.dynamic.Mock;
@@ -72,6 +73,25 @@ public class TestPluginEnabler extends TestCase
         Plugin plugin3 = new MyPlugin("foo3");
 
         enabler.enable(Arrays.asList(plugin, plugin2, plugin3));
+        assertEquals(PluginState.ENABLED, plugin.getPluginState());
+        assertEquals(PluginState.ENABLED, plugin2.getPluginState());
+        assertEquals(PluginState.ENABLED, plugin3.getPluginState());
+    }
+
+    public void testEnableAllRecursivelyEnablesDependencies()
+    {
+        Plugin plugin = new MyPlugin("foo", "foo2");
+        Plugin plugin2 = new MyPlugin("foo2", "foo3");
+        Plugin plugin3 = new MyPlugin("foo3");
+        MockPluginAccessor accessor = new MockPluginAccessor();
+        accessor.addPlugin(plugin);
+        accessor.addPlugin(plugin2);
+        accessor.addPlugin(plugin3);
+
+        enabler = new PluginEnabler(accessor, mock(PluginController.class));
+
+        // Enable a single plugin, which will recursively enable all deps
+        enabler.enableAllRecursively(Arrays.asList(plugin));
         assertEquals(PluginState.ENABLED, plugin.getPluginState());
         assertEquals(PluginState.ENABLED, plugin2.getPluginState());
         assertEquals(PluginState.ENABLED, plugin3.getPluginState());

@@ -7,9 +7,14 @@ import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.WaitUntil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,20 +41,36 @@ class PluginEnabler
 
     /**
      * Determines, recursively, which disabled plugins this plugin depends upon, and enables all of them at once.
+     * Returns the plugins that were successfully enabled, including dependencies that weren't explicitly specified.
      *
-     * @param plugin The requested plugin to enable
+     * @param plugins The set of plugins to enable
+     * @return a collection of plugins that were actually enabled
      */
-    void enableRecursively(Plugin plugin)
+    Collection<Plugin> enableAllRecursively(Collection<Plugin> plugins)
     {
+        Collection<Plugin> pluginsToEnable = new ArrayList<Plugin>();
         Set<String> dependentKeys = new HashSet<String>();
-        scanDependencies(plugin, dependentKeys);
 
-        List<Plugin> pluginsToEnable = new ArrayList<Plugin>();
+        for (Plugin plugin : plugins)
+        {
+            scanDependencies(plugin, dependentKeys);
+        }
+
         for (String key : dependentKeys)
         {
             pluginsToEnable.add(pluginAccessor.getPlugin(key));
         }
         enable(pluginsToEnable);
+
+        ImmutableList.Builder enabledPlugins = new ImmutableList.Builder();
+        for (Plugin plugin : pluginsToEnable)
+        {
+            if (plugin.getPluginState().equals(PluginState.ENABLED))
+            {
+               enabledPlugins.add(plugin);
+            }
+        }
+        return enabledPlugins.build();
     }
 
     /**
@@ -60,7 +81,6 @@ class PluginEnabler
      */
     void enable(Collection<Plugin> plugins)
     {
-
         final Set<Plugin> pluginsInEnablingState = new HashSet<Plugin>();
         for (final Plugin plugin : plugins)
         {

@@ -64,7 +64,7 @@ public class ClassModuleCreator implements ModuleCreator
     {
         StringBuilder builder = new StringBuilder();
         builder.append("Couldn't load the class '").append(className).append("'. ");
-        builder.append("This could mean that you misspelled the name of the class (doublecheck) or that ");
+        builder.append("This could mean that you misspelled the name of the class (double check) or that ");
         builder.append("you're using a class in your plugin that you haven't provided bundle instructions for.");
         builder.append("See http://confluence.atlassian.com/x/QRS-Cg for more details on how to fix this.");
         return builder.toString();
