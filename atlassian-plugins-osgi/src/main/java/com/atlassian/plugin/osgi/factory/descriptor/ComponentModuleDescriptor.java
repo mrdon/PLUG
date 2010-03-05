@@ -4,8 +4,8 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.CannotDisable;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.osgi.module.SpringModuleCreator;
+import com.atlassian.plugin.module.ModuleFactory;
+import com.atlassian.plugin.osgi.module.SpringModuleFactory;
 
 /**
  * Module descriptor for Spring components.  Shouldn't be directly used outside providing read-only information.
@@ -17,7 +17,7 @@ public class ComponentModuleDescriptor<Object> extends AbstractModuleDescriptor
 {
     public ComponentModuleDescriptor()
     {
-        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
+        super(ModuleFactory.LEGACY_MODULE_FACTORY);
     }
 
     @Override
@@ -29,7 +29,7 @@ public class ComponentModuleDescriptor<Object> extends AbstractModuleDescriptor
     @Override
     public Object getModule()
     {
-        return (Object) new SpringModuleCreator().createModule(getKey(), this);
+        return (Object) new SpringModuleFactory().createModule(getKey(), this);
     }
 
     /**

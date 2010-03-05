@@ -2,8 +2,8 @@ package com.atlassian.plugin.osgi.factory.descriptor;
 
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.CannotDisable;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.osgi.module.SpringModuleCreator;
+import com.atlassian.plugin.module.ModuleFactory;
+import com.atlassian.plugin.osgi.module.SpringModuleFactory;
 
 /**
  * Module descriptor for OSGi service imports.  Shouldn't be directly used outside providing read-only information.
@@ -18,12 +18,12 @@ public class ComponentImportModuleDescriptor extends AbstractModuleDescriptor<Ob
      */
     public ComponentImportModuleDescriptor()
     {
-        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
+        super(ModuleFactory.LEGACY_MODULE_FACTORY);
     }
 
     public Object getModule()
     {
-        return new SpringModuleCreator().createModule(getKey(), this);
+        return new SpringModuleFactory().createModule(getKey(), this);
     }
 
 }

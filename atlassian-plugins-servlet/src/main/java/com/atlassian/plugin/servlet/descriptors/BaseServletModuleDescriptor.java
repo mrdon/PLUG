@@ -3,7 +3,7 @@ package com.atlassian.plugin.servlet.descriptors;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.util.validation.ValidationPattern;
 import org.dom4j.Element;
 import org.slf4j.Logger;
@@ -30,7 +30,7 @@ public abstract class BaseServletModuleDescriptor<T> extends AbstractModuleDescr
     private Map<String,String> initParams;
 
     /**
-     * @deprecated  Since 2.5.0, use {@link BaseServletModuleDescriptor( com.atlassian.plugin.module.ModuleClassFactory)} instead (as of 2.5.0).
+     * @deprecated  Since 2.5.0, use {@link BaseServletModuleDescriptor( com.atlassian.plugin.module.ModuleFactory )} instead (as of 2.5.0).
      */
     public BaseServletModuleDescriptor()
     {
@@ -40,7 +40,7 @@ public abstract class BaseServletModuleDescriptor<T> extends AbstractModuleDescr
      * @since 2.5.0
      * @param moduleCreator
      */
-    public BaseServletModuleDescriptor(ModuleClassFactory moduleCreator)
+    public BaseServletModuleDescriptor(ModuleFactory moduleCreator)
     {
         super(moduleCreator);
     }

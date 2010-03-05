@@ -4,14 +4,12 @@ import javax.servlet.ServletContextListener;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.module.ClassModuleCreator;
-import com.atlassian.plugin.module.DefaultModuleClassFactory;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.module.ModuleCreator;
+import com.atlassian.plugin.module.ClassModuleFactory;
+import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.servlet.PluginBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
 public class ServletContextListenerModuleDescriptorBuilder
 {
@@ -39,10 +37,9 @@ public class ServletContextListenerModuleDescriptorBuilder
     
     public ServletContextListenerModuleDescriptor build()
     {
-        final List<ModuleCreator> provider = new ArrayList<ModuleCreator>();
-        provider.add(new ClassModuleCreator(new DefaultHostContainer()));
-        DefaultModuleClassFactory defaultModuleClassFactory = new DefaultModuleClassFactory(provider);
-        Descriptor d = new Descriptor(plugin, key, listener, defaultModuleClassFactory);
+        PrefixedModuleFactory prefixedModuleFactory = new PrefixedModuleFactory(
+                Collections.<String, ModuleFactory>singletonMap("class", new ClassModuleFactory(new DefaultHostContainer())));
+        Descriptor d = new Descriptor(plugin, key, listener, prefixedModuleFactory);
         plugin.addModuleDescriptor(d);
         return d;
     }
@@ -56,9 +53,9 @@ public class ServletContextListenerModuleDescriptorBuilder
         public Descriptor(
             Plugin plugin,
             String key,
-            ServletContextListener listener, ModuleClassFactory moduleClassFactory)
+            ServletContextListener listener, ModuleFactory moduleFactory)
         {
-            super(moduleClassFactory);
+            super(moduleFactory);
             this.plugin = plugin;
             this.key = key;
             this.listener = listener;

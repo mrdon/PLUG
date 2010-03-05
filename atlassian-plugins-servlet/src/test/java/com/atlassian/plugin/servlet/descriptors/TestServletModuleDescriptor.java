@@ -3,7 +3,7 @@ package com.atlassian.plugin.servlet.descriptors;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.impl.StaticPlugin;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.mockobjects.dynamic.Mock;
 import junit.framework.TestCase;
@@ -19,7 +19,7 @@ public class TestServletModuleDescriptor extends TestCase
     @Override
     public void setUp()
     {
-        descriptor = new ServletModuleDescriptor(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY, (ServletModuleManager) new Mock(ServletModuleManager.class).proxy());
+        descriptor = new ServletModuleDescriptor(ModuleFactory.LEGACY_MODULE_FACTORY, (ServletModuleManager) new Mock(ServletModuleManager.class).proxy());
     }
 
     @Override

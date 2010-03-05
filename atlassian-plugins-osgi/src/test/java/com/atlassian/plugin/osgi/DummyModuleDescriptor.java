@@ -1,7 +1,7 @@
 package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 
 public class DummyModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
@@ -9,13 +9,13 @@ public class DummyModuleDescriptor extends AbstractModuleDescriptor<Void>
 
     /**
      *
-     * @param moduleCreator
+     * @param moduleFactory
      *
      * @since 2.5.0
      */
-    public DummyModuleDescriptor(ModuleClassFactory moduleClassFactory)
+    public DummyModuleDescriptor(ModuleFactory moduleFactory)
     {
-        super(moduleClassFactory);
+        super(moduleFactory);
     }
 
     @Override

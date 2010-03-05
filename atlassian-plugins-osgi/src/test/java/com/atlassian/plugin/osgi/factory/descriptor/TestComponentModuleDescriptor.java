@@ -1,6 +1,5 @@
 package com.atlassian.plugin.osgi.factory.descriptor;
 
-import com.atlassian.plugin.module.ModuleClassFactory;
 import junit.framework.TestCase;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;

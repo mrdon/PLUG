@@ -6,7 +6,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.test.PluginJarBuilder;
@@ -45,7 +45,7 @@ public class TestOsgiPluginFactory extends TestCase
     {
         tmpDir = PluginTestUtils.createTempDirectory(TestOsgiPluginFactory.class);
         osgiContainerManager = mock(OsgiContainerManager.class);
-        ModuleClassFactory moduleCreator = mock(ModuleClassFactory.class);
+        ModuleFactory moduleCreator = mock(ModuleFactory.class);
         factory = new OsgiPluginFactory(PluginAccessor.Descriptor.FILENAME, (String) null, new DefaultOsgiPersistentCache(tmpDir), osgiContainerManager, new DefaultPluginEventManager());
         jar = new PluginJarBuilder("someplugin").addPluginInformation("plugin.key", "My Plugin", "1.0").build();
 

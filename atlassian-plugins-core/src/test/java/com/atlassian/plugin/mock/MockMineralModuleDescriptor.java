@@ -3,7 +3,7 @@ package com.atlassian.plugin.mock;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import org.dom4j.Element;
 
 public class MockMineralModuleDescriptor extends AbstractModuleDescriptor<MockMineral>
@@ -12,7 +12,7 @@ public class MockMineralModuleDescriptor extends AbstractModuleDescriptor<MockMi
 
     public MockMineralModuleDescriptor()
     {
-        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
+        super(ModuleFactory.LEGACY_MODULE_FACTORY);
     }
 
     @Override

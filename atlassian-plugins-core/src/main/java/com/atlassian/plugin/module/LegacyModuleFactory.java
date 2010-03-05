@@ -6,17 +6,16 @@ import com.atlassian.plugin.PluginParseException;
 import java.lang.reflect.Constructor;
 
 /**
- * Created by IntelliJ IDEA.
- * User: ervzijst
- * Date: Mar 1, 2010
- * Time: 5:30:37 PM
- * To change this template use File | Settings | File Templates.
+ * Legacy module factory that provides module classes for descriptors that aren't using an injected ModuleFactory
+ *
+ * @since 2.5.0
  */
-public class LegacyModuleClassFactory implements ModuleClassFactory {
+public class LegacyModuleFactory implements ModuleFactory
+{
 
-    public <T> T createModuleClass(String name, ModuleDescriptor<T> moduleDescriptor) throws PluginParseException
+    public <T> T createModule(String name, ModuleDescriptor<T> moduleDescriptor) throws PluginParseException
     {
-        throw new UnsupportedOperationException(" create Module Class not supported by LegacyModuleClassFactory. Use DefaultModuleClassFactory instead.");
+        throw new UnsupportedOperationException(" create Module not supported by LegacyModuleFactory. Use PrefixedModuleFactory instead.");
     }
 
     public <T> Class<T> getModuleClass(String name, ModuleDescriptor<T> moduleDescriptor) throws ModuleClassNotFoundException {

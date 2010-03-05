@@ -1,6 +1,6 @@
 package com.atlassian.plugin.descriptors;
 
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 
 /**
  * @deprecated All module descriptors now have resources. Use AbstractModuleDescriptor instead.
@@ -10,6 +10,6 @@ public abstract class ResourcedModuleDescriptor<T> extends AbstractModuleDescrip
 {
     public ResourcedModuleDescriptor()
     {
-        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
+        super(ModuleFactory.LEGACY_MODULE_FACTORY);
     }
 }

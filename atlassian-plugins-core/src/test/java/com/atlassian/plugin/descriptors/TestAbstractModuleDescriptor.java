@@ -13,7 +13,7 @@ import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.mock.MockMineral;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import junit.framework.TestCase;
 import org.dom4j.DocumentException;
@@ -22,11 +22,13 @@ import org.dom4j.Element;
 
 import java.util.List;
 
+import static org.mockito.Mockito.mock;
+
 public class TestAbstractModuleDescriptor extends TestCase
 {
     public void testAssertModuleClassImplements() throws DocumentException, PluginParseException
     {
-        ModuleDescriptor descriptor = new AbstractModuleDescriptor(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY) {
+        ModuleDescriptor descriptor = new AbstractModuleDescriptor(ModuleFactory.LEGACY_MODULE_FACTORY) {
             public void init(Plugin plugin, Element element) throws PluginParseException
             {
                 super.init(plugin, element);
@@ -53,6 +55,61 @@ public class TestAbstractModuleDescriptor extends TestCase
 
         // now succeed
         descriptor.init(new StaticPlugin(), DocumentHelper.parseText("<animal key=\"key\" name=\"bear\" class=\"com.atlassian.plugin.mock.MockGold\" />").getRootElement());
+    }
+
+    public void testLoadClassFromNewModuleFactory()
+    {
+        ModuleFactory moduleFactory = mock(ModuleFactory.class);
+        AbstractModuleDescriptor moduleDescriptor = new StringModuleDescriptor(moduleFactory, "foo");
+        Plugin plugin = mock(Plugin.class);
+        moduleDescriptor.loadClass(plugin, "foo");
+        assertEquals(String.class, moduleDescriptor.getModuleClass());
+    }
+
+    public void testLoadClassFromNewModuleFactoryWithExtendsNumberType()
+    {
+        ModuleFactory moduleFactory = mock(ModuleFactory.class);
+        AbstractModuleDescriptor moduleDescriptor = new ExtendsNumberModuleDescriptor(moduleFactory, "foo");
+        Plugin plugin = mock(Plugin.class);
+
+        try
+        {
+            moduleDescriptor.loadClass(plugin, "foo");
+            fail("Should have complained about extends type");
+        }
+        catch (IllegalStateException ex)
+        {
+            // success
+        }
+    }
+
+    public void testLoadClassFromNewModuleFactoryButUnknownType()
+    {
+        ModuleFactory moduleFactory = mock(ModuleFactory.class);
+        AbstractModuleDescriptor moduleDescriptor = new AbstractModuleDescriptor(moduleFactory)
+        {
+            public AbstractModuleDescriptor init()
+            {
+                moduleClassName = "foo";
+                return this;
+            }
+
+            @Override
+            public Object getModule()
+            {
+                return null;
+            }
+        }.init();
+        try
+        {
+            Plugin plugin = mock(Plugin.class);
+            moduleDescriptor.loadClass(plugin, "foo");
+            fail("Should have complained about unknown type");
+        }
+        catch (IllegalStateException ex)
+        {
+            // success
+        }
     }
 
     public void testSingletonness() throws DocumentException, PluginParseException
@@ -114,7 +171,7 @@ public class TestAbstractModuleDescriptor extends TestCase
 
     private ModuleDescriptor makeSingletonDescriptor()
     {
-        ModuleDescriptor descriptor = new AbstractModuleDescriptor(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY) {
+        ModuleDescriptor descriptor = new AbstractModuleDescriptor(ModuleFactory.LEGACY_MODULE_FACTORY) {
             Object module;
 
             public void init(Plugin plugin, Element element) throws PluginParseException
@@ -147,5 +204,36 @@ public class TestAbstractModuleDescriptor extends TestCase
             }
         };
         return descriptor;
+    }
+
+    private static class StringModuleDescriptor extends AbstractModuleDescriptor<String>
+    {
+        public StringModuleDescriptor(ModuleFactory moduleFactory, String className)
+        {
+            super(moduleFactory);
+            moduleClassName = className;
+        }
+
+        @Override
+        public String getModule()
+        {
+            return null;
+        }
+
+    }
+
+    private static class ExtendsNumberModuleDescriptor<T extends Number> extends AbstractModuleDescriptor<T>
+    {
+        public ExtendsNumberModuleDescriptor(ModuleFactory moduleFactory, String className)
+        {
+            super(moduleFactory);
+            moduleClassName = className;
+        }
+
+        @Override
+        public T getModule()
+        {
+            return null;
+        }
     }
 }

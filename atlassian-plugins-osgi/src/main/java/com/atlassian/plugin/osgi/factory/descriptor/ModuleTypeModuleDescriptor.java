@@ -1,7 +1,7 @@
 package com.atlassian.plugin.osgi.factory.descriptor;
 
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 
 /**
  * Module descriptor for dynamic module types.  Shouldn't be directly used outside providing read-only information.
@@ -12,7 +12,7 @@ public class ModuleTypeModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
     public ModuleTypeModuleDescriptor()
     {
-        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
+        super(ModuleFactory.LEGACY_MODULE_FACTORY);
     }
 
     public Void getModule()

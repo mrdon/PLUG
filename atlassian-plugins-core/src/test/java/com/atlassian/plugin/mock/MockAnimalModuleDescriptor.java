@@ -5,7 +5,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import junit.framework.Assert;
 import org.dom4j.Element;
 
@@ -26,7 +26,7 @@ public class MockAnimalModuleDescriptor extends AbstractModuleDescriptor<MockAni
     
     public MockAnimalModuleDescriptor(String type, String name)
     {
-      super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
+      super(ModuleFactory.LEGACY_MODULE_FACTORY);
       this.type = type;
       this.name = name;
     }

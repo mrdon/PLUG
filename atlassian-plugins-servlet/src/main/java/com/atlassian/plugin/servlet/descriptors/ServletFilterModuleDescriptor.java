@@ -5,7 +5,7 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.module.HostContainerLegacyAdaptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
 import org.apache.commons.lang.Validate;
@@ -50,9 +50,9 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
      *
      * @since 2.5.0
      */
-    public ServletFilterModuleDescriptor(ModuleClassFactory moduleClassFactory, ServletModuleManager servletModuleManager)
+    public ServletFilterModuleDescriptor(ModuleFactory moduleFactory, ServletModuleManager servletModuleManager)
     {
-        super(moduleClassFactory);
+        super(moduleFactory);
         Validate.notNull(servletModuleManager);
         this.servletModuleManager = servletModuleManager;
     }
@@ -62,7 +62,7 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
      *
      * @param hostContainer The module factory
      * @since 2.2.0
-     * @deprecated use {@link com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor#ServletFilterModuleDescriptor(com.atlassian.plugin.module.ModuleClassFactory, com.atlassian.plugin.servlet.ServletModuleManager)} instead
+     * @deprecated use {@link com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor#ServletFilterModuleDescriptor(com.atlassian.plugin.module.ModuleFactory , com.atlassian.plugin.servlet.ServletModuleManager)} instead
      */
     public ServletFilterModuleDescriptor(HostContainer hostContainer, ServletModuleManager servletModuleManager)
     {
@@ -106,7 +106,7 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
     @Override
     public Filter getModule()
     {
-        return moduleClassFactory.createModuleClass(getModuleClass().getName(), this);
+        return moduleFactory.createModule(moduleClassName, this);
     }
 
     public FilterLocation getLocation()

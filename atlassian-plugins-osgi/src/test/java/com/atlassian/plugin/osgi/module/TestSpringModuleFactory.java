@@ -5,7 +5,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.module.ContainerAccessor;
 import com.atlassian.plugin.module.ContainerManagedPlugin;
-import com.atlassian.plugin.module.ModuleCreator;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.osgi.spring.SpringContainerAccessor;
 import junit.framework.TestCase;
 
@@ -16,26 +16,21 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class TestSpringModuleCreator extends TestCase
+public class TestSpringModuleFactory extends TestCase
 {
-    ModuleCreator moduleCreator;
+    ModuleFactory moduleCreator;
 
     @Override
     protected void setUp() throws Exception
     {
         super.setUp();
-        moduleCreator = new SpringModuleCreator();
+        moduleCreator = new SpringModuleFactory();
     }
 
     @Override
     protected void tearDown() throws Exception
     {
         super.tearDown();
-    }
-
-    public void testSupportsPrefix() throws Exception
-    {
-        assertEquals("bean", moduleCreator.getPrefix());
     }
 
     public void testCreateBeanFailedUsingHostContainer() throws Exception

@@ -8,7 +8,10 @@ import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.loaders.LoaderUtils;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.LegacyModuleFactory;
+import com.atlassian.plugin.module.ModuleFactory;
+import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.util.ClassUtils;
 import com.atlassian.plugin.util.JavaVersionUtils;
 import com.atlassian.plugin.util.validation.ValidationPattern;
 import org.apache.commons.lang.Validate;
@@ -42,21 +45,21 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     private String descriptionKey;
     private String completeKey;
     boolean enabled = false;
-    protected final ModuleClassFactory moduleClassFactory;
+    protected final ModuleFactory moduleFactory;
 
-    public AbstractModuleDescriptor(ModuleClassFactory moduleClassFactory)
+    public AbstractModuleDescriptor(ModuleFactory moduleFactory)
     {
-        Validate.notNull(moduleClassFactory, "Module creator factory cannot be null");
-        this.moduleClassFactory = moduleClassFactory;
+        Validate.notNull(moduleFactory, "Module creator factory cannot be null");
+        this.moduleFactory = moduleFactory;
     }
 
     /**
-     * @Deprecated since 2.5.0 use the constructor which requires a {@link com.atlassian.plugin.module.ModuleClassFactory}
+     * @Deprecated since 2.5.0 use the constructor which requires a {@link com.atlassian.plugin.module.ModuleFactory}
      */
     @Deprecated
     public AbstractModuleDescriptor()
     {
-        this(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
+        this(ModuleFactory.LEGACY_MODULE_FACTORY);
     }
 
 
@@ -101,7 +104,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         }
         else
         {
-                      singleton = isSingletonByDefault();
+            singleton = isSingletonByDefault();
         }
 
         resources = Resources.fromXml(element);
@@ -145,17 +148,54 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
 
 
     /**
-     * Override this for module descriptors which don't expect to be able to load a class successfully
+     * Loads the module class that this descriptor provides, and will not necessarily be the implementation class.
+     * Override this for module descriptors who's type cannot be determined via generics.
      *
      * @param clazz The module class name to load
-     * @Deprecated since 2.5.0 use the {@link com.atlassian.plugin.module.ModuleClassFactory} to create the module class
+     * @throws IllegalStateException If the module class cannot be determined and the descriptor doesn't define a
+     * module type via generics
      */
-    @Deprecated
     protected void loadClass(final Plugin plugin, final String clazz) throws PluginParseException
     {
-        if (moduleClassName != null) //not all plugins have to have a class
+        if (moduleClassName != null)
         {
-            moduleClass = moduleClassFactory.getModuleClass(moduleClassName, this);
+            if (moduleFactory instanceof LegacyModuleFactory) //not all plugins have to have a class
+            {
+                moduleClass = ((LegacyModuleFactory)moduleFactory).getModuleClass(moduleClassName, this);
+            }
+
+            // This is only here for backwards compatibility with old code that uses
+            // {@link com.atlassian.plugin.PluginAccessor#getEnabledModulesByClass(Class)}
+            else if (moduleFactory instanceof PrefixedModuleFactory)
+            {
+                moduleClass = ((PrefixedModuleFactory)moduleFactory).guessModuleClass(moduleClassName, this);
+            }
+        }
+        // If this module has no class, then we assume Void
+        else
+        {
+            moduleClass = (Class<T>) Void.class;
+        }
+        
+
+        // Usually is null when a prefix is used in the class name
+        if (moduleClass == null)
+        {
+            try
+            {
+                moduleClass = (Class<T>) ClassUtils.getTypeArguments(AbstractModuleDescriptor.class, getClass()).get(0);
+            }
+            catch (ClassCastException ex)
+            {
+                throw new IllegalStateException("The module class must be defined in a concrete instance of " +
+                            "ModuleDescriptor and not as another generic type.");
+            }
+
+            if (moduleClass == null)
+            {
+                throw new IllegalStateException("The module class cannot be determined, likely because it needs a concrete " +
+                    "module type defined in the generic type it passes to AbstractModuleDescriptor");
+            }
         }
     }
 

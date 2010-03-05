@@ -1,26 +1,24 @@
 package com.atlassian.plugin.servlet.download.plugin;
 
-import com.atlassian.plugin.module.ClassModuleCreator;
-import com.atlassian.plugin.module.DefaultModuleClassFactory;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.module.ModuleCreator;
-import junit.framework.TestCase;
-import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
-import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
-import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
-import com.atlassian.plugin.servlet.DownloadStrategy;
-import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
+import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.module.ClassModuleFactory;
+import com.atlassian.plugin.module.ModuleFactory;
+import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.servlet.DownloadException;
+import com.atlassian.plugin.servlet.DownloadStrategy;
 import com.mockobjects.dynamic.Mock;
+import junit.framework.TestCase;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.StringWriter;
+import java.util.Collections;
 
 public class TestPluggableDownloadStrategy extends TestCase
 {
@@ -56,11 +54,10 @@ public class TestPluggableDownloadStrategy extends TestCase
         assertFalse(strategy.matches("/monkey/something"));
     }
 
-    protected ModuleClassFactory getDefaultModuleClassFactory()
+    protected ModuleFactory getDefaultModuleClassFactory()
     {
-        final List<ModuleCreator> moduleCreators = new ArrayList<ModuleCreator>();
-        moduleCreators.add(new ClassModuleCreator(new DefaultHostContainer()));
-        return new DefaultModuleClassFactory(moduleCreators);
+        return new PrefixedModuleFactory(
+                Collections.<String, ModuleFactory>singletonMap(ClassModuleFactory.PREFIX, new ClassModuleFactory(new DefaultHostContainer())));
     }
 
     public void testPluginModuleEnabled() throws Exception

@@ -85,7 +85,7 @@ public class ScanDescriptorForHostClassesStage implements TransformStage
         }
         catch (ClassNotFoundException e)
         {
-            log.debug("Unable to load class '" + className + "' in calling class context: '" + getClass() + "'", e);
+            // not a host class, ignore
             return;
         }
 

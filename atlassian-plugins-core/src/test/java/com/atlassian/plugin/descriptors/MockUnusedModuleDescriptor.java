@@ -1,13 +1,13 @@
 package com.atlassian.plugin.descriptors;
 
 import com.atlassian.plugin.mock.MockThing;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 
 public class MockUnusedModuleDescriptor extends AbstractModuleDescriptor<MockThing>
 {
     public MockUnusedModuleDescriptor()
     {
-        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
+        super(ModuleFactory.LEGACY_MODULE_FACTORY);
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.atlassian.plugin.servlet.descriptors;
 
-import com.atlassian.plugin.module.DefaultModuleClassFactory;
-import com.atlassian.plugin.module.ModuleCreator;
+import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import junit.framework.TestCase;
 
 import org.dom4j.Element;
@@ -25,7 +25,7 @@ public class TestServletFilterModuleDescriptor extends TestCase
     public void setUp()
     {
         descriptor = new ServletFilterModuleDescriptor
-                ( new DefaultModuleClassFactory(Collections.<ModuleCreator>emptyList()), (ServletModuleManager) new Mock(ServletModuleManager.class).proxy());
+                ( new PrefixedModuleFactory(Collections.<String, ModuleFactory>emptyMap()), (ServletModuleManager) new Mock(ServletModuleManager.class).proxy());
     }
 
     @Override

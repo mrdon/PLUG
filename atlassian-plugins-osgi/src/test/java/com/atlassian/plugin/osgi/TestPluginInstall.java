@@ -6,11 +6,6 @@ import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.hostcontainer.HostContainer;
-import com.atlassian.plugin.module.ClassModuleCreator;
-import com.atlassian.plugin.module.DefaultModuleClassFactory;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.module.ModuleCreator;
 import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
@@ -21,26 +16,22 @@ import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.WaitUntil;
-import com.mockobjects.dynamic.C;
-import com.mockobjects.dynamic.Mock;
 import org.osgi.framework.Bundle;
 import org.osgi.util.tracker.ServiceTracker;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServlet;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServlet;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -881,13 +872,9 @@ public class TestPluginInstall extends PluginInContainerTestBase
         when(servletConfig.getServletContext()).thenReturn(ctx);
 
         ServletModuleManager mgr = new DefaultServletModuleManager(pluginEventManager);
-        Mock mockHostContainer = new Mock(HostContainer.class);
-        final List<ModuleCreator> creator = new ArrayList<ModuleCreator>();
-        creator.add(new ClassModuleCreator((HostContainer) mockHostContainer.proxy()));
-        ModuleClassFactory moduleClassFactory = new DefaultModuleClassFactory(creator);
-        mockHostContainer.matchAndReturn("create", C.args(C.eq(ServletModuleDescriptor.class)), new StubServletModuleDescriptor((ModuleClassFactory) moduleClassFactory,mgr));
+        hostContainer = createHostContainer(Collections.<Class<?>, Object>singletonMap(ServletModuleManager.class, mgr));
         initPluginManager(prov, new SingleModuleDescriptorFactory(
-                (HostContainer) mockHostContainer.proxy(),
+                hostContainer,
                 "servlet",
                 ServletModuleDescriptor.class));
 

@@ -37,7 +37,7 @@ import com.atlassian.plugin.loaders.SinglePluginLoader;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
 import com.atlassian.plugin.mock.*;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
@@ -120,7 +120,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     public void testEnableModuleFailed() throws PluginParseException
     {
         final Mock mockPluginLoader = new Mock(PluginLoader.class);
-        final ModuleDescriptor<Object> badModuleDescriptor = new AbstractModuleDescriptor<Object>(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY)
+        final ModuleDescriptor<Object> badModuleDescriptor = new AbstractModuleDescriptor<Object>(ModuleFactory.LEGACY_MODULE_FACTORY)
         {
             @Override
             public String getKey()

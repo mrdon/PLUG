@@ -3,7 +3,7 @@ package com.atlassian.plugin.servlet.descriptors;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.module.HostContainerLegacyAdaptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,19 +27,19 @@ public class ServletContextListenerModuleDescriptor extends AbstractModuleDescri
 
     /**
      *
-     * @param moduleClassFactory
+     * @param moduleFactory
      *
      * @since 2.5.0
      */
-    public ServletContextListenerModuleDescriptor(ModuleClassFactory moduleClassFactory)
+    public ServletContextListenerModuleDescriptor(ModuleFactory moduleFactory)
     {
-        super(moduleClassFactory);
+        super(moduleFactory);
     }
 
     @Override
     public ServletContextListener getModule()
     {
-        return moduleClassFactory.createModuleClass(moduleClassName, this);
+        return moduleFactory.createModule(moduleClassName, this);
     }
 
 }

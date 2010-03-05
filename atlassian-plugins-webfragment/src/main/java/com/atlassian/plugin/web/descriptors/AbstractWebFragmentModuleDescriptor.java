@@ -5,7 +5,7 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.loaders.LoaderUtils;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.WebInterfaceManager;
@@ -39,13 +39,13 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
 
     protected AbstractWebFragmentModuleDescriptor(final WebInterfaceManager webInterfaceManager)
     {
-        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
+        super(ModuleFactory.LEGACY_MODULE_FACTORY);
         this.webInterfaceManager = webInterfaceManager;
     }
 
     public AbstractWebFragmentModuleDescriptor()
     {
-        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
+        super(ModuleFactory.LEGACY_MODULE_FACTORY);
     }
 
     @Override

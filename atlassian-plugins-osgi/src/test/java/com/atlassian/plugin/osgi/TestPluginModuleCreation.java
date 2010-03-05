@@ -6,28 +6,31 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.ClassPathPluginLoader;
-import com.atlassian.plugin.module.ClassModuleCreator;
-import com.atlassian.plugin.module.DefaultModuleClassFactory;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.module.ModuleCreator;
+import com.atlassian.plugin.module.ClassModuleFactory;
+import com.atlassian.plugin.module.ModuleFactory;
+import com.atlassian.plugin.module.PrefixedModuleFactory;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.osgi.module.SpringModuleCreator;
+import com.atlassian.plugin.osgi.module.SpringModuleFactory;
 import com.atlassian.plugin.osgi.test.TestServlet;
 import com.atlassian.plugin.servlet.ServletModuleManager;
+import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.test.PluginJarBuilder;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
  * Tests around the creation of the module class of {@link com.atlassian.plugin.ModuleDescriptor}
  */
-public class TestPluginModuleClassCreation extends PluginInContainerTestBase
+public class TestPluginModuleCreation extends PluginInContainerTestBase
 {
     public void testInstallPlugin2AndGetModuleClass() throws Exception
     {
@@ -52,16 +55,10 @@ public class TestPluginModuleClassCreation extends PluginInContainerTestBase
                         "}")
                 .build();
 
-        HostContainer hostContainer = mock(HostContainer.class);
         final ServletModuleManager servletModuleManager = mock(ServletModuleManager.class);
-        final List<ModuleCreator> providers = new ArrayList<ModuleCreator>();
-        ModuleCreator classModuleCreator = new ClassModuleCreator(hostContainer);
-        providers.add(classModuleCreator);
-        ModuleCreator springBeanModuleCreator = new SpringModuleCreator();
-        providers.add(springBeanModuleCreator);
 
-        final ModuleClassFactory moduleCreator = new DefaultModuleClassFactory(providers);
-        when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleCreator, servletModuleManager));
+        HostContainer hostContainer = mock(HostContainer.class);
+        when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleFactory, servletModuleManager));
 
         final DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(hostContainer);
         moduleDescriptorFactory.addModuleDescriptor("servlet", StubServletModuleDescriptor.class);
@@ -82,16 +79,14 @@ public class TestPluginModuleClassCreation extends PluginInContainerTestBase
     public void testInstallPlugins1AndGetModuleClass() throws Exception
     {
         ClassPathPluginLoader classPathPluginLoader = new ClassPathPluginLoader("testInstallPlugins1AndGetModuleClass.xml");
-        HostContainer hostContainer = mock(HostContainer.class);
         final ServletModuleManager servletModuleManager = mock(ServletModuleManager.class);
-        final List<ModuleCreator> providers = new ArrayList<ModuleCreator>();
-        ModuleCreator classModuleCreator = new ClassModuleCreator(hostContainer);
-        providers.add(classModuleCreator);
-        ModuleCreator springBeanModuleCreator = new SpringModuleCreator();
-        providers.add(springBeanModuleCreator);
-
-        final ModuleClassFactory moduleCreator = new DefaultModuleClassFactory(providers);
-        when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleCreator, servletModuleManager));
+        final HostContainer hostContainer = mock(HostContainer.class);
+        moduleFactory = new PrefixedModuleFactory(new HashMap<String, ModuleFactory>()
+        {{
+            put(ClassModuleFactory.PREFIX, new ClassModuleFactory(hostContainer));
+            put(SpringModuleFactory.PREFIX, new SpringModuleFactory());
+        }});
+        when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleFactory, servletModuleManager));
         when(hostContainer.create(TestServlet.class)).thenReturn(new TestServlet());
 
         final DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(hostContainer);
@@ -106,17 +101,24 @@ public class TestPluginModuleClassCreation extends PluginInContainerTestBase
     public void testInstallPlugins1AndFailToGetModuleClassFromSpring() throws Exception
     {
         ClassPathPluginLoader classPathPluginLoader = new ClassPathPluginLoader("testInstallPlugins1AndFailToGetModuleClassFromSpring.xml");
-        HostContainer hostContainer = mock(HostContainer.class);
         final ServletModuleManager servletModuleManager = mock(ServletModuleManager.class);
-        final List<ModuleCreator> providers = new ArrayList<ModuleCreator>();
-        ModuleCreator classModuleCreator = new ClassModuleCreator(hostContainer);
-        providers.add(classModuleCreator);
-        ModuleCreator springBeanModuleCreator = new SpringModuleCreator();
-        providers.add(springBeanModuleCreator);
 
-        final ModuleClassFactory moduleCreator = new DefaultModuleClassFactory(providers);
-        when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleCreator, servletModuleManager));
+        final HostContainer hostContainer = mock(HostContainer.class);
+        moduleFactory = new PrefixedModuleFactory(new HashMap<String, ModuleFactory>()
+        {{
+            put(ClassModuleFactory.PREFIX, new ClassModuleFactory(hostContainer));
+            put(SpringModuleFactory.PREFIX, new SpringModuleFactory());
+        }});
+        when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleFactory, servletModuleManager));
         when(hostContainer.create(TestServlet.class)).thenReturn(new TestServlet());
+        doAnswer(new Answer()
+        {
+            public Object answer(InvocationOnMock invocation) throws Throwable
+            {
+                ((ServletModuleDescriptor)invocation.getArguments()[0]).getModule();
+                return null;
+            }
+        }).when(servletModuleManager).addServletModule((ServletModuleDescriptor)anyObject());
 
         final DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(hostContainer);
         moduleDescriptorFactory.addModuleDescriptor("servlet", StubServletModuleDescriptor.class);
@@ -125,8 +127,6 @@ public class TestPluginModuleClassCreation extends PluginInContainerTestBase
         assertEquals(1, pluginManager.getPlugins().size());
         final Plugin plugin = pluginManager.getPlugins().iterator().next();
         assertTrue(plugin instanceof UnloadablePlugin);
-        UnloadablePlugin unloadablePlugin = (UnloadablePlugin) plugin;
-        assertEquals("There was a problem loading the module descriptor: A test servlet.<br/>Failed to resolve 'BeanServlet'. You cannot use 'bean' prefix with non-OSGi plugins", unloadablePlugin.getErrorText());
         assertEquals(0, pluginManager.getEnabledPlugins().size());
     }
 
@@ -154,16 +154,9 @@ public class TestPluginModuleClassCreation extends PluginInContainerTestBase
                         "}")
                 .build();
 
-        HostContainer hostContainer = mock(HostContainer.class);
         final ServletModuleManager servletModuleManager = mock(ServletModuleManager.class);
-        final List<ModuleCreator> providers = new ArrayList<ModuleCreator>();
-        ModuleCreator classModuleCreator = new ClassModuleCreator(hostContainer);
-        providers.add(classModuleCreator);
-        ModuleCreator springBeanModuleCreator = new SpringModuleCreator();
-        providers.add(springBeanModuleCreator);
-
-        final ModuleClassFactory moduleCreator = new DefaultModuleClassFactory(providers);
-        when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleCreator, servletModuleManager));
+        HostContainer hostContainer = mock(HostContainer.class);
+        when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleFactory, servletModuleManager));
 
         final DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(hostContainer);
         moduleDescriptorFactory.addModuleDescriptor("servlet", StubServletModuleDescriptor.class);
@@ -285,16 +278,22 @@ public class TestPluginModuleClassCreation extends PluginInContainerTestBase
                         "}")
                 .build();
 
-        HostContainer hostContainer = mock(HostContainer.class);
         final ServletModuleManager servletModuleManager = mock(ServletModuleManager.class);
-        final List<ModuleCreator> providers = new ArrayList<ModuleCreator>();
-        ModuleCreator classModuleCreator = new ClassModuleCreator(hostContainer);
-        providers.add(classModuleCreator);
-        ModuleCreator springBeanModuleCreator = new SpringModuleCreator();
-        providers.add(springBeanModuleCreator);
-
-        final ModuleClassFactory moduleCreator = new DefaultModuleClassFactory(providers);
-        when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleCreator, servletModuleManager));
+        doAnswer(new Answer()
+        {
+            public Object answer(InvocationOnMock invocation) throws Throwable
+            {
+                ((ServletModuleDescriptor)invocation.getArguments()[0]).getModule();
+                return null;
+            }
+        }).when(servletModuleManager).addServletModule((ServletModuleDescriptor)anyObject());
+        final HostContainer hostContainer = mock(HostContainer.class);
+        moduleFactory = new PrefixedModuleFactory(new HashMap<String, ModuleFactory>()
+        {{
+            put(ClassModuleFactory.PREFIX, new ClassModuleFactory(hostContainer));
+            put(SpringModuleFactory.PREFIX, new SpringModuleFactory());
+        }});
+        when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleFactory, servletModuleManager));
 
         final DefaultModuleDescriptorFactory moduleDescriptorFactory = new DefaultModuleDescriptorFactory(hostContainer);
         moduleDescriptorFactory.addModuleDescriptor("servlet", StubServletModuleDescriptor.class);
@@ -310,9 +309,5 @@ public class TestPluginModuleClassCreation extends PluginInContainerTestBase
         assertEquals(0, pluginManager.getEnabledPlugins().size());
         final Plugin plugin = pluginManager.getPlugins().iterator().next();
         assertTrue(plugin instanceof UnloadablePlugin);
-        UnloadablePlugin unloadablePlugin = (UnloadablePlugin) plugin;
-        assertEquals("There was a problem loading the descriptor for module 'spring bean for servlet' in plugin 'Test'.\n"
-                + " Couldn't find the spring bean reference with the id 'beanId'. Please make sure you have defined a spring bean with this id within this plugin. Either using a native spring configuration or the component module descriptor, the spring bean id is the key of the module descriptor.If the spring bean you refer to is not part of this plugin, please make sure it is declared as public so it is visible to other plugins.", unloadablePlugin.getErrorText());
-
     }
 }

@@ -5,19 +5,21 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import junit.framework.TestCase;
 
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class TestClassModuleCreator extends TestCase
+public class TestClassModuleFactory extends TestCase
 {
-    ModuleCreator moduleCreator;
+    ModuleFactory moduleCreator;
     private HostContainer hostContainer;
 
     @Override
     protected void setUp() throws Exception
     {
         hostContainer = mock(HostContainer.class);
-        moduleCreator = new ClassModuleCreator(hostContainer);
+        moduleCreator = new ClassModuleFactory(hostContainer);
     }
 
     @Override
@@ -26,15 +28,11 @@ public class TestClassModuleCreator extends TestCase
         super.tearDown();
     }
 
-    public void testSupportsPrefix() throws Exception
-    {
-        assertEquals("class",moduleCreator.getPrefix());
-    }
-
     public void testCreateBeanUsingHostContainer() throws Exception
     {
         final ModuleDescriptor<Object> moduleDescriptor = mock(ModuleDescriptor.class);
         final Plugin plugin = mock(Plugin.class);
+        when(plugin.<Object>loadClass(eq("myBean"), (Class)anyObject())).thenReturn(Object.class);
 
         when(moduleDescriptor.getPlugin()).thenReturn(plugin);
         when(moduleDescriptor.getModuleClass()).thenReturn(Object.class);

@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.mockobjects.dynamic.AnyConstraintMatcher;
 import junit.framework.TestCase;
 
@@ -24,9 +24,9 @@ public class TestServletModuleContainerServlet extends TestCase
     public void testServletDoesntUnloadItself() throws IOException, ServletException
     {
         Mock mockServletModuleManager = new Mock(ServletModuleManager.class);
-        Mock mockModuleClassFactory = new Mock(ModuleClassFactory.class);
-        mockModuleClassFactory.expectAndReturn("createModuleClass", new AnyConstraintMatcher(), null);
-        ServletModuleDescriptor servletModuleDescriptor = new ServletModuleDescriptor((ModuleClassFactory) mockModuleClassFactory.proxy(), (ServletModuleManager) mockServletModuleManager.proxy());
+        Mock mockModuleClassFactory = new Mock(ModuleFactory.class);
+        mockModuleClassFactory.expectAndReturn("createModule", new AnyConstraintMatcher(), null);
+        ServletModuleDescriptor servletModuleDescriptor = new ServletModuleDescriptor((ModuleFactory) mockModuleClassFactory.proxy(), (ServletModuleManager) mockServletModuleManager.proxy());
 
 
         final DelegatingPluginServlet delegatingPluginServlet = new DelegatingPluginServlet(servletModuleDescriptor)

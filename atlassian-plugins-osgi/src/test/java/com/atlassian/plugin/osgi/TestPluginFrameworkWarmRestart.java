@@ -12,7 +12,7 @@ public class TestPluginFrameworkWarmRestart extends PluginInContainerTestBase
     public void testWarmRestart() throws Exception
     {
         final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(hostContainer);
-        factory.addModuleDescriptor("object", ObjectModuleDescriptor.class);
+        factory.addModuleDescriptor("object", CallableModuleDescriptor.class);
 
         final HostComponentProvider prov = new HostComponentProvider()
         {
@@ -26,7 +26,6 @@ public class TestPluginFrameworkWarmRestart extends PluginInContainerTestBase
                         return "count:"+(count++)+"-";
                     }
                 });
-
             }
         };
 

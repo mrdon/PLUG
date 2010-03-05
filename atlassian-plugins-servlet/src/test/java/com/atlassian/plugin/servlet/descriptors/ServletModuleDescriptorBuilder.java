@@ -10,9 +10,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServlet;
 
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.module.DefaultModuleClassFactory;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.module.ModuleCreator;
+import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.servlet.ObjectFactories;
 import com.atlassian.plugin.servlet.ObjectFactory;
 import com.atlassian.plugin.servlet.PluginBuilder;
@@ -72,7 +71,7 @@ public class ServletModuleDescriptorBuilder
 
     public ServletModuleDescriptor build()
     {
-        Descriptor d = new Descriptor(plugin, key, servletFactory, immutableList(paths), immutableMap(initParams), servletModuleManager, new DefaultModuleClassFactory(Collections.<ModuleCreator>emptyList()));
+        Descriptor d = new Descriptor(plugin, key, servletFactory, immutableList(paths), immutableMap(initParams), servletModuleManager, new PrefixedModuleFactory(Collections.<String, ModuleFactory>emptyMap()));
         plugin.addModuleDescriptor(d);
         return d;
     }
@@ -104,9 +103,9 @@ public class ServletModuleDescriptorBuilder
             List<String> paths,
             Map<String, String> initParams,
             ServletModuleManager servletModuleManager,
-            ModuleClassFactory moduleClassFactory)
+            ModuleFactory moduleFactory)
         {
-            super(moduleClassFactory, servletModuleManager);
+            super(moduleFactory, servletModuleManager);
             this.plugin = plugin;
             this.key = key;
             this.servletFactory = servletFactory;

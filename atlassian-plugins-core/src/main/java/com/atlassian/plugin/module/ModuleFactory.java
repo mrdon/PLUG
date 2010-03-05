@@ -4,16 +4,16 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginParseException;
 
 /**
- * The {@link com.atlassian.plugin.module.ModuleClassFactory} creates the module class of a {@link com.atlassian.plugin.ModuleDescriptor}.
- * The ModuleClassFactory is injected into the {@link com.atlassian.plugin.descriptors.AbstractModuleDescriptor} and encapsulates the different
+ * The {@link ModuleFactory} creates the module class of a {@link com.atlassian.plugin.ModuleDescriptor}.
+ * The ModuleFactory is injected into the {@link com.atlassian.plugin.descriptors.AbstractModuleDescriptor} and encapsulates the different
  * strategies how the module class can be created.
  *
  * @since 2.5.0
  */
-public interface ModuleClassFactory
+public interface ModuleFactory
 {
     /**
-     * Creates the modules class. The module class name can contain a prefix. The delimiter of the prefix and the class name is ':'.
+     * Creates the module instance. The module class name can contain a prefix. The delimiter of the prefix and the class name is ':'.
      * E.g.: 'bean:httpServletBean'. Which prefixes are supported depends on the registered {@link com.atlassian.plugin.module.ModuleCreator}.
      * The prefix is case in-sensitive.
      *
@@ -26,7 +26,7 @@ public interface ModuleClassFactory
      *
      * @throws PluginParseException If it failed to create the object.
      */
-    <T> T createModuleClass(String name, ModuleDescriptor<T> moduleDescriptor) throws PluginParseException;
+    <T> T createModule(String name, ModuleDescriptor<T> moduleDescriptor) throws PluginParseException;
 
     /**
      * Returns the module class. The module class name can contain a prefix. The delimiter of the prefix and the class name is ':'.
@@ -39,10 +39,10 @@ public interface ModuleClassFactory
      * @return the module class.
      * @throws ModuleClassNotFoundException If the module class could not be found
      */
-    <T> Class<T> getModuleClass(String name, ModuleDescriptor<T> moduleDescriptor) throws ModuleClassNotFoundException;
+    //<T> Class<T> getModuleClass(String name, ModuleDescriptor<T> moduleDescriptor) throws ModuleClassNotFoundException;
 
 
 
-    static final ModuleClassFactory LEGACY_MODULE_CLASS_FACTORY = new LegacyModuleClassFactory();
+    static final ModuleFactory LEGACY_MODULE_FACTORY = new LegacyModuleFactory();
 
 }

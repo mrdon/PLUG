@@ -3,7 +3,7 @@ package com.atlassian.plugin.servlet.descriptors;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.module.HostContainerLegacyAdaptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import org.apache.commons.lang.Validate;
 
@@ -20,26 +20,26 @@ public class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpSer
     /**
      * Creates a descriptor that uses a module factory to create instances
      *
-     * @param hostContainer the host container
-     * @param servletModuleManager
-     * @deprecated Since 2.5.0, use {@link #ServletModuleDescriptor(com.atlassian.plugin.module.ModuleClassFactory, com.atlassian.plugin.servlet.ServletModuleManager)} instead
+     * @param moduleFactory
+     * @since 2.2.0
      */
-    public ServletModuleDescriptor(HostContainer hostContainer, ServletModuleManager servletModuleManager)
+    public ServletModuleDescriptor(final ModuleFactory moduleFactory, final ServletModuleManager servletModuleManager)
     {
-        this(new HostContainerLegacyAdaptor(hostContainer), servletModuleManager);
+        super(moduleFactory);
+        Validate.notNull(servletModuleManager);
+        this.servletModuleManager = servletModuleManager;
     }
 
     /**
      * Creates a descriptor that uses a module factory to create instances
      *
-     * @param moduleClassFactory
-     * @since 2.2.0
+     * @param hostContainer the host container
+     * @param servletModuleManager
+     * @deprecated Since 2.5.0, use {@link #ServletModuleDescriptor(com.atlassian.plugin.module.ModuleFactory , com.atlassian.plugin.servlet.ServletModuleManager)} instead
      */
-    public ServletModuleDescriptor(final ModuleClassFactory moduleClassFactory, final ServletModuleManager servletModuleManager)
+    public ServletModuleDescriptor(HostContainer hostContainer, ServletModuleManager servletModuleManager)
     {
-        super(moduleClassFactory);
-        Validate.notNull(servletModuleManager);
-        this.servletModuleManager = servletModuleManager;
+        this(new HostContainerLegacyAdaptor(hostContainer), servletModuleManager);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpSer
     @Override
     public HttpServlet getModule()
     {
-        return moduleClassFactory.createModuleClass(moduleClassName, this);
+        return moduleFactory.createModule(moduleClassName, this);
     }
 
     /**

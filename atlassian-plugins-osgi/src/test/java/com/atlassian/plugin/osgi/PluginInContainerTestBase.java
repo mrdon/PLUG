@@ -13,10 +13,9 @@ import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.manager.DefaultPluginManager;
 import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
-import com.atlassian.plugin.module.ClassModuleCreator;
-import com.atlassian.plugin.module.DefaultModuleClassFactory;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.module.ModuleCreator;
+import com.atlassian.plugin.module.ClassModuleFactory;
+import com.atlassian.plugin.module.ModuleFactory;
+import com.atlassian.plugin.module.PrefixedModuleFactory;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
@@ -28,7 +27,7 @@ import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
-import com.atlassian.plugin.osgi.module.SpringModuleCreator;
+import com.atlassian.plugin.osgi.module.SpringModuleFactory;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
@@ -39,10 +38,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -59,7 +56,7 @@ public abstract class PluginInContainerTestBase extends TestCase
     protected ModuleDescriptorFactory moduleDescriptorFactory;
     protected DefaultPluginManager pluginManager;
     protected PluginEventManager pluginEventManager;
-    private ModuleClassFactory moduleClassFactory;
+    protected ModuleFactory moduleFactory;
     protected SimpleConstructorHostContainer hostContainer;
 
     @Override
@@ -76,13 +73,21 @@ public abstract class PluginInContainerTestBase extends TestCase
         pluginsDir = new File(tmpDir, "plugins");
         pluginsDir.mkdir();
         this.pluginEventManager = new DefaultPluginEventManager();
-        List<ModuleCreator> providers = new ArrayList<ModuleCreator>();
-        moduleClassFactory = new DefaultModuleClassFactory(providers);
+        moduleFactory = new PrefixedModuleFactory(new HashMap<String, ModuleFactory>()
+        {{
+            put(ClassModuleFactory.PREFIX, new ClassModuleFactory(hostContainer));
+            put(SpringModuleFactory.PREFIX, new SpringModuleFactory());
+        }});
         Map<Class<?>, Object> context = new HashMap<Class<?>, Object>();
-        context.put(ModuleClassFactory.class, moduleClassFactory);
-        hostContainer = new SimpleConstructorHostContainer(context);
-        ((DefaultModuleClassFactory) moduleClassFactory).registerModuleCreator(new ClassModuleCreator(hostContainer));
-        ((DefaultModuleClassFactory) moduleClassFactory).registerModuleCreator(new SpringModuleCreator());
+        context.put(ModuleFactory.class, moduleFactory);
+        hostContainer = createHostContainer(context);
+    }
+
+    protected SimpleConstructorHostContainer createHostContainer(Map<Class<?>, Object> originalContext)
+    {
+        Map<Class<?>, Object> context = new HashMap<Class<?>, Object>(originalContext);
+        context.put(ModuleFactory.class, moduleFactory);
+        return new SimpleConstructorHostContainer(context);
     }
 
     @Override
@@ -99,7 +104,7 @@ public abstract class PluginInContainerTestBase extends TestCase
         moduleDescriptorFactory = null;
         pluginManager = null;
         pluginEventManager = null;
-        moduleClassFactory = null;
+        moduleFactory = null;
     }
 
     protected void initPluginManager() throws Exception

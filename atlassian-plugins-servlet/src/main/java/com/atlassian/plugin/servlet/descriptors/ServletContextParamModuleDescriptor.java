@@ -3,7 +3,7 @@ package com.atlassian.plugin.servlet.descriptors;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.util.validation.ValidationPattern;
 import org.dom4j.Element;
 
@@ -21,7 +21,7 @@ public class ServletContextParamModuleDescriptor extends AbstractModuleDescripto
 
     public ServletContextParamModuleDescriptor()
     {
-        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
+        super(ModuleFactory.LEGACY_MODULE_FACTORY);
     }
 
     @Override

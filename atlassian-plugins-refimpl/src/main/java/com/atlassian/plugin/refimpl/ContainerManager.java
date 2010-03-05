@@ -11,15 +11,14 @@ import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
 import com.atlassian.plugin.main.AtlassianPlugins;
 import com.atlassian.plugin.main.PluginsConfiguration;
 import com.atlassian.plugin.main.PluginsConfigurationBuilder;
-import com.atlassian.plugin.module.ClassModuleCreator;
-import com.atlassian.plugin.module.DefaultModuleClassFactory;
-import com.atlassian.plugin.module.ModuleClassFactory;
-import com.atlassian.plugin.module.ModuleCreator;
+import com.atlassian.plugin.module.ClassModuleFactory;
+import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.osgi.module.SpringModuleCreator;
+import com.atlassian.plugin.osgi.module.SpringModuleFactory;
 import com.atlassian.plugin.refimpl.servlet.SimpleContentTypeResolver;
 import com.atlassian.plugin.refimpl.servlet.SimpleServletContextFactory;
 import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
@@ -139,8 +138,8 @@ public class ContainerManager
                 .applicationKey("refapp")
                 .build();
 
-        DefaultModuleClassFactory moduleClassFactory = new DefaultModuleClassFactory(Collections.<ModuleCreator>emptyList());
-
+        Map<String, ModuleFactory> moduleFactories = new HashMap<String, ModuleFactory>();
+        ModuleFactory moduleFactory = new PrefixedModuleFactory(moduleFactories);
         plugins = new AtlassianPlugins(config);
 
         final PluginEventManager pluginEventManager = plugins.getPluginEventManager();
@@ -160,12 +159,12 @@ public class ContainerManager
         publicContainer.put(ServletModuleManager.class, servletModuleManager);
         publicContainer.put(WebResourceManager.class, webResourceManager);
         publicContainer.put(Map.class, publicContainer);
-        publicContainer.put(ModuleClassFactory.class, moduleClassFactory);
+        publicContainer.put(ModuleFactory.class, moduleFactory);
 
         hostContainer = new SimpleConstructorHostContainer(publicContainer);
 
-        moduleClassFactory.registerModuleCreator(new ClassModuleCreator(hostContainer));
-        moduleClassFactory.registerModuleCreator(new SpringModuleCreator());
+        moduleFactories.put(ClassModuleFactory.PREFIX, new ClassModuleFactory(hostContainer));
+        moduleFactories.put(SpringModuleFactory.PREFIX, new SpringModuleFactory());
 
         try
         {

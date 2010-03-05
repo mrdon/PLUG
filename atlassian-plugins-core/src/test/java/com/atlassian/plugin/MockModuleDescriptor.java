@@ -1,7 +1,7 @@
 package com.atlassian.plugin;
 
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.module.ModuleClassFactory;
+import com.atlassian.plugin.module.ModuleFactory;
 
 public class MockModuleDescriptor<T> extends AbstractModuleDescriptor<T>
 {
@@ -11,7 +11,7 @@ public class MockModuleDescriptor<T> extends AbstractModuleDescriptor<T>
 
     public MockModuleDescriptor(Plugin plugin, String key, T module)
     {
-        super(ModuleClassFactory.LEGACY_MODULE_CLASS_FACTORY);
+        super(ModuleFactory.LEGACY_MODULE_FACTORY);
         this.module = module;
         this.plugin = plugin;
         this.key = key;
@@ -44,5 +44,11 @@ public class MockModuleDescriptor<T> extends AbstractModuleDescriptor<T>
     public Class<T> getModuleClass()
     {
         return (Class<T>) module.getClass();
+    }
+
+    @Override
+    protected void loadClass(Plugin plugin, String clazz) throws PluginParseException
+    {
+        // no need since we override getModuleClass
     }
 }
