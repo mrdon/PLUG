@@ -1,15 +1,5 @@
 package com.atlassian.plugin.servlet;
 
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.util.PluginUtils;
-import com.atlassian.plugin.elements.ResourceLocation;
-import com.atlassian.plugin.servlet.util.LastModifiedHandler;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,10 +8,20 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.elements.ResourceLocation;
+import com.atlassian.plugin.servlet.util.LastModifiedHandler;
+import com.atlassian.plugin.util.PluginUtils;
+
 /**
- * This base class is used to provide the ability to server minified versions of files
- * if required and available.
- *
+ * This base class is used to provide the ability to server minified versions of
+ * files if required and available.
+ * 
  * @since 2.2
  */
 abstract class AbstractDownloadableResource implements DownloadableResource
@@ -29,8 +29,8 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     private static final Logger log = LoggerFactory.getLogger(AbstractDownloadableResource.class);
 
     /**
-     * This is a the system environment variable to set to disable the minification naming strategy used to find web
-     * resources.
+     * This is a the system environment variable to set to disable the
+     * minification naming strategy used to find web resources.
      */
     private static final String ATLASSIAN_WEBRESOURCE_DISABLE_MINIFICATION = "atlassian.webresource.disable.minification";
 
@@ -40,7 +40,8 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     protected final String extraPath;
     protected final ResourceLocation resourceLocation;
 
-    // PLUG-538 cache this so we don't recreate the string every time it is called
+    // PLUG-538 cache this so we don't recreate the string every time it is
+    // called
     private final String location;
     private final boolean disableMinification;
 
@@ -64,7 +65,10 @@ abstract class AbstractDownloadableResource implements DownloadableResource
 
     public void serveResource(final HttpServletRequest request, final HttpServletResponse response) throws DownloadException
     {
-        log.debug("Serving: " + this);
+        if (log.isDebugEnabled())
+        {
+            log.debug("Serving: " + this);
+        }
 
         final InputStream resourceStream = getResourceAsStreamViaMinificationStrategy();
         if (resourceStream == null)
@@ -106,12 +110,13 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     }
 
     /**
-     * Copy from the supplied OutputStream to the supplied InputStream. Note that the InputStream will be closed on
-     * completion.
-     *
+     * Copy from the supplied OutputStream to the supplied InputStream. Note
+     * that the InputStream will be closed on completion.
+     * 
      * @param in the stream to read from
      * @param out the stream to write to
-     * @throws DownloadException if an IOException is encountered writing to the out stream
+     * @throws DownloadException if an IOException is encountered writing to the
+     *             out stream
      */
     private void streamResource(final InputStream in, final OutputStream out) throws DownloadException
     {
@@ -138,12 +143,12 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     }
 
     /**
-     * Checks any "If-Modified-Since" header from the request against the plugin's loading time, since plugins can't
-     * be modified after they've been loaded this is a good way to determine if a plugin resource has been modified
-     * or not.
-     *
-     * If this method returns true, don't do any more processing on the request -- the response code has already been
-     * set to "304 Not Modified" for you, and you don't need to serve the file.
+     * Checks any "If-Modified-Since" header from the request against the
+     * plugin's loading time, since plugins can't be modified after they've been
+     * loaded this is a good way to determine if a plugin resource has been
+     * modified or not. If this method returns true, don't do any more
+     * processing on the request -- the response code has already been set to
+     * "304 Not Modified" for you, and you don't need to serve the file.
      */
     public boolean isResourceModified(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse)
     {
@@ -158,17 +163,19 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     }
 
     /**
-     * Returns an {@link InputStream} to stream the resource from based on resource name.
-     *
+     * Returns an {@link InputStream} to stream the resource from based on
+     * resource name.
+     * 
      * @param resourceLocation the location of the resource to try and load
-     *
-     * @return an InputStream if the resource can be found or null if cant be found
+     * @return an InputStream if the resource can be found or null if cant be
+     *         found
      */
     protected abstract InputStream getResourceAsStream(String resourceLocation);
 
     /**
-     * This is called to return the location of the resource that this object represents.
-     *
+     * This is called to return the location of the resource that this object
+     * represents.
+     * 
      * @return the location of the resource that this object represents.
      */
     protected String getLocation()
@@ -183,10 +190,12 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     }
 
     /**
-     * This is called to use a minification naming strategy to find resources.  If a minified file cant by found then
-     * the base location is ised as the fall back
-     *
-     * @return an InputStream r null if nothing can be found for the resource name
+     * This is called to use a minification naming strategy to find resources.
+     * If a minified file cant by found then the base location is ised as the
+     * fall back
+     * 
+     * @return an InputStream r null if nothing can be found for the resource
+     *         name
      */
     private InputStream getResourceAsStreamViaMinificationStrategy()
     {
@@ -206,32 +215,34 @@ abstract class AbstractDownloadableResource implements DownloadableResource
     }
 
     /**
-     * Returns true if the minification strategy should be applied to a given resource name
-     *
+     * Returns true if the minification strategy should be applied to a given
+     * resource name
+     * 
      * @param resourceLocation the location of the resource
-     *
      * @return true if the minification strategy should be used.
      */
     private boolean minificationStrategyInPlay(final String resourceLocation)
     {
-        // check if minification has been turned off for this resource (at the module level)
+        // check if minification has been turned off for this resource (at the
+        // module level)
         if (disableMinification)
         {
             return false;
         }
 
-        // secondly CHECK if we have a System property set to true that DISABLES the minification
+        // secondly CHECK if we have a System property set to true that DISABLES
+        // the minification
         try
         {
-            if (Boolean.getBoolean(ATLASSIAN_WEBRESOURCE_DISABLE_MINIFICATION) ||
-                Boolean.getBoolean(PluginUtils.ATLASSIAN_DEV_MODE))
+            if (Boolean.getBoolean(ATLASSIAN_WEBRESOURCE_DISABLE_MINIFICATION) || Boolean.getBoolean(PluginUtils.ATLASSIAN_DEV_MODE))
             {
                 return false;
             }
         }
         catch (final SecurityException se)
         {
-            // some app servers might have protected access to system properties.  Unlikely but lets be defensive
+            // some app servers might have protected access to system
+            // properties. Unlikely but lets be defensive
         }
         // We only minify .js or .css files
         if (resourceLocation.endsWith(".js"))
@@ -244,14 +255,16 @@ abstract class AbstractDownloadableResource implements DownloadableResource
             // Check if it is already the minified vesrion of the file
             return !(resourceLocation.endsWith("-min.css") || resourceLocation.endsWith(".min.css"));
         }
-        // Not .js or .css, don't bother trying to find a minified version (may save some file operations)
+        // Not .js or .css, don't bother trying to find a minified version (may
+        // save some file operations)
         return false;
     }
 
     private String getMinifiedLocation(final String location)
     {
         final int lastDot = location.lastIndexOf(".");
-        // this can never but -1 since the method call is protected by a call to minificationStrategyInPlay() first
+        // this can never but -1 since the method call is protected by a call to
+        // minificationStrategyInPlay() first
         return location.substring(0, lastDot) + "-min" + location.substring(lastDot);
     }
 }
