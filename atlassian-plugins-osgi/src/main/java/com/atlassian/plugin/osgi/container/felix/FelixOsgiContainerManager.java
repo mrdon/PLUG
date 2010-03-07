@@ -6,10 +6,7 @@ import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkWarmRestartingEvent;
 import com.atlassian.plugin.event.events.PluginUpgradedEvent;
-import com.atlassian.plugin.osgi.container.OsgiContainerException;
-import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
-import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
+import com.atlassian.plugin.osgi.container.*;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
@@ -84,6 +81,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     private boolean felixRunning = false;
     private boolean disableMultipleBundleVersions = true;
     private Logger felixLogger;
+    private final PluginEventManager pluginEventManager;
 
     /**
      * Constructs the container manager using the framework bundles zip file located in this library
@@ -160,6 +158,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         this.persistentCache = persistentCache;
         hostComponentProvider = provider;
         trackers = Collections.synchronizedList(new ArrayList<ServiceTracker>());
+        this.pluginEventManager = eventManager;
         eventManager.register(this);
         felixLogger = new FelixLoggerBridge(log);
         exportsBuilder = new ExportsBuilder();
@@ -282,6 +281,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         {
             throw new OsgiContainerException("Unable to start OSGi container", ex);
         }
+        pluginEventManager.broadcast(new OsgiContainerStartedEvent(this));
     }
 
     /**
@@ -376,6 +376,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
         felixRunning = false;
         felix = null;
+        pluginEventManager.broadcast(new OsgiContainerStoppedEvent(this));
     }
 
     public Bundle[] getBundles()
@@ -458,7 +459,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         private List<HostComponentRegistration> hostComponentRegistrations;
         private final URL frameworkBundlesUrl;
         private final File frameworkBundlesDir;
-        private final ClassLoader initializedClassLoader;
+        private ClassLoader initializedClassLoader;
         private PackageAdmin packageAdmin;
 
         public BundleRegistration(final URL frameworkBundlesUrl, final File frameworkBundlesDir, final DefaultComponentRegistrar registrar)
@@ -498,6 +499,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             hostServicesReferences = null;
             hostComponentRegistrations = null;
             registrar = null;
+            initializedClassLoader = null;
         }
 
         public void bundleChanged(final BundleEvent evt)

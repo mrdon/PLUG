@@ -1,8 +1,9 @@
 package com.atlassian.plugin.servlet.descriptors;
 
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.module.PrefixDelegatingModuleFactory;
 import com.atlassian.plugin.module.ModuleFactory;
+import com.atlassian.plugin.module.PrefixModuleFactory;
 import com.atlassian.plugin.servlet.ObjectFactories;
 import com.atlassian.plugin.servlet.ObjectFactory;
 import com.atlassian.plugin.servlet.PluginBuilder;
@@ -77,7 +78,8 @@ public class ServletFilterModuleDescriptorBuilder
 
     public ServletFilterModuleDescriptor build()
     {
-        return new Descriptor(plugin, key, filterFactory, location, weight, immutableList(paths), servletModuleManager, new PrefixedModuleFactory(Collections.<String, ModuleFactory>emptyMap()));
+        return new Descriptor(plugin, key, filterFactory, location, weight, immutableList(paths), servletModuleManager,
+                new PrefixDelegatingModuleFactory(Collections.<PrefixModuleFactory>emptySet()));
     }
 
     static final class Descriptor extends ServletFilterModuleDescriptor

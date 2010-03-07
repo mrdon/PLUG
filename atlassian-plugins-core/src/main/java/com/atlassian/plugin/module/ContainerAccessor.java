@@ -1,7 +1,9 @@
 package com.atlassian.plugin.module;
 
+import java.util.Collection;
+
 /**
- * The ContainerAccessor allows to create a bean in a plugin container (e.g. spring).
+ * The ContainerAccessor allows access to the underlying plugin container (e.g. spring).
  * 
  * @since 2.5.0
  */
@@ -16,4 +18,13 @@ public interface ContainerAccessor
      * @return an instantiated bean.
      */
     <T> T createBean(Class<T> clazz);
+
+    /**
+     * Gets all the beans that implement a given interface
+     *
+     * @param interfaceClass The interface class
+     * @param <T> The target interface type
+     * @return A collection of implementations from the plugin's container
+     */
+    <T> Collection<T> getBeansOfType(Class<T> interfaceClass);
 }

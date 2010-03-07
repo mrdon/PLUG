@@ -16,9 +16,9 @@ import org.slf4j.Logger;
 
 /**
  */
-public class TestPrefixedModuleFactory extends TestCase
+public class TestPrefixDelegatingModuleFactory extends TestCase
 {
-    PrefixedModuleFactory prefixedModuleFactory;
+    PrefixDelegatingModuleFactory prefixDelegatingModuleFactory;
 
     @Override
     protected void setUp() throws Exception
@@ -34,14 +34,36 @@ public class TestPrefixedModuleFactory extends TestCase
 
     public void testCreateBean() throws Exception
     {
-        ModuleFactory mockModuleFactory = mock(ModuleFactory.class);
+        PrefixModuleFactory moduleFactory = mock(PrefixModuleFactory.class);
+        when(moduleFactory.getPrefix()).thenReturn("jira");
         Object bean = new Object();
 
         ModuleDescriptor moduleDescriptor = mock(ModuleDescriptor.class);
-        when(mockModuleFactory.createModule("doSomething", moduleDescriptor)).thenReturn(bean);
-        this.prefixedModuleFactory = new PrefixedModuleFactory(Collections.singletonMap("jira", mockModuleFactory));
+        when(moduleFactory.createModule("doSomething", moduleDescriptor)).thenReturn(bean);
+        this.prefixDelegatingModuleFactory = new PrefixDelegatingModuleFactory(Collections.singleton(moduleFactory));
 
-        final Object returnedBean = this.prefixedModuleFactory.createModule("jira:doSomething", moduleDescriptor);
+        final Object returnedBean = this.prefixDelegatingModuleFactory.createModule("jira:doSomething", moduleDescriptor);
+        assertEquals(bean, returnedBean);
+    }
+
+    public void testCreateBeanWithDynamicModuleFactory() throws Exception
+    {
+        PrefixModuleFactory moduleFactory = mock(PrefixModuleFactory.class);
+        when(moduleFactory.getPrefix()).thenReturn("jira");
+
+        Object bean = new Object();
+        ModuleDescriptor moduleDescriptor = mock(ModuleDescriptor.class);
+        ContainerAccessor containerAccessor = mock(ContainerAccessor.class);
+        ContainerManagedPlugin plugin = mock(ContainerManagedPlugin.class);
+        when(plugin.getContainerAccessor()).thenReturn(containerAccessor);
+        when(moduleDescriptor.getPlugin()).thenReturn(plugin);
+        when(containerAccessor.getBeansOfType(PrefixModuleFactory.class)).thenReturn(Collections.singleton(moduleFactory));
+
+        when(moduleFactory.createModule("doSomething", moduleDescriptor)).thenReturn(bean);
+
+        this.prefixDelegatingModuleFactory = new PrefixDelegatingModuleFactory(Collections.<PrefixModuleFactory>emptySet());
+
+        final Object returnedBean = this.prefixDelegatingModuleFactory.createModule("jira:doSomething", moduleDescriptor);
         assertEquals(bean, returnedBean);
     }
 
@@ -62,7 +84,8 @@ public class TestPrefixedModuleFactory extends TestCase
 
     private void _testCreateWithThrowableCausingErrorLogMessage(Throwable throwable)
     {
-        ModuleFactory moduleFactory = mock(ModuleFactory.class);
+        PrefixModuleFactory moduleFactory = mock(PrefixModuleFactory.class);
+        when(moduleFactory.getPrefix()).thenReturn("jira");
         Logger log = mock(Logger.class);
 
 
@@ -71,12 +94,12 @@ public class TestPrefixedModuleFactory extends TestCase
         when(moduleDescriptor.getPlugin()).thenReturn(plugin);
         when(moduleFactory.createModule("doSomething", moduleDescriptor)).thenThrow(throwable);
 
-        this.prefixedModuleFactory = new PrefixedModuleFactory(Collections.singletonMap("jira", moduleFactory));
-        this.prefixedModuleFactory.log = log;
+        this.prefixDelegatingModuleFactory = new PrefixDelegatingModuleFactory(Collections.singleton(moduleFactory));
+        this.prefixDelegatingModuleFactory.log = log;
 
         try
         {
-            this.prefixedModuleFactory.createModule("jira:doSomething", moduleDescriptor);
+            this.prefixDelegatingModuleFactory.createModule("jira:doSomething", moduleDescriptor);
 
             fail("Should not return");
         }
@@ -88,14 +111,15 @@ public class TestPrefixedModuleFactory extends TestCase
 
     public void testCreateBeanFailed() throws Exception
     {
-        ModuleFactory moduleFactory = mock(ModuleFactory.class);
+        PrefixModuleFactory moduleFactory = mock(PrefixModuleFactory.class);
+        when(moduleFactory.getPrefix()).thenReturn("bob");
         ModuleDescriptor moduleDescriptor = mock(ModuleDescriptor.class);
 
-        this.prefixedModuleFactory = new PrefixedModuleFactory(Collections.singletonMap("foo", moduleFactory));
+        this.prefixDelegatingModuleFactory = new PrefixDelegatingModuleFactory(Collections.singleton(moduleFactory));
 
         try
         {
-            this.prefixedModuleFactory.createModule("jira:doSomething", moduleDescriptor);
+            this.prefixDelegatingModuleFactory.createModule("jira:doSomething", moduleDescriptor);
 
             fail("Should not return, there is no module prefix provider for jira");
         }

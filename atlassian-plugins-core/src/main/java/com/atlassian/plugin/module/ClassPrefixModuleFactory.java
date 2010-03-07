@@ -13,13 +13,11 @@ import com.atlassian.plugin.hostcontainer.HostContainer;
  *
  * @Since 2.5.0
  */
-public class ClassModuleFactory implements ModuleFactory
+public class ClassPrefixModuleFactory implements PrefixModuleFactory
 {
     protected final HostContainer hostContainer;
 
-    public static final String PREFIX = "class";
-
-    public ClassModuleFactory(final HostContainer hostContainer)
+    public ClassPrefixModuleFactory(final HostContainer hostContainer)
     {
         this.hostContainer = hostContainer;
     }
@@ -62,4 +60,8 @@ public class ClassModuleFactory implements ModuleFactory
         return builder.toString();
     }
 
+    public String getPrefix()
+    {
+        return "class";
+    }
 }

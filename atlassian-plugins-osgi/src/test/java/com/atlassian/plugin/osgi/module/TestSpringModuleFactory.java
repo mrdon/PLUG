@@ -24,7 +24,7 @@ public class TestSpringModuleFactory extends TestCase
     protected void setUp() throws Exception
     {
         super.setUp();
-        moduleCreator = new SpringModuleFactory();
+        moduleCreator = new BeanPrefixModuleFactory();
     }
 
     @Override

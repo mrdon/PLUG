@@ -6,12 +6,12 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.ClassPathPluginLoader;
-import com.atlassian.plugin.module.ClassModuleFactory;
-import com.atlassian.plugin.module.ModuleFactory;
-import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.module.ClassPrefixModuleFactory;
+import com.atlassian.plugin.module.PrefixDelegatingModuleFactory;
+import com.atlassian.plugin.module.PrefixModuleFactory;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.osgi.module.SpringModuleFactory;
+import com.atlassian.plugin.osgi.module.BeanPrefixModuleFactory;
 import com.atlassian.plugin.osgi.test.TestServlet;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
@@ -20,7 +20,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.HashSet;
 
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doAnswer;
@@ -81,10 +81,10 @@ public class TestPluginModuleCreation extends PluginInContainerTestBase
         ClassPathPluginLoader classPathPluginLoader = new ClassPathPluginLoader("testInstallPlugins1AndGetModuleClass.xml");
         final ServletModuleManager servletModuleManager = mock(ServletModuleManager.class);
         final HostContainer hostContainer = mock(HostContainer.class);
-        moduleFactory = new PrefixedModuleFactory(new HashMap<String, ModuleFactory>()
+        moduleFactory = new PrefixDelegatingModuleFactory(new HashSet<PrefixModuleFactory>()
         {{
-            put(ClassModuleFactory.PREFIX, new ClassModuleFactory(hostContainer));
-            put(SpringModuleFactory.PREFIX, new SpringModuleFactory());
+            add(new ClassPrefixModuleFactory(hostContainer));
+            add(new BeanPrefixModuleFactory());
         }});
         when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleFactory, servletModuleManager));
         when(hostContainer.create(TestServlet.class)).thenReturn(new TestServlet());
@@ -104,10 +104,10 @@ public class TestPluginModuleCreation extends PluginInContainerTestBase
         final ServletModuleManager servletModuleManager = mock(ServletModuleManager.class);
 
         final HostContainer hostContainer = mock(HostContainer.class);
-        moduleFactory = new PrefixedModuleFactory(new HashMap<String, ModuleFactory>()
+        moduleFactory = new PrefixDelegatingModuleFactory(new HashSet<PrefixModuleFactory>()
         {{
-            put(ClassModuleFactory.PREFIX, new ClassModuleFactory(hostContainer));
-            put(SpringModuleFactory.PREFIX, new SpringModuleFactory());
+            add(new ClassPrefixModuleFactory(hostContainer));
+            add(new BeanPrefixModuleFactory());
         }});
         when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleFactory, servletModuleManager));
         when(hostContainer.create(TestServlet.class)).thenReturn(new TestServlet());
@@ -288,10 +288,10 @@ public class TestPluginModuleCreation extends PluginInContainerTestBase
             }
         }).when(servletModuleManager).addServletModule((ServletModuleDescriptor)anyObject());
         final HostContainer hostContainer = mock(HostContainer.class);
-        moduleFactory = new PrefixedModuleFactory(new HashMap<String, ModuleFactory>()
+        moduleFactory = new PrefixDelegatingModuleFactory(new HashSet<PrefixModuleFactory>()
         {{
-            put(ClassModuleFactory.PREFIX, new ClassModuleFactory(hostContainer));
-            put(SpringModuleFactory.PREFIX, new SpringModuleFactory());
+            add(new ClassPrefixModuleFactory(hostContainer));
+            add(new BeanPrefixModuleFactory());
         }});
         when(hostContainer.create(StubServletModuleDescriptor.class)).thenReturn(new StubServletModuleDescriptor(moduleFactory, servletModuleManager));
 

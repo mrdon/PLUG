@@ -15,7 +15,7 @@ public class LegacyModuleFactory implements ModuleFactory
 
     public <T> T createModule(String name, ModuleDescriptor<T> moduleDescriptor) throws PluginParseException
     {
-        throw new UnsupportedOperationException(" create Module not supported by LegacyModuleFactory. Use PrefixedModuleFactory instead.");
+        throw new UnsupportedOperationException(" create Module not supported by LegacyModuleFactory. Use PrefixDelegatingModuleFactory instead.");
     }
 
     public <T> Class<T> getModuleClass(String name, ModuleDescriptor<T> moduleDescriptor) throws ModuleClassNotFoundException {

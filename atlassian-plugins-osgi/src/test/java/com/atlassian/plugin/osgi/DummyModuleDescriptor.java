@@ -7,17 +7,6 @@ public class DummyModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
     private boolean enabled = false;
 
-    /**
-     *
-     * @param moduleFactory
-     *
-     * @since 2.5.0
-     */
-    public DummyModuleDescriptor(ModuleFactory moduleFactory)
-    {
-        super(moduleFactory);
-    }
-
     @Override
     public Void getModule()
     {

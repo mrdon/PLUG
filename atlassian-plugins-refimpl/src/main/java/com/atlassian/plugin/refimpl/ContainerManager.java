@@ -11,14 +11,15 @@ import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
 import com.atlassian.plugin.main.AtlassianPlugins;
 import com.atlassian.plugin.main.PluginsConfiguration;
 import com.atlassian.plugin.main.PluginsConfigurationBuilder;
-import com.atlassian.plugin.module.ClassModuleFactory;
-import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.module.ClassPrefixModuleFactory;
+import com.atlassian.plugin.module.PrefixDelegatingModuleFactory;
 import com.atlassian.plugin.module.ModuleFactory;
+import com.atlassian.plugin.module.PrefixModuleFactory;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
-import com.atlassian.plugin.osgi.module.SpringModuleFactory;
+import com.atlassian.plugin.osgi.module.BeanPrefixModuleFactory;
 import com.atlassian.plugin.refimpl.servlet.SimpleContentTypeResolver;
 import com.atlassian.plugin.refimpl.servlet.SimpleServletContextFactory;
 import com.atlassian.plugin.refimpl.webresource.SimpleWebResourceIntegration;
@@ -45,12 +46,7 @@ import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * A simple class that behaves like Spring's ContainerManager class.
@@ -138,8 +134,8 @@ public class ContainerManager
                 .applicationKey("refapp")
                 .build();
 
-        Map<String, ModuleFactory> moduleFactories = new HashMap<String, ModuleFactory>();
-        ModuleFactory moduleFactory = new PrefixedModuleFactory(moduleFactories);
+        Set<PrefixModuleFactory> moduleFactories = new HashSet<PrefixModuleFactory>();
+        ModuleFactory moduleFactory = new PrefixDelegatingModuleFactory(moduleFactories);
         plugins = new AtlassianPlugins(config);
 
         final PluginEventManager pluginEventManager = plugins.getPluginEventManager();
@@ -163,8 +159,8 @@ public class ContainerManager
 
         hostContainer = new SimpleConstructorHostContainer(publicContainer);
 
-        moduleFactories.put(ClassModuleFactory.PREFIX, new ClassModuleFactory(hostContainer));
-        moduleFactories.put(SpringModuleFactory.PREFIX, new SpringModuleFactory());
+        moduleFactories.add(new ClassPrefixModuleFactory(hostContainer));
+        moduleFactories.add(new BeanPrefixModuleFactory());
 
         try
         {

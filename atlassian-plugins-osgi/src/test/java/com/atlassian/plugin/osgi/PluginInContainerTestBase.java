@@ -13,9 +13,10 @@ import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.manager.DefaultPluginManager;
 import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
-import com.atlassian.plugin.module.ClassModuleFactory;
+import com.atlassian.plugin.module.ClassPrefixModuleFactory;
 import com.atlassian.plugin.module.ModuleFactory;
-import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.module.PrefixDelegatingModuleFactory;
+import com.atlassian.plugin.module.PrefixModuleFactory;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
@@ -27,7 +28,7 @@ import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
-import com.atlassian.plugin.osgi.module.SpringModuleFactory;
+import com.atlassian.plugin.osgi.module.BeanPrefixModuleFactory;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
@@ -41,6 +42,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.HashSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -73,10 +75,10 @@ public abstract class PluginInContainerTestBase extends TestCase
         pluginsDir = new File(tmpDir, "plugins");
         pluginsDir.mkdir();
         this.pluginEventManager = new DefaultPluginEventManager();
-        moduleFactory = new PrefixedModuleFactory(new HashMap<String, ModuleFactory>()
+        moduleFactory = new PrefixDelegatingModuleFactory(new HashSet<PrefixModuleFactory>()
         {{
-            put(ClassModuleFactory.PREFIX, new ClassModuleFactory(hostContainer));
-            put(SpringModuleFactory.PREFIX, new SpringModuleFactory());
+            add(new ClassPrefixModuleFactory(hostContainer));
+            add(new BeanPrefixModuleFactory());
         }});
         Map<Class<?>, Object> context = new HashMap<Class<?>, Object>();
         context.put(ModuleFactory.class, moduleFactory);
@@ -105,6 +107,7 @@ public abstract class PluginInContainerTestBase extends TestCase
         pluginManager = null;
         pluginEventManager = null;
         moduleFactory = null;
+        hostContainer = null;
     }
 
     protected void initPluginManager() throws Exception

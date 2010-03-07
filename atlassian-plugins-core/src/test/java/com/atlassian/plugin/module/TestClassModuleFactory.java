@@ -19,7 +19,7 @@ public class TestClassModuleFactory extends TestCase
     protected void setUp() throws Exception
     {
         hostContainer = mock(HostContainer.class);
-        moduleCreator = new ClassModuleFactory(hostContainer);
+        moduleCreator = new ClassPrefixModuleFactory(hostContainer);
     }
 
     @Override

@@ -1,6 +1,16 @@
 package com.atlassian.plugin.module;
 
-public interface ContainerManagedPlugin
+import com.atlassian.plugin.Plugin;
+
+/**
+ * A plugin that is managed by a container
+ *
+ * @since 2.5.0
+ */
+public interface ContainerManagedPlugin extends Plugin
 {
-      ContainerAccessor getContainerAccessor();
+    /**
+     * @return The object to use to access the plugin's container
+     */
+    ContainerAccessor getContainerAccessor();
 }

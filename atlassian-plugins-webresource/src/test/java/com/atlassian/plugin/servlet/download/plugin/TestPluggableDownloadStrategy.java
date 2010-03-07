@@ -5,9 +5,10 @@ import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.module.ClassModuleFactory;
+import com.atlassian.plugin.module.ClassPrefixModuleFactory;
 import com.atlassian.plugin.module.ModuleFactory;
-import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.module.PrefixDelegatingModuleFactory;
+import com.atlassian.plugin.module.PrefixModuleFactory;
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadStrategy;
 import com.mockobjects.dynamic.Mock;
@@ -56,8 +57,8 @@ public class TestPluggableDownloadStrategy extends TestCase
 
     protected ModuleFactory getDefaultModuleClassFactory()
     {
-        return new PrefixedModuleFactory(
-                Collections.<String, ModuleFactory>singletonMap(ClassModuleFactory.PREFIX, new ClassModuleFactory(new DefaultHostContainer())));
+        return new PrefixDelegatingModuleFactory(
+                Collections.<PrefixModuleFactory>singleton(new ClassPrefixModuleFactory(new DefaultHostContainer())));
     }
 
     public void testPluginModuleEnabled() throws Exception

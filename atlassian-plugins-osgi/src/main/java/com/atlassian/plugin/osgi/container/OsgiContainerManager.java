@@ -64,7 +64,7 @@ public interface OsgiContainerManager
     /**
      * Gets a service tracker to follow a service registered under a certain interface.  Will return a new
      * {@link ServiceTracker} instance for every call, so don't call more than necessary.  Any provided
-     * {@link ServiceTracker} instances will be automatically closed on shutdown.
+     * {@link ServiceTracker} instances will be opened before returning and automatically closed on shutdown.
      *
      * @param interfaceClassName The interface class as a String
      * @return A service tracker to follow all instances of that interface

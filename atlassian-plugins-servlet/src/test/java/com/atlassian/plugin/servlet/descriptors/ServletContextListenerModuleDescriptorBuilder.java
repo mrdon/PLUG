@@ -4,9 +4,10 @@ import javax.servlet.ServletContextListener;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.module.ClassModuleFactory;
-import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.module.ClassPrefixModuleFactory;
+import com.atlassian.plugin.module.PrefixDelegatingModuleFactory;
 import com.atlassian.plugin.module.ModuleFactory;
+import com.atlassian.plugin.module.PrefixModuleFactory;
 import com.atlassian.plugin.servlet.PluginBuilder;
 
 import java.util.Collections;
@@ -37,9 +38,9 @@ public class ServletContextListenerModuleDescriptorBuilder
     
     public ServletContextListenerModuleDescriptor build()
     {
-        PrefixedModuleFactory prefixedModuleFactory = new PrefixedModuleFactory(
-                Collections.<String, ModuleFactory>singletonMap("class", new ClassModuleFactory(new DefaultHostContainer())));
-        Descriptor d = new Descriptor(plugin, key, listener, prefixedModuleFactory);
+        PrefixDelegatingModuleFactory prefixDelegatingModuleFactory = new PrefixDelegatingModuleFactory(
+                Collections.<PrefixModuleFactory>singleton(new ClassPrefixModuleFactory(new DefaultHostContainer())));
+        Descriptor d = new Descriptor(plugin, key, listener, prefixDelegatingModuleFactory);
         plugin.addModuleDescriptor(d);
         return d;
     }

@@ -2,10 +2,11 @@ package com.atlassian.plugin.osgi.spring;
 
 import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.module.ContainerAccessor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Map;
 
 import org.apache.commons.lang.Validate;
 
@@ -20,6 +21,7 @@ public class DefaultSpringContainerAccessor implements SpringContainerAccessor
     private final Method nativeCreateBeanMethod;
     private final Method nativeAutowireBeanMethod;
     private final Method nativeGetBeanMethod;
+    private final Method nativeGetBeansOfTypeMethod;
 
     /**
      * The autowire strategy to use when creating and wiring a bean
@@ -72,13 +74,14 @@ public class DefaultSpringContainerAccessor implements SpringContainerAccessor
             nativeCreateBeanMethod = beanFactory.getClass().getMethod("createBean", Class.class, int.class, boolean.class);
             nativeAutowireBeanMethod = beanFactory.getClass().getMethod("autowireBeanProperties", Object.class, int.class, boolean.class);
             nativeGetBeanMethod = beanFactory.getClass().getMethod("getBean", String.class);
+            nativeGetBeansOfTypeMethod = beanFactory.getClass().getMethod("getBeansOfType", Class.class);
 
-            Validate.noNullElements(new Object[] {nativeAutowireBeanMethod, nativeCreateBeanMethod, nativeGetBeanMethod});
+            Validate.noNullElements(new Object[] {nativeGetBeansOfTypeMethod, nativeAutowireBeanMethod, nativeCreateBeanMethod, nativeGetBeanMethod});
         }
         catch (final NoSuchMethodException e)
         {
             // Should never happen
-            throw new PluginException("Cannot find createBean method on registered bean factory: " + nativeBeanFactory, e);
+            throw new PluginException("Cannot find one or more methods on registered bean factory: " + nativeBeanFactory, e);
         }
     }
 
@@ -109,6 +112,24 @@ public class DefaultSpringContainerAccessor implements SpringContainerAccessor
         {
             // Should never happen
             throw new PluginException("Unable to access createBean method", e);
+        }
+        catch (final InvocationTargetException e)
+        {
+            handleSpringMethodInvocationError(e);
+            return null;
+        }
+    }
+
+    public <T> Collection<T> getBeansOfType(Class<T> interfaceClass) {
+        try
+        {
+            Map<String, T> beans = (Map<String, T>) nativeGetBeansOfTypeMethod.invoke(nativeBeanFactory, interfaceClass);
+            return beans.values();
+        }
+        catch (final IllegalAccessException e)
+        {
+            // Should never happen
+            throw new PluginException("Unable to access getBeansOfType method", e);
         }
         catch (final InvocationTargetException e)
         {

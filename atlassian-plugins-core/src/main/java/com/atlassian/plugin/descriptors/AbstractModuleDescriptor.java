@@ -10,7 +10,7 @@ import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import com.atlassian.plugin.module.LegacyModuleFactory;
 import com.atlassian.plugin.module.ModuleFactory;
-import com.atlassian.plugin.module.PrefixedModuleFactory;
+import com.atlassian.plugin.module.PrefixDelegatingModuleFactory;
 import com.atlassian.plugin.util.ClassUtils;
 import com.atlassian.plugin.util.JavaVersionUtils;
 import com.atlassian.plugin.util.validation.ValidationPattern;
@@ -166,9 +166,9 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
 
             // This is only here for backwards compatibility with old code that uses
             // {@link com.atlassian.plugin.PluginAccessor#getEnabledModulesByClass(Class)}
-            else if (moduleFactory instanceof PrefixedModuleFactory)
+            else if (moduleFactory instanceof PrefixDelegatingModuleFactory)
             {
-                moduleClass = ((PrefixedModuleFactory)moduleFactory).guessModuleClass(moduleClassName, this);
+                moduleClass = ((PrefixDelegatingModuleFactory)moduleFactory).guessModuleClass(moduleClassName, this);
             }
         }
         // If this module has no class, then we assume Void

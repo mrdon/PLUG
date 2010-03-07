@@ -357,7 +357,9 @@
                     <excludes>
                         <exclude>**/performance/**</exclude>
                     </excludes>
-
+                    <!-- Necessary due to a permgen memory leak restarting Felix in Sun's 64bit server VM -->
+                    <argLine>-XX:PermSize=64m -XX:MaxPermSize=256m</argLine>
+                    <!--argLine>-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/mrdon/dev/tmp</argLine-->
                 </configuration>
             </plugin>
 
