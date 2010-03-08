@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
 
+import com.atlassian.util.concurrent.CopyOnWriteMaps;
+
 /**
  * A thread-safe variant of {@link Map} in which all mutative operations (the
  * "destructive" operations described by {@link Map} put, remove and so on) are
@@ -50,7 +52,12 @@ import java.util.WeakHashMap;
  * @param <K> the key type
  * @param <V> the value type
  * @author Jed Wesley-Smith
+ * @deprecated since 2.5.0 please use the
+ *             {@link com.atlassian.util.concurrent.CopyOnWriteMap} instead as
+ *             it has some important features and some bug fixes. This version
+ *             is no longer maintained.
  */
+@Deprecated
 public abstract class CopyOnWriteMap<K, V> extends AbstractCopyOnWriteMap<K, V, Map<K, V>>
 {
     private static final long serialVersionUID = 7935514534647505917L;

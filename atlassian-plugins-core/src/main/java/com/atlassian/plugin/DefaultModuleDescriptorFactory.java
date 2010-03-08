@@ -1,9 +1,6 @@
 package com.atlassian.plugin;
 
-import com.atlassian.plugin.hostcontainer.HostContainer;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.util.ClassLoaderUtils;
-import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
+import static java.util.Collections.unmodifiableMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,29 +11,42 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.hostcontainer.HostContainer;
+import com.atlassian.plugin.util.ClassLoaderUtils;
+import com.atlassian.util.concurrent.CopyOnWriteMap;
+
 /**
- * Default implementation of a descriptor factory that allows filtering of descriptor keys
+ * Default implementation of a descriptor factory that allows filtering of
+ * descriptor keys
  */
 public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
 {
     private static Logger log = LoggerFactory.getLogger(DefaultModuleDescriptorFactory.class);
 
-    private final Map<String, Class<? extends ModuleDescriptor>> moduleDescriptorClasses = CopyOnWriteMap.newHashMap();
+    @SuppressWarnings("unchecked")
+    private final Map<String, Class<? extends ModuleDescriptor>> moduleDescriptorClasses = CopyOnWriteMap.<String, Class<? extends ModuleDescriptor>> builder().stableViews()
+        .newHashMap();
     private final List<String> permittedModuleKeys = new ArrayList<String>();
     private final HostContainer hostContainer;
 
     /**
-     * @deprecated Since 2.2.0, use {@link #DefaultModuleDescriptorFactory(HostContainer)} instead
+     * @deprecated Since 2.2.0, use
+     *             {@link #DefaultModuleDescriptorFactory(HostContainer)}
+     *             instead
      */
+    @Deprecated
     public DefaultModuleDescriptorFactory()
     {
         this(new DefaultHostContainer());
     }
 
     /**
-     * Instantiates a descriptor factory that uses the host container to create descriptors
-     *
-     * @param hostContainer The host container implementation for descriptor creation
+     * Instantiates a descriptor factory that uses the host container to create
+     * descriptors
+     * 
+     * @param hostContainer The host container implementation for descriptor
+     *            creation
      * @since 2.2.0
      */
     public DefaultModuleDescriptorFactory(final HostContainer hostContainer)
@@ -44,6 +54,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
         this.hostContainer = hostContainer;
     }
 
+    @SuppressWarnings("unchecked")
     public Class<? extends ModuleDescriptor> getModuleDescriptorClass(final String type)
     {
         return moduleDescriptorClasses.get(type);
@@ -56,6 +67,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
             return null;
         }
 
+        @SuppressWarnings("unchecked")
         final Class<? extends ModuleDescriptor> moduleDescriptorClazz = getModuleDescriptorClass(type);
 
         if (moduleDescriptorClazz == null)
@@ -116,6 +128,7 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
         return moduleDescriptorClasses.containsKey(type);
     }
 
+    @SuppressWarnings("unchecked")
     public void addModuleDescriptor(final String type, final Class<? extends ModuleDescriptor> moduleDescriptorClass)
     {
         moduleDescriptorClasses.put(type, moduleDescriptorClass);
@@ -126,15 +139,17 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
         moduleDescriptorClasses.remove(type);
     }
 
+    @SuppressWarnings("unchecked")
     protected Map<String, Class<? extends ModuleDescriptor>> getDescriptorClassesMap()
     {
-        return Collections.unmodifiableMap(moduleDescriptorClasses);
+        return unmodifiableMap(moduleDescriptorClasses);
     }
 
     /**
-     * Sets the list of module keys that will be loaded. If this list is empty, then the factory will
-     * permit all recognised module types to load. This allows you to run the plugin system in a 'restricted mode'
-     *
+     * Sets the list of module keys that will be loaded. If this list is empty,
+     * then the factory will permit all recognised module types to load. This
+     * allows you to run the plugin system in a 'restricted mode'
+     * 
      * @param permittedModuleKeys List of (String) keys
      */
     public void setPermittedModuleKeys(List<String> permittedModuleKeys)

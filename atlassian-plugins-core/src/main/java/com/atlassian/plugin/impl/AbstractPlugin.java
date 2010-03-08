@@ -1,6 +1,17 @@
 package com.atlassian.plugin.impl;
 
-import static com.atlassian.plugin.util.concurrent.CopyOnWriteMap.newLinkedMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
@@ -12,23 +23,11 @@ import com.atlassian.plugin.Resources;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.util.VersionStringComparator;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
+import com.atlassian.util.concurrent.CopyOnWriteMap;
 
 public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 {
-    private final Map<String, ModuleDescriptor<?>> modules = newLinkedMap();
+    private final Map<String, ModuleDescriptor<?>> modules = CopyOnWriteMap.<String, ModuleDescriptor<?>> builder().stableViews().newLinkedMap();
     private String name;
     private String i18nNameKey;
     private String key;
@@ -91,12 +90,13 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     }
 
     /**
-     * Returns a copy of the module descriptors for this plugin
-     * @return A copy of the internal list
+     * Returns the module descriptors for this plugin
+     * 
+     * @return An unmodifiable list of the module descriptors.
      */
     public Collection<ModuleDescriptor<?>> getModuleDescriptors()
     {
-        return new ArrayList<ModuleDescriptor<?>>(modules.values());
+        return modules.values();
     }
 
     public ModuleDescriptor<?> getModuleDescriptor(final String key)
@@ -136,10 +136,11 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 
     /**
      * Only sets the plugin state if it is in the expected state.
-     *
+     * 
      * @param requiredExistingState The expected state
      * @param desiredState The desired state
-     * @return True if the set was successful, false if not in the expected state
+     * @return True if the set was successful, false if not in the expected
+     *         state
      * @since 2.4
      */
     protected boolean compareAndSetPluginState(final PluginState requiredExistingState, final PluginState desiredState)
@@ -221,7 +222,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
 
     public final void enable()
     {
-        PluginState state = pluginState.get();
+        final PluginState state = pluginState.get();
         if ((state == PluginState.ENABLED) || (state == PluginState.ENABLING))
         {
             return;
@@ -233,10 +234,10 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         try
         {
             // not ideal as comparison and set doesn't happen atomically
-            PluginState desiredState = enableInternal();
+            final PluginState desiredState = enableInternal();
             if ((desiredState != PluginState.ENABLED) && (desiredState != PluginState.ENABLING))
             {
-                log.warn("Illegal state transition to "+desiredState+" for plugin '" + getKey() + "' on enable()");
+                log.warn("Illegal state transition to " + desiredState + " for plugin '" + getKey() + "' on enable()");
             }
             setPluginState(desiredState);
         }
@@ -252,11 +253,13 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     }
 
     /**
-     * Perform any internal enabling logic.  Subclasses should only throw {@link PluginException}.
-     *
+     * Perform any internal enabling logic. Subclasses should only throw
+     * {@link PluginException}.
+     * 
      * @throws PluginException If the plugin could not be enabled
      * @since 2.2.0
-     * @return Either {@link PluginState#ENABLED} or {@link PluginState#ENABLING}
+     * @return Either {@link PluginState#ENABLED} or
+     *         {@link PluginState#ENABLING}
      */
     protected PluginState enableInternal() throws PluginException
     {
@@ -290,14 +293,14 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     }
 
     /**
-     * Perform any internal disabling logic.  Subclasses should only throw {@link PluginException}.
-     *
+     * Perform any internal disabling logic. Subclasses should only throw
+     * {@link PluginException}.
+     * 
      * @throws PluginException If the plugin could not be disabled
      * @since 2.2.0
      */
     protected void disableInternal() throws PluginException
-    {
-    }
+    {}
 
     public Set<String> getRequiredPlugins()
     {
@@ -336,14 +339,14 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     }
 
     /**
-     * Perform any internal installation logic.  Subclasses should only throw {@link PluginException}.
-     *
+     * Perform any internal installation logic. Subclasses should only throw
+     * {@link PluginException}.
+     * 
      * @throws PluginException If the plugin could not be installed
      * @since 2.2.0
      */
     protected void installInternal() throws PluginException
-    {
-    }
+    {}
 
     public final void uninstall()
     {
@@ -372,17 +375,18 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     }
 
     /**
-     * Perform any internal uninstallation logic.  Subclasses should only throw {@link PluginException}.
-     *
+     * Perform any internal uninstallation logic. Subclasses should only throw
+     * {@link PluginException}.
+     * 
      * @throws PluginException If the plugin could not be uninstalled
      * @since 2.2.0
      */
     protected void uninstallInternal() throws PluginException
-    {
-    }
+    {}
 
     /**
-     * Setter for the enabled state of a plugin. If this is set to false then the plugin will not execute.
+     * Setter for the enabled state of a plugin. If this is set to false then
+     * the plugin will not execute.
      */
     @Deprecated
     public void setEnabled(final boolean enabled)
@@ -430,11 +434,12 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
     }
 
     /**
-     * Compares this Plugin to another Plugin for order.
-     * The primary sort field is the key, and the secondary field is the version number.
-     *
+     * Compares this Plugin to another Plugin for order. The primary sort field
+     * is the key, and the secondary field is the version number.
+     * 
      * @param otherPlugin The plugin to be compared.
-     * @return  a negative integer, zero, or a positive integer as this Plugin is less than, equal to, or greater than the specified Plugin.
+     * @return a negative integer, zero, or a positive integer as this Plugin is
+     *         less than, equal to, or greater than the specified Plugin.
      * @see VersionStringComparator
      * @see Comparable#compareTo
      */
@@ -444,7 +449,8 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         {
             if (getKey() == null)
             {
-                // both null keys - not going to bother checking the version, who cares?
+                // both null keys - not going to bother checking the version,
+                // who cares?
                 return 0;
             }
             return 1;
@@ -454,7 +460,8 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
             return -1;
         }
 
-        // If the compared plugin doesn't have the same key, the current object is greater
+        // If the compared plugin doesn't have the same key, the current object
+        // is greater
         if (!otherPlugin.getKey().equals(getKey()))
         {
             return getKey().compareTo(otherPlugin.getKey());
@@ -463,7 +470,8 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         final String thisVersion = cleanVersionString((getPluginInformation() != null ? getPluginInformation().getVersion() : null));
         final String otherVersion = cleanVersionString((otherPlugin.getPluginInformation() != null ? otherPlugin.getPluginInformation().getVersion() : null));
 
-        // Valid versions should come after invalid versions because when we find multiple instances of a plugin, we choose the "latest".
+        // Valid versions should come after invalid versions because when we
+        // find multiple instances of a plugin, we choose the "latest".
         if (!VersionStringComparator.isValidVersionString(thisVersion))
         {
             if (!VersionStringComparator.isValidVersionString(otherVersion))

@@ -1,5 +1,29 @@
 package com.atlassian.plugin.manager;
 
+import static com.atlassian.plugin.util.Assertions.notNull;
+import static com.atlassian.plugin.util.collect.CollectionUtil.toList;
+import static com.google.common.collect.Iterables.concat;
+import static com.google.common.collect.Iterables.filter;
+import static com.google.common.collect.Iterables.transform;
+import static com.google.common.collect.Maps.filterKeys;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.apache.commons.lang.time.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.atlassian.plugin.ModuleCompleteKey;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
@@ -46,30 +70,9 @@ import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.predicate.ModuleOfClassPredicate;
 import com.atlassian.plugin.predicate.PluginPredicate;
 import com.atlassian.plugin.util.PluginUtils;
-import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
+import com.atlassian.util.concurrent.CopyOnWriteMap;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import org.apache.commons.lang.time.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
-import static com.atlassian.plugin.util.Assertions.notNull;
-import static com.atlassian.plugin.util.collect.CollectionUtil.toList;
-import static com.google.common.collect.Iterables.*;
-import static com.google.common.collect.Maps.filterKeys;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -96,7 +99,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     private final ModuleDescriptorFactory moduleDescriptorFactory;
     private final PluginEventManager pluginEventManager;
 
-    private final Map<String, Plugin> plugins = CopyOnWriteMap.newHashMap();
+    private final Map<String, Plugin> plugins = CopyOnWriteMap.<String, Plugin> builder().stableViews().newHashMap();
     private final PluginsClassLoader classLoader = new PluginsClassLoader(this);
     private final PluginEnabler pluginEnabler = new PluginEnabler(this, this);
     private final StateTracker tracker = new StateTracker();
@@ -481,7 +484,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     }
 
     /**
-     * @deprecated Since 2.0.2, use {@link #addPlugins(PluginLoader,Collection<Plugin>...)} instead
+     * @deprecated Since 2.0.2, use {@link
+     *             #addPlugins(PluginLoader,Collection<Plugin>...)} instead
      */
     @Deprecated
     protected void addPlugin(final PluginLoader loader, final Plugin plugin) throws PluginParseException
@@ -514,9 +518,9 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         {
             boolean pluginUpgraded = false;
             // testing to make sure plugin keys are unique
-            if (plugins.containsKey(plugin.getKey()))
+            final Plugin existingPlugin = plugins.get(plugin.getKey());
+            if (existingPlugin != null)
             {
-                final Plugin existingPlugin = plugins.get(plugin.getKey());
                 if (plugin.compareTo(existingPlugin) >= 0)
                 {
                     try
@@ -532,7 +536,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                 }
                 else
                 {
-                    // If we find an older plugin, don't error, just ignore it.  PLUG-12.
+                    // If we find an older plugin, don't error, just ignore it.
+                    // PLUG-12.
                     if (log.isDebugEnabled())
                     {
                         log.debug("Duplicate plugin found (installed version is newer): '" + plugin.getKey() + "'");
@@ -954,22 +959,25 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     }
 
     /**
-     * Enable a set of plugins by key. This will implicitly and recursively enable all dependent plugins
+     * Enable a set of plugins by key. This will implicitly and recursively
+     * enable all dependent plugins
+     * 
      * @param keys The plugin keys
      * @since 2.5.0
      */
     public void enablePlugins(final String... keys)
     {
-        Collection<Plugin> pluginsToEnable = new ArrayList<Plugin>(keys.length);
+        final Collection<Plugin> pluginsToEnable = new ArrayList<Plugin>(keys.length);
 
-        for (String key : keys)
+        for (final String key : keys)
         {
             if (key == null)
             {
                 throw new IllegalArgumentException("Keys passed to enablePlugins must be non-null");
             }
 
-            if (!plugins.containsKey(key))
+            final Plugin plugin = plugins.get(key);
+            if (plugin == null)
             {
                 if (log.isInfoEnabled())
                 {
@@ -978,7 +986,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                 continue;
             }
 
-            final Plugin plugin = plugins.get(key);
             if (!plugin.getPluginInformation().satisfiesMinJavaVersion())
             {
                 log.error("Minimum Java version of '" + plugin.getPluginInformation().getMinJavaVersion() + "' was not satisfied for module '" + key + "'. Not enabling.");
@@ -986,9 +993,9 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             }
             pluginsToEnable.add(plugin);
         }
-        Collection<Plugin> enabledPlugins = pluginEnabler.enableAllRecursively(pluginsToEnable);
+        final Collection<Plugin> enabledPlugins = pluginEnabler.enableAllRecursively(pluginsToEnable);
 
-        for (Plugin plugin : enabledPlugins)
+        for (final Plugin plugin : enabledPlugins)
         {
             enablePluginState(plugin, getStore());
             notifyPluginEnabled(plugin);
@@ -1099,17 +1106,15 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             throw new IllegalArgumentException("You must specify a plugin key to disable.");
         }
 
-        if (!plugins.containsKey(key))
+        final Plugin plugin = plugins.get(key);
+        if (plugin == null)
         {
             if (log.isInfoEnabled())
             {
                 log.info("No plugin was found for key '" + key + "'. Not disabling.");
             }
-
             return;
         }
-
-        final Plugin plugin = plugins.get(key);
 
         notifyPluginDisabled(plugin);
         if (persistDisabledState)

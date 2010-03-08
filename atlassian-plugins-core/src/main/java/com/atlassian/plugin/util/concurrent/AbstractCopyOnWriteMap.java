@@ -34,8 +34,13 @@ import java.util.concurrent.locks.ReentrantLock;
  * @param <K> The key type
  * @param <V> The value type
  * @param <M> the internal {@link Map} or extension for things like sorted and
- * navigable maps.
+ *            navigable maps.
+ * @deprecated since 2.5.0 please use the
+ *             {@link com.atlassian.util.concurrent.CopyOnWriteMap} instead as
+ *             it has some important features and some bug fixes. This version
+ *             is no longer maintained.
  */
+@Deprecated
 abstract class AbstractCopyOnWriteMap<K, V, M extends Map<K, V>> implements ConcurrentMap<K, V>, Serializable
 {
     private static final long serialVersionUID = 4508989182041753878L;

@@ -6,11 +6,11 @@
  */
 package com.atlassian.plugin;
 
-import com.atlassian.plugin.util.JavaVersionUtils;
-import com.atlassian.plugin.util.concurrent.CopyOnWriteMap;
-
 import java.util.Collections;
 import java.util.Map;
+
+import com.atlassian.plugin.util.JavaVersionUtils;
+import com.atlassian.util.concurrent.CopyOnWriteMap;
 
 public class PluginInformation
 {
@@ -22,7 +22,7 @@ public class PluginInformation
     private float maxVersion;
     private float minVersion;
     private Float minJavaVersion;
-    private final Map<String, String> parameters = CopyOnWriteMap.newHashMap();
+    private final Map<String, String> parameters = CopyOnWriteMap.<String, String> builder().stableViews().newHashMap();
 
     public String getDescription()
     {
