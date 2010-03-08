@@ -58,7 +58,7 @@ import com.atlassian.util.concurrent.CopyOnWriteMaps;
  *             is no longer maintained.
  */
 @Deprecated
-public abstract class CopyOnWriteMap<K, V> extends AbstractCopyOnWriteMap<K, V, Map<K, V>>
+public abstract class CopyOnWriteMap<K, V> extends com.atlassian.util.concurrent.CopyOnWriteMap<K, V>
 {
     private static final long serialVersionUID = 7935514534647505917L;
 
@@ -157,7 +157,4 @@ public abstract class CopyOnWriteMap<K, V> extends AbstractCopyOnWriteMap<K, V, 
     {
         super(Collections.<K, V> emptyMap());
     }
-
-    @Override
-    protected abstract <N extends Map<? extends K, ? extends V>> Map<K, V> copy(N map);
 }
