@@ -2,28 +2,6 @@ package com.atlassian.plugin.servlet;
 
 import static com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor.byWeight;
 
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.event.PluginEventListener;
-import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.event.events.PluginDisabledEvent;
-import com.atlassian.plugin.servlet.descriptors.ServletContextListenerModuleDescriptor;
-import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
-import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
-import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
-import com.atlassian.plugin.servlet.filter.DelegatingPluginFilter;
-import com.atlassian.plugin.servlet.filter.FilterLocation;
-import com.atlassian.plugin.servlet.filter.PluginFilterConfig;
-import com.atlassian.plugin.servlet.util.ClassLoaderStack;
-import com.atlassian.plugin.servlet.util.DefaultPathMapper;
-import com.atlassian.plugin.servlet.util.LazyLoadedReference;
-import com.atlassian.plugin.servlet.util.PathMapper;
-import com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor;
-
-import com.atlassian.plugin.util.PluginUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -46,9 +24,31 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.event.PluginEventListener;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginDisabledEvent;
+import com.atlassian.plugin.servlet.descriptors.ServletContextListenerModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
+import com.atlassian.plugin.servlet.filter.DelegatingPluginFilter;
+import com.atlassian.plugin.servlet.filter.FilterLocation;
+import com.atlassian.plugin.servlet.filter.PluginFilterConfig;
+import com.atlassian.plugin.servlet.util.DefaultPathMapper;
+import com.atlassian.plugin.servlet.util.PathMapper;
+import com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor;
+import com.atlassian.plugin.util.ClassLoaderStack;
+import com.atlassian.util.concurrent.LazyReference;
+
 /**
- * A simple servletModuleManager to track and retrieve the loaded servlet plugin modules.
- *
+ * A simple servletModuleManager to track and retrieve the loaded servlet plugin
+ * modules.
+ * 
  * @since 2.1.0
  */
 public class DefaultServletModuleManager implements ServletModuleManager
@@ -57,17 +57,18 @@ public class DefaultServletModuleManager implements ServletModuleManager
 
     private final PathMapper servletMapper;
     private final Map<String, ServletModuleDescriptor> servletDescriptors = new HashMap<String, ServletModuleDescriptor>();
-    private final ConcurrentMap<String, LazyLoadedReference<HttpServlet>> servletRefs = new ConcurrentHashMap<String, LazyLoadedReference<HttpServlet>>();
+    private final ConcurrentMap<String, LazyReference<HttpServlet>> servletRefs = new ConcurrentHashMap<String, LazyReference<HttpServlet>>();
 
     private final PathMapper filterMapper;
     private final Map<String, ServletFilterModuleDescriptor> filterDescriptors = new HashMap<String, ServletFilterModuleDescriptor>();
-    private final ConcurrentMap<String, LazyLoadedReference<Filter>> filterRefs = new ConcurrentHashMap<String, LazyLoadedReference<Filter>>();
+    private final ConcurrentMap<String, LazyReference<Filter>> filterRefs = new ConcurrentHashMap<String, LazyReference<Filter>>();
 
     private final ConcurrentMap<Plugin, ContextLifecycleReference> pluginContextRefs = new ConcurrentHashMap<Plugin, ContextLifecycleReference>();
 
     /**
-     * Constructor that sets itself in the servlet context for later use in dispatching servlets and filters.
-     *
+     * Constructor that sets itself in the servlet context for later use in
+     * dispatching servlets and filters.
+     * 
      * @param servletContext The servlet context to store itself in
      * @param pluginEventManager The plugin event manager
      * @since 2.2.0
@@ -81,8 +82,9 @@ public class DefaultServletModuleManager implements ServletModuleManager
     /**
      * Creates the servlet module manager, but assumes you will be calling
      * {@link com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor#setServletModuleManager(javax.servlet.ServletContext, ServletModuleManager)}
-     * yourself if you don't extend the dispatching servlet and filter classes to provide the servlet module manager instance.
-     *
+     * yourself if you don't extend the dispatching servlet and filter classes
+     * to provide the servlet module manager instance.
+     * 
      * @param pluginEventManager The plugin event manager
      */
     public DefaultServletModuleManager(final PluginEventManager pluginEventManager)
@@ -93,10 +95,12 @@ public class DefaultServletModuleManager implements ServletModuleManager
     /**
      * Creates the servlet module manager, but assumes you will be calling
      * {@link com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor#setServletModuleManager(javax.servlet.ServletContext, ServletModuleManager)}
-     * yourself if you don't extend the dispatching servlet and filter classes to provide the servlet module manager instance.
-     *
+     * yourself if you don't extend the dispatching servlet and filter classes
+     * to provide the servlet module manager instance.
+     * 
      * @param pluginEventManager The plugin event manager
-     * @param servletPathMapper The path mapper used for mapping servlets to paths
+     * @param servletPathMapper The path mapper used for mapping servlets to
+     *            paths
      * @param filterPathMapper The path mapper used for mapping filters to paths
      */
     public DefaultServletModuleManager(final PluginEventManager pluginEventManager, final PathMapper servletPathMapper, final PathMapper filterPathMapper)
@@ -110,13 +114,14 @@ public class DefaultServletModuleManager implements ServletModuleManager
     {
         servletDescriptors.put(descriptor.getCompleteKey(), descriptor);
 
-        // for some reason the JDK complains about getPaths not returning a List<String> ?!?!?
+        // for some reason the JDK complains about getPaths not returning a
+        // List<String> ?!?!?
         final List<String> paths = descriptor.getPaths();
         for (final String path : paths)
         {
             servletMapper.put(descriptor.getCompleteKey(), path);
         }
-        final LazyLoadedReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
+        final LazyReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
         if (servletRef != null)
         {
             servletRef.get().destroy();
@@ -150,7 +155,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         servletDescriptors.remove(descriptor.getCompleteKey());
         servletMapper.put(descriptor.getCompleteKey(), null);
 
-        final LazyLoadedReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
+        final LazyReference<HttpServlet> servletRef = servletRefs.remove(descriptor.getCompleteKey());
         if (servletRef != null)
         {
             servletRef.get().destroy();
@@ -165,7 +170,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         {
             filterMapper.put(descriptor.getCompleteKey(), path);
         }
-        final LazyLoadedReference<Filter> filterRef = filterRefs.remove(descriptor.getCompleteKey());
+        final LazyReference<Filter> filterRef = filterRefs.remove(descriptor.getCompleteKey());
         if (filterRef != null)
         {
             filterRef.get().destroy();
@@ -204,12 +209,14 @@ public class DefaultServletModuleManager implements ServletModuleManager
         int insertIndex = Collections.binarySearch(list, e, comparator);
         if (insertIndex < 0)
         {
-            // no entry already there, so the insertIndex is the negative value of where it should be inserted
+            // no entry already there, so the insertIndex is the negative value
+            // of where it should be inserted
             insertIndex = -insertIndex - 1;
         }
         else
         {
-            // there is already a value at that position, so we need to find the next available spot for it
+            // there is already a value at that position, so we need to find the
+            // next available spot for it
             while ((insertIndex < list.size()) && (comparator.compare(list.get(insertIndex), e) == 0))
             {
                 insertIndex++;
@@ -223,7 +230,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         filterDescriptors.remove(descriptor.getCompleteKey());
         filterMapper.put(descriptor.getCompleteKey(), null);
 
-        final LazyLoadedReference<Filter> filterRef = filterRefs.remove(descriptor.getCompleteKey());
+        final LazyReference<Filter> filterRef = filterRefs.remove(descriptor.getCompleteKey());
         if (filterRef != null)
         {
             filterRef.get().destroy();
@@ -231,8 +238,9 @@ public class DefaultServletModuleManager implements ServletModuleManager
     }
 
     /**
-     * Call the plugins servlet context listeners contextDestroyed methods and cleanup any servlet contexts that are
-     * associated with the plugin that was disabled.
+     * Call the plugins servlet context listeners contextDestroyed methods and
+     * cleanup any servlet contexts that are associated with the plugin that was
+     * disabled.
      */
     @PluginEventListener
     public void onPluginDisabled(final PluginDisabledEvent event)
@@ -248,28 +256,32 @@ public class DefaultServletModuleManager implements ServletModuleManager
     }
 
     /**
-     * Returns a wrapped Servlet for the servlet module.  If a wrapped servlet for the module has not been
-     * created yet, we create one using the servletConfig.
+     * Returns a wrapped Servlet for the servlet module. If a wrapped servlet
+     * for the module has not been created yet, we create one using the
+     * servletConfig.
      * <p/>
-     * Note: We use a map of lazily loaded references to the servlet so that only one can ever be created and
-     * initialized for each module descriptor.
-     *
+     * Note: We use a map of lazily loaded references to the servlet so that
+     * only one can ever be created and initialized for each module descriptor.
+     * 
      * @param descriptor
      * @param servletConfig
      * @return
      */
     HttpServlet getServlet(final ServletModuleDescriptor descriptor, final ServletConfig servletConfig)
     {
-        // check for an existing reference, if there is one it's either in the process of loading, in which case
-        // servletRef.get() below will block until it's available, otherwise we go about creating a new ref to use
-        LazyLoadedReference<HttpServlet> servletRef = servletRefs.get(descriptor.getCompleteKey());
+        // check for an existing reference, if there is one it's either in the
+        // process of loading, in which case
+        // servletRef.get() below will block until it's available, otherwise we
+        // go about creating a new ref to use
+        LazyReference<HttpServlet> servletRef = servletRefs.get(descriptor.getCompleteKey());
         if (servletRef == null)
         {
             // if there isn't an existing reference, create one.
             final ServletContext servletContext = getWrappedContext(descriptor.getPlugin(), servletConfig.getServletContext());
             servletRef = new LazyLoadedServletReference(descriptor, servletContext);
 
-            // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
+            // check that another thread didn't beat us to the punch of creating
+            // a lazy reference. if it did, we
             // want to use that so there is only ever one reference
             if (servletRefs.putIfAbsent(descriptor.getCompleteKey(), servletRef) != null)
             {
@@ -289,28 +301,33 @@ public class DefaultServletModuleManager implements ServletModuleManager
     }
 
     /**
-     * Returns a wrapped Filter for the filter module.  If a wrapped filter for the module has not been
-     * created yet, we create one using the filterConfig.
+     * Returns a wrapped Filter for the filter module. If a wrapped filter for
+     * the module has not been created yet, we create one using the
+     * filterConfig.
      * <p/>
-     * Note: We use a map of lazily loaded references to the filter so that only one can ever be created and
-     * initialized for each module descriptor.
-     *
+     * Note: We use a map of lazily loaded references to the filter so that only
+     * one can ever be created and initialized for each module descriptor.
+     * 
      * @param descriptor
      * @param filterConfig
-     * @return The filter, or null if the filter is invalid and should be removed
+     * @return The filter, or null if the filter is invalid and should be
+     *         removed
      */
     Filter getFilter(final ServletFilterModuleDescriptor descriptor, final FilterConfig filterConfig)
     {
-        // check for an existing reference, if there is one it's either in the process of loading, in which case
-        // filterRef.get() below will block until it's available, otherwise we go about creating a new ref to use
-        LazyLoadedReference<Filter> filterRef = filterRefs.get(descriptor.getCompleteKey());
+        // check for an existing reference, if there is one it's either in the
+        // process of loading, in which case
+        // filterRef.get() below will block until it's available, otherwise we
+        // go about creating a new ref to use
+        LazyReference<Filter> filterRef = filterRefs.get(descriptor.getCompleteKey());
         if (filterRef == null)
         {
             // if there isn't an existing reference, create one.
             final ServletContext servletContext = getWrappedContext(descriptor.getPlugin(), filterConfig.getServletContext());
             filterRef = new LazyLoadedFilterReference(descriptor, servletContext);
 
-            // check that another thread didn't beat us to the punch of creating a lazy reference.  if it did, we
+            // check that another thread didn't beat us to the punch of creating
+            // a lazy reference. if it did, we
             // want to use that so there is only ever one reference
             if (filterRefs.putIfAbsent(descriptor.getCompleteKey(), filterRef) != null)
             {
@@ -329,16 +346,19 @@ public class DefaultServletModuleManager implements ServletModuleManager
     }
 
     /**
-     * Returns a wrapped ServletContext for the plugin.  If a wrapped servlet context for the plugin has not been
-     * created yet, we create using the baseContext, any context params specified in the plugin and initialize any
-     * context listeners the plugin may define.
+     * Returns a wrapped ServletContext for the plugin. If a wrapped servlet
+     * context for the plugin has not been created yet, we create using the
+     * baseContext, any context params specified in the plugin and initialize
+     * any context listeners the plugin may define.
      * <p/>
-     * Note: We use a map of lazily loaded references to the context so that only one can ever be created for each
-     * plugin.
-     *
+     * Note: We use a map of lazily loaded references to the context so that
+     * only one can ever be created for each plugin.
+     * 
      * @param plugin Plugin for whom we're creating a wrapped servlet context.
-     * @param baseContext The applications base servlet context which we will be wrapping.
-     * @return A wrapped, fully initialized servlet context that can be used for all the plugins filters and servlets.
+     * @param baseContext The applications base servlet context which we will be
+     *            wrapping.
+     * @return A wrapped, fully initialized servlet context that can be used for
+     *         all the plugins filters and servlets.
      */
     private ServletContext getWrappedContext(final Plugin plugin, final ServletContext baseContext)
     {
@@ -354,7 +374,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         return pluginContextRef.get().servletContext;
     }
 
-    private static final class LazyLoadedFilterReference extends LazyLoadedReference<Filter>
+    private static final class LazyLoadedFilterReference extends LazyReference<Filter>
     {
         private final ServletFilterModuleDescriptor descriptor;
         private final ServletContext servletContext;
@@ -374,7 +394,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         }
     }
 
-    private static final class LazyLoadedServletReference extends LazyLoadedReference<HttpServlet>
+    private static final class LazyLoadedServletReference extends LazyReference<HttpServlet>
     {
         private final ServletModuleDescriptor descriptor;
         private final ServletContext servletContext;
@@ -394,7 +414,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         }
     }
 
-    private static final class ContextLifecycleReference extends LazyLoadedReference<ContextLifecycleManager>
+    private static final class ContextLifecycleReference extends LazyReference<ContextLifecycleManager>
     {
         private final Plugin plugin;
         private final ServletContext baseContext;
@@ -416,8 +436,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
             final List<ServletContextListener> listeners = new ArrayList<ServletContextListener>();
             try
             {
-                for (final ServletContextListenerModuleDescriptor descriptor : findModuleDescriptorsByType(
-                    ServletContextListenerModuleDescriptor.class, plugin))
+                for (final ServletContextListenerModuleDescriptor descriptor : findModuleDescriptorsByType(ServletContextListenerModuleDescriptor.class, plugin))
                 {
                     listeners.add(descriptor.getModule());
                 }
