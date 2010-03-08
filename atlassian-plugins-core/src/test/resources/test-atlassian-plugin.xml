@@ -26,6 +26,7 @@
     </mineral>
 
     <vegetable key="veg" class="com.atlassian.plugin.mock.MockVegetable"/>
+    <vegetableSubclass key="vegSubclass" class="com.atlassian.plugin.mock.MockVegetable"/>
 
     <resource type="download" name="icon.gif" location="/icon.gif" />
 </atlassian-plugin>

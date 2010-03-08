@@ -70,7 +70,7 @@ public class TestSinglePluginLoader extends TestCase
         assertEquals("http://www.atlassian.com", plugin.getPluginInformation().getVendorUrl());
         assertEquals(3f, plugin.getPluginInformation().getMinVersion(), 0);
         assertEquals(3.1f, plugin.getPluginInformation().getMaxVersion(), 0);
-        assertEquals(3, plugin.getModuleDescriptors().size());
+        assertEquals(4, plugin.getModuleDescriptors().size());
 
         ModuleDescriptor bearDescriptor = plugin.getModuleDescriptor("bear");
         assertEquals("test.atlassian.plugin:bear", bearDescriptor.getCompleteKey());

@@ -34,7 +34,7 @@ public class PluginUtils
      */
     public static boolean doesPluginRequireRestart(final Plugin plugin)
     {
-        //PLUG-451: When in dev mode, plugins will should not require a restart.
+        //PLUG-451: When in dev mode, plugins should not require a restart.
         if (Boolean.getBoolean(ATLASSIAN_DEV_MODE))
         {
             return false;

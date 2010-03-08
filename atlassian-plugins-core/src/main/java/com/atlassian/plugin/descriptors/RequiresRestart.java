@@ -1,9 +1,10 @@
 package com.atlassian.plugin.descriptors;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.annotation.ElementType;
 
 /**
  * Marks {@link com.atlassian.plugin.ModuleDescriptor} implementations that require a restart of the application to
@@ -12,6 +13,7 @@ import java.lang.annotation.ElementType;
  *
  * @since 2.1
  */
+@Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface RequiresRestart

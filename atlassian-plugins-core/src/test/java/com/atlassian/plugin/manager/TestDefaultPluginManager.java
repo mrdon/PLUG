@@ -14,6 +14,7 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.PluginRestartState;
 import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.descriptors.CannotDisable;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.event.PluginEventListener;
@@ -260,6 +261,30 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertNull(manager.getEnabledPluginModule(disablableModuleKey));
 
         // Now, make sure we can't disable the veg module
+        manager.disablePluginModule(moduleKey);
+        assertNotNull(manager.getEnabledPluginModule(moduleKey));
+    }
+
+    public void testDisablePluginModuleWithCannotDisableAnnotationinSuperclass()
+    {
+        pluginLoaders.add(new SinglePluginLoader("test-atlassian-plugin.xml"));
+        moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("bullshit", MockUnusedModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("vegetable", MockVegetableModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("vegetableSubclass", MockVegetableSubclassModuleDescriptor.class);
+
+        manager.init();
+
+        final String pluginKey = "test.atlassian.plugin";
+        final String disablableModuleKey = pluginKey + ":bear";
+        final String moduleKey = pluginKey + ":vegSubclass";
+
+        // First, make sure we can disable the bear module
+        manager.disablePluginModule(disablableModuleKey);
+        assertNull(manager.getEnabledPluginModule(disablableModuleKey));
+
+        // Now, make sure we can't disable the vegSubclass module
         manager.disablePluginModule(moduleKey);
         assertNotNull(manager.getEnabledPluginModule(moduleKey));
     }
@@ -1034,6 +1059,39 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(2, manager.getPlugins().size());
     }
 
+    public void testRemovePluginThatRequiresRestartViaSubclass() throws PluginParseException, IOException
+    {
+        createFillAndCleanTempPluginDirectory();
+        moduleDescriptorFactory.addModuleDescriptor("requiresRestartSubclass", RequiresRestartSubclassModuleDescriptor.class);
+
+        final File pluginFile = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>1.0</version>",
+                "    </plugin-info>", "    <requiresRestartSubclass key='foo' />", "</atlassian-plugin>").build(pluginsTestDir);
+
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
+
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartSubclassModuleDescriptor.class).size());
+        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
+
+        manager.uninstall(manager.getPlugin("test.restartrequired"));
+
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(PluginRestartState.REMOVE, manager.getPluginRestartState("test.restartrequired"));
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartSubclassModuleDescriptor.class).size());
+
+        manager.shutdown();
+        manager.init();
+
+        assertFalse(pluginFile.exists());
+        assertEquals(0, manager.getEnabledModuleDescriptorsByClass(RequiresRestartSubclassModuleDescriptor.class).size());
+        assertEquals(2, manager.getPlugins().size());
+    }
+
     public void testDisableEnableOfPluginThatRequiresRestart() throws PluginParseException, IOException
     {
         createFillAndCleanTempPluginDirectory();
@@ -1053,7 +1111,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.disablePlugin("test.restartrequired");
         assertFalse(manager.isPluginEnabled("test.restartrequired"));
-        manager.enablePlugin("test.restartrequired");
+        manager.enablePlugins("test.restartrequired");
 
         assertEquals(3, manager.getPlugins().size());
         assertNotNull(manager.getPlugin("test.restartrequired"));
@@ -1669,6 +1727,12 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     @RequiresRestart
     public static class RequiresRestartModuleDescriptor extends MockUnusedModuleDescriptor
     {
+    }
+
+    // A subclass of a module descriptor that @RequiresRestart; should inherit the annotation
+    public static class RequiresRestartSubclassModuleDescriptor extends RequiresRestartModuleDescriptor
+    {
+        
     }
 
     private class MultiplePluginLoader implements PluginLoader
