@@ -39,6 +39,7 @@ import com.atlassian.plugin.webresource.WebResourceIntegration;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.plugin.webresource.WebResourceManagerImpl;
 import com.atlassian.plugin.webresource.WebResourceModuleDescriptor;
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -134,8 +135,7 @@ public class ContainerManager
                 .applicationKey("refapp")
                 .build();
 
-        Set<PrefixModuleFactory> moduleFactories = new HashSet<PrefixModuleFactory>();
-        ModuleFactory moduleFactory = new PrefixDelegatingModuleFactory(moduleFactories);
+        PrefixDelegatingModuleFactory moduleFactory = new PrefixDelegatingModuleFactory(ImmutableSet.<PrefixModuleFactory>of(new BeanPrefixModuleFactory()));
         plugins = new AtlassianPlugins(config);
 
         final PluginEventManager pluginEventManager = plugins.getPluginEventManager();
@@ -158,9 +158,7 @@ public class ContainerManager
         publicContainer.put(ModuleFactory.class, moduleFactory);
 
         hostContainer = new SimpleConstructorHostContainer(publicContainer);
-
-        moduleFactories.add(new ClassPrefixModuleFactory(hostContainer));
-        moduleFactories.add(new BeanPrefixModuleFactory());
+        moduleFactory.addPrefixModuleFactory(new ClassPrefixModuleFactory(hostContainer));
 
         try
         {

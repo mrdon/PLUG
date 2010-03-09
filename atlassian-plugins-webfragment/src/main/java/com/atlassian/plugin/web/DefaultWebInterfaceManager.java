@@ -6,6 +6,8 @@ import com.atlassian.plugin.web.descriptors.*;
 
 import java.util.*;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,8 +18,9 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
 {
     private PluginAccessor pluginAccessor;
     private WebFragmentHelper webFragmentHelper;
-    private Map<String,List<WebSectionModuleDescriptor>> sections;
-    private Map<String,List<WebItemModuleDescriptor>> items;
+    private Map<String, List<WebSectionModuleDescriptor>> sections;
+    private Map<String, List<WebItemModuleDescriptor>> items;
+    private Map<String, List<DefaultWebPanelModuleDescriptor>> panels;
     private static final Logger log = LoggerFactory.getLogger(DefaultWebInterfaceManager.class);
 
     public static final WeightedDescriptorComparator WEIGHTED_DESCRIPTOR_COMPARATOR = new WeightedDescriptorComparator();
@@ -103,6 +106,54 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         return filterFragmentsByCondition(getItems(section), context);
     }
 
+    public List<WebPanel> getDisplayableWebPanels(String location, Map<String, Object> context)
+    {
+        return toWebPanels(filterFragmentsByCondition(getWebPanelDescriptors(location), context));
+    }
+
+    public List<WebPanel> getWebPanels(String location)
+    {
+        return toWebPanels(getWebPanelDescriptors(location));
+    }
+
+    private List<WebPanel> toWebPanels(List<DefaultWebPanelModuleDescriptor> descriptors)
+    {
+        return Lists.transform(descriptors, new Function<DefaultWebPanelModuleDescriptor, WebPanel>()
+        {
+            public WebPanel apply(DefaultWebPanelModuleDescriptor from)
+            {
+                return from.getModule();
+            }
+        });
+    }
+
+    private List<DefaultWebPanelModuleDescriptor> getWebPanelDescriptors(String location)
+    {
+        if (location == null)
+        {
+            return Collections.emptyList();
+        }
+        else
+        {
+            List<DefaultWebPanelModuleDescriptor> result = panels.get(location);
+            if (result == null) {
+                result = new ArrayList<DefaultWebPanelModuleDescriptor>(); // use a tree map so we get nice weight sorting
+
+                List<DefaultWebPanelModuleDescriptor> descriptors = pluginAccessor.getEnabledModuleDescriptorsByClass(DefaultWebPanelModuleDescriptor.class);
+                for (DefaultWebPanelModuleDescriptor descriptor : descriptors)
+                {
+                    if (location.equalsIgnoreCase(descriptor.getLocation()))
+                    {
+                        result.add(descriptor);
+                    }
+                }
+                Collections.sort(result, WEIGHTED_DESCRIPTOR_COMPARATOR);
+                panels.put(location, result);
+            }
+            return result;
+        }
+    }
+
     private <T extends WebFragmentModuleDescriptor> List<T> filterFragmentsByCondition(List<T> relevantItems, Map<String,Object> context)
     {
         if (relevantItems.isEmpty())
@@ -135,6 +186,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
     {
         sections = Collections.synchronizedMap(new HashMap());
         items = Collections.synchronizedMap(new HashMap());
+        panels = Collections.synchronizedMap(new HashMap());
     }
 
     /**

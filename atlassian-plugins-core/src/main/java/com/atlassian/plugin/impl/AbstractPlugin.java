@@ -197,6 +197,11 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         return resources.getResourceDescriptors(type);
     }
 
+    public List<ResourceDescriptor> getResourceDescriptorsByName(String name)
+    {
+        return resources.getResourceDescriptorsByName(name);
+    }
+
     public ResourceLocation getResourceLocation(final String type, final String name)
     {
         return resources.getResourceLocation(type, name);

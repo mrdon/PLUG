@@ -33,6 +33,16 @@ public class MockWebInterfaceManager implements WebInterfaceManager
         return null;
     }
 
+    public List<WebPanel> getDisplayableWebPanels(String location, Map<String, Object> context)
+    {
+        return null;
+    }
+
+    public List<WebPanel> getWebPanels(String location)
+    {
+        return null;
+    }
+
     public void refresh()
     {
     }

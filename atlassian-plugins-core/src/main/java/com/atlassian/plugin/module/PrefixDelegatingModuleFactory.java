@@ -17,9 +17,9 @@ import java.util.Collection;
  * The module class name can contain a prefix and this prefix determines which {@link com.atlassian.plugin.module.ModuleFactory}
  * is used to create the java class for this module descriptor.
  * <p/>
- * IF no prefix is supplied it will use {@link ClassPrefixModuleFactory} to create the module class object.
+ * If no prefix is supplied it will use {@link ClassPrefixModuleFactory} to create the module class object.
  * <p/>
- * ModuleFactories are located via the following alorithm.  First, the prefixes registered during construction are searched, then
+ * ModuleFactories are located via the following algorithm.  First, the prefixes registered during construction are searched, then
  * any implementations in the plugin's container, if applicable.
  * <p/>
  * <i>Implementation note:</i>  The plugin's container is searched, instead of
@@ -42,6 +42,11 @@ public class PrefixDelegatingModuleFactory implements ModuleFactory
             factories.put(factory.getPrefix(), factory);
         }
         this.delegateModuleFactories = factories;
+    }
+
+    public void addPrefixModuleFactory(PrefixModuleFactory prefixModuleFactory)
+    {
+        delegateModuleFactories.put(prefixModuleFactory.getPrefix(), prefixModuleFactory);
     }
 
     /**

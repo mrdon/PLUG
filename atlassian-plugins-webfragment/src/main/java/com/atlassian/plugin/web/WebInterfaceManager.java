@@ -1,7 +1,8 @@
 package com.atlassian.plugin.web;
 
-import com.atlassian.plugin.web.descriptors.WebSectionModuleDescriptor;
 import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
+import com.atlassian.plugin.web.descriptors.WebPanel;
+import com.atlassian.plugin.web.descriptors.WebSectionModuleDescriptor;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,7 @@ public interface WebInterfaceManager
     List<WebSectionModuleDescriptor> getSections(String location);
 
     /**
-     * @return A list of all AbstractWebFragmentModuleDescriptor <i>viewable in a given context</i> in the given location.
+     * @return A list of all AbstractWebLinkFragmentModuleDescriptor <i>viewable in a given context</i> in the given location.
      */
     List<WebSectionModuleDescriptor> getDisplayableSections(String location, Map<String,Object> context);
 
@@ -32,9 +33,26 @@ public interface WebInterfaceManager
     List<WebItemModuleDescriptor> getItems(String section);
 
     /**
-     * @return A list of all AbstractWebFragmentModuleDescriptor <i>viewable in a given context</i> in the given section.
+     * @return A list of all AbstractWebLinkFragmentModuleDescriptor <i>viewable in a given context</i> in the given section.
      */
     List<WebItemModuleDescriptor> getDisplayableItems(String section, Map<String,Object> context);
+
+    /**
+     *
+     * @param location
+     * @return  A list of all {@link com.atlassian.plugin.web.descriptors.WebPanel} module instances
+     * for the given location.
+     */
+    List<WebPanel> getWebPanels(String location);
+
+    /**
+     *
+     * @param location
+     * @param context
+     * @return  A list of all {@link com.atlassian.plugin.web.descriptors.WebPanel} module instances
+     * <i>viewable in a given context</i> in the given location.
+     */
+    List<WebPanel> getDisplayableWebPanels(String location, Map<String,Object> context);
 
     /**
      * Refresh the contents of the web interface manager.

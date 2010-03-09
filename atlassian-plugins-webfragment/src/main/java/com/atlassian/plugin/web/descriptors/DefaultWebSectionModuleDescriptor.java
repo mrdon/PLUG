@@ -9,7 +9,7 @@ import org.dom4j.Element;
 /**
  * Represents a web section - that is a collection of web items.
  */
-public class DefaultWebSectionModuleDescriptor extends AbstractWebFragmentModuleDescriptor<Void> implements WebSectionModuleDescriptor<Void>
+public class DefaultWebSectionModuleDescriptor extends AbstractWebLinkFragmentModuleDescriptor<Void> implements WebSectionModuleDescriptor<Void>
 {
     private String location;
 

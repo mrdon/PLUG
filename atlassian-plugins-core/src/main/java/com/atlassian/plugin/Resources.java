@@ -3,6 +3,9 @@ package com.atlassian.plugin;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import org.dom4j.Element;
 
 import java.util.ArrayList;
@@ -92,6 +95,18 @@ public class Resources implements Resourced
             }
         }
         return Collections.unmodifiableList(typedResourceDescriptors);
+    }
+
+    public List<ResourceDescriptor> getResourceDescriptorsByName(final String name)
+    {
+        return ImmutableList.copyOf(
+            Collections2.filter(resourceDescriptors, new Predicate<ResourceDescriptor>()
+            {
+                public boolean apply(ResourceDescriptor input)
+                {
+                    return name.equals(input.getName());
+                }
+            }));
     }
 
     public ResourceLocation getResourceLocation(final String type, final String name)

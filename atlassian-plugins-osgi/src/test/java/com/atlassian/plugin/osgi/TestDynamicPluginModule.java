@@ -6,7 +6,6 @@ import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
 import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
 import com.atlassian.plugin.util.WaitUntil;
@@ -15,7 +14,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.Collections;
 import java.util.HashSet;
 
 import org.osgi.framework.BundleContext;

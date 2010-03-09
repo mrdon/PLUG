@@ -8,7 +8,7 @@ import com.atlassian.plugin.web.model.WebLink;
  *
  * @see WebSectionModuleDescriptor
  */
-public interface WebItemModuleDescriptor<T> extends WebFragmentModuleDescriptor<T>
+public interface WebItemModuleDescriptor<T> extends WebLinkFragmentModuleDescriptor<T>
 {
     String getSection();
 
