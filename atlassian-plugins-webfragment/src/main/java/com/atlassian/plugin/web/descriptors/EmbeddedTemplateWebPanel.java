@@ -9,7 +9,6 @@ import java.util.Map;
 
 public class EmbeddedTemplateWebPanel extends AbstractWebPanel
 {
-
     private String templateBody;
     private static final Logger logger = LoggerFactory.getLogger(EmbeddedTemplateWebPanel.class.getName());
 
