@@ -1,78 +1,75 @@
 package com.atlassian.plugin.servlet.filter;
 
-import junit.framework.TestCase;
 import com.atlassian.plugin.servlet.ServletModuleManager;
-import com.mockobjects.dynamic.Mock;
-import com.mockobjects.dynamic.C;
+import junit.framework.TestCase;
+import org.mockito.Mock;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.FilterConfig;
 import java.io.IOException;
 import java.util.Collections;
 
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+
 public class TestServletFilterModuleContainerFilter extends TestCase
 {
+    @Mock private ServletModuleManager moduleManager;
+    @Mock private HttpServletRequest request;
+    @Mock private HttpServletResponse response;
+    @Mock private FilterChain filterChain;
+
+    public void setUp() {
+        initMocks(this);
+    }
+
     public void testFilter() throws IOException, ServletException
     {
-        Mock mockManager = new Mock(ServletModuleManager.class);
-        mockManager.expectAndReturn("getFilters", C.args(C.IS_ANYTHING, C.eq("/myfilter"), C.IS_ANYTHING), Collections.emptyList());
+        when(moduleManager.getFilters(any(FilterLocation.class), eq("/myfilter"), any(FilterConfig.class), eq("REQUEST"))).thenReturn(Collections.<Filter>emptyList());
 
-        MyFilter filter = new MyFilter(mockManager);
-        Mock mockRequest = new Mock(HttpServletRequest.class);
-        mockRequest.expectAndReturn("getContextPath", "/myapp");
-        mockRequest.expectAndReturn("getContextPath", "/myapp");
-        mockRequest.expectAndReturn("getRequestURI", "/myapp/myfilter");
-        mockRequest.matchAndReturn("getAttribute", C.ANY_ARGS, null);
-        mockRequest.expectAndReturn("getServletPath", null);
-        mockRequest.expectAndReturn("getPathInfo", null);
+        MyFilter filter = new MyFilter(moduleManager);
 
-        Mock mockResponse = new Mock(HttpServletResponse.class);
-        Mock mockChain = new Mock(FilterChain.class);
-        mockChain.expect("doFilter", C.ANY_ARGS);
+        when(request.getContextPath()).thenReturn("/myapp");
+        when(request.getRequestURI()).thenReturn("/myapp/myfilter");
 
-        filter.doFilter((HttpServletRequest)mockRequest.proxy(), (HttpServletResponse)mockResponse.proxy(), (FilterChain)mockChain.proxy());
-
-        mockRequest.verify();
-        mockResponse.verify();
-        mockChain.verify();
-        mockManager.verify();
+        filter.doFilter(request, response, filterChain);
+        verify(filterChain).doFilter(any(ServletRequest.class), any(ServletResponse.class));
     }
 
     public void testNoServletModuleManager() throws IOException, ServletException
     {
-
         MyFilter filter = new MyFilter(null);
-        Mock mockRequest = new Mock(HttpServletRequest.class);
-
-        Mock mockResponse = new Mock(HttpServletResponse.class);
-        Mock mockChain = new Mock(FilterChain.class);
-        mockChain.expect("doFilter", C.ANY_ARGS);
-
-        filter.doFilter((HttpServletRequest)mockRequest.proxy(), (HttpServletResponse)mockResponse.proxy(), (FilterChain)mockChain.proxy());
-
-        mockRequest.verify();
-        mockResponse.verify();
-        mockChain.verify();
+        filter.doFilter(request, response, filterChain);
+        verify(filterChain).doFilter(any(ServletRequest.class), any(ServletResponse.class));
     }
 
     static class MyFilter extends ServletFilterModuleContainerFilter
     {
-        private final Mock mockManager;
+        @Mock private FilterConfig filterConfig;
 
-        public MyFilter(Mock mockManager) throws ServletException
+        private final ServletModuleManager moduleManager;
+
+        public MyFilter(ServletModuleManager moduleManager) throws ServletException
         {
-            this.mockManager = mockManager;
-            Mock config = new Mock(FilterConfig.class);
-            config.expectAndReturn("getInitParameter", C.ANY_ARGS, "after-encoding");
-            init((FilterConfig) config.proxy());
+            initMocks(this);
+            this.moduleManager = moduleManager;
+            when(filterConfig.getInitParameter("location")).thenReturn("after-encoding");
+            when(filterConfig.getInitParameter("dispatcher")).thenReturn("REQUEST");
+            init(filterConfig);
         }
 
         protected ServletModuleManager getServletModuleManager()
         {
-             return (mockManager != null ? (ServletModuleManager) mockManager.proxy() : null);
+             return moduleManager;
         }
     }
 }
