@@ -1,29 +1,34 @@
 package com.atlassian.plugin.manager;
 
+import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.factories.XmlDynamicPluginFactory;
-import com.atlassian.plugin.impl.StaticPlugin;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.impl.AbstractDelegatingPlugin;
+import com.atlassian.plugin.impl.StaticPlugin;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
+import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
 import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
-import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
 import com.atlassian.plugin.test.PluginJarBuilder;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.atlassian.plugin.*;
-
-import org.apache.commons.io.FileUtils;
-
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -82,6 +87,7 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
             {
                 return PluginState.DISABLED;
             }
+
             public void disableInternal()
             {
                 // do nothing
@@ -109,7 +115,7 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
     private DefaultPluginManager makeClassLoadingPluginManager() throws PluginParseException
     {
         directoryPluginLoader = new DirectoryPluginLoader(pluginsTestDir, Arrays.asList(new LegacyDynamicPluginFactory(
-            PluginAccessor.Descriptor.FILENAME), new XmlDynamicPluginFactory("foo")), pluginEventManager);
+                PluginAccessor.Descriptor.FILENAME), new XmlDynamicPluginFactory("foo")), pluginEventManager);
         pluginLoaders.add(directoryPluginLoader);
 
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
@@ -128,7 +134,7 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
                 .addPluginInformation("some.key", "My name", "1.0", 1)
                 .addResource("foo.txt", "foo")
                 .addJava("my.MyClass",
-                    "package my; public class MyClass {}")
+                        "package my; public class MyClass {}")
                 .build();
         FileUtils.moveFile(jar, plugin);
 
@@ -141,7 +147,9 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
 
         final Plugin installedPlugin = manager.getPlugin(pluginKey);
         assertNotNull(installedPlugin);
-        assertNotNull(installedPlugin.getClassLoader().getResourceAsStream("foo.txt"));
+        InputStream s0 = installedPlugin.getClassLoader().getResourceAsStream("foo.txt");
+        assertNotNull(s0);
+        s0.close();
         assertNull(installedPlugin.getClassLoader().getResourceAsStream("bar.txt"));
         assertNotNull(installedPlugin.getClassLoader().loadClass("my.MyClass"));
         try
@@ -175,7 +183,9 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         assertNotNull(installedPlugin2);
         assertEquals(1, manager.getEnabledPlugins().size());
         assertNull(installedPlugin2.getClassLoader().getResourceAsStream("foo.txt"));
-        assertNotNull(installedPlugin2.getClassLoader().getResourceAsStream("bar.txt"));
+        InputStream s1 = installedPlugin2.getClassLoader().getResourceAsStream("bar.txt");
+        assertNotNull(s1);
+        s1.close();
         assertNotNull(installedPlugin2.getClassLoader().loadClass("my.MyNewClass"));
         try
         {
@@ -194,7 +204,7 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
 
         FileUtils.cleanDirectory(pluginsTestDir);
         final File plugin1 = new PluginJarBuilder("plugin").addPluginInformation("some.key", "My name", "1.0", 1).addResource("foo.txt", "foo").addJava(
-            "my.MyClass", "package my; public class MyClass {}").build();
+                "my.MyClass", "package my; public class MyClass {}").build();
 
         final DefaultPluginManager manager = makeClassLoadingPluginManager();
         manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
@@ -205,8 +215,11 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
 
         final Plugin installedPlugin = manager.getPlugin(pluginKey);
         assertNotNull(installedPlugin);
-        assertNotNull(installedPlugin.getClassLoader().getResourceAsStream("foo.txt"));
-        assertNull(installedPlugin.getClassLoader().getResourceAsStream("bar.txt"));
+        InputStream s0 = installedPlugin.getClassLoader().getResourceAsStream("foo.txt");
+        assertNotNull(s0);
+        s0.close();
+        InputStream s1 = installedPlugin.getClassLoader().getResourceAsStream("bar.txt");
+        assertNull(s1);
         assertNotNull(installedPlugin.getClassLoader().loadClass("my.MyClass"));
         try
         {
@@ -221,8 +234,9 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         // sleep to ensure the new plugin is picked up
         Thread.sleep(1000);
 
-        final File plugin2 = new PluginJarBuilder("plugin").addPluginInformation("some.key", "My name", "1.0", 1).addResource("bar.txt", "bar").addJava(
-            "my.MyNewClass", "package my; public class MyNewClass {}").build();
+        final File plugin2 = new PluginJarBuilder("plugin").addPluginInformation("some.key", "My name", "1.0", 1)
+                .addResource("bar.txt", "bar").addJava("my.MyNewClass", "package my; public class MyNewClass {}")
+                .build();
 
         // reinstall the plugin
         final String pluginKey2 = manager.installPlugin(new JarPluginArtifact(plugin2));
@@ -233,8 +247,11 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
         final Plugin installedPlugin2 = manager.getPlugin(pluginKey2);
         assertNotNull(installedPlugin2);
         assertEquals(1, manager.getEnabledPlugins().size());
-        assertNull(installedPlugin2.getClassLoader().getResourceAsStream("foo.txt"));
-        assertNotNull(installedPlugin2.getClassLoader().getResourceAsStream("bar.txt"));
+        InputStream s2 = installedPlugin2.getClassLoader().getResourceAsStream("foo.txt");
+        assertNull(s2);
+        InputStream s3 = installedPlugin2.getClassLoader().getResourceAsStream("bar.txt");
+        assertNotNull(s3);
+        s3.close();
         assertNotNull(installedPlugin2.getClassLoader().loadClass("my.MyNewClass"));
         try
         {
@@ -289,9 +306,11 @@ public class TestDefaultPluginManagerLongRunning extends AbstractTestClassLoader
     }
 
     class NothingModuleDescriptor extends MockUnusedModuleDescriptor
-    {}
+    {
+    }
 
     @RequiresRestart
     public static class RequiresRestartModuleDescriptor extends MockUnusedModuleDescriptor
-    {}
+    {
+    }
 }

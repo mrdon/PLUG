@@ -8,6 +8,7 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 
@@ -61,7 +62,9 @@ public class TestPluginClassLoader extends TestCase
 
     public void testPluginClassLoaderHandlesDeletedExctractedInnerJars() throws Exception
     {
-        assertNotNull(pluginClassLoader.getResource("innerresource.txt").openStream());
+        InputStream inputStream = pluginClassLoader.getResource("innerresource.txt").openStream();
+        assertNotNull(inputStream);
+        inputStream.close();
         FileUtils.deleteDirectory(tmpDir);
         assertTrue(tmpDir.mkdirs());
         try
@@ -101,7 +104,9 @@ public class TestPluginClassLoader extends TestCase
     {
         final URL resourceUrl = pluginClassLoader.getResource("innerresource.txt");
         assertNotNull(resourceUrl);
-        assertEquals("innerresource", IOUtils.toString(resourceUrl.openStream()));
+        InputStream inputStream = resourceUrl.openStream();
+        assertEquals("innerresource", IOUtils.toString(inputStream));
+        inputStream.close();
     }
 
     public void testPluginClassLoaderDoesNotSwallowClassesFromADifferentClassLoader() throws Exception

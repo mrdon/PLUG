@@ -1,9 +1,5 @@
 package com.atlassian.plugin.loaders;
 
-import static com.atlassian.plugin.util.collect.CollectionUtil.filter;
-import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableList;
-
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
@@ -23,7 +19,6 @@ import com.atlassian.plugin.mock.MockMineralModuleDescriptor;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.util.collect.CollectionUtil;
 import com.atlassian.plugin.util.collect.Predicate;
-
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -37,6 +32,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+
+import static com.atlassian.plugin.util.collect.CollectionUtil.filter;
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
 
 public class TestDirectoryPluginLoader extends AbstractTestClassLoader
 {
@@ -224,6 +223,7 @@ public class TestDirectoryPluginLoader extends AbstractTestClassLoader
         // sleep to ensure the new plugin is picked up
         Thread.sleep(1000);
 
+        plugin.delete(); //delete the old plugin artifact to make windows happy
         new PluginJarBuilder("plugin").addPluginInformation("some.key", "My name", "1.0", 1).addResource("bar.txt", "bar").build().renameTo(plugin);
         plugins = loader.addFoundPlugins(moduleDescriptorFactory);
         assertEquals(1, plugins.size());
