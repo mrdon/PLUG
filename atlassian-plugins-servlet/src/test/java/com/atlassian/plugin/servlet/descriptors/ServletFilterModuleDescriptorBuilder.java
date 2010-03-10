@@ -12,8 +12,10 @@ import com.atlassian.plugin.servlet.filter.FilterLocation;
 import com.mockobjects.dynamic.Mock;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import javax.servlet.Filter;
 
 import static com.atlassian.plugin.servlet.filter.FilterTestUtils.immutableList;
@@ -27,7 +29,8 @@ public class ServletFilterModuleDescriptorBuilder
     private int weight = 100;
     private List<String> paths = new LinkedList<String>();
     private ServletModuleManager servletModuleManager = (ServletModuleManager) new Mock(ServletModuleManager.class).proxy();
-    
+    private Set<String> dispatchers = new HashSet<String>();
+
     public ServletFilterModuleDescriptorBuilder with(Plugin plugin)
     {
         this.plugin = plugin;
@@ -76,10 +79,15 @@ public class ServletFilterModuleDescriptorBuilder
         return this;
     }
 
+    public ServletFilterModuleDescriptorBuilder withDispatcher(String dispatcher) {
+        dispatchers.add(dispatcher);
+        return this;
+    }
+
     public ServletFilterModuleDescriptor build()
     {
         return new Descriptor(plugin, key, filterFactory, location, weight, immutableList(paths), servletModuleManager,
-                new PrefixDelegatingModuleFactory(Collections.<PrefixModuleFactory>emptySet()));
+                new PrefixDelegatingModuleFactory(Collections.<PrefixModuleFactory>emptySet()), dispatchers);
     }
 
     static final class Descriptor extends ServletFilterModuleDescriptor
@@ -90,6 +98,7 @@ public class ServletFilterModuleDescriptorBuilder
         final FilterLocation location;
         final int weight;
         final ServletModuleManager servletModuleManager;
+        final Set<String> dispatchers;
         
         public Descriptor(
             Plugin plugin,
@@ -99,7 +108,8 @@ public class ServletFilterModuleDescriptorBuilder
             int weight,
             List<String> paths,
             ServletModuleManager servletModuleManager,
-            ModuleFactory moduleFactory)
+            ModuleFactory moduleFactory,
+            Set<String> dispatchers)
         {
             super(moduleFactory, servletModuleManager);
             this.plugin = plugin;
@@ -109,6 +119,7 @@ public class ServletFilterModuleDescriptorBuilder
             this.weight = weight;
             this.paths = paths;
             this.servletModuleManager = servletModuleManager;
+            this.dispatchers = dispatchers;
         }
 
         @Override
@@ -153,6 +164,11 @@ public class ServletFilterModuleDescriptorBuilder
             return paths;
         }
 
+        @Override
+        public Set<String> getDispatcherConditions()
+        {
+            return dispatchers;
+        }
     }
 
 }

@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 import static com.atlassian.plugin.util.PluginUtils.*;
 
 import com.atlassian.plugin.servlet.filter.DelegatingPluginFilter;
+import com.google.common.collect.Iterables;
 import junit.framework.TestCase;
 
 import com.atlassian.plugin.Plugin;
@@ -472,7 +473,44 @@ public class TestDefaultServletModuleManager extends TestCase
         
         chain.doFilter((HttpServletRequest) mockHttpServletRequest.proxy(), (HttpServletResponse) mockHttpServletResponse.proxy());
         assertEquals(newList(1, 2, 2, 1), filterCallOrder);
-    }        
+    }
+
+    public void testGetFiltersWithDispatcher() throws Exception {
+        ServletContext servletContext = mock(ServletContext.class);
+        FilterConfig filterConfig = mock(FilterConfig.class);
+        when(filterConfig.getServletContext()).thenReturn(servletContext);
+        when(servletContext.getInitParameterNames()).thenReturn(new Vector().elements());
+        Plugin plugin = new PluginBuilder().build();
+
+        ServletFilterModuleDescriptor filterDescriptor = new ServletFilterModuleDescriptorBuilder()
+            .with(plugin)
+            .withKey("foo")
+            .with(new FilterAdapter())
+            .withPath("/foo")
+            .with(servletModuleManager)
+            .withDispatcher("REQUEST")
+            .withDispatcher("FORWARD")
+            .build();
+
+        ServletFilterModuleDescriptor filterDescriptor2 = new ServletFilterModuleDescriptorBuilder()
+            .with(plugin)
+            .withKey("bar")
+            .with(new FilterAdapter())
+            .withPath("/foo")
+            .with(servletModuleManager)
+            .withDispatcher("REQUEST")
+            .withDispatcher("INCLUDE")
+            .build();
+        
+        servletModuleManager.addFilterModule(filterDescriptor);
+        servletModuleManager.addFilterModule(filterDescriptor2);
+
+        assertEquals(2, Iterables.size(servletModuleManager.getFilters(FilterLocation.BEFORE_DISPATCH, "/foo", filterConfig, "REQUEST")));
+        assertEquals(1, Iterables.size(servletModuleManager.getFilters(FilterLocation.BEFORE_DISPATCH, "/foo", filterConfig, "INCLUDE")));
+        assertEquals(1, Iterables.size(servletModuleManager.getFilters(FilterLocation.BEFORE_DISPATCH, "/foo", filterConfig, "FORWARD")));
+        assertEquals(0, Iterables.size(servletModuleManager.getFilters(FilterLocation.BEFORE_DISPATCH, "/foo", filterConfig, "ERROR")));
+        assertEquals(2, Iterables.size(servletModuleManager.getFilters(FilterLocation.BEFORE_DISPATCH, "/foo", filterConfig, null)));
+    }
 
     static class TestServletContextListener implements ServletContextListener
     {

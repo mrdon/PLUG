@@ -52,6 +52,12 @@ public class TestServletFilterModuleDescriptor extends TestCase
         Element url = new DOMElement("url-pattern");
         url.setText("/foo");
         e.add(url);
+        Element dispatcher1 = new DOMElement("dispatcher");
+        dispatcher1.setText("REQUEST");
+        e.add(dispatcher1);
+        Element dispatcher2 = new DOMElement("dispatcher");
+        dispatcher2.setText("FORWARD");
+        e.add(dispatcher2);
         return e;
     }
 
@@ -66,7 +72,8 @@ public class TestServletFilterModuleDescriptor extends TestCase
         {
             descriptor.init(plugin, e);
             fail("Should have thrown exception");
-        } catch (PluginParseException ex)
+        }
+        catch (PluginParseException ex)
         {
             // very good
         }
@@ -82,6 +89,8 @@ public class TestServletFilterModuleDescriptor extends TestCase
         descriptor.init(plugin, e);
         assertEquals(FilterLocation.AFTER_ENCODING, descriptor.getLocation());
         assertEquals(122, descriptor.getWeight());
+        assertTrue(descriptor.getDispatcherConditions().contains("REQUEST"));
+        assertTrue(descriptor.getDispatcherConditions().contains("FORWARD"));
     }
 
     public void testInitWithBadLocation()
@@ -94,7 +103,8 @@ public class TestServletFilterModuleDescriptor extends TestCase
         {
             descriptor.init(plugin, e);
             fail("Should have thrown exception");
-        } catch (PluginParseException ex)
+        }
+        catch (PluginParseException ex)
         {
             // very good
         }
@@ -110,7 +120,27 @@ public class TestServletFilterModuleDescriptor extends TestCase
         {
             descriptor.init(plugin, e);
             fail("Should have thrown exception");
-        } catch (PluginParseException ex)
+        }
+        catch (PluginParseException ex)
+        {
+            // very good
+        }
+    }
+
+    public void testInitWithBadDispatcher()
+    {
+        Plugin plugin = new StaticPlugin();
+        plugin.setKey("somekey");
+        Element e = getValidConfig();
+        Element badDispatcher = new DOMElement("dispatcher");
+        badDispatcher.setText("badValue");
+        e.add(badDispatcher);
+        try
+        {
+            descriptor.init(plugin, e);
+            fail("Should have thrown exception");
+        }
+        catch (PluginParseException ex)
         {
             // very good
         }

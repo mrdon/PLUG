@@ -179,10 +179,19 @@ public class DefaultServletModuleManager implements ServletModuleManager
 
     public Iterable<Filter> getFilters(final FilterLocation location, final String path, final FilterConfig filterConfig) throws ServletException
     {
+        return getFilters(location, path, filterConfig, null);
+    }
+
+    public Iterable<Filter> getFilters(FilterLocation location, String path, FilterConfig filterConfig, String dispatcher) throws ServletException
+    {
         final List<ServletFilterModuleDescriptor> matchingFilterDescriptors = new ArrayList<ServletFilterModuleDescriptor>();
         for (final String completeKey : filterMapper.getAll(path))
         {
             final ServletFilterModuleDescriptor descriptor = filterDescriptors.get(completeKey);
+            if(dispatcher != null && !descriptor.getDispatcherConditions().contains(dispatcher)) {
+                continue;
+            }
+
             if (location.equals(descriptor.getLocation()))
             {
                 sortedInsert(matchingFilterDescriptors, descriptor, byWeight);

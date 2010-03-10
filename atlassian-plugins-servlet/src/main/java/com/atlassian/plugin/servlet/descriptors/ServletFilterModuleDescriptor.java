@@ -13,6 +13,9 @@ import org.dom4j.Element;
 
 import javax.servlet.Filter;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A module descriptor that allows plugin developers to define servlet filters.  Developers can define what urls the 
@@ -39,15 +42,29 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
 {
     static final String DEFAULT_LOCATION = FilterLocation.BEFORE_DISPATCH.name();
     static final String DEFAULT_WEIGHT = "100";
-    
+
+    private static final Set<String> VALID_DISPATCHER_CONDITIONS = new HashSet<String>();
+
+    static
+    {
+        VALID_DISPATCHER_CONDITIONS.add("REQUEST");    
+        VALID_DISPATCHER_CONDITIONS.add("INCLUDE");
+        VALID_DISPATCHER_CONDITIONS.add("FORWARD");
+        VALID_DISPATCHER_CONDITIONS.add("ERROR");    
+    }
+
     private FilterLocation location;
 
     private int weight;
     private final ServletModuleManager servletModuleManager;
 
+    private Set<String> dispatcherConditions;
+
     /**
      * Creates a descriptor that uses a module class factory to create instances.
      *
+     * @param moduleFactory The module factory
+     * @param servletModuleManager The module manager
      * @since 2.5.0
      */
     public ServletFilterModuleDescriptor(ModuleFactory moduleFactory, ServletModuleManager servletModuleManager)
@@ -61,6 +78,7 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
      * Creates a descriptor that uses a module factory to create instances
      *
      * @param hostContainer The module factory
+     * @param servletModuleManager The module manager
      * @since 2.2.0
      * @deprecated use {@link com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor#ServletFilterModuleDescriptor(com.atlassian.plugin.module.ModuleFactory , com.atlassian.plugin.servlet.ServletModuleManager)} instead
      */
@@ -77,6 +95,7 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
         }
     };
 
+    @SuppressWarnings("unchecked")
     public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);
@@ -88,6 +107,17 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
         catch (IllegalArgumentException ex)
         {
             throw new PluginParseException(ex);
+        }
+
+        dispatcherConditions = new HashSet<String>();
+        List<Element> dispatcherElements = element.elements("dispatcher");
+        for (Element dispatcher : dispatcherElements)
+        {
+            if(!VALID_DISPATCHER_CONDITIONS.contains(dispatcher.getTextTrim()))
+            {
+                throw new PluginParseException("The dispatcher value must be one of the following only [REQUEST | INCLUDE | FORWARD | ERROR] - '" + dispatcher.getTextTrim() + "' is not a valid value.");
+            }
+            dispatcherConditions.add(dispatcher.getTextTrim());
         }
     }
     
@@ -119,4 +149,8 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
         return weight;
     }
 
+    public Set<String> getDispatcherConditions()
+    {
+        return dispatcherConditions;
+    }
 }

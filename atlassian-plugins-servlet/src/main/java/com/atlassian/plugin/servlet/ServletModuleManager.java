@@ -92,6 +92,21 @@ public interface ServletModuleManager
     Iterable<Filter> getFilters(FilterLocation location, String pathInfo, FilterConfig filterConfig) throws ServletException;
 
     /**
+     * Returns the filters that have been registered to filter requests at the specified path matching the location
+     * in the filter stack and registered for the specific dispatcher condition.
+     * <p/>
+     * A <code>null</code> dispatcher parameter will return all filters.
+     *
+     * @param location Place in the applications filter stack the filters should be applied.
+     * @param pathInfo Path of the incoming request to filter.
+     * @param filterConfig FilterConfig given to the delegating filter.
+     * @param dispatcher The dispatcher tag that filters have been registered to.
+     * @return List of filters to be applied, already sorted by weight
+     * @throws ServletException Thrown if there is a problem initializing one of the filters to apply.
+     */
+    Iterable<Filter> getFilters(FilterLocation location, String pathInfo, FilterConfig filterConfig, String dispatcher) throws ServletException;
+
+    /**
      * Remove a previously registered filter plugin module.  Requests that come in on the path described in the 
      * descriptor will no longer be served.
      *  

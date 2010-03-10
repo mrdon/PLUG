@@ -30,11 +30,13 @@ public class ServletFilterModuleContainerFilter implements Filter
 
     private FilterConfig filterConfig;
     private FilterLocation location;
+    private String dispatcher;
 
     public void init(FilterConfig filterConfig) throws ServletException
     {
         this.filterConfig = filterConfig;
         location = FilterLocation.parse(filterConfig.getInitParameter("location"));
+        dispatcher = filterConfig.getInitParameter("dispatcher");
     }
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException
@@ -51,7 +53,7 @@ public class ServletFilterModuleContainerFilter implements Filter
             return;
         }
 
-        final Iterable<Filter> filters = getServletModuleManager().getFilters(location, getUri(request), filterConfig);
+        final Iterable<Filter> filters = getServletModuleManager().getFilters(location, getUri(request), filterConfig, dispatcher);
         FilterChain pluginFilterChain = new IteratingFilterChain(filters.iterator(), chain);
         pluginFilterChain.doFilter(request, response);
     }
