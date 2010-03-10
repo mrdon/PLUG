@@ -233,11 +233,6 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
         return delegate.getResourceDescriptors(type);
     }
 
-    public List<ResourceDescriptor> getResourceDescriptorsByName(String name)
-    {
-        return delegate.getResourceDescriptorsByName(name);
-    }
-
     public ResourceDescriptor getResourceDescriptor(String type, String name)
     {
         return delegate.getResourceDescriptor(type, name);

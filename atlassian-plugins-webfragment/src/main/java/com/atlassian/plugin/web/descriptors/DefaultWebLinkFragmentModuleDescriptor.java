@@ -182,11 +182,6 @@ public class DefaultWebLinkFragmentModuleDescriptor<T> implements StateAware, We
         return decoratedDescriptor.getResourceDescriptors(type);
     }
 
-    public List<ResourceDescriptor> getResourceDescriptorsByName(String name)
-    {
-        return decoratedDescriptor.getResourceDescriptorsByName(name);
-    }
-
     public ResourceLocation getResourceLocation(final String type, final String name)
     {
         return decoratedDescriptor.getResourceLocation(type, name);

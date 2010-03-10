@@ -28,15 +28,6 @@ public interface Resourced
     List<ResourceDescriptor> getResourceDescriptors(String type);
 
     /**
-     * Get a list of all {@link ResourceDescriptor descriptors} that have a particular name.
-     *
-     * @since   2.5.0
-     * @param name  the resource element's name attribute.
-     * @return  all resource descriptors that have the specified name. Returns an empty list if none were found.
-     */
-    List<ResourceDescriptor> getResourceDescriptorsByName(String name);
-
-    /**
      * Get a {@link ResourceDescriptor} of a particular type and name.
      * 
      * @return the specified resource descriptor if found, null otherwise.

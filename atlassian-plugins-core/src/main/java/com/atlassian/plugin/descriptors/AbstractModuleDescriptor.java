@@ -327,11 +327,6 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         return resources.getResourceDescriptors(type);
     }
 
-    public List<ResourceDescriptor> getResourceDescriptorsByName(String name)
-    {
-        return resources.getResourceDescriptorsByName(name);
-    }
-
     public ResourceLocation getResourceLocation(final String type, final String name)
     {
         return resources.getResourceLocation(type, name);
@@ -399,13 +394,5 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     {
         enabled = false;
         moduleClass = null;
-    }
-
-    protected void assertResourceByNameExists(final String name) throws PluginParseException
-    {
-        if (getResourceDescriptorsByName(name).isEmpty())
-        {
-            throw new PluginParseException("Required resource with name " + name + " does not exist.");
-        }
     }
 }

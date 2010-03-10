@@ -97,18 +97,6 @@ public class Resources implements Resourced
         return Collections.unmodifiableList(typedResourceDescriptors);
     }
 
-    public List<ResourceDescriptor> getResourceDescriptorsByName(final String name)
-    {
-        return ImmutableList.copyOf(
-            Collections2.filter(resourceDescriptors, new Predicate<ResourceDescriptor>()
-            {
-                public boolean apply(ResourceDescriptor input)
-                {
-                    return name.equals(input.getName());
-                }
-            }));
-    }
-
     public ResourceLocation getResourceLocation(final String type, final String name)
     {
         for (final ResourceDescriptor resourceDescriptor : resourceDescriptors)

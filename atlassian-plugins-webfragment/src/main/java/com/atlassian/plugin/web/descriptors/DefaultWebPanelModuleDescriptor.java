@@ -7,9 +7,12 @@ import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.web.WebInterfaceManager;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import org.apache.commons.lang.StringUtils;
 import org.dom4j.Element;
 
+import java.util.Collection;
 import java.util.concurrent.Callable;
 
 public class DefaultWebPanelModuleDescriptor extends AbstractWebFragmentModuleDescriptor<WebPanel>
@@ -32,8 +35,7 @@ public class DefaultWebPanelModuleDescriptor extends AbstractWebFragmentModuleDe
 
         if (moduleClassName == null)
         {
-            assertResourceByNameExists("view");
-            final ResourceDescriptor resource = getResourceDescriptorsByName("view").get(0);
+            final ResourceDescriptor resource = getRequiredViewResource();
             final String filename = resource.getLocation();
             if (StringUtils.isEmpty(filename))
             {
@@ -96,6 +98,30 @@ public class DefaultWebPanelModuleDescriptor extends AbstractWebFragmentModuleDe
         catch (Exception e)
         {
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * @return  the (first) resource with attribute <code>name="view"</code>
+     * @throws PluginParseException when no resources with name "view" were found.
+     */
+    private ResourceDescriptor getRequiredViewResource() throws PluginParseException
+    {
+        final Collection<ResourceDescriptor> resources =
+                Collections2.filter(getResourceDescriptors(), new Predicate<ResourceDescriptor>()
+            {
+                public boolean apply(ResourceDescriptor input)
+                {
+                    return "view".equals(input.getName());
+                }
+            });
+        if (resources.isEmpty())
+        {
+            throw new PluginParseException("Required resource with name 'view' does not exist.");
+        }
+        else
+        {
+            return resources.iterator().next();
         }
     }
 }
