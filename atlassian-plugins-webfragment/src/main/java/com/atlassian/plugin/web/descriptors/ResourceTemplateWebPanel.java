@@ -1,7 +1,6 @@
 package com.atlassian.plugin.web.descriptors;
 
 import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.web.renderer.RendererException;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +10,8 @@ import java.util.Map;
 
 public class ResourceTemplateWebPanel extends AbstractWebPanel
 {
-    private String resourceFilename;
     private static final Logger logger = LoggerFactory.getLogger(ResourceTemplateWebPanel.class.getName());
+    private String resourceFilename;
 
     public ResourceTemplateWebPanel(PluginAccessor pluginAccessor)
     {
