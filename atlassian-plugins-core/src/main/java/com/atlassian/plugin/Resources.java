@@ -1,21 +1,23 @@
 package com.atlassian.plugin;
 
-import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.elements.ResourceLocation;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import org.dom4j.Element;
+import static com.atlassian.plugin.util.Assertions.notNull;
+import static com.google.common.collect.Iterables.filter;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
+import org.dom4j.Element;
+
+import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+
 /**
- * An aggregate of all resource descriptors within the given plugin module or plugin.
- *
+ * An aggregate of all resource descriptors within the given plugin module or
+ * plugin.
+ * 
  * @see com.atlassian.plugin.impl.AbstractPlugin#resources
  * @see com.atlassian.plugin.descriptors.AbstractModuleDescriptor#resources
  */
@@ -26,15 +28,18 @@ public class Resources implements Resourced
     private final List<ResourceDescriptor> resourceDescriptors;
 
     /**
-     * Parses the resource descriptors from the provided plugin XML element and creates a Resources object containing them.
+     * Parses the resource descriptors from the provided plugin XML element and
+     * creates a Resources object containing them.
      * <p/>
-     * If the module or plugin contains no resource elements, an empty Resources object will be returned. This method will
-     * not return null.
-     *
-     * @param element the plugin or plugin module XML fragment which should not be null
-     * @return a Resources object representing the resources in the plugin or plugin module
-     * @throws PluginParseException if there are two resources with the same name and type in this element, or another parse error
-     * occurs
+     * If the module or plugin contains no resource elements, an empty Resources
+     * object will be returned. This method will not return null.
+     * 
+     * @param element the plugin or plugin module XML fragment which should not
+     *            be null
+     * @return a Resources object representing the resources in the plugin or
+     *         plugin module
+     * @throws PluginParseException if there are two resources with the same
+     *             name and type in this element, or another parse error occurs
      * @throws IllegalArgumentException if the provided element is null
      */
     public static Resources fromXml(final Element element) throws PluginParseException, IllegalArgumentException
@@ -55,8 +60,7 @@ public class Resources implements Resourced
 
             if (templates.contains(resourceDescriptor))
             {
-                throw new PluginParseException(
-                    "Duplicate resource with type '" + resourceDescriptor.getType() + "' and name '" + resourceDescriptor.getName() + "' found");
+                throw new PluginParseException("Duplicate resource with type '" + resourceDescriptor.getType() + "' and name '" + resourceDescriptor.getName() + "' found");
             }
 
             templates.add(resourceDescriptor);
@@ -65,9 +69,11 @@ public class Resources implements Resourced
     }
 
     /**
-     * Create a resource object with the given resource descriptors. The provided list must not be null.
-     *
-     * @param resourceDescriptors the descriptors which are part of this resources object
+     * Create a resource object with the given resource descriptors. The
+     * provided list must not be null.
+     * 
+     * @param resourceDescriptors the descriptors which are part of this
+     *            resources object
      * @throws IllegalArgumentException if the resourceDescriptors list is null
      */
     public Resources(final List<ResourceDescriptor> resourceDescriptors) throws IllegalArgumentException
@@ -76,7 +82,7 @@ public class Resources implements Resourced
         {
             throw new IllegalArgumentException("Resources cannot be created with a null resources list. Pass empty list instead");
         }
-        this.resourceDescriptors = Collections.unmodifiableList(new ArrayList<ResourceDescriptor>(resourceDescriptors));
+        this.resourceDescriptors = ImmutableList.<ResourceDescriptor> builder().addAll(resourceDescriptors).build();
     }
 
     public List<ResourceDescriptor> getResourceDescriptors()
@@ -86,15 +92,7 @@ public class Resources implements Resourced
 
     public List<ResourceDescriptor> getResourceDescriptors(final String type)
     {
-        final List<ResourceDescriptor> typedResourceDescriptors = new LinkedList<ResourceDescriptor>();
-        for (final ResourceDescriptor resourceDescriptor : resourceDescriptors)
-        {
-            if (resourceDescriptor.getType().equalsIgnoreCase(type))
-            {
-                typedResourceDescriptors.add(resourceDescriptor);
-            }
-        }
-        return Collections.unmodifiableList(typedResourceDescriptors);
+        return ImmutableList.<ResourceDescriptor> builder().addAll(filter(resourceDescriptors, new TypeFilter(type))).build();
     }
 
     public ResourceLocation getResourceLocation(final String type, final String name)
@@ -119,5 +117,21 @@ public class Resources implements Resourced
             }
         }
         return null;
+    }
+
+    public static class TypeFilter implements Predicate<ResourceDescriptor>
+    {
+        private final String type;
+
+        public TypeFilter(final String type)
+        {
+            this.type = notNull("type", type);
+        }
+
+        public boolean apply(final ResourceDescriptor input)
+        {
+            // TODO Auto-generated method stub
+            return type.equals(input.getType());
+        }
     }
 }
