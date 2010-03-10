@@ -30,7 +30,7 @@ public class ResourceTemplateWebPanel extends AbstractWebPanel {
         try
         {
 
-            getRenderer().render(resourceFilename, plugin.getClassLoader(), context, sink);
+            getRenderer().render(resourceFilename, plugin, context, sink);
         }
         catch (IOException e)
         {

@@ -32,7 +32,7 @@ public abstract class AbstractWebPanel implements WebPanel
     {
         if (StaticWebPanelRenderer.RESOURCE_TYPE.equals(resourceType))
         {
-            return new StaticWebPanelRenderer(plugin.getClassLoader());
+            return StaticWebPanelRenderer.RENDERER;
         }
         else
         {

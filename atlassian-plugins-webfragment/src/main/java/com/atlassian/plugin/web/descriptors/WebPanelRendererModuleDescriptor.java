@@ -13,7 +13,9 @@ import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 public class WebPanelRendererModuleDescriptor extends AbstractModuleDescriptor<WebPanelRenderer>
 {
     public static final String XML_ELEMENT_NAME = "web-panel-renderer";
-    
+
+    private WebPanelRenderer rendererModule;
+
     public WebPanelRendererModuleDescriptor(ModuleFactory moduleClassFactory)
     {
         super(moduleClassFactory);
@@ -48,6 +50,9 @@ public class WebPanelRendererModuleDescriptor extends AbstractModuleDescriptor<W
     @Override
     public WebPanelRenderer getModule()
     {
-        return moduleFactory.createModule(moduleClassName, this);
+        if (rendererModule == null) {
+            rendererModule = moduleFactory.createModule(moduleClassName, this);
+        }
+        return rendererModule;
     }
 }

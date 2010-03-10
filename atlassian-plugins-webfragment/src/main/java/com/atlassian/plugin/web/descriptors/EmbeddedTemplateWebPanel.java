@@ -26,7 +26,7 @@ public class EmbeddedTemplateWebPanel extends AbstractWebPanel
     {
         try
         {
-            return getRenderer().renderFragment(templateBody, plugin.getClassLoader(), context);
+            return getRenderer().renderFragment(templateBody, plugin, context);
         }
         catch (RendererException e)
         {

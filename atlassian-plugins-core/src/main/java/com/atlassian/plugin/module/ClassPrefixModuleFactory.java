@@ -8,10 +8,10 @@ import com.atlassian.plugin.hostcontainer.HostContainer;
  * The ClassModuleFactory creates a java bean for the given module class by using either the plugins container or the hostcontainer, depending
  * if the plugin implements {@link com.atlassian.plugin.module.ContainerManagedPlugin}.
  * The returned bean class should have all constructor dependencies injected. However it is the containers responsibility to inject the dependencies.
- *
+ * <p/>
  * The ClassModuleFactory expects the fully qualified name of the java class.
  *
- * @Since 2.5.0
+ * @since 2.5.0
  */
 public class ClassPrefixModuleFactory implements PrefixModuleFactory
 {
