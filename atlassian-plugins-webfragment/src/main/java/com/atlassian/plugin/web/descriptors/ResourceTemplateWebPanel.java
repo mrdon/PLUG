@@ -6,41 +6,37 @@ import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Map;
 
-public class ResourceTemplateWebPanel extends AbstractWebPanel {
-
+public class ResourceTemplateWebPanel extends AbstractWebPanel
+{
     private String resourceFilename;
     private static final Logger logger = LoggerFactory.getLogger(ResourceTemplateWebPanel.class.getName());
 
-    public ResourceTemplateWebPanel(PluginAccessor pluginAccessor) {
+    public ResourceTemplateWebPanel(PluginAccessor pluginAccessor)
+    {
         super(pluginAccessor);
     }
 
     public void setResourceFilename(String resourceFilename)
     {
-        this.resourceFilename = Preconditions.checkNotNull(resourceFilename);
+        this.resourceFilename = Preconditions.checkNotNull(resourceFilename, "resourceFilename");
     }
 
-    public String getHtml(Map<String, Object> context) {
-
-        final StringWriter sink = new StringWriter();
+    public String getHtml(Map<String, Object> context)
+    {
         try
         {
-
+            final StringWriter sink = new StringWriter();
             getRenderer().render(resourceFilename, plugin, context, sink);
+            return sink.toString();
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            // not thrown by StringWriter
+            final String message = String.format("Error rendering WebPanel (%s): %s", resourceFilename, e.getMessage());
+            logger.warn(message, e);
+            return message;
         }
-        catch (RendererException e)
-        {
-            logger.warn(String.format("Error rendering WebPanel (%s): %s", resourceFilename, e.getMessage()), e);
-            return e.toString();
-        }
-        return sink.toString();
     }
 }
