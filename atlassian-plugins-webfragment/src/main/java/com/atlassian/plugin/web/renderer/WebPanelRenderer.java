@@ -15,10 +15,11 @@ public interface WebPanelRenderer
     String getResourceType();
 
     /**
-     * Renders the template to the writer, using the given context and adding an {@code I18nResolver} and {@code
-     * WebResourceManager}.
+     * Renders the template to the writer.
      *
      * @param templateName file name of the template to render
+     * @param plugin the context plugin. Used, for example, to resolve templates and other resources from the classpath
+     * via {@link Plugin#getClassLoader()}
      * @param context Map of objects to make available in the template rendering process
      * @param writer where to write the rendered template
      * @throws RendererException thrown if there is an internal exception when rendering the template
@@ -32,6 +33,8 @@ public interface WebPanelRenderer
      * WebResourceManager}.
      *
      * @param fragment template fragment to render
+     * @param plugin the context plugin. Used, for example, to resolve templates and other resources from the classpath
+     * via {@link Plugin#getClassLoader()}
      * @param context Map of objects to make available in the template rendering process
      * @return rendered template
      * @throws RendererException thrown if there is an internal exception when rendering the template
