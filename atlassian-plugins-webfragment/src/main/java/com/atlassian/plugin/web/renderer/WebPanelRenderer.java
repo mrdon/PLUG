@@ -6,6 +6,14 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Map;
 
+/**
+ * This interface allows the plugin system to be extended by adding new
+ * renderers for new markup formats. Currently the atlassian-template-renderer
+ * project provides a velocity implementation.
+ *
+ * @see {@link com.atlassian.plugin.web.descriptors.WebPanelRendererModuleDescriptor#getModule()}
+ * @since   2.5.0
+ */
 public interface WebPanelRenderer
 {
     /**

@@ -79,11 +79,18 @@ import com.google.common.collect.Iterables;
  */
 public class DefaultWebPanelModuleDescriptor extends AbstractWebFragmentModuleDescriptor<WebPanel>
 {
+    /**
+     * Host applications should use this string when registering the
+     * web panel module descriptor.
+     */
+    public static final String XML_ELEMENT_NAME = "web-panel";
     private Supplier<WebPanel> webPanelFactory;
     private String location;
     private final HostContainer hostContainer;
 
-    public DefaultWebPanelModuleDescriptor(final HostContainer hostContainer, final ModuleFactory moduleClassFactory, final WebInterfaceManager webInterfaceManager)
+    public DefaultWebPanelModuleDescriptor(final HostContainer hostContainer,
+                                           final ModuleFactory moduleClassFactory,
+                                           final WebInterfaceManager webInterfaceManager)
     {
         super(moduleClassFactory, webInterfaceManager);
         this.hostContainer = hostContainer;

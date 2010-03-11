@@ -163,16 +163,13 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     {
         if (moduleClassName != null)
         {
-            if (moduleFactory instanceof LegacyModuleFactory) // not all plugins
-            // have to have a
-            // class
+            if (moduleFactory instanceof LegacyModuleFactory) // not all plugins have to have a class
             {
                 moduleClass = ((LegacyModuleFactory) moduleFactory).getModuleClass(moduleClassName, this);
             }
 
             // This is only here for backwards compatibility with old code that
-            // uses
-            // {@link
+            // uses {@link
             // com.atlassian.plugin.PluginAccessor#getEnabledModulesByClass(Class)}
             else if (moduleFactory instanceof PrefixDelegatingModuleFactory)
             {
