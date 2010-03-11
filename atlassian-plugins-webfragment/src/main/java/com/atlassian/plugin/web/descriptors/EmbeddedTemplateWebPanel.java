@@ -8,6 +8,13 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 /**
+ * This class is used for web panel declaration that do not have a custom
+ * <code>class</code> attribute in their descriptor, nor a <code>location</code>
+ * attribute in their resource child element.
+ * <p>
+ * This class reads the web panel's content from the resource element's
+ * content.
+ *
  * @since   2.5.0
  */
 public class EmbeddedTemplateWebPanel extends AbstractWebPanel

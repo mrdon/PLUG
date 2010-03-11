@@ -9,6 +9,11 @@ import java.io.StringWriter;
 import java.util.Map;
 
 /**
+ * This class is used for web panel declaration that do not have a custom
+ * <code>class</code> attribute in their descriptor, but do have a
+ * <code>location</code> attribute in their resource child element, which
+ * points to a template file on the (plugin's) classpath.
+ * 
  * @since   2.5.0
  */
 public class ResourceTemplateWebPanel extends AbstractWebPanel
