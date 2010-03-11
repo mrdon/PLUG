@@ -2,7 +2,7 @@ package com.atlassian.plugin.web.descriptors;
 
 import com.atlassian.plugin.web.WebInterfaceManager;
 
-public class MockAbstractWebLinkFragmentModuleDescriptor extends AbstractWebLinkFragmentModuleDescriptor<Void>
+public class MockAbstractWebLinkFragmentModuleDescriptor extends AbstractWebLinkFragmentModuleDescriptor
 {
     protected MockAbstractWebLinkFragmentModuleDescriptor(final WebInterfaceManager webInterfaceManager)
     {

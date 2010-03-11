@@ -8,7 +8,8 @@ import com.atlassian.plugin.elements.ResourceLocation;
 public interface Resourced
 {
     /**
-     * Get a list of all the {@link ResourceDescriptor descriptors}.
+     * Get an {@link List} of all the {@link ResourceDescriptor descriptors}
+     * .
      * <p>
      * Note: since 2.2 this list must be immutable, previously modifying this
      * list could modify the underlying list.

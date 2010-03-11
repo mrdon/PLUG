@@ -1,34 +1,39 @@
 package com.atlassian.plugin.loaders;
 
-import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.Resources;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.dom4j.Element;
 
-import java.util.*;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.Resources;
+import com.atlassian.plugin.elements.ResourceDescriptor;
 
 public class LoaderUtils
 {
     /**
      * @deprecated use {@link com.atlassian.plugin.Resources#fromXml}
      */
-    public static List<ResourceDescriptor> getResourceDescriptors(Element element) throws PluginParseException
+    @Deprecated
+    public static List<ResourceDescriptor> getResourceDescriptors(final Element element) throws PluginParseException
     {
         return Resources.fromXml(element).getResourceDescriptors();
     }
 
-    public static Map<String,String> getParams(Element element)
+    public static Map<String, String> getParams(final Element element)
     {
-        List<Element> elements = element.elements("param");
+        @SuppressWarnings("unchecked")
+        final List<Element> elements = element.elements("param");
 
-        Map<String,String> params = new HashMap<String,String>(elements.size());
+        final Map<String, String> params = new HashMap<String, String>(elements.size());
 
-        for (Element paramEl : elements)
+        for (final Element paramEl : elements)
         {
-            String name = paramEl.attributeValue("name");
+            final String name = paramEl.attributeValue("name");
             String value = paramEl.attributeValue("value");
 
-            if (value == null && paramEl.getTextTrim() != null && !"".equals(paramEl.getTextTrim()))
+            if ((value == null) && (paramEl.getTextTrim() != null) && !"".equals(paramEl.getTextTrim()))
             {
                 value = paramEl.getTextTrim();
             }

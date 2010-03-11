@@ -11,6 +11,7 @@ import org.dom4j.Element;
 
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
+import com.atlassian.util.concurrent.Assertions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 
@@ -76,12 +77,9 @@ public class Resources implements Resourced
      *            resources object
      * @throws IllegalArgumentException if the resourceDescriptors list is null
      */
-    public Resources(final List<ResourceDescriptor> resourceDescriptors) throws IllegalArgumentException
+    public Resources(final Iterable<ResourceDescriptor> resourceDescriptors) throws IllegalArgumentException
     {
-        if (resourceDescriptors == null)
-        {
-            throw new IllegalArgumentException("Resources cannot be created with a null resources list. Pass empty list instead");
-        }
+        Assertions.notNull("Resources cannot be created with a null resources list. Pass empty list instead", resourceDescriptors);
         this.resourceDescriptors = ImmutableList.<ResourceDescriptor> builder().addAll(resourceDescriptors).build();
     }
 

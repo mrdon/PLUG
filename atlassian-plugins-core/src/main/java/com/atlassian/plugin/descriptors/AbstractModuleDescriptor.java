@@ -1,5 +1,14 @@
 package com.atlassian.plugin.descriptors;
 
+import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.Validate;
+import org.dom4j.Element;
+
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
@@ -14,14 +23,6 @@ import com.atlassian.plugin.module.PrefixDelegatingModuleFactory;
 import com.atlassian.plugin.util.ClassUtils;
 import com.atlassian.plugin.util.JavaVersionUtils;
 import com.atlassian.plugin.util.validation.ValidationPattern;
-import org.apache.commons.lang.Validate;
-import org.dom4j.Element;
-
-import java.util.List;
-import java.util.Map;
-
-import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
-import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
 public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>, StateAware
 {
@@ -37,6 +38,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     /**
      * @deprecated since 2.2.0
      */
+    @Deprecated
     protected boolean singleton = true;
     Map<String, String> params;
     protected Resources resources = Resources.EMPTY_RESOURCES;
@@ -47,22 +49,21 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     boolean enabled = false;
     protected final ModuleFactory moduleFactory;
 
-    public AbstractModuleDescriptor(ModuleFactory moduleFactory)
+    public AbstractModuleDescriptor(final ModuleFactory moduleFactory)
     {
         Validate.notNull(moduleFactory, "Module creator factory cannot be null");
         this.moduleFactory = moduleFactory;
     }
 
     /**
-     * @Deprecated since 2.5.0 use the constructor which requires a {@link com.atlassian.plugin.module.ModuleFactory}
+     * @Deprecated since 2.5.0 use the constructor which requires a
+     *             {@link com.atlassian.plugin.module.ModuleFactory}
      */
     @Deprecated
     public AbstractModuleDescriptor()
     {
         this(ModuleFactory.LEGACY_MODULE_FACTORY);
     }
-
-
 
     public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
@@ -111,31 +112,34 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     }
 
     /**
-     * Validates the element, collecting the rules from {@link #provideValidationRules(ValidationPattern)}
-     *
+     * Validates the element, collecting the rules from
+     * {@link #provideValidationRules(ValidationPattern)}
+     * 
      * @param element The configuration element
      * @since 2.2.0
      */
-    private void validate(Element element)
+    private void validate(final Element element)
     {
-        ValidationPattern pattern = createPattern();
+        final ValidationPattern pattern = createPattern();
         provideValidationRules(pattern);
         pattern.evaluate(element);
     }
 
     /**
      * Provides validation rules for the pattern
-     *
+     * 
      * @param pattern The validation pattern
      * @since 2.2.0
      */
-    protected void provideValidationRules(ValidationPattern pattern)
+    protected void provideValidationRules(final ValidationPattern pattern)
     {
         pattern.rule(test("@key").withError("The key is required"));
     }
 
     /**
-     * Override this for module descriptors which don't expect to be able to load a class successfully
+     * Override this for module descriptors which don't expect to be able to
+     * load a class successfully
+     * 
      * @param plugin
      * @param element
      * @deprecated Since 2.1.0, use {@link #loadClass(Plugin,String)} instead
@@ -146,29 +150,33 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         loadClass(plugin, element.attributeValue("class"));
     }
 
-
     /**
-     * Loads the module class that this descriptor provides, and will not necessarily be the implementation class.
-     * Override this for module descriptors who's type cannot be determined via generics.
-     *
+     * Loads the module class that this descriptor provides, and will not
+     * necessarily be the implementation class. Override this for module
+     * descriptors who's type cannot be determined via generics.
+     * 
      * @param clazz The module class name to load
-     * @throws IllegalStateException If the module class cannot be determined and the descriptor doesn't define a
-     * module type via generics
+     * @throws IllegalStateException If the module class cannot be determined
+     *             and the descriptor doesn't define a module type via generics
      */
     protected void loadClass(final Plugin plugin, final String clazz) throws PluginParseException
     {
         if (moduleClassName != null)
         {
-            if (moduleFactory instanceof LegacyModuleFactory) //not all plugins have to have a class
+            if (moduleFactory instanceof LegacyModuleFactory) // not all plugins
+            // have to have a
+            // class
             {
-                moduleClass = ((LegacyModuleFactory)moduleFactory).getModuleClass(moduleClassName, this);
+                moduleClass = ((LegacyModuleFactory) moduleFactory).getModuleClass(moduleClassName, this);
             }
 
-            // This is only here for backwards compatibility with old code that uses
-            // {@link com.atlassian.plugin.PluginAccessor#getEnabledModulesByClass(Class)}
+            // This is only here for backwards compatibility with old code that
+            // uses
+            // {@link
+            // com.atlassian.plugin.PluginAccessor#getEnabledModulesByClass(Class)}
             else if (moduleFactory instanceof PrefixDelegatingModuleFactory)
             {
-                moduleClass = ((PrefixDelegatingModuleFactory)moduleFactory).guessModuleClass(moduleClassName, this);
+                moduleClass = ((PrefixDelegatingModuleFactory) moduleFactory).guessModuleClass(moduleClassName, this);
             }
         }
         // If this module has no class, then we assume Void
@@ -176,7 +184,6 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         {
             moduleClass = (Class<T>) Void.class;
         }
-        
 
         // Usually is null when a prefix is used in the class name
         if (moduleClass == null)
@@ -185,23 +192,23 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
             {
                 moduleClass = (Class<T>) ClassUtils.getTypeArguments(AbstractModuleDescriptor.class, getClass()).get(0);
             }
-            catch (ClassCastException ex)
+            catch (final ClassCastException ex)
             {
-                throw new IllegalStateException("The module class must be defined in a concrete instance of " +
-                            "ModuleDescriptor and not as another generic type.");
+                throw new IllegalStateException("The module class must be defined in a concrete instance of " + "ModuleDescriptor and not as another generic type.");
             }
 
             if (moduleClass == null)
             {
-                throw new IllegalStateException("The module class cannot be determined, likely because it needs a concrete " +
-                    "module type defined in the generic type it passes to AbstractModuleDescriptor");
+                throw new IllegalStateException("The module class cannot be determined, likely because it needs a concrete "
+                    + "module type defined in the generic type it passes to AbstractModuleDescriptor");
             }
         }
     }
 
     /**
-     * Build the complete key based on the provided plugin and module key. This method has no
-     * side effects.
+     * Build the complete key based on the provided plugin and module key. This
+     * method has no side effects.
+     * 
      * @param plugin The plugin for which the module belongs
      * @param moduleKey The key for the module
      * @return A newly constructed complete key, null if the plugin is null
@@ -253,9 +260,13 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     }
 
     /**
-     * Check that the module class of this descriptor implements a given interface, or extends a given class.
-     * @param requiredModuleClazz The class this module's class must implement or extend.
-     * @throws PluginParseException If the module class does not implement or extend the given class.
+     * Check that the module class of this descriptor implements a given
+     * interface, or extends a given class.
+     * 
+     * @param requiredModuleClazz The class this module's class must implement
+     *            or extend.
+     * @throws PluginParseException If the module class does not implement or
+     *             extend the given class.
      */
     final protected void assertModuleClassImplements(final Class<T> requiredModuleClazz) throws PluginParseException
     {
@@ -265,8 +276,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         }
         if (!requiredModuleClazz.isAssignableFrom(getModuleClass()))
         {
-            throw new PluginParseException(
-                "Given module class: " + getModuleClass().getName() + " does not implement " + requiredModuleClazz.getName());
+            throw new PluginParseException("Given module class: " + getModuleClass().getName() + " does not implement " + requiredModuleClazz.getName());
         }
     }
 
@@ -375,9 +385,9 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     }
 
     /**
-     * Enables the descriptor by loading the module class. Classes overriding this method MUST
-     * call super.enabled() before their own enabling code.
-     *
+     * Enables the descriptor by loading the module class. Classes overriding
+     * this method MUST call super.enabled() before their own enabling code.
+     * 
      * @since 2.1.0
      */
     public void enabled()
@@ -387,8 +397,8 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     }
 
     /**
-     * Disables the module descriptor. Classes overriding this method MUST call super.disabled() after
-     * their own disabling code.
+     * Disables the module descriptor. Classes overriding this method MUST call
+     * super.disabled() after their own disabling code.
      */
     public void disabled()
     {

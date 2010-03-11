@@ -1,5 +1,10 @@
 package com.atlassian.plugin.web.descriptors;
 
+import java.util.Iterator;
+import java.util.List;
+
+import org.dom4j.Element;
+
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
@@ -13,10 +18,6 @@ import com.atlassian.plugin.web.conditions.AndCompositeCondition;
 import com.atlassian.plugin.web.conditions.InvertedCondition;
 import com.atlassian.plugin.web.conditions.OrCompositeCondition;
 import com.atlassian.plugin.web.model.WebParam;
-import org.dom4j.Element;
-
-import java.util.Iterator;
-import java.util.List;
 
 public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractModuleDescriptor<T> implements WebFragmentModuleDescriptor<T>
 {
@@ -27,7 +28,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     protected ContextProvider contextProvider;
     protected WebParam params;
 
-    protected AbstractWebFragmentModuleDescriptor(ModuleFactory moduleClassFactory, final WebInterfaceManager webInterfaceManager)
+    protected AbstractWebFragmentModuleDescriptor(final ModuleFactory moduleClassFactory, final WebInterfaceManager webInterfaceManager)
     {
         super(moduleClassFactory);
         this.webInterfaceManager = webInterfaceManager;
@@ -50,13 +51,15 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
 
     /**
      * Create a condition for when this web fragment should be displayed
+     * 
      * @param element Element of web-section or web-item
      * @param type logical operator type {@link #getCompositeType}
      * @throws com.atlassian.plugin.PluginParseException
      */
+    @SuppressWarnings("unchecked")
     protected Condition makeConditions(final Element element, final int type) throws PluginParseException
     {
-        //make single conditions (all Anded together)
+        // make single conditions (all Anded together)
         final List singleConditionElements = element.elements("condition");
         Condition singleConditions = null;
         if ((singleConditionElements != null) && !singleConditionElements.isEmpty())
@@ -64,7 +67,8 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
             singleConditions = makeConditions(singleConditionElements, type);
         }
 
-        //make composite conditions (logical operator can be specified by "type")
+        // make composite conditions (logical operator can be specified by
+        // "type")
         final List nestedConditionsElements = element.elements("conditions");
         AbstractCompositeCondition nestedConditions = null;
         if ((nestedConditionsElements != null) && !nestedConditionsElements.isEmpty())
@@ -79,7 +83,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
 
         if ((singleConditions != null) && (nestedConditions != null))
         {
-            //Join together the single and composite conditions by this type
+            // Join together the single and composite conditions by this type
             final AbstractCompositeCondition compositeCondition = getCompositeCondition(type);
             compositeCondition.addCondition(singleConditions);
             compositeCondition.addCondition(nestedConditions);
@@ -97,6 +101,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     protected Condition makeConditions(final List elements, final int type) throws PluginParseException
     {
         if (elements.size() == 0)
@@ -124,8 +129,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     {
         try
         {
-            final Condition condition = webInterfaceManager.getWebFragmentHelper()
-                .loadCondition(element.attributeValue("class"), plugin);
+            final Condition condition = webInterfaceManager.getWebFragmentHelper().loadCondition(element.attributeValue("class"), plugin);
             condition.init(LoaderUtils.getParams(element));
 
             if ((element.attribute("invert") != null) && "true".equals(element.attributeValue("invert")))
@@ -149,8 +153,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     {
         try
         {
-            final ContextProvider context = webInterfaceManager.getWebFragmentHelper()
-                .loadContextProvider(element.attributeValue("class"), plugin);
+            final ContextProvider context = webInterfaceManager.getWebFragmentHelper().loadContextProvider(element.attributeValue("class"), plugin);
             context.init(LoaderUtils.getParams(element));
 
             return context;
@@ -182,14 +185,14 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     {
         switch (type)
         {
-            case COMPOSITE_TYPE_OR:
-            {
-                return new OrCompositeCondition();
-            }
-            case COMPOSITE_TYPE_AND:
-            {
-                return new AndCompositeCondition();
-            }
+        case COMPOSITE_TYPE_OR:
+        {
+            return new OrCompositeCondition();
+        }
+        case COMPOSITE_TYPE_AND:
+        {
+            return new AndCompositeCondition();
+        }
         }
         throw new PluginParseException("Invalid condition type specified. type = " + type);
     }

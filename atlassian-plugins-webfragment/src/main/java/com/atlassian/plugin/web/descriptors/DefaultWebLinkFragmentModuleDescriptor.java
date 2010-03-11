@@ -1,5 +1,10 @@
 package com.atlassian.plugin.web.descriptors;
 
+import java.util.List;
+import java.util.Map;
+
+import org.dom4j.Element;
+
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
@@ -11,20 +16,15 @@ import com.atlassian.plugin.web.WebInterfaceManager;
 import com.atlassian.plugin.web.model.WebLabel;
 import com.atlassian.plugin.web.model.WebParam;
 
-import org.dom4j.Element;
-
-import java.util.List;
-import java.util.Map;
-
 /**
- * Wrapper for {@link WebLinkFragmentModuleDescriptor}, so that it could be extended by application specific
- * wrappers to provide additional methods.
+ * Wrapper for {@link WebLinkFragmentModuleDescriptor}, so that it could be
+ * extended by application specific wrappers to provide additional methods.
  */
-public class DefaultWebLinkFragmentModuleDescriptor<T> implements StateAware, WebLinkFragmentModuleDescriptor<T>
+public class DefaultWebLinkFragmentModuleDescriptor implements StateAware, WebLinkFragmentModuleDescriptor
 {
-    private final WebLinkFragmentModuleDescriptor<T> decoratedDescriptor;
+    private final WebLinkFragmentModuleDescriptor decoratedDescriptor;
 
-    public DefaultWebLinkFragmentModuleDescriptor(final WebLinkFragmentModuleDescriptor<T> abstractDescriptor)
+    public DefaultWebLinkFragmentModuleDescriptor(final WebLinkFragmentModuleDescriptor abstractDescriptor)
     {
         decoratedDescriptor = abstractDescriptor;
     }
@@ -39,7 +39,7 @@ public class DefaultWebLinkFragmentModuleDescriptor<T> implements StateAware, We
         decoratedDescriptor.disabled();
     }
 
-    protected WebFragmentModuleDescriptor<T> getDecoratedDescriptor()
+    protected WebLinkFragmentModuleDescriptor getDecoratedDescriptor()
     {
         return decoratedDescriptor;
     }
@@ -54,7 +54,7 @@ public class DefaultWebLinkFragmentModuleDescriptor<T> implements StateAware, We
         return decoratedDescriptor.getKey();
     }
 
-    public T getModule()
+    public Void getModule()
     {
         return decoratedDescriptor.getModule();
     }
@@ -89,7 +89,7 @@ public class DefaultWebLinkFragmentModuleDescriptor<T> implements StateAware, We
         // bit of a hack but it works :)
         if (decoratedDescriptor instanceof AbstractWebLinkFragmentModuleDescriptor)
         {
-            final AbstractWebLinkFragmentModuleDescriptor<T> abstractWebFragmentModuleDescriptor = (AbstractWebLinkFragmentModuleDescriptor<T>) decoratedDescriptor;
+            final AbstractWebLinkFragmentModuleDescriptor abstractWebFragmentModuleDescriptor = (AbstractWebLinkFragmentModuleDescriptor) decoratedDescriptor;
             abstractWebFragmentModuleDescriptor.setWebInterfaceManager(webInterfaceManager);
         }
     }
@@ -109,7 +109,8 @@ public class DefaultWebLinkFragmentModuleDescriptor<T> implements StateAware, We
         return decoratedDescriptor.getWebParams();
     }
 
-    //----------------------------------------------------------------------------------------- ModuleDescriptor methods
+    // -----------------------------------------------------------------------------------------
+    // ModuleDescriptor methods
     public String getCompleteKey()
     {
         return decoratedDescriptor.getCompleteKey();
@@ -130,7 +131,7 @@ public class DefaultWebLinkFragmentModuleDescriptor<T> implements StateAware, We
         return decoratedDescriptor.getDescription();
     }
 
-    public Class<T> getModuleClass()
+    public Class<Void> getModuleClass()
     {
         return decoratedDescriptor.getModuleClass();
     }
@@ -170,7 +171,8 @@ public class DefaultWebLinkFragmentModuleDescriptor<T> implements StateAware, We
         return decoratedDescriptor.getParams();
     }
 
-    //------------------------------------------------------------------------------------------------ Resourced methods
+    // ------------------------------------------------------------------------------------------------
+    // Resourced methods
 
     public List<ResourceDescriptor> getResourceDescriptors()
     {
@@ -179,7 +181,9 @@ public class DefaultWebLinkFragmentModuleDescriptor<T> implements StateAware, We
 
     public List<ResourceDescriptor> getResourceDescriptors(final String type)
     {
-        return decoratedDescriptor.getResourceDescriptors(type);
+        @SuppressWarnings("deprecation")
+        final List<ResourceDescriptor> result = decoratedDescriptor.getResourceDescriptors(type);
+        return result;
     }
 
     public ResourceLocation getResourceLocation(final String type, final String name)

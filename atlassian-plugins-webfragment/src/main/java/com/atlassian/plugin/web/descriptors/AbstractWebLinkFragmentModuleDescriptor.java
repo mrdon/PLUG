@@ -10,9 +10,8 @@ import com.atlassian.plugin.web.model.WebLabel;
 /**
  * An abstract convenience class for web fragment descriptors.
  */
-public abstract class AbstractWebLinkFragmentModuleDescriptor<T> extends AbstractWebFragmentModuleDescriptor<T> implements WebLinkFragmentModuleDescriptor<T>
+public abstract class AbstractWebLinkFragmentModuleDescriptor extends AbstractWebFragmentModuleDescriptor<Void> implements WebLinkFragmentModuleDescriptor
 {
-
     protected DefaultWebLabel label;
     protected DefaultWebLabel tooltip;
 

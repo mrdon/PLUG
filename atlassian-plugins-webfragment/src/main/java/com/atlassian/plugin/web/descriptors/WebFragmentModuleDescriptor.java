@@ -6,7 +6,8 @@ import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.model.WebParam;
 
-public interface WebFragmentModuleDescriptor<T> extends ModuleDescriptor<T>, WeightedDescriptor, StateAware {
+public interface WebFragmentModuleDescriptor<T> extends ModuleDescriptor<T>, WeightedDescriptor, StateAware
+{
     int COMPOSITE_TYPE_OR = 0;
     int COMPOSITE_TYPE_AND = 1;
 

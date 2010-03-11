@@ -1,15 +1,15 @@
 package com.atlassian.plugin.web.descriptors;
 
+import org.dom4j.Element;
+
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.WebInterfaceManager;
 
-import org.dom4j.Element;
-
 /**
  * Represents a web section - that is a collection of web items.
  */
-public class DefaultWebSectionModuleDescriptor extends AbstractWebLinkFragmentModuleDescriptor<Void> implements WebSectionModuleDescriptor<Void>
+public class DefaultWebSectionModuleDescriptor extends AbstractWebLinkFragmentModuleDescriptor implements WebSectionModuleDescriptor
 {
     private String location;
 

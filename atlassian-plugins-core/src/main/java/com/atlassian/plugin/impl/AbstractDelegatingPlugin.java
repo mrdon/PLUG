@@ -1,33 +1,33 @@
 package com.atlassian.plugin.impl;
 
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.PluginInformation;
-import com.atlassian.plugin.Resourced;
-import com.atlassian.plugin.PluginState;
-import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.elements.ResourceLocation;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Date;
-import java.util.Set;
-import java.net.URL;
 import java.io.InputStream;
+import java.net.URL;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang.Validate;
 
+import com.atlassian.plugin.AutowireCapablePlugin;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.Resourced;
+import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
+
 /**
  * Delegating plugin that supports easy wrapping
- *
+ * 
  * @since 2.2.0
  */
 public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plugin>, AutowireCapablePlugin
 {
     private final Plugin delegate;
 
-    public AbstractDelegatingPlugin(Plugin delegate)
+    public AbstractDelegatingPlugin(final Plugin delegate)
     {
         Validate.notNull(delegate);
         this.delegate = delegate;
@@ -38,7 +38,7 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
         return delegate.getPluginsVersion();
     }
 
-    public void setPluginsVersion(int version)
+    public void setPluginsVersion(final int version)
     {
         delegate.setPluginsVersion(version);
     }
@@ -48,7 +48,7 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
         return delegate.getName();
     }
 
-    public void setName(String name)
+    public void setName(final String name)
     {
         delegate.setName(name);
     }
@@ -58,7 +58,7 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
         return delegate.getI18nNameKey();
     }
 
-    public void setI18nNameKey(String i18nNameKey)
+    public void setI18nNameKey(final String i18nNameKey)
     {
         delegate.setI18nNameKey(i18nNameKey);
     }
@@ -68,12 +68,12 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
         return delegate.getKey();
     }
 
-    public void setKey(String aPackage)
+    public void setKey(final String aPackage)
     {
         delegate.setKey(aPackage);
     }
 
-    public void addModuleDescriptor(ModuleDescriptor<?> moduleDescriptor)
+    public void addModuleDescriptor(final ModuleDescriptor<?> moduleDescriptor)
     {
         delegate.addModuleDescriptor(moduleDescriptor);
     }
@@ -83,12 +83,12 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
         return delegate.getModuleDescriptors();
     }
 
-    public ModuleDescriptor<?> getModuleDescriptor(String key)
+    public ModuleDescriptor<?> getModuleDescriptor(final String key)
     {
         return delegate.getModuleDescriptor(key);
     }
 
-    public <M> List<ModuleDescriptor<M>> getModuleDescriptorsByModuleClass(Class<M> moduleClass)
+    public <M> List<ModuleDescriptor<M>> getModuleDescriptorsByModuleClass(final Class<M> moduleClass)
     {
         return delegate.getModuleDescriptorsByModuleClass(moduleClass);
     }
@@ -98,7 +98,7 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
         return delegate.isEnabledByDefault();
     }
 
-    public void setEnabledByDefault(boolean enabledByDefault)
+    public void setEnabledByDefault(final boolean enabledByDefault)
     {
         delegate.setEnabledByDefault(enabledByDefault);
     }
@@ -108,12 +108,12 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
         return delegate.getPluginInformation();
     }
 
-    public void setPluginInformation(PluginInformation pluginInformation)
+    public void setPluginInformation(final PluginInformation pluginInformation)
     {
         delegate.setPluginInformation(pluginInformation);
     }
 
-    public void setResources(Resourced resources)
+    public void setResources(final Resourced resources)
     {
         delegate.setResources(resources);
     }
@@ -138,7 +138,7 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
         return delegate.containsSystemModule();
     }
 
-    public void setSystemPlugin(boolean system)
+    public void setSystemPlugin(final boolean system)
     {
         delegate.setSystemPlugin(system);
     }
@@ -168,7 +168,7 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
         return delegate.isDynamicallyLoaded();
     }
 
-    public <T> Class<T> loadClass(String clazz, Class<?> callingClass) throws ClassNotFoundException
+    public <T> Class<T> loadClass(final String clazz, final Class<?> callingClass) throws ClassNotFoundException
     {
         return delegate.loadClass(clazz, callingClass);
     }
@@ -178,17 +178,17 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
         return delegate.getClassLoader();
     }
 
-    public URL getResource(String path)
+    public URL getResource(final String path)
     {
         return delegate.getResource(path);
     }
 
-    public InputStream getResourceAsStream(String name)
+    public InputStream getResourceAsStream(final String name)
     {
         return delegate.getResourceAsStream(name);
     }
 
-    public void setEnabled(boolean enabled)
+    public void setEnabled(final boolean enabled)
     {
         delegate.setEnabled(enabled);
     }
@@ -228,22 +228,22 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
         return delegate.getResourceDescriptors();
     }
 
-    public List<ResourceDescriptor> getResourceDescriptors(String type)
+    public List<ResourceDescriptor> getResourceDescriptors(final String type)
     {
         return delegate.getResourceDescriptors(type);
     }
 
-    public ResourceDescriptor getResourceDescriptor(String type, String name)
+    public ResourceDescriptor getResourceDescriptor(final String type, final String name)
     {
         return delegate.getResourceDescriptor(type, name);
     }
 
-    public ResourceLocation getResourceLocation(String type, String name)
+    public ResourceLocation getResourceLocation(final String type, final String name)
     {
         return delegate.getResourceLocation(type, name);
     }
 
-    public int compareTo(Plugin o)
+    public int compareTo(final Plugin o)
     {
         return delegate.compareTo(o);
     }
@@ -266,76 +266,76 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
     }
 
     @Override
-    public boolean equals(Object obj)
+    public boolean equals(final Object obj)
     {
         return delegate.equals(obj);
     }
 
     /**
-     * @throws UnsupportedOperationException If the underlying delegate doesn't implement {@link AutowireCapablePlugin}
+     * @throws UnsupportedOperationException If the underlying delegate doesn't
+     *             implement {@link AutowireCapablePlugin}
      * @since 2.3.0
      */
-    public <T> T autowire(Class<T> clazz) throws UnsupportedOperationException
+    public <T> T autowire(final Class<T> clazz) throws UnsupportedOperationException
     {
         if (delegate instanceof AutowireCapablePlugin)
         {
-            return ((AutowireCapablePlugin)delegate).autowire(clazz);
+            return ((AutowireCapablePlugin) delegate).autowire(clazz);
         }
         else
         {
-            throw new UnsupportedOperationException("The AutowireCapablePlugin interface is not implemented by the "
-                    + "delegate '" + delegate.getClass().getSimpleName() + "'");
+            throw new UnsupportedOperationException("The AutowireCapablePlugin interface is not implemented by the " + "delegate '" + delegate.getClass().getSimpleName() + "'");
         }
     }
 
     /**
-     * @throws UnsupportedOperationException If the underlying delegate doesn't implement {@link AutowireCapablePlugin}
+     * @throws UnsupportedOperationException If the underlying delegate doesn't
+     *             implement {@link AutowireCapablePlugin}
      * @since 2.3.0
      */
-    public <T> T autowire(Class<T> clazz, AutowireStrategy autowireStrategy) throws UnsupportedOperationException
+    public <T> T autowire(final Class<T> clazz, final AutowireStrategy autowireStrategy) throws UnsupportedOperationException
     {
         if (delegate instanceof AutowireCapablePlugin)
         {
-            return ((AutowireCapablePlugin)delegate).autowire(clazz, autowireStrategy);
+            return ((AutowireCapablePlugin) delegate).autowire(clazz, autowireStrategy);
         }
         else
         {
-            throw new UnsupportedOperationException("The AutowireCapablePlugin interface is not implemented by the "
-                    + "delegate '" + delegate.getClass().getSimpleName() + "'");
+            throw new UnsupportedOperationException("The AutowireCapablePlugin interface is not implemented by the " + "delegate '" + delegate.getClass().getSimpleName() + "'");
         }
     }
 
     /**
-     * @throws UnsupportedOperationException If the underlying delegate doesn't implement {@link AutowireCapablePlugin}
+     * @throws UnsupportedOperationException If the underlying delegate doesn't
+     *             implement {@link AutowireCapablePlugin}
      * @since 2.3.0
      */
-    public void autowire(Object instance) throws UnsupportedOperationException
+    public void autowire(final Object instance) throws UnsupportedOperationException
     {
         if (delegate instanceof AutowireCapablePlugin)
         {
-            ((AutowireCapablePlugin)delegate).autowire(instance);
+            ((AutowireCapablePlugin) delegate).autowire(instance);
         }
         else
         {
-            throw new UnsupportedOperationException("The AutowireCapablePlugin interface is not implemented by the "
-                    + "delegate '" + delegate.getClass().getSimpleName() + "'");
+            throw new UnsupportedOperationException("The AutowireCapablePlugin interface is not implemented by the " + "delegate '" + delegate.getClass().getSimpleName() + "'");
         }
     }
 
     /**
-     * @throws UnsupportedOperationException If the underlying delegate doesn't implement {@link AutowireCapablePlugin}
+     * @throws UnsupportedOperationException If the underlying delegate doesn't
+     *             implement {@link AutowireCapablePlugin}
      * @since 2.3.0
      */
-    public void autowire(Object instance, AutowireStrategy autowireStrategy) throws UnsupportedOperationException
+    public void autowire(final Object instance, final AutowireStrategy autowireStrategy) throws UnsupportedOperationException
     {
         if (delegate instanceof AutowireCapablePlugin)
         {
-            ((AutowireCapablePlugin)delegate).autowire(instance, autowireStrategy);
+            ((AutowireCapablePlugin) delegate).autowire(instance, autowireStrategy);
         }
         else
         {
-            throw new UnsupportedOperationException("The AutowireCapablePlugin interface is not implemented by the "
-                    + "delegate '" + delegate.getClass().getSimpleName() + "'");
+            throw new UnsupportedOperationException("The AutowireCapablePlugin interface is not implemented by the " + "delegate '" + delegate.getClass().getSimpleName() + "'");
         }
     }
 }
