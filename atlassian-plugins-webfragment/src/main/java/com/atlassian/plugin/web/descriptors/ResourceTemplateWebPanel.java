@@ -8,6 +8,9 @@ import org.slf4j.LoggerFactory;
 import java.io.StringWriter;
 import java.util.Map;
 
+/**
+ * @since   2.5.0
+ */
 public class ResourceTemplateWebPanel extends AbstractWebPanel
 {
     private static final Logger logger = LoggerFactory.getLogger(ResourceTemplateWebPanel.class.getName());
@@ -18,6 +21,13 @@ public class ResourceTemplateWebPanel extends AbstractWebPanel
         super(pluginAccessor);
     }
 
+    /**
+     * Specifies the name of the template file that is to be rendered.
+     * This file will be loaded from the (plugin's) classpath.
+     *
+     * @param resourceFilename  the name of the template file that is to be rendered.
+     *  May not be null.
+     */
     public void setResourceFilename(String resourceFilename)
     {
         this.resourceFilename = Preconditions.checkNotNull(resourceFilename, "resourceFilename");

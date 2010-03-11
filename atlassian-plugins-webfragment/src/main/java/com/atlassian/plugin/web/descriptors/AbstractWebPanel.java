@@ -7,6 +7,9 @@ import com.atlassian.plugin.web.renderer.StaticWebPanelRenderer;
 import com.atlassian.plugin.web.renderer.WebPanelRenderer;
 import com.google.common.base.Preconditions;
 
+/**
+ * @since   2.5.0
+ */
 public abstract class AbstractWebPanel implements WebPanel
 {
     private final PluginAccessor pluginAccessor;

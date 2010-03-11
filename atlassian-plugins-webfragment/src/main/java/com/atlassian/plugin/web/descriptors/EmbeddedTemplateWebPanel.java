@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
+/**
+ * @since   2.5.0
+ */
 public class EmbeddedTemplateWebPanel extends AbstractWebPanel
 {
     private String templateBody;
@@ -17,6 +20,10 @@ public class EmbeddedTemplateWebPanel extends AbstractWebPanel
         super(pluginAccessor);
     }
 
+    /**
+     * @param templateBody  the body of the web panel (may contain any content type such as velocity or just static
+     *  HTML) that was inlined in <code>atlassian-plugin.xml</code>
+     */
     public void setTemplateBody(String templateBody)
     {
         this.templateBody = templateBody;
@@ -30,9 +37,10 @@ public class EmbeddedTemplateWebPanel extends AbstractWebPanel
         }
         catch (RendererException e)
         {
-            logger.warn(String.format("Error rendering WebPanel: %s\n" +
-                    "Template contents: %s", e.getMessage(), templateBody), e);
-            return e.toString();
+            final String message = String.format("Error rendering WebPanel: %s\n" +
+                    "Template contents: %s", e.getMessage(), templateBody);
+            logger.warn(message, e);
+            return message;
         }
     }
 }
