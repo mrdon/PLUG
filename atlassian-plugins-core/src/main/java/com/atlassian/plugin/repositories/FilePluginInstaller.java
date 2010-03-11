@@ -9,6 +9,7 @@ import org.apache.commons.lang.Validate;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
@@ -39,16 +40,20 @@ public class FilePluginInstaller implements PluginInstaller
     {
         Validate.notNull(key, "The plugin key must be specified");
         Validate.notNull(pluginArtifact, "The plugin artifact must not be null");
-        
+
         File newPluginFile = new File(directory, pluginArtifact.getName());
         if (newPluginFile.exists())
+        {
             newPluginFile.delete();
+        }
 
         OutputStream os = null;
+        InputStream in = null;
         try
         {
-            os= new FileOutputStream(newPluginFile);
-            IOUtils.copy(pluginArtifact.getInputStream(), os);
+            os = new FileOutputStream(newPluginFile);
+            in = pluginArtifact.getInputStream();
+            IOUtils.copy(in, os);
         }
         catch (IOException e)
         {
@@ -56,6 +61,7 @@ public class FilePluginInstaller implements PluginInstaller
         }
         finally
         {
+            IOUtils.closeQuietly(in);
             IOUtils.closeQuietly(os);
         }
     }

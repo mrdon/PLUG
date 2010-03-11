@@ -1,14 +1,16 @@
 package com.atlassian.plugin.util.zip;
 
-import junit.framework.TestCase;
 import com.atlassian.plugin.test.PluginTestUtils;
-
-import java.io.*;
-import java.util.zip.ZipOutputStream;
-import java.util.zip.ZipEntry;
-
+import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class TestUrlUnzipper extends TestCase
 {
@@ -90,7 +92,9 @@ public class TestUrlUnzipper extends TestCase
             ZipEntry entry = new ZipEntry(child.getName());
             entry.setTime(child.lastModified());
             zout.putNextEntry(entry);
-            IOUtils.copy(new FileInputStream(child), zout);
+            FileInputStream input = new FileInputStream(child);
+            IOUtils.copy(input, zout);
+            input.close();
 
             // not sure why this is necessary...
             child.setLastModified(entry.getTime());

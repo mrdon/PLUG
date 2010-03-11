@@ -172,7 +172,9 @@ public class PluginJarBuilder
      */
     public PluginJarBuilder addFile(String path, File file) throws IOException
     {
-        jarContents.put(path, IOUtils.toByteArray(new FileInputStream(file)));
+        FileInputStream in = new FileInputStream(file);
+        jarContents.put(path, IOUtils.toByteArray(in));
+        IOUtils.closeQuietly(in);
         return this;
     }
 
