@@ -19,7 +19,7 @@ import com.atlassian.plugin.web.conditions.InvertedCondition;
 import com.atlassian.plugin.web.conditions.OrCompositeCondition;
 import com.atlassian.plugin.web.model.WebParam;
 
-public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractModuleDescriptor<T> implements WebFragmentModuleDescriptor<T>
+public abstract class DefaultAbstractWebFragmentModuleDescriptor<T> extends AbstractModuleDescriptor<T> implements WebFragmentModuleDescriptor<T>
 {
     protected WebInterfaceManager webInterfaceManager;
     protected Element element;
@@ -28,7 +28,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     protected ContextProvider contextProvider;
     protected WebParam params;
 
-    protected AbstractWebFragmentModuleDescriptor(final ModuleFactory moduleClassFactory, final WebInterfaceManager webInterfaceManager)
+    protected DefaultAbstractWebFragmentModuleDescriptor(final ModuleFactory moduleClassFactory, final WebInterfaceManager webInterfaceManager)
     {
         super(moduleClassFactory);
         this.webInterfaceManager = webInterfaceManager;

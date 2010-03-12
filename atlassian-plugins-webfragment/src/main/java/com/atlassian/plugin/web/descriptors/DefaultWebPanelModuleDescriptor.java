@@ -77,7 +77,7 @@ import com.google.common.collect.Iterables;
  *
  * @since   2.5.0
  */
-public class DefaultWebPanelModuleDescriptor extends AbstractWebFragmentModuleDescriptor<WebPanel>
+public class DefaultWebPanelModuleDescriptor extends DefaultAbstractWebFragmentModuleDescriptor<WebPanel>
 {
     /**
      * Host applications should use this string when registering the
