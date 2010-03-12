@@ -96,6 +96,7 @@ public class TestComponentImportSpringStage extends TestCase
     {
         final ComponentImportSpringStage stage = new ComponentImportSpringStage();
         stage.log = mock(Logger.class);
+        when(stage.log.isDebugEnabled()).thenReturn(true);
         final File jar = new PluginJarBuilder()
             .addFormattedResource("atlassian-plugin.xml", "<atlassian-plugin>",
             "  <component-import key='foo' interface='my.UnknownService' />", "</atlassian-plugin>").build();
@@ -108,7 +109,7 @@ public class TestComponentImportSpringStage extends TestCase
 
         final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         stage.execute(context);
-        verify(stage.log).warn(anyString());
+        verify(stage.log).debug(anyString());
     }
 
     public void testTransformImportNoWarnForVerifiedService() throws Exception
