@@ -1,6 +1,7 @@
 package com.atlassian.plugin.servlet.filter;
 
 import com.atlassian.plugin.servlet.ServletModuleManager;
+import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 import com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor;
 
 import javax.servlet.*;
@@ -8,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +39,9 @@ public class ServletFilterModuleContainerFilter implements Filter
         this.filterConfig = filterConfig;
         location = FilterLocation.parse(filterConfig.getInitParameter("location"));
         dispatcher = filterConfig.getInitParameter("dispatcher");
+        if(StringUtils.isNotBlank(dispatcher) && !ServletFilterModuleDescriptor.VALID_DISPATCHER_CONDITIONS.contains(dispatcher)) {
+            throw new ServletException("The dispatcher value must be one of the following only [REQUEST | INCLUDE | FORWARD | ERROR] - '" + dispatcher + "' is not a valid value.");
+        }
     }
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException

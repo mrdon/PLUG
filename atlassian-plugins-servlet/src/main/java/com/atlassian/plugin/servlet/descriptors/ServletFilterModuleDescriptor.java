@@ -43,15 +43,13 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
     static final String DEFAULT_LOCATION = FilterLocation.BEFORE_DISPATCH.name();
     static final String DEFAULT_WEIGHT = "100";
 
-    private static final Set<String> VALID_DISPATCHER_CONDITIONS = new HashSet<String>();
-
-    static
-    {
-        VALID_DISPATCHER_CONDITIONS.add("REQUEST");    
-        VALID_DISPATCHER_CONDITIONS.add("INCLUDE");
-        VALID_DISPATCHER_CONDITIONS.add("FORWARD");
-        VALID_DISPATCHER_CONDITIONS.add("ERROR");    
-    }
+    public static final Set<String> VALID_DISPATCHER_CONDITIONS = new HashSet<String>()
+    {{
+        add("REQUEST");
+        add("INCLUDE");
+        add("FORWARD");
+        add("ERROR");
+    }};
 
     private FilterLocation location;
 
