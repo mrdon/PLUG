@@ -1,13 +1,15 @@
-package com.atlassian.plugin.web.descriptors;
+package com.atlassian.plugin.web.conditions;
 
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.Condition;
+import com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor;
+import com.atlassian.plugin.web.descriptors.MockWebFragmentHelper;
 import junit.framework.TestCase;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 
-public class TestAbstractWebFragmentModuleDescriptor extends TestCase
+public class TestModuleDescriptorHelper extends TestCase
 {
     private static final String TYPE_OR = "<conditions type=\"OR\">";
     private static final String TYPE_AND = "<conditions type=\"AND\">";
@@ -17,7 +19,7 @@ public class TestAbstractWebFragmentModuleDescriptor extends TestCase
     private static final String NOT_FALSE = "<condition class=\"com.atlassian.plugin.web.conditions.NeverDisplayCondition\" invert=\"true\" />";
     private static final String NOT_TRUE = "<condition class=\"com.atlassian.plugin.web.conditions.AlwaysDisplayCondition\" invert=\"true\" />";
 
-    private final AbstractWebFragmentModuleDescriptor descriptor = new MockAbstractWebFragmentModuleDescriptor(new MockWebInterfaceManager());
+    private final ModuleDescriptorHelper moduleDescriptorHelper = new ModuleDescriptorHelper(null, new MockWebFragmentHelper());
 
     public void testSimple() throws DocumentException, PluginParseException
     {
@@ -131,7 +133,7 @@ public class TestAbstractWebFragmentModuleDescriptor extends TestCase
         String rootElement = "<root>" + conditionElement + "</root>";
         Document document = DocumentHelper.parseText(rootElement);
 
-        Condition condition = descriptor.makeConditions(document.getRootElement(), AbstractWebFragmentModuleDescriptor.COMPOSITE_TYPE_AND);
+        Condition condition = moduleDescriptorHelper.makeConditions(document.getRootElement(), AbstractWebFragmentModuleDescriptor.COMPOSITE_TYPE_AND);
 
         assertEquals(expectedResult, condition.shouldDisplay(null));
     }

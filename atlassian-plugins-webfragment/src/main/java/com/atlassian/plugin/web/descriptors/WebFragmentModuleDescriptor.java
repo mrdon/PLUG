@@ -12,7 +12,14 @@ import com.atlassian.plugin.web.model.WebParam;
  */
 public interface WebFragmentModuleDescriptor<T> extends ModuleDescriptor<T>, WeightedDescriptor, StateAware, ConditionalDescriptor
 {
+    /**
+     * @deprecated As of 2.5.0, use {@link com.atlassian.plugin.web.conditions.ModuleDescriptorHelper#COMPOSITE_TYPE_OR}
+     */
     int COMPOSITE_TYPE_OR = 0;
+
+    /**
+     * @deprecated As of 2.5.0, use {@link com.atlassian.plugin.web.conditions.ModuleDescriptorHelper#COMPOSITE_TYPE_AND}
+     */
     int COMPOSITE_TYPE_AND = 1;
 
     int getWeight();
