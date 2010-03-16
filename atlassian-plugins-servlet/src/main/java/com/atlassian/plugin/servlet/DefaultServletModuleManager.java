@@ -188,7 +188,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         for (final String completeKey : filterMapper.getAll(path))
         {
             final ServletFilterModuleDescriptor descriptor = filterDescriptors.get(completeKey);
-            if(dispatcher != null && !descriptor.getDispatcherConditions().contains(dispatcher)) {
+            if(dispatcher != null && !descriptor.getDispatcherConditions().contains(dispatcher) && descriptor.getDispatcherConditions().size() != 0) {
                 continue;
             }
 
