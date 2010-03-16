@@ -2,6 +2,7 @@ package com.atlassian.plugin.web.descriptors;
 
 import java.util.Iterator;
 
+import com.atlassian.plugin.util.validation.ValidationPattern;
 import org.apache.commons.lang.StringUtils;
 import org.dom4j.Element;
 
@@ -16,6 +17,8 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
 
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
+
 /**
  * <p>
  * The web panel module declares a single web panel in atlassian-plugin.xml.
@@ -23,7 +26,7 @@ import com.google.common.collect.Iterables;
  * locations in the host application where web panels can be embedded.
  * </p>
  * <p>
- * A web panel also contain a single resource child element that contains the
+ * A web panel also contains a single resource child element that contains the
  * contents of the web panel. This can be plain HTML, or a (velocity) template
  * to provide dynamic content.
  * </p>
@@ -115,7 +118,7 @@ public class DefaultWebPanelModuleDescriptor extends DefaultAbstractWebFragmentM
                     {
                         final EmbeddedTemplateWebPanel panel = hostContainer.create(EmbeddedTemplateWebPanel.class);
                         panel.setTemplateBody(body);
-                        panel.setResourceType(resource.getType());
+                        panel.setResourceType(getRequiredResourceType(resource));
                         panel.setPlugin(plugin);
                         return panel;
                     }
@@ -129,7 +132,7 @@ public class DefaultWebPanelModuleDescriptor extends DefaultAbstractWebFragmentM
                     {
                         final ResourceTemplateWebPanel panel = hostContainer.create(ResourceTemplateWebPanel.class);
                         panel.setResourceFilename(filename);
-                        panel.setResourceType(resource.getType());
+                        panel.setResourceType(getRequiredResourceType(resource));
                         panel.setPlugin(plugin);
                         return panel;
                     }
@@ -150,6 +153,15 @@ public class DefaultWebPanelModuleDescriptor extends DefaultAbstractWebFragmentM
 
     }
 
+    @Override
+    protected void provideValidationRules(ValidationPattern pattern)
+    {
+        super.provideValidationRules(pattern);
+        pattern.
+                rule(
+                    test("@location").withError("The Web Panel location attribute is required."));
+    }
+
     public String getLocation()
     {
         return location;
@@ -159,6 +171,19 @@ public class DefaultWebPanelModuleDescriptor extends DefaultAbstractWebFragmentM
     public WebPanel getModule()
     {
         return webPanelFactory.get();
+    }
+
+    private String getRequiredResourceType(ResourceDescriptor resource)
+    {
+        final String type = resource.getType();
+        if (StringUtils.isEmpty(type))
+        {
+            throw new PluginParseException("Resource element is lacking a type attribute.");
+        }
+        else
+        {
+            return type;
+        }
     }
 
     /**

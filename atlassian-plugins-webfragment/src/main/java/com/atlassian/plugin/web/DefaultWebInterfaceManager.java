@@ -127,6 +127,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         });
     }
 
+    // TODO: probably succumb to Jed's gospel and refactor to Iterable
     private List<DefaultWebPanelModuleDescriptor> getWebPanelDescriptors(String location)
     {
         if (location == null)
