@@ -1,7 +1,5 @@
 package com.atlassian.plugin.web.descriptors;
 
-import org.dom4j.Element;
-
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.WebInterfaceManager;
@@ -10,10 +8,12 @@ import com.atlassian.plugin.web.model.DefaultWebLink;
 import com.atlassian.plugin.web.model.WebIcon;
 import com.atlassian.plugin.web.model.WebLink;
 
+import org.dom4j.Element;
+
 /**
  * Represents a pluggable link.
  */
-public class DefaultWebItemModuleDescriptor extends AbstractWebLinkFragmentModuleDescriptor implements WebItemModuleDescriptor
+public class DefaultWebItemModuleDescriptor<T> extends AbstractWebFragmentModuleDescriptor<T> implements WebItemModuleDescriptor<T>
 {
     private String section;
     private WebIcon icon;
@@ -37,7 +37,8 @@ public class DefaultWebItemModuleDescriptor extends AbstractWebLinkFragmentModul
 
         if (element.element("styleClass") != null)
         {
-            styleClass = element.element("styleClass").getTextTrim();
+            styleClass = element.element("styleClass")
+                .getTextTrim();
         }
         else
         {
@@ -70,8 +71,7 @@ public class DefaultWebItemModuleDescriptor extends AbstractWebLinkFragmentModul
     {
         super.enabled();
 
-        // contextProvider is not available until the module is enabled because
-        // they may need to have dependencies injected
+        // contextProvider is not available until the module is enabled because they may need to have dependencies injected
         if (element.element("icon") != null)
         {
             icon = new DefaultWebIcon(element.element("icon"), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
@@ -83,7 +83,7 @@ public class DefaultWebItemModuleDescriptor extends AbstractWebLinkFragmentModul
     }
 
     @Override
-    public Void getModule()
+    public T getModule()
     {
         return null;
     }

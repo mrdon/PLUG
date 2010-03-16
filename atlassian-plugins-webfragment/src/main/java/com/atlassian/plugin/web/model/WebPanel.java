@@ -1,4 +1,4 @@
-package com.atlassian.plugin.web.descriptors;
+package com.atlassian.plugin.web.model;
 
 import java.util.Map;
 
@@ -7,7 +7,7 @@ import java.util.Map;
  * Whatever is returned by {@link #getHtml(java.util.Map)} is inserted into the
  * host application's page, so it has to be valid HTML.
  *
- * @see {@link DefaultWebPanelModuleDescriptor#getModule()}
+ * @see {@link com.atlassian.plugin.web.descriptors.DefaultWebPanelModuleDescriptor#getModule()}
  * @since   2.5.0
  */
 public interface WebPanel

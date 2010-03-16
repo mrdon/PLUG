@@ -17,7 +17,7 @@ public class TestAbstractWebFragmentModuleDescriptor extends TestCase
     private static final String NOT_FALSE = "<condition class=\"com.atlassian.plugin.web.conditions.NeverDisplayCondition\" invert=\"true\" />";
     private static final String NOT_TRUE = "<condition class=\"com.atlassian.plugin.web.conditions.AlwaysDisplayCondition\" invert=\"true\" />";
 
-    private final AbstractWebLinkFragmentModuleDescriptor descriptor = new MockAbstractWebLinkFragmentModuleDescriptor(new MockWebInterfaceManager());
+    private final AbstractWebFragmentModuleDescriptor descriptor = new MockAbstractWebFragmentModuleDescriptor(new MockWebInterfaceManager());
 
     public void testSimple() throws DocumentException, PluginParseException
     {
@@ -131,7 +131,7 @@ public class TestAbstractWebFragmentModuleDescriptor extends TestCase
         String rootElement = "<root>" + conditionElement + "</root>";
         Document document = DocumentHelper.parseText(rootElement);
 
-        Condition condition = descriptor.makeConditions(document.getRootElement(), AbstractWebLinkFragmentModuleDescriptor.COMPOSITE_TYPE_AND);
+        Condition condition = descriptor.makeConditions(document.getRootElement(), AbstractWebFragmentModuleDescriptor.COMPOSITE_TYPE_AND);
 
         assertEquals(expectedResult, condition.shouldDisplay(null));
     }

@@ -6,6 +6,7 @@ import com.atlassian.plugin.web.descriptors.*;
 
 import java.util.*;
 
+import com.atlassian.plugin.web.model.WebPanel;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
@@ -155,7 +156,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         }
     }
 
-    private <T extends WebFragmentModuleDescriptor> List<T> filterFragmentsByCondition(List<T> relevantItems, Map<String,Object> context)
+    private <T extends ConditionalDescriptor> List<T> filterFragmentsByCondition(List<T> relevantItems, Map<String,Object> context)
     {
         if (relevantItems.isEmpty())
         {
@@ -163,9 +164,9 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         }
 
         List<T> result = new ArrayList<T>(relevantItems);
-        for (Iterator iterator = result.iterator(); iterator.hasNext();)
+        for (Iterator<T> iterator = result.iterator(); iterator.hasNext();)
         {
-            WebFragmentModuleDescriptor descriptor = (WebFragmentModuleDescriptor) iterator.next();
+            ConditionalDescriptor descriptor = iterator.next();
             try
             {
                 if (descriptor.getCondition() != null && !descriptor.getCondition().shouldDisplay(context))

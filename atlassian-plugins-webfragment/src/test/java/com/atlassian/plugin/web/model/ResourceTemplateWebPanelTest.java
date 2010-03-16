@@ -1,4 +1,4 @@
-package com.atlassian.plugin.web.descriptors;
+package com.atlassian.plugin.web.model;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;

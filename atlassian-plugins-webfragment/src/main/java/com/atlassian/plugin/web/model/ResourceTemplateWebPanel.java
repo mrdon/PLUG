@@ -1,4 +1,4 @@
-package com.atlassian.plugin.web.descriptors;
+package com.atlassian.plugin.web.model;
 
 import com.atlassian.plugin.PluginAccessor;
 import com.google.common.base.Preconditions;
@@ -13,7 +13,7 @@ import java.util.Map;
  * <code>class</code> attribute in their descriptor, but do have a
  * <code>location</code> attribute in their resource child element, which
  * points to a template file on the (plugin's) classpath.
- * 
+ *
  * @since   2.5.0
  */
 public class ResourceTemplateWebPanel extends AbstractWebPanel

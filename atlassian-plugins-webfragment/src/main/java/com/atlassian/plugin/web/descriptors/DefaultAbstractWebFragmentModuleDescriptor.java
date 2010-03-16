@@ -1,231 +1,200 @@
 package com.atlassian.plugin.web.descriptors;
 
-import java.util.Iterator;
-import java.util.List;
-
-import org.dom4j.Element;
-
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.loaders.LoaderUtils;
-import com.atlassian.plugin.module.ModuleFactory;
+import com.atlassian.plugin.StateAware;
+import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.WebInterfaceManager;
-import com.atlassian.plugin.web.conditions.AbstractCompositeCondition;
-import com.atlassian.plugin.web.conditions.AndCompositeCondition;
-import com.atlassian.plugin.web.conditions.InvertedCondition;
-import com.atlassian.plugin.web.conditions.OrCompositeCondition;
+import com.atlassian.plugin.web.model.WebLabel;
 import com.atlassian.plugin.web.model.WebParam;
 
-public abstract class DefaultAbstractWebFragmentModuleDescriptor<T> extends AbstractModuleDescriptor<T> implements WebFragmentModuleDescriptor<T>
+import org.dom4j.Element;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Wrapper for {@link WebFragmentModuleDescriptor}, so that it could be extended by application specific
+ * wrappers to provide additional methods.
+ */
+public class DefaultAbstractWebFragmentModuleDescriptor<T> implements StateAware, WebFragmentModuleDescriptor<T>
 {
-    protected WebInterfaceManager webInterfaceManager;
-    protected Element element;
-    protected int weight;
-    protected Condition condition;
-    protected ContextProvider contextProvider;
-    protected WebParam params;
+    private final WebFragmentModuleDescriptor<T> decoratedDescriptor;
 
-    protected DefaultAbstractWebFragmentModuleDescriptor(final ModuleFactory moduleClassFactory, final WebInterfaceManager webInterfaceManager)
+    public DefaultAbstractWebFragmentModuleDescriptor(final WebFragmentModuleDescriptor<T> abstractDescriptor)
     {
-        super(moduleClassFactory);
-        this.webInterfaceManager = webInterfaceManager;
+        decoratedDescriptor = abstractDescriptor;
     }
 
-    @Override
-    public void init(final Plugin plugin, final Element element) throws PluginParseException
+    public void enabled()
     {
-        super.init(plugin, element);
-
-        this.element = element;
-        weight = 1000;
-        try
-        {
-            weight = Integer.parseInt(element.attributeValue("weight"));
-        }
-        catch (final NumberFormatException e)
-        {}
+        decoratedDescriptor.enabled();
     }
 
-    /**
-     * Create a condition for when this web fragment should be displayed
-     * 
-     * @param element Element of web-section or web-item
-     * @param type logical operator type {@link #getCompositeType}
-     * @throws com.atlassian.plugin.PluginParseException
-     */
-    @SuppressWarnings("unchecked")
-    protected Condition makeConditions(final Element element, final int type) throws PluginParseException
+    public void disabled()
     {
-        // make single conditions (all Anded together)
-        final List singleConditionElements = element.elements("condition");
-        Condition singleConditions = null;
-        if ((singleConditionElements != null) && !singleConditionElements.isEmpty())
-        {
-            singleConditions = makeConditions(singleConditionElements, type);
-        }
-
-        // make composite conditions (logical operator can be specified by
-        // "type")
-        final List nestedConditionsElements = element.elements("conditions");
-        AbstractCompositeCondition nestedConditions = null;
-        if ((nestedConditionsElements != null) && !nestedConditionsElements.isEmpty())
-        {
-            nestedConditions = getCompositeCondition(type);
-            for (final Iterator iterator = nestedConditionsElements.iterator(); iterator.hasNext();)
-            {
-                final Element nestedElement = (Element) iterator.next();
-                nestedConditions.addCondition(makeConditions(nestedElement, getCompositeType(nestedElement.attributeValue("type"))));
-            }
-        }
-
-        if ((singleConditions != null) && (nestedConditions != null))
-        {
-            // Join together the single and composite conditions by this type
-            final AbstractCompositeCondition compositeCondition = getCompositeCondition(type);
-            compositeCondition.addCondition(singleConditions);
-            compositeCondition.addCondition(nestedConditions);
-            return compositeCondition;
-        }
-        else if (singleConditions != null)
-        {
-            return singleConditions;
-        }
-        else if (nestedConditions != null)
-        {
-            return nestedConditions;
-        }
-
-        return null;
+        decoratedDescriptor.disabled();
     }
 
-    @SuppressWarnings("unchecked")
-    protected Condition makeConditions(final List elements, final int type) throws PluginParseException
+    protected WebFragmentModuleDescriptor<T> getDecoratedDescriptor()
     {
-        if (elements.size() == 0)
-        {
-            return null;
-        }
-        else if (elements.size() == 1)
-        {
-            return makeCondition((Element) elements.get(0));
-        }
-        else
-        {
-            final AbstractCompositeCondition compositeCondition = getCompositeCondition(type);
-            for (final Iterator it = elements.iterator(); it.hasNext();)
-            {
-                final Element element = (Element) it.next();
-                compositeCondition.addCondition(makeCondition(element));
-            }
-
-            return compositeCondition;
-        }
-    }
-
-    protected Condition makeCondition(final Element element) throws PluginParseException
-    {
-        try
-        {
-            final Condition condition = webInterfaceManager.getWebFragmentHelper().loadCondition(element.attributeValue("class"), plugin);
-            condition.init(LoaderUtils.getParams(element));
-
-            if ((element.attribute("invert") != null) && "true".equals(element.attributeValue("invert")))
-            {
-                return new InvertedCondition(condition);
-            }
-
-            return condition;
-        }
-        catch (final ClassCastException e)
-        {
-            throw new PluginParseException("Configured condition class does not implement the Condition interface");
-        }
-        catch (final Throwable t)
-        {
-            throw new PluginParseException(t);
-        }
-    }
-
-    protected ContextProvider makeContextProvider(final Element element) throws PluginParseException
-    {
-        try
-        {
-            final ContextProvider context = webInterfaceManager.getWebFragmentHelper().loadContextProvider(element.attributeValue("class"), plugin);
-            context.init(LoaderUtils.getParams(element));
-
-            return context;
-        }
-        catch (final ClassCastException e)
-        {
-            throw new PluginParseException("Configured context-provider class does not implement the ContextProvider interface");
-        }
-        catch (final Throwable t)
-        {
-            throw new PluginParseException(t);
-        }
-    }
-
-    private int getCompositeType(final String type) throws PluginParseException
-    {
-        if ("or".equalsIgnoreCase(type))
-        {
-            return COMPOSITE_TYPE_OR;
-        }
-        else if ("and".equalsIgnoreCase(type))
-        {
-            return COMPOSITE_TYPE_AND;
-        }
-        throw new PluginParseException("Invalid condition type specified. type = " + type);
-    }
-
-    private AbstractCompositeCondition getCompositeCondition(final int type) throws PluginParseException
-    {
-        switch (type)
-        {
-        case COMPOSITE_TYPE_OR:
-        {
-            return new OrCompositeCondition();
-        }
-        case COMPOSITE_TYPE_AND:
-        {
-            return new AndCompositeCondition();
-        }
-        }
-        throw new PluginParseException("Invalid condition type specified. type = " + type);
+        return decoratedDescriptor;
     }
 
     public int getWeight()
     {
-        return weight;
+        return decoratedDescriptor.getWeight();
     }
 
-    public Condition getCondition()
+    public String getKey()
     {
-        return condition;
+        return decoratedDescriptor.getKey();
     }
 
-    public ContextProvider getContextProvider()
+    public T getModule()
     {
-        return contextProvider;
+        return decoratedDescriptor.getModule();
     }
 
-    public WebParam getWebParams()
+    public String getI18nNameKey()
     {
-        return params;
+        return decoratedDescriptor.getI18nNameKey();
     }
 
-    @Override
-    public void disabled()
+    public String getDescriptionKey()
     {
-        webInterfaceManager.refresh();
-        super.disabled();
+        return decoratedDescriptor.getDescriptionKey();
+    }
+
+    public Plugin getPlugin()
+    {
+        return decoratedDescriptor.getPlugin();
+    }
+
+    public WebLabel getWebLabel()
+    {
+        return decoratedDescriptor.getWebLabel();
+    }
+
+    public WebLabel getTooltip()
+    {
+        return decoratedDescriptor.getTooltip();
     }
 
     public void setWebInterfaceManager(final WebInterfaceManager webInterfaceManager)
     {
-        this.webInterfaceManager = webInterfaceManager;
+        // bit of a hack but it works :)
+        if (decoratedDescriptor instanceof AbstractWebFragmentModuleDescriptor)
+        {
+            final AbstractWebFragmentModuleDescriptor<T> abstractWebFragmentModuleDescriptor = (AbstractWebFragmentModuleDescriptor<T>) decoratedDescriptor;
+            abstractWebFragmentModuleDescriptor.setWebInterfaceManager(webInterfaceManager);
+        }
+    }
+
+    public Condition getCondition()
+    {
+        return decoratedDescriptor.getCondition();
+    }
+
+    public ContextProvider getContextProvider()
+    {
+        return decoratedDescriptor.getContextProvider();
+    }
+
+    public WebParam getWebParams()
+    {
+        return decoratedDescriptor.getWebParams();
+    }
+
+    //----------------------------------------------------------------------------------------- ModuleDescriptor methods
+    public String getCompleteKey()
+    {
+        return decoratedDescriptor.getCompleteKey();
+    }
+
+    public String getPluginKey()
+    {
+        return decoratedDescriptor.getPluginKey();
+    }
+
+    public String getName()
+    {
+        return decoratedDescriptor.getName();
+    }
+
+    public String getDescription()
+    {
+        return decoratedDescriptor.getDescription();
+    }
+
+    public Class<T> getModuleClass()
+    {
+        return decoratedDescriptor.getModuleClass();
+    }
+
+    public void init(final Plugin plugin, final Element element) throws PluginParseException
+    {
+        decoratedDescriptor.init(plugin, element);
+    }
+
+    public boolean isEnabledByDefault()
+    {
+        return decoratedDescriptor.isEnabledByDefault();
+    }
+
+    public boolean isSystemModule()
+    {
+        return decoratedDescriptor.isSystemModule();
+    }
+
+    public void destroy(final Plugin plugin)
+    {
+        decoratedDescriptor.destroy(plugin);
+    }
+
+    public Float getMinJavaVersion()
+    {
+        return decoratedDescriptor.getMinJavaVersion();
+    }
+
+    public boolean satisfiesMinJavaVersion()
+    {
+        return decoratedDescriptor.satisfiesMinJavaVersion();
+    }
+
+    public Map<String, String> getParams()
+    {
+        return decoratedDescriptor.getParams();
+    }
+
+    //------------------------------------------------------------------------------------------------ Resourced methods
+
+    public List<ResourceDescriptor> getResourceDescriptors()
+    {
+        return decoratedDescriptor.getResourceDescriptors();
+    }
+
+    public List<ResourceDescriptor> getResourceDescriptors(final String type)
+    {
+        return decoratedDescriptor.getResourceDescriptors(type);
+    }
+
+    public ResourceLocation getResourceLocation(final String type, final String name)
+    {
+        return decoratedDescriptor.getResourceLocation(type, name);
+    }
+
+    public ResourceDescriptor getResourceDescriptor(final String type, final String name)
+    {
+        return decoratedDescriptor.getResourceDescriptor(type, name);
+    }
+
+    @Override
+    public String toString()
+    {
+        return decoratedDescriptor.toString();
     }
 }

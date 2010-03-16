@@ -2,6 +2,7 @@ package com.atlassian.plugin.web.descriptors;
 
 import com.atlassian.plugin.web.WebInterfaceManager;
 import com.atlassian.plugin.web.WebFragmentHelper;
+import com.atlassian.plugin.web.model.WebPanel;
 
 import java.util.List;
 import java.util.Map;

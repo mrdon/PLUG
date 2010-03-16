@@ -13,7 +13,7 @@ import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 /**
  * The web panel renderer module is used to add web panel renderers to the
  * plugin system.
- * 
+ *
  * @since   2.5.0
  */
 public class WebPanelRendererModuleDescriptor extends AbstractModuleDescriptor<WebPanelRenderer>

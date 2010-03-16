@@ -1,8 +1,8 @@
 package com.atlassian.plugin.web;
 
 import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
-import com.atlassian.plugin.web.descriptors.WebPanel;
 import com.atlassian.plugin.web.descriptors.WebSectionModuleDescriptor;
+import com.atlassian.plugin.web.model.WebPanel;
 
 import java.util.List;
 import java.util.Map;
@@ -40,7 +40,7 @@ public interface WebInterfaceManager
     /**
      *
      * @param location
-     * @return  A list of all {@link com.atlassian.plugin.web.descriptors.WebPanel} module instances
+     * @return  A list of all {@link com.atlassian.plugin.web.model.WebPanel} module instances
      * for the given location.
      */
     List<WebPanel> getWebPanels(String location);
@@ -49,7 +49,7 @@ public interface WebInterfaceManager
      *
      * @param location
      * @param context
-     * @return  A list of all {@link com.atlassian.plugin.web.descriptors.WebPanel} module instances
+     * @return  A list of all {@link com.atlassian.plugin.web.model.WebPanel} module instances
      * <i>viewable in a given context</i> in the given location.
      */
     List<WebPanel> getDisplayableWebPanels(String location, Map<String,Object> context);
