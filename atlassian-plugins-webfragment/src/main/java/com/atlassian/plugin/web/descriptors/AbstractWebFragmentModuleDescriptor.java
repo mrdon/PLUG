@@ -8,7 +8,6 @@ import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.WebInterfaceManager;
-import com.atlassian.plugin.web.conditions.ModuleDescriptorHelper;
 import com.atlassian.plugin.web.model.DefaultWebLabel;
 import com.atlassian.plugin.web.model.DefaultWebParam;
 import com.atlassian.plugin.web.model.WebLabel;
@@ -37,6 +36,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     {
         super(ModuleFactory.LEGACY_MODULE_FACTORY);
         this.webInterfaceManager = webInterfaceManager;
+        this.moduleDescriptorHelper = new ModuleDescriptorHelper(plugin, webInterfaceManager.getWebFragmentHelper());
     }
 
     public AbstractWebFragmentModuleDescriptor()
@@ -57,13 +57,12 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
         }
         catch (final NumberFormatException e)
         {}
-        moduleDescriptorHelper = new ModuleDescriptorHelper(plugin, webInterfaceManager.getWebFragmentHelper());
     }
 
     /**
      * Create a condition for when this web fragment should be displayed
      * @param element Element of web-section or web-item
-     * @param type logical operator type {@link com.atlassian.plugin.web.conditions.ModuleDescriptorHelper#getCompositeType(String)}
+     * @param type logical operator type {@link ModuleDescriptorHelper#getCompositeType(String)}
      * @throws PluginParseException
      */
     protected Condition makeConditions(final Element element, final int type) throws PluginParseException
@@ -90,7 +89,8 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     {
         if (moduleDescriptorHelper == null)
         {
-            throw new IllegalStateException("ModuleDescriptorHelper not injected.");
+            throw new IllegalStateException("ModuleDescriptorHelper not " +
+                    "available because the WebInterfaceManager has not been injected.");
         }
         else
         {
@@ -162,6 +162,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     public void setWebInterfaceManager(final WebInterfaceManager webInterfaceManager)
     {
         this.webInterfaceManager = webInterfaceManager;
+        this.moduleDescriptorHelper = new ModuleDescriptorHelper(plugin, webInterfaceManager.getWebFragmentHelper());
     }
 
     public Condition getCondition()

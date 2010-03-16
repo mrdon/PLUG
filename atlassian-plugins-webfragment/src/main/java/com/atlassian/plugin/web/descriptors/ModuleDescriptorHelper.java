@@ -1,4 +1,4 @@
-package com.atlassian.plugin.web.conditions;
+package com.atlassian.plugin.web.descriptors;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
@@ -6,7 +6,10 @@ import com.atlassian.plugin.loaders.LoaderUtils;
 import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.WebFragmentHelper;
-import com.atlassian.plugin.web.descriptors.WebFragmentModuleDescriptor;
+import com.atlassian.plugin.web.conditions.AbstractCompositeCondition;
+import com.atlassian.plugin.web.conditions.AndCompositeCondition;
+import com.atlassian.plugin.web.conditions.InvertedCondition;
+import com.atlassian.plugin.web.conditions.OrCompositeCondition;
 import org.dom4j.Element;
 
 import java.util.Iterator;

@@ -11,7 +11,6 @@ import com.atlassian.plugin.util.validation.ValidationPattern;
 import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.WebInterfaceManager;
-import com.atlassian.plugin.web.conditions.ModuleDescriptorHelper;
 import com.atlassian.plugin.web.model.EmbeddedTemplateWebPanel;
 import com.atlassian.plugin.web.model.ResourceTemplateWebPanel;
 import com.atlassian.plugin.web.model.WebPanel;

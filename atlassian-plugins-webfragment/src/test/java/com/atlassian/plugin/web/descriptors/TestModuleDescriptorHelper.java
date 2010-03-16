@@ -1,9 +1,7 @@
-package com.atlassian.plugin.web.conditions;
+package com.atlassian.plugin.web.descriptors;
 
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.Condition;
-import com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor;
-import com.atlassian.plugin.web.descriptors.MockWebFragmentHelper;
 import junit.framework.TestCase;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
