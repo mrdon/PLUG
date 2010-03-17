@@ -30,6 +30,7 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
 import com.atlassian.plugin.osgi.module.BeanPrefixModuleFactory;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
+import com.google.common.collect.ImmutableSet;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -42,7 +43,6 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.HashSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -75,14 +75,10 @@ public abstract class PluginInContainerTestBase extends TestCase
         pluginsDir = new File(tmpDir, "plugins");
         pluginsDir.mkdir();
         this.pluginEventManager = new DefaultPluginEventManager();
-        moduleFactory = new PrefixDelegatingModuleFactory(new HashSet<PrefixModuleFactory>()
-        {{
-            add(new ClassPrefixModuleFactory(hostContainer));
-            add(new BeanPrefixModuleFactory());
-        }});
-        Map<Class<?>, Object> context = new HashMap<Class<?>, Object>();
-        context.put(ModuleFactory.class, moduleFactory);
-        hostContainer = createHostContainer(context);
+        moduleFactory = new PrefixDelegatingModuleFactory(ImmutableSet.<PrefixModuleFactory>of(
+            new ClassPrefixModuleFactory(hostContainer),
+            new BeanPrefixModuleFactory()));
+        hostContainer = createHostContainer(new HashMap<Class<?>, Object>());
     }
 
     protected SimpleConstructorHostContainer createHostContainer(Map<Class<?>, Object> originalContext)
