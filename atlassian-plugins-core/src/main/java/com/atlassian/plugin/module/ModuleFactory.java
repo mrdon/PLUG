@@ -41,8 +41,5 @@ public interface ModuleFactory
      */
     //<T> Class<T> getModuleClass(String name, ModuleDescriptor<T> moduleDescriptor) throws ModuleClassNotFoundException;
 
-
-
-    static final ModuleFactory LEGACY_MODULE_FACTORY = new LegacyModuleFactory();
-
+    ModuleFactory LEGACY_MODULE_FACTORY = new LegacyModuleFactory();
 }
