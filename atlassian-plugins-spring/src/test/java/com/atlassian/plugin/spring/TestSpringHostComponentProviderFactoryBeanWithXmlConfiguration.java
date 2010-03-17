@@ -42,6 +42,24 @@ public class TestSpringHostComponentProviderFactoryBeanWithXmlConfiguration exte
         assertEquals(ContextClassLoaderStrategy.USE_PLUGIN.name(), list.get(0).getProperties().get(PropertyBuilder.CONTEXT_CLASS_LOADER_STRATEGY));
     }
 
+    public void testProvideWithDeprecations()
+    {
+        XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("com/atlassian/plugin/spring/pluginns/plugins-spring-deprecations.xml"));
+
+        HostComponentProvider provider = getHostProvider(factory);
+
+        DefaultComponentRegistrar registrar = new DefaultComponentRegistrar();
+        provider.provide(registrar);
+
+        List<HostComponentRegistration> list = registrar.getRegistry();
+        assertNotNull(list);
+        assertEquals(1, list.size());
+        assertEquals("foo", list.get(0).getProperties().get("bean-name"));
+        assertEquals(5, list.get(0).getMainInterfaces().length);
+        assertEquals(FOOABLE_BEAN_INTERFACES, new HashSet<Class>(Arrays.asList(list.get(0).getMainInterfaceClasses())));
+        assertEquals(ContextClassLoaderStrategy.USE_PLUGIN.name(), list.get(0).getProperties().get(PropertyBuilder.CONTEXT_CLASS_LOADER_STRATEGY));
+    }
+
     private HostComponentProvider getHostProvider(BeanFactory factory)
     {
         final HostComponentProvider provider = (HostComponentProvider) factory.getBean(HOST_COMPONENT_PROVIDER);

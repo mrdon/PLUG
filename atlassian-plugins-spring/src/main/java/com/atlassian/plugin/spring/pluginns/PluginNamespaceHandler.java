@@ -19,5 +19,8 @@ public class PluginNamespaceHandler extends NamespaceHandlerSupport
         super.registerBeanDefinitionDecorator("interface", new PluginInterfaceBeanDefinitionDecorator());
         super.registerBeanDefinitionDecoratorForAttribute("available", new PluginAvailableBeanDefinitionDecorator());
         super.registerBeanDefinitionDecoratorForAttribute("contextClassLoader", new PluginContextClassLoaderStrategyBeanDefinitionDecorator());
+
+        // Deprecated
+        super.registerBeanDefinitionDecoratorForAttribute("ccls", new PluginContextClassLoaderStrategyBeanDefinitionDecorator());
     }
 }

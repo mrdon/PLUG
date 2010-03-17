@@ -27,6 +27,20 @@
         </xsd:simpleType>
     </xsd:attribute>
 
+    <xsd:attribute name="ccls" default="USE_HOST">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[
+            (Deprecated) The context class loader strategy for this bean.
+            ]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+            <xsd:restriction base="xsd:NMTOKEN">
+                <xsd:enumeration value="USE_HOST"/>
+                <xsd:enumeration value="USE_PLUGIN"/>
+            </xsd:restriction>
+        </xsd:simpleType>
+    </xsd:attribute>
+
     <xsd:element name="interface" type="xsd:string">
         <xsd:annotation>
             <xsd:documentation><![CDATA[
