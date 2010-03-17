@@ -11,13 +11,13 @@ public interface PluginController
     /**
      * Enable a plugin by key.
      * @param key The plugin key.
-     * @deprecated since 2.5.0, use {#link enablePlugins(String[]keys)} instead
+     * @deprecated since 2.5.0, use {#link enablePlugins(String... keys)} instead
      */
     void enablePlugin(String key);
 
     /**
      * Enable a set of plugins by key. This will implicitly and recursively enable all dependent plugins
-     * @param keys The plugin keys
+     * @param keys The plugin keys. Must not be null.
      * @since 2.5.0
      */
     void enablePlugins(String... keys);

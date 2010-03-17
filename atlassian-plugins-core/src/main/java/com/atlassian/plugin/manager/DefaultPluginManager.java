@@ -960,9 +960,9 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     /**
      * Enable a set of plugins by key. This will implicitly and recursively
-     * enable all dependent plugins
+     * enable all dependent plugins.
      * 
-     * @param keys The plugin keys
+     * @param keys The plugin keys. Must not be null. 
      * @since 2.5.0
      */
     public void enablePlugins(final String... keys)
@@ -1003,7 +1003,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     }
 
     /**
-     * @deprecated since 2.5.0, use {#link enablePlugins(String[]keys)} instead
+     * @deprecated since 2.5.0, use {#link enablePlugins(String... keys)} instead
      */
     @Deprecated
     public void enablePlugin(final String key)
