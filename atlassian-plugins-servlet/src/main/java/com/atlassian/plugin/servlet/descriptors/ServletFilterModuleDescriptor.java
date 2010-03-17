@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
 /**
  * A module descriptor that allows plugin developers to define servlet filters.  Developers can define what urls the 
@@ -116,12 +116,15 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
         List<Element> dispatcherElements = element.elements("dispatcher");
         for (Element dispatcher : dispatcherElements)
         {
-            if(!VALID_DISPATCHER_CONDITIONS.contains(dispatcher.getTextTrim()))
-            {
-                throw new PluginParseException("The dispatcher value must be one of the following only [REQUEST | INCLUDE | FORWARD | ERROR] - '" + dispatcher.getTextTrim() + "' is not a valid value.");
-            }
             dispatcherConditions.add(dispatcher.getTextTrim());
         }
+    }
+
+    @Override
+    protected void provideValidationRules(ValidationPattern pattern) {
+        super.provideValidationRules(pattern);
+        pattern.rule("dispatcher[. != 'REQUEST' and . != 'FORWARD' and . != 'INCLUDE' and . != 'ERROR']", test("dispatcher")
+                .withError("The dispatcher value must be one of the following only [REQUEST | FORWARD | INCLUDE | ERROR]"));
     }
 
     public void enabled()
@@ -132,7 +135,7 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
 
     public void disabled()
     {
-       servletModuleManager.removeFilterModule(this);
+        servletModuleManager.removeFilterModule(this);
         super.disabled();
     }
 

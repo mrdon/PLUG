@@ -145,4 +145,19 @@ public class TestServletFilterModuleDescriptor extends TestCase
             // very good
         }
     }
+
+    public void testWithNoDispatcher()
+    {
+        Plugin plugin = new StaticPlugin();
+        plugin.setKey("somekey");
+
+        Element e = new DOMElement("servlet-filter");
+        e.addAttribute("key", "key2");
+        e.addAttribute("class", FilterAdapter.class.getName());
+        Element url = new DOMElement("url-pattern");
+        url.setText("/foo");
+        e.add(url);
+
+        descriptor.init(plugin, e);
+    }
 }
