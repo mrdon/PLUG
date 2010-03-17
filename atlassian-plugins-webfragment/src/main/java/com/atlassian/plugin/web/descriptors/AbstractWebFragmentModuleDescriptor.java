@@ -35,8 +35,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     protected AbstractWebFragmentModuleDescriptor(final WebInterfaceManager webInterfaceManager)
     {
         super(ModuleFactory.LEGACY_MODULE_FACTORY);
-        this.webInterfaceManager = webInterfaceManager;
-        this.moduleDescriptorHelper = new ModuleDescriptorHelper(plugin, webInterfaceManager.getWebFragmentHelper());
+        setWebInterfaceManager(webInterfaceManager);
     }
 
     public AbstractWebFragmentModuleDescriptor()
