@@ -12,6 +12,7 @@ import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
 
 import javax.servlet.Filter;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -43,13 +44,14 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
     static final String DEFAULT_LOCATION = FilterLocation.BEFORE_DISPATCH.name();
     static final String DEFAULT_WEIGHT = "100";
 
-    public static final Set<String> VALID_DISPATCHER_CONDITIONS = new HashSet<String>()
-    {{
-        add("REQUEST");
-        add("INCLUDE");
-        add("FORWARD");
-        add("ERROR");
-    }};
+    public static final Set<String> VALID_DISPATCHER_CONDITIONS = Collections.unmodifiableSet(
+        new HashSet<String>()
+        {{
+            add("REQUEST");
+            add("INCLUDE");
+            add("FORWARD");
+            add("ERROR");
+        }});
 
     private FilterLocation location;
 
@@ -75,7 +77,7 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
     /**
      * Creates a descriptor that uses a module factory to create instances
      *
-     * @param hostContainer The module factory
+     * @param hostContainer the host application's dependency injection system.
      * @param servletModuleManager The module manager
      * @since 2.2.0
      * @deprecated use {@link com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor#ServletFilterModuleDescriptor(com.atlassian.plugin.module.ModuleFactory , com.atlassian.plugin.servlet.ServletModuleManager)} instead
