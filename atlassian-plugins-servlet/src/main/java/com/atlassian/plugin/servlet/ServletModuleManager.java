@@ -88,7 +88,9 @@ public interface ServletModuleManager
      * @param filterConfig FilterConfig given to the delegating filter.
      * @return List of filters to be applied, already sorted by weight
      * @throws ServletException Thrown if there is a problem initializing one of the filters to apply.
+     * @deprecated Use method with String <code>dispatcher</code> parameter instead.
      */
+    @Deprecated
     Iterable<Filter> getFilters(FilterLocation location, String pathInfo, FilterConfig filterConfig) throws ServletException;
 
     /**
@@ -103,6 +105,7 @@ public interface ServletModuleManager
      * @param dispatcher The dispatcher tag that filters have been registered to.
      * @return List of filters to be applied, already sorted by weight
      * @throws ServletException Thrown if there is a problem initializing one of the filters to apply.
+     * @since 2.5.0
      */
     Iterable<Filter> getFilters(FilterLocation location, String pathInfo, FilterConfig filterConfig, String dispatcher) throws ServletException;
 

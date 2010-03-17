@@ -8,6 +8,7 @@ import com.atlassian.plugin.module.HostContainerLegacyAdaptor;
 import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
+import com.atlassian.plugin.util.validation.ValidationPattern;
 import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
 
@@ -17,6 +18,8 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+
 
 /**
  * A module descriptor that allows plugin developers to define servlet filters.  Developers can define what urls the 
@@ -120,7 +123,7 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
             dispatcherConditions.add(dispatcher.getTextTrim());
         }
     }
-    
+
     public void enabled()
     {
         super.enabled();
@@ -149,6 +152,13 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
         return weight;
     }
 
+    /**
+     * Returns a set of dispatcher conditions that have been set for this filter, these conditions
+     * will be one of the following: <code>REQUEST, FORWARD, INCLUDE or ERROR</code>.
+     *
+     * @return A set of dispatcher conditions that have been set for this filter.
+     * @since 2.5.0
+     */
     public Set<String> getDispatcherConditions()
     {
         return dispatcherConditions;
