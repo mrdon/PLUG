@@ -6,9 +6,7 @@ import com.atlassian.plugin.web.renderer.StaticWebPanelRenderer;
 import com.atlassian.plugin.web.renderer.WebPanelRenderer;
 import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
-import org.mockito.Mock;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 

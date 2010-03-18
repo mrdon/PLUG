@@ -15,6 +15,7 @@ import java.util.Map;
  * This class reads the web panel's content from the resource element's
  * content.
  *
+ * @see com.atlassian.plugin.web.descriptors.DefaultWebPanelModuleDescriptor
  * @since   2.5.0
  */
 public class EmbeddedTemplateWebPanel extends AbstractWebPanel

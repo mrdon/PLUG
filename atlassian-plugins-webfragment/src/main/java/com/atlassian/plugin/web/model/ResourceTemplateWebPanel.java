@@ -14,6 +14,7 @@ import java.util.Map;
  * <code>location</code> attribute in their resource child element, which
  * points to a template file on the (plugin's) classpath.
  *
+ * @see com.atlassian.plugin.web.descriptors.DefaultWebPanelModuleDescriptor
  * @since   2.5.0
  */
 public class ResourceTemplateWebPanel extends AbstractWebPanel

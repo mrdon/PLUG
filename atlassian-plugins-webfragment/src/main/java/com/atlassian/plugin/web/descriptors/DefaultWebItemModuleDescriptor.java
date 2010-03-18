@@ -13,7 +13,7 @@ import org.dom4j.Element;
 /**
  * Represents a pluggable link.
  */
-public class DefaultWebItemModuleDescriptor<T> extends AbstractWebFragmentModuleDescriptor<T> implements WebItemModuleDescriptor<T>
+public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDescriptor implements WebItemModuleDescriptor
 {
     private String section;
     private WebIcon icon;
@@ -83,7 +83,7 @@ public class DefaultWebItemModuleDescriptor<T> extends AbstractWebFragmentModule
     }
 
     @Override
-    public T getModule()
+    public Void getModule()
     {
         return null;
     }

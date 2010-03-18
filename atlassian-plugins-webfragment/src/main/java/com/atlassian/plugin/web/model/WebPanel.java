@@ -3,11 +3,11 @@ package com.atlassian.plugin.web.model;
 import java.util.Map;
 
 /**
- * The module that is responsive for providing the raw content for a we panel.
+ * The module that is responsive for providing the raw content for a Web Panel.
  * Whatever is returned by {@link #getHtml(java.util.Map)} is inserted into the
  * host application's page, so it has to be valid HTML.
  *
- * @see {@link com.atlassian.plugin.web.descriptors.DefaultWebPanelModuleDescriptor#getModule()}
+ * @see com.atlassian.plugin.web.descriptors.DefaultWebPanelModuleDescriptor#getModule()
  * @since   2.5.0
  */
 public interface WebPanel

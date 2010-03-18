@@ -96,12 +96,11 @@ public class DefaultWebPanelModuleDescriptor
      */
     public static final String XML_ELEMENT_NAME = "web-panel";
 
-    protected int weight;
-
-    protected Element element;
-    protected Condition condition;
-    protected ContextProvider contextProvider;
-    protected WebInterfaceManager webInterfaceManager;
+    private int weight;
+    private Element element;
+    private Condition condition;
+    private ContextProvider contextProvider;
+    private final WebInterfaceManager webInterfaceManager;
 
     private Supplier<WebPanel> webPanelFactory;
     private String location;
