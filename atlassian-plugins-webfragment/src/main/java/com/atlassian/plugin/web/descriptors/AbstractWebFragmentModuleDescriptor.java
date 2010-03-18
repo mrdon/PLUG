@@ -49,13 +49,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
         super.init(plugin, element);
 
         this.element = element;
-        weight = 1000;
-        try
-        {
-            weight = Integer.parseInt(element.attributeValue("weight"));
-        }
-        catch (final NumberFormatException e)
-        {}
+        weight = ModuleDescriptorHelper.getWeight(element);
     }
 
     /**
@@ -69,6 +63,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
         return getRequiredModuleDescriptorHelper().makeConditions(element, type);
     }
 
+    @SuppressWarnings("unchecked")
     protected Condition makeConditions(final List elements, final int type) throws PluginParseException
     {
         return getRequiredModuleDescriptorHelper().makeConditions(elements, type);

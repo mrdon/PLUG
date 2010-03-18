@@ -8,6 +8,7 @@ import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.WebFragmentHelper;
 import com.atlassian.plugin.web.conditions.AbstractCompositeCondition;
 import com.atlassian.plugin.web.conditions.AndCompositeCondition;
+import com.atlassian.plugin.web.conditions.ConditionLoadingException;
 import com.atlassian.plugin.web.conditions.InvertedCondition;
 import com.atlassian.plugin.web.conditions.OrCompositeCondition;
 import org.dom4j.Element;
@@ -18,7 +19,7 @@ import java.util.List;
 /**
  * @since   2.5.0
  */
-public class ModuleDescriptorHelper
+class ModuleDescriptorHelper
 {
     public static final int COMPOSITE_TYPE_OR = WebFragmentModuleDescriptor.COMPOSITE_TYPE_OR;
     public static final int COMPOSITE_TYPE_AND = WebFragmentModuleDescriptor.COMPOSITE_TYPE_AND;
@@ -34,6 +35,24 @@ public class ModuleDescriptorHelper
     }
 
     /**
+     * @param moduleDescriptorElement   a module descriptor XML element.
+     * @return  the value of the <code>weight</code> attribute of the
+     * specified module descriptor element, or the system's default weight
+     * value if no weight was specified.
+     */
+    public static int getWeight(Element moduleDescriptorElement)
+    {
+        try
+        {
+            return Integer.parseInt(moduleDescriptorElement.attributeValue("weight"));
+        }
+        catch (final NumberFormatException e)
+        {
+            return 1000;    // default weight
+        }
+    }
+
+    /**
      * Create a condition for when this web fragment should be displayed.
      *
      * @param element Element of web-section, web-item, or web-panel
@@ -44,7 +63,7 @@ public class ModuleDescriptorHelper
     public Condition makeConditions(final Element element, final int type) throws PluginParseException
     {
         // make single conditions (all Anded together)
-        final List singleConditionElements = element.elements("condition");
+        final List<Element> singleConditionElements = element.elements("condition");
         Condition singleConditions = null;
         if ((singleConditionElements != null) && !singleConditionElements.isEmpty())
         {
@@ -53,14 +72,14 @@ public class ModuleDescriptorHelper
 
         // make composite conditions (logical operator can be specified by
         // "type")
-        final List nestedConditionsElements = element.elements("conditions");
+        final List<Element> nestedConditionsElements = element.elements("conditions");
         AbstractCompositeCondition nestedConditions = null;
         if ((nestedConditionsElements != null) && !nestedConditionsElements.isEmpty())
         {
             nestedConditions = getCompositeCondition(type);
-            for (final Iterator iterator = nestedConditionsElements.iterator(); iterator.hasNext();)
+            for (final Iterator<Element> iterator = nestedConditionsElements.iterator(); iterator.hasNext();)
             {
-                final Element nestedElement = (Element) iterator.next();
+                final Element nestedElement = iterator.next();
                 nestedConditions.addCondition(makeConditions(nestedElement, getCompositeType(nestedElement.attributeValue("type"))));
             }
         }
@@ -86,22 +105,22 @@ public class ModuleDescriptorHelper
     }
 
     @SuppressWarnings("unchecked")
-    public Condition makeConditions(final List elements, final int type) throws PluginParseException
+    public Condition makeConditions(final List<Element> elements, final int type) throws PluginParseException
     {
-        if (elements.size() == 0)
+        if (elements.isEmpty())
         {
             return null;
         }
         else if (elements.size() == 1)
         {
-            return makeCondition((Element) elements.get(0));
+            return makeCondition(elements.get(0));
         }
         else
         {
             final AbstractCompositeCondition compositeCondition = getCompositeCondition(type);
-            for (final Iterator it = elements.iterator(); it.hasNext();)
+            for (final Iterator<Element> it = elements.iterator(); it.hasNext();)
             {
-                final Element element = (Element) it.next();
+                final Element element = it.next();
                 compositeCondition.addCondition(makeCondition(element));
             }
 
@@ -125,11 +144,11 @@ public class ModuleDescriptorHelper
         }
         catch (final ClassCastException e)
         {
-            throw new PluginParseException("Configured condition class does not implement the Condition interface");
+            throw new PluginParseException("Configured condition class does not implement the Condition interface", e);
         }
-        catch (final Throwable t)
+        catch (final ConditionLoadingException cle)
         {
-            throw new PluginParseException(t);
+            throw new PluginParseException("Unable to load the module's display conditions: " + cle.getMessage(), cle);
         }
     }
 
@@ -144,11 +163,11 @@ public class ModuleDescriptorHelper
         }
         catch (final ClassCastException e)
         {
-            throw new PluginParseException("Configured context-provider class does not implement the ContextProvider interface");
+            throw new PluginParseException("Configured context-provider class does not implement the ContextProvider interface", e);
         }
-        catch (final Throwable t)
+        catch (final ConditionLoadingException cle)
         {
-            throw new PluginParseException(t);
+            throw new PluginParseException("Unable to load the module's display conditions: " + cle.getMessage(), cle);
         }
     }
 

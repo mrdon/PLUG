@@ -123,14 +123,7 @@ public class DefaultWebPanelModuleDescriptor
         super.init(plugin, element);
         this.element = element;
 
-        weight = 1000;
-        try
-        {
-            weight = Integer.parseInt(element.attributeValue("weight"));
-        }
-        catch (final NumberFormatException e)
-        {}
-
+        weight = ModuleDescriptorHelper.getWeight(element);
         location = element.attributeValue("location");
         condition = moduleDescriptorHelper.makeConditions(element, ModuleDescriptorHelper.COMPOSITE_TYPE_AND);
 
