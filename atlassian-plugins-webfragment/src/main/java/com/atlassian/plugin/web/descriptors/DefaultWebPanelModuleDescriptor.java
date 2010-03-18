@@ -86,7 +86,7 @@ import static com.atlassian.plugin.util.validation.ValidationPattern.test;
  *
  * @since   2.5.0
  */
-public class DefaultWebPanelModuleDescriptor
+public final class DefaultWebPanelModuleDescriptor
         extends AbstractModuleDescriptor<WebPanel>
         implements WeightedDescriptor, StateAware, ConditionalDescriptor
 {
