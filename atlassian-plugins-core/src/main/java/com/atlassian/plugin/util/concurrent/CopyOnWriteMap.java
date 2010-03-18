@@ -51,7 +51,6 @@ import com.atlassian.util.concurrent.CopyOnWriteMaps;
  * 
  * @param <K> the key type
  * @param <V> the value type
- * @author Jed Wesley-Smith
  * @deprecated since 2.5.0 please use the
  *             {@link com.atlassian.util.concurrent.CopyOnWriteMap} instead as
  *             it has some important features and some bug fixes. This version
