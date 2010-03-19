@@ -4,7 +4,6 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import com.atlassian.plugin.web.Condition;
-import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.WebFragmentHelper;
 import com.atlassian.plugin.web.conditions.AbstractCompositeCondition;
 import com.atlassian.plugin.web.conditions.AndCompositeCondition;
@@ -17,9 +16,14 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
+ * This class contains the logic for constructing {@link com.atlassian.plugin.web.Condition}
+ * objects from a module descriptor's XML element. Its functionality is used
+ * by both {@link com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor}
+ * and {@link com.atlassian.plugin.web.descriptors.DefaultWebPanelModuleDescriptor}.
+ *
  * @since   2.5.0
  */
-class ModuleDescriptorHelper
+class ConditionElementParser
 {
     public static final int COMPOSITE_TYPE_OR = WebFragmentModuleDescriptor.COMPOSITE_TYPE_OR;
     public static final int COMPOSITE_TYPE_AND = WebFragmentModuleDescriptor.COMPOSITE_TYPE_AND;
@@ -27,37 +31,19 @@ class ModuleDescriptorHelper
     private final WebFragmentHelper webFragmentHelper;
     private final Plugin plugin;
 
-
-    public ModuleDescriptorHelper(Plugin plugin, WebFragmentHelper webFragmentHelper)
+    public ConditionElementParser(Plugin plugin, WebFragmentHelper webFragmentHelper)
     {
         this.plugin = plugin;
         this.webFragmentHelper = webFragmentHelper;
     }
 
     /**
-     * @param moduleDescriptorElement   a module descriptor XML element.
-     * @return  the value of the <code>weight</code> attribute of the
-     * specified module descriptor element, or the system's default weight
-     * value if no weight was specified.
-     */
-    public static int getWeight(Element moduleDescriptorElement)
-    {
-        try
-        {
-            return Integer.parseInt(moduleDescriptorElement.attributeValue("weight"));
-        }
-        catch (final NumberFormatException e)
-        {
-            return 1000;    // default weight
-        }
-    }
-
-    /**
      * Create a condition for when this web fragment should be displayed.
      *
-     * @param element Element of web-section, web-item, or web-panel
-     * @param type logical operator type {@link #getCompositeType}
+     * @param element Element of web-section, web-item, or web-panel.
+     * @param type    logical operator type {@link #getCompositeType}
      * @throws com.atlassian.plugin.PluginParseException
+     *
      */
     @SuppressWarnings("unchecked")
     public Condition makeConditions(final Element element, final int type) throws PluginParseException
@@ -145,25 +131,6 @@ class ModuleDescriptorHelper
         catch (final ClassCastException e)
         {
             throw new PluginParseException("Configured condition class does not implement the Condition interface", e);
-        }
-        catch (final ConditionLoadingException cle)
-        {
-            throw new PluginParseException("Unable to load the module's display conditions: " + cle.getMessage(), cle);
-        }
-    }
-
-    public ContextProvider makeContextProvider(final Element element) throws PluginParseException
-    {
-        try
-        {
-            final ContextProvider context = webFragmentHelper.loadContextProvider(element.attributeValue("class"), plugin);
-            context.init(LoaderUtils.getParams(element));
-
-            return context;
-        }
-        catch (final ClassCastException e)
-        {
-            throw new PluginParseException("Configured context-provider class does not implement the ContextProvider interface", e);
         }
         catch (final ConditionLoadingException cle)
         {

@@ -26,11 +26,12 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     protected int weight;
 
     protected Condition condition;
-    protected ModuleDescriptorHelper moduleDescriptorHelper = null;
     protected ContextProvider contextProvider;
     protected DefaultWebLabel label;
     protected DefaultWebLabel tooltip;
     protected WebParam params;
+    private ConditionElementParser conditionElementParser;
+    private ContextProviderElementParser contextProviderElementParser;
 
     protected AbstractWebFragmentModuleDescriptor(final WebInterfaceManager webInterfaceManager)
     {
@@ -49,46 +50,46 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
         super.init(plugin, element);
 
         this.element = element;
-        weight = ModuleDescriptorHelper.getWeight(element);
+        weight = WeightElementParser.getWeight(element);
     }
 
     /**
      * Create a condition for when this web fragment should be displayed
      * @param element Element of web-section or web-item
-     * @param type logical operator type {@link ModuleDescriptorHelper#getCompositeType(String)}
+     * @param type logical operator type {@link ConditionElementParser#getCompositeType(String)}
      * @throws PluginParseException
      */
     protected Condition makeConditions(final Element element, final int type) throws PluginParseException
     {
-        return getRequiredModuleDescriptorHelper().makeConditions(element, type);
+        return getRequiredConditionElementParser().makeConditions(element, type);
     }
 
     @SuppressWarnings("unchecked")
     protected Condition makeConditions(final List elements, final int type) throws PluginParseException
     {
-        return getRequiredModuleDescriptorHelper().makeConditions(elements, type);
+        return getRequiredConditionElementParser().makeConditions(elements, type);
     }
 
     protected Condition makeCondition(final Element element) throws PluginParseException
     {
-        return getRequiredModuleDescriptorHelper().makeCondition(element);
+        return getRequiredConditionElementParser().makeCondition(element);
     }
 
     protected ContextProvider makeContextProvider(final Element element) throws PluginParseException
     {
-        return getRequiredModuleDescriptorHelper().makeContextProvider(element);
+        return contextProviderElementParser.makeContextProvider(element.getParent());
     }
 
-    private ModuleDescriptorHelper getRequiredModuleDescriptorHelper()
+    private ConditionElementParser getRequiredConditionElementParser()
     {
-        if (moduleDescriptorHelper == null)
+        if (conditionElementParser == null)
         {
             throw new IllegalStateException("ModuleDescriptorHelper not " +
                     "available because the WebInterfaceManager has not been injected.");
         }
         else
         {
-            return moduleDescriptorHelper;
+            return conditionElementParser;
         }
     }
 
@@ -100,10 +101,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
         // by the plugin are not available for injection during the init() phase
         try
         {
-            if (element.element("context-provider") != null)
-            {
-                contextProvider = makeContextProvider(element.element("context-provider"));
-            }
+            contextProvider = contextProviderElementParser.makeContextProvider(element);
 
             if (element.element("label") != null)
             {
@@ -120,7 +118,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
                 params = new DefaultWebParam(getParams(), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
             }
 
-            condition = makeConditions(element, ModuleDescriptorHelper.COMPOSITE_TYPE_AND);
+            condition = makeConditions(element, ConditionElementParser.COMPOSITE_TYPE_AND);
         }
         catch (final PluginParseException e)
         {
@@ -156,7 +154,8 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     public void setWebInterfaceManager(final WebInterfaceManager webInterfaceManager)
     {
         this.webInterfaceManager = webInterfaceManager;
-        this.moduleDescriptorHelper = new ModuleDescriptorHelper(plugin, webInterfaceManager.getWebFragmentHelper());
+        this.conditionElementParser = new ConditionElementParser(plugin, webInterfaceManager.getWebFragmentHelper());
+        this.contextProviderElementParser = new ContextProviderElementParser(plugin, webInterfaceManager.getWebFragmentHelper());
     }
 
     public Condition getCondition()

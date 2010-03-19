@@ -7,7 +7,7 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 
-public class TestModuleDescriptorHelper extends TestCase
+public class TestConditionElementParser extends TestCase
 {
     private static final String TYPE_OR = "<conditions type=\"OR\">";
     private static final String TYPE_AND = "<conditions type=\"AND\">";
@@ -17,7 +17,7 @@ public class TestModuleDescriptorHelper extends TestCase
     private static final String NOT_FALSE = "<condition class=\"com.atlassian.plugin.web.conditions.NeverDisplayCondition\" invert=\"true\" />";
     private static final String NOT_TRUE = "<condition class=\"com.atlassian.plugin.web.conditions.AlwaysDisplayCondition\" invert=\"true\" />";
 
-    private final ModuleDescriptorHelper moduleDescriptorHelper = new ModuleDescriptorHelper(null, new MockWebFragmentHelper());
+    private final ConditionElementParser conditionElementParser = new ConditionElementParser(null, new MockWebFragmentHelper());
 
     public void testSimple() throws DocumentException, PluginParseException
     {
@@ -131,7 +131,7 @@ public class TestModuleDescriptorHelper extends TestCase
         String rootElement = "<root>" + conditionElement + "</root>";
         Document document = DocumentHelper.parseText(rootElement);
 
-        Condition condition = moduleDescriptorHelper.makeConditions(document.getRootElement(), AbstractWebFragmentModuleDescriptor.COMPOSITE_TYPE_AND);
+        Condition condition = conditionElementParser.makeConditions(document.getRootElement(), AbstractWebFragmentModuleDescriptor.COMPOSITE_TYPE_AND);
 
         assertEquals(expectedResult, condition.shouldDisplay(null));
     }

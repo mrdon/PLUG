@@ -96,16 +96,19 @@ public final class DefaultWebPanelModuleDescriptor
      */
     public static final String XML_ELEMENT_NAME = "web-panel";
 
-    private int weight;
-    private Element element;
-    private Condition condition;
-    private ContextProvider contextProvider;
     private final WebInterfaceManager webInterfaceManager;
-
-    private Supplier<WebPanel> webPanelFactory;
-    private String location;
     private final HostContainer hostContainer;
-    private final ModuleDescriptorHelper moduleDescriptorHelper;
+
+    /**
+     * These suppliers are used to delay instantiation because the required
+     * spring beans are not available for injection during the init() phase.
+     */
+    private Supplier<WebPanel> webPanelFactory;
+    private Supplier<Condition> conditionFactory;
+    private Supplier<ContextProvider> contextProviderFactory;
+
+    private int weight;
+    private String location;
 
     public DefaultWebPanelModuleDescriptor(final HostContainer hostContainer,
                                            final ModuleFactory moduleClassFactory,
@@ -114,18 +117,36 @@ public final class DefaultWebPanelModuleDescriptor
         super(moduleClassFactory);
         this.hostContainer = hostContainer;
         this.webInterfaceManager = webInterfaceManager;
-        this.moduleDescriptorHelper = new ModuleDescriptorHelper(plugin, webInterfaceManager.getWebFragmentHelper());
     }
 
     @Override
     public void init(final Plugin plugin, final Element element) throws PluginParseException
     {
         super.init(plugin, element);
-        this.element = element;
 
-        weight = ModuleDescriptorHelper.getWeight(element);
+        weight = WeightElementParser.getWeight(element);
         location = element.attributeValue("location");
-        condition = moduleDescriptorHelper.makeConditions(element, ModuleDescriptorHelper.COMPOSITE_TYPE_AND);
+        conditionFactory = new Supplier<Condition>()
+        {
+            public Condition get()
+            {
+                return new ConditionElementParser(plugin, webInterfaceManager.getWebFragmentHelper())
+                        .makeConditions(element, ConditionElementParser.COMPOSITE_TYPE_AND);
+            }
+        };
+        contextProviderFactory = new Supplier<ContextProvider>()
+        {
+            private ContextProvider contextProvider;
+            public ContextProvider get()
+            {
+                if (contextProvider == null)
+                {
+                    contextProvider = new ContextProviderElementParser(plugin, webInterfaceManager.getWebFragmentHelper())
+                        .makeContextProvider(element);
+                }
+                return contextProvider;
+            }
+        };
 
         if (moduleClassName == null)
         {
@@ -195,12 +216,12 @@ public final class DefaultWebPanelModuleDescriptor
 
     public Condition getCondition()
     {
-        return condition;
+        return conditionFactory.get();
     }
 
     public ContextProvider getContextProvider()
     {
-        return contextProvider;
+        return contextProviderFactory.get();
     }
 
     @Override
@@ -251,22 +272,6 @@ public final class DefaultWebPanelModuleDescriptor
     public void enabled()
     {
         super.enabled();
-
-        // this lives here because spring beans declared
-        // by the plugin are not available for injection during the init() phase
-        try
-        {
-            if (element.element("context-provider") != null)
-            {
-                contextProvider = moduleDescriptorHelper.makeContextProvider(element.element("context-provider"));
-            }
-        }
-        catch (final PluginParseException e)
-        {
-            // is there a better exception to throw?
-            throw new RuntimeException("Unable to enable web fragment", e);
-        }
-
         webInterfaceManager.refresh();
     }
 
