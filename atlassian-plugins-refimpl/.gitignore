@@ -11,3 +11,5 @@ target
 *~
 xdocs
 out
+src/main/webapp/WEB-INF/osgi-cache/
+src/main/webapp/WEB-INF/plugins.state
