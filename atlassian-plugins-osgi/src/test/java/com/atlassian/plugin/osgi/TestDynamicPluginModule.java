@@ -76,6 +76,90 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
     }
 
+    public void testDynamicPluginModuleUsingModuleTypeDescriptorWithReinstall() throws Exception
+    {
+        initPluginManager(new HostComponentProvider()
+        {
+            public void provide(final ComponentRegistrar registrar)
+            {
+            }
+        });
+
+        final File pluginJar = new PluginJarBuilder("pluginType")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin.module' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <module-type key='foo' class='foo.MyModuleDescriptor' />",
+                        "</atlassian-plugin>")
+                .addFormattedJava("foo.MyModuleDescriptor",
+                        "package foo;",
+                        "public class MyModuleDescriptor extends com.atlassian.plugin.descriptors.AbstractModuleDescriptor {",
+                        "  public Object getModule(){return null;}",
+                        "}")
+                .build();
+        final File pluginJar2 = new PluginJarBuilder("fooUser")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <foo key='dum2'/>",
+                        "</atlassian-plugin>")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("test.plugin")
+                        .getModuleDescriptors()
+                        .iterator()
+                        .next()
+                        .getClass()
+                        .getSimpleName()
+                        .equals("MyModuleDescriptor");
+            }
+        });
+
+        // uninstall the module - the test plugin modules should revert back to Unrecognised
+        pluginManager.uninstall(pluginManager.getPlugin("test.plugin.module"));
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                ModuleDescriptor<?> descriptor = pluginManager.getPlugin("test.plugin")
+                        .getModuleDescriptors()
+                        .iterator()
+                        .next();
+                boolean enabled = pluginManager.isPluginModuleEnabled(descriptor.getCompleteKey());
+                return descriptor
+                        .getClass()
+                        .getSimpleName()
+                        .equals("UnrecognisedModuleDescriptor")
+                        && !enabled;
+            }
+        });
+        // reinstall the module - the test plugin modules should be correct again
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("test.plugin")
+                        .getModuleDescriptors()
+                        .iterator()
+                        .next()
+                        .getClass()
+                        .getSimpleName()
+                        .equals("MyModuleDescriptor");
+            }
+        });
+    }
+
     public void testDynamicPluginModuleNotLinkToAllPlugins() throws Exception
     {
         new PluginJarBuilder("pluginType")

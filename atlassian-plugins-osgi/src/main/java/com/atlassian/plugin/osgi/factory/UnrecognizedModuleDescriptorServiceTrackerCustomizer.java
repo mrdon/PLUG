@@ -42,6 +42,30 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
     public Object addingService(final ServiceReference serviceReference)
     {
         final ListableModuleDescriptorFactory factory = (ListableModuleDescriptorFactory) bundle.getBundleContext().getService(serviceReference);
+
+        // Only register the factory if it is or should be being used by this plugin.  We still care if they are currently
+        // in use because we need to change them to unrecognized descriptors if the factory goes away.
+        if (canFactoryResolveUnrecognizedDescriptor(factory) || isFactoryInUse(factory))
+        {
+            return factory;
+        }
+        else
+        {
+            // The docs seem to indicate returning null is enough to untrack a service, but the source code and tests
+            // show otherwise.
+            bundle.getBundleContext().ungetService(serviceReference);
+            return null;
+        }
+    }
+
+    /**
+     * See if the descriptor factory can resolve any unrecognized descriptors for this plugin, and if so, resolve them
+     *
+     * @param factory The new module descriptor factory
+     * @return True if any were resolved, false otherwise
+     */
+    private boolean canFactoryResolveUnrecognizedDescriptor(ListableModuleDescriptorFactory factory)
+    {
         boolean usedFactory = false;
         for (final UnrecognisedModuleDescriptor unrecognised : getModuleDescriptorsByDescriptorClass(UnrecognisedModuleDescriptor.class))
         {
@@ -66,17 +90,27 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
                 }
             }
         }
-        if (usedFactory)
+        return usedFactory;
+    }
+
+    /**
+     * Determine if the module descriptor factory is being used by any of the recognized descriptors.
+     * @param factory The new descriptor factory
+     * @return True if in use, false otherwise
+     */
+    private boolean isFactoryInUse(ListableModuleDescriptorFactory factory)
+    {
+        for (ModuleDescriptor descriptor : plugin.getModuleDescriptors())
         {
-            return factory;
+            for (Class<ModuleDescriptor<?>> descriptorClass : factory.getModuleDescriptorClasses())
+            {
+                if (descriptorClass == descriptor.getClass())
+                {
+                    return true;
+                }
+            }
         }
-        else
-        {
-            // The docs seem to indicate returning null is enough to untrack a service, but the source code and tests
-            // show otherwise.
-            bundle.getBundleContext().ungetService(serviceReference);
-            return null;
-        }
+        return false;
     }
 
     /**
