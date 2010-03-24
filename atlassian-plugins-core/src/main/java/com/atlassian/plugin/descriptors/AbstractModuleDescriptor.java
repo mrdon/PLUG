@@ -1,5 +1,6 @@
 package com.atlassian.plugin.descriptors;
 
+import static com.atlassian.plugin.util.Assertions.notNull;
 import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
 import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
@@ -23,6 +24,7 @@ import com.atlassian.plugin.module.PrefixDelegatingModuleFactory;
 import com.atlassian.plugin.util.ClassUtils;
 import com.atlassian.plugin.util.JavaVersionUtils;
 import com.atlassian.plugin.util.validation.ValidationPattern;
+import com.atlassian.util.concurrent.NotNull;
 
 public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>, StateAware
 {
@@ -65,11 +67,11 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         this(ModuleFactory.LEGACY_MODULE_FACTORY);
     }
 
-    public void init(final Plugin plugin, final Element element) throws PluginParseException
+    public void init(@NotNull final Plugin plugin, @NotNull final Element element) throws PluginParseException
     {
         validate(element);
 
-        this.plugin = plugin;
+        this.plugin = notNull("plugin", plugin);
         this.key = element.attributeValue("key");
         this.name = element.attributeValue("name");
         this.i18nNameKey = element.attributeValue("i18n-name-key");
@@ -120,6 +122,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
      */
     private void validate(final Element element)
     {
+        notNull("element", element);
         final ValidationPattern pattern = createPattern();
         provideValidationRules(pattern);
         pattern.evaluate(element);
@@ -163,7 +166,9 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     {
         if (moduleClassName != null)
         {
-            if (moduleFactory instanceof LegacyModuleFactory) // not all plugins have to have a class
+            if (moduleFactory instanceof LegacyModuleFactory) // not all plugins
+            // have to have a
+            // class
             {
                 moduleClass = ((LegacyModuleFactory) moduleFactory).getModuleClass(moduleClassName, this);
             }
