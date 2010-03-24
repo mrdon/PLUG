@@ -1,5 +1,6 @@
 package com.atlassian.plugin.web.descriptors;
 
+import com.atlassian.plugin.util.Assertions;
 import org.dom4j.Element;
 
 import com.atlassian.plugin.Plugin;
@@ -38,6 +39,7 @@ class ContextProviderElementParser
      */
     public ContextProvider makeContextProvider(final Plugin plugin, final Element element) throws PluginParseException
     {
+        Assertions.notNull("plugin == null", plugin);
         try
         {
             final Element contextProviderElement = element.element("context-provider");
@@ -46,7 +48,7 @@ class ContextProviderElementParser
                 return null;
             }
             final ContextProvider context = webFragmentHelper.loadContextProvider(contextProviderElement.attributeValue("class"), plugin);
-            context.init(LoaderUtils.getParams(element));
+            context.init(LoaderUtils.getParams(contextProviderElement));
             return context;
         }
         catch (final ClassCastException e)

@@ -1,11 +1,13 @@
 package com.atlassian.plugin.web.descriptors;
 
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.Condition;
 import junit.framework.TestCase;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
+import org.mockito.Mockito;
 
 public class TestConditionElementParser extends TestCase
 {
@@ -131,7 +133,7 @@ public class TestConditionElementParser extends TestCase
         String rootElement = "<root>" + conditionElement + "</root>";
         Document document = DocumentHelper.parseText(rootElement);
 
-        Condition condition = conditionElementParser.makeConditions(null, document.getRootElement(), AbstractWebFragmentModuleDescriptor.COMPOSITE_TYPE_AND);
+        Condition condition = conditionElementParser.makeConditions(Mockito.mock(Plugin.class), document.getRootElement(), AbstractWebFragmentModuleDescriptor.COMPOSITE_TYPE_AND);
 
         assertEquals(expectedResult, condition.shouldDisplay(null));
     }

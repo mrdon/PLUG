@@ -3,6 +3,7 @@ package com.atlassian.plugin.web.descriptors;
 import java.util.Iterator;
 import java.util.List;
 
+import com.atlassian.plugin.util.Assertions;
 import org.dom4j.Element;
 
 import com.atlassian.plugin.Plugin;
@@ -68,6 +69,8 @@ class ConditionElementParser
     @SuppressWarnings("unchecked")
     public Condition makeConditions(final Plugin plugin, final Element element, final int type) throws PluginParseException
     {
+        Assertions.notNull("plugin == null", plugin);
+
         // make single conditions (all Anded together)
         final List<Element> singleConditionElements = element.elements("condition");
         Condition singleConditions = null;
