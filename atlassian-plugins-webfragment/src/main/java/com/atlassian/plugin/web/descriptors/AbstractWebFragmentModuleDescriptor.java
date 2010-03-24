@@ -61,23 +61,23 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
      */
     protected Condition makeConditions(final Element element, final int type) throws PluginParseException
     {
-        return getRequiredConditionElementParser().makeConditions(element, type);
+        return getRequiredConditionElementParser().makeConditions(plugin, element, type);
     }
 
     @SuppressWarnings("unchecked")
     protected Condition makeConditions(final List elements, final int type) throws PluginParseException
     {
-        return getRequiredConditionElementParser().makeConditions(elements, type);
+        return getRequiredConditionElementParser().makeConditions(plugin, elements, type);
     }
 
     protected Condition makeCondition(final Element element) throws PluginParseException
     {
-        return getRequiredConditionElementParser().makeCondition(element);
+        return getRequiredConditionElementParser().makeCondition(plugin, element);
     }
 
     protected ContextProvider makeContextProvider(final Element element) throws PluginParseException
     {
-        return contextProviderElementParser.makeContextProvider(element.getParent());
+        return contextProviderElementParser.makeContextProvider(plugin, element.getParent());
     }
 
     private ConditionElementParser getRequiredConditionElementParser()
@@ -101,7 +101,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
         // by the plugin are not available for injection during the init() phase
         try
         {
-            contextProvider = contextProviderElementParser.makeContextProvider(element);
+            contextProvider = contextProviderElementParser.makeContextProvider(plugin, element);
 
             if (element.element("label") != null)
             {
@@ -154,8 +154,8 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     public void setWebInterfaceManager(final WebInterfaceManager webInterfaceManager)
     {
         this.webInterfaceManager = webInterfaceManager;
-        this.conditionElementParser = new ConditionElementParser(plugin, webInterfaceManager.getWebFragmentHelper());
-        this.contextProviderElementParser = new ContextProviderElementParser(plugin, webInterfaceManager.getWebFragmentHelper());
+        this.conditionElementParser = new ConditionElementParser(webInterfaceManager.getWebFragmentHelper());
+        this.contextProviderElementParser = new ContextProviderElementParser(webInterfaceManager.getWebFragmentHelper());
     }
 
     public Condition getCondition()

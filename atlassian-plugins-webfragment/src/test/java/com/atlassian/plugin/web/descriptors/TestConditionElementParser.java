@@ -17,7 +17,7 @@ public class TestConditionElementParser extends TestCase
     private static final String NOT_FALSE = "<condition class=\"com.atlassian.plugin.web.conditions.NeverDisplayCondition\" invert=\"true\" />";
     private static final String NOT_TRUE = "<condition class=\"com.atlassian.plugin.web.conditions.AlwaysDisplayCondition\" invert=\"true\" />";
 
-    private final ConditionElementParser conditionElementParser = new ConditionElementParser(null, new MockWebFragmentHelper());
+    private final ConditionElementParser conditionElementParser = new ConditionElementParser(new MockWebFragmentHelper());
 
     public void testSimple() throws DocumentException, PluginParseException
     {
@@ -131,7 +131,7 @@ public class TestConditionElementParser extends TestCase
         String rootElement = "<root>" + conditionElement + "</root>";
         Document document = DocumentHelper.parseText(rootElement);
 
-        Condition condition = conditionElementParser.makeConditions(document.getRootElement(), AbstractWebFragmentModuleDescriptor.COMPOSITE_TYPE_AND);
+        Condition condition = conditionElementParser.makeConditions(null, document.getRootElement(), AbstractWebFragmentModuleDescriptor.COMPOSITE_TYPE_AND);
 
         assertEquals(expectedResult, condition.shouldDisplay(null));
     }

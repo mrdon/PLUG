@@ -29,11 +29,9 @@ class ConditionElementParser
     public static final int COMPOSITE_TYPE_AND = WebFragmentModuleDescriptor.COMPOSITE_TYPE_AND;
 
     private final WebFragmentHelper webFragmentHelper;
-    private final Plugin plugin;
 
-    public ConditionElementParser(Plugin plugin, WebFragmentHelper webFragmentHelper)
+    public ConditionElementParser(WebFragmentHelper webFragmentHelper)
     {
-        this.plugin = plugin;
         this.webFragmentHelper = webFragmentHelper;
     }
 
@@ -46,14 +44,14 @@ class ConditionElementParser
      *
      */
     @SuppressWarnings("unchecked")
-    public Condition makeConditions(final Element element, final int type) throws PluginParseException
+    public Condition makeConditions(final Plugin plugin, final Element element, final int type) throws PluginParseException
     {
         // make single conditions (all Anded together)
         final List<Element> singleConditionElements = element.elements("condition");
         Condition singleConditions = null;
         if ((singleConditionElements != null) && !singleConditionElements.isEmpty())
         {
-            singleConditions = makeConditions(singleConditionElements, type);
+            singleConditions = makeConditions(plugin, singleConditionElements, type);
         }
 
         // make composite conditions (logical operator can be specified by
@@ -66,7 +64,7 @@ class ConditionElementParser
             for (final Iterator<Element> iterator = nestedConditionsElements.iterator(); iterator.hasNext();)
             {
                 final Element nestedElement = iterator.next();
-                nestedConditions.addCondition(makeConditions(nestedElement, getCompositeType(nestedElement.attributeValue("type"))));
+                nestedConditions.addCondition(makeConditions(plugin, nestedElement, getCompositeType(nestedElement.attributeValue("type"))));
             }
         }
 
@@ -91,7 +89,7 @@ class ConditionElementParser
     }
 
     @SuppressWarnings("unchecked")
-    public Condition makeConditions(final List<Element> elements, final int type) throws PluginParseException
+    public Condition makeConditions(final Plugin plugin, final List<Element> elements, final int type) throws PluginParseException
     {
         if (elements.isEmpty())
         {
@@ -99,7 +97,7 @@ class ConditionElementParser
         }
         else if (elements.size() == 1)
         {
-            return makeCondition(elements.get(0));
+            return makeCondition(plugin, elements.get(0));
         }
         else
         {
@@ -107,14 +105,14 @@ class ConditionElementParser
             for (final Iterator<Element> it = elements.iterator(); it.hasNext();)
             {
                 final Element element = it.next();
-                compositeCondition.addCondition(makeCondition(element));
+                compositeCondition.addCondition(makeCondition(plugin, element));
             }
 
             return compositeCondition;
         }
     }
 
-    public Condition makeCondition(final Element element) throws PluginParseException
+    public Condition makeCondition(final Plugin plugin, final Element element) throws PluginParseException
     {
         try
         {

@@ -19,11 +19,9 @@ import org.dom4j.Element;
 class ContextProviderElementParser
 {
     private final WebFragmentHelper webFragmentHelper;
-    private final Plugin plugin;
 
-    public ContextProviderElementParser(Plugin plugin, WebFragmentHelper webFragmentHelper)
+    public ContextProviderElementParser(WebFragmentHelper webFragmentHelper)
     {
-        this.plugin = plugin;
         this.webFragmentHelper = webFragmentHelper;
     }
 
@@ -34,7 +32,7 @@ class ContextProviderElementParser
      * contain a &lt;context-provider> element.
      * @throws PluginParseException
      */
-    public ContextProvider makeContextProvider(final Element element) throws PluginParseException
+    public ContextProvider makeContextProvider(Plugin plugin, final Element element) throws PluginParseException
     {
         try
         {

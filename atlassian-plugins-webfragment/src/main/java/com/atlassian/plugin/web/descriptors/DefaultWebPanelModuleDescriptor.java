@@ -130,8 +130,8 @@ public final class DefaultWebPanelModuleDescriptor
         {
             public Condition get()
             {
-                return new ConditionElementParser(plugin, webInterfaceManager.getWebFragmentHelper())
-                        .makeConditions(element, ConditionElementParser.COMPOSITE_TYPE_AND);
+                return new ConditionElementParser(webInterfaceManager.getWebFragmentHelper())
+                        .makeConditions(plugin, element, ConditionElementParser.COMPOSITE_TYPE_AND);
             }
         };
         contextProviderFactory = new Supplier<ContextProvider>()
@@ -141,8 +141,8 @@ public final class DefaultWebPanelModuleDescriptor
             {
                 if (contextProvider == null)
                 {
-                    contextProvider = new ContextProviderElementParser(plugin, webInterfaceManager.getWebFragmentHelper())
-                        .makeContextProvider(element);
+                    contextProvider = new ContextProviderElementParser(webInterfaceManager.getWebFragmentHelper())
+                        .makeContextProvider(plugin, element);
                 }
                 return contextProvider;
             }
