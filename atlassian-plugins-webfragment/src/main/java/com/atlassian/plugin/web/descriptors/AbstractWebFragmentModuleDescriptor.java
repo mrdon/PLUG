@@ -1,5 +1,9 @@
 package com.atlassian.plugin.web.descriptors;
 
+import java.util.List;
+
+import org.dom4j.Element;
+
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
@@ -12,14 +16,11 @@ import com.atlassian.plugin.web.model.DefaultWebLabel;
 import com.atlassian.plugin.web.model.DefaultWebParam;
 import com.atlassian.plugin.web.model.WebLabel;
 import com.atlassian.plugin.web.model.WebParam;
-import org.dom4j.Element;
-
-import java.util.List;
 
 /**
  * An abstract convenience class for web fragment descriptors.
  */
-public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractModuleDescriptor<T> implements StateAware, WebFragmentModuleDescriptor<T>
+public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModuleDescriptor<Void> implements StateAware, WebFragmentModuleDescriptor
 {
     protected WebInterfaceManager webInterfaceManager;
     protected Element element;
@@ -55,8 +56,10 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
 
     /**
      * Create a condition for when this web fragment should be displayed
+     * 
      * @param element Element of web-section or web-item
-     * @param type logical operator type {@link ConditionElementParser#getCompositeType(String)}
+     * @param type logical operator type
+     *            {@link ConditionElementParser#get(String)}
      * @throws PluginParseException
      */
     protected Condition makeConditions(final Element element, final int type) throws PluginParseException
@@ -84,8 +87,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     {
         if (conditionElementParser == null)
         {
-            throw new IllegalStateException("ModuleDescriptorHelper not " +
-                    "available because the WebInterfaceManager has not been injected.");
+            throw new IllegalStateException("ModuleDescriptorHelper not available because the WebInterfaceManager has not been injected.");
         }
         else
         {
@@ -118,7 +120,7 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
                 params = new DefaultWebParam(getParams(), webInterfaceManager.getWebFragmentHelper(), contextProvider, this);
             }
 
-            condition = makeConditions(element, ConditionElementParser.COMPOSITE_TYPE_AND);
+            condition = makeConditions(element, ConditionElementParser.CompositeType.AND);
         }
         catch (final PluginParseException e)
         {

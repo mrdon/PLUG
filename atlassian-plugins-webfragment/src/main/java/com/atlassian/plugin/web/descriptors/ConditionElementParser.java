@@ -1,5 +1,10 @@
 package com.atlassian.plugin.web.descriptors;
 
+import java.util.Iterator;
+import java.util.List;
+
+import org.dom4j.Element;
+
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.loaders.LoaderUtils;
@@ -10,38 +15,55 @@ import com.atlassian.plugin.web.conditions.AndCompositeCondition;
 import com.atlassian.plugin.web.conditions.ConditionLoadingException;
 import com.atlassian.plugin.web.conditions.InvertedCondition;
 import com.atlassian.plugin.web.conditions.OrCompositeCondition;
-import org.dom4j.Element;
-
-import java.util.Iterator;
-import java.util.List;
 
 /**
- * This class contains the logic for constructing {@link com.atlassian.plugin.web.Condition}
- * objects from a module descriptor's XML element. Its functionality is used
- * by both {@link com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor}
- * and {@link com.atlassian.plugin.web.descriptors.DefaultWebPanelModuleDescriptor}.
- *
- * @since   2.5.0
+ * This class contains the logic for constructing
+ * {@link com.atlassian.plugin.web.Condition} objects from a module descriptor's
+ * XML element. Its functionality is used by both
+ * {@link com.atlassian.plugin.web.descriptors.AbstractWebFragmentModuleDescriptor}
+ * and
+ * {@link com.atlassian.plugin.web.descriptors.DefaultWebPanelModuleDescriptor}.
+ * 
+ * @since 2.5.0
  */
 class ConditionElementParser
 {
-    public static final int COMPOSITE_TYPE_OR = WebFragmentModuleDescriptor.COMPOSITE_TYPE_OR;
-    public static final int COMPOSITE_TYPE_AND = WebFragmentModuleDescriptor.COMPOSITE_TYPE_AND;
+    static class CompositeType
+    {
+        static final int OR = 0;
+        static final int AND = 1;
+
+        static int parse(final String type) throws PluginParseException
+        {
+            if ("or".equalsIgnoreCase(type))
+            {
+                return CompositeType.OR;
+            }
+            else if ("and".equalsIgnoreCase(type))
+            {
+                return CompositeType.AND;
+            }
+            else
+            {
+                throw new PluginParseException("Invalid condition type specified. type = " + type);
+            }
+        }
+
+    }
 
     private final WebFragmentHelper webFragmentHelper;
 
-    public ConditionElementParser(WebFragmentHelper webFragmentHelper)
+    public ConditionElementParser(final WebFragmentHelper webFragmentHelper)
     {
         this.webFragmentHelper = webFragmentHelper;
     }
 
     /**
      * Create a condition for when this web fragment should be displayed.
-     *
+     * 
      * @param element Element of web-section, web-item, or web-panel.
-     * @param type    logical operator type {@link #getCompositeType}
+     * @param type logical operator type {@link #getCompositeType}
      * @throws com.atlassian.plugin.PluginParseException
-     *
      */
     @SuppressWarnings("unchecked")
     public Condition makeConditions(final Plugin plugin, final Element element, final int type) throws PluginParseException
@@ -64,7 +86,7 @@ class ConditionElementParser
             for (final Iterator<Element> iterator = nestedConditionsElements.iterator(); iterator.hasNext();)
             {
                 final Element nestedElement = iterator.next();
-                nestedConditions.addCondition(makeConditions(plugin, nestedElement, getCompositeType(nestedElement.attributeValue("type"))));
+                nestedConditions.addCondition(makeConditions(plugin, nestedElement, CompositeType.parse(nestedElement.attributeValue("type"))));
             }
         }
 
@@ -88,7 +110,6 @@ class ConditionElementParser
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     public Condition makeConditions(final Plugin plugin, final List<Element> elements, final int type) throws PluginParseException
     {
         if (elements.isEmpty())
@@ -136,32 +157,16 @@ class ConditionElementParser
         }
     }
 
-    private int getCompositeType(final String type) throws PluginParseException
-    {
-        if ("or".equalsIgnoreCase(type))
-        {
-            return COMPOSITE_TYPE_OR;
-        }
-        else if ("and".equalsIgnoreCase(type))
-        {
-            return COMPOSITE_TYPE_AND;
-        }
-        else
-        {
-            throw new PluginParseException("Invalid condition type specified. type = " + type);
-        }
-    }
-
     private AbstractCompositeCondition getCompositeCondition(final int type) throws PluginParseException
     {
         switch (type)
         {
-            case COMPOSITE_TYPE_OR:
-                return new OrCompositeCondition();
-            case COMPOSITE_TYPE_AND:
-                return new AndCompositeCondition();
-            default:
-                throw new PluginParseException("Invalid condition type specified. type = " + type);
+        case CompositeType.OR:
+            return new OrCompositeCondition();
+        case CompositeType.AND:
+            return new AndCompositeCondition();
+        default:
+            throw new PluginParseException("Invalid condition type specified. type = " + type);
         }
     }
 }

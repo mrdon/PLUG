@@ -1,5 +1,12 @@
 package com.atlassian.plugin.web.descriptors;
 
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
+
+import java.util.Iterator;
+
+import org.apache.commons.lang.StringUtils;
+import org.dom4j.Element;
+
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
@@ -18,18 +25,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
-import org.apache.commons.lang.StringUtils;
-import org.dom4j.Element;
-
-import java.util.Iterator;
-
-import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
 /**
  * <p>
- * The web panel module declares a single web panel in atlassian-plugin.xml.
- * Its XML element contains a location string that should match existing
- * locations in the host application where web panels can be embedded.
+ * The web panel module declares a single web panel in atlassian-plugin.xml. Its
+ * XML element contains a location string that should match existing locations
+ * in the host application where web panels can be embedded.
  * </p>
  * <p>
  * A web panel also contains a single resource child element that contains the
@@ -37,8 +38,8 @@ import static com.atlassian.plugin.util.validation.ValidationPattern.test;
  * to provide dynamic content.
  * </p>
  * <p>
- * A resource element's <code>type</code> attribute identifies the format of
- * the panel's content (currently "static" and "velocity" are supported) which
+ * A resource element's <code>type</code> attribute identifies the format of the
+ * panel's content (currently "static" and "velocity" are supported) which
  * allows the plugin framework to use the appropriate
  * {@link com.atlassian.plugin.web.renderer.WebPanelRenderer}.
  * </p>
@@ -51,48 +52,55 @@ import static com.atlassian.plugin.util.validation.ValidationPattern.test;
  * <b>Examples</b>
  * <p>
  * A web panel that contains static, embedded HTML:
+ * 
  * <pre>
  *     &lt;web-panel key="myPanel" location="general">
  *         &lt;resource name="view" type="static">&lt;![CDATA[&lt;b>Hello World!&lt;/b>]]>&lt;/resource>
  *     &lt;/web-panel>
  * </pre>
+ * 
  * </p>
  * <p>
  * A web panel that contains an embedded velocity template:
+ * 
  * <pre>
  *     &lt;web-panel key="myPanel" location="general">
  *         &lt;resource name="view" type="velocity">&lt;![CDATA[#set($name = 'foo')My name is $name]]>&lt;/resource>
  *     &lt;/web-panel>
  * </pre>
+ * 
  * </p>
  * <p>
  * A web panel that contains uses a velocity template that is on the classpath
  * (part of the plugin's jar file):
+ * 
  * <pre>
  *     &lt;web-panel key="myPanel" location="general">
  *         &lt;resource name="view" type="velocity" location="templates/pie.vm"/>
  *     &lt;/web-panel>
  * </pre>
+ * 
  * </p>
  * <p>
  * Finally it is also possible to provide your own custom class that is
  * responsible for producing the panel's HTML, by using the descriptor's
  * <code>class</code> attribute:
+ * 
  * <pre>
  *     &lt;web-panel key="myPanel" location="general" class="com.example.FooWebPanel"/>
  * </pre>
- * Note that <code>FooWebPanel</code> must implement {@link com.atlassian.plugin.web.model.WebPanel}.
+ * 
+ * Note that <code>FooWebPanel</code> must implement
+ * {@link com.atlassian.plugin.web.model.WebPanel}.
  * </p>
- *
- * @since   2.5.0
+ * 
+ * @since 2.5.0
  */
-public final class DefaultWebPanelModuleDescriptor
-        extends AbstractModuleDescriptor<WebPanel>
-        implements WeightedDescriptor, StateAware, ConditionalDescriptor
+public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescriptor<WebPanel> implements WeightedDescriptor, StateAware, ConditionalDescriptor
 {
     /**
-     * Host applications should use this string when registering the
-     * web panel module descriptor.
+     * Host applications should use this string when registering the web panel
+     * module descriptor.
      */
     public static final String XML_ELEMENT_NAME = "web-panel";
 
@@ -110,9 +118,7 @@ public final class DefaultWebPanelModuleDescriptor
     private int weight;
     private String location;
 
-    public DefaultWebPanelModuleDescriptor(final HostContainer hostContainer,
-                                           final ModuleFactory moduleClassFactory,
-                                           final WebInterfaceManager webInterfaceManager)
+    public DefaultWebPanelModuleDescriptor(final HostContainer hostContainer, final ModuleFactory moduleClassFactory, final WebInterfaceManager webInterfaceManager)
     {
         super(moduleClassFactory);
         this.hostContainer = hostContainer;
@@ -130,19 +136,18 @@ public final class DefaultWebPanelModuleDescriptor
         {
             public Condition get()
             {
-                return new ConditionElementParser(webInterfaceManager.getWebFragmentHelper())
-                        .makeConditions(plugin, element, ConditionElementParser.COMPOSITE_TYPE_AND);
+                return new ConditionElementParser(webInterfaceManager.getWebFragmentHelper()).makeConditions(plugin, element, ConditionElementParser.CompositeType.AND);
             }
         };
         contextProviderFactory = new Supplier<ContextProvider>()
         {
             private ContextProvider contextProvider;
+
             public ContextProvider get()
             {
                 if (contextProvider == null)
                 {
-                    contextProvider = new ContextProviderElementParser(webInterfaceManager.getWebFragmentHelper())
-                        .makeContextProvider(plugin, element);
+                    contextProvider = new ContextProviderElementParser(webInterfaceManager.getWebFragmentHelper()).makeContextProvider(plugin, element);
                 }
                 return contextProvider;
             }
@@ -196,12 +201,10 @@ public final class DefaultWebPanelModuleDescriptor
     }
 
     @Override
-    protected void provideValidationRules(ValidationPattern pattern)
+    protected void provideValidationRules(final ValidationPattern pattern)
     {
         super.provideValidationRules(pattern);
-        pattern.
-                rule(
-                    test("@location").withError("The Web Panel location attribute is required."));
+        pattern.rule(test("@location").withError("The Web Panel location attribute is required."));
     }
 
     public String getLocation()
@@ -230,7 +233,7 @@ public final class DefaultWebPanelModuleDescriptor
         return webPanelFactory.get();
     }
 
-    private String getRequiredResourceType(ResourceDescriptor resource)
+    private String getRequiredResourceType(final ResourceDescriptor resource)
     {
         final String type = resource.getType();
         if (StringUtils.isEmpty(type))

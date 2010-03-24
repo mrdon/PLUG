@@ -1,5 +1,10 @@
 package com.atlassian.plugin.web.descriptors;
 
+import java.util.List;
+import java.util.Map;
+
+import org.dom4j.Element;
+
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
@@ -11,20 +16,15 @@ import com.atlassian.plugin.web.WebInterfaceManager;
 import com.atlassian.plugin.web.model.WebLabel;
 import com.atlassian.plugin.web.model.WebParam;
 
-import org.dom4j.Element;
-
-import java.util.List;
-import java.util.Map;
-
 /**
- * Wrapper for {@link WebFragmentModuleDescriptor}, so that it could be extended by application specific
- * wrappers to provide additional methods.
+ * Wrapper for {@link WebFragmentModuleDescriptor}, so that it could be extended
+ * by application specific wrappers to provide additional methods.
  */
-public class DefaultAbstractWebFragmentModuleDescriptor<T> implements StateAware, WebFragmentModuleDescriptor<T>
+public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, WebFragmentModuleDescriptor
 {
-    private final WebFragmentModuleDescriptor<T> decoratedDescriptor;
+    private final WebFragmentModuleDescriptor decoratedDescriptor;
 
-    public DefaultAbstractWebFragmentModuleDescriptor(final WebFragmentModuleDescriptor<T> abstractDescriptor)
+    public DefaultAbstractWebFragmentModuleDescriptor(final WebFragmentModuleDescriptor abstractDescriptor)
     {
         decoratedDescriptor = abstractDescriptor;
     }
@@ -39,7 +39,7 @@ public class DefaultAbstractWebFragmentModuleDescriptor<T> implements StateAware
         decoratedDescriptor.disabled();
     }
 
-    protected WebFragmentModuleDescriptor<T> getDecoratedDescriptor()
+    protected WebFragmentModuleDescriptor getDecoratedDescriptor()
     {
         return decoratedDescriptor;
     }
@@ -54,9 +54,9 @@ public class DefaultAbstractWebFragmentModuleDescriptor<T> implements StateAware
         return decoratedDescriptor.getKey();
     }
 
-    public T getModule()
+    public Void getModule()
     {
-        return decoratedDescriptor.getModule();
+        return null;
     }
 
     public String getI18nNameKey()
@@ -89,7 +89,7 @@ public class DefaultAbstractWebFragmentModuleDescriptor<T> implements StateAware
         // bit of a hack but it works :)
         if (decoratedDescriptor instanceof AbstractWebFragmentModuleDescriptor)
         {
-            final AbstractWebFragmentModuleDescriptor<T> abstractWebFragmentModuleDescriptor = (AbstractWebFragmentModuleDescriptor<T>) decoratedDescriptor;
+            final AbstractWebFragmentModuleDescriptor abstractWebFragmentModuleDescriptor = (AbstractWebFragmentModuleDescriptor) decoratedDescriptor;
             abstractWebFragmentModuleDescriptor.setWebInterfaceManager(webInterfaceManager);
         }
     }
@@ -109,7 +109,8 @@ public class DefaultAbstractWebFragmentModuleDescriptor<T> implements StateAware
         return decoratedDescriptor.getWebParams();
     }
 
-    //----------------------------------------------------------------------------------------- ModuleDescriptor methods
+    // -----------------------------------------------------------------------------------------
+    // ModuleDescriptor methods
     public String getCompleteKey()
     {
         return decoratedDescriptor.getCompleteKey();
@@ -130,7 +131,7 @@ public class DefaultAbstractWebFragmentModuleDescriptor<T> implements StateAware
         return decoratedDescriptor.getDescription();
     }
 
-    public Class<T> getModuleClass()
+    public Class<Void> getModuleClass()
     {
         return decoratedDescriptor.getModuleClass();
     }
@@ -170,13 +171,19 @@ public class DefaultAbstractWebFragmentModuleDescriptor<T> implements StateAware
         return decoratedDescriptor.getParams();
     }
 
-    //------------------------------------------------------------------------------------------------ Resourced methods
+    // ------------------------------------------------------------------------------------------------
+    // Resourced methods
 
     public List<ResourceDescriptor> getResourceDescriptors()
     {
         return decoratedDescriptor.getResourceDescriptors();
     }
 
+    /**
+     * @deprecated since 2.5.0 use {@link #getResourceDescriptors()} and filter
+     *             as required
+     */
+    @Deprecated
     public List<ResourceDescriptor> getResourceDescriptors(final String type)
     {
         return decoratedDescriptor.getResourceDescriptors(type);
