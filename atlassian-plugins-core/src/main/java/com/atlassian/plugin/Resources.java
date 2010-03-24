@@ -88,6 +88,11 @@ public class Resources implements Resourced
         return resourceDescriptors;
     }
 
+    /**
+     * * @deprecated since 2.5.0 use {@link #getResourceDescriptors()} and
+     * filter as required
+     */
+    @Deprecated
     public List<ResourceDescriptor> getResourceDescriptors(final String type)
     {
         return ImmutableList.<ResourceDescriptor> builder().addAll(filter(resourceDescriptors, new TypeFilter(type))).build();
