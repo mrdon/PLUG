@@ -8,6 +8,7 @@ import com.atlassian.plugin.servlet.ObjectFactories;
 import com.atlassian.plugin.servlet.ObjectFactory;
 import com.atlassian.plugin.servlet.PluginBuilder;
 import com.atlassian.plugin.servlet.ServletModuleManager;
+import com.atlassian.plugin.servlet.filter.FilterDispatcherCondition;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
 import com.mockobjects.dynamic.Mock;
 
@@ -29,7 +30,7 @@ public class ServletFilterModuleDescriptorBuilder
     private int weight = 100;
     private List<String> paths = new LinkedList<String>();
     private ServletModuleManager servletModuleManager = (ServletModuleManager) new Mock(ServletModuleManager.class).proxy();
-    private Set<String> dispatchers = new HashSet<String>();
+    private Set<FilterDispatcherCondition> dispatchers = new HashSet<FilterDispatcherCondition>();
 
     public ServletFilterModuleDescriptorBuilder with(Plugin plugin)
     {
@@ -79,7 +80,7 @@ public class ServletFilterModuleDescriptorBuilder
         return this;
     }
 
-    public ServletFilterModuleDescriptorBuilder withDispatcher(String dispatcher) {
+    public ServletFilterModuleDescriptorBuilder withDispatcher(FilterDispatcherCondition dispatcher) {
         dispatchers.add(dispatcher);
         return this;
     }
@@ -98,7 +99,7 @@ public class ServletFilterModuleDescriptorBuilder
         final FilterLocation location;
         final int weight;
         final ServletModuleManager servletModuleManager;
-        final Set<String> dispatchers;
+        final Set<FilterDispatcherCondition> dispatchers;
         
         public Descriptor(
             Plugin plugin,
@@ -109,7 +110,7 @@ public class ServletFilterModuleDescriptorBuilder
             List<String> paths,
             ServletModuleManager servletModuleManager,
             ModuleFactory moduleFactory,
-            Set<String> dispatchers)
+            Set<FilterDispatcherCondition> dispatchers)
         {
             super(moduleFactory, servletModuleManager);
             this.plugin = plugin;
@@ -165,7 +166,7 @@ public class ServletFilterModuleDescriptorBuilder
         }
 
         @Override
-        public Set<String> getDispatcherConditions()
+        public Set<FilterDispatcherCondition> getDispatcherConditions()
         {
             return dispatchers;
         }

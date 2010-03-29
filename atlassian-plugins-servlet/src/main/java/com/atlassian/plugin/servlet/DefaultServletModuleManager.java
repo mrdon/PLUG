@@ -24,6 +24,8 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
+import com.atlassian.plugin.servlet.filter.FilterDispatcherCondition;
+import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -179,16 +181,17 @@ public class DefaultServletModuleManager implements ServletModuleManager
 
     public Iterable<Filter> getFilters(final FilterLocation location, final String path, final FilterConfig filterConfig) throws ServletException
     {
-        return getFilters(location, path, filterConfig, null);
+        return getFilters(location, path, filterConfig, FilterDispatcherCondition.REQUEST);
     }
 
-    public Iterable<Filter> getFilters(FilterLocation location, String path, FilterConfig filterConfig, String dispatcher) throws ServletException
+    public Iterable<Filter> getFilters(FilterLocation location, String path, FilterConfig filterConfig, FilterDispatcherCondition condition) throws ServletException
     {
+        Validate.notNull(condition);
         final List<ServletFilterModuleDescriptor> matchingFilterDescriptors = new ArrayList<ServletFilterModuleDescriptor>();
         for (final String completeKey : filterMapper.getAll(path))
         {
             final ServletFilterModuleDescriptor descriptor = filterDescriptors.get(completeKey);
-            if (dispatcher != null && !descriptor.getDispatcherConditions().contains(dispatcher) && descriptor.getDispatcherConditions().size() != 0)
+            if (!descriptor.getDispatcherConditions().isEmpty() && !descriptor.getDispatcherConditions().contains(condition))
             {
                 continue;
             }

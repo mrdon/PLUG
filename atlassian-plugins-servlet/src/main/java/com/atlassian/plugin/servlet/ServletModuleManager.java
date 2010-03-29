@@ -2,6 +2,7 @@ package com.atlassian.plugin.servlet;
 
 import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
 import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
+import com.atlassian.plugin.servlet.filter.FilterDispatcherCondition;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
 import com.atlassian.plugin.servlet.filter.ServletFilterModuleContainerFilter;
 
@@ -81,14 +82,14 @@ public interface ServletModuleManager
 
     /**
      * Returns the filters that have been registered to filter requests at the specified path matching the location 
-     * in the filter stack. 
+     * in the filter stack.  The filter dispatcher condition will be set to REQUEST.
      * 
      * @param location Place in the applications filter stack the filters should be applied.
      * @param pathInfo Path of the incoming request to filter.
      * @param filterConfig FilterConfig given to the delegating filter.
      * @return List of filters to be applied, already sorted by weight
      * @throws ServletException Thrown if there is a problem initializing one of the filters to apply.
-     * @deprecated Use method with String <code>dispatcher</code> parameter instead.
+     * @deprecated Since 2.5.0, use {@link #getFilters(FilterLocation,String,FilterConfig,FilterDispatcherCondition)} instead
      */
     @Deprecated
     Iterable<Filter> getFilters(FilterLocation location, String pathInfo, FilterConfig filterConfig) throws ServletException;
@@ -97,17 +98,16 @@ public interface ServletModuleManager
      * Returns the filters that have been registered to filter requests at the specified path matching the location
      * in the filter stack and registered for the specific dispatcher condition.
      * <p/>
-     * A <code>null</code> dispatcher parameter will return all filters.
      *
      * @param location Place in the applications filter stack the filters should be applied.
      * @param pathInfo Path of the incoming request to filter.
      * @param filterConfig FilterConfig given to the delegating filter.
-     * @param dispatcher The dispatcher tag that filters have been registered to.
+     * @param condition The dispatcher tag that filters have been registered to.  Cannot be null.
      * @return List of filters to be applied, already sorted by weight
      * @throws ServletException Thrown if there is a problem initializing one of the filters to apply.
      * @since 2.5.0
      */
-    Iterable<Filter> getFilters(FilterLocation location, String pathInfo, FilterConfig filterConfig, String dispatcher) throws ServletException;
+    Iterable<Filter> getFilters(FilterLocation location, String pathInfo, FilterConfig filterConfig, FilterDispatcherCondition condition) throws ServletException;
 
     /**
      * Remove a previously registered filter plugin module.  Requests that come in on the path described in the 

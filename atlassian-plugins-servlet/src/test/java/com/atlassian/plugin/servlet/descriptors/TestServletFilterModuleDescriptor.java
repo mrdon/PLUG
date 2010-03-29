@@ -2,6 +2,7 @@ package com.atlassian.plugin.servlet.descriptors;
 
 import com.atlassian.plugin.module.PrefixDelegatingModuleFactory;
 import com.atlassian.plugin.module.PrefixModuleFactory;
+import com.atlassian.plugin.servlet.filter.FilterDispatcherCondition;
 import junit.framework.TestCase;
 
 import org.dom4j.Element;
@@ -89,8 +90,8 @@ public class TestServletFilterModuleDescriptor extends TestCase
         descriptor.init(plugin, e);
         assertEquals(FilterLocation.AFTER_ENCODING, descriptor.getLocation());
         assertEquals(122, descriptor.getWeight());
-        assertTrue(descriptor.getDispatcherConditions().contains("REQUEST"));
-        assertTrue(descriptor.getDispatcherConditions().contains("FORWARD"));
+        assertTrue(descriptor.getDispatcherConditions().contains(FilterDispatcherCondition.REQUEST));
+        assertTrue(descriptor.getDispatcherConditions().contains(FilterDispatcherCondition.FORWARD));
     }
 
     public void testInitWithBadLocation()
