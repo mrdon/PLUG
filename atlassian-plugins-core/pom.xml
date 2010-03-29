@@ -76,6 +76,11 @@
             <artifactId>dom4j</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.atlassian.multitenant</groupId>
+            <artifactId>multitenant-core</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>com.atlassian.plugins.test</groupId>
             <artifactId>atlassian-plugins-test</artifactId>
             <version>${project.version}</version>
