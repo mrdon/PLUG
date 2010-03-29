@@ -65,27 +65,29 @@ public class ComponentImportSpringStage implements TransformStage
 
     private void validateInterface(String interfaceName, String pluginName, ServiceReference[] serviceReferences)
     {
-        boolean found = false;
-        outer:
-        for (ServiceReference ref : serviceReferences)
+        if (log.isDebugEnabled())
         {
-
-            for (String clazz : (String[]) ref.getProperty(Constants.OBJECTCLASS))
+            boolean found = false;
+            outer:
+            for (ServiceReference ref : serviceReferences)
             {
-                if (interfaceName.equals(clazz))
+
+                for (String clazz : (String[]) ref.getProperty(Constants.OBJECTCLASS))
                 {
-                    found = true;
-                    break outer;
+                    if (interfaceName.equals(clazz))
+                    {
+                        found = true;
+                        break outer;
+                    }
                 }
             }
-        }
-
-        if (!found && log.isDebugEnabled())
-        {
-            log.debug("Couldn't confirm that '" + interfaceName + "' (used as a <component-import> in the plugin with name '" + pluginName +
-                "') is a public component in the product's OSGi exports. If this is an interface you expect to be" +
-                " provided from the product, double check the spelling of '" + interfaceName + "'; if this class" +
-                " is supposed to come from another plugin, you can probably ignore this warning.");
+            if (!found)
+            {
+                log.debug("Couldn't confirm that '" + interfaceName + "' (used as a <component-import> in the plugin with name '" + pluginName +
+                        "') is a public component in the product's OSGi exports. If this is an interface you expect to be" +
+                        " provided from the product, double check the spelling of '" + interfaceName + "'; if this class" +
+                        " is supposed to come from another plugin, you can probably ignore this warning.");
+            }
         }
 
     }
