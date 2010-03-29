@@ -53,7 +53,7 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
     private int weight;
     private final ServletModuleManager servletModuleManager;
 
-    private Set<FilterDispatcherCondition> dispatcherConditions;
+    private Set<FilterDispatcherCondition> dispatcherConditions = new HashSet<FilterDispatcherCondition>();
 
     /**
      * Creates a descriptor that uses a module class factory to create instances.
@@ -104,7 +104,7 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
             throw new PluginParseException(ex);
         }
 
-        dispatcherConditions = new HashSet<FilterDispatcherCondition>();
+        dispatcherConditions.clear();
         List<Element> dispatcherElements = element.elements("dispatcher");
         for (Element dispatcher : dispatcherElements)
         {
