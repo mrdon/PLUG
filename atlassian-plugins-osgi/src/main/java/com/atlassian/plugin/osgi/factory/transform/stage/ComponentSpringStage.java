@@ -1,5 +1,6 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
+import com.atlassian.multitenant.MultiTenantContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
@@ -65,7 +66,7 @@ public class ComponentSpringStage implements TransformStage
                     interfaceNames.add(component.attributeValue("interface"));
                 }
 
-                if (stateful)
+                if (stateful && MultiTenantContext.isEnabled())
                 {
                     bean.addAttribute("class", "com.atlassian.plugin.osgi.bridge.external.MultiTenantComponentFactoryBean");
                     bean.addElement("beans:property").addAttribute("name", "implementation")
