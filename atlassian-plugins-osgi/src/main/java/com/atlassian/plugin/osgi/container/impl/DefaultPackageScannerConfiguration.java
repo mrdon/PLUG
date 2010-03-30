@@ -13,8 +13,12 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
 
     private List<String> jarIncludes = Arrays.asList("*.jar");
     private List<String> jarExcludes = Collections.emptyList();
-    private List<String> packageIncludes = Arrays.asList("com.atlassian.*", "org.apache.*", "org.jdom*", "org.slf4j");
-    private List<String> packageExcludes = Arrays.asList("com.springframework*");
+    private List<String> packageIncludes = Arrays.asList(
+            "com.atlassian.*", "com.google.common.*", "javax.*", "net.jcip.*", "org.jfree.*",
+            "org.joda.*", "org.quartz", "org.quartz.*", "com.opensymphony.*", "org.apache.*", "org.ofbiz.*", "org.xml.*", "org.w3c.*", "webwork.*",
+            "org.tuckey.web.filters.urlrewrite.*", "org.bouncycastle*", "org.dom4j*", "org.jdom*", "com.perforce*", "org.slf4j*");
+    private List<String> packageExcludes = Arrays.asList("com.springframework*", "org.apache.tomcat.*",
+            "org.apache.catalina.*", "org.apache.jasper.*", "org.apache.coyote.*", "org.apache.naming*");
     private Map<String, String> packageVersions;
     private String hostVersion;
     private ServletContext servletContext;
@@ -25,8 +29,8 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
     }
 
     /**
-     * @since 2.2
      * @param hostVersion The current host application version
+     * @since 2.2
      */
     public DefaultPackageScannerConfiguration(String hostVersion)
     {
@@ -35,7 +39,7 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
         jarExcludes = new ArrayList<String>(jarExcludes);
         packageIncludes = new ArrayList<String>(packageIncludes);
         packageExcludes = new ArrayList<String>(packageExcludes);
-        packageVersions = new HashMap<String,String>();
+        packageVersions = new HashMap<String, String>();
     }
 
 
@@ -61,29 +65,34 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
 
     /**
      * Sets the jars to include and exclude from scanning
+     *
      * @param includes A list of jar patterns to include
      * @param excludes A list of jar patterns to exclude
      */
-    public void setJarPatterns(List<String> includes, List<String> excludes) {
+    public void setJarPatterns(List<String> includes, List<String> excludes)
+    {
         this.jarIncludes = includes;
         this.jarExcludes = excludes;
     }
 
     /**
      * Sets the packages to include and exclude
+     *
      * @param includes A list of patterns to include
      * @param excludes A list of patterns to exclude
      */
-    public void setPackagePatterns(List<String> includes, List<String> excludes) {
+    public void setPackagePatterns(List<String> includes, List<String> excludes)
+    {
         this.packageIncludes = includes;
         this.packageExcludes = excludes;
     }
 
     /**
      * Maps discovered packages to specific versions by overriding autodiscovered versions
+     *
      * @param packageToVersions A map of package patterns to version strings
      */
-    public void setPackageVersions(Map<String,String> packageToVersions)
+    public void setPackageVersions(Map<String, String> packageToVersions)
     {
         this.packageVersions = packageToVersions;
     }

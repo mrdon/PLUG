@@ -195,9 +195,9 @@ public class DefaultServletModuleManager implements ServletModuleManager
             final ServletFilterModuleDescriptor descriptor = filterDescriptors.get(completeKey);
             if (!descriptor.getDispatcherConditions().isEmpty() && !descriptor.getDispatcherConditions().contains(condition))
             {
-                if (log.isDebugEnabled())
+                if (log.isTraceEnabled())
                 {
-                    log.debug("Skipping filter " + descriptor.getCompleteKey() + " as condition " + condition +
+                    log.trace("Skipping filter " + descriptor.getCompleteKey() + " as condition " + condition +
                             " doesn't match list:" + Arrays.asList(descriptor.getDispatcherConditions()));
                 }
                 continue;
