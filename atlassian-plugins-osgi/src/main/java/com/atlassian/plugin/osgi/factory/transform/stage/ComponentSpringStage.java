@@ -1,17 +1,19 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
-import com.atlassian.plugin.osgi.factory.transform.TransformStage;
-import com.atlassian.plugin.osgi.factory.transform.TransformContext;
+import com.atlassian.multitenant.MultiTenantContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
-import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
-import static com.atlassian.plugin.util.validation.ValidationPattern.test;
-import com.atlassian.plugin.util.validation.ValidationPattern;
+import com.atlassian.plugin.osgi.factory.transform.TransformContext;
+import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.util.PluginUtils;
+import com.atlassian.plugin.util.validation.ValidationPattern;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+
+import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
 /**
  * Transforms component tags in the plugin descriptor into the appropriate spring XML configuration file
@@ -47,26 +49,58 @@ public class ComponentSpringStage implements TransformStage
                 }
                 validation.evaluate(component);
 
+                boolean stateful = Boolean.parseBoolean(component.attributeValue("stateful"));
+
                 Element bean = root.addElement("beans:bean");
                 bean.addAttribute("id", component.attributeValue("key"));
                 bean.addAttribute("alias", component.attributeValue("alias"));
-                bean.addAttribute("class", component.attributeValue("class"));
+
+                List<String> interfaceNames = new ArrayList<String>();
+                List<Element> compInterfaces = component.elements("interface");
+                for (Element inf : compInterfaces)
+                {
+                    interfaceNames.add(inf.getTextTrim());
+                }
+                if (component.attributeValue("interface") != null)
+                {
+                    interfaceNames.add(component.attributeValue("interface"));
+                }
+
+                if (stateful && MultiTenantContext.isEnabled())
+                {
+                    bean.addAttribute("class", "com.atlassian.plugin.osgi.bridge.external.MultiTenantComponentFactoryBean");
+                    bean.addElement("beans:property").addAttribute("name", "implementation")
+                            .addAttribute("value", component.attributeValue("class"));
+                    Element lazy = bean.addElement("beans:property").addAttribute("name", "lazyLoad");
+                    if (component.attribute("lazy") == null || Boolean.parseBoolean(component.attributeValue("lazy")))
+                    {
+                        lazy.addAttribute("value", "true");
+                    }
+                    else
+                    {
+                        lazy.addAttribute("value", "false");
+                    }
+                    if (!interfaceNames.isEmpty())
+                    {
+                        Element interfaces = bean.addElement("beans:property").addAttribute("name", "interfaces")
+                                .addElement("beans:list");
+                        for (String interfaceName : interfaceNames)
+                        {
+                            Element e = interfaces.addElement("beans:value");
+                            e.setText(interfaceName);
+                        }
+                    }
+                }
+                else
+                {
+                    bean.addAttribute("class", component.attributeValue("class"));
+                }
+
                 if ("true".equalsIgnoreCase(component.attributeValue("public")))
                 {
                     Element osgiService = root.addElement("osgi:service");
                     osgiService.addAttribute("id", component.attributeValue("key") + "_osgiService");
                     osgiService.addAttribute("ref", component.attributeValue("key"));
-
-                    List<String> interfaceNames = new ArrayList<String>();
-                    List<Element> compInterfaces = component.elements("interface");
-                    for (Element inf : compInterfaces)
-                    {
-                        interfaceNames.add(inf.getTextTrim());
-                    }
-                    if (component.attributeValue("interface") != null)
-                    {
-                        interfaceNames.add(component.attributeValue("interface"));
-                    }
 
                     Element interfaces = osgiService.addElement("osgi:interfaces");
                     for (String name : interfaceNames)
@@ -108,6 +142,14 @@ public class ComponentSpringStage implements TransformStage
             {
                 context.getExtraExports().add(pkg);
             }
+        }
+    }
+
+    void ensureMultiTenantImported(TransformContext context)
+    {
+        if (!context.getExtraImports().contains("com.atlassian.plugin.osgi.bridge.external"))
+        {
+            context.getExtraImports().add("com.atlassian.plugin.osgi.bridge.external");
         }
     }
 
