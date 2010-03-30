@@ -3,6 +3,7 @@ package com.atlassian.plugin.servlet;
 import static com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor.byWeight;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
@@ -188,11 +189,17 @@ public class DefaultServletModuleManager implements ServletModuleManager
     {
         Validate.notNull(condition);
         final List<ServletFilterModuleDescriptor> matchingFilterDescriptors = new ArrayList<ServletFilterModuleDescriptor>();
+
         for (final String completeKey : filterMapper.getAll(path))
         {
             final ServletFilterModuleDescriptor descriptor = filterDescriptors.get(completeKey);
             if (!descriptor.getDispatcherConditions().isEmpty() && !descriptor.getDispatcherConditions().contains(condition))
             {
+                if (log.isDebugEnabled())
+                {
+                    log.debug("Skipping filter " + descriptor.getCompleteKey() + " as condition " + condition +
+                            " doesn't match list:" + Arrays.asList(descriptor.getDispatcherConditions()));
+                }
                 continue;
             }
 
@@ -214,6 +221,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
                 filters.add(getFilter(descriptor, filterConfig));
             }
         }
+
         return filters;
     }
 
