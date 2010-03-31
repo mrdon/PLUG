@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 import javax.servlet.Filter;
 
+import static com.atlassian.plugin.servlet.filter.FilterDispatcherCondition.REQUEST;
 import static com.atlassian.plugin.servlet.filter.FilterTestUtils.immutableList;
 
 public class ServletFilterModuleDescriptorBuilder
@@ -37,7 +38,7 @@ public class ServletFilterModuleDescriptorBuilder
         this.plugin = plugin;
         return this;
     }
-    
+
     public ServletFilterModuleDescriptorBuilder withKey(String key)
     {
         this.key = key;
@@ -61,13 +62,13 @@ public class ServletFilterModuleDescriptorBuilder
         this.servletModuleManager = servletModuleManager;
         return this;
     }
-    
+
     public ServletFilterModuleDescriptorBuilder at(FilterLocation location)
     {
         this.location = location;
         return this;
     }
-    
+
     public ServletFilterModuleDescriptorBuilder withWeight(int weight)
     {
         this.weight = weight;
@@ -100,7 +101,7 @@ public class ServletFilterModuleDescriptorBuilder
         final int weight;
         final ServletModuleManager servletModuleManager;
         final Set<FilterDispatcherCondition> dispatchers;
-        
+
         public Descriptor(
             Plugin plugin,
             String key,
@@ -121,6 +122,9 @@ public class ServletFilterModuleDescriptorBuilder
             this.paths = paths;
             this.servletModuleManager = servletModuleManager;
             this.dispatchers = dispatchers;
+            if (dispatchers.isEmpty()) { // PLUG-530 - set of dispatcherConditions defaults to {REQUEST}
+                dispatchers.add(REQUEST);
+            }
         }
 
         @Override
@@ -128,7 +132,7 @@ public class ServletFilterModuleDescriptorBuilder
         {
             return plugin;
         }
-        
+
         @Override
         public String getCompleteKey()
         {
@@ -146,13 +150,13 @@ public class ServletFilterModuleDescriptorBuilder
         {
             return filterFactory.create();
         }
-        
+
         @Override
         public FilterLocation getLocation()
         {
             return location;
         }
-        
+
         @Override
         public int getWeight()
         {
