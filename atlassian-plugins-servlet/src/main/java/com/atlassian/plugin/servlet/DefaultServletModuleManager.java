@@ -1,7 +1,35 @@
 package com.atlassian.plugin.servlet;
 
-import static com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor.byWeight;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.event.PluginEventListener;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginDisabledEvent;
+import com.atlassian.plugin.servlet.descriptors.ServletContextListenerModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
+import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
+import com.atlassian.plugin.servlet.filter.DelegatingPluginFilter;
+import com.atlassian.plugin.servlet.filter.FilterDispatcherCondition;
+import com.atlassian.plugin.servlet.filter.FilterLocation;
+import com.atlassian.plugin.servlet.filter.PluginFilterConfig;
+import com.atlassian.plugin.servlet.util.DefaultPathMapper;
+import com.atlassian.plugin.servlet.util.PathMapper;
+import com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor;
+import com.atlassian.plugin.util.ClassLoaderStack;
+import com.atlassian.util.concurrent.LazyReference;
+import org.apache.commons.lang.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,42 +44,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-
-import com.atlassian.plugin.servlet.filter.FilterDispatcherCondition;
-import org.apache.commons.lang.Validate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.event.PluginEventListener;
-import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.event.events.PluginDisabledEvent;
-import com.atlassian.plugin.servlet.descriptors.ServletContextListenerModuleDescriptor;
-import com.atlassian.plugin.servlet.descriptors.ServletContextParamModuleDescriptor;
-import com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor;
-import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
-import com.atlassian.plugin.servlet.filter.DelegatingPluginFilter;
-import com.atlassian.plugin.servlet.filter.FilterLocation;
-import com.atlassian.plugin.servlet.filter.PluginFilterConfig;
-import com.atlassian.plugin.servlet.util.DefaultPathMapper;
-import com.atlassian.plugin.servlet.util.PathMapper;
-import com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor;
-import com.atlassian.plugin.util.ClassLoaderStack;
-import com.atlassian.util.concurrent.LazyReference;
+import static com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor.byWeight;
 
 /**
  * A simple servletModuleManager to track and retrieve the loaded servlet plugin
  * modules.
- * 
+ *
  * @since 2.1.0
  */
 public class DefaultServletModuleManager implements ServletModuleManager
@@ -71,7 +69,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
     /**
      * Constructor that sets itself in the servlet context for later use in
      * dispatching servlets and filters.
-     * 
+     *
      * @param servletContext The servlet context to store itself in
      * @param pluginEventManager The plugin event manager
      * @since 2.2.0
@@ -87,7 +85,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * {@link com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor#setServletModuleManager(javax.servlet.ServletContext, ServletModuleManager)}
      * yourself if you don't extend the dispatching servlet and filter classes
      * to provide the servlet module manager instance.
-     * 
+     *
      * @param pluginEventManager The plugin event manager
      */
     public DefaultServletModuleManager(final PluginEventManager pluginEventManager)
@@ -100,7 +98,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * {@link com.atlassian.plugin.servlet.util.ServletContextServletModuleManagerAccessor#setServletModuleManager(javax.servlet.ServletContext, ServletModuleManager)}
      * yourself if you don't extend the dispatching servlet and filter classes
      * to provide the servlet module manager instance.
-     * 
+     *
      * @param pluginEventManager The plugin event manager
      * @param servletPathMapper The path mapper used for mapping servlets to
      *            paths
@@ -193,7 +191,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
         for (final String completeKey : filterMapper.getAll(path))
         {
             final ServletFilterModuleDescriptor descriptor = filterDescriptors.get(completeKey);
-            if (!descriptor.getDispatcherConditions().isEmpty() && !descriptor.getDispatcherConditions().contains(condition))
+            if (!descriptor.getDispatcherConditions().contains(condition))
             {
                 if (log.isTraceEnabled())
                 {
@@ -283,7 +281,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * <p/>
      * Note: We use a map of lazily loaded references to the servlet so that
      * only one can ever be created and initialized for each module descriptor.
-     * 
+     *
      * @param descriptor
      * @param servletConfig
      * @return
@@ -328,7 +326,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * <p/>
      * Note: We use a map of lazily loaded references to the filter so that only
      * one can ever be created and initialized for each module descriptor.
-     * 
+     *
      * @param descriptor
      * @param filterConfig
      * @return The filter, or null if the filter is invalid and should be
@@ -374,7 +372,7 @@ public class DefaultServletModuleManager implements ServletModuleManager
      * <p/>
      * Note: We use a map of lazily loaded references to the context so that
      * only one can ever be created for each plugin.
-     * 
+     *
      * @param plugin Plugin for whom we're creating a wrapped servlet context.
      * @param baseContext The applications base servlet context which we will be
      *            wrapping.

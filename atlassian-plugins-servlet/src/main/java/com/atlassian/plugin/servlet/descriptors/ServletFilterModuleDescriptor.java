@@ -23,9 +23,9 @@ import java.util.Set;
 import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
 /**
- * A module descriptor that allows plugin developers to define servlet filters.  Developers can define what urls the 
+ * A module descriptor that allows plugin developers to define servlet filters.  Developers can define what urls the
  * filter should be applied to by defining one or more &lt;url-pattern&gt; elements and they can decide where in the
- * filter stack a plugin filter should go by defining the "location" and "weight" attributes. 
+ * filter stack a plugin filter should go by defining the "location" and "weight" attributes.
  * <p/>
  * The location attribute can have one of four values:
  * </p>
@@ -53,7 +53,7 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
     private int weight;
     private final ServletModuleManager servletModuleManager;
 
-    private Set<FilterDispatcherCondition> dispatcherConditions = new HashSet<FilterDispatcherCondition>();
+    private Set<FilterDispatcherCondition> dispatcherConditions = new HashSet<FilterDispatcherCondition>() {{ add(FilterDispatcherCondition.REQUEST); }};
 
     /**
      * Creates a descriptor that uses a module class factory to create instances.
@@ -104,12 +104,14 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
             throw new PluginParseException(ex);
         }
 
-        dispatcherConditions.clear();
         List<Element> dispatcherElements = element.elements("dispatcher");
-        for (Element dispatcher : dispatcherElements)
-        {
-            // already been validated via the validation rules
-            dispatcherConditions.add(FilterDispatcherCondition.valueOf(dispatcher.getTextTrim()));
+        if (!dispatcherElements.isEmpty()) {
+            dispatcherConditions.clear();
+            for (Element dispatcher : dispatcherElements)
+            {
+                // already been validated via the validation rules
+                dispatcherConditions.add(FilterDispatcherCondition.valueOf(dispatcher.getTextTrim()));
+            }
         }
     }
 
