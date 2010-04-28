@@ -92,7 +92,7 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
 
     public void onDisable() throws OsgiContainerException
     {
-        ServiceTracker[] serviceTrackers = this.serviceTrackers;
+        final ServiceTracker[] serviceTrackers = this.serviceTrackers; // cache a copy locally for multi-threaded goodness
         if(serviceTrackers != null)
         {
             for (final ServiceTracker svc : serviceTrackers)
