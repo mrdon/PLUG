@@ -16,14 +16,10 @@ import com.atlassian.plugin.servlet.DownloadStrategy;
 public class DownloadStrategyModuleDescriptor extends AbstractModuleDescriptor<DownloadStrategy>
 {
     /**
-     * @deprecated  Since 2.5.0, use {@link #DownloadStrategyModuleDescriptor(com.atlassian.plugin.module.ModuleFactory)} instead.
-     * @param hostContainer
+     * Creates a download strategy.
+     * @param moduleCreator The factory to create module instances
+     * @Since 2.5.0
      */
-    public DownloadStrategyModuleDescriptor(HostContainer hostContainer)
-    {
-        this (new HostContainerLegacyAdaptor(hostContainer));
-    }
-
     public DownloadStrategyModuleDescriptor(ModuleFactory moduleCreator)
     {
         super(moduleCreator);

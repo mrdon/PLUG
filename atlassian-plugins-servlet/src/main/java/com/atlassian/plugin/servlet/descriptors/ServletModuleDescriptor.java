@@ -21,25 +21,13 @@ public class ServletModuleDescriptor extends BaseServletModuleDescriptor<HttpSer
      * Creates a descriptor that uses a module factory to create instances
      *
      * @param moduleFactory
-     * @since 2.2.0
+     * @since 2.5.0
      */
     public ServletModuleDescriptor(final ModuleFactory moduleFactory, final ServletModuleManager servletModuleManager)
     {
         super(moduleFactory);
         Validate.notNull(servletModuleManager);
         this.servletModuleManager = servletModuleManager;
-    }
-
-    /**
-     * Creates a descriptor that uses a module factory to create instances
-     *
-     * @param hostContainer the host container
-     * @param servletModuleManager
-     * @deprecated Since 2.5.0, use {@link #ServletModuleDescriptor(com.atlassian.plugin.module.ModuleFactory , com.atlassian.plugin.servlet.ServletModuleManager)} instead
-     */
-    public ServletModuleDescriptor(HostContainer hostContainer, ServletModuleManager servletModuleManager)
-    {
-        this(new HostContainerLegacyAdaptor(hostContainer), servletModuleManager);
     }
 
     @Override

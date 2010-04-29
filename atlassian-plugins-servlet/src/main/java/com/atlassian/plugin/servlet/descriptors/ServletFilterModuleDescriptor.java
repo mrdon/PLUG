@@ -69,19 +69,6 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
         this.servletModuleManager = servletModuleManager;
     }
 
-    /**
-     * Creates a descriptor that uses a module factory to create instances
-     *
-     * @param hostContainer the host application's dependency injection system.
-     * @param servletModuleManager The module manager
-     * @since 2.2.0
-     * @deprecated use {@link com.atlassian.plugin.servlet.descriptors.ServletFilterModuleDescriptor#ServletFilterModuleDescriptor(com.atlassian.plugin.module.ModuleFactory , com.atlassian.plugin.servlet.ServletModuleManager)} instead
-     */
-    public ServletFilterModuleDescriptor(HostContainer hostContainer, ServletModuleManager servletModuleManager)
-    {
-        this (new HostContainerLegacyAdaptor(hostContainer), servletModuleManager);
-    }
-
     public static final Comparator<ServletFilterModuleDescriptor> byWeight = new Comparator<ServletFilterModuleDescriptor>()
     {
         public int compare(ServletFilterModuleDescriptor lhs, ServletFilterModuleDescriptor rhs)

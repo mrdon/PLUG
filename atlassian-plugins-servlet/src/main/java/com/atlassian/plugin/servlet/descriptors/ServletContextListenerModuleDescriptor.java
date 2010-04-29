@@ -20,11 +20,6 @@ public class ServletContextListenerModuleDescriptor extends AbstractModuleDescri
 {
     protected static final Logger log = LoggerFactory.getLogger(ServletContextListenerModuleDescriptor.class);
 
-    public ServletContextListenerModuleDescriptor(HostContainer hostContainer)
-    {
-        this (new HostContainerLegacyAdaptor(hostContainer));
-    }
-
     /**
      *
      * @param moduleFactory
