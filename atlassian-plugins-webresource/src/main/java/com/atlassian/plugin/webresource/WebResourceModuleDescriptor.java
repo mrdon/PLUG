@@ -22,6 +22,7 @@ public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
     private List<String> dependencies = Collections.emptyList();
     private boolean disableMinification;
     private Set<String> contexts = Collections.emptySet();
+    private List<WebResourceTransformation> webResourceTransformations = Collections.emptyList();
 
     @Override
     public void init(final Plugin plugin, final Element element) throws PluginParseException
@@ -41,6 +42,13 @@ public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
             ctxs.add(contextElement.getTextTrim());
         }
         contexts = Collections.unmodifiableSet(ctxs);
+
+        final List<WebResourceTransformation> trans = new ArrayList<WebResourceTransformation>();
+        for (Element e : (List<Element>) element.elements("transformation"))
+        {
+            trans.add(new WebResourceTransformation(e));
+        }
+        webResourceTransformations = Collections.unmodifiableList(trans);
 
         final Attribute minifiedAttribute = element.attribute("disable-minification");
         disableMinification = minifiedAttribute == null ? false : Boolean.valueOf(minifiedAttribute.getValue());
@@ -73,6 +81,11 @@ public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void>
     public List<String> getDependencies()
     {
         return dependencies;
+    }
+
+    public List<WebResourceTransformation> getTransformations()
+    {
+        return webResourceTransformations;
     }
 
     /**

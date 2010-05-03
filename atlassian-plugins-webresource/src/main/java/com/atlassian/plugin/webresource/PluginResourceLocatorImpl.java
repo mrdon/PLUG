@@ -271,7 +271,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             {
                 disableMinification = ((WebResourceModuleDescriptor) moduleDescriptor).isDisableMinification();
             }
-            return getDownloadablePluginResource(plugin, resourceLocation, filePath, disableMinification);
+            return getDownloadablePluginResource(plugin, resourceLocation, moduleDescriptor, filePath, disableMinification);
         }
 
         final String[] nextParts = splitLastPathPart(resourcePath);
@@ -293,7 +293,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         final ResourceLocation resourceLocation = plugin.getResourceLocation(DOWNLOAD_TYPE, resourcePath);
         if (resourceLocation != null)
         {
-            return getDownloadablePluginResource(plugin, resourceLocation, filePath, false);
+            return getDownloadablePluginResource(plugin, resourceLocation, null, filePath, false);
         }
 
         final String[] nextParts = splitLastPathPart(resourcePath);
@@ -322,8 +322,9 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         return new String[] { resourcePath.substring(0, indexOfSlash + 1), resourcePath.substring(indexOfSlash + 1) };
     }
 
-    private DownloadableResource getDownloadablePluginResource(final Plugin plugin, final ResourceLocation resourceLocation, final String filePath,
-        final boolean disableMinification)
+    private DownloadableResource getDownloadablePluginResource(final Plugin plugin, final ResourceLocation resourceLocation,
+                                                               ModuleDescriptor descriptor, final String filePath,
+                                                               final boolean disableMinification)
     {
         final String sourceParam = resourceLocation.getParameter(RESOURCE_SOURCE_PARAM);
 
@@ -334,13 +335,33 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             return new ForwardableResource(resourceLocation);
         }
 
+        DownloadableResource actualResource = null;
         // serve static resources from the web application - batching supported
         if ("webContextStatic".equalsIgnoreCase(sourceParam))
         {
-            return new DownloadableWebResource(plugin, resourceLocation, filePath, servletContextFactory.getServletContext(), disableMinification);
+            actualResource = new DownloadableWebResource(plugin, resourceLocation, filePath, servletContextFactory.getServletContext(), disableMinification);
+        }
+        else
+        {
+            actualResource = new DownloadableClasspathResource(plugin, resourceLocation, filePath);
         }
 
-        return new DownloadableClasspathResource(plugin, resourceLocation, filePath);
+        DownloadableResource result = actualResource;
+        // web resources are able to be transformed during delivery
+        if (descriptor != null && descriptor instanceof WebResourceModuleDescriptor)
+        {
+            DownloadableResource lastResource = actualResource;
+            WebResourceModuleDescriptor desc = (WebResourceModuleDescriptor) descriptor;
+            for (WebResourceTransformation list : desc.getTransformations())
+            {
+                if (list.matches(resourceLocation))
+                {
+                    lastResource = list.transformDownloadableResource(pluginAccessor, actualResource, resourceLocation);
+                }
+            }
+            result = lastResource;
+        }
+        return result;
     }
 
     public List<PluginResource> getPluginResources(final String moduleCompleteKey)

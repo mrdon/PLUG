@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.atlassian.plugin.webresource.transformer.WebResourceTransformer;
+import com.atlassian.plugin.webresource.transformer.WebResourceTransformerModuleDescriptor;
 import junit.framework.TestCase;
 
 import org.dom4j.DocumentHelper;
@@ -21,6 +23,10 @@ import com.atlassian.plugin.servlet.ForwardableResource;
 import com.atlassian.plugin.servlet.ServletContextFactory;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
+import org.dom4j.Element;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TestPluginResourceLocatorImpl extends TestCase
 {
@@ -223,6 +229,117 @@ public class TestPluginResourceLocatorImpl extends TestCase
             "", Collections.EMPTY_MAP));
 
         mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
+        mockPluginAccessor.expectAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), mockPlugin.proxy());
+
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
+
+        assertTrue(resource instanceof DownloadableClasspathResource);
+    }
+
+    public void testGetTransformedDownloadableClasspathResource() throws Exception
+    {
+        final String resourceName = "test.js";
+        final String url = "/download/resources/" + TEST_MODULE_COMPLETE_KEY + "/" + resourceName;
+
+        final DownloadableResource transformedResource = mock(DownloadableResource.class);
+        WebResourceTransformation trans = new WebResourceTransformation(DocumentHelper.parseText(
+                "<transformation extension=\"js\">\n" +
+                    "<transformer key=\"foo\" />\n" +
+                "</transformation>").getRootElement());
+        WebResourceTransformer transformer = new WebResourceTransformer()
+        {
+            public DownloadableResource transform(Element configElement, ResourceLocation location, DownloadableResource nextResource) {
+                return transformedResource;
+            }
+        };
+
+        WebResourceTransformerModuleDescriptor transDescriptor = mock(WebResourceTransformerModuleDescriptor.class);
+        when(transDescriptor.getKey()).thenReturn("foo");
+        when(transDescriptor.getModule()).thenReturn(transformer);
+
+        final Mock mockPlugin = new Mock(Plugin.class);
+        WebResourceModuleDescriptor descriptor = mock(WebResourceModuleDescriptor.class);
+        when(descriptor.getPluginKey()).thenReturn(TEST_PLUGIN_KEY);
+        when(descriptor.getResourceLocation("download", resourceName)).thenReturn(new ResourceLocation("", resourceName, "download", "text/css",
+            "", Collections.EMPTY_MAP));
+        when(descriptor.getTransformations()).thenReturn(Arrays.asList(trans));
+
+        mockPluginAccessor.expectAndReturn("getEnabledModuleDescriptorsByClass", C.args(C.eq(WebResourceTransformerModuleDescriptor.class)), Arrays.asList(transDescriptor));
+        mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), descriptor);
+        mockPluginAccessor.expectAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), mockPlugin.proxy());
+
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
+
+        assertTrue(resource == transformedResource);
+    }
+
+    public void testGetUnmatchedTransformDownloadableClasspathResource() throws Exception
+    {
+        final String resourceName = "test.css";
+        final String url = "/download/resources/" + TEST_MODULE_COMPLETE_KEY + "/" + resourceName;
+
+        final DownloadableResource transformedResource = mock(DownloadableResource.class);
+        WebResourceTransformation trans = new WebResourceTransformation(DocumentHelper.parseText(
+                "<transformation extension=\"js\">\n" +
+                    "<transformer key=\"foo\" />\n" +
+                "</transformation>").getRootElement());
+        WebResourceTransformer transformer = new WebResourceTransformer()
+        {
+            public DownloadableResource transform(Element configElement, ResourceLocation location, DownloadableResource nextResource) {
+                return transformedResource;
+            }
+        };
+
+        WebResourceTransformerModuleDescriptor transDescriptor = mock(WebResourceTransformerModuleDescriptor.class);
+        when(transDescriptor.getKey()).thenReturn("foo");
+        when(transDescriptor.getModule()).thenReturn(transformer);
+
+        final Mock mockPlugin = new Mock(Plugin.class);
+        WebResourceModuleDescriptor descriptor = mock(WebResourceModuleDescriptor.class);
+        when(descriptor.getPluginKey()).thenReturn(TEST_PLUGIN_KEY);
+        when(descriptor.getResourceLocation("download", resourceName)).thenReturn(new ResourceLocation("", resourceName, "download", "text/css",
+            "", Collections.EMPTY_MAP));
+        when(descriptor.getTransformations()).thenReturn(Arrays.asList(trans));
+
+        mockPluginAccessor.expectAndReturn("getEnabledModuleDescriptorsByClass", C.args(C.eq(WebResourceTransformerModuleDescriptor.class)), Arrays.asList(transDescriptor));
+        mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), descriptor);
+        mockPluginAccessor.expectAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), mockPlugin.proxy());
+
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
+
+        assertTrue(resource instanceof DownloadableClasspathResource);
+    }
+
+    public void testGetMissingTransformerDownloadableClasspathResource() throws Exception
+    {
+        final String resourceName = "test.css";
+        final String url = "/download/resources/" + TEST_MODULE_COMPLETE_KEY + "/" + resourceName;
+
+        final DownloadableResource transformedResource = mock(DownloadableResource.class);
+        WebResourceTransformation trans = new WebResourceTransformation(DocumentHelper.parseText(
+                "<transformation extension=\"js\">\n" +
+                    "<transformer key=\"foo\" />\n" +
+                "</transformation>").getRootElement());
+        WebResourceTransformer transformer = new WebResourceTransformer()
+        {
+            public DownloadableResource transform(Element configElement, ResourceLocation location, DownloadableResource nextResource) {
+                return transformedResource;
+            }
+        };
+
+        WebResourceTransformerModuleDescriptor transDescriptor = mock(WebResourceTransformerModuleDescriptor.class);
+        when(transDescriptor.getKey()).thenReturn("bar");
+        when(transDescriptor.getModule()).thenReturn(transformer);
+
+        final Mock mockPlugin = new Mock(Plugin.class);
+        WebResourceModuleDescriptor descriptor = mock(WebResourceModuleDescriptor.class);
+        when(descriptor.getPluginKey()).thenReturn(TEST_PLUGIN_KEY);
+        when(descriptor.getResourceLocation("download", resourceName)).thenReturn(new ResourceLocation("", resourceName, "download", "text/css",
+            "", Collections.EMPTY_MAP));
+        when(descriptor.getTransformations()).thenReturn(Arrays.asList(trans));
+
+        mockPluginAccessor.expectAndReturn("getEnabledModuleDescriptorsByClass", C.args(C.eq(WebResourceTransformerModuleDescriptor.class)), Arrays.asList(transDescriptor));
+        mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), descriptor);
         mockPluginAccessor.expectAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), mockPlugin.proxy());
 
         final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);

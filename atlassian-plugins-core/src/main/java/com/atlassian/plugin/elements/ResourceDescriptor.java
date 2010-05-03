@@ -216,7 +216,7 @@ public class ResourceDescriptor
             }
             else
             {
-                throw new RuntimeException("Thiss descriptor does not provide resources named " + name);
+                throw new RuntimeException("This descriptor does not provide resources named " + name);
             }
         }
         else
