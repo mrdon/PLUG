@@ -248,7 +248,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
                 "</transformation>").getRootElement());
         WebResourceTransformer transformer = new WebResourceTransformer()
         {
-            public DownloadableResource transform(Element configElement, ResourceLocation location, DownloadableResource nextResource) {
+            public DownloadableResource transform(Element configElement, ResourceLocation location, String filePath, DownloadableResource nextResource) {
                 return transformedResource;
             }
         };
@@ -285,7 +285,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
                 "</transformation>").getRootElement());
         WebResourceTransformer transformer = new WebResourceTransformer()
         {
-            public DownloadableResource transform(Element configElement, ResourceLocation location, DownloadableResource nextResource) {
+            public DownloadableResource transform(Element configElement, ResourceLocation location, String extraPath, DownloadableResource nextResource) {
                 return transformedResource;
             }
         };
@@ -322,7 +322,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
                 "</transformation>").getRootElement());
         WebResourceTransformer transformer = new WebResourceTransformer()
         {
-            public DownloadableResource transform(Element configElement, ResourceLocation location, DownloadableResource nextResource) {
+            public DownloadableResource transform(Element configElement, ResourceLocation location, String extraPath, DownloadableResource nextResource) {
                 return transformedResource;
             }
         };

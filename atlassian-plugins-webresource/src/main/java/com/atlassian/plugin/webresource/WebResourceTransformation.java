@@ -50,7 +50,7 @@ class WebResourceTransformation
         return loc.endsWith(extension);
     }
 
-    DownloadableResource transformDownloadableResource(PluginAccessor pluginAccessor, DownloadableResource resource, ResourceLocation resourceLocation)
+    DownloadableResource transformDownloadableResource(PluginAccessor pluginAccessor, DownloadableResource resource, ResourceLocation resourceLocation, String filePath)
     {
         DownloadableResource lastResource = resource;
         for (Map.Entry<String, Element> entry : transformerElements.entrySet())
@@ -61,7 +61,7 @@ class WebResourceTransformation
                 if (descriptor.getKey().equals(entry.getKey()))
                 {
                     found = true;
-                    lastResource = descriptor.getModule().transform(entry.getValue(), resourceLocation, lastResource);
+                    lastResource = descriptor.getModule().transform(entry.getValue(), resourceLocation, filePath, lastResource);
                 }
             }
             if (!found)

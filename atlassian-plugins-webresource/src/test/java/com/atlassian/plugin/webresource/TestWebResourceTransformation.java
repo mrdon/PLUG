@@ -70,9 +70,9 @@ public class TestWebResourceTransformation extends TestCase
 
         DownloadableResource originalResource = mock(DownloadableResource.class);
         DownloadableResource transResource = mock(DownloadableResource.class);
-        when(transformer.transform(element.element("transformer"), loc, originalResource)).thenReturn(transResource);
+        when(transformer.transform(element.element("transformer"), loc, "", originalResource)).thenReturn(transResource);
 
-        DownloadableResource testResource = trans.transformDownloadableResource(pluginAccessor, originalResource, loc);
+        DownloadableResource testResource = trans.transformDownloadableResource(pluginAccessor, originalResource, loc, "");
         assertEquals(transResource, testResource);
     }
 

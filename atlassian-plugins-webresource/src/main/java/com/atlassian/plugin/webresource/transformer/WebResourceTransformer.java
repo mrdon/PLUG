@@ -18,8 +18,9 @@ public interface WebResourceTransformer
      * @param configElement The element where it was used.  This is provided to allow the transformer to
      * take additional configuration in the form of custom attributes or sub-elements.
      * @param location The original resource location
+     * @param filePath Extra path information.  Cannot be null, but can be an empty string if no extra path information
      * @param nextResource The original resource
      * @return The new resource representing the transformed resource
      */
-    DownloadableResource transform(Element configElement, ResourceLocation location, DownloadableResource nextResource);
+    DownloadableResource transform(Element configElement, ResourceLocation location, String filePath, DownloadableResource nextResource);
 }

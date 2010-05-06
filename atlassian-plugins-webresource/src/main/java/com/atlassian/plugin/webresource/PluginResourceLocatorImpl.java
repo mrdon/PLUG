@@ -356,7 +356,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             {
                 if (list.matches(resourceLocation))
                 {
-                    lastResource = list.transformDownloadableResource(pluginAccessor, actualResource, resourceLocation);
+                    lastResource = list.transformDownloadableResource(pluginAccessor, actualResource, resourceLocation, filePath);
                 }
             }
             result = lastResource;
