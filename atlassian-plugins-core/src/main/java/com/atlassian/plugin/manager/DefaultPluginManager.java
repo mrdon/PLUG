@@ -358,6 +358,10 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
                                     final UnloadablePlugin unloadablePlugin = new UnloadablePlugin("Plugin requires a restart of the application");
                                     unloadablePlugin.setKey(plugin.getKey());
+                                    unloadablePlugin.setI18nNameKey(plugin.getI18nNameKey());
+                                    unloadablePlugin.setName(plugin.getName());
+                                    unloadablePlugin.setPluginInformation(plugin.getPluginInformation());
+                                    unloadablePlugin.setPluginsVersion(plugin.getPluginsVersion());
                                     plugin = unloadablePlugin;
                                 }
                                 else
