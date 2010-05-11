@@ -924,12 +924,17 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(2, manager.getPlugins().size());
 
         new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
-                "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>1.0</version>",
+                "<atlassian-plugin name='Test 2' i18n-name-key='test.name' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>1.0</version>",
                 "    </plugin-info>", "    <requiresRestart key='foo' />", "</atlassian-plugin>").build(pluginsTestDir);
         manager.scanForNewPlugins();
 
         assertEquals(3, manager.getPlugins().size());
-        assertNotNull(manager.getPlugin("test.restartrequired"));
+        Plugin plugin = manager.getPlugin("test.restartrequired");
+        assertNotNull(plugin);
+        assertEquals("Test 2", plugin.getName());
+        assertEquals("test.name", plugin.getI18nNameKey());
+        assertEquals(1, plugin.getPluginsVersion());
+        assertEquals("1.0", plugin.getPluginInformation().getVersion());
         assertFalse(manager.isPluginEnabled("test.restartrequired"));
         assertEquals(0, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
         assertEquals(PluginRestartState.INSTALL, manager.getPluginRestartState("test.restartrequired"));
@@ -938,7 +943,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         manager.init();
 
         assertEquals(3, manager.getPlugins().size());
-        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertNotNull(plugin);
         assertTrue(manager.isPluginEnabled("test.restartrequired"));
         assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
         assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));

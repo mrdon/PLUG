@@ -42,7 +42,8 @@ public final class UnloadablePluginFactory
         newPlugin.setI18nNameKey(oldPlugin.getI18nNameKey());
         newPlugin.setUninstallable(oldPlugin.isUninstallable());
         newPlugin.setDeletable(oldPlugin.isDeleteable());
-
+        newPlugin.setPluginsVersion(oldPlugin.getPluginsVersion());
+        
         // Make sure it's visible to the user
         newPlugin.setSystemPlugin(false);
 
