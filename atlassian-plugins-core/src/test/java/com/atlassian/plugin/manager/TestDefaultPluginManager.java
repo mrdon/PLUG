@@ -21,6 +21,7 @@ import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.event.events.PluginEnabledEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.event.listeners.FailListener;
@@ -1674,6 +1675,40 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         catch (IllegalArgumentException ex)
         {
             // test passed
+        }
+    }
+
+    public void testShutdownHandlesException()
+    {
+        final ThingsAreWrongListener listener = new ThingsAreWrongListener();
+        pluginEventManager.register(listener);
+        manager.init();
+        try
+        {
+            //this should not throw an exception
+            manager.shutdown();
+        }
+        catch (Exception e)
+        {
+            fail("Should not have thrown an exception!");
+        }
+        assertTrue(listener.isCalled());
+    }
+
+    public static class ThingsAreWrongListener
+    {
+        private volatile boolean called = false;
+
+        @PluginEventListener
+        public void onFrameworkShutdown(final PluginFrameworkShutdownEvent event)
+        {
+            called = true;
+            throw new NullPointerException("AAAH!");
+        }
+
+        public boolean isCalled()
+        {
+            return called;
         }
     }
 

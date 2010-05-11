@@ -83,6 +83,13 @@ public class DefaultPluginEventManager implements PluginEventManager
 
     public void broadcast(Object event) throws NotificationException
     {
-        publisher.publish(event);
+        try
+        {
+            publisher.publish(event);
+        }
+        catch (RuntimeException e)
+        {
+            throw new NotificationException(e);
+        }
     }
 }
