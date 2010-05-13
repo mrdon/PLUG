@@ -12,6 +12,7 @@ import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
 import org.apache.commons.lang.Validate;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -132,7 +133,30 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
     public Set<String> getRequiredPlugins()
     {
         final Set<String> keys = new HashSet<String>();
+        getRequiredPluginsFromExports(keys);
+        getRequiredPluginsFromServices(keys);
+        return keys;
+    }
 
+    private void getRequiredPluginsFromServices(Set<String> keys)
+    {
+        ServiceReference[] refs = bundle.getServicesInUse();
+        if (refs != null)
+        {
+            for (ServiceReference ref : refs)
+            {
+                // note: this won't catch service dependencies on pure OSGi bundles
+                String pluginKey = (String) ref.getBundle().getHeaders().get(OsgiPlugin.ATLASSIAN_PLUGIN_KEY);
+                if (pluginKey != null)
+                {
+                    keys.add(pluginKey);
+                }
+            }
+        }
+    }
+
+    private void getRequiredPluginsFromExports(Set<String> keys)
+    {
         // Get a set of all packages that this plugin imports
         final Set<String> imports = OsgiHeaderUtil.parseHeader((String) getBundle().getHeaders().get(Constants.IMPORT_PACKAGE)).keySet();
 
@@ -164,7 +188,6 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
                 }
             }
         }
-        return keys;
     }
 
     public void setPluginContainer(final Object container)

@@ -559,6 +559,9 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             }
             if (pluginUpgraded)
             {
+                // we have to disable all dependent plugins to prevent a dependent plugin trying to access, indirectly,
+                // the felix global lock, which is held by the PackageAdmin while refreshing.
+                pluginsToEnable.addAll(disableDependentPlugins(plugin));
                 pluginEventManager.broadcast(new PluginUpgradedEvent(plugin));
             }
             plugins.put(plugin.getKey(), plugin);
@@ -580,6 +583,28 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                 }
             }
         }
+    }
+
+    private Set<Plugin> disableDependentPlugins(Plugin plugin)
+    {
+        Set<Plugin> dependentPlugins = new HashSet<Plugin>();
+        Set<String> dependentPluginKeys = new HashSet<String>();
+
+        for (Plugin depPlugin : getEnabledPlugins())
+        {
+            if (plugin != depPlugin && depPlugin.getRequiredPlugins().contains(plugin.getKey()))
+            {
+                dependentPlugins.add(depPlugin);
+                dependentPluginKeys.add(depPlugin.getKey());
+            }
+        }
+        log.info("Found dependent enabled plugins for upgraded plugin '" + plugin.getKey() + "': " + dependentPluginKeys
+         + ".  Temporarily disabling...");
+        for (Plugin depPlugin : dependentPlugins)
+        {
+            disablePluginWithoutPersisting(depPlugin.getKey());
+        }
+        return dependentPlugins;
     }
 
     /**

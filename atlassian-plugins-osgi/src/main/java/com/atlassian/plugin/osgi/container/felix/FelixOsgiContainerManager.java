@@ -55,6 +55,7 @@ import java.util.jar.JarFile;
 public class FelixOsgiContainerManager implements OsgiContainerManager
 {
     public static final String OSGI_FRAMEWORK_BUNDLES_ZIP = "osgi-framework-bundles.zip";
+    public static final int REFRESH_TIMEOUT = 10;
 
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(FelixOsgiContainerManager.class);
     private static final String OSGI_BOOTDELEGATION = "org.osgi.framework.bootdelegation";
@@ -659,7 +660,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 boolean refreshed = false;
                 try
                 {
-                    refreshed = latch.await(10, TimeUnit.SECONDS);
+                    refreshed = latch.await(REFRESH_TIMEOUT, TimeUnit.SECONDS);
                 }
                 catch (InterruptedException e)
                 {
