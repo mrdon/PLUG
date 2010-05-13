@@ -229,10 +229,12 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         if ((bootDelegation == null) || (bootDelegation.trim().length() == 0))
         {
             bootDelegation = "com.yourkit,com.yourkit.*," +
+                             "sun.*," +
                              "com.jprofiler,com.jprofiler.*";
         }
 
         configMap.put(FelixConstants.FRAMEWORK_BOOTDELEGATION, bootDelegation);
+        configMap.put(FelixConstants.IMPLICIT_BOOT_DELEGATION_PROP, "false");
 
         configMap.put(FelixConstants.FRAMEWORK_BUNDLE_PARENT, FelixConstants.FRAMEWORK_BUNDLE_PARENT_FRAMEWORK);
         if (log.isDebugEnabled())
