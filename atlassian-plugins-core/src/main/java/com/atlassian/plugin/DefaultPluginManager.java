@@ -14,7 +14,7 @@ import java.util.List;
  * state changes in the PluginStateStore.
  * <p/>
  * An interesting quirk in the design is that {@link #installPlugin(PluginArtifact)} explicitly stores
- * the plugin via a {@link PluginInstaller}, whereas {@link #uninstall(Plugin)} relies on the
+ * the plugin via a {@link PluginInstaller}, whereas {@link #uninstall(String)} relies on the
  * underlying {@link PluginLoader} to remove the plugin if necessary.
  *
  * @deprecated Since 2.2.0, use {@link com.atlassian.plugin.manager.DefaultPluginManager} instead

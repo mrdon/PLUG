@@ -1049,7 +1049,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
         assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
 
-        manager.uninstall(manager.getPlugin("test.restartrequired"));
+        manager.uninstall("test.restartrequired");
 
         assertEquals(3, manager.getPlugins().size());
         assertNotNull(manager.getPlugin("test.restartrequired"));
@@ -1082,7 +1082,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartSubclassModuleDescriptor.class).size());
         assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
 
-        manager.uninstall(manager.getPlugin("test.restartrequired"));
+        manager.uninstall("test.restartrequired");
 
         assertEquals(3, manager.getPlugins().size());
         assertNotNull(manager.getPlugin("test.restartrequired"));
@@ -1146,7 +1146,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         try
         {
-            manager.uninstall(manager.getPlugin("test.atlassian.plugin"));
+            manager.uninstall("test.atlassian.plugin");
             fail();
         }
         catch (final PluginException ex)
@@ -1183,7 +1183,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         final PassListener disabledListener = new PassListener(PluginDisabledEvent.class);
         pluginEventManager.register(disabledListener);
         final Plugin plugin = manager.getPlugin("test.atlassian.plugin.classloaded");
-        manager.uninstall(plugin);
+        manager.uninstall(plugin.getKey());
         assertTrue("Module must have had disable() called before being removed", moduleDescriptor.disabled);
 
         // uninstalling a plugin should remove it's state completely from the state store - PLUG-13
@@ -1211,7 +1211,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         try
         {
-            manager.uninstall(plugin);
+            manager.uninstall(plugin.getKey());
             fail("Where was the exception?");
         }
         catch (final PluginException p)
@@ -1345,7 +1345,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         checkResources(manager, false, false);
         manager.enablePlugin("test.atlassian.plugin.classloaded");
         checkResources(manager, true, true);
-        manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded"));
+        manager.uninstall("test.atlassian.plugin.classloaded");
         checkResources(manager, false, false);
         //restore paddington to test plugins dir
         FileUtils.copyDirectory(pluginsDirectory, pluginsTestDir);
@@ -1407,7 +1407,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         checkClasses(manager, false);
         manager.enablePlugin("test.atlassian.plugin.classloaded");
         checkClasses(manager, true);
-        manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded"));
+        manager.uninstall("test.atlassian.plugin.classloaded");
         checkClasses(manager, false);
         //restore paddington to test plugins dir
         FileUtils.copyDirectory(pluginsDirectory, pluginsTestDir);
@@ -1637,7 +1637,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertTrue(manager.isPluginModuleEnabled(module.getCompleteKey()));
         manager.disablePluginModule(module.getCompleteKey());
         assertFalse(manager.isPluginModuleEnabled(module.getCompleteKey()));
-        manager.uninstall(plugin);
+        manager.uninstall(plugin.getKey());
         assertFalse(manager.isPluginModuleEnabled(module.getCompleteKey()));
         assertTrue(pluginStateStore.load().getPluginStateMap(plugin).isEmpty());
     }

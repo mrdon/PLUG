@@ -126,7 +126,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
         });
 
         // uninstall the module - the test plugin modules should revert back to Unrecognised
-        pluginManager.uninstall(pluginManager.getPlugin("test.plugin.module"));
+        pluginManager.uninstall("test.plugin.module");
         WaitUntil.invoke(new BasicWaitCondition()
         {
             public boolean isFinished()
@@ -400,7 +400,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                 .next();
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
 
-        pluginManager.uninstall(pluginManager.getPlugin("test.plugin.module"));
+        pluginManager.uninstall("test.plugin.module");
         WaitUntil.invoke(new BasicWaitCondition()
         {
             public boolean isFinished()

@@ -66,7 +66,7 @@ public interface PluginController
      * @param pluginArtifact The plugin artifact to install
      * @throws com.atlassian.plugin.PluginParseException if the plugin is not a valid plugin
      * @return The plugin key
-     * @deprecated Since 2.3.0, use {@link #installPlugins(PluginArtifact[])} instead
+     * @deprecated Since 2.3.0, use {@link #installPlugins(PluginArtifact...)} instead
      */
     String installPlugin(PluginArtifact pluginArtifact) throws PluginParseException;
 
@@ -85,8 +85,20 @@ public interface PluginController
      * Uninstall the plugin, disabling it first.
      * @param plugin The plugin.
      * @throws PluginException if there was some problem uninstalling the plugin.
+     * @deprecated Since 2.5.0, use {@link #uninstall(String)} instead
      */
     void uninstall(Plugin plugin) throws PluginException;
+
+    /**
+     * Uninstall the plugin, disabling it first.  If the plugin had been upgraded or installed, but required a restart,
+     * the upgrade or install artifact will be deleted, and the old one replaced, in the case of an upgrade.
+     *
+     * @param pluginKey The plugin key
+     * @throws PluginException if there was some problem uninstalling the plugin.
+     * @throws IllegalArgumentException if the plugin key is null or cannot be resolved to a plugin
+     * @since 2.5.0
+     */
+    void uninstall(String pluginKey) throws PluginException;
 
     /**
      * Search all loaders and add any new plugins you find.

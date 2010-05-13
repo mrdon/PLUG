@@ -191,7 +191,7 @@ public class TestDefaultPluginManagerEvents extends TestCase
     public void testInstallPlugin() throws Exception
     {
         // have to uninstall one of the directory plugins
-        manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded2"));
+        manager.uninstall("test.atlassian.plugin.classloaded2");
         listener.reset();
         File pluginJar = new File(DirectoryPluginLoaderUtils.getTestPluginsDirectory(),
              "pooh-test-plugin.jar");
@@ -205,7 +205,7 @@ public class TestDefaultPluginManagerEvents extends TestCase
     public void testUninstallPlugin() throws Exception
     {
         // have to uninstall one of the directory plugins
-        manager.uninstall(manager.getPlugin("test.atlassian.plugin.classloaded2"));
+        manager.uninstall("test.atlassian.plugin.classloaded2");
 
         assertListEquals(listener.getEventClasses(),
             PluginModuleDisabledEvent.class,

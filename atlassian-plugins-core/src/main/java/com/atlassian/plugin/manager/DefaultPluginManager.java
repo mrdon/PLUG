@@ -20,24 +20,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.atlassian.plugin.*;
+import org.apache.commons.lang.Validate;
 import org.apache.commons.lang.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.atlassian.plugin.ModuleCompleteKey;
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginController;
-import com.atlassian.plugin.PluginException;
-import com.atlassian.plugin.PluginInstaller;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.PluginRestartState;
-import com.atlassian.plugin.PluginState;
-import com.atlassian.plugin.PluginSystemLifecycle;
-import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.classloader.PluginsClassLoader;
 import com.atlassian.plugin.descriptors.CannotDisable;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
@@ -86,7 +74,7 @@ import com.google.common.base.Predicate;
  * An interesting quirk in the design is that
  * {@link #installPlugin(com.atlassian.plugin.PluginArtifact)} explicitly stores
  * the plugin via a {@link com.atlassian.plugin.PluginInstaller}, whereas
- * {@link #uninstall(com.atlassian.plugin.Plugin)} relies on the underlying
+ * {@link #uninstall(String)} relies on the underlying
  * {@link com.atlassian.plugin.loaders.PluginLoader} to remove the plugin if
  * necessary.
  */
@@ -108,7 +96,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      * Installer used for storing plugins. Used by
      * {@link #installPlugin(PluginArtifact)}.
      */
-    private PluginInstaller pluginInstaller;
+    private RevertablePluginInstaller pluginInstaller = new NoOpRevertablePluginInstaller(new UnsupportedPluginInstaller());
 
     /**
      * Stores {@link Plugin}s as a key and {@link PluginLoader} as a value.
@@ -133,6 +121,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         stopWatch.start();
         log.info("Initialising the plugin system");
         pluginEventManager.broadcast(new PluginFrameworkStartingEvent(this, this));
+        pluginInstaller.clearBackups();
         for (final PluginLoader loader : pluginLoaders)
         {
             if (loader == null)
@@ -253,7 +242,14 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     public void setPluginInstaller(final PluginInstaller pluginInstaller)
     {
-        this.pluginInstaller = pluginInstaller;
+        if (pluginInstaller instanceof RevertablePluginInstaller)
+        {
+            this.pluginInstaller = (RevertablePluginInstaller) pluginInstaller;
+        }
+        else
+        {
+            this.pluginInstaller = new NoOpRevertablePluginInstaller(pluginInstaller);
+        }
     }
 
     protected final PluginPersistentStateStore getStore()
@@ -362,7 +358,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                                 }
                                 else
                                 {
-                                    getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.UPGRADE).toState());
+                                    markPluginUpgradeThatRequiresRestart(plugin);
                                     continue;
                                 }
                             }
@@ -371,7 +367,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                             // require restart, even if the new one doesn't
                             else if ((oldPlugin != null) && PluginUtils.doesPluginRequireRestart(oldPlugin))
                             {
-                                getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.UPGRADE).toState());
+                                markPluginUpgradeThatRequiresRestart(plugin);
                                 continue;
                             }
                             pluginsToAdd.add(plugin);
@@ -385,6 +381,11 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         return numberFound;
     }
 
+    private void markPluginUpgradeThatRequiresRestart(Plugin plugin)
+    {
+        getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.UPGRADE).toState());
+    }
+
     /**
      * @param plugin
      * @throws PluginException If the plugin or loader doesn't support
@@ -392,6 +393,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     public void uninstall(final Plugin plugin) throws PluginException
     {
+        // This code is left here to support the rare case of a client passing in a plugin that cannot be resolved
+        // internally.  Unlikely, and damn hacky, but still...
         if (PluginUtils.doesPluginRequireRestart(plugin))
         {
             ensurePluginAndLoaderSupportsUninstall(plugin);
@@ -403,6 +406,29 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
             // PLUG-13: Plugins should not save state across uninstalls.
             removeStateFromStore(getStore(), plugin);
+        }
+    }
+
+    /**
+     * @param pluginKey The plugin key to uninstall
+     * @throws PluginException If the plugin or loader doesn't support
+     *             uninstallation
+     */
+    public void uninstall(final String pluginKey) throws PluginException
+    {
+        Validate.notNull(pluginKey);
+        if (getState().getPluginRestartState(pluginKey) == PluginRestartState.UPGRADE ||
+            getState().getPluginRestartState(pluginKey) == PluginRestartState.INSTALL)
+        {
+            getStore().save(getBuilder().setPluginRestartState(pluginKey, PluginRestartState.NONE).toState());
+            pluginInstaller.revertInstalledPlugin(pluginKey);
+
+        }
+        else
+        {
+            Plugin plugin = getPlugin(pluginKey);
+            Validate.notNull(plugin);
+            uninstall(plugin);
         }
     }
 
@@ -421,7 +447,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      * clustered application.
      * 
      * @param plugin the plugin to remove
-     * @throws PluginException if th eplugin cannot be uninstalled
+     * @throws PluginException if the plugin cannot be uninstalled
      */
     protected void unloadPlugin(final Plugin plugin) throws PluginException
     {
