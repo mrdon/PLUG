@@ -20,8 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.jar.Manifest;
-import java.util.HashMap;
-import java.util.Hashtable;
 
 /**
  * Plugin deployer that deploys OSGi bundles that don't contain XML descriptor files

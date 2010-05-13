@@ -12,9 +12,8 @@ import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
+import org.apache.commons.lang.Validate;
+import org.osgi.framework.*;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -34,11 +33,27 @@ public class OsgiBundlePlugin extends AbstractPlugin
     private final Date dateLoaded;
     private final String key;
     private final ClassLoader bundleClassLoader;
+    private final SynchronousBundleListener bundleStopListener;
 
     public OsgiBundlePlugin(final Bundle bundle, final String key, final PluginEventManager pluginEventManager)
     {
         bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
+        Validate.notNull(bundle);
         this.bundle = bundle;
+        // TODO: this should be done at a higher level than this to support start and stop
+        bundleStopListener = new SynchronousBundleListener()
+        {
+            public void bundleChanged(final BundleEvent bundleEvent)
+            {
+                if (bundleEvent.getBundle() == bundle)
+                {
+                    if (bundleEvent.getType() == BundleEvent.STOPPING)
+                    {
+                        setPluginState(PluginState.DISABLED);
+                    }
+                }
+            }
+        };
         pluginInformation = new PluginInformation();
         pluginInformation.setDescription((String) bundle.getHeaders().get(Constants.BUNDLE_DESCRIPTION));
         pluginInformation.setVersion((String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
@@ -243,6 +258,7 @@ public class OsgiBundlePlugin extends AbstractPlugin
         try
         {
             bundle.start();
+            bundle.getBundleContext().addBundleListener(bundleStopListener);
             return PluginState.ENABLED;
         }
         catch (final BundleException e)

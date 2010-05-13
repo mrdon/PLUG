@@ -22,12 +22,7 @@ import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.BundleListener;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.*;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
@@ -63,6 +58,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     public static final String SPRING_CONTEXT = "Spring-Context";
     public static final String ATLASSIAN_PLUGIN_KEY = "Atlassian-Plugin-Key";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final BundleListener bundleStopListener;
 
     public OsgiPlugin(final String key, final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginEventManager pluginEventManager)
     {
@@ -74,6 +70,17 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         this.helper = new OsgiPluginUninstalledHelper(key, mgr, artifact);
         this.pluginEventManager = pluginEventManager;
         this.packageAdmin = extractPackageAdminFromOsgi(mgr);
+        this.bundleStopListener = new SynchronousBundleListener()
+        {
+            public void bundleChanged(final BundleEvent bundleEvent)
+            {
+                if ((bundleEvent.getBundle() == getBundle()) && (bundleEvent.getType() == BundleEvent.STOPPING))
+                {
+                    helper.onDisable();
+                    setPluginState(PluginState.DISABLED);
+                }
+            }
+        };
     }
 
     /**
@@ -85,6 +92,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         this.helper = helper;
         this.pluginEventManager = pluginEventManager;
         this.packageAdmin = null;
+        this.bundleStopListener = null;
     }
 
     /**
@@ -380,18 +388,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                                 new UnrecognizedModuleDescriptorServiceTrackerCustomizer(this)));
 
                 // ensure the bean factory is removed when the bundle is stopped
-                // Do we need to unregister this?
-                ctx.addBundleListener(new BundleListener()
-                {
-                    public void bundleChanged(final BundleEvent bundleEvent)
-                    {
-                        if ((bundleEvent.getBundle() == getBundle()) && (bundleEvent.getType() == BundleEvent.STOPPED))
-                        {
-                            helper.onDisable();
-                            setPluginState(PluginState.DISABLED);
-                        }
-                    }
-                });
+                ctx.addBundleListener(bundleStopListener);
             }
             else
             {

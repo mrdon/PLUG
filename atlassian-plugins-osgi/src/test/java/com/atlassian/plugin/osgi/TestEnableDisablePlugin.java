@@ -12,6 +12,7 @@ import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.test.PluginJarBuilder;
+import org.osgi.framework.Bundle;
 import org.osgi.util.tracker.ServiceTracker;
 
 import java.io.File;
@@ -145,6 +146,98 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
         assertEquals(PluginState.ENABLED, consumer.getPluginState());
         assertEquals(PluginState.ENABLED, provider.getPluginState());
     }
+
+    public void testStoppedOsgiBundleDetected() throws Exception
+    {
+        new PluginJarBuilder("osgi")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                    "Manifest-Version: 1.0",
+                    "Bundle-SymbolicName: my",
+                    "Bundle-Version: 1.0",
+                    "")
+                .build(pluginsDir);
+        initPluginManager();
+        Plugin plugin = pluginManager.getPlugin("my-1.0");
+        assertTrue(pluginManager.isPluginEnabled("my-1.0"));
+        assertTrue(plugin.getPluginState() == PluginState.ENABLED);
+
+        for (Bundle bundle : osgiContainerManager.getBundles())
+        {
+            if (bundle.getSymbolicName().equals("my"))
+            {
+                bundle.stop();
+            }
+        }
+
+        assertFalse(pluginManager.isPluginEnabled("my-1.0"));
+        assertTrue(plugin.getPluginState() == PluginState.DISABLED);
+
+    }
+
+    /* This won't work until we do detection at a higher level than the plugin object
+    public void testStartedOsgiBundleDetected() throws Exception
+    {
+        new PluginJarBuilder("osgi")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                    "Manifest-Version: 1.0",
+                    "Bundle-SymbolicName: my",
+                    "Bundle-Version: 1.0",
+                    "")
+                .build(pluginsDir);
+        initPluginManager();
+        Plugin plugin = pluginManager.getPlugin("my-1.0");
+        assertTrue(pluginManager.isPluginEnabled("my-1.0"));
+        assertTrue(plugin.getPluginState() == PluginState.ENABLED);
+
+        for (Bundle bundle : osgiContainerManager.getBundles())
+        {
+            if (bundle.getSymbolicName().equals("my"))
+            {
+                bundle.stop();
+                bundle.start();
+            }
+        }
+
+        assertTrue(WaitUntil.invoke(new WaitUntil.WaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.isPluginEnabled("my-1.0");
+            }
+
+            public String getWaitMessage()
+            {
+                return null;
+            }
+        }));
+        assertTrue(pluginManager.isPluginEnabled("my-1.0"));
+        assertTrue(plugin.getPluginState() == PluginState.ENABLED);
+    }
+    */
+
+    public void testStoppedOsgiPluginDetected() throws Exception
+    {
+        new PluginJarBuilder("osgi")
+                .addPluginInformation("my", "foo", "1.0")
+                .build(pluginsDir);
+        initPluginManager();
+        Plugin plugin = pluginManager.getPlugin("my");
+        assertTrue(pluginManager.isPluginEnabled("my"));
+        assertTrue(plugin.getPluginState() == PluginState.ENABLED);
+
+        for (Bundle bundle : osgiContainerManager.getBundles())
+        {
+            if (bundle.getSymbolicName().equals("my"))
+            {
+                bundle.stop();
+            }
+        }
+
+        assertFalse(pluginManager.isPluginEnabled("my"));
+        assertTrue(plugin.getPluginState() == PluginState.DISABLED);
+
+    }
+
 
     public void testEnableEnablesDependentPluginsWithBundles() throws Exception
     {
