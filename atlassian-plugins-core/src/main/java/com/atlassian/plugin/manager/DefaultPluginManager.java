@@ -353,7 +353,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                                     getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.INSTALL).toState());
 
                                     final UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin);
-                                    unloadablePlugin.setErrorText("Plugin requires a restart of the application");
+                                    unloadablePlugin.setErrorText("Plugin requires a restart of the application due " +
+                                        "to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
                                     plugin = unloadablePlugin;
                                 }
                                 else

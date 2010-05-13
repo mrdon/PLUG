@@ -889,6 +889,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         final Plugin plugin = manager.getPlugin("test.atlassian.plugin");
         assertTrue(plugin instanceof UnloadablePlugin);
+        assertTrue(((UnloadablePlugin)plugin).getErrorText().contains("foo"));
 
         assertEquals(PluginRestartState.INSTALL, manager.getPluginRestartState("test.atlassian.plugin"));
     }

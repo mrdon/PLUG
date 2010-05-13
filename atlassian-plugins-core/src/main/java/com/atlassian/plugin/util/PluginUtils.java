@@ -6,6 +6,7 @@ import com.atlassian.plugin.descriptors.RequiresRestart;
 import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -48,6 +49,27 @@ public class PluginUtils
             }
         }
         return false;
+    }
+
+    /**
+     * Gets a list of all the module keys in a plugin that require restart.  Looks for the annotation
+     * {@link RequiresRestart} on the plugin's module descriptors.
+     *
+     * @param plugin The plugin
+     * @return A unique set of module keys
+     * @since 2.5.0
+     */
+    public static Set<String> getPluginModulesThatRequireRestart(final Plugin plugin)
+    {
+        Set<String> keys = new HashSet<String>();
+        for (final ModuleDescriptor<?> descriptor : plugin.getModuleDescriptors())
+        {
+            if (descriptor.getClass().getAnnotation(RequiresRestart.class) != null)
+            {
+                keys.add(descriptor.getKey());
+            }
+        }
+        return keys;
     }
 
     /**
