@@ -312,14 +312,17 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         int pos = systemExports.indexOf("org.apache.xerces.util");
         if (pos > -1)
         {
-            pos += "org.apache.xerces.util".length();
-
-            // only fail if no xerces found and xerces has no version
-            if (pos >= systemExports.length() || ';' != systemExports.charAt(pos))
+            if (pos == 0 || (pos > 0 && systemExports.charAt(pos - 1) == ','))
             {
-                throw new OsgiContainerException(
-                    "Detected an incompatible version of Apache Xerces on the classpath.  If using Tomcat, you may have " +
-                    "an old version of Xerces in $TOMCAT_HOME/common/lib/endorsed that will need to be removed.");
+                pos += "org.apache.xerces.util".length();
+
+                // only fail if no xerces found and xerces has no version
+                if (pos >= systemExports.length() || ';' != systemExports.charAt(pos))
+                {
+                    throw new OsgiContainerException(
+                            "Detected an incompatible version of Apache Xerces on the classpath.  If using Tomcat, you may have " +
+                                    "an old version of Xerces in $TOMCAT_HOME/common/lib/endorsed that will need to be removed.");
+                }
             }
         }
     }

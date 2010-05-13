@@ -59,6 +59,8 @@ public class TestFelixOsgiContainerManager extends TestCase
         felix.detectXercesOverride("foo.bar,baz.jim");
         felix.detectXercesOverride("foo.bar,org.apache.xerces.util;version=\"1.0\",baz.jim");
         felix.detectXercesOverride("foo.bar,org.apache.xerces.util;version=\"1.0\"");
+        felix.detectXercesOverride("foo.bar,repackaged.org.apache.xerces.util,bar.baz");
+
 
         try
         {
