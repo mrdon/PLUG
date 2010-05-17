@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.atlassian.plugin.*;
-import org.apache.commons.lang.Validate;
 import org.apache.commons.lang.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -414,7 +413,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     public void revertRestartRequiredChange(final String pluginKey) throws PluginException
     {
-        Validate.notNull(pluginKey);
+        notNull("pluginKey", pluginKey);
         if (getState().getPluginRestartState(pluginKey) == PluginRestartState.UPGRADE ||
             getState().getPluginRestartState(pluginKey) == PluginRestartState.INSTALL)
         {
