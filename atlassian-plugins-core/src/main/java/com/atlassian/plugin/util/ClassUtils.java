@@ -103,6 +103,7 @@ public class ClassUtils
      * @param baseClass  the base class
      * @param childClass the child class
      * @return a list of the raw classes for the actual type arguments.
+     * @throws IllegalArgumentException If the child class is not the base of the baseClass
      * @since 2.5.0
      */
     public static <T> List<Class<?>> getTypeArguments(
@@ -110,8 +111,9 @@ public class ClassUtils
     {
         Map<Type, Type> resolvedTypes = new HashMap<Type, Type>();
         Type type = childClass;
+        Class typeClass = getClass(type);
         // start walking up the inheritance hierarchy until we hit baseClass
-        while (!getClass(type).equals(baseClass))
+        while (!typeClass.equals(baseClass))
         {
             if (type instanceof Class)
             {
@@ -134,6 +136,11 @@ public class ClassUtils
                 {
                     type = rawType.getGenericSuperclass();
                 }
+            }
+            typeClass = getClass(type);
+            if (typeClass == null)
+            {
+                throw new IllegalArgumentException("Unable to find the class for the type " + type);
             }
         }
 

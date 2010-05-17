@@ -156,7 +156,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     /**
      * Loads the module class that this descriptor provides, and will not
      * necessarily be the implementation class. Override this for module
-     * descriptors who's type cannot be determined via generics.
+     * descriptors whose type cannot be determined via generics.
      * 
      * @param clazz The module class name to load
      * @throws IllegalStateException If the module class cannot be determined
