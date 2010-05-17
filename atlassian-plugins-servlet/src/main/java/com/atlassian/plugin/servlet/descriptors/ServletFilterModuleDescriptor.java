@@ -10,6 +10,7 @@ import com.atlassian.plugin.servlet.ServletModuleManager;
 import com.atlassian.plugin.servlet.filter.FilterDispatcherCondition;
 import com.atlassian.plugin.servlet.filter.FilterLocation;
 import com.atlassian.plugin.util.validation.ValidationPattern;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
 
@@ -53,7 +54,7 @@ public class ServletFilterModuleDescriptor extends BaseServletModuleDescriptor<F
     private int weight;
     private final ServletModuleManager servletModuleManager;
 
-    private Set<FilterDispatcherCondition> dispatcherConditions = new HashSet<FilterDispatcherCondition>() {{ add(FilterDispatcherCondition.REQUEST); }};
+    private Set<FilterDispatcherCondition> dispatcherConditions = Sets.newHashSet(FilterDispatcherCondition.REQUEST);
 
     /**
      * Creates a descriptor that uses a module class factory to create instances.
