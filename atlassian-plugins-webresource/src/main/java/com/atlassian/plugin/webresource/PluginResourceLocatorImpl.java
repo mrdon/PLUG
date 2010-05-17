@@ -348,7 +348,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
         DownloadableResource result = actualResource;
         // web resources are able to be transformed during delivery
-        if (descriptor != null && descriptor instanceof WebResourceModuleDescriptor)
+        if (descriptor instanceof WebResourceModuleDescriptor)
         {
             DownloadableResource lastResource = actualResource;
             WebResourceModuleDescriptor desc = (WebResourceModuleDescriptor) descriptor;

@@ -52,4 +52,9 @@ public abstract class AbstractTransformedDownloadableResource implements Downloa
     public String getContentType() {
         return originalResource.getContentType();
     }
+
+    protected DownloadableResource getOriginalResource()
+    {
+        return originalResource;
+    }
 }
