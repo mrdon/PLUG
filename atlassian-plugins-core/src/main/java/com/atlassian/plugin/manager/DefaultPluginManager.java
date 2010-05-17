@@ -349,7 +349,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                             {
                                 if (oldPlugin == null)
                                 {
-                                    getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.INSTALL).toState());
+                                    markPluginInstallThatRequiresRestart(plugin);
 
                                     final UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin);
                                     unloadablePlugin.setErrorText("Plugin requires a restart of the application due " +
@@ -381,9 +381,25 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         return numberFound;
     }
 
+    private void markPluginInstallThatRequiresRestart(Plugin plugin)
+    {
+        log.info("Installed plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " +
+                PluginUtils.getPluginModulesThatRequireRestart(plugin));
+        getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.INSTALL).toState());
+    }
+
     private void markPluginUpgradeThatRequiresRestart(Plugin plugin)
     {
+        log.info("Upgraded plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " +
+                PluginUtils.getPluginModulesThatRequireRestart(plugin));
         getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.UPGRADE).toState());
+    }
+
+    private void markPluginUninstallThatRequiresRestart(Plugin plugin)
+    {
+        log.info("Uninstalled plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " +
+                PluginUtils.getPluginModulesThatRequireRestart(plugin));
+        getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.REMOVE).toState());
     }
 
     /**
@@ -396,7 +412,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         if (PluginUtils.doesPluginRequireRestart(plugin))
         {
             ensurePluginAndLoaderSupportsUninstall(plugin);
-            getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.REMOVE).toState());
+            markPluginUninstallThatRequiresRestart(plugin);
         }
         else
         {
