@@ -74,7 +74,7 @@ import com.google.common.base.Predicate;
  * An interesting quirk in the design is that
  * {@link #installPlugin(com.atlassian.plugin.PluginArtifact)} explicitly stores
  * the plugin via a {@link com.atlassian.plugin.PluginInstaller}, whereas
- * {@link #uninstall(String)} relies on the underlying
+ * {@link #uninstall(Plugin)} relies on the underlying
  * {@link com.atlassian.plugin.loaders.PluginLoader} to remove the plugin if
  * necessary.
  */
@@ -394,8 +394,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     public void uninstall(final Plugin plugin) throws PluginException
     {
-        // This code is left here to support the rare case of a client passing in a plugin that cannot be resolved
-        // internally.  Unlikely, and damn hacky, but still...
         if (PluginUtils.doesPluginRequireRestart(plugin))
         {
             ensurePluginAndLoaderSupportsUninstall(plugin);
@@ -411,26 +409,19 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     }
 
     /**
-     * @param pluginKey The plugin key to uninstall
-     * @throws PluginException If the plugin or loader doesn't support
-     *             uninstallation
+     * @param pluginKey The plugin key to revert
+     * @throws PluginException If the revert cannot be completed
      */
-    public void uninstall(final String pluginKey) throws PluginException
+    public void revertRestartRequiredChange(final String pluginKey) throws PluginException
     {
         Validate.notNull(pluginKey);
         if (getState().getPluginRestartState(pluginKey) == PluginRestartState.UPGRADE ||
             getState().getPluginRestartState(pluginKey) == PluginRestartState.INSTALL)
         {
-            getStore().save(getBuilder().setPluginRestartState(pluginKey, PluginRestartState.NONE).toState());
             pluginInstaller.revertInstalledPlugin(pluginKey);
 
         }
-        else
-        {
-            Plugin plugin = getPlugin(pluginKey);
-            Validate.notNull(plugin);
-            uninstall(plugin);
-        }
+        getStore().save(getBuilder().setPluginRestartState(pluginKey, PluginRestartState.NONE).toState());
     }
 
     protected void removeStateFromStore(final PluginPersistentStateStore stateStore, final Plugin plugin)

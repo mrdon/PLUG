@@ -85,20 +85,20 @@ public interface PluginController
      * Uninstall the plugin, disabling it first.
      * @param plugin The plugin.
      * @throws PluginException if there was some problem uninstalling the plugin.
-     * @deprecated Since 2.5.0, use {@link #uninstall(String)} instead
      */
     void uninstall(Plugin plugin) throws PluginException;
 
     /**
-     * Uninstall the plugin, disabling it first.  If the plugin had been upgraded or installed, but required a restart,
-     * the upgrade or install artifact will be deleted, and the old one replaced, in the case of an upgrade.
+     * Restores the state of any plugin requiring a restart that had been removed, upgraded, or installed.  If marked
+     * as removed, the mark will be deleted.  If marked as upgrade, an attempt to restore the original plugin artifact
+     * will be made.  If marked as install, the artifact will be deleted.
      *
      * @param pluginKey The plugin key
-     * @throws PluginException if there was some problem uninstalling the plugin.
+     * @throws PluginException if there was some problem reverting the plugin state.
      * @throws IllegalArgumentException if the plugin key is null or cannot be resolved to a plugin
      * @since 2.5.0
      */
-    void uninstall(String pluginKey) throws PluginException;
+    void revertRestartRequiredChange(String pluginKey) throws PluginException;
 
     /**
      * Search all loaders and add any new plugins you find.

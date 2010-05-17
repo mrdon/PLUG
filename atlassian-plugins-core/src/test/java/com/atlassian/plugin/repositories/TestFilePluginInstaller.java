@@ -48,7 +48,7 @@ public class TestFilePluginInstaller extends TestCase
 
         installer.installPlugin("foo", new XmlPluginArtifact(upgradedFile));
         assertEquals("bar", FileUtils.readFileToString(pluginFile));
-        assertTrue(new File(pluginDir, ".bak-" + pluginFile.getName()).exists());
+        assertTrue(new File(pluginDir, FilePluginInstaller.ORIGINAL_PREFIX + pluginFile.getName()).exists());
     }
 
     public void testInstallPluginWithExistingOld() throws IOException
@@ -61,11 +61,11 @@ public class TestFilePluginInstaller extends TestCase
         FileUtils.writeStringToFile(upgradedFile, "bar");
 
         File upgraded2File = new File(tmpDir, pluginFile.getName());
-        FileUtils.writeStringToFile(upgradedFile, "bar");
+        FileUtils.writeStringToFile(upgraded2File, "bar");
 
         installer.installPlugin("foo", new XmlPluginArtifact(upgradedFile));
         assertEquals("bar", FileUtils.readFileToString(pluginFile));
-        assertTrue(new File(pluginDir, ".bak-" + pluginFile.getName()).exists());
+        assertTrue(new File(pluginDir, FilePluginInstaller.ORIGINAL_PREFIX + pluginFile.getName()).exists());
     }
 
     public void testRevertInstalledPlugin() throws IOException
@@ -90,11 +90,31 @@ public class TestFilePluginInstaller extends TestCase
 
         installer.installPlugin("foo", new XmlPluginArtifact(upgradedFile));
         assertEquals("bar", FileUtils.readFileToString(pluginFile));
-        File oldFile = new File(pluginDir, ".bak-" + pluginFile.getName());
+        File oldFile = new File(pluginDir, FilePluginInstaller.ORIGINAL_PREFIX + pluginFile.getName());
         assertTrue(oldFile.exists());
 
         installer.revertInstalledPlugin("foo");
         assertFalse(oldFile.exists());
+        assertEquals("foo", FileUtils.readFileToString(pluginFile));
+    }
+
+    public void testRevertUpgradedTwicePlugin() throws IOException
+    {
+        FilePluginInstaller installer = new FilePluginInstaller(pluginDir);
+        File pluginFile = File.createTempFile("plugin", ".jar", pluginDir);
+        FileUtils.writeStringToFile(pluginFile, "foo");
+
+        File upgradedFile = new File(tmpDir, pluginFile.getName());
+        FileUtils.writeStringToFile(upgradedFile, "bar");
+        installer.installPlugin("foo", new XmlPluginArtifact(upgradedFile));
+        assertEquals("bar", FileUtils.readFileToString(pluginFile));
+
+        File upgraded2File = new File(tmpDir, pluginFile.getName());
+        FileUtils.writeStringToFile(upgraded2File, "baz");
+        installer.installPlugin("foo", new XmlPluginArtifact(upgraded2File));
+        assertEquals("baz", FileUtils.readFileToString(pluginFile));
+
+        installer.revertInstalledPlugin("foo");
         assertEquals("foo", FileUtils.readFileToString(pluginFile));
     }
 
@@ -116,9 +136,7 @@ public class TestFilePluginInstaller extends TestCase
         File pluginFile = new File(pluginDir, originalFile.getName());
         assertEquals("baz", FileUtils.readFileToString(pluginFile));
         installer.revertInstalledPlugin("foo");
-        assertEquals("bar", FileUtils.readFileToString(pluginFile));
-        installer.revertInstalledPlugin("foo");
-        assertEquals("foo", FileUtils.readFileToString(pluginFile));
+        assertFalse(pluginFile.exists());
     }
 
     public void testRevertInstalledPluginWithTwoPreviousAndDifferentNames() throws IOException
@@ -140,12 +158,25 @@ public class TestFilePluginInstaller extends TestCase
         assertTrue(new File(pluginDir, upgradedFile.getName()).exists());
         assertTrue(new File(pluginDir, originalFile.getName()).exists());
         installer.revertInstalledPlugin("foo");
-        assertFalse(new File(pluginDir, upgraded2File.getName()).exists());
+        assertTrue(new File(pluginDir, upgraded2File.getName()).exists());
         assertTrue(new File(pluginDir, upgradedFile.getName()).exists());
-        assertTrue(new File(pluginDir, originalFile.getName()).exists());
-        installer.revertInstalledPlugin("foo");
-        assertFalse(new File(pluginDir, upgraded2File.getName()).exists());
-        assertFalse(new File(pluginDir, upgradedFile.getName()).exists());
-        assertTrue(new File(pluginDir, originalFile.getName()).exists());
+        assertFalse(new File(pluginDir, originalFile.getName()).exists());
+    }
+
+    public void testClearBackups() throws IOException
+    {
+        FilePluginInstaller installer = new FilePluginInstaller(pluginDir);
+        File pluginFile = File.createTempFile("plugin", ".jar", pluginDir);
+        FileUtils.writeStringToFile(pluginFile, "foo");
+
+        File upgradedFile = new File(tmpDir, pluginFile.getName());
+        FileUtils.writeStringToFile(upgradedFile, "bar");
+
+        installer.installPlugin("foo", new XmlPluginArtifact(upgradedFile));
+        assertTrue(new File(pluginDir, FilePluginInstaller.ORIGINAL_PREFIX + pluginFile.getName()).exists());
+        installer.clearBackups();
+        assertTrue(pluginFile.exists());
+        assertFalse(new File(pluginDir, FilePluginInstaller.ORIGINAL_PREFIX + pluginFile.getName()).exists());
+
     }
 }

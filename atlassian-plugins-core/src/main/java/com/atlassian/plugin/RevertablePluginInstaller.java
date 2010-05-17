@@ -13,9 +13,10 @@ package com.atlassian.plugin;
 public interface RevertablePluginInstaller extends PluginInstaller
 {
     /**
-     * Reverts a plugin artifact that was installed to any previous state.  If the artifact had already existed
+     * Reverts a plugin artifact that was installed to its original state.  If the artifact had already existed
      * before it was upgraded, the old artifact should be returned to its place.  If the artifact hadn't existed previously,
-     * then the installed plugin artifact should just be deleted.
+     * then the installed plugin artifact should just be deleted.  Calling this method after multiple installs or
+     * upgrades for a given plugin key during an instance will simple restore the original artifact, if any.
      *
      * @param pluginKey The plugin key to revert
      *

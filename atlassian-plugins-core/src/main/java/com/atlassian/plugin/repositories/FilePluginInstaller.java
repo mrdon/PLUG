@@ -1,7 +1,6 @@
 package com.atlassian.plugin.repositories;
 
 import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginInstaller;
 import com.atlassian.plugin.RevertablePluginInstaller;
 import com.atlassian.util.concurrent.CopyOnWriteMap;
 import org.apache.commons.io.FileUtils;
@@ -11,16 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * File-based implementation of a PluginInstaller which writes plugin artifact
- * to a specified directory.  Handles reverting installs by keeping track of previous
- * installs for a given instance, and backs up all installations automatically.
+ * to a specified directory.  Handles reverting installs by keeping track of the first installation for a given
+ * instance, and restores it.  Installation of plugin artifacts with different names will overwrite an existing artifact
+ * of that same name, if it exists, with the only exception being the backup of the first overwritten artifact to
+ * support reverting.
  *
  * @see RevertablePluginInstaller
  */
@@ -29,12 +26,9 @@ public class FilePluginInstaller implements RevertablePluginInstaller
     private File directory;
     private static final Logger log = LoggerFactory.getLogger(FilePluginInstaller.class);
 
-    // should be a nice multimap, which we don't see to have
-    private final Map<String, List<File>> installedPlugins = CopyOnWriteMap.<String, List<File>>builder().stableViews().newHashMap();
+    private final Map<String, OriginalFile> installedPlugins = CopyOnWriteMap.<String, OriginalFile>builder().stableViews().newHashMap();
 
-    private static final String BAK_PREFIX = ".bak-";
-    private static final Pattern BACKUP_NAME_PATTERN = Pattern.compile("(?:" + BAK_PREFIX + ")*(.*)");
-    private static final FilenameFilter BACKUP_NAME_FILTER = new BackupNameFilter();
+    public static final String ORIGINAL_PREFIX = ".original-";
 
     /**
      * @param directory where plugin JARs will be installed.
@@ -97,24 +91,25 @@ public class FilePluginInstaller implements RevertablePluginInstaller
      */
     public void revertInstalledPlugin(String pluginKey)
     {
-        List<File> oldFiles = getOldFiles(pluginKey);
-        if (!oldFiles.isEmpty())
+        OriginalFile orig = installedPlugins.get(pluginKey);
+        if (orig != null)
         {
-            File lastBackup = oldFiles.remove(oldFiles.size() - 1);
-            String targetFileName = stripPrefix(lastBackup.getName());
+            File origFile = new File(orig.getBackupFile().getParent(), orig.getOriginalName());
+            if (origFile.exists())
+            {
+                origFile.delete();
+            }
 
-            File pluginFile = new File(lastBackup.getParent(), targetFileName);
-            if (pluginFile.exists())
+            if (orig.isUpgrade())
             {
-                pluginFile.delete();
-            }
-            try
-            {
-                FileUtils.moveFile(lastBackup, pluginFile);
-            }
-            catch (IOException e)
-            {
-                log.warn("Unable to restore old plugin for " + pluginKey);
+                try
+                {
+                    FileUtils.moveFile(orig.getBackupFile(), origFile);
+                }
+                catch (IOException e)
+                {
+                    log.warn("Unable to restore old plugin for " + pluginKey);
+                }
             }
         }
     }
@@ -126,65 +121,71 @@ public class FilePluginInstaller implements RevertablePluginInstaller
      */
     public void clearBackups()
     {
-        for (File file : directory.listFiles(BACKUP_NAME_FILTER))
+        for (File file : directory.listFiles(new BackupNameFilter()))
         {
             file.delete();
         }
-    }
-
-    private List<File> getOldFiles(String pluginKey)
-    {
-        List<File> oldFiles = installedPlugins.get(pluginKey);
-        if (oldFiles == null)
-        {
-            oldFiles = new CopyOnWriteArrayList<File>();
-            installedPlugins.put(pluginKey, oldFiles);
-        }
-        return oldFiles;
+        installedPlugins.clear();
     }
 
     private void backup(String pluginKey, File newPluginFile) throws IOException
     {
-        List<File> oldFiles = getOldFiles(pluginKey);
-        if (newPluginFile.exists())
+        if (!installedPlugins.containsKey(pluginKey))
         {
-            File backupFile = findNextBackupFile(newPluginFile);
-            FileUtils.moveFile(newPluginFile, backupFile);
-            oldFiles.add(backupFile);
-        }
-        else
-        {
-            oldFiles.add(newPluginFile);
-        }
-    }
+            OriginalFile orig;
+            if (newPluginFile.exists())
+            {
+                File backupFile = new File(newPluginFile.getParent(), ORIGINAL_PREFIX + newPluginFile.getName());
+                if (backupFile.exists())
+                {
+                    throw new IOException("Existing backup found for plugin " + pluginKey + ".  Cannot install.");
+                }
 
-    private File findNextBackupFile(File newPluginFile)
-    {
-        File file = newPluginFile;
-        do
-        {
-            file = new File(file.getParent(), BAK_PREFIX + file.getName());
+                FileUtils.copyFile(newPluginFile, backupFile);
+                orig = new OriginalFile(backupFile, newPluginFile.getName());
+            }
+            else
+            {
+                orig = new OriginalFile(newPluginFile, newPluginFile.getName());
+            }
+            installedPlugins.put(pluginKey, orig);
         }
-        while (file.exists());
-
-        return file;
-    }
-
-    private String stripPrefix(String name)
-    {
-        Matcher m = BACKUP_NAME_PATTERN.matcher(name);
-        if (m.matches())
-        {
-            return m.group(1);
-        }
-        throw new RuntimeException("Invalid backup name");
     }
 
     private static class BackupNameFilter implements FilenameFilter
     {
         public boolean accept(File dir, String name)
         {
-            return name.startsWith(BAK_PREFIX);
+            return name.startsWith(ORIGINAL_PREFIX);
+        }
+    }
+
+    private static class OriginalFile
+    {
+        private final File backupFile;
+        private final String originalName;
+        private final boolean isUpgrade;
+
+        public OriginalFile(File backupFile, String originalName)
+        {
+            this.backupFile = backupFile;
+            this.originalName = originalName;
+            this.isUpgrade = !backupFile.getName().equals(originalName);
+        }
+
+        public File getBackupFile()
+        {
+            return backupFile;
+        }
+
+        public String getOriginalName()
+        {
+            return originalName;
+        }
+
+        public boolean isUpgrade()
+        {
+            return isUpgrade;
         }
     }
 }
