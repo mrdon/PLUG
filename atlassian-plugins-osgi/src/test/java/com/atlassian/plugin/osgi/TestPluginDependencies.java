@@ -513,18 +513,4 @@ public void testUpgradeWithNewComponentImplementation() throws Exception
         assertEquals(3, pluginManager.getEnabledPlugins().size());
         assertEquals("hi", ((OsgiPlugin)pluginManager.getPlugin("test2.plugin")).autowire(TestPluginInstall.Callable3Aware.class).call());
     }
-
-    public static class RefreshHappened
-    {
-        public volatile boolean refreshHappened = false;
-
-        @PluginEventListener
-        public void foo(PluginRefreshedEvent evt)
-        {
-            if (evt.getPlugin().getKey().equals("test2.plugin"))
-            {
-                refreshHappened = true;
-            }
-        }
-    }
 }

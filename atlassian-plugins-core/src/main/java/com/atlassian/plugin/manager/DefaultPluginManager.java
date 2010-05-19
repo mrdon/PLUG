@@ -594,6 +594,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             {
                 // we have to disable all dependent plugins to prevent a dependent plugin trying to access, indirectly,
                 // the felix global lock, which is held by the PackageAdmin while refreshing.
+                // see http://studio.atlassian.com/browse/PLUG-582
                 pluginsToEnable.addAll(disableDependentPlugins(plugin));
                 pluginEventManager.broadcast(new PluginUpgradedEvent(plugin));
             }
