@@ -5,15 +5,18 @@ import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.Resourced;
-import com.atlassian.plugin.osgi.util.BundleClassLoaderAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.impl.AbstractPlugin;
+import com.atlassian.plugin.osgi.util.BundleClassLoaderAccessor;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
-
 import org.apache.commons.lang.Validate;
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
+import org.osgi.framework.SynchronousBundleListener;
 
 import java.io.InputStream;
 import java.net.URL;
