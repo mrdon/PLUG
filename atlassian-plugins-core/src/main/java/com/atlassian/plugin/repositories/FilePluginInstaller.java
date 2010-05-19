@@ -128,25 +128,25 @@ public class FilePluginInstaller implements RevertablePluginInstaller
         installedPlugins.clear();
     }
 
-    private void backup(String pluginKey, File newPluginFile) throws IOException
+    private void backup(String pluginKey, File oldPluginFile) throws IOException
     {
         if (!installedPlugins.containsKey(pluginKey))
         {
             OriginalFile orig;
-            if (newPluginFile.exists())
+            if (oldPluginFile.exists())
             {
-                File backupFile = new File(newPluginFile.getParent(), ORIGINAL_PREFIX + newPluginFile.getName());
+                File backupFile = new File(oldPluginFile.getParent(), ORIGINAL_PREFIX + oldPluginFile.getName());
                 if (backupFile.exists())
                 {
                     throw new IOException("Existing backup found for plugin " + pluginKey + ".  Cannot install.");
                 }
 
-                FileUtils.copyFile(newPluginFile, backupFile);
-                orig = new OriginalFile(backupFile, newPluginFile.getName());
+                FileUtils.copyFile(oldPluginFile, backupFile);
+                orig = new OriginalFile(backupFile, oldPluginFile.getName());
             }
             else
             {
-                orig = new OriginalFile(newPluginFile, newPluginFile.getName());
+                orig = new OriginalFile(oldPluginFile, oldPluginFile.getName());
             }
             installedPlugins.put(pluginKey, orig);
         }
