@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.event.events.PluginUninstalledEvent;
 import org.apache.commons.lang.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -416,11 +417,27 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         }
         else
         {
-            unloadPlugin(plugin);
+            // Explicitly disable any plugins that require this plugin
+            disableDependentPlugins(plugin);
+            
+            uninstallNoEvent(plugin);
 
-            // PLUG-13: Plugins should not save state across uninstalls.
-            removeStateFromStore(getStore(), plugin);
+            pluginEventManager.broadcast(new PluginUninstalledEvent(plugin));
         }
+    }
+
+    /**
+     * Preforms an uninstallation without broadcasting the uninstallation event.
+     *
+     * @param plugin The plugin to uninstall
+     * @since 2.5.0
+     */
+    protected void uninstallNoEvent(Plugin plugin)
+    {
+        unloadPlugin(plugin);
+
+        // PLUG-13: Plugins should not save state across uninstalls.
+        removeStateFromStore(getStore(), plugin);
     }
 
     /**
@@ -592,9 +609,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             }
             if (pluginUpgraded)
             {
-                // we have to disable all dependent plugins to prevent a dependent plugin trying to access, indirectly,
-                // the felix global lock, which is held by the PackageAdmin while refreshing.
-                // see http://studio.atlassian.com/browse/PLUG-582
                 pluginsToEnable.addAll(disableDependentPlugins(plugin));
                 pluginEventManager.broadcast(new PluginUpgradedEvent(plugin));
             }
@@ -619,6 +633,13 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         }
     }
 
+    /**
+     * Disables all dependent plugins to prevent a dependent plugin trying to access, indirectly,
+     * the felix global lock, which is held by the PackageAdmin while refreshing.
+     * see http://studio.atlassian.com/browse/PLUG-582
+     * @param plugin The plugin to disable
+     * @return A set of plugins that were disabled
+     */
     private Set<Plugin> disableDependentPlugins(Plugin plugin)
     {
         Set<Plugin> dependentPlugins = new HashSet<Plugin>();
@@ -632,8 +653,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                 dependentPluginKeys.add(depPlugin.getKey());
             }
         }
-        log.info("Found dependent enabled plugins for upgraded plugin '" + plugin.getKey() + "': " + dependentPluginKeys
-         + ".  Temporarily disabling...");
+        log.info("Found dependent enabled plugins for uninstalled plugin '" + plugin.getKey() + "': " + dependentPluginKeys
+         + ".  Disabling...");
         for (Plugin depPlugin : dependentPlugins)
         {
             disablePluginWithoutPersisting(depPlugin.getKey());
@@ -670,7 +691,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         {
             log.debug("Uninstalling old plugin: " + oldPlugin);
         }
-        uninstall(oldPlugin);
+        uninstallNoEvent(oldPlugin);
         if (log.isDebugEnabled())
         {
             log.debug("Plugin uninstalled '" + oldPlugin + "', preserving old state");

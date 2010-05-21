@@ -70,7 +70,7 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
         assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
     }
     
-    public void testDisableEnableOfPluginThatRequiresRestart() throws Exception, IOException
+    public void testDisableEnableOfPluginThatRequiresRestart() throws Exception
     {
         final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         factory.addModuleDescriptor("requiresRestart", RequiresRestartModuleDescriptor.class);

@@ -47,6 +47,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 import static org.mockito.Mockito.*;
 
 public class TestDefaultPluginManager extends AbstractTestClassLoader
@@ -1301,6 +1303,36 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertNull(manager.getPlugin("test.atlassian.plugin.classloaded"));
         assertEquals(1, pluginsTestDir.listFiles().length);
         disabledListener.assertCalled();
+    }
+
+    public void testUninstallPluginWithDependencies() throws PluginException, IOException
+    {
+        PluginLoader pluginLoader = mock(PluginLoader.class);
+        when(pluginLoader.supportsRemoval()).thenReturn(true);
+        Plugin child = mock(Plugin.class);
+        when(child.getKey()).thenReturn("child");
+        when(child.isEnabledByDefault()).thenReturn(true);
+        when(child.getPluginState()).thenReturn(PluginState.ENABLED);
+        when(child.getRequiredPlugins()).thenReturn(singleton("parent"));
+        when(child.compareTo(any(Plugin.class))).thenReturn(-1);
+        Plugin parent = mock(Plugin.class);
+        when(parent.getKey()).thenReturn("parent");
+        when(parent.isEnabledByDefault()).thenReturn(true);
+        when(parent.isDeleteable()).thenReturn(true);
+        when(parent.isUninstallable()).thenReturn(true);
+        when(parent.getPluginState()).thenReturn(PluginState.ENABLED);
+        when(parent.compareTo(any(Plugin.class))).thenReturn(-1);
+        when (pluginLoader.loadAllPlugins(any(ModuleDescriptorFactory.class))).thenReturn(asList(child, parent));
+        pluginLoaders.add(pluginLoader);
+        manager.init();
+
+        manager.uninstall(parent);
+        verify(parent).enable();
+        verify(parent).disable();
+        verify(pluginLoader).removePlugin(parent);
+
+        verify(child).enable();
+        verify(child).disable();
     }
 
     public void testNonRemovablePlugins() throws PluginParseException

@@ -132,25 +132,10 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
     {
         final Set<String> keys = new HashSet<String>();
         getRequiredPluginsFromExports(keys);
-        getRequiredPluginsFromServices(keys);
-        return keys;
-    }
 
-    private void getRequiredPluginsFromServices(Set<String> keys)
-    {
-        ServiceReference[] refs = bundle.getServicesInUse();
-        if (refs != null)
-        {
-            for (ServiceReference ref : refs)
-            {
-                // note: this won't catch service dependencies on pure OSGi bundles
-                String pluginKey = (String) ref.getBundle().getHeaders().get(OsgiPlugin.ATLASSIAN_PLUGIN_KEY);
-                if (pluginKey != null)
-                {
-                    keys.add(pluginKey);
-                }
-            }
-        }
+        // we can't get required plugins from services, since services could have different cardinalities and you can't
+        // detect that from looking at the service reference.
+        return keys;
     }
 
     private void getRequiredPluginsFromExports(Set<String> keys)

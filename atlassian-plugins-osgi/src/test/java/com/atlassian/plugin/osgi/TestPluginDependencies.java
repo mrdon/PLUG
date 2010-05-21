@@ -57,21 +57,22 @@ public class TestPluginDependencies extends PluginInContainerTestBase
         assertEquals(Collections.singleton("parent"), pluginManager.getPlugin("child").getRequiredPlugins());
     }
 
-    public void testPluginDependentOnComponentImport() throws Exception
+    public void testUninstallingPluginDependentOnPackageImport() throws Exception
     {
         PluginJarBuilder parentBuilder =  new PluginJarBuilder("parent")
                 .addFormattedResource("atlassian-plugin.xml",
                     "<atlassian-plugin name='Test' key='parent' pluginsVersion='2'>",
                     "    <plugin-info>",
                     "        <version>1.0</version>",
+                    "        <bundle-instructions>",
+                    "            <Import-Package>foo</Import-Package>",
+                    "            <Export-Package>foo</Export-Package>",
+                    "        </bundle-instructions>",
                     "    </plugin-info>",
-                    "    <component key='foo' class='foo.BarImpl' public='true' interface='java.util.concurrent.Callable' />",
                     "</atlassian-plugin>")
-                .addFormattedJava("foo.BarImpl",
+                .addFormattedJava("foo.Bar",
                         "package foo;",
-                        "public class BarImpl implements java.util.concurrent.Callable {",
-                        "  public Object call() { return null; }",
-                        "}");
+                        "public interface Bar {}");
 
         new PluginJarBuilder("child", parentBuilder.getClassLoader())
                 .addFormattedResource("atlassian-plugin.xml",
@@ -79,17 +80,23 @@ public class TestPluginDependencies extends PluginInContainerTestBase
                     "    <plugin-info>",
                     "        <version>1.0</version>",
                     "    </plugin-info>",
-                    "    <component-import key='foo' interface='java.util.concurrent.Callable' />",
                     "</atlassian-plugin>")
+                .addFormattedJava("second.MyImpl",
+                        "package second;",
+                        "public class MyImpl {",
+                        "    public MyImpl(foo.Bar config) {",
+                        "    }",
+                        "}")
                 .build(pluginsDir);
 
         parentBuilder.build(pluginsDir);
         initPluginManager();
         assertEquals(2, pluginManager.getEnabledPlugins().size());
-        assertEquals(Collections.singleton("parent"), pluginManager.getPlugin("child").getRequiredPlugins());
+        pluginManager.uninstall(pluginManager.getPlugin("parent"));
+        assertEquals(0, pluginManager.getEnabledPlugins().size());
     }
 
-public void testUpgradeWithNewComponentImplementation() throws Exception
+    public void testUpgradeWithNewComponentImplementation() throws Exception
     {
         final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         factory.addModuleDescriptor("dummy", DummyModuleDescriptor.class);
@@ -512,5 +519,75 @@ public void testUpgradeWithNewComponentImplementation() throws Exception
         assertTrue("Refresh seemed to have timed out, which is bad", timeWaitingForRefresh < FelixOsgiContainerManager.REFRESH_TIMEOUT * 1000);
         assertEquals(3, pluginManager.getEnabledPlugins().size());
         assertEquals("hi", ((OsgiPlugin)pluginManager.getPlugin("test2.plugin")).autowire(TestPluginInstall.Callable3Aware.class).call());
+    }
+
+    public void testUninstallWithShutdownAffectingOtherPluginsWithClassLoadingOnShutdown() throws Exception
+    {
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
+        initPluginManager(new HostComponentProvider()
+        {
+            public void provide(final ComponentRegistrar registrar)
+            {
+            }
+        }, factory);
+
+        PluginJarBuilder pluginBuilder = new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test' key='test.plugin' pluginsVersion='2'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "        <bundle-instructions><Export-Package>my</Export-Package></bundle-instructions>",
+                    "    </plugin-info>",
+                    "    <component key='svc' class='my.ServiceImpl' public='true'>",
+                    "    <interface>java.util.concurrent.Callable</interface>",
+                    "    </component>",
+                    "</atlassian-plugin>")
+                .addFormattedJava("my.ServiceImpl",
+                    "package my;",
+                    "import java.util.concurrent.Callable;",
+                    "public class ServiceImpl implements Callable {",
+                    "    public Object call() throws Exception { return 'hi';}",
+                    "}");
+        final File pluginJar = pluginBuilder.build();
+
+        final File pluginJar2 = new PluginJarBuilder("second", pluginBuilder.getClassLoader())
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test 2' key='test2.plugin' pluginsVersion='2'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "        <bundle-instructions><Import-Package>my,*</Import-Package>",
+                    "          <DynamicImport-Package>foo</DynamicImport-Package></bundle-instructions>",
+                    "    </plugin-info>",
+                    "    <component-import key='svc' interface='java.util.concurrent.Callable' />",
+                    "    <component key='del' class='my2.Consumer'/>",
+                    "</atlassian-plugin>")
+                .addFormattedJava("my2.Consumer",
+                    "package my2;",
+                    "import java.util.concurrent.Callable;",
+                    "public class Consumer implements org.springframework.beans.factory.DisposableBean {",
+                    "    private final Callable delegate;",
+                    "    public Consumer(Callable foo) {",
+                    "        this.delegate = foo;",
+                    "    }",
+                    "    public void destroy() {",
+                    "       try {",
+                    "          getClass().getClassLoader().loadClass('foo.bar');",
+                    "       } catch (ClassNotFoundException ex) {}",
+                    "    }",
+                    "}")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+
+        assertEquals(2, pluginManager.getEnabledPlugins().size());
+
+        long start = System.currentTimeMillis();
+        pluginManager.uninstall(pluginManager.getPlugin("test.plugin"));
+        long timeWaitingForRefresh = System.currentTimeMillis() - start;
+        assertTrue("Refresh seemed to have timed out, which is bad", timeWaitingForRefresh < FelixOsgiContainerManager.REFRESH_TIMEOUT * 1000);
+        assertEquals(0, pluginManager.getEnabledPlugins().size());
     }
 }

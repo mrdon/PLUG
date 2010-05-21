@@ -5,6 +5,7 @@ import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkWarmRestartingEvent;
+import com.atlassian.plugin.event.events.PluginUninstalledEvent;
 import com.atlassian.plugin.event.events.PluginUpgradedEvent;
 import com.atlassian.plugin.osgi.container.*;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
@@ -192,6 +193,13 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
     @SuppressWarnings ({ "UnusedDeclaration" })
     @PluginEventListener
     public void onPluginUpgrade(PluginUpgradedEvent event)
+    {
+        registration.refreshPackages();
+    }
+
+    @SuppressWarnings ({ "UnusedDeclaration" })
+    @PluginEventListener
+    public void onPluginUninstallation(PluginUninstalledEvent event)
     {
         registration.refreshPackages();
     }
