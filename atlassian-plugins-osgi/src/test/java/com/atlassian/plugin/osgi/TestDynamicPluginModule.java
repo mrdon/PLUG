@@ -1,5 +1,8 @@
 package com.atlassian.plugin.osgi;
 
+import com.atlassian.plugin.event.PluginEventListener;
+import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
+import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
@@ -526,12 +529,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
 
     public void testDynamicPluginModuleUsingModuleTypeDescriptorInSamePluginWithRestart() throws Exception
     {
-        initPluginManager(new HostComponentProvider()
-        {
-            public void provide(final ComponentRegistrar registrar)
-            {
-            }
-        });
+        initPluginManager();
 
         final File pluginJar = new PluginJarBuilder("pluginType")
                 .addFormattedResource("atlassian-plugin.xml",
@@ -567,6 +565,12 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
         ModuleDescriptor<?> descriptor = pluginManager.getPlugin("test.plugin")
                 .getModuleDescriptor("dum2");
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
+
+        PluginModuleDisabledListener disabledListener = new PluginModuleDisabledListener();
+        PluginModuleEnabledListener enabledListener = new PluginModuleEnabledListener();
+        pluginEventManager.register(disabledListener);
+        pluginEventManager.register(enabledListener);
+
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
         WaitUntil.invoke(new BasicWaitCondition()
         {
@@ -586,6 +590,8 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                 .getModuleDescriptor("dum2");
         assertEquals("MyModuleDescriptor", newdescriptor.getClass().getSimpleName());
         assertTrue(descriptor.getClass() != newdescriptor.getClass());
+        assertTrue(disabledListener.called);
+        assertTrue(enabledListener.called);
     }
 
     public void testDynamicModuleDescriptor() throws Exception
@@ -646,5 +652,25 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
         descriptors = pluginManager.getPlugin("test.plugin")
                 .getModuleDescriptors();
         assertEquals(1, descriptors.size());
+    }
+
+    public static class PluginModuleEnabledListener
+    {
+        public volatile boolean called;
+        @PluginEventListener
+        public void onEnable(PluginModuleEnabledEvent event)
+        {
+            called = true;
+        }
+    }
+
+    public static class PluginModuleDisabledListener
+    {
+        public volatile boolean called;
+        @PluginEventListener
+        public void onDisable(PluginModuleDisabledEvent event)
+        {
+            called = true;
+        }
     }
 }

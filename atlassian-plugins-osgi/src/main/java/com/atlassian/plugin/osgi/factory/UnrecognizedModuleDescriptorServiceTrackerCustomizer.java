@@ -1,5 +1,8 @@
 package com.atlassian.plugin.osgi.factory;
 
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginModuleAvailableEvent;
+import com.atlassian.plugin.event.events.PluginModuleUnavailableEvent;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Bundle;
@@ -27,9 +30,11 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
 
     private final Bundle bundle;
     private final OsgiPlugin plugin;
+    private final PluginEventManager pluginEventManager;
 
-    public UnrecognizedModuleDescriptorServiceTrackerCustomizer(OsgiPlugin plugin)
+    public UnrecognizedModuleDescriptorServiceTrackerCustomizer(OsgiPlugin plugin, PluginEventManager pluginEventManager)
     {
+        this.pluginEventManager = pluginEventManager;
         Validate.notNull(plugin);
         this.bundle = plugin.getBundle();
         Validate.notNull(bundle);
@@ -82,6 +87,7 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
                     {
                         log.info("Turned plugin module " + descriptor.getCompleteKey() + " into module " + descriptor);
                     }
+                    pluginEventManager.broadcast(new PluginModuleAvailableEvent(descriptor));
                 }
                 catch (final Exception e)
                 {
@@ -113,13 +119,9 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
         return false;
     }
 
-    /**
-     * Updates any local module descriptors that were created from the modified factory
-     */
     public void modifiedService(final ServiceReference serviceReference, final Object o)
     {
-        removedService(serviceReference, o);
-        addingService(serviceReference);
+        // do nothing as it is only modifying the properties, which we largely ignore
     }
 
     /**
@@ -133,6 +135,7 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
         {
             for (final ModuleDescriptor<?> descriptor : getModuleDescriptorsByDescriptorClass(moduleDescriptorClass))
             {
+                pluginEventManager.broadcast(new PluginModuleUnavailableEvent(descriptor));
                 final UnrecognisedModuleDescriptor unrecognisedModuleDescriptor = new UnrecognisedModuleDescriptor();
                 final Element source = plugin.getModuleElements().get(descriptor.getKey());
                 if (source != null)
@@ -140,10 +143,12 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
                     unrecognisedModuleDescriptor.init(plugin, source);
                     unrecognisedModuleDescriptor.setErrorText(UnrecognisedModuleDescriptorFallbackFactory.DESCRIPTOR_TEXT);
                     plugin.addModuleDescriptor(unrecognisedModuleDescriptor);
+                    pluginEventManager.broadcast(new PluginModuleAvailableEvent(unrecognisedModuleDescriptor));
                     if (log.isInfoEnabled())
                     {
                         log.info("Removed plugin module " + unrecognisedModuleDescriptor.getCompleteKey() + " as its factory was uninstalled");
                     }
+
                 }
             }
         }

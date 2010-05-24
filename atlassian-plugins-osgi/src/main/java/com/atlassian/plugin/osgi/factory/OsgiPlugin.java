@@ -383,9 +383,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 final BundleContext ctx = getBundle().getBundleContext();
                 helper.onEnable(
                         new ServiceTracker(ctx, ModuleDescriptor.class.getName(),
-                                new ModuleDescriptorServiceTrackerCustomizer(this)),
+                                new ModuleDescriptorServiceTrackerCustomizer(this, pluginEventManager)),
                         new ServiceTracker(ctx, ListableModuleDescriptorFactory.class.getName(),
-                                new UnrecognizedModuleDescriptorServiceTrackerCustomizer(this)));
+                                new UnrecognizedModuleDescriptorServiceTrackerCustomizer(this, pluginEventManager)));
 
                 // ensure the bean factory is removed when the bundle is stopped
                 ctx.addBundleListener(bundleStopListener);

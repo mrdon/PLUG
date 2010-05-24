@@ -13,6 +13,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import com.atlassian.plugin.event.PluginEventListener;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginEnabledEvent;
+import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
+import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -37,14 +42,29 @@ public class PluginsClassLoader extends AbstractClassLoader
 
     public PluginsClassLoader(final PluginAccessor pluginAccessor)
     {
-        this(null, pluginAccessor);
+        this(null, pluginAccessor, new DefaultPluginEventManager());
     }
 
+    /**
+     * @deprecated Since 2.5.0, use {@link #PluginsClassLoader(ClassLoader, PluginAccessor, PluginEventManager)} instead
+     */
     public PluginsClassLoader(final ClassLoader parent, final PluginAccessor pluginAccessor)
+    {
+        this(parent, pluginAccessor, new DefaultPluginEventManager());
+    }
+
+    /**
+     * @param parent The parent classloader
+     * @param pluginAccessor The plugin accessor
+     * @param pluginEventManager The plugin event manager
+     * @since 2.5.0
+     */
+    public PluginsClassLoader(final ClassLoader parent, final PluginAccessor pluginAccessor, PluginEventManager pluginEventManager)
     {
         super(parent);
         this.parentClassLoader = parent;
         this.pluginAccessor = notNull("pluginAccessor", pluginAccessor);
+        pluginEventManager.register(this);
     }
 
     @Override
@@ -288,6 +308,18 @@ public class PluginsClassLoader extends AbstractClassLoader
                 return false;
             }
         }
+    }
+
+    @PluginEventListener
+    public void onPluginEnabled(PluginEnabledEvent event)
+    {
+        notifyPluginOrModuleEnabled();
+    }
+
+    @PluginEventListener
+    public void onPluginModuleEnabled(PluginModuleEnabledEvent event)
+    {
+        notifyPluginOrModuleEnabled();
     }
 
     public synchronized void notifyPluginOrModuleEnabled()

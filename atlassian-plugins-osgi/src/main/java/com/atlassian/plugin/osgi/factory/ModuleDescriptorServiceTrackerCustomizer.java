@@ -1,6 +1,9 @@
 package com.atlassian.plugin.osgi.factory;
 
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginModuleAvailableEvent;
+import com.atlassian.plugin.event.events.PluginModuleUnavailableEvent;
 import org.apache.commons.lang.Validate;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
@@ -19,9 +22,11 @@ class ModuleDescriptorServiceTrackerCustomizer implements ServiceTrackerCustomiz
 
     private final Bundle bundle;
     private final OsgiPlugin plugin;
+    private final PluginEventManager pluginEventManager;
 
-    public ModuleDescriptorServiceTrackerCustomizer(OsgiPlugin plugin)
+    public ModuleDescriptorServiceTrackerCustomizer(OsgiPlugin plugin, PluginEventManager pluginEventManager)
     {
+        this.pluginEventManager = pluginEventManager;
         Validate.notNull(plugin);
         this.bundle = plugin.getBundle();
         Validate.notNull(bundle);
@@ -39,21 +44,14 @@ class ModuleDescriptorServiceTrackerCustomizer implements ServiceTrackerCustomiz
             {
                 log.info("Dynamically registered new module descriptor: " + descriptor.getCompleteKey());
             }
+            pluginEventManager.broadcast(new PluginModuleAvailableEvent(descriptor));
         }
         return descriptor;
     }
 
     public void modifiedService(final ServiceReference serviceReference, final Object o)
     {
-        if (serviceReference.getBundle() == bundle)
-        {
-            final ModuleDescriptor<?> descriptor = (ModuleDescriptor<?>) o;
-            plugin.addModuleDescriptor(descriptor);
-            if (log.isInfoEnabled())
-            {
-                log.info("Dynamically upgraded new module descriptor: " + descriptor.getCompleteKey());
-            }
-        }
+        // Don't bother doing anything as it only represents a change in properties
     }
 
     public void removedService(final ServiceReference serviceReference, final Object o)
@@ -66,6 +64,7 @@ class ModuleDescriptorServiceTrackerCustomizer implements ServiceTrackerCustomiz
             {
                 log.info("Dynamically removed module descriptor: " + descriptor.getCompleteKey());
             }
+            pluginEventManager.broadcast(new PluginModuleUnavailableEvent(descriptor));
         }
     }
 }

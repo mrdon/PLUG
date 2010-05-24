@@ -21,6 +21,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.atlassian.plugin.*;
+import com.atlassian.plugin.event.events.PluginContainerUnavailableEvent;
+import com.atlassian.plugin.event.events.PluginModuleAvailableEvent;
+import com.atlassian.plugin.event.events.PluginModuleUnavailableEvent;
 import com.atlassian.plugin.event.events.PluginUninstalledEvent;
 import org.apache.commons.lang.time.StopWatch;
 import org.slf4j.Logger;
@@ -88,7 +91,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     private final PluginEventManager pluginEventManager;
 
     private final Map<String, Plugin> plugins = CopyOnWriteMap.<String, Plugin> builder().stableViews().newHashMap();
-    private final PluginsClassLoader classLoader = new PluginsClassLoader(this);
+    private final PluginsClassLoader classLoader;
     private final PluginEnabler pluginEnabler = new PluginEnabler(this, this);
     private final StateTracker tracker = new StateTracker();
 
@@ -112,6 +115,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         this.pluginEventManager = notNull("PluginEventManager must not be null.", pluginEventManager);
 
         this.pluginEventManager.register(this);
+        classLoader = new PluginsClassLoader(null, this, pluginEventManager);
     }
 
     public void init() throws PluginParseException, NotificationException
@@ -211,12 +215,29 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         Collections.reverse(restartedPlugins);
         for (final Plugin plugin : restartedPlugins)
         {
-            enablePluginModules(plugin);
+            enableConfiguredPluginModules(plugin);
         }
 
-        classLoader.notifyPluginOrModuleEnabled();
         pluginEventManager.broadcast(new PluginFrameworkWarmRestartedEvent(this, this));
         tracker.setState(StateTracker.State.STARTED);
+    }
+
+    @PluginEventListener
+    public void onPluginModuleAvailable(PluginModuleAvailableEvent event)
+    {
+        enableConfiguredPluginModule(event.getModule().getPlugin(), event.getModule(), new HashSet());
+    }
+
+    @PluginEventListener
+    public void onPluginModuleUnavailable(PluginModuleUnavailableEvent event)
+    {
+        notifyModuleDisabled(event.getModule());
+    }
+
+    @PluginEventListener
+    public void onPluginContainerUnavailable(PluginContainerUnavailableEvent event)
+    {
+        disablePluginWithoutPersisting(event.getPluginKey());
     }
 
     @PluginEventListener
@@ -227,8 +248,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         disablePluginModules(plugin);
 
         // enable the plugin, shamefully copied from notifyPluginEnabled()
-        classLoader.notifyPluginOrModuleEnabled();
-        if (enablePluginModules(plugin))
+        if (enableConfiguredPluginModules(plugin))
         {
             pluginEventManager.broadcast(new PluginEnabledEvent(plugin));
         }
@@ -625,7 +645,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             if (plugin.getPluginState() == PluginState.ENABLED)
             {
                 // This method enables the plugin modules
-                if (enablePluginModules(plugin))
+                if (enableConfiguredPluginModules(plugin))
                 {
                     pluginEventManager.broadcast(new PluginEnabledEvent(plugin));
                 }
@@ -1106,8 +1126,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     protected void notifyPluginEnabled(final Plugin plugin)
     {
         plugin.enable();
-        classLoader.notifyPluginOrModuleEnabled();
-        if (enablePluginModules(plugin))
+        if (enableConfiguredPluginModules(plugin))
         {
             pluginEventManager.broadcast(new PluginEnabledEvent(plugin));
         }
@@ -1123,49 +1142,59 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      * @param plugin the plugin to enable
      * @return true if the modules were all enabled correctly, false otherwise.
      */
-    private boolean enablePluginModules(final Plugin plugin)
+    private boolean enableConfiguredPluginModules(final Plugin plugin)
     {
         boolean success = true;
         final Set<ModuleDescriptor<?>> enabledDescriptors = new HashSet<ModuleDescriptor<?>>();
         for (final ModuleDescriptor<?> descriptor : plugin.getModuleDescriptors())
         {
-            // We only want to re-enable modules that weren't explicitly
-            // disabled by the user.
-            if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
+            if (!enableConfiguredPluginModule(plugin, descriptor, enabledDescriptors))
             {
-                if (plugin.isSystemPlugin())
-                {
-                    log.warn("System plugin module disabled: " + descriptor.getCompleteKey());
-                }
-                else if (log.isDebugEnabled())
-                {
-                    log.debug("Plugin module '" + descriptor.getName() + "' is explicitly disabled, so not re-enabling.");
-                }
-                continue;
-            }
-
-            try
-            {
-                notifyModuleEnabled(descriptor);
-                enabledDescriptors.add(descriptor);
-            }
-            catch (final Throwable exception)
-            {
-                // catch any errors and insert an UnloadablePlugin (PLUG-7)
-                log.error("There was an error loading the descriptor '" + descriptor.getName() + "' of plugin '" + plugin.getKey() + "'. Disabling.", exception);
-
-                // Disable all previously enabled descriptors
-                for (final ModuleDescriptor<?> desc : enabledDescriptors)
-                {
-                    notifyModuleDisabled(desc);
-                }
-
-                replacePluginWithUnloadablePlugin(plugin, descriptor, exception);
                 success = false;
+                break;
             }
         }
-        // TODO: Do we need to call this on success = false?
-        classLoader.notifyPluginOrModuleEnabled();
+        return success;
+    }
+
+    private boolean enableConfiguredPluginModule(Plugin plugin, ModuleDescriptor<?> descriptor, Set<ModuleDescriptor<?>> enabledDescriptors)
+    {
+        boolean success = true;
+        // We only want to re-enable modules that weren't explicitly
+        // disabled by the user.
+        if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
+        {
+            if (plugin.isSystemPlugin())
+            {
+                log.warn("System plugin module disabled: " + descriptor.getCompleteKey());
+            }
+            else if (log.isDebugEnabled())
+            {
+                log.debug("Plugin module '" + descriptor.getName() + "' is explicitly disabled, so not re-enabling.");
+            }
+            return success;
+        }
+
+        try
+        {
+            notifyModuleEnabled(descriptor);
+            enabledDescriptors.add(descriptor);
+        }
+        catch (final Throwable exception)
+        {
+            // catch any errors and insert an UnloadablePlugin (PLUG-7)
+            log.error("There was an error loading the descriptor '" + descriptor.getName() + "' of plugin '" + plugin.getKey() + "'. Disabling.", exception);
+
+            // Disable all previously enabled descriptors
+            for (final ModuleDescriptor<?> desc : enabledDescriptors)
+            {
+                notifyModuleDisabled(desc);
+            }
+
+            replacePluginWithUnloadablePlugin(plugin, descriptor, exception);
+            success = false;
+        }
+
         return success;
     }
 
@@ -1258,15 +1287,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         {
             if (log.isInfoEnabled())
             {
-                log.info("Plugin module " + completeKey + " cannot be disabled; it " + "is annotated with" + CannotDisable.class.getName());
-            }
-            return;
-        }
-
-        if (module.getClass().isAnnotationPresent(CannotDisable.class))
-        {
-            if (log.isInfoEnabled())
-            {
                 log.info("Plugin module " + completeKey + " cannot be disabled; it is annotated with" + CannotDisable.class.getName());
             }
             return;
@@ -1340,7 +1360,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         {
             log.debug("Enabling " + module.getKey());
         }
-        classLoader.notifyPluginOrModuleEnabled();
         if (module instanceof StateAware)
         {
             ((StateAware) module).enabled();

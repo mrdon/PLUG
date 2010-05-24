@@ -6,10 +6,14 @@ import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginContainerUnavailableEvent;
 import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.event.events.PluginEnabledEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
+import com.atlassian.plugin.event.events.PluginModuleAvailableEvent;
 import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
+import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
+import com.atlassian.plugin.event.events.PluginModuleUnavailableEvent;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.event.listeners.FailListener;
 import com.atlassian.plugin.event.listeners.PassListener;
@@ -1305,6 +1309,126 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         disabledListener.assertCalled();
     }
 
+    public void testPluginModuleAvailableAfterInstallation()
+    {
+        PluginLoader pluginLoader = mock(PluginLoader.class);
+        when(pluginLoader.supportsRemoval()).thenReturn(true);
+        Plugin plugin = mock(Plugin.class);
+        when(plugin.getKey()).thenReturn("dynPlugin");
+        when(plugin.isEnabledByDefault()).thenReturn(true);
+        when(plugin.isDeleteable()).thenReturn(true);
+        when(plugin.isUninstallable()).thenReturn(true);
+        when(plugin.getPluginState()).thenReturn(PluginState.ENABLED);
+        when(plugin.compareTo(any(Plugin.class))).thenReturn(-1);
+        when (pluginLoader.loadAllPlugins(any(ModuleDescriptorFactory.class))).thenReturn(asList(plugin));
+        pluginLoaders.add(pluginLoader);
+        manager.init();
+
+        PluginModuleEnabledListener listener = new PluginModuleEnabledListener();
+        pluginEventManager.register(listener);
+        Collection<ModuleDescriptor<?>> mods = new ArrayList<ModuleDescriptor<?>>();
+        MockModuleDescriptor<String> moduleDescriptor = new MockModuleDescriptor<String>(plugin, "foo", "foo");
+        mods.add(moduleDescriptor);
+        when(plugin.getModuleDescriptors()).thenReturn(mods);
+        when(plugin.getModuleDescriptor("foo")).thenReturn((ModuleDescriptor)moduleDescriptor);
+        pluginEventManager.broadcast(new PluginModuleAvailableEvent(moduleDescriptor));
+
+        assertTrue(manager.isPluginModuleEnabled("dynPlugin:foo"));
+        assertTrue(listener.called);
+    }
+
+    public void testPluginModuleAvailableAfterInstallationButConfiguredToBeDisabled()
+    {
+        PluginLoader pluginLoader = mock(PluginLoader.class);
+        when(pluginLoader.supportsRemoval()).thenReturn(true);
+        Plugin plugin = mock(Plugin.class);
+        when(plugin.getKey()).thenReturn("dynPlugin");
+        when(plugin.isEnabledByDefault()).thenReturn(true);
+        when(plugin.isDeleteable()).thenReturn(true);
+        when(plugin.isUninstallable()).thenReturn(true);
+        when(plugin.getPluginState()).thenReturn(PluginState.ENABLED);
+        when(plugin.compareTo(any(Plugin.class))).thenReturn(-1);
+        when (pluginLoader.loadAllPlugins(any(ModuleDescriptorFactory.class))).thenReturn(asList(plugin));
+        pluginLoaders.add(pluginLoader);
+        manager.init();
+
+        MockModuleDescriptor<String> moduleDescriptor = new MockModuleDescriptor<String>(plugin, "foo", "foo");
+
+        manager.disablePluginModuleState(moduleDescriptor, manager.getStore());
+
+        PluginModuleEnabledListener listener = new PluginModuleEnabledListener();
+        pluginEventManager.register(listener);
+        Collection<ModuleDescriptor<?>> mods = new ArrayList<ModuleDescriptor<?>>();
+        mods.add(moduleDescriptor);
+
+        when(plugin.getModuleDescriptors()).thenReturn(mods);
+        when(plugin.getModuleDescriptor("foo")).thenReturn((ModuleDescriptor)moduleDescriptor);
+        pluginEventManager.broadcast(new PluginModuleAvailableEvent(moduleDescriptor));
+
+        assertFalse(manager.isPluginModuleEnabled("dynPlugin:foo"));
+        assertFalse(listener.called);
+    }
+
+    public void testPluginModuleUnavailableAfterInstallation()
+    {
+        PluginLoader pluginLoader = mock(PluginLoader.class);
+        when(pluginLoader.supportsRemoval()).thenReturn(true);
+        Plugin plugin = mock(Plugin.class);
+        when(plugin.getKey()).thenReturn("dynPlugin");
+        when(plugin.isEnabledByDefault()).thenReturn(true);
+        when(plugin.isDeleteable()).thenReturn(true);
+        when(plugin.isUninstallable()).thenReturn(true);
+        when(plugin.getPluginState()).thenReturn(PluginState.ENABLED);
+        when(plugin.compareTo(any(Plugin.class))).thenReturn(-1);
+        when (pluginLoader.loadAllPlugins(any(ModuleDescriptorFactory.class))).thenReturn(asList(plugin));
+        pluginLoaders.add(pluginLoader);
+        manager.init();
+
+        PluginModuleDisabledListener listener = new PluginModuleDisabledListener();
+        pluginEventManager.register(listener);
+        Collection<ModuleDescriptor<?>> mods = new ArrayList<ModuleDescriptor<?>>();
+        MockModuleDescriptor<String> moduleDescriptor = new MockModuleDescriptor<String>(plugin, "foo", "foo");
+        mods.add(moduleDescriptor);
+        when(plugin.getModuleDescriptors()).thenReturn(mods);
+        when(plugin.getModuleDescriptor("foo")).thenReturn((ModuleDescriptor)moduleDescriptor);
+        pluginEventManager.broadcast(new PluginModuleAvailableEvent(moduleDescriptor));
+        assertTrue(manager.isPluginModuleEnabled("dynPlugin:foo"));
+        assertFalse(listener.called);
+        pluginEventManager.broadcast(new PluginModuleUnavailableEvent(moduleDescriptor));
+        assertTrue(listener.called);
+    }
+
+    public void testPluginContainerUnavailable()
+    {
+        PluginLoader pluginLoader = mock(PluginLoader.class);
+        when(pluginLoader.supportsRemoval()).thenReturn(true);
+        Plugin plugin = mock(Plugin.class);
+        when(plugin.getKey()).thenReturn("dynPlugin");
+        when(plugin.isEnabledByDefault()).thenReturn(true);
+        when(plugin.isDeleteable()).thenReturn(true);
+        when(plugin.isUninstallable()).thenReturn(true);
+        when(plugin.getPluginState()).thenReturn(PluginState.ENABLED);
+        when(plugin.compareTo(any(Plugin.class))).thenReturn(-1);
+        Collection<ModuleDescriptor<?>> mods = new ArrayList<ModuleDescriptor<?>>();
+        MockModuleDescriptor<String> moduleDescriptor = new MockModuleDescriptor<String>(plugin, "foo", "foo");
+        mods.add(moduleDescriptor);
+        when(plugin.getModuleDescriptors()).thenReturn(mods);
+        when(plugin.getModuleDescriptor("foo")).thenReturn((ModuleDescriptor)moduleDescriptor);
+        when (pluginLoader.loadAllPlugins(any(ModuleDescriptorFactory.class))).thenReturn(asList(plugin));
+        pluginLoaders.add(pluginLoader);
+        manager.init();
+
+        PluginDisabledListener listener = new PluginDisabledListener();
+        PluginModuleDisabledListener moduleDisabledListener = new PluginModuleDisabledListener();
+        pluginEventManager.register(listener);
+        pluginEventManager.register(moduleDisabledListener);
+        when(plugin.getPluginState()).thenReturn(PluginState.DISABLED);
+        pluginEventManager.broadcast(new PluginContainerUnavailableEvent("dynPlugin"));
+        assertFalse(manager.isPluginEnabled("dynPlugin"));
+        assertTrue(listener.called);
+        assertFalse(moduleDisabledListener.called);
+    }
+
     public void testUninstallPluginWithDependencies() throws PluginException, IOException
     {
         PluginLoader pluginLoader = mock(PluginLoader.class);
@@ -1997,6 +2121,36 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         public void disabled()
         {
+        }
+    }
+
+    public static class PluginModuleEnabledListener
+    {
+        public volatile boolean called;
+        @PluginEventListener
+        public void onEnable(PluginModuleEnabledEvent event)
+        {
+            called = true;
+        }
+    }
+
+    public static class PluginModuleDisabledListener
+    {
+        public volatile boolean called;
+        @PluginEventListener
+        public void onDisable(PluginModuleDisabledEvent event)
+        {
+            called = true;
+        }
+    }
+
+    public static class PluginDisabledListener
+    {
+        public volatile boolean called;
+        @PluginEventListener
+        public void onDisable(PluginDisabledEvent event)
+        {
+            called = true;
         }
     }
 }

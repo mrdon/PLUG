@@ -14,7 +14,7 @@ public class PluginContainerRefreshedEvent
 
     public PluginContainerRefreshedEvent(Object container, String key)
     {
-        Validate.notNull(key, "The bundle symbolic name must be available");
+        Validate.notNull(key, "The plugin key must be available");
         Validate.notNull(container, "The container cannot be null");
 
         this.container = container;
