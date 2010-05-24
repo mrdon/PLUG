@@ -12,7 +12,8 @@ import com.atlassian.plugin.loaders.classloading.*;
 import com.atlassian.plugin.PluginException;
 
 /**
- * Scans the filesystem for changed or added plugin files and stores a map of the currently known ones.
+ * Scans the filesystem for changed or added plugin files and stores a map of the currently known ones.  Files beginning
+ * with "." are ignored.
  *
  * @since 2.1.0
  */
