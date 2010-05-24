@@ -84,9 +84,11 @@ class DirectoryScanner implements com.atlassian.plugin.loaders.classloading.Scan
     }
 
     /**
-     * Scans for jars that have been added or modified since the last call to scan.
+     * Scans for all files and directories that have been added or modified since the
+     * last call to scan. This will ignore all files or directories starting with
+     * the '.' character.
      *
-     * @return Collection of {@link DeploymentUnit}s that describe newly added Jars.
+     * @return Collection of {@link DeploymentUnit}s that describe newly added files or directories.
      */
     public Collection<DeploymentUnit> scan()
     {
