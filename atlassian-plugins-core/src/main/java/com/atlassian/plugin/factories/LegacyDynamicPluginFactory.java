@@ -73,7 +73,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
                 throw new PluginParseException("No descriptor found in classloader for : " + file);
 
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
-            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, null);
+            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor);
             loader = new PluginClassLoader(file, Thread.currentThread().getContextClassLoader(), tempDirectory);
             plugin = parser.configurePlugin(moduleDescriptorFactory, createPlugin(pluginArtifact, loader));
         }
@@ -137,7 +137,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
             descriptorStream = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
             if (descriptorStream != null)
             {
-                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream, null);
+                final DescriptorParser descriptorParser = descriptorParserFactory.getInstance(descriptorStream);
 
                 // Only recognize version 1 plugins
                 if (descriptorParser.getPluginsVersion() <= 1)

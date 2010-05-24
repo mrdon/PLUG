@@ -37,7 +37,7 @@ public class TestXmlDescriptorParser extends TestCase
 
         try
         {
-            XmlDescriptorParser parser = new XmlDescriptorParser(new FileInputStream(getTestFile(MISSING_INFO_TEST_FILE)), null);
+            XmlDescriptorParser parser = new XmlDescriptorParser(new FileInputStream(getTestFile(MISSING_INFO_TEST_FILE)));
             parser.configurePlugin((ModuleDescriptorFactory)mockFactory.proxy(), testPlugin);
             
             PluginInformation info = testPlugin.getPluginInformation();
@@ -97,13 +97,13 @@ public class TestXmlDescriptorParser extends TestCase
     public void testPluginsVersion()
     {
         String xml = "<atlassian-plugin key=\"foo\" pluginsVersion=\"2\" />";
-        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()), null);
+        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()));
         assertEquals(2, parser.getPluginsVersion());
     }
 
     public void testPluginsVersionAfterConfigure()
     {
-        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream("<atlassian-plugin key=\"foo\" plugins-version=\"2\" />".getBytes()), null);
+        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream("<atlassian-plugin key=\"foo\" plugins-version=\"2\" />".getBytes()));
         // mock up some supporting objects
         PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
         Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
@@ -206,14 +206,14 @@ public class TestXmlDescriptorParser extends TestCase
     public void testPluginsVersionWithDash()
     {
         String xml = "<atlassian-plugin key=\"foo\" plugins-version=\"2\" />";
-        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()), null);
+        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()));
         assertEquals(2, parser.getPluginsVersion());
     }
 
     public void testPluginsVersionMissing()
     {
         String xml = "<atlassian-plugin key=\"foo\" />";
-        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()), null);
+        XmlDescriptorParser parser = new XmlDescriptorParser(new ByteArrayInputStream(xml.getBytes()));
         assertEquals(1, parser.getPluginsVersion());
     }
     
