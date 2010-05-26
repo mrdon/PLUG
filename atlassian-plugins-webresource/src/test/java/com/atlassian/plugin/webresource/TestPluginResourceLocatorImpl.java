@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.webresource.transformer.WebResourceTransformer;
 import com.atlassian.plugin.webresource.transformer.WebResourceTransformerModuleDescriptor;
 import junit.framework.TestCase;
@@ -65,6 +66,37 @@ public class TestPluginResourceLocatorImpl extends TestCase
         mockServletContextFactory = null;
 
         super.tearDown();
+    }
+
+    public void testIsBatchingOff()
+    {
+        try
+        {
+            System.clearProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF);
+            System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "true");
+            assertTrue(pluginResourceLocator.isBatchingOff());
+
+            System.setProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF, "true");
+            System.clearProperty(PluginUtils.ATLASSIAN_DEV_MODE);
+            assertTrue(pluginResourceLocator.isBatchingOff());
+
+            System.clearProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF);
+            System.clearProperty(PluginUtils.ATLASSIAN_DEV_MODE);
+            assertFalse(pluginResourceLocator.isBatchingOff());
+
+            System.clearProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF);
+            System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "false");
+            assertFalse(pluginResourceLocator.isBatchingOff());
+
+            System.setProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF, "false");
+            System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "true");
+            assertFalse(pluginResourceLocator.isBatchingOff());
+        }
+        finally
+        {
+            System.clearProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF);
+            System.clearProperty(PluginUtils.ATLASSIAN_DEV_MODE);
+        }
     }
 
     public void testMatches()

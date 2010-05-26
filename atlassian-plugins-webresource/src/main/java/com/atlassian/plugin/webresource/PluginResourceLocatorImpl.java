@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -373,7 +374,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             return Collections.emptyList();
         }
 
-        final boolean singleMode = Boolean.valueOf(System.getProperty(PLUGIN_WEBRESOURCE_BATCHING_OFF));
+        final boolean singleMode = isBatchingOff();
         final List<PluginResource> resources = new ArrayList<PluginResource>();
 
         for (final ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors())
@@ -393,6 +394,23 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             }
         }
         return resources;
+    }
+
+    /**
+     * @return True if either it is explicitly turned off or in dev mode
+     */
+    Boolean isBatchingOff()
+    {
+        String explicitSetting = System.getProperty(PLUGIN_WEBRESOURCE_BATCHING_OFF);
+        if (explicitSetting != null)
+        {
+            return Boolean.parseBoolean(explicitSetting);
+        }
+        else
+        {
+            return Boolean.parseBoolean(System.getProperty(PluginUtils.ATLASSIAN_DEV_MODE));
+        }
+
     }
 
     private boolean skipBatch(final ResourceDescriptor resourceDescriptor)
