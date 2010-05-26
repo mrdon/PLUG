@@ -2,6 +2,7 @@ package com.atlassian.plugin.osgi.bridge.external;
 
 import com.atlassian.multitenant.MultiTenantAwareComponentCreator;
 import com.atlassian.multitenant.MultiTenantAwareComponentDestroyer;
+import com.atlassian.multitenant.MultiTenantAwareComponentFactory;
 import com.atlassian.multitenant.MultiTenantContext;
 import com.atlassian.multitenant.MultiTenantDescriptor;
 import org.apache.log4j.Logger;
@@ -34,8 +35,9 @@ public class MultiTenantComponentFactoryBean implements FactoryBean, Application
         {
             if (interfaces != null && interfaces.length > 0)
             {
-                proxy = MultiTenantContext.getFactory().createComponent(new FactoryBeanCreator(),
-                        implementation.getClassLoader(), lazyLoad, interfaces);
+                MultiTenantAwareComponentFactory factory = MultiTenantContext.getFactory();
+                proxy = factory.createComponent(factory.createComponentMapBuilder(new FactoryBeanCreator())
+                        .setLazyLoad(lazyLoad).construct(), implementation.getClassLoader(), interfaces);
             }
             else
             {
