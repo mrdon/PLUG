@@ -236,9 +236,16 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         String bootDelegation = getAtlassianSpecificOsgiSystemProperty(OSGI_BOOTDELEGATION);
         if ((bootDelegation == null) || (bootDelegation.trim().length() == 0))
         {
-            bootDelegation = "com.yourkit,com.yourkit.*," +
+            // These exist to work around JAXP problems.  Specifically, bundles that use static factories to create JAXP
+            // instances will execute FactoryFinder with the CCL set to the bundle.  These delegations ensure the appropriate
+            // implementation is found and loaded.
+            bootDelegation = "weblogic,weblogic.*," +
+                             "META-INF.services," +
+                             "com.yourkit,com.yourkit.*," +
+                             "com.jprofiler,com.jprofiler.*," +
+                             "org.apache.xerces,org.apache.xerces.*," +
                              "sun.*," +
-                             "com.jprofiler,com.jprofiler.*";
+                             "com.icl.saxon";
         }
 
         configMap.put(FelixConstants.FRAMEWORK_BOOTDELEGATION, bootDelegation);

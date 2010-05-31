@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.atlassian.plugins</groupId>
@@ -17,7 +18,8 @@
         <!-- This should use ${project.build.directory} instead of target, but Maven < 2.0.9 fails to interpolate. -->
         <frameworkBundleDirectory>target/framework-bundles</frameworkBundleDirectory>
         <!-- DEBUG<global.jvm.opts>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005</global.jvm.opts>-->
-        <jvm.opts1>-Ddummy1=1</jvm.opts1><!--NPE's if you leave these blank -->
+        <jvm.opts1>-Ddummy1=1</jvm.opts1>
+        <!--NPE's if you leave these blank -->
         <jvm.opts2>-Ddummy2=2</jvm.opts2>
         <jmeter.version>2.3.4</jmeter.version>
         <jmeter.home>${project.build.directory}/jakarta-jmeter-${jmeter.version}/</jmeter.home>
@@ -43,42 +45,45 @@
                 <jmeter.version>2.3.4-atlassian-1</jmeter.version>
             </properties>
         </profile>
-    
+
         <profile>
             <id>perfprofile</id>
             <properties>
-                <jvm.opts1>-agentlib:jprofilerti=offline,id=${jprofiler.profileid},config=${jprofiler.configfile}</jvm.opts1>
+                <jvm.opts1>-agentlib:jprofilerti=offline,id=${jprofiler.profileid},config=${jprofiler.configfile}
+                </jvm.opts1>
                 <jvm.opts2>-Xbootclasspath/a:${jprofiler.home}/bin/agent.jar</jvm.opts2>
                 <jprofiler.home>${project.build.directory}/jprofiler5/</jprofiler.home>
                 <jprofiler.version>5.2.4</jprofiler.version>
                 <jprofiler.profileid>111</jprofiler.profileid>
                 <jprofiler.configfile>${project.build.directory}/test-classes/jprofilerconfig.xml</jprofiler.configfile>
                 <setuptest.runtime>100</setuptest.runtime>
-                <fixedload.offset>101</fixedload.offset><!--This probably wont trigger unless things go really bad-->
+                <fixedload.offset>101</fixedload.offset>
+                <!--This probably wont trigger unless things go really bad-->
             </properties>
             <build>
                 <plugins>
                     <plugin>
-                      <artifactId>maven-antrun-plugin</artifactId>
-                      <executions>
-                          <execution>
-                              <id>30_update-jprofiler-paths</id>
-                              <!-- Antrun is broken WRT phases, so this is bound to process-test-classes instead of pre-integration-test -->
-                              <phase>process-test-classes</phase>
-                              <goals>
-                                  <goal>run</goal>
-                              </goals>
-                              <configuration>
-                                  <tasks>
-                                      <replace file="${jprofiler.configfile}" token="@project-dir@" value="${project.build.directory}" />
-                                      <!--
-                                      <replace file="${jprofiler.configfile}" token="@setupoffset@" value="${setuptest.runtime}" />
-                                      <replace file="${jprofiler.configfile}" token="@fixedoffset@" value="${fixedload.offset}" />
-                                      -->
-                                  </tasks>
-                              </configuration>
-                          </execution>
-                      </executions>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>30_update-jprofiler-paths</id>
+                                <!-- Antrun is broken WRT phases, so this is bound to process-test-classes instead of pre-integration-test -->
+                                <phase>process-test-classes</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <tasks>
+                                        <replace file="${jprofiler.configfile}" token="@project-dir@"
+                                                 value="${project.build.directory}"/>
+                                        <!--
+                                        <replace file="${jprofiler.configfile}" token="@setupoffset@" value="${setuptest.runtime}" />
+                                        <replace file="${jprofiler.configfile}" token="@fixedoffset@" value="${fixedload.offset}" />
+                                        -->
+                                    </tasks>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                     <plugin>
                         <artifactId>maven-dependency-plugin</artifactId>
@@ -110,8 +115,12 @@
         <profile>
             <id>perftest</id>
             <properties>
-                <history.directory>/opt/performance/history/plugins2/perflegacy-${project.version}-${java.specification.version}</history.directory>
-                <sitedoc.url>dav:https://internal.docs.atlassian.com/plugins2-performance/perflegacy-${project.version}-${java.specification.version}</sitedoc.url>
+                <history.directory>
+                    /opt/performance/history/plugins2/perflegacy-${project.version}-${java.specification.version}
+                </history.directory>
+                <sitedoc.url>
+                    dav:https://internal.docs.atlassian.com/plugins2-performance/perflegacy-${project.version}-${java.specification.version}
+                </sitedoc.url>
                 <skipTests>true</skipTests>
             </properties>
             <distributionManagement>
@@ -308,7 +317,8 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${frameworkBundleDirectory}</outputDirectory>
-                            <includeArtifactIds>atlassian-plugins-osgi-bridge,atlassian-plugins-osgi-spring-extender</includeArtifactIds>
+                            <includeArtifactIds>atlassian-plugins-osgi-bridge,atlassian-plugins-osgi-spring-extender
+                            </includeArtifactIds>
                         </configuration>
                     </execution>
                     <execution>
@@ -392,7 +402,6 @@
         <dependency>
             <groupId>biz.aQute</groupId>
             <artifactId>bndlib</artifactId>
-
             <version>0.0.255</version>
         </dependency>
         <dependency>
@@ -408,14 +417,13 @@
             <version>${springVersion}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
 
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
             <version>${springVersion}</version>
             <scope>provided</scope>
         </dependency>
-
 
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -476,6 +484,14 @@
             <groupId>com.atlassian.plugins</groupId>
             <artifactId>atlassian-plugins-servlet</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- This tests the ability of Spring DM to access xerces due to lame service finding algorithms in JAXP -->
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.9.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
