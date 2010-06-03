@@ -96,7 +96,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
             log.info("No plugins found to be deployed");
         }
 
-        return Collections.unmodifiableCollection(plugins.values());
+        return Collections.unmodifiableCollection(new ArrayList<Plugin>(plugins.values()));
     }
 
     protected Plugin deployPluginFromUnit(final DeploymentUnit deploymentUnit, final ModuleDescriptorFactory moduleDescriptorFactory)
