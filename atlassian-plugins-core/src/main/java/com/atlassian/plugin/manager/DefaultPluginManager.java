@@ -1160,6 +1160,14 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     private boolean enableConfiguredPluginModule(Plugin plugin, ModuleDescriptor<?> descriptor, Set<ModuleDescriptor<?>> enabledDescriptors)
     {
         boolean success = true;
+
+        // This can happen if the plugin available event is fired as part of the plugin initialization process
+        if (!isPluginEnabled(plugin.getKey()))
+        {
+            log.debug("The plugin isn't enabled, so we won't bother trying to enable it");
+            return success;
+        }
+
         // We only want to re-enable modules that weren't explicitly
         // disabled by the user.
         if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
