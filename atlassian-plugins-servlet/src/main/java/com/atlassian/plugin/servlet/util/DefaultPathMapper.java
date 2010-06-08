@@ -1,6 +1,7 @@
 package com.atlassian.plugin.servlet.util;
 
 import java.io.Serializable;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -88,6 +89,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
 
     public String get(String path)
     {
+        path = normalize(path);
         lock.readLock().lock();
         try
         {
@@ -118,6 +120,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
      */
     public Collection<String> getAll(String path)
     {
+        path = normalize(path);
         lock.readLock().lock();
         try
         {
@@ -153,6 +156,11 @@ public class DefaultPathMapper implements Serializable, PathMapper
         {
             lock.readLock().unlock();
         }
+    }
+
+    private String normalize(String path)
+    {
+        return path == null ? null : URI.create(path).normalize().toString();
     }
 
     public String toString()
