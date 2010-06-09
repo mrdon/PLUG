@@ -104,6 +104,7 @@ public class ContainerManager
         packageIncludes.add("org.bouncycastle*");
         packageIncludes.add("org.dom4j*");
         packageIncludes.add("javax.servlet*");
+        packageIncludes.add("com.google*");
         packageIncludes.add("com.opensymphony.module.sitemesh*");
 
         scannerConfig.setPackageIncludes(packageIncludes);
