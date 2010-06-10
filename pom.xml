@@ -46,6 +46,7 @@
         <module>atlassian-plugins-osgi-spring-extender</module>
         <module>atlassian-plugins-spring</module>
         <module>atlassian-plugins-refimpl</module>
+        <module>atlassian-plugins-upgrade</module>        
         <module>atlassian-plugins-core</module>
         <module>atlassian-plugins-webresource</module>
         <module>atlassian-plugins-webfragment</module>

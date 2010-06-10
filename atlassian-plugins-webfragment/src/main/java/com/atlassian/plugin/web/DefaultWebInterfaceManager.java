@@ -1,13 +1,20 @@
 package com.atlassian.plugin.web;
 
-import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.web.descriptors.*;
-
-import java.util.*;
-
-import org.apache.commons.logging.LogFactory;
+import com.atlassian.plugin.PluginManager;
+import com.atlassian.plugin.web.descriptors.WebFragmentModuleDescriptor;
+import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
+import com.atlassian.plugin.web.descriptors.WebSectionModuleDescriptor;
+import com.atlassian.plugin.web.descriptors.WeightedDescriptorComparator;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Stores and manages flexible web interface sections available in the system.

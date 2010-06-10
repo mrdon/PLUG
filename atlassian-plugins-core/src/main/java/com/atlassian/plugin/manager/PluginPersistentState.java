@@ -1,8 +1,5 @@
 package com.atlassian.plugin.manager;
 
-import static com.atlassian.plugin.manager.PluginPersistentState.Util.RESTART_STATE_SEPARATOR;
-import static com.atlassian.plugin.manager.PluginPersistentState.Util.buildStateKey;
-
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginRestartState;
@@ -11,6 +8,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import static com.atlassian.plugin.manager.PluginPersistentState.Util.RESTART_STATE_SEPARATOR;
+import static com.atlassian.plugin.manager.PluginPersistentState.Util.buildStateKey;
 
 /**
  * Interface that represents a configuration state for plugins and plugin modules. The configuration state (enabled
