@@ -171,6 +171,17 @@ public class PluginJarBuilder
     }
 
     /**
+     * Adds a java class to the jar
+     */
+    public PluginJarBuilder addClass(Class clazz) throws IOException
+    {
+        String fileName = clazz.getName().replace('.', '/') + ".class";
+        // Must be absolute
+        jarContents.put(fileName, IOUtils.toByteArray(clazz.getResourceAsStream("/" + fileName)));
+        return this;
+    }
+
+    /**
      * Builds a jar file from the provided information.  The file name is not guarenteed to match the jar name, as it is
      * created as a temporary file.
      *
@@ -201,7 +212,6 @@ public class PluginJarBuilder
      */
     public File build(File baseDir) throws IOException
     {
-
         // Ensure there is a manifest
         if (!jarContents.containsKey("META-INF/MANIFEST.MF"))
         {

@@ -3,38 +3,39 @@ package com.atlassian.plugin.osgi;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
-import com.atlassian.plugin.manager.DefaultPluginManager;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.factories.LegacyDynamicPluginFactory;
 import com.atlassian.plugin.factories.PluginFactory;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.loaders.BundledPluginLoader;
 import com.atlassian.plugin.loaders.DirectoryPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
-import com.atlassian.plugin.loaders.BundledPluginLoader;
+import com.atlassian.plugin.manager.DefaultPluginManager;
+import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
+import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
-import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
-import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
+import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.factory.OsgiBundleFactory;
+import com.atlassian.plugin.osgi.factory.OsgiPluginFactory;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.InstanceBuilder;
 import com.atlassian.plugin.repositories.FilePluginInstaller;
-
+import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.Arrays;
-import java.util.zip.ZipOutputStream;
 import java.util.zip.ZipEntry;
-
-import junit.framework.TestCase;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Base for in-container unit tests
@@ -117,11 +118,21 @@ public abstract class PluginInContainerTestBase extends TestCase
         pluginManager.init();
     }
 
+    protected void initBundlingPluginManager(final HostComponentProvider hostComponentProvider, File... bundledPluginJars) throws Exception
+    {
+        initBundlingPluginManager(hostComponentProvider, new DefaultModuleDescriptorFactory(new DefaultHostContainer()), bundledPluginJars);
+    }
+
     protected void initBundlingPluginManager(final ModuleDescriptorFactory moduleDescriptorFactory, File... bundledPluginJars) throws Exception
+    {
+        initBundlingPluginManager(null, moduleDescriptorFactory, bundledPluginJars);
+    }
+
+    protected void initBundlingPluginManager(HostComponentProvider hostComponentProvider, final ModuleDescriptorFactory moduleDescriptorFactory, File... bundledPluginJars) throws Exception
     {
         this.moduleDescriptorFactory = moduleDescriptorFactory;
         final PackageScannerConfiguration scannerConfig = buildScannerConfiguration("1.0");
-        HostComponentProvider requiredWrappingProvider = getWrappingHostComponentProvider(null);
+        HostComponentProvider requiredWrappingProvider = getWrappingHostComponentProvider(hostComponentProvider);
         OsgiPersistentCache cache = new DefaultOsgiPersistentCache(cacheDir);
         osgiContainerManager = new FelixOsgiContainerManager(cache, scannerConfig, requiredWrappingProvider, pluginEventManager);
 
@@ -131,23 +142,29 @@ public abstract class PluginInContainerTestBase extends TestCase
             new DefaultPluginEventManager());
 
         File zip = new File(bundledPluginJars[0].getParentFile(), "bundled-plugins.zip");
-        for (File bundledPluginJar : bundledPluginJars)
+        ZipOutputStream stream = null;
+        try
         {
-            ZipOutputStream stream = null;
-            InputStream in = null;
-            try
+            stream = new ZipOutputStream(new FileOutputStream(zip));
+            for (File bundledPluginJar : bundledPluginJars)
             {
-                stream = new ZipOutputStream(new FileOutputStream(zip));
-                in = new FileInputStream(bundledPluginJar);
-                stream.putNextEntry(new ZipEntry(bundledPluginJar.getName()));
-                IOUtils.copy(in, stream);
-                stream.closeEntry();
+                InputStream in = null;
+                try
+                {
+                    in = new FileInputStream(bundledPluginJar);
+                    stream.putNextEntry(new ZipEntry(bundledPluginJar.getName()));
+                    IOUtils.copy(in, stream);
+                    stream.closeEntry();
+                }
+                finally
+                {
+                    IOUtils.closeQuietly(in);
+                }
             }
-            catch (IOException ex)
-            {
-                IOUtils.closeQuietly(in);
-                IOUtils.closeQuietly(stream);
-            }
+        }
+        finally
+        {
+            IOUtils.closeQuietly(stream);
         }
         File bundledDir = new File(bundledPluginJars[0].getParentFile(), "bundled-plugins");
         final BundledPluginLoader bundledLoader = new BundledPluginLoader(zip.toURL(), bundledDir, Arrays.<PluginFactory>asList(osgiPluginDeployer),
