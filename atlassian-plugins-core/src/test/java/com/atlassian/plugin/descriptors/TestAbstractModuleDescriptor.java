@@ -12,16 +12,29 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.impl.StaticPlugin;
+import com.atlassian.plugin.mock.MockAnimal;
+import com.atlassian.plugin.mock.MockAnimalModuleDescriptor;
 import com.atlassian.plugin.mock.MockMineral;
 import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.util.ClassLoaderUtils;
+import com.atlassian.plugin.util.ClassUtils;
+import com.atlassian.plugin.util.MyModule;
+import com.atlassian.plugin.util.MySubClass;
+import com.atlassian.plugin.util.MySuperClass;
 import junit.framework.TestCase;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Collection;
+import java.util.Enumeration;
 import java.util.List;
 
+import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 
 public class TestAbstractModuleDescriptor extends TestCase
@@ -81,6 +94,36 @@ public class TestAbstractModuleDescriptor extends TestCase
         {
             // success
         }
+    }
+
+    public void testLoadClassFromNewModuleFactoryWithExtendsNothingType()
+    {
+        ModuleFactory moduleFactory = mock(ModuleFactory.class);
+        AbstractModuleDescriptor moduleDescriptor = new ExtendsNothingModuleDescriptor(moduleFactory, "foo");
+        Plugin plugin = mock(Plugin.class);
+
+        try
+        {
+            moduleDescriptor.loadClass(plugin, "foo");
+            fail("Should have complained about extends type");
+        }
+        catch (IllegalStateException ex)
+        {
+            // success
+        }
+    }
+
+    public void testGetModuleReturnClass()
+    {
+        AbstractModuleDescriptor desc = new MockAnimalModuleDescriptor();
+        assertEquals(MockAnimal.class, desc.getModuleReturnClass());
+    }
+
+    public void testGetModuleReturnClassWithExtendsNumber()
+    {
+        ModuleFactory moduleFactory = mock(ModuleFactory.class);
+        AbstractModuleDescriptor moduleDescriptor = new ExtendsNothingModuleDescriptor(moduleFactory, "foo");
+        assertEquals(Object.class, moduleDescriptor.getModuleReturnClass());
     }
 
     public void testLoadClassFromNewModuleFactoryButUnknownType()
@@ -225,6 +268,21 @@ public class TestAbstractModuleDescriptor extends TestCase
     private static class ExtendsNumberModuleDescriptor<T extends Number> extends AbstractModuleDescriptor<T>
     {
         public ExtendsNumberModuleDescriptor(ModuleFactory moduleFactory, String className)
+        {
+            super(moduleFactory);
+            moduleClassName = className;
+        }
+
+        @Override
+        public T getModule()
+        {
+            return null;
+        }
+    }
+
+    private static class ExtendsNothingModuleDescriptor<T> extends AbstractModuleDescriptor<T>
+    {
+        public ExtendsNothingModuleDescriptor(ModuleFactory moduleFactory, String className)
         {
             super(moduleFactory);
             moduleClassName = className;

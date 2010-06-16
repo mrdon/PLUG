@@ -1,5 +1,6 @@
 package com.atlassian.plugin.osgi;
 
+import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
@@ -81,12 +82,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
 
     public void testDynamicPluginModuleUsingModuleTypeDescriptorWithReinstall() throws Exception
     {
-        initPluginManager(new HostComponentProvider()
-        {
-            public void provide(final ComponentRegistrar registrar)
-            {
-            }
-        });
+        initPluginManager();
 
         final File pluginJar = new PluginJarBuilder("pluginType")
                 .addFormattedResource("atlassian-plugin.xml",
@@ -161,6 +157,126 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                         .equals("MyModuleDescriptor");
             }
         });
+    }
+
+    public void testDynamicPluginModuleUsingModuleTypeDescriptorWithImmediateReinstall() throws Exception
+    {
+        initPluginManager();
+
+        final File pluginJar = new PluginJarBuilder("pluginType")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin.module' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <module-type key='foo' class='foo.MyModuleDescriptor' />",
+                        "</atlassian-plugin>")
+                .addFormattedJava("foo.MyModuleDescriptor",
+                        "package foo;",
+                        "public class MyModuleDescriptor extends com.atlassian.plugin.descriptors.AbstractModuleDescriptor {",
+                        "  public Object getModule(){return null;}",
+                        "}")
+                .build();
+        final File pluginJar2 = new PluginJarBuilder("fooUser")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <foo key='dum2'/>",
+                        "</atlassian-plugin>")
+                .build();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("test.plugin")
+                        .getModuleDescriptors()
+                        .iterator()
+                        .next()
+                        .getClass()
+                        .getSimpleName()
+                        .equals("MyModuleDescriptor");
+            }
+        });
+
+        // reinstall the module - the test plugin modules should be correct again
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("test.plugin")
+                        .getModuleDescriptors()
+                        .iterator()
+                        .next()
+                        .getClass()
+                        .getSimpleName()
+                        .equals("MyModuleDescriptor");
+            }
+        });
+    }
+
+    public void testUpgradeOfBundledPluginWithDynamicModule() throws Exception
+    {
+        final File pluginJar = new PluginJarBuilder("pluginType")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='test.plugin.module' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <module-type key='foo' class='foo.MyModuleDescriptor' />",
+                        "</atlassian-plugin>")
+                .addFormattedJava("foo.MyModuleDescriptor",
+                        "package foo;",
+                        "public class MyModuleDescriptor extends com.atlassian.plugin.descriptors.AbstractModuleDescriptor {",
+                        "  public Object getModule(){return null;}",
+                        "}")
+                .build();
+
+        final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(hostContainer);
+        initBundlingPluginManager(factory, pluginJar);
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+
+        final File pluginClientOld = new PluginJarBuilder("fooUser")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <foo key='dum2'/>",
+                        "</atlassian-plugin>")
+                .build();
+        final File pluginClientNew = new PluginJarBuilder("fooUser")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>2.0</version>",
+                        "    </plugin-info>",
+                        "    <foo key='dum2'/>",
+                        "</atlassian-plugin>")
+                .build();
+        pluginManager.installPlugins(new JarPluginArtifact(pluginClientOld), new JarPluginArtifact(pluginClientNew));
+
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("test.plugin")
+                        .getModuleDescriptors()
+                        .iterator()
+                        .next()
+                        .getClass()
+                        .getSimpleName()
+                        .equals("MyModuleDescriptor");
+            }
+        });
+
+        assertEquals(2, pluginManager.getEnabledPlugins().size());
+        assertEquals("2.0", pluginManager.getPlugin("test.plugin").getPluginInformation().getVersion());
     }
 
     public void testDynamicPluginModuleNotLinkToAllPlugins() throws Exception
