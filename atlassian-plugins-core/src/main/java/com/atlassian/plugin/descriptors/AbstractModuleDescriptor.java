@@ -25,6 +25,8 @@ import com.atlassian.plugin.util.ClassUtils;
 import com.atlassian.plugin.util.JavaVersionUtils;
 import com.atlassian.plugin.util.validation.ValidationPattern;
 import com.atlassian.util.concurrent.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>, StateAware
 {
@@ -50,6 +52,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     private String completeKey;
     boolean enabled = false;
     protected final ModuleFactory moduleFactory;
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     public AbstractModuleDescriptor(final ModuleFactory moduleFactory)
     {
@@ -192,7 +195,18 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
         {
             try
             {
-                moduleClass = (Class<T>) ClassUtils.getTypeArguments(AbstractModuleDescriptor.class, getClass()).get(0);
+
+                Class moduleTypeClass = null;
+                try
+                {
+                    moduleTypeClass = ClassUtils.getTypeArguments(AbstractModuleDescriptor.class, getClass()).get(0);
+                }
+                catch (RuntimeException ex)
+                {
+                    log.debug("Unable to get generic type, usually due to Class.forName() problems", ex);
+                    moduleTypeClass = getModuleReturnClass();
+                }
+                moduleClass = moduleTypeClass;
             }
             catch (final ClassCastException ex)
             {
@@ -204,6 +218,18 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
                 throw new IllegalStateException("The module class cannot be determined, likely because it needs a concrete "
                     + "module type defined in the generic type it passes to AbstractModuleDescriptor");
             }
+        }
+    }
+
+    Class<?> getModuleReturnClass()
+    {
+        try
+        {
+            return getClass().getMethod("getModule").getReturnType();
+        }
+        catch (NoSuchMethodException e)
+        {
+            throw new IllegalStateException("The getModule() method is missing (!) on " + getClass());
         }
     }
 
