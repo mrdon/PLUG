@@ -1,7 +1,6 @@
 package com.atlassian.plugin.servlet.util;
 
 import java.io.Serializable;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -89,7 +88,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
 
     public String get(String path)
     {
-        path = normalize(path);
+        path = removeRedundantSlashes(path);
         lock.readLock().lock();
         try
         {
@@ -120,7 +119,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
      */
     public Collection<String> getAll(String path)
     {
-        path = normalize(path);
+        path = removeRedundantSlashes(path);
         lock.readLock().lock();
         try
         {
@@ -158,9 +157,49 @@ public class DefaultPathMapper implements Serializable, PathMapper
         }
     }
 
-    private String normalize(String path)
+    /**
+     * <p>
+     * Reduces sequences of more than one consecutive slashes to a single
+     * slash.
+     * </p>
+     * <p>
+     * Note that this method will the a reference to the input string if slash
+     * removal was not required. A new string instance is returned only when
+     * substitution took place.
+     * </p>
+     *
+     * @param path  any string, including {@code null} (e.g. {@code "foo//bar"})
+     * @return  the input string, with all sequences of more than one
+     * consecutive slash removed (e.g. {@code "foo/bar"})
+     */
+    protected String removeRedundantSlashes(String path)
     {
-        return path == null ? null : URI.create(path).normalize().toString();
+        if (path == null) {
+            return null;
+
+        } else {
+            StringBuilder copy = null;
+            boolean previousWasSlash = false;
+            boolean copied = false;
+
+            for (int i = 0; i < path.length(); i++) {
+
+                final char c = path.charAt(i);
+                final boolean skip = (c == '/' && previousWasSlash);
+
+                if (skip && !copied) {
+                    copy = new StringBuilder(path.substring(0, i));
+                    copied = true;
+                }
+                if (!skip && copied)
+                {
+                    copy.append(c);
+                }
+                previousWasSlash = c == '/';
+                
+            }
+            return copied ? copy.toString() : path;
+        }
     }
 
     public String toString()
