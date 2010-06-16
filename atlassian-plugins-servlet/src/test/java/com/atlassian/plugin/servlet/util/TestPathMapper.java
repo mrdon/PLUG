@@ -6,6 +6,7 @@ public class TestPathMapper extends TestCase
 {
     /**
      * For more info, see:
+     * https://studio.atlassian.com/browse/PLUG-597
      * https://studio.atlassian.com/browse/APL-170
      * https://extranet.atlassian.com/display/~evzijst/2010/06/02/Bypassing+Servlet+Filters+with+Double+Slashes
      * https://studio.atlassian.com/source/cru/CR-PLUG-193#c17487
@@ -20,6 +21,7 @@ public class TestPathMapper extends TestCase
         assertEquals("key", pathMapper.get("/foo//bar"));
         assertEquals("key", pathMapper.get("/foo///bar"));
         assertEquals("key", pathMapper.get("/foo///bar 2"));
+        assertNull(pathMapper.get("/images/ddtree/black spinner/12.png"));
     }
 
     public void testSlashRemover()

@@ -159,13 +159,13 @@ public class DefaultPathMapper implements Serializable, PathMapper
 
     /**
      * <p>
-     * Reduces sequences of more than one consecutive slashes to a single
-     * slash.
+     * Reduces sequences of more than one consecutive forward slash ("/") to a
+     * single slash (see: https://studio.atlassian.com/browse/PLUG-597).
      * </p>
      * <p>
-     * Note that this method will the a reference to the input string if slash
-     * removal was not required. A new string instance is returned only when
-     * substitution took place.
+     * Note that this method will return a reference to the input string if
+     * slash removal was not required. A new string instance is returned only
+     * when substitution actually took place.
      * </p>
      *
      * @param path  any string, including {@code null} (e.g. {@code "foo//bar"})
@@ -174,20 +174,23 @@ public class DefaultPathMapper implements Serializable, PathMapper
      */
     protected String removeRedundantSlashes(String path)
     {
-        if (path == null) {
+        if (path == null)
+        {
             return null;
-
-        } else {
+        }
+        else
+        {
             StringBuilder copy = null;
             boolean previousWasSlash = false;
             boolean copied = false;
 
-            for (int i = 0; i < path.length(); i++) {
-
+            for (int i = 0; i < path.length(); i++)
+            {
                 final char c = path.charAt(i);
                 final boolean skip = (c == '/' && previousWasSlash);
 
-                if (skip && !copied) {
+                if (skip && !copied)
+                {
                     copy = new StringBuilder(path.substring(0, i));
                     copied = true;
                 }
