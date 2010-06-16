@@ -172,7 +172,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
      * @return  the input string, with all sequences of more than one
      * consecutive slash removed (e.g. {@code "foo/bar"})
      */
-    protected String removeRedundantSlashes(String path)
+    protected String removeRedundantSlashes(final String path)
     {
         if (path == null)
         {
@@ -191,7 +191,8 @@ public class DefaultPathMapper implements Serializable, PathMapper
 
                 if (skip && !copied)
                 {
-                    copy = new StringBuilder(path.substring(0, i));
+                    copy = new StringBuilder(path.length())
+                            .append(path.substring(0, i));
                     copied = true;
                 }
                 if (!skip && copied)
