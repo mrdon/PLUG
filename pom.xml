@@ -9,7 +9,7 @@
 
     <groupId>com.atlassian.plugins</groupId>
     <artifactId>atlassian-plugins-parent</artifactId>
-    <version>2.5.1-beta1</version>
+    <version>2.5.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Atlassian Plugins - Parent POM</name>
@@ -33,10 +33,10 @@
     </ciManagement>
 
     <scm>
-        <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.5.1-beta1</connection>
-        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.5.1-beta1
+        <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.5.x</connection>
+        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.5.x
         </developerConnection>
-        <url>https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.5.1-beta1</url>
+        <url>https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.5.x</url>
     </scm>
 
     <modules>
