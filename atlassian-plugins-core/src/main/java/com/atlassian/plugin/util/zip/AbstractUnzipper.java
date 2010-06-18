@@ -87,7 +87,10 @@ public abstract class AbstractUnzipper implements Unzipper
         if (!targetDirContents.equals(zipContentsAndLastModified))
         {
             // Note: clean, not delete, as destdir may be a symlink (PLUG-606).
-            FileUtils.cleanDirectory(destDir);
+            if (destDir.exists())
+            {
+                FileUtils.cleanDirectory(destDir);
+            }
             unzip();
         }
         else
