@@ -86,7 +86,8 @@ public abstract class AbstractUnzipper implements Unzipper
         Map<String,Long> targetDirContents = getContentsOfTargetDir(destDir);
         if (!targetDirContents.equals(zipContentsAndLastModified))
         {
-            FileUtils.deleteDirectory(destDir);
+            // Note: clean, not delete, as destdir may be a symlink (PLUG-606).
+            FileUtils.cleanDirectory(destDir);
             unzip();
         }
         else

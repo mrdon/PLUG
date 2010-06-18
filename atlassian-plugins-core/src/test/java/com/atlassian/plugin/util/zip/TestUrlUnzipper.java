@@ -61,6 +61,16 @@ public class TestUrlUnzipper extends TestCase
 
     }
 
+    public void testConditionalUnzipCleansZipDirectory() throws IOException, InterruptedException
+    {
+        File f = new File(destdir, "bogusfile.txt");
+        zip(sourcedir, zip);
+        UrlUnzipper unzipper = new UrlUnzipper(zip.toURL(), destdir);
+        unzipper.conditionalUnzip();
+        assertEquals(1, destdir.listFiles().length); // there's only one..
+        assertEquals("source1.jar", destdir.listFiles()[0].getName()); // ..and it's not randomfile.txt
+    }
+
     public void testConditionalUnzipWithNoUnzipIfNoFileMod() throws IOException, InterruptedException {
         zip(sourcedir, zip);
         UrlUnzipper unzipper = new UrlUnzipper(zip.toURL(), destdir);
