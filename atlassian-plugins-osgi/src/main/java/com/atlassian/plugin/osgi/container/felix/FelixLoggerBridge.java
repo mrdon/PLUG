@@ -2,7 +2,6 @@ package com.atlassian.plugin.osgi.container.felix;
 
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.moduleloader.ResourceNotFoundException;
 import org.osgi.framework.BundleException;
 import org.slf4j.LoggerFactory;
 
@@ -69,10 +68,6 @@ public class FelixLoggerBridge extends Logger {
                     if (throwable instanceof ClassNotFoundException && isClassNotFoundsWeCareAbout(throwable))
                     {
                         log.debug("Class not found in bundle: " + message);
-                    }
-                    else if (throwable instanceof ResourceNotFoundException)
-                    {
-                        log.trace("Resource not found in bundle: " + message);
                     }
                 }
                 else
