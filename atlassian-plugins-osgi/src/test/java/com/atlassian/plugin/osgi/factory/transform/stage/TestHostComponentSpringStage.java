@@ -1,21 +1,25 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
-import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.osgi.SomeInterface;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.osgi.factory.transform.*;
+import com.atlassian.plugin.osgi.factory.transform.Barable;
+import com.atlassian.plugin.osgi.factory.transform.FooChild;
+import com.atlassian.plugin.osgi.factory.transform.Fooable;
+import com.atlassian.plugin.osgi.factory.transform.StubHostComponentRegistration;
+import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.factory.transform.test.SomeClass;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
 import com.atlassian.plugin.test.PluginJarBuilder;
-
+import junit.framework.TestCase;
 import org.dom4j.DocumentException;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import org.osgi.framework.ServiceReference;
 
+import javax.servlet.Servlet;
+import javax.swing.table.TableModel;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,10 +28,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.swing.table.TableModel;
-import javax.servlet.Servlet;
-
-import junit.framework.TestCase;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TestHostComponentSpringStage extends TestCase
 {
@@ -393,6 +395,41 @@ public class TestHostComponentSpringStage extends TestCase
             },
             null,
             "not(beans:bean[@id='foo']/beans:property[@name='filter']/@value='(&(bean-name=foo)(plugins-host=true))']");
+    }
+
+    public void testTransformWithExistingComponentImportInterfaceScopedToDifferentApplication() throws Exception, DocumentException
+    {
+        jar = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  public Foo(com.atlassian.plugin.osgi.SomeInterface bar) {}",
+                        "}")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin>",
+                        "  <component-import key='foobar' application='notfoo'>",
+                        "    <interface>com.atlassian.plugin.osgi.SomeInterface</interface>",
+                        "  </component-import>",
+                        "</atlassian-plugin>")
+                .addResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0\n" +
+                        "Bundle-Version: 1.0\n" +
+                        "Bundle-SymbolicName: my.server\n" +
+                        "Bundle-ManifestVersion: 2\n")
+                .build();
+
+        assertNotNull("No file overrides!", SpringTransformerTestHelper.transform(
+            transformer,
+            jar,
+            new ArrayList<HostComponentRegistration>()
+            {
+                {
+                    assertTrue(add(new StubHostComponentRegistration("foo", new SomeInterface()
+                    {}, SomeInterface.class)));
+                }
+            },
+            null,
+            "beans:bean[@id='foo']/beans:property[@name='filter']/@value='(&(bean-name=foo)(plugins-host=true))'"));
     }
 
     public void testTransformWithExistingComponentImportInterfacePartialMatch() throws Exception, DocumentException
