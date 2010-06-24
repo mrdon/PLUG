@@ -467,11 +467,15 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     public void revertRestartRequiredChange(final String pluginKey) throws PluginException
     {
         notNull("pluginKey", pluginKey);
-        if (getState().getPluginRestartState(pluginKey) == PluginRestartState.UPGRADE ||
-            getState().getPluginRestartState(pluginKey) == PluginRestartState.INSTALL)
+        PluginRestartState restartState = getState().getPluginRestartState(pluginKey);
+        if (restartState == PluginRestartState.UPGRADE)
         {
             pluginInstaller.revertInstalledPlugin(pluginKey);
-
+        }
+        else if (restartState == PluginRestartState.INSTALL)
+        {
+            pluginInstaller.revertInstalledPlugin(pluginKey);
+            plugins.remove(pluginKey);
         }
         getStore().save(getBuilder().setPluginRestartState(pluginKey, PluginRestartState.NONE).toState());
     }
