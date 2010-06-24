@@ -12,6 +12,7 @@ import com.atlassian.plugin.osgi.util.Clazz;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.util.ClassLoaderUtils;
+import com.atlassian.plugin.util.PluginUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.apache.commons.io.IOUtils;
@@ -77,7 +78,8 @@ public class HostComponentSpringStage implements TransformStage
                     Set<String> regInterfaces = new HashSet<String>(Arrays.asList(reg.getMainInterfaces()));
                     for (ComponentImport compImport : context.getComponentImports().values())
                     {
-                        if (regInterfaces.containsAll(compImport.getInterfaces()))
+                        if (PluginUtils.doesModuleElementApplyToApplication(compImport.getSource(), context.getApplicationKeys()) &&
+                            regInterfaces.containsAll(compImport.getInterfaces()))
                         {
                             found = false;
                             break;
