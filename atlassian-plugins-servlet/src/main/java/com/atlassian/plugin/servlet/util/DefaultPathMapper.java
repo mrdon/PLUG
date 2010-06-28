@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
+import java.util.regex.Pattern;
 
 /**
  * Originally opied from Atlassian Seraph 1.0
@@ -28,6 +28,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class DefaultPathMapper implements Serializable, PathMapper
 {
+
+    private static final Pattern REDUNDANT_SLASHES = Pattern.compile("//+");
     private static final String[] DEFAULT_KEYS = { "/", "*", "/*" };
 
     private final Map<String, Collection<String>> mappings = new HashMap<String, Collection<String>>();
@@ -162,11 +164,6 @@ public class DefaultPathMapper implements Serializable, PathMapper
      * Reduces sequences of more than one consecutive forward slash ("/") to a
      * single slash (see: https://studio.atlassian.com/browse/PLUG-597).
      * </p>
-     * <p>
-     * Note that this method will return a reference to the input string if
-     * slash removal was not required. A new string instance is returned only
-     * when substitution actually took place.
-     * </p>
      *
      * @param path  any string, including {@code null} (e.g. {@code "foo//bar"})
      * @return  the input string, with all sequences of more than one
@@ -174,36 +171,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
      */
     protected String removeRedundantSlashes(final String path)
     {
-        if (path == null)
-        {
-            return null;
-        }
-        else
-        {
-            StringBuilder copy = null;
-            boolean previousWasSlash = false;
-            boolean copied = false;
-
-            for (int i = 0; i < path.length(); i++)
-            {
-                final char c = path.charAt(i);
-                final boolean skip = (c == '/' && previousWasSlash);
-
-                if (skip && !copied)
-                {
-                    copy = new StringBuilder(path.length())
-                            .append(path.substring(0, i));
-                    copied = true;
-                }
-                if (!skip && copied)
-                {
-                    copy.append(c);
-                }
-                previousWasSlash = c == '/';
-                
-            }
-            return copied ? copy.toString() : path;
-        }
+        return path == null ? null : REDUNDANT_SLASHES.matcher(path).replaceAll("/");
     }
 
     public String toString()
