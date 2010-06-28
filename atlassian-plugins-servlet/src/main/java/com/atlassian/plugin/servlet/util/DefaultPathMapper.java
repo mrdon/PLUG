@@ -1,7 +1,6 @@
 package com.atlassian.plugin.servlet.util;
 
 import java.io.Serializable;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
+import java.util.regex.Pattern;
 
 /**
  * Originally opied from Atlassian Seraph 1.0
@@ -29,6 +28,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class DefaultPathMapper implements Serializable, PathMapper
 {
+
+    private static final Pattern REDUNDANT_SLASHES = Pattern.compile("//+");
     private static final String[] DEFAULT_KEYS = { "/", "*", "/*" };
 
     private final Map<String, Collection<String>> mappings = new HashMap<String, Collection<String>>();
@@ -89,7 +90,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
 
     public String get(String path)
     {
-        path = normalize(path);
+        path = removeRedundantSlashes(path);
         lock.readLock().lock();
         try
         {
@@ -120,7 +121,7 @@ public class DefaultPathMapper implements Serializable, PathMapper
      */
     public Collection<String> getAll(String path)
     {
-        path = normalize(path);
+        path = removeRedundantSlashes(path);
         lock.readLock().lock();
         try
         {
@@ -158,9 +159,19 @@ public class DefaultPathMapper implements Serializable, PathMapper
         }
     }
 
-    private String normalize(String path)
+    /**
+     * <p>
+     * Reduces sequences of more than one consecutive forward slash ("/") to a
+     * single slash (see: https://studio.atlassian.com/browse/PLUG-597).
+     * </p>
+     *
+     * @param path  any string, including {@code null} (e.g. {@code "foo//bar"})
+     * @return  the input string, with all sequences of more than one
+     * consecutive slash removed (e.g. {@code "foo/bar"})
+     */
+    protected String removeRedundantSlashes(final String path)
     {
-        return path == null ? null : URI.create(path).normalize().toString();
+        return path == null ? null : REDUNDANT_SLASHES.matcher(path).replaceAll("/");
     }
 
     public String toString()
