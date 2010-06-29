@@ -115,20 +115,13 @@ public class ContainerManager
         }});
         hostComponentProvider = new SimpleHostComponentProvider();
 
-        File osgiCache;
-        if (System.getProperty("osgi.cache") != null)
-        {
-            osgiCache = makeSureDirectoryExists(System.getProperty("osgi.cache"));
-        }
-        else
-        {
-            osgiCache = makeSureDirectoryExists(servletContext, "/WEB-INF/osgi-cache");
-        }
+        File osgiCache = findAndCreateDirectory(servletContext, "osgi.cache", "WEB-INF/osgi-cache");
+        File bundledPluginDir = findAndCreateDirectory(servletContext, "bundledplugins.cache", "WEB-INF/bundled-plugins");
 
         final PluginsConfiguration config = new PluginsConfigurationBuilder()
                 .useLegacyDynamicPluginDeployer(true)
                 .bundledPluginUrl(this.getClass().getResource(BUNDLED_PLUGINS_ZIP))
-                .bundledPluginCacheDirectory(makeSureDirectoryExists(servletContext, "/WEB-INF/bundled-plugins"))
+                .bundledPluginCacheDirectory(bundledPluginDir)
                 .pluginDirectory(makeSureDirectoryExists(servletContext, "/WEB-INF/plugins"))
                 .moduleDescriptorFactory(moduleDescriptorFactory)
                 .packageScannerConfiguration(scannerConfig)
@@ -174,6 +167,20 @@ public class ContainerManager
 
         downloadStrategies = new ArrayList<DownloadStrategy>();
         downloadStrategies.add(pluginDownloadStrategy);
+    }
+
+    private File findAndCreateDirectory(ServletContext servletContext, String sysPropName, String defaultPath)
+    {
+        File dir;
+        if (System.getProperty(sysPropName) != null)
+        {
+            dir = makeSureDirectoryExists(System.getProperty(sysPropName));
+        }
+        else
+        {
+            dir = makeSureDirectoryExists(servletContext, defaultPath);
+        }
+        return dir;
     }
 
     private String determineVersion()
