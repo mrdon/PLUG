@@ -239,7 +239,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     @PluginEventListener
     public void onPluginModuleAvailable(final PluginModuleAvailableEvent event)
     {
-        enableConfiguredPluginModule(event.getModule().getPlugin(), event.getModule(), new HashSet());
+        enableConfiguredPluginModule(event.getModule().getPlugin(), event.getModule(), new HashSet<ModuleDescriptor<?>>());
     }
 
     @PluginEventListener
@@ -1016,9 +1016,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                 {
                     if (isPluginModuleEnabled(module.getCompleteKey()))
                     {
-                        @SuppressWarnings("unchecked")
-                        final D moduleDescriptor = (D) module;
-                        result.add(moduleDescriptor);
+                        result.add(descriptorClazz.cast(module));
                     }
                     else if (log.isDebugEnabled())
                     {
