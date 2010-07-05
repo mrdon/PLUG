@@ -7,28 +7,21 @@ import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Maps.filterKeys;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
-import com.atlassian.plugin.*;
-import com.atlassian.plugin.event.events.PluginContainerUnavailableEvent;
-import com.atlassian.plugin.event.events.PluginModuleAvailableEvent;
-import com.atlassian.plugin.event.events.PluginModuleUnavailableEvent;
-import com.atlassian.plugin.event.events.PluginUninstalledEvent;
-import org.apache.commons.lang.time.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.atlassian.plugin.ModuleCompleteKey;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginController;
+import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.PluginInstaller;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.PluginRestartState;
+import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.PluginSystemLifecycle;
+import com.atlassian.plugin.RevertablePluginInstaller;
+import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.classloader.PluginsClassLoader;
 import com.atlassian.plugin.descriptors.CannotDisable;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
@@ -36,6 +29,7 @@ import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
 import com.atlassian.plugin.event.NotificationException;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.event.events.PluginContainerUnavailableEvent;
 import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.event.events.PluginEnabledEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
@@ -43,9 +37,12 @@ import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkStartingEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkWarmRestartedEvent;
 import com.atlassian.plugin.event.events.PluginFrameworkWarmRestartingEvent;
+import com.atlassian.plugin.event.events.PluginModuleAvailableEvent;
 import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
+import com.atlassian.plugin.event.events.PluginModuleUnavailableEvent;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
+import com.atlassian.plugin.event.events.PluginUninstalledEvent;
 import com.atlassian.plugin.event.events.PluginUpgradedEvent;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
@@ -62,8 +59,26 @@ import com.atlassian.plugin.predicate.ModuleOfClassPredicate;
 import com.atlassian.plugin.predicate.PluginPredicate;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.util.concurrent.CopyOnWriteMap;
+
+import org.apache.commons.lang.time.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -106,8 +121,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     private final Map<Plugin, PluginLoader> pluginToPluginLoader = new HashMap<Plugin, PluginLoader>();
 
-    public DefaultPluginManager(final PluginPersistentStateStore store, final List<PluginLoader> pluginLoaders, final ModuleDescriptorFactory moduleDescriptorFactory,
-        final PluginEventManager pluginEventManager)
+    public DefaultPluginManager(final PluginPersistentStateStore store, final List<PluginLoader> pluginLoaders, final ModuleDescriptorFactory moduleDescriptorFactory, final PluginEventManager pluginEventManager)
     {
         this.pluginLoaders = notNull("Plugin Loaders list must not be null.", pluginLoaders);
         this.store = notNull("PluginPersistentStateStore must not be null.", store);
@@ -223,19 +237,19 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     }
 
     @PluginEventListener
-    public void onPluginModuleAvailable(PluginModuleAvailableEvent event)
+    public void onPluginModuleAvailable(final PluginModuleAvailableEvent event)
     {
         enableConfiguredPluginModule(event.getModule().getPlugin(), event.getModule(), new HashSet());
     }
 
     @PluginEventListener
-    public void onPluginModuleUnavailable(PluginModuleUnavailableEvent event)
+    public void onPluginModuleUnavailable(final PluginModuleUnavailableEvent event)
     {
         notifyModuleDisabled(event.getModule());
     }
 
     @PluginEventListener
-    public void onPluginContainerUnavailable(PluginContainerUnavailableEvent event)
+    public void onPluginContainerUnavailable(final PluginContainerUnavailableEvent event)
     {
         disablePluginWithoutPersisting(event.getPluginKey());
     }
@@ -373,8 +387,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                                     markPluginInstallThatRequiresRestart(plugin);
 
                                     final UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin);
-                                    unloadablePlugin.setErrorText("Plugin requires a restart of the application due " +
-                                        "to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
+                                    unloadablePlugin.setErrorText("Plugin requires a restart of the application due " + "to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
                                     plugin = unloadablePlugin;
                                 }
                                 else
@@ -402,24 +415,21 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         return numberFound;
     }
 
-    private void markPluginInstallThatRequiresRestart(Plugin plugin)
+    private void markPluginInstallThatRequiresRestart(final Plugin plugin)
     {
-        log.info("Installed plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " +
-                PluginUtils.getPluginModulesThatRequireRestart(plugin));
+        log.info("Installed plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
         getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.INSTALL).toState());
     }
 
-    private void markPluginUpgradeThatRequiresRestart(Plugin plugin)
+    private void markPluginUpgradeThatRequiresRestart(final Plugin plugin)
     {
-        log.info("Upgraded plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " +
-                PluginUtils.getPluginModulesThatRequireRestart(plugin));
+        log.info("Upgraded plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
         getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.UPGRADE).toState());
     }
 
-    private void markPluginUninstallThatRequiresRestart(Plugin plugin)
+    private void markPluginUninstallThatRequiresRestart(final Plugin plugin)
     {
-        log.info("Uninstalled plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " +
-                PluginUtils.getPluginModulesThatRequireRestart(plugin));
+        log.info("Uninstalled plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
         getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.REMOVE).toState());
     }
 
@@ -439,7 +449,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         {
             // Explicitly disable any plugins that require this plugin
             disableDependentPlugins(plugin);
-            
+
             uninstallNoEvent(plugin);
 
             pluginEventManager.broadcast(new PluginUninstalledEvent(plugin));
@@ -452,7 +462,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      * @param plugin The plugin to uninstall
      * @since 2.5.0
      */
-    protected void uninstallNoEvent(Plugin plugin)
+    protected void uninstallNoEvent(final Plugin plugin)
     {
         unloadPlugin(plugin);
 
@@ -467,7 +477,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     public void revertRestartRequiredChange(final String pluginKey) throws PluginException
     {
         notNull("pluginKey", pluginKey);
-        PluginRestartState restartState = getState().getPluginRestartState(pluginKey);
+        final PluginRestartState restartState = getState().getPluginRestartState(pluginKey);
         if (restartState == PluginRestartState.UPGRADE)
         {
             pluginInstaller.revertInstalledPlugin(pluginKey);
@@ -605,7 +615,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                     }
                     catch (final PluginException e)
                     {
-                        throw new PluginParseException("Duplicate plugin found (installed version is the same or older) and could not be unloaded: '" + plugin.getKey() + "'", e);
+                        throw new PluginParseException(
+                            "Duplicate plugin found (installed version is the same or older) and could not be unloaded: '" + plugin.getKey() + "'", e);
                     }
                 }
                 else
@@ -664,22 +675,21 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      * @param plugin The plugin to disable
      * @return A set of plugins that were disabled
      */
-    private Set<Plugin> disableDependentPlugins(Plugin plugin)
+    private Set<Plugin> disableDependentPlugins(final Plugin plugin)
     {
-        Set<Plugin> dependentPlugins = new HashSet<Plugin>();
-        Set<String> dependentPluginKeys = new HashSet<String>();
+        final Set<Plugin> dependentPlugins = new HashSet<Plugin>();
+        final Set<String> dependentPluginKeys = new HashSet<String>();
 
-        for (Plugin depPlugin : getEnabledPlugins())
+        for (final Plugin depPlugin : getEnabledPlugins())
         {
-            if (plugin != depPlugin && depPlugin.getRequiredPlugins().contains(plugin.getKey()))
+            if ((plugin != depPlugin) && depPlugin.getRequiredPlugins().contains(plugin.getKey()))
             {
                 dependentPlugins.add(depPlugin);
                 dependentPluginKeys.add(depPlugin.getKey());
             }
         }
-        log.info("Found dependent enabled plugins for uninstalled plugin '" + plugin.getKey() + "': " + dependentPluginKeys
-         + ".  Disabling...");
-        for (Plugin depPlugin : dependentPlugins)
+        log.info("Found dependent enabled plugins for uninstalled plugin '" + plugin.getKey() + "': " + dependentPluginKeys + ".  Disabling...");
+        for (final Plugin depPlugin : dependentPlugins)
         {
             disablePluginWithoutPersisting(depPlugin.getKey());
         }
@@ -862,7 +872,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                     }
                     catch (final RuntimeException ex)
                     {
-                        log.error("Exception when retrieving plugin module " + input.getKey() + ", will disable plugin " + input.getPlugin().getKey(), ex);
+                        log.error(
+                            "Exception when retrieving plugin module " + input.getKey() + ", will disable plugin " + input.getPlugin().getKey(), ex);
                         pluginsToDisable.add(input.getPlugin().getKey());
                     }
                     return result;
@@ -937,8 +948,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     @Deprecated
     public <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>>[] descriptorClasses, final Class<M> moduleClass)
     {
-        final Iterable<ModuleDescriptor<M>> moduleDescriptors = filterDescriptors(getEnabledModuleDescriptorsByModuleClass(moduleClass), new ModuleDescriptorOfClassPredicate<M>(
-            descriptorClasses));
+        final Iterable<ModuleDescriptor<M>> moduleDescriptors = filterDescriptors(getEnabledModuleDescriptorsByModuleClass(moduleClass),
+            new ModuleDescriptorOfClassPredicate<M>(descriptorClasses));
 
         return getModules(moduleDescriptors);
     }
@@ -1161,7 +1172,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         return success;
     }
 
-    private boolean enableConfiguredPluginModule(Plugin plugin, ModuleDescriptor<?> descriptor, Set<ModuleDescriptor<?>> enabledDescriptors)
+    private boolean enableConfiguredPluginModule(final Plugin plugin, final ModuleDescriptor<?> descriptor, final Set<ModuleDescriptor<?>> enabledDescriptors)
     {
         boolean success = true;
 
@@ -1195,7 +1206,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         catch (final Throwable exception)
         {
             // catch any errors and insert an UnloadablePlugin (PLUG-7)
-            log.error("There was an error loading the descriptor '" + descriptor.getName() + "' of plugin '" + plugin.getKey() + "'. Disabling.", exception);
+            log.error("There was an error loading the descriptor '" + descriptor.getName() + "' of plugin '" + plugin.getKey() + "'. Disabling.",
+                exception);
 
             // Disable all previously enabled descriptors
             for (final ModuleDescriptor<?> desc : enabledDescriptors)
@@ -1446,7 +1458,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     private UnloadablePlugin replacePluginWithUnloadablePlugin(final Plugin plugin, final ModuleDescriptor<?> descriptor, final Throwable throwable)
     {
-        final UnloadableModuleDescriptor unloadableDescriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin, descriptor, throwable);
+        final UnloadableModuleDescriptor unloadableDescriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin,
+            descriptor, throwable);
         final UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin, unloadableDescriptor);
 
         unloadablePlugin.setUninstallable(plugin.isUninstallable());
