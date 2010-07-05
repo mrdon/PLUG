@@ -153,7 +153,10 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             {
                 if (getState().getPluginRestartState(plugin.getKey()) == PluginRestartState.REMOVE)
                 {
-                    log.info("Plugin " + plugin.getKey() + " was marked to be removed on restart.  Removing now.");
+                    if (log.isInfoEnabled())
+                    {
+                        log.info("Plugin " + plugin.getKey() + " was marked to be removed on restart.  Removing now.");
+                    }
                     loader.removePlugin(plugin);
 
                     // PLUG-13: Plugins should not save state across uninstalls.
@@ -417,19 +420,28 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     private void markPluginInstallThatRequiresRestart(final Plugin plugin)
     {
-        log.info("Installed plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
+        if (log.isInfoEnabled())
+        {
+            log.info("Installed plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
+        }
         getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.INSTALL).toState());
     }
 
     private void markPluginUpgradeThatRequiresRestart(final Plugin plugin)
     {
-        log.info("Upgraded plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
+        if (log.isInfoEnabled())
+        {
+            log.info("Upgraded plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
+        }
         getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.UPGRADE).toState());
     }
 
     private void markPluginUninstallThatRequiresRestart(final Plugin plugin)
     {
-        log.info("Uninstalled plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
+        if (log.isInfoEnabled())
+        {
+            log.info("Uninstalled plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
+        }
         getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.REMOVE).toState());
     }
 
@@ -688,7 +700,10 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                 dependentPluginKeys.add(depPlugin.getKey());
             }
         }
-        log.info("Found dependent enabled plugins for uninstalled plugin '" + plugin.getKey() + "': " + dependentPluginKeys + ".  Disabling...");
+        if (log.isInfoEnabled())
+        {
+            log.info("Found dependent enabled plugins for uninstalled plugin '" + plugin.getKey() + "': " + dependentPluginKeys + ".  Disabling...");
+        }
         for (final Plugin depPlugin : dependentPlugins)
         {
             disablePluginWithoutPersisting(depPlugin.getKey());
@@ -1261,7 +1276,10 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void notifyPluginDisabled(final Plugin plugin)
     {
-        log.info("Disabling " + plugin.getKey());
+        if (log.isInfoEnabled())
+        {
+            log.info("Disabling " + plugin.getKey());
+        }
         disablePluginModules(plugin);
 
         // This needs to happen after modules are disabled to prevent errors
