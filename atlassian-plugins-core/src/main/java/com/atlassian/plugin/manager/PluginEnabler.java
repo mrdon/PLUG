@@ -28,7 +28,8 @@ import org.slf4j.LoggerFactory;
 class PluginEnabler
 {
     private static final Logger log = LoggerFactory.getLogger(PluginEnabler.class);
-    private static final long LAST_PLUGIN_TIMEOUT = 5 * 1000;
+    private static final long LAST_PLUGIN_TIMEOUT = 30 * 1000;
+    private static final long LAST_PLUGIN_WARN_TIMEOUT = 5 * 1000;
 
     private final PluginAccessor pluginAccessor;
     private final PluginController pluginController;
@@ -104,6 +105,7 @@ class PluginEnabler
             WaitUntil.invoke(new WaitUntil.WaitCondition()
             {
                 private long singlePluginTimeout;
+                private long singlePluginWarn;
                 public boolean isFinished()
                 {
                     if (singlePluginTimeout > 0 && singlePluginTimeout < System.currentTimeMillis())
@@ -118,11 +120,31 @@ class PluginEnabler
                             i.remove();
                         }
                     }
-                    if (isAtlassianDevMode() && pluginsInEnablingState.size() == 1 && singlePluginTimeout == 0)
+                    if (isAtlassianDevMode() && pluginsInEnablingState.size() == 1)
                     {
-                        log.info("Only one plugin left not enabled. Resetting the timeout to " +
-                                (LAST_PLUGIN_TIMEOUT/1000) + " seconds.");
-                        singlePluginTimeout = System.currentTimeMillis() + LAST_PLUGIN_TIMEOUT;
+                        final long currentTime = System.currentTimeMillis();
+                        if (singlePluginTimeout == 0)
+                        {
+                            log.info("Only one plugin left not enabled. Resetting the timeout to " +
+                                    (LAST_PLUGIN_TIMEOUT/1000) + " seconds.");
+
+                            singlePluginWarn = currentTime + LAST_PLUGIN_WARN_TIMEOUT;
+                            singlePluginTimeout = currentTime + LAST_PLUGIN_TIMEOUT;
+                        }
+                        else if (singlePluginWarn <= currentTime)
+                        {
+                            //PLUG-617: Warn people when it takes a long time to enable a plugin when in dev mode. We bumped
+                            //this timeout from 5 to 30 seconds because the gadget publisher in JIRA can take this long to
+                            //load when running java in DEBUG mode. We are also now going to log a message about slow startup
+                            //since 30 seconds is a long time to wait for your plugin to fail.
+                            final Plugin plugin = pluginsInEnablingState.iterator().next();
+                            final long remainingWait = Math.max(0, Math.round((singlePluginTimeout - currentTime) / 1000.0));
+
+                            log.warn("Plugin '" + plugin + "' did not enable within " + (LAST_PLUGIN_WARN_TIMEOUT / 1000) + " seconds."
+                                    + "The plugin should not take this long to enable. Will only attempt to load plugin for another '"
+                                    + remainingWait + "' seconds.");
+                            singlePluginWarn = Long.MAX_VALUE;
+                        }
                     }
                     return pluginsInEnablingState.isEmpty();
                 }
