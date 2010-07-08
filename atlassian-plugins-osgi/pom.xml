@@ -54,9 +54,6 @@
                 <jprofiler.version>6.0.4</jprofiler.version>
                 <jprofiler.profileid>109</jprofiler.profileid>
                 <jprofiler.configfile>${project.build.directory}/test-classes/jprofilerconfig.xml</jprofiler.configfile>
-                <setuptest.runtime>1</setuptest.runtime>
-                <fixedload.offset>2</fixedload.offset>
-                <!--This probably wont trigger unless things go really bad-->
             </properties>
             <build>
                 <plugins>
@@ -73,8 +70,6 @@
                                 <configuration>
                                     <tasks>
                                         <replace file="${jprofiler.configfile}" token="@project-dir@" value="${project.build.directory}" />
-                                        <replace file="${jprofiler.configfile}" token="@setupoffset@" value="${setuptest.runtime}" />
-                                        <replace file="${jprofiler.configfile}" token="@fixedoffset@" value="${fixedload.offset}" />
                                     </tasks>
                                 </configuration>
                             </execution>
