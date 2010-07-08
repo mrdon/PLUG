@@ -63,7 +63,7 @@ class PluginEnabler
         }
         enable(pluginsToEnable);
 
-        ImmutableList.Builder enabledPlugins = new ImmutableList.Builder();
+        ImmutableList.Builder<Plugin> enabledPlugins = new ImmutableList.Builder<Plugin>();
         for (Plugin plugin : pluginsToEnable)
         {
             if (plugin.getPluginState().equals(PluginState.ENABLED))
