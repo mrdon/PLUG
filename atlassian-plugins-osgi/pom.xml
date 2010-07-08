@@ -189,7 +189,7 @@
                             <options>
                                 <value>${jvm.opts1}</value>
                                 <value>${jvm.opts2}</value>
-                                <value>-Datlassian.org.osgi.framework.bootdelegation=java.*,javax.*,com.jprofiler.*,sun.*,com.sun.*</value>
+                                <!--<value>-Datlassian.org.osgi.framework.bootdelegation=java.*,javax.*,com.jprofiler.*,sun.*,com.sun.*</value>-->
                             </options>
                         </configuration>
                         <executions>
