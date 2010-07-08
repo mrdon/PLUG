@@ -52,7 +52,7 @@
                 <jvm.opts2>-Xbootclasspath/a:${jprofiler.home}/bin/agent.jar</jvm.opts2>
                 <jprofiler.home>${project.build.directory}/jprofiler6/</jprofiler.home>
                 <jprofiler.version>6.0.4</jprofiler.version>
-                <jprofiler.profileid>109</jprofiler.profileid>
+                <jprofiler.profileid>108</jprofiler.profileid>
                 <jprofiler.configfile>${project.build.directory}/test-classes/jprofilerconfig.xml</jprofiler.configfile>
             </properties>
             <build>
