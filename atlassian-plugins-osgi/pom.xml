@@ -48,15 +48,14 @@
         <profile>
             <id>perfprofile</id>
             <properties>
-                <jvm.opts1>-agentlib:jprofilerti=offline,id=${jprofiler.profileid},config=${jprofiler.configfile}
-                </jvm.opts1>
+                <jvm.opts1>-agentlib:jprofilerti=offline,id=${jprofiler.profileid},config=${jprofiler.configfile}</jvm.opts1>
                 <jvm.opts2>-Xbootclasspath/a:${jprofiler.home}/bin/agent.jar</jvm.opts2>
-                <jprofiler.home>${project.build.directory}/jprofiler5/</jprofiler.home>
-                <jprofiler.version>5.2.4</jprofiler.version>
-                <jprofiler.profileid>111</jprofiler.profileid>
+                <jprofiler.home>${project.build.directory}/jprofiler6/</jprofiler.home>
+                <jprofiler.version>6.0.4</jprofiler.version>
+                <jprofiler.profileid>109</jprofiler.profileid>
                 <jprofiler.configfile>${project.build.directory}/test-classes/jprofilerconfig.xml</jprofiler.configfile>
-                <setuptest.runtime>100</setuptest.runtime>
-                <fixedload.offset>101</fixedload.offset>
+                <setuptest.runtime>1</setuptest.runtime>
+                <fixedload.offset>2</fixedload.offset>
                 <!--This probably wont trigger unless things go really bad-->
             </properties>
             <build>
@@ -74,10 +73,8 @@
                                 <configuration>
                                     <tasks>
                                         <replace file="${jprofiler.configfile}" token="@project-dir@" value="${project.build.directory}" />
-                                        <!--
                                         <replace file="${jprofiler.configfile}" token="@setupoffset@" value="${setuptest.runtime}" />
                                         <replace file="${jprofiler.configfile}" token="@fixedoffset@" value="${fixedload.offset}" />
-                                        -->
                                     </tasks>
                                 </configuration>
                             </execution>
@@ -197,7 +194,7 @@
                             <options>
                                 <value>${jvm.opts1}</value>
                                 <value>${jvm.opts2}</value>
-                                <value>-Datlassian.org.osgi.framework.bootdelegation=java.*,com.jprofiler.*</value>
+                                <value>-Datlassian.org.osgi.framework.bootdelegation=java.*,javax.*,com.jprofiler.*,sun.*,com.sun.*</value>
                             </options>
                         </configuration>
                         <executions>
