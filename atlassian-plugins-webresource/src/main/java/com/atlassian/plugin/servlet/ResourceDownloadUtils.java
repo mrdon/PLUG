@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 public class ResourceDownloadUtils
 {
     private static final Logger log = LoggerFactory.getLogger(ResourceDownloadUtils.class);
-    private static final long TEN_YEARS = 1000L * 60L * 60L * 24L * 365L * 10L;
+    private static final long ONE_YEAR = 60L * 60L * 24L * 365L;
 
     /**
      * @deprecated Since 2.0. Use {@link IOUtils#copy(InputStream, OutputStream)} instead. The method calling
@@ -44,8 +44,8 @@ public class ResourceDownloadUtils
     {
         if (!Boolean.getBoolean("atlassian.disable.caches"))
         {
-            httpServletResponse.setDateHeader("Expires", System.currentTimeMillis() + TEN_YEARS);
-            httpServletResponse.setHeader("Cache-Control", "max-age=" + TEN_YEARS);
+            httpServletResponse.setDateHeader("Expires", System.currentTimeMillis() + ONE_YEAR);
+            httpServletResponse.setHeader("Cache-Control", "max-age=" + ONE_YEAR);
             for (final String cacheControl : cacheControls)
             {
                 httpServletResponse.addHeader("Cache-Control", cacheControl);

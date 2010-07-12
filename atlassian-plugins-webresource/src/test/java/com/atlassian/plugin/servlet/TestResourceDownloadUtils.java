@@ -10,7 +10,7 @@ import junit.framework.TestCase;
 
 public class TestResourceDownloadUtils extends TestCase
 {
-    private static final long TEN_YEARS = 1000L * 60L * 60L * 24L *365L * 10L;
+    private static final long ONE_YEAR = 60L * 60L * 24L *365L;
     private static final String CACHE_CONTROL = "Cache-Control";
 
     public void testAddPublicCachingHeaders()
@@ -19,7 +19,7 @@ public class TestResourceDownloadUtils extends TestCase
 
         Mock mockResponse = new Mock(HttpServletResponse.class);
         mockResponse.expect("setDateHeader", C.ANY_ARGS);
-        mockResponse.expect("setHeader", C.args(C.eq(CACHE_CONTROL), C.eq("max-age=" + TEN_YEARS)));
+        mockResponse.expect("setHeader", C.args(C.eq(CACHE_CONTROL), C.eq("max-age=" + ONE_YEAR)));
         mockResponse.expect("addHeader", C.args(C.eq(CACHE_CONTROL), C.eq("public")));
 
         ResourceDownloadUtils.addPublicCachingHeaders((HttpServletRequest) mockRequest.proxy(), (HttpServletResponse) mockResponse.proxy());
@@ -29,7 +29,7 @@ public class TestResourceDownloadUtils extends TestCase
     {
         Mock mockResponse = new Mock(HttpServletResponse.class);
         mockResponse.expect("setDateHeader", C.ANY_ARGS);
-        mockResponse.expect("setHeader", C.args(C.eq(CACHE_CONTROL), C.eq("max-age=" + TEN_YEARS)));
+        mockResponse.expect("setHeader", C.args(C.eq(CACHE_CONTROL), C.eq("max-age=" + ONE_YEAR)));
         mockResponse.expect("addHeader", C.args(C.eq(CACHE_CONTROL), C.eq("private")));
         mockResponse.expect("addHeader", C.args(C.eq(CACHE_CONTROL), C.eq("foo")));
 
