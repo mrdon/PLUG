@@ -1,6 +1,15 @@
 package com.atlassian.plugin.refimpl;
 
 import com.atlassian.event.api.EventPublisher;
+import com.atlassian.event.config.EventThreadPoolConfiguration;
+import com.atlassian.event.config.ListenerHandlersConfiguration;
+import com.atlassian.event.internal.AsynchronousAbleEventDispatcher;
+import com.atlassian.event.internal.EventExecutorFactoryImpl;
+import com.atlassian.event.internal.EventPublisherImpl;
+import com.atlassian.event.internal.EventThreadPoolConfigurationImpl;
+import com.atlassian.event.internal.ListenerHandlerConfigurationImpl;
+import com.atlassian.event.spi.EventDispatcher;
+import com.atlassian.event.spi.EventExecutorFactory;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
@@ -156,7 +165,10 @@ public class ContainerManager
         publicContainer = new HashMap<Class<?>, Object>();
         publicContainer.put(PluginController.class, plugins.getPluginController());
         publicContainer.put(PluginAccessor.class, pluginAccessor);
-        publicContainer.put(EventPublisher.class, pluginEventManager);
+
+        // TODO: should re-use event publisher from plugin event manager
+        publicContainer.put(EventPublisher.class, createEventPublisher());
+        
         publicContainer.put(ServletModuleManager.class, servletModuleManager);
         publicContainer.put(WebResourceManager.class, webResourceManager);
         publicContainer.put(Map.class, publicContainer);
@@ -176,6 +188,16 @@ public class ContainerManager
 
         downloadStrategies = new ArrayList<DownloadStrategy>();
         downloadStrategies.add(pluginDownloadStrategy);
+    }
+
+    private EventPublisher createEventPublisher()
+    {
+        EventThreadPoolConfiguration threadPoolConfiguration = new EventThreadPoolConfigurationImpl();
+        EventExecutorFactory factory = new EventExecutorFactoryImpl(threadPoolConfiguration);
+        EventDispatcher dispatcher = new AsynchronousAbleEventDispatcher(factory);
+        ListenerHandlersConfiguration listenerHandlersConfiguration = new ListenerHandlerConfigurationImpl();
+        EventPublisher publisher = new EventPublisherImpl(dispatcher, listenerHandlersConfiguration);
+        return publisher;
     }
 
     private String determineVersion()
