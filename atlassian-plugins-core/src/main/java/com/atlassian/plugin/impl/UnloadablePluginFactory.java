@@ -43,6 +43,7 @@ public final class UnloadablePluginFactory
         newPlugin.setUninstallable(oldPlugin.isUninstallable());
         newPlugin.setDeletable(oldPlugin.isDeleteable());
         newPlugin.setPluginsVersion(oldPlugin.getPluginsVersion());
+        newPlugin.setDynamicallyLoaded(oldPlugin.isDynamicallyLoaded());
         
         // Make sure it's visible to the user
         newPlugin.setSystemPlugin(false);

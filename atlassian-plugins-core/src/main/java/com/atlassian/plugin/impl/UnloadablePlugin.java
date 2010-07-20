@@ -11,7 +11,8 @@ public class UnloadablePlugin extends StaticPlugin
     private String errorText;
     private boolean uninstallable = true;
     private boolean deletable = true;
-
+    private boolean dynamic = false;
+    
     public UnloadablePlugin()
     {
         this(null);
@@ -63,6 +64,17 @@ public class UnloadablePlugin extends StaticPlugin
     public void setErrorText(final String errorText)
     {
         this.errorText = errorText;
+    }
+    
+    @Override
+    public boolean isDynamicallyLoaded()
+    {
+        return dynamic;
+    }
+    
+    public void setDynamicallyLoaded(boolean dynamic)
+    {
+        this.dynamic = dynamic;
     }
 
     @Override

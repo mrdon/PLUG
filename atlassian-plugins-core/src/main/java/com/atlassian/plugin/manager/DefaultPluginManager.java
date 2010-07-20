@@ -1478,8 +1478,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             descriptor, throwable);
         final UnloadablePlugin unloadablePlugin = UnloadablePluginFactory.createUnloadablePlugin(plugin, unloadableDescriptor);
 
-        unloadablePlugin.setUninstallable(plugin.isUninstallable());
-        unloadablePlugin.setDeletable(plugin.isDeleteable());
         // Add the error text at the plugin level as well. This is useful for
         // logging.
         unloadablePlugin.setErrorText(unloadableDescriptor.getErrorText());
