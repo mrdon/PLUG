@@ -21,6 +21,8 @@ import com.atlassian.plugin.hostcontainer.SimpleConstructorHostContainer;
 import com.atlassian.plugin.main.AtlassianPlugins;
 import com.atlassian.plugin.main.PluginsConfiguration;
 import com.atlassian.plugin.main.PluginsConfigurationBuilder;
+import com.atlassian.plugin.metadata.DefaultPluginMetadataManager;
+import com.atlassian.plugin.metadata.PluginMetadataManager;
 import com.atlassian.plugin.module.ClassPrefixModuleFactory;
 import com.atlassian.plugin.module.PrefixDelegatingModuleFactory;
 import com.atlassian.plugin.module.ModuleFactory;
@@ -158,6 +160,7 @@ public class ContainerManager
         publicContainer = new HashMap<Class<?>, Object>();
         publicContainer.put(PluginController.class, plugins.getPluginController());
         publicContainer.put(PluginAccessor.class, pluginAccessor);
+        publicContainer.put(PluginMetadataManager.class, new DefaultPluginMetadataManager());
 
         // TODO: should re-use event publisher from plugin event manager
         publicContainer.put(EventPublisher.class, createEventPublisher());
