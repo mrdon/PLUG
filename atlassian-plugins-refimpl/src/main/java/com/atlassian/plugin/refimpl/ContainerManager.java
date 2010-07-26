@@ -1,5 +1,6 @@
 package com.atlassian.plugin.refimpl;
 
+import com.atlassian.event.api.EventPublisher;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.PluginAccessor;
@@ -148,6 +149,7 @@ public class ContainerManager
         publicContainer = new HashMap<Class<?>, Object>();
         publicContainer.put(PluginController.class, plugins.getPluginController());
         publicContainer.put(PluginAccessor.class, pluginAccessor);
+        publicContainer.put(EventPublisher.class, pluginEventManager);
         publicContainer.put(ServletModuleManager.class, servletModuleManager);
         publicContainer.put(WebResourceManager.class, webResourceManager);
         publicContainer.put(Map.class, publicContainer);
