@@ -110,7 +110,7 @@ public class DefaultPluginMetadataManager implements PluginMetadataManager
      * descriptor's plugin is {@code false}, then this method will also return {@code false}.  Also if the module descriptor is
      * annotated with {@link com.atlassian.plugin.descriptors.CannotDisable} then it can not be optional.
      */
-    public boolean isOptional(final ModuleDescriptor moduleDescriptor)
+    public boolean isOptional(final ModuleDescriptor<?> moduleDescriptor)
     {
         checkNotNull(moduleDescriptor, "moduleDescriptor");
         // It is not optional if the host application has marked it as required
@@ -134,12 +134,12 @@ public class DefaultPluginMetadataManager implements PluginMetadataManager
         return !requiredPlugins.contains(plugin.getKey());
     }
 
-    private boolean optionalAccordingToHostApplication(final ModuleDescriptor moduleDescriptor)
+    private boolean optionalAccordingToHostApplication(final ModuleDescriptor<?> moduleDescriptor)
     {
         return !requiredModules.contains(moduleDescriptor.getCompleteKey());
     }
 
-    private boolean optionalAccordingToModuleDescriptorType(final ModuleDescriptor moduleDescriptor)
+    private boolean optionalAccordingToModuleDescriptorType(final ModuleDescriptor<?> moduleDescriptor)
     {
         return !moduleDescriptor.getClass().isAnnotationPresent(CannotDisable.class);
     }

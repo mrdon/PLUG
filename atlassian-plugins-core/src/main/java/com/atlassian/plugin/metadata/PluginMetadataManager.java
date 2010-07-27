@@ -38,5 +38,5 @@ public interface PluginMetadataManager
      * @return true if the module can safely be disabled, false if the module being disabled would adversely effect the
      * host application.
      */
-    boolean isOptional(ModuleDescriptor moduleDescriptor);
+    boolean isOptional(ModuleDescriptor<?> moduleDescriptor);
 }
