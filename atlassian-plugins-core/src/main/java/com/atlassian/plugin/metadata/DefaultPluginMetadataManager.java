@@ -1,15 +1,22 @@
 package com.atlassian.plugin.metadata;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableList.copyOf;
+import static com.google.common.collect.Iterables.filter;
+import static org.apache.commons.io.IOUtils.readLines;
+
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.descriptors.CannotDisable;
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Lists;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -18,12 +25,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.ImmutableList.copyOf;
-import static com.google.common.collect.Iterables.filter;
-import static org.apache.commons.io.IOUtils.readLines;
+import javax.annotation.Nullable;
 
 /**
  * A default implementation that looks at the com.atlassian.plugin.metadata package of the classpath for files named:
@@ -48,7 +51,7 @@ public class DefaultPluginMetadataManager implements PluginMetadataManager
     static final String REQUIRED_MODULES_FILENAME_PREFIX = "application-required-modules";
     static final String DOT = ".";
     static final String FILENAME_EXTENSION = "txt";
- 
+
     private final Collection<String> applicationProvidedPlugins;
     private final Collection<String> requiredPlugins;
     private final Collection<String> requiredModules;
@@ -57,11 +60,11 @@ public class DefaultPluginMetadataManager implements PluginMetadataManager
 
     public DefaultPluginMetadataManager()
     {
-        this.transformInputFunction = new TransformInputFunction();
-        this.filterInputPredicate = new FilterInputPredicate();
-        this.applicationProvidedPlugins = getStringsFromFiles(APPLICATION_PROVIDED_PLUGINS_FILENAME_PREFIX, FILENAME_EXTENSION);
-        this.requiredPlugins = getStringsFromFiles(REQUIRED_PLUGINS_FILENAME_PREFIX, FILENAME_EXTENSION);
-        this.requiredModules = getStringsFromFiles(REQUIRED_MODULES_FILENAME_PREFIX, FILENAME_EXTENSION);
+        transformInputFunction = new TransformInputFunction();
+        filterInputPredicate = new FilterInputPredicate();
+        applicationProvidedPlugins = getStringsFromFiles(APPLICATION_PROVIDED_PLUGINS_FILENAME_PREFIX, FILENAME_EXTENSION);
+        requiredPlugins = getStringsFromFiles(REQUIRED_PLUGINS_FILENAME_PREFIX, FILENAME_EXTENSION);
+        requiredModules = getStringsFromFiles(REQUIRED_MODULES_FILENAME_PREFIX, FILENAME_EXTENSION);
     }
 
     /**
@@ -91,7 +94,7 @@ public class DefaultPluginMetadataManager implements PluginMetadataManager
         }
 
         // We need to check if any of the plugins modules are not optional
-        for (ModuleDescriptor<?> moduleDescriptor : plugin.getModuleDescriptors())
+        for (final ModuleDescriptor<?> moduleDescriptor : plugin.getModuleDescriptors())
         {
             if (!optionalAccordingToHostApplication(moduleDescriptor))
             {
@@ -121,7 +124,7 @@ public class DefaultPluginMetadataManager implements PluginMetadataManager
         {
             return false;
         }
-        
+
         // A module can only be optional if its parent plugin is not declared by the host application as required
         return optionalAccordingToHostApplication(moduleDescriptor.getPlugin());
     }
@@ -143,12 +146,11 @@ public class DefaultPluginMetadataManager implements PluginMetadataManager
 
     private Collection<String> getStringsFromFiles(final String fileNamePrefix, final String fileNameExtension)
     {
-        Collection<String> stringsFromFiles = new ArrayList<String>();
+        final Collection<String> stringsFromFiles = new ArrayList<String>();
         final String[] fileNames = getMatchingFileNamesFromClasspath(fileNamePrefix, fileNameExtension);
 
-        for (int i = 0; i < fileNames.length; i++)
+        for (final String fileName : fileNames)
         {
-            String fileName = fileNames[i];
             final InputStream providedPluginsStream = getInputStreamFromClasspath(fileName);
             try
             {
@@ -157,9 +159,10 @@ public class DefaultPluginMetadataManager implements PluginMetadataManager
                     try
                     {
                         // Make sure that we trim the strings that we read from the file, we copy the list so that the transformation only occurs once
-                        stringsFromFiles.addAll(copyOf(filter(Lists.<String, String>transform(readLines(providedPluginsStream), transformInputFunction), filterInputPredicate)));
+                        stringsFromFiles.addAll(copyOf(filter(Lists.<String, String> transform(readLines(providedPluginsStream),
+                            transformInputFunction), filterInputPredicate)));
                     }
-                    catch (IOException e)
+                    catch (final IOException e)
                     {
                         log.error("Unable to read from the input stream provided by '" + fileName + "'.", e);
                     }
@@ -195,12 +198,13 @@ public class DefaultPluginMetadataManager implements PluginMetadataManager
             return StringUtils.isNotBlank(input) && !input.startsWith("#");
         }
     }
- 
+
     ///CLOVER:OFF
     InputStream getInputStreamFromClasspath(final String fileName)
     {
         return getClass().getResourceAsStream(fileName);
     }
+
     ///CLOVER:ON
 
     /**
@@ -215,11 +219,11 @@ public class DefaultPluginMetadataManager implements PluginMetadataManager
     String[] getMatchingFileNamesFromClasspath(final String fileNamePrefix, final String fileNameExtension)
     {
         String[] matchingFiles = null;
-		// Get a File object for the package
-        URL resource = getClass().getResource("/" + getClass().getPackage().getName().replace(".", "/"));
+        // Get a File object for the package
+        final URL resource = getClass().getResource("/" + getClass().getPackage().getName().replace(".", "/"));
         if (resource != null)
         {
-            File directory = new File(resource.getFile());
+            final File directory = new File(resource.getFile());
             if (directory.exists())
             {
                 matchingFiles = directory.list(new FilenameFilter()
@@ -231,11 +235,11 @@ public class DefaultPluginMetadataManager implements PluginMetadataManager
                 });
             }
         }
-        if (matchingFiles == null || matchingFiles.length == 0)
+        if ((matchingFiles == null) || (matchingFiles.length == 0))
         {
             // If we can not read the jar directory or we did not find any then lets just fallback to the filename + DOT + extension
-            return new String[] { fileNamePrefix + DOT + fileNameExtension};
+            return new String[] { fileNamePrefix + DOT + fileNameExtension };
         }
         return matchingFiles;
-	}
+    }
 }
