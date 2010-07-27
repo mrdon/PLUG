@@ -107,7 +107,7 @@ class ClasspathPluginMetadata implements PluginMetadata
             try
             {
                 final Class<ClasspathPluginMetadata> clazz = ClasspathPluginMetadata.class;
-                final Enumeration<URL> urlEnumeration = ClassLoaderUtils.getResources("/" + clazz.getPackage().getName().replace(".", "/") + "/" + fileName, clazz);
+                final Enumeration<URL> urlEnumeration = clazz.getClassLoader().getResources(clazz.getPackage().getName().replace(".", "/") + "/" + fileName);
                 while (urlEnumeration.hasMoreElements())
                 {
                     inputStreams.add(urlEnumeration.nextElement().openStream());
