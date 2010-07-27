@@ -9,15 +9,13 @@ import com.atlassian.plugin.descriptors.CannotDisable;
 /**
  * A default implementation that looks at the com.atlassian.plugin.metadata package of the classpath for files named:
  * <ul>
- *   <li>application-provided-plugins*.txt - used to list the plugin keys of all plugins that are provided by the host application</li>
- *   <li>application-required-plugins*.txt - used to list the plugin keys that are considered required for the application to function correctly</li>
- *   <li>application-required-modules*.txt - used to list the module keys that are considered required for the application to function correctly</li>
+ *   <li>application-provided-plugins.txt - used to list the plugin keys of all plugins that are provided by the host application</li>
+ *   <li>application-required-plugins.txt - used to list the plugin keys that are considered required for the application to function correctly</li>
+ *   <li>application-required-modules.txt - used to list the module keys that are considered required for the application to function correctly</li>
  * </ul>
  *
- * Note the '*' in the file names above. This class will scan the package for all files named with the prefix (before the *) and
- * the suffix (after the *). For example, this will find a file named application-provided-plugins.txt as well as a file
- * named application-provided-plugins-my.crazy-file.1.0.txt. Both files contents will be used to inform this implementation
- * of plugin keys.
+ * Note that all files in that package space with those names will be included. All files contents will be used to inform
+ * this implementation of plugin keys.
  *
  * @since 2.6.0 
  */

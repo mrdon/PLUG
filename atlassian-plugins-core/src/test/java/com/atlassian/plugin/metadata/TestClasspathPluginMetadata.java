@@ -12,33 +12,38 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 public class TestClasspathPluginMetadata extends TestCase
 {
-    private final Map<String, InputStream> testData;
+    private final Map<String, Collection<InputStream>> testData;
     private static final String applicationProvidedPlugins = "my.plugin.a\nmy.plugin.b\nmy.plugin.c\n  my.plugin.with.whitespace  ";
+    private static final String applicationProvidedPlugins2 = "my.plugin.z";
     private static final String requiredPlugins = "my.plugin.a\nmy.plugin.b";
     private static final String requiredModules = "my.plugin.a-mod1\nmy.plugin.c-mod1\n   \n  #hello \nmy.plugin.c-mod2";
     private PluginMetadata pluginMetadata;
 
     public TestClasspathPluginMetadata()
     {
-        testData = new HashMap<String, InputStream>();
+        testData = new HashMap<String, Collection<InputStream>>();
         try
         {
             testData.put(
-                ClasspathPluginMetadata.APPLICATION_PROVIDED_PLUGINS_FILENAME_PREFIX + ClasspathPluginMetadata.DOT + ClasspathPluginMetadata.FILENAME_EXTENSION,
-                new ByteArrayInputStream(applicationProvidedPlugins.getBytes("UTF-8")));
+                ClasspathPluginMetadata.APPLICATION_PROVIDED_PLUGINS_FILENAME,
+                ImmutableList.<InputStream>of(new ByteArrayInputStream(applicationProvidedPlugins.getBytes("UTF-8")),
+                        new ByteArrayInputStream(applicationProvidedPlugins2.getBytes("UTF-8"))));
             testData.put(
-                ClasspathPluginMetadata.REQUIRED_PLUGINS_FILENAME_PREFIX + ClasspathPluginMetadata.DOT + ClasspathPluginMetadata.FILENAME_EXTENSION,
-                new ByteArrayInputStream(requiredPlugins.getBytes("UTF-8")));
+                ClasspathPluginMetadata.REQUIRED_PLUGINS_FILENAME,
+                Collections.<InputStream>singletonList(new ByteArrayInputStream(requiredPlugins.getBytes("UTF-8"))));
             testData.put(
-                ClasspathPluginMetadata.REQUIRED_MODULES_FILENAME_PREFIX + ClasspathPluginMetadata.DOT + ClasspathPluginMetadata.FILENAME_EXTENSION,
-                new ByteArrayInputStream(requiredModules.getBytes("UTF-8")));
+                ClasspathPluginMetadata.REQUIRED_MODULES_FILENAME,
+                Collections.<InputStream>singletonList(new ByteArrayInputStream(requiredModules.getBytes("UTF-8"))));
         }
         catch (final UnsupportedEncodingException e)
         {
@@ -49,9 +54,9 @@ public class TestClasspathPluginMetadata extends TestCase
     @Override
     public void setUp() throws IOException
     {
-        pluginMetadata = new ClasspathPluginMetadata(new Function<String, InputStream>()
+        pluginMetadata = new ClasspathPluginMetadata(new Function<String, Collection<InputStream>>()
         {
-            public InputStream apply(final String fileName)
+            public Collection<InputStream> apply(final String fileName)
             {
                 return testData.get(fileName);
             }
@@ -148,11 +153,11 @@ public class TestClasspathPluginMetadata extends TestCase
 
     public void testIsUserInstalledPluginNoFileOnClasspath()
     {
-        pluginMetadata = new ClasspathPluginMetadata(new Function<String, InputStream>()
+        pluginMetadata = new ClasspathPluginMetadata(new Function<String, Collection<InputStream>>()
         {
-            public InputStream apply(final String fileName)
+            public Collection<InputStream> apply(final String fileName)
             {
-                return null;
+                return Collections.emptyList();
             }
         });
 
@@ -193,16 +198,12 @@ public class TestClasspathPluginMetadata extends TestCase
         assertFalse(pluginMetadata.required(moduleDescriptor));
     }
 
-    public void testGetMatchingFileNamesFromClasspath()
+    public void testPluginKeysFromSecondFileIncluded()
     {
-        // total of this class + inner classes
-        assertEquals(3, ClasspathPluginMetadata.getMatchingFileNamesFromClasspath("TestClasspathPluginMetadata", "class").length);
-    }
+        final Plugin plugin = mock(Plugin.class);
+        when(plugin.getKey()).thenReturn("my.plugin.z");
 
-    public void testGetMatchingFileNamesFromClasspathFindingNoneReturnsFilename()
-    {
-        final String[] strings = ClasspathPluginMetadata.getMatchingFileNamesFromClasspath("MyStuff", "class");
-        assertEquals(1, strings.length);
-        assertEquals("MyStuff.class", strings[0]);
+        assertTrue(pluginMetadata.applicationProvided(plugin));
     }
+    
 }
