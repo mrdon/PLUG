@@ -3,26 +3,24 @@ package com.atlassian.plugin.metadata;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-
-import com.google.common.base.Function;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
+
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 
 public class TestClasspathPluginMetadata extends TestCase
 {
-    private final Map<String, Collection<InputStream>> testData;
+    private final Map<String, Iterable<InputStream>> testData;
     private static final String applicationProvidedPlugins = "my.plugin.a\nmy.plugin.b\nmy.plugin.c\n  my.plugin.with.whitespace  ";
     private static final String applicationProvidedPlugins2 = "my.plugin.z";
     private static final String requiredPlugins = "my.plugin.a\nmy.plugin.b";
@@ -31,32 +29,18 @@ public class TestClasspathPluginMetadata extends TestCase
 
     public TestClasspathPluginMetadata()
     {
-        testData = new HashMap<String, Collection<InputStream>>();
-        try
-        {
-            testData.put(
-                ClasspathPluginMetadata.APPLICATION_PROVIDED_PLUGINS_FILENAME,
-                ImmutableList.<InputStream>of(new ByteArrayInputStream(applicationProvidedPlugins.getBytes("UTF-8")),
-                        new ByteArrayInputStream(applicationProvidedPlugins2.getBytes("UTF-8"))));
-            testData.put(
-                ClasspathPluginMetadata.REQUIRED_PLUGINS_FILENAME,
-                Collections.<InputStream>singletonList(new ByteArrayInputStream(requiredPlugins.getBytes("UTF-8"))));
-            testData.put(
-                ClasspathPluginMetadata.REQUIRED_MODULES_FILENAME,
-                Collections.<InputStream>singletonList(new ByteArrayInputStream(requiredModules.getBytes("UTF-8"))));
-        }
-        catch (final UnsupportedEncodingException e)
-        {
-            fail("Unable to construct test data");
-        }
+        testData = new HashMap<String, Iterable<InputStream>>();
+        testData.put(ClasspathPluginMetadata.APPLICATION_PROVIDED_PLUGINS_FILENAME, toStreams(applicationProvidedPlugins, applicationProvidedPlugins2));
+        testData.put(ClasspathPluginMetadata.REQUIRED_PLUGINS_FILENAME, toStreams(requiredPlugins));
+        testData.put(ClasspathPluginMetadata.REQUIRED_MODULES_FILENAME, toStreams(requiredModules));
     }
 
     @Override
     public void setUp() throws IOException
     {
-        pluginMetadata = new ClasspathPluginMetadata(new Function<String, Collection<InputStream>>()
+        pluginMetadata = new ClasspathPluginMetadata(new Function<String, Iterable<InputStream>>()
         {
-            public Collection<InputStream> apply(final String fileName)
+            public Iterable<InputStream> apply(final String fileName)
             {
                 return testData.get(fileName);
             }
@@ -153,9 +137,9 @@ public class TestClasspathPluginMetadata extends TestCase
 
     public void testIsUserInstalledPluginNoFileOnClasspath()
     {
-        pluginMetadata = new ClasspathPluginMetadata(new Function<String, Collection<InputStream>>()
+        pluginMetadata = new ClasspathPluginMetadata(new Function<String, Iterable<InputStream>>()
         {
-            public Collection<InputStream> apply(final String fileName)
+            public Iterable<InputStream> apply(final String fileName)
             {
                 return Collections.emptyList();
             }
@@ -176,7 +160,8 @@ public class TestClasspathPluginMetadata extends TestCase
 
     public void testBlankLinesInFilesAreNotIncluded()
     {
-        // There is a blank line in the requiredModules file lets make sure that is not included
+        // There is a blank line in the requiredModules file lets make sure that
+        // is not included
         final Plugin plugin = mock(Plugin.class);
         final ModuleDescriptor<?> moduleDescriptor = mock(ModuleDescriptor.class);
         when(plugin.getKey()).thenReturn("my.plugin.d");
@@ -188,7 +173,8 @@ public class TestClasspathPluginMetadata extends TestCase
 
     public void testCommentLinesInFilesAreNotIncluded()
     {
-        // There is a blank line in the requiredModules file lets make sure that is not included
+        // There is a blank line in the requiredModules file lets make sure that
+        // is not included
         final Plugin plugin = mock(Plugin.class);
         final ModuleDescriptor<?> moduleDescriptor = mock(ModuleDescriptor.class);
         when(plugin.getKey()).thenReturn("my.plugin.d");
@@ -205,5 +191,21 @@ public class TestClasspathPluginMetadata extends TestCase
 
         assertTrue(pluginMetadata.applicationProvided(plugin));
     }
-    
+
+    static Iterable<InputStream> toStreams(final String... names)
+    {
+        final ImmutableList.Builder<InputStream> builder = ImmutableList.builder();
+        for (final String name : names)
+        {
+            try
+            {
+                builder.add(new ByteArrayInputStream(name.getBytes("UTF-8")));
+            }
+            catch (final UnsupportedEncodingException e)
+            {
+                throw new Error("Unable to construct test data", e);
+            }
+        }
+        return builder.build();
+    }
 }

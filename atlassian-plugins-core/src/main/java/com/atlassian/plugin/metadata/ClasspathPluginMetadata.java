@@ -1,32 +1,32 @@
 package com.atlassian.plugin.metadata;
 
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.util.ClassLoaderUtils;
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
+import static com.google.common.collect.Iterables.filter;
+import static com.google.common.collect.Iterables.transform;
+import static com.google.common.collect.Iterators.forEnumeration;
+import static com.google.common.collect.Iterators.transform;
+import static org.apache.commons.io.IOUtils.readLines;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Iterator;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Set;
-import javax.annotation.Nullable;
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
-import static com.google.common.collect.Iterables.filter;
-import static org.apache.commons.io.IOUtils.readLines;
-
-class ClasspathPluginMetadata implements PluginMetadata
+final class ClasspathPluginMetadata implements PluginMetadata
 {
     static final Logger log = LoggerFactory.getLogger(ClasspathPluginMetadata.class);
     static final String APPLICATION_PROVIDED_PLUGINS_FILENAME = "application-provided-plugins.txt";
@@ -37,12 +37,12 @@ class ClasspathPluginMetadata implements PluginMetadata
     private final Set<String> requiredPluginKeys;
     private final Set<String> requiredModules;
 
-    public ClasspathPluginMetadata()
+    ClasspathPluginMetadata()
     {
         this(InputStreamFromClasspath.INSTANCE);
     }
 
-    public ClasspathPluginMetadata(final Function<String, Collection<InputStream>> loader)
+    ClasspathPluginMetadata(final Function<String, Iterable<InputStream>> loader)
     {
         pluginKeys = getStringsFromFile(APPLICATION_PROVIDED_PLUGINS_FILENAME, loader);
         requiredPluginKeys = getStringsFromFile(REQUIRED_PLUGINS_FILENAME, loader);
@@ -64,23 +64,22 @@ class ClasspathPluginMetadata implements PluginMetadata
         return requiredModules.contains(descriptor.getCompleteKey());
     }
 
-    static Set<String> getStringsFromFile(final String fileName, final Function<String, Collection<InputStream>> loader)
+    static Set<String> getStringsFromFile(final String fileName, final Function<String, Iterable<InputStream>> loader)
     {
         final ImmutableList.Builder<String> stringsFromFiles = ImmutableList.builder();
-        final Collection<InputStream> fileInputStreams = loader.apply(fileName);
-
-        for (InputStream fileInputStream : fileInputStreams)
+        for (final InputStream stream : loader.apply(fileName))
         {
             try
             {
-                if (fileInputStream != null)
+                if (stream != null)
                 {
                     try
                     {
                         @SuppressWarnings("unchecked")
-                        final List<String> lines = readLines(fileInputStream);
-                        // Make sure that we trim the strings that we read from the file and filter out comments and blank lines
-                        stringsFromFiles.addAll(filter(Iterables.transform(lines, TrimString.INSTANCE), NotComment.INSTANCE));
+                        final Iterable<String> lines = readLines(stream);
+                        // Make sure that we trim the strings that we read from
+                        // the file and filter out comments and blank lines
+                        stringsFromFiles.addAll(filter(transform(lines, TrimString.INSTANCE), NotComment.INSTANCE));
                     }
                     catch (final IOException e)
                     {
@@ -90,37 +89,63 @@ class ClasspathPluginMetadata implements PluginMetadata
             }
             finally
             {
-                IOUtils.closeQuietly(fileInputStream);
+                IOUtils.closeQuietly(stream);
             }
         }
         return ImmutableSet.copyOf(stringsFromFiles.build());
     }
 
-    ///CLOVER:OFF
-    enum InputStreamFromClasspath implements Function<String, Collection<InputStream>>
+    // /CLOVER:OFF
+    /**
+     * Get all resources with the supplied name as an {@link Iterable} of opened
+     * {@link InputStream streams}.
+     */
+    enum InputStreamFromClasspath implements Function<String, Iterable<InputStream>>
     {
         INSTANCE;
 
-        public Collection<InputStream> apply(final String fileName)
+        public Iterable<InputStream> apply(final String fileName)
         {
-            final Collection<InputStream> inputStreams = new ArrayList<InputStream>();
+            return new Iterable<InputStream>()
+            {
+
+                public Iterator<InputStream> iterator()
+                {
+                    final Class<ClasspathPluginMetadata> clazz = ClasspathPluginMetadata.class;
+                    final String resourceName = clazz.getPackage().getName().replace(".", "/") + "/" + fileName;
+                    try
+                    {
+                        return transform(forEnumeration(clazz.getClassLoader().getResources(resourceName)), UrlToInputStream.INSTANCE);
+                    }
+                    catch (final IOException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                }
+            };
+        }
+    }
+
+    // /CLOVER:ON
+
+    /**
+     * Opens an {@link InputStream} from a {@link URL}.
+     */
+    enum UrlToInputStream implements Function<URL, InputStream>
+    {
+        INSTANCE;
+        public InputStream apply(final URL from)
+        {
             try
             {
-                final Class<ClasspathPluginMetadata> clazz = ClasspathPluginMetadata.class;
-                final Enumeration<URL> urlEnumeration = clazz.getClassLoader().getResources(clazz.getPackage().getName().replace(".", "/") + "/" + fileName);
-                while (urlEnumeration.hasMoreElements())
-                {
-                    inputStreams.add(urlEnumeration.nextElement().openStream());
-                }
-                return inputStreams;
+                return from.openStream();
             }
-            catch (IOException e)
+            catch (final IOException e)
             {
                 throw new RuntimeException(e);
             }
         }
     }
-    ///CLOVER:ON
 
     /**
      * Return a trimmed string.
@@ -149,7 +174,8 @@ class ClasspathPluginMetadata implements PluginMetadata
 
         public boolean apply(@Nullable final String input)
         {
-            // Don't include blank lines or lines that start with a comment syntax
+            // Don't include blank lines or lines that start with a comment
+            // syntax
             return StringUtils.isNotBlank(input) && !input.startsWith("#");
         }
     }
