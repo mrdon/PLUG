@@ -36,34 +36,4 @@ interface PluginMetadata
      */
     boolean required(ModuleDescriptor<?> descriptor);
 
-    /**
-     * The legal set of metadata types.
-     * <p>
-     * Contains the canonical filename for looking up from the classpath if
-     * necessary.
-     */
-    enum Type
-    {
-        ApplicationProvided("application-provided-plugins.txt"), RequiredPlugins("application-required-plugins.txt"), RequiredModuleDescriptors("application-required-modules.txt");
-
-        Type(final String filename)
-        {
-            this.filename = filename;
-        }
-
-        private final String filename;
-
-        String getFileName()
-        {
-            return filename;
-        }
-    }
-
-    /**
-     * Factory for creating instances of {@link PluginMetadata}.
-     * <p>
-     * Must not be null.
-     */
-    interface Factory extends Supplier<PluginMetadata>
-    {}
 }

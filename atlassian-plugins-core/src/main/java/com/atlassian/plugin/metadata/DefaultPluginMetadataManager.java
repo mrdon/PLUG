@@ -8,21 +8,9 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.descriptors.CannotDisable;
 
 /**
- * A default implementation that looks at the com.atlassian.plugin.metadata
- * package of the classpath for files named:
- * <ul>
- * <li>application-provided-plugins.txt - used to list the plugin keys of all
- * plugins that are provided by the host application</li>
- * <li>application-required-plugins.txt - used to list the plugin keys that are
- * considered required for the application to function correctly</li>
- * <li>application-required-modules.txt - used to list the module keys that are
- * considered required for the application to function correctly</li>
- * </ul>
- * Note that all files in that package space with those names will be included.
- * All files contents will be used to inform this implementation of plugin keys.
- * <p>
- * Note: the actual file names are in the {@link PluginMetadata.Type} class.
- * 
+ * A default implementation that uses the {@link com.atlassian.plugin.metadata.ClasspathFilePluginMetadata}
+ * plugin metadata implementation to resolve the application provided plugin metadata.
+ *
  * @since 2.6
  */
 @Immutable
@@ -35,15 +23,15 @@ public final class DefaultPluginMetadataManager implements PluginMetadataManager
      */
     public DefaultPluginMetadataManager()
     {
-        this(DefaultPluginMetadataFactory.fromClasspath());
+        this(new ClasspathFilePluginMetadata());
     }
 
     /**
      * Test ctor.
      */
-    DefaultPluginMetadataManager(final PluginMetadata.Factory factory)
+    DefaultPluginMetadataManager(final PluginMetadata metadata)
     {
-        this.metadata = checkNotNull(checkNotNull(factory, "factory").get(), "metadata");
+        this.metadata = checkNotNull(metadata, "metadata");
     }
 
     /**
