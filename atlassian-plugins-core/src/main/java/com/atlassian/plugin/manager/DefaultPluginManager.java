@@ -1200,13 +1200,9 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         // disabled by the user.
         if (!isPluginModuleEnabled(descriptor.getCompleteKey()))
         {
-            if (plugin.isSystemPlugin())
+            if (log.isDebugEnabled())
             {
-                log.warn("System plugin module disabled: " + descriptor.getCompleteKey());
-            }
-            else if (log.isDebugEnabled())
-            {
-                log.debug("Plugin module '" + descriptor.getName() + "' is explicitly disabled, so not re-enabling.");
+                log.debug("Plugin module '" + descriptor.getName() + "' is explicitly disabled (or so by default), so not re-enabling.");
             }
             return success;
         }
