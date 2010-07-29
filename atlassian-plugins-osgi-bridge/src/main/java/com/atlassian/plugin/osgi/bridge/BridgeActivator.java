@@ -1,6 +1,8 @@
 package com.atlassian.plugin.osgi.bridge;
 
+import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.event.PluginEventManager;
+import com.atlassian.plugin.osgi.bridge.external.PluginRetrievalService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -19,12 +21,7 @@ public class BridgeActivator implements BundleActivator
     public void start(BundleContext bundleContext) throws Exception
     {
         // We can do this because the plugin event manager is a host component
-        ServiceReference ref = bundleContext.getServiceReference(PluginEventManager.class.getName());
-        if (ref == null)
-        {
-            throw new IllegalStateException("The PluginEventManager service must be exported from the application");
-        }
-        PluginEventManager pluginEventManager = (PluginEventManager) bundleContext.getService(ref);
+        PluginEventManager pluginEventManager = getHostComponent(bundleContext, PluginEventManager.class);
 
         // Register the listener for context refreshed and failed events
         bundleContext.registerService(
@@ -39,6 +36,23 @@ public class BridgeActivator implements BundleActivator
                 OsgiBundleApplicationContextListener.class.getName(),
                 new SpringContextEventBridge(pluginEventManager),
                 dict);
+
+        // Register the {@link PluginRetrievalService} service
+        PluginAccessor pluginAccessor = getHostComponent(bundleContext, PluginAccessor.class);
+        bundleContext.registerService(
+                PluginRetrievalService.class.getName(),
+                new PluginRetrievalServiceFactory(pluginAccessor),
+                null);
+    }
+
+    private <T> T getHostComponent(BundleContext bundleContext, Class<T> componentClass)
+    {
+        ServiceReference ref = bundleContext.getServiceReference(componentClass.getName());
+        if (ref == null)
+        {
+            throw new IllegalStateException("The " + componentClass.getName() + " service must be exported from the application");
+        }
+        return (T) bundleContext.getService(ref);
     }
 
     public void stop(BundleContext bundleContext) throws Exception

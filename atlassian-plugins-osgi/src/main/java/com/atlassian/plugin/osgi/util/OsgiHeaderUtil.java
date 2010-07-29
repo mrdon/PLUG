@@ -186,6 +186,8 @@ public class OsgiHeaderUtil
      * WARNING: shamelessly copied at {@link com.atlassian.plugin.osgi.bridge.PluginBundleUtils}, which can't use
      * this class due to creating a cyclic build dependency.  Ensure these two implementations are in sync.
      *
+     * This method shouldn't be used directly.  Instead consider consuming the {@link com.atlassian.plugin.osgi.bridge.external.PluginRetrievalService}.
+     *
      * @param bundle The plugin bundle
      * @return The plugin key, cannot be null
      * @since 2.2.0

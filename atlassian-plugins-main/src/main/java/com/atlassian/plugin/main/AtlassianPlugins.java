@@ -2,6 +2,7 @@ package com.atlassian.plugin.main;
 
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginController;
+import com.atlassian.plugin.PluginManager;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Facade interface to the Atlassian Plugins framework.  See the package Javadocs for usage information.
@@ -54,10 +56,11 @@ public class AtlassianPlugins
     {
         pluginEventManager = new DefaultPluginEventManager();
 
+        AtomicReference<PluginAccessor> pluginManagerRef = new AtomicReference<PluginAccessor>();
         osgiContainerManager = new FelixOsgiContainerManager(
                 config.getOsgiPersistentCache(),
                 config.getPackageScannerConfiguration(),
-                new CriticalHostComponentProvider(config.getHostComponentProvider(), pluginEventManager),
+                new CriticalHostComponentProvider(config.getHostComponentProvider(), pluginEventManager, pluginManagerRef),
                 pluginEventManager);
 
         // plugin factories/deployers
@@ -93,6 +96,7 @@ public class AtlassianPlugins
                 pluginLoaders,
                 config.getModuleDescriptorFactory(),
                 pluginEventManager);
+        pluginManagerRef.set(pluginManager);
 
         pluginManager.setPluginInstaller(new FilePluginInstaller(config.getPluginDirectory()));
 
@@ -164,16 +168,19 @@ public class AtlassianPlugins
     {
         private final HostComponentProvider delegate;
         private final PluginEventManager pluginEventManager;
+        private final AtomicReference<PluginAccessor> pluginManagerRef;
 
-        public CriticalHostComponentProvider(HostComponentProvider delegate, PluginEventManager pluginEventManager)
+        public CriticalHostComponentProvider(HostComponentProvider delegate, PluginEventManager pluginEventManager, AtomicReference<PluginAccessor> pluginManagerRef)
         {
             this.delegate = delegate;
             this.pluginEventManager = pluginEventManager;
+            this.pluginManagerRef = pluginManagerRef;
         }
 
         public void provide(ComponentRegistrar registrar)
         {
             registrar.register(PluginEventManager.class).forInstance(pluginEventManager);
+            registrar.register(PluginAccessor.class).forInstance(pluginManagerRef.get());
             delegate.provide(registrar);
         }
     }

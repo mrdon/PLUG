@@ -213,6 +213,7 @@ public abstract class PluginInContainerTestBase extends TestCase
                     });
                 }
                 registrar.register(PluginEventManager.class).forInstance(pluginEventManager);
+                registrar.register(PluginAccessor.class).forInstance(pluginManager);
             }
         };
         return requiredWrappingProvider;
