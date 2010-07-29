@@ -1,54 +1,34 @@
 package com.atlassian.plugin.metadata;
 
+import static com.google.common.collect.ImmutableList.of;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import junit.framework.TestCase;
 
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 
-public class TestClasspathPluginMetadata extends TestCase
+public class TestDefaultPluginMetadata extends TestCase
 {
-    private final Map<String, Iterable<InputStream>> testData;
-    private static final String applicationProvidedPlugins = "my.plugin.a\nmy.plugin.b\nmy.plugin.c\n  my.plugin.with.whitespace  ";
-    private static final String applicationProvidedPlugins2 = "my.plugin.z";
-    private static final String requiredPlugins = "my.plugin.a\nmy.plugin.b";
-    private static final String requiredModules = "my.plugin.a-mod1\nmy.plugin.c-mod1\n   \n  #hello \nmy.plugin.c-mod2";
+    private static final Iterable<String> applicationProvidedPlugins = of("my.plugin.a", "my.plugin.b", "my.plugin.c", "my.plugin.with.whitespace");
+    private static final Iterable<String> requiredPlugins = of("my.plugin.a", "my.plugin.b");
+    private static final Iterable<String> requiredModules = of("my.plugin.a-mod1", "my.plugin.c-mod1", "my.plugin.c-mod2");
     private PluginMetadata pluginMetadata;
 
-    public TestClasspathPluginMetadata()
+    @Override
+    public void setUp()
     {
-        testData = new HashMap<String, Iterable<InputStream>>();
-        testData.put(ClasspathPluginMetadata.APPLICATION_PROVIDED_PLUGINS_FILENAME, toStreams(applicationProvidedPlugins, applicationProvidedPlugins2));
-        testData.put(ClasspathPluginMetadata.REQUIRED_PLUGINS_FILENAME, toStreams(requiredPlugins));
-        testData.put(ClasspathPluginMetadata.REQUIRED_MODULES_FILENAME, toStreams(requiredModules));
+        pluginMetadata = new DefaultPluginMetadata(applicationProvidedPlugins, requiredPlugins, requiredModules);
     }
 
     @Override
-    public void setUp() throws IOException
-    {
-        pluginMetadata = new ClasspathPluginMetadata(new Function<String, Iterable<InputStream>>()
-        {
-            public Iterable<InputStream> apply(final String fileName)
-            {
-                return testData.get(fileName);
-            }
-        });
-    }
-
-    @Override
-    public void tearDown() throws IOException
+    public void tearDown()
     {
         pluginMetadata = null;
     }
@@ -137,59 +117,12 @@ public class TestClasspathPluginMetadata extends TestCase
 
     public void testIsUserInstalledPluginNoFileOnClasspath()
     {
-        pluginMetadata = new ClasspathPluginMetadata(new Function<String, Iterable<InputStream>>()
-        {
-            public Iterable<InputStream> apply(final String fileName)
-            {
-                return Collections.emptyList();
-            }
-        });
+        pluginMetadata = new DefaultPluginMetadata(empty(), empty(), empty());
 
         final Plugin plugin = mock(Plugin.class);
         when(plugin.getKey()).thenReturn("my.plugin.a");
         assertFalse(pluginMetadata.applicationProvided(plugin));
         assertFalse(pluginMetadata.required(plugin));
-    }
-
-    public void testIsUserInstalledPluginPluginSpecifiedWithWhitespace()
-    {
-        final Plugin plugin = mock(Plugin.class);
-        when(plugin.getKey()).thenReturn("my.plugin.with.whitespace");
-        assertTrue(pluginMetadata.applicationProvided(plugin));
-    }
-
-    public void testBlankLinesInFilesAreNotIncluded()
-    {
-        // There is a blank line in the requiredModules file lets make sure that
-        // is not included
-        final Plugin plugin = mock(Plugin.class);
-        final ModuleDescriptor<?> moduleDescriptor = mock(ModuleDescriptor.class);
-        when(plugin.getKey()).thenReturn("my.plugin.d");
-        when(moduleDescriptor.getCompleteKey()).thenReturn("");
-        when(moduleDescriptor.getPlugin()).thenReturn(plugin);
-
-        assertFalse(pluginMetadata.required(moduleDescriptor));
-    }
-
-    public void testCommentLinesInFilesAreNotIncluded()
-    {
-        // There is a blank line in the requiredModules file lets make sure that
-        // is not included
-        final Plugin plugin = mock(Plugin.class);
-        final ModuleDescriptor<?> moduleDescriptor = mock(ModuleDescriptor.class);
-        when(plugin.getKey()).thenReturn("my.plugin.d");
-        when(moduleDescriptor.getCompleteKey()).thenReturn("#hello");
-        when(moduleDescriptor.getPlugin()).thenReturn(plugin);
-
-        assertFalse(pluginMetadata.required(moduleDescriptor));
-    }
-
-    public void testPluginKeysFromSecondFileIncluded()
-    {
-        final Plugin plugin = mock(Plugin.class);
-        when(plugin.getKey()).thenReturn("my.plugin.z");
-
-        assertTrue(pluginMetadata.applicationProvided(plugin));
     }
 
     static Iterable<InputStream> toStreams(final String... names)
@@ -207,5 +140,10 @@ public class TestClasspathPluginMetadata extends TestCase
             }
         }
         return builder.build();
+    }
+
+    static Iterable<String> empty()
+    {
+        return ImmutableList.of();
     }
 }
