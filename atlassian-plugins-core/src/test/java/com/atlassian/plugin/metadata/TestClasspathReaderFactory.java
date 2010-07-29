@@ -32,7 +32,7 @@ public class TestClasspathReaderFactory extends TestCase
         assertNotNull(Iterators.getOnlyElement(new ClasspathReaderFactory().urls("com/atlassian/plugin/metadata/test.txt")));
     }
 
-    public void testname() throws Exception
+    public void testReadingFromFile() throws Exception
     {
         final Reader reader = Iterables.getOnlyElement(new ClasspathReaderFactory().getReaders(Type.ApplicationProvided));
         assertNotNull(reader);
