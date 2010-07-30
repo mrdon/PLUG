@@ -6,9 +6,13 @@ import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -195,6 +199,48 @@ public class TestClasspathFilePluginMetadata extends TestCase
         assertTrue(pluginMetadata.applicationProvided(plugin));
     }
 
+    public void testClassLoading() throws IOException
+    {
+        ClassLoader classLoader = setupAndGetClassloader();
+
+        final Plugin plugin1 = mock(Plugin.class);
+        when(plugin1.getKey()).thenReturn("test1");
+        final Plugin plugin2 = mock(Plugin.class);
+        when(plugin2.getKey()).thenReturn("test2");
+
+        final ClasspathFilePluginMetadata pluginMetadata = new ClasspathFilePluginMetadata(classLoader);
+        assertTrue(pluginMetadata.applicationProvided(plugin1));
+        assertTrue(pluginMetadata.applicationProvided(plugin2));
+    }
+
+    private ClassLoader setupAndGetClassloader() throws IOException
+    {
+        final File tempDir1 = createTempDirectory("dir1");
+        // Create the package
+        final File packageDir1 = new File(tempDir1, "/com/atlassian/plugin/metadata/");
+        packageDir1.mkdirs();
+        packageDir1.deleteOnExit();
+        final File tempDir2 = createTempDirectory("dir2");
+        final File packageDir2 = new File(tempDir2, "/com/atlassian/plugin/metadata/");
+        packageDir2.mkdirs();
+        packageDir2.deleteOnExit();
+
+        final File file1 = new File(packageDir1, "application-provided-plugins.txt");
+        file1.deleteOnExit();
+        final File file2 = new File(packageDir2, "application-provided-plugins.txt");
+        file2.deleteOnExit();
+        FileWriter fileWriter1 = new FileWriter(file1);
+        file1.createNewFile();
+        fileWriter1.append("test1");
+        fileWriter1.close();
+        FileWriter fileWriter2 = new FileWriter(file2);
+        file2.createNewFile();
+        fileWriter2.append("test2");
+        fileWriter2.close();
+        ClassLoader classLoader = new URLClassLoader(new URL[] {tempDir1.toURI().toURL(), tempDir2.toURI().toURL()});
+        return classLoader;
+    }
+
     static Collection<InputStream> toStreams(final String... names)
     {
         final ImmutableList.Builder<InputStream> builder = ImmutableList.builder();
@@ -211,4 +257,33 @@ public class TestClasspathFilePluginMetadata extends TestCase
         }
         return builder.build();
     }
+
+    static File createTempDirectory(final String prefix)
+    {
+        long counter = System.currentTimeMillis();
+
+        File f;
+        final String systemTempDir = getSystemTempDir();
+        do
+        {
+            f = new File(systemTempDir, prefix + counter);
+            counter++;
+        }
+        while (!f.mkdir());
+        f.deleteOnExit();
+        return f;
+    }
+
+    /**
+     * Returns the system's temp directory.
+     * <p>
+     * Be aware that some operating systems place a trailing slash and others don't.
+     *
+     * @return the system's temp directory.
+     */
+    static String getSystemTempDir()
+    {
+        return System.getProperty("java.io.tmpdir");
+    }
+
 }

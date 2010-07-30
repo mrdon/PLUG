@@ -18,20 +18,15 @@ import java.util.Set;
 import static org.apache.commons.io.IOUtils.readLines;
 
 /**
- * Looks on the classpath for three files named:
- * <ul>
- * <li>application-provided-plugins.txt - used to list the plugin keys of all
- * plugins that are provided by the host application</li>
- * <li>application-required-plugins.txt - used to list the plugin keys that are
- * considered required for the application to function correctly</li>
- * <li>application-required-modules.txt - used to list the module keys that are
- * considered required for the application to function correctly</li>
- * </ul>
- * Note that all files in that package space with those names will be included.
- *
- * All files contents will be used to inform this implementation of plugin keys.
- * This will read the contents all instances of those files into the structures of this class.
- *
+ * Looks on the classpath for three files named: <ul> <li>application-provided-plugins.txt - used to list the plugin
+ * keys of all plugins that are provided by the host application</li> <li>application-required-plugins.txt - used to
+ * list the plugin keys that are considered required for the application to function correctly</li>
+ * <li>application-required-modules.txt - used to list the module keys that are considered required for the application
+ * to function correctly</li> </ul> Note that all files in that package space with those names will be included.
+ * <p/>
+ * All files contents will be used to inform this implementation of plugin keys. This will read the contents all
+ * instances of those files into the structures of this class.
+ * <p/>
  * The values will determine the plugin metadata for this implementation.
  *
  * @since 2.6
@@ -45,9 +40,16 @@ public class ClasspathFilePluginMetadata implements PluginMetadata
     private final Set<String> providedPluginKeys;
     private final Set<String> requiredPluginKeys;
     private final Set<String> requiredModuleKeys;
+    private final ClassLoader classLoader;
 
     public ClasspathFilePluginMetadata()
     {
+        this(ClasspathFilePluginMetadata.class.getClassLoader());
+    }
+
+    ClasspathFilePluginMetadata(ClassLoader classLoader)
+    {
+        this.classLoader = classLoader;
         this.providedPluginKeys = getStringsFromFile(APPLICATION_PROVIDED_PLUGINS_FILENAME);
         this.requiredPluginKeys = getStringsFromFile(APPLICATION_REQUIRED_PLUGINS_FILENAME);
         this.requiredModuleKeys = getStringsFromFile(APPLICATION_REQUIRED_MODULES_FILENAME);
@@ -73,9 +75,9 @@ public class ClasspathFilePluginMetadata implements PluginMetadata
         final ImmutableSet.Builder<String> stringsFromFiles = ImmutableSet.builder();
 
         final Collection<InputStream> fileInputStreams = getInputStreamsForFilename(fileName);
-        for (InputStream fileInputStream : fileInputStreams)
+        try
         {
-            try
+            for (InputStream fileInputStream : fileInputStreams)
             {
                 if (fileInputStream != null)
                 {
@@ -102,7 +104,10 @@ public class ClasspathFilePluginMetadata implements PluginMetadata
                     }
                 }
             }
-            finally
+        }
+        finally
+        {
+            for (InputStream fileInputStream : fileInputStreams)
             {
                 IOUtils.closeQuietly(fileInputStream);
             }
@@ -111,11 +116,12 @@ public class ClasspathFilePluginMetadata implements PluginMetadata
     }
 
     /**
-     * Checks the input to see if it meets the rules we want to enforce about valid lines. If it does not meet
-     * the criteria then null is returned, otherwise a trimmed version of the passed in string is returned.
+     * Checks the input to see if it meets the rules we want to enforce about valid lines. If it does not meet the
+     * criteria then null is returned, otherwise a trimmed version of the passed in string is returned.
      *
      * @param rawLine the string of data we are processing
-     * @return if rawLine does not meet the criteria then null is returned, otherwise a trimmed version of rawLine is returned.
+     * @return if rawLine does not meet the criteria then null is returned, otherwise a trimmed version of rawLine is
+     *         returned.
      */
     private String processedLine(String rawLine)
     {
@@ -139,7 +145,6 @@ public class ClasspathFilePluginMetadata implements PluginMetadata
         return trimmedLine;
     }
 
-    ///CLOVER:OFF
     Collection<InputStream> getInputStreamsForFilename(final String fileName)
     {
         final Collection<InputStream> inputStreams = new ArrayList<InputStream>();
@@ -147,7 +152,7 @@ public class ClasspathFilePluginMetadata implements PluginMetadata
         final String resourceName = clazz.getPackage().getName().replace(".", "/") + "/" + fileName;
         try
         {
-            final Enumeration<URL> urlEnumeration = clazz.getClassLoader().getResources(resourceName);
+            final Enumeration<URL> urlEnumeration = classLoader.getResources(resourceName);
             while (urlEnumeration.hasMoreElements())
             {
                 inputStreams.add(urlEnumeration.nextElement().openStream());
@@ -155,10 +160,14 @@ public class ClasspathFilePluginMetadata implements PluginMetadata
         }
         catch (final IOException e)
         {
+            // Close what we had opened before, one bad apple ruins the batch
+            for (InputStream inputStream : inputStreams)
+            {
+                IOUtils.closeQuietly(inputStream);
+            }
             throw new RuntimeException(e);
         }
         return inputStreams;
     }
-    ///CLOVER:ON
 
 }
