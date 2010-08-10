@@ -1063,6 +1063,126 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(3, manager.getPlugins().size());
         assertNotNull(manager.getPlugin("test.restartrequired"));
         assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals("1.0", manager.getPlugin("test.restartrequired").getPluginInformation().getVersion());
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
+    }
+
+    public void testUpgradePluginThatRequiresRestartThenRevertedRevertsToOriginalPlugin() throws PluginParseException, IOException, InterruptedException
+    {
+        createFillAndCleanTempPluginDirectory();
+        moduleDescriptorFactory.addModuleDescriptor("requiresRestart", RequiresRestartModuleDescriptor.class);
+
+        // Add the plugin to the plugins test directory so it is included when we first start up
+        new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>1.0</version>",
+                "    </plugin-info>", "    <requiresRestart key='foo' />", "</atlassian-plugin>").build(pluginsTestDir);
+
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
+        manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
+
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
+
+        // Some filesystems only record last modified in seconds
+        Thread.sleep(1000);
+        final File updateFile = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>2.0</version>",
+                "    </plugin-info>", "    <requiresRestart key='foo' />", "    <requiresRestart key='bar' />", "</atlassian-plugin>").build();
+
+        // Install version 2 of the plugin
+        manager.installPlugin(new JarPluginArtifact(updateFile));
+
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(PluginRestartState.UPGRADE, manager.getPluginRestartState("test.restartrequired"));
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+
+        Thread.sleep(1000);
+        final File updateFile2 = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>3.0</version>",
+                "    </plugin-info>", "    <requiresRestart key='foo' />", "    <requiresRestart key='bar' />", "</atlassian-plugin>").build();
+
+        // Install version 3 of the plugin
+        manager.installPlugin(new JarPluginArtifact(updateFile2));
+
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(PluginRestartState.UPGRADE, manager.getPluginRestartState("test.restartrequired"));
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+
+        // Lets revert the whole upgrade so that the original plugin is restored
+        manager.revertRestartRequiredChange("test.restartrequired");
+        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
+        assertEquals("1.0", manager.getPlugin("test.restartrequired").getPluginInformation().getVersion());
+
+        manager.shutdown();
+        manager.init();
+
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals("1.0", manager.getPlugin("test.restartrequired").getPluginInformation().getVersion());
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
+    }
+    
+    public void testUpgradePluginThatRequiresRestartMultipleTimeStaysUpgraded() throws PluginParseException, IOException, InterruptedException
+    {
+        createFillAndCleanTempPluginDirectory();
+        moduleDescriptorFactory.addModuleDescriptor("requiresRestart", RequiresRestartModuleDescriptor.class);
+
+        final File origFile = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>1.0</version>",
+                "    </plugin-info>", "    <requiresRestart key='foo' />", "</atlassian-plugin>").build(pluginsTestDir);
+
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
+        manager.setPluginInstaller(new FilePluginInstaller(pluginsTestDir));
+
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
+
+        // Some filesystems only record last modified in seconds
+        Thread.sleep(1000);
+        final File updateFile = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>2.0</version>",
+                "    </plugin-info>", "    <requiresRestart key='foo' />", "</atlassian-plugin>").build();
+
+        manager.installPlugin(new JarPluginArtifact(updateFile));
+
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(PluginRestartState.UPGRADE, manager.getPluginRestartState("test.restartrequired"));
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+
+        Thread.sleep(1000);
+        final File updateFile2 = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>3.0</version>",
+                "    </plugin-info>", "    <requiresRestart key='foo' />", "</atlassian-plugin>").build();
+
+        manager.installPlugin(new JarPluginArtifact(updateFile2));
+
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(PluginRestartState.UPGRADE, manager.getPluginRestartState("test.restartrequired"));
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+
+        manager.shutdown();
+        manager.init();
+
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
         assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
         assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
     }
@@ -1106,7 +1226,93 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals(0, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
         assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
     }
+    
+    public void testInstallPluginThatPreviouslyRequiredRestart() throws PluginParseException, IOException, InterruptedException
+    {
+        createFillAndCleanTempPluginDirectory();
+        moduleDescriptorFactory.addModuleDescriptor("requiresRestart", RequiresRestartModuleDescriptor.class);
 
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
+
+        assertEquals(2, manager.getPlugins().size());
+        assertNull(manager.getPlugin("test.restartrequired"));
+
+        final File origFile = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>1.0</version>",
+                "    </plugin-info>", "    <requiresRestart key='foo' />", "</atlassian-plugin>").build(pluginsTestDir);
+
+        manager.scanForNewPlugins();
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertFalse(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(PluginRestartState.INSTALL, manager.getPluginRestartState("test.restartrequired"));
+
+        // Some filesystems only record last modified in seconds
+        Thread.sleep(1000);
+        final File updateFile = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>2.0</version>",
+                "    </plugin-info>", "</atlassian-plugin>").build(pluginsTestDir);
+
+        origFile.delete();
+        FileUtils.moveFile(updateFile, origFile);
+
+        manager.scanForNewPlugins();
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertTrue(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
+        assertEquals(0, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+
+        manager.shutdown();
+        manager.init();
+
+        assertEquals(0, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
+    }
+
+    public void testInstallPluginMoreThanOnceStaysAsInstall() throws PluginParseException, IOException, InterruptedException
+    {
+        createFillAndCleanTempPluginDirectory();
+        moduleDescriptorFactory.addModuleDescriptor("requiresRestart", RequiresRestartModuleDescriptor.class);
+
+        final DefaultPluginManager manager = makeClassLoadingPluginManager();
+
+        assertEquals(2, manager.getPlugins().size());
+        assertNull(manager.getPlugin("test.restartrequired"));
+        assertEquals(0, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+
+        final File origFile = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>1.0</version>",
+                "    </plugin-info>", "    <requiresRestart key='foo' />", "</atlassian-plugin>").build(pluginsTestDir);
+
+        manager.scanForNewPlugins();
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertFalse(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(PluginRestartState.INSTALL, manager.getPluginRestartState("test.restartrequired"));
+
+        // Some filesystems only record last modified in seconds
+        Thread.sleep(1000);
+        final File updateFile = new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Test 2' key='test.restartrequired' pluginsVersion='1'>", "    <plugin-info>", "        <version>2.0</version>",
+                "    </plugin-info>", "    <requiresRestart key='foo' />", "</atlassian-plugin>").build(pluginsTestDir);
+
+        origFile.delete();
+        FileUtils.moveFile(updateFile, origFile);
+
+        manager.scanForNewPlugins();
+        assertEquals(3, manager.getPlugins().size());
+        assertNotNull(manager.getPlugin("test.restartrequired"));
+        assertFalse(manager.isPluginEnabled("test.restartrequired"));
+        assertEquals(PluginRestartState.INSTALL, manager.getPluginRestartState("test.restartrequired"));
+
+        manager.shutdown();
+        manager.init();
+
+        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.restartrequired"));
+    }
+    
     public void testRemovePluginThatRequiresRestart() throws PluginParseException, IOException
     {
         createFillAndCleanTempPluginDirectory();

@@ -395,17 +395,32 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                                 }
                                 else
                                 {
-                                    markPluginUpgradeThatRequiresRestart(plugin);
+                                    // If a plugin has been installed but is waiting for restart then we do not want to
+                                    // put the plugin into the update state, we want to keep it in the install state.
+                                    if (!PluginRestartState.INSTALL.equals(getPluginRestartState(plugin.getKey())))
+                                    {
+                                        markPluginUpgradeThatRequiresRestart(plugin);
+                                    }
                                     continue;
                                 }
                             }
-
-                            // Check to ensure that the old plugin didn't
-                            // require restart, even if the new one doesn't
-                            else if ((oldPlugin != null) && PluginUtils.doesPluginRequireRestart(oldPlugin))
+                            // If the new plugin does not require restart we need to check what the restart state of
+                            // the old plugin was and act accordingly
+                            else if (oldPlugin != null && PluginUtils.doesPluginRequireRestart(oldPlugin))
                             {
-                                markPluginUpgradeThatRequiresRestart(plugin);
-                                continue;
+                                // If you have installed the plugin that requires restart and before restart you have
+                                // reinstalled a version of that plugin that does not require restart then you should
+                                // just go ahead and install that plugin. This means reverting the previous install
+                                // and letting the plugin fall into the plugins to add list
+                                if (PluginRestartState.INSTALL.equals(getPluginRestartState(oldPlugin.getKey())))
+                                {
+                                    revertRestartRequiredChange(oldPlugin.getKey());
+                                }
+                                else
+                                {
+                                    markPluginUpgradeThatRequiresRestart(plugin);
+                                    continue;
+                                }
                             }
                             pluginsToAdd.add(plugin);
                         }

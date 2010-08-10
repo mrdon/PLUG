@@ -12,12 +12,21 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * File-based implementation of a PluginInstaller which writes plugin artifact
  * to a specified directory.  Handles reverting installs by keeping track of the first installation for a given
  * instance, and restores it.  Installation of plugin artifacts with different names will overwrite an existing artifact
  * of that same name, if it exists, with the only exception being the backup of the first overwritten artifact to
  * support reverting.
+ *
+ * NOTE: This implementation has a limitation. The issue is that when installing a plugin we are only provided the plugin
+ * key and do not know the name of the artifact that provided the original plugin. So if someone installs a new version
+ * of an existing plugin in an artifact that has a different name we have no way of telling what artifact provided
+ * the original plugin and therefore which artifact to delete. This will result in two of the same plugins, but in
+ * different artifacts being left in the plugins directory. Hopefully the versions will differ so that the plugins
+ * framework can decide which plugin to enable. 
  *
  * @see RevertablePluginInstaller
  */
@@ -26,7 +35,7 @@ public class FilePluginInstaller implements RevertablePluginInstaller
     private File directory;
     private static final Logger log = LoggerFactory.getLogger(FilePluginInstaller.class);
 
-    private final Map<String, OriginalFile> installedPlugins = CopyOnWriteMap.<String, OriginalFile>builder().stableViews().newHashMap();
+    private final Map<String, BackupRepresentation> installedPlugins = CopyOnWriteMap.<String, BackupRepresentation>builder().stableViews().newHashMap();
 
     public static final String ORIGINAL_PREFIX = ".original-";
 
@@ -46,10 +55,10 @@ public class FilePluginInstaller implements RevertablePluginInstaller
      */
     public void installPlugin(String key, PluginArtifact pluginArtifact)
     {
-        Validate.notNull(key, "The plugin key must be specified");
-        Validate.notNull(pluginArtifact, "The plugin artifact must not be null");
+        checkNotNull(key, "The plugin key must be specified");
+        checkNotNull(pluginArtifact, "The plugin artifact must not be null");
 
-        File newPluginFile = new File(directory, pluginArtifact.getName());
+        final File newPluginFile = new File(directory, pluginArtifact.getName());
         try
         {
             backup(key, newPluginFile);
@@ -91,20 +100,22 @@ public class FilePluginInstaller implements RevertablePluginInstaller
      */
     public void revertInstalledPlugin(String pluginKey)
     {
-        OriginalFile orig = installedPlugins.get(pluginKey);
-        if (orig != null)
+        BackupRepresentation backup = installedPlugins.get(pluginKey);
+        if (backup != null)
         {
-            File origFile = new File(orig.getBackupFile().getParent(), orig.getOriginalName());
-            if (origFile.exists())
+            File currentFile = new File(backup.getBackupFile().getParent(), backup.getCurrentPluginFilename());
+            if (currentFile.exists())
             {
-                origFile.delete();
+                currentFile.delete();
             }
 
-            if (orig.isUpgrade())
+            // We need to copy the original backed-up file back to the original filename if we overwrote the plugin
+            // when we first installed it.
+            if (backup.isUpgrade())
             {
                 try
                 {
-                    FileUtils.moveFile(orig.getBackupFile(), origFile);
+                    FileUtils.moveFile(backup.getBackupFile(), new File(backup.getBackupFile().getParent(), backup.getOriginalPluginArtifactFilename()));
                 }
                 catch (IOException e)
                 {
@@ -128,27 +139,55 @@ public class FilePluginInstaller implements RevertablePluginInstaller
         installedPlugins.clear();
     }
 
-    private void backup(String pluginKey, File oldPluginFile) throws IOException
+    private void backup(String pluginKey, File currentPluginArtifact) throws IOException
     {
+        BackupRepresentation orig = null;
+        // If this is the first time we have seen the pluginkey then we will create a backup representation that may
+        // refer to the original plugins file, if the artifact is named the same
         if (!installedPlugins.containsKey(pluginKey))
         {
-            OriginalFile orig;
-            if (oldPluginFile.exists())
-            {
-                File backupFile = new File(oldPluginFile.getParent(), ORIGINAL_PREFIX + oldPluginFile.getName());
-                if (backupFile.exists())
-                {
-                    throw new IOException("Existing backup found for plugin " + pluginKey + ".  Cannot install.");
-                }
+            orig = getBackupRepresentation(pluginKey, currentPluginArtifact);
+        }
+        // There is already a backup, we need to delete the intermediate file representation so that we do not
+        // leave a bunch of files laying around and update the backup with the new current plugin artifact name
+        else
+        {
+            final BackupRepresentation oldBackupFile = installedPlugins.get(pluginKey);
+            // Create a new backup representation that retains the reference to the original backup file but that changes
+            // the current plugin artifact name to be the new plugin file representation
+            orig = new BackupRepresentation(oldBackupFile, currentPluginArtifact.getName());
 
-                FileUtils.copyFile(oldPluginFile, backupFile);
-                orig = new OriginalFile(backupFile, oldPluginFile.getName());
-            }
-            else
+            // Delete the previous plugin representation
+            final File previousPluginFile = new File(oldBackupFile.getBackupFile().getParent(), oldBackupFile.getCurrentPluginFilename());
+            if (previousPluginFile.exists())
             {
-                orig = new OriginalFile(oldPluginFile, oldPluginFile.getName());
+                previousPluginFile.delete();
             }
-            installedPlugins.put(pluginKey, orig);
+        }
+
+        // Lets keep the backup representation for this plugin up-to-date
+        installedPlugins.put(pluginKey, orig);
+    }
+
+    private BackupRepresentation getBackupRepresentation(final String pluginKey, final File currentPluginArtifact) throws IOException
+    {
+        // If there is already a file of the same name as our current plugin artifact then we should create a backup copy
+        // of the original file before we overwrite the old plugin file
+        if (currentPluginArtifact.exists())
+        {
+            File backupFile = new File(currentPluginArtifact.getParent(), ORIGINAL_PREFIX + currentPluginArtifact.getName());
+            if (backupFile.exists())
+            {
+                throw new IOException("Existing backup found for plugin " + pluginKey + ".  Cannot install.");
+            }
+
+            FileUtils.copyFile(currentPluginArtifact, backupFile);
+            return new BackupRepresentation(backupFile, currentPluginArtifact.getName());
+        }
+        // Since there was no original file then there is not really anything we need to store as a backup
+        else
+        {
+            return new BackupRepresentation(currentPluginArtifact, currentPluginArtifact.getName());
         }
     }
 
@@ -160,17 +199,35 @@ public class FilePluginInstaller implements RevertablePluginInstaller
         }
     }
 
-    private static class OriginalFile
+    private static class BackupRepresentation
     {
         private final File backupFile;
-        private final String originalName;
+        private final String originalPluginArtifactFilename;
+        private final String currentPluginFilename;
         private final boolean isUpgrade;
 
-        public OriginalFile(File backupFile, String originalName)
+        /**
+         * @param backupFile the file reference to the file that we should restore if we need to restore a backup
+         * @param originalPluginArtifactFilename the name of the original plugin artifact.
+         */
+        public BackupRepresentation(File backupFile, String originalPluginArtifactFilename)
         {
-            this.backupFile = backupFile;
-            this.originalName = originalName;
-            this.isUpgrade = !backupFile.getName().equals(originalName);
+            this.backupFile = checkNotNull(backupFile, "backupFile");
+            this.originalPluginArtifactFilename = checkNotNull(originalPluginArtifactFilename, "originalPluginArtifactFilename");
+            this.isUpgrade = !backupFile.getName().equals(originalPluginArtifactFilename);
+            this.currentPluginFilename = originalPluginArtifactFilename;
+        }
+
+        /**
+         * @param oldBackup defines the backup file, original plugin artifact name and if the backup is an "upgrade", non-null.
+         * @param currentPluginFilename the name of the current plugin artifact, not null.
+         */
+        public BackupRepresentation(BackupRepresentation oldBackup, String currentPluginFilename)
+        {
+            this.backupFile = checkNotNull(oldBackup, "oldBackup").backupFile;
+            this.originalPluginArtifactFilename = oldBackup.originalPluginArtifactFilename;
+            this.isUpgrade = oldBackup.isUpgrade;
+            this.currentPluginFilename = checkNotNull(currentPluginFilename, "currentPluginFilename");
         }
 
         public File getBackupFile()
@@ -178,9 +235,14 @@ public class FilePluginInstaller implements RevertablePluginInstaller
             return backupFile;
         }
 
-        public String getOriginalName()
+        public String getOriginalPluginArtifactFilename()
         {
-            return originalName;
+            return originalPluginArtifactFilename;
+        }
+
+        public String getCurrentPluginFilename()
+        {
+            return currentPluginFilename;
         }
 
         public boolean isUpgrade()
