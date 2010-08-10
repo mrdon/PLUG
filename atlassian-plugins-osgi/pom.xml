@@ -286,11 +286,17 @@
                                     <artifactId>spring-osgi-io</artifactId>
                                     <version>${springDmVersion}</version>
                                 </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>com.atlassian.bundles</groupId>
+                                    <artifactId>velocity</artifactId>
+                                    <version>1.6.2-1-SNAPSHOT</version>
+                                </artifactItem>
+
                                 <artifactItem>
                                     <groupId>org.slf4j</groupId>
                                     <artifactId>jcl-over-slf4j</artifactId>
                                 </artifactItem>
-
                                 <!--
                                 <artifactItem>
                                     <groupId>org.aopalliance</groupId>
