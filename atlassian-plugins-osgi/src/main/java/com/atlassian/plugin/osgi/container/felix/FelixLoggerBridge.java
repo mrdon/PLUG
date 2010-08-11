@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi.container.felix;
 
 import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.BundleException;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,17 @@ public class FelixLoggerBridge extends Logger {
 
         switch (level) {
             case LOG_DEBUG:
-                log.debug(message);
+
+                // helps debug resolution errors when there are multiple constraint violations (final exception just
+                // reports the last one)
+                if (throwable != null && throwable instanceof ResolveException)
+                {
+                    log.debug(message, throwable);
+                }
+                else
+                {
+                    log.debug(message);
+                }
                 break;
             case LOG_ERROR:
                 if (throwable != null) {

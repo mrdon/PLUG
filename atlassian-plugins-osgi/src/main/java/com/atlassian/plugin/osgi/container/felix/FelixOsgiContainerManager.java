@@ -246,6 +246,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                              "org.apache.xerces,org.apache.xerces.*," +
                              "org.apache.xalan,org.apache.xalan.*," +
                              "sun.*," +
+                             "com.sun.xml.bind.v2," +
                              "com.icl.saxon";
         }
 
