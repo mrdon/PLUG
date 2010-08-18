@@ -367,10 +367,18 @@
     <distributionManagement>
         <site>
             <id>atlassian-documentation</id>
-            <url>dav:https://docs.atlassian.com/atlassian-plugins/${project.version}</url>
+            <url>dav:https://docs.atlassian.com/${project.artifactId}/${project.version}</url>
         </site>
     </distributionManagement>
 
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </reporting>
 
     <properties>
         <jdkLevel>1.5</jdkLevel>
