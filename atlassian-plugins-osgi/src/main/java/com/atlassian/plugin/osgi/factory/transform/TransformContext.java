@@ -1,5 +1,19 @@
 package com.atlassian.plugin.osgi.factory.transform;
 
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.osgi.container.OsgiContainerManager;
+import com.atlassian.plugin.osgi.factory.transform.model.ComponentImport;
+import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
+import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.parsers.XmlDescriptorParser;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
+import org.dom4j.Document;
+import org.dom4j.Element;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,20 +29,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
-import org.dom4j.Document;
-import org.dom4j.Element;
-
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.osgi.factory.transform.model.ComponentImport;
-import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
-import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
-import com.atlassian.plugin.osgi.container.OsgiContainerManager;
-import com.atlassian.plugin.parsers.XmlDescriptorParser;
-
 /**
  * The transform context containing any configuration necessary to enact a JAR transformation
  *
@@ -36,7 +36,6 @@ import com.atlassian.plugin.parsers.XmlDescriptorParser;
  */
 public class TransformContext
 {
-//    private final JarFile pluginJar;
     private final Manifest manifest;
     private final List<HostComponentRegistration> regs;
     private final Map<String, byte[]> fileOverrides;
@@ -50,16 +49,14 @@ public class TransformContext
     private final Set<String> applicationKeys;
     private boolean shouldRequireSpring = false;
     private final OsgiContainerManager osgiContainerManager;
-    private Set<HostComponentRegistration> requiredHostComponents;
+    private final Set<HostComponentRegistration> requiredHostComponents;
 
     // The transformation is mainly about generating spring beans.
     // We don't want to have name conflicts between them. This map helps keep track of that.
     // The definition of this map is "beanName -> source".
-    private Map<String, String> beanSourceMap = new HashMap<String, String>();
+    private final Map<String, String> beanSourceMap = new HashMap<String, String>();
 
-    public TransformContext(final List<HostComponentRegistration> regs, final SystemExports systemExports,
-                            final PluginArtifact pluginArtifact, final Set<String> applicationKeys, final String descriptorPath,
-                            final OsgiContainerManager osgiContainerManager)
+    public TransformContext(final List<HostComponentRegistration> regs, final SystemExports systemExports, final PluginArtifact pluginArtifact, final Set<String> applicationKeys, final String descriptorPath, final OsgiContainerManager osgiContainerManager)
     {
         this.osgiContainerManager = osgiContainerManager;
         Validate.notNull(pluginArtifact, "The plugin artifact must be specified");
@@ -69,13 +66,13 @@ public class TransformContext
         this.regs = regs;
         this.systemExports = systemExports;
         this.pluginArtifact = pluginArtifact;
-        this.applicationKeys = (applicationKeys == null ? Collections.<String>emptySet() : applicationKeys);
+        this.applicationKeys = (applicationKeys == null ? Collections.<String> emptySet() : applicationKeys);
 
         JarFile jarFile = null;
         try
         {
             jarFile = new JarFile(pluginArtifact.toFile());
-            Manifest manifest = jarFile.getManifest();
+            final Manifest manifest = jarFile.getManifest();
             if (manifest == null)
             {
                 this.manifest = new Manifest();
@@ -88,23 +85,24 @@ public class TransformContext
         catch (final IOException e)
         {
             throw new IllegalArgumentException("File must be a jar", e);
-        } finally
+        }
+        finally
         {
             closeJarQuietly(jarFile);
         }
         fileOverrides = new HashMap<String, byte[]>();
         bndInstructions = new HashMap<String, String>();
-        this.descriptorDocument = retrieveDocFromJar(pluginArtifact, descriptorPath);
-        this.extraImports = new ArrayList<String>();
-        this.extraExports = new ArrayList<String>();
+        descriptorDocument = retrieveDocFromJar(pluginArtifact, descriptorPath);
+        extraImports = new ArrayList<String>();
+        extraExports = new ArrayList<String>();
 
-        this.componentImports = Collections.unmodifiableMap(parseComponentImports(descriptorDocument));
+        componentImports = Collections.unmodifiableMap(parseComponentImports(descriptorDocument));
         requiredHostComponents = new HashSet<HostComponentRegistration>();
     }
 
     private Map<String, ComponentImport> parseComponentImports(final Document descriptorDocument)
     {
-        final Map<String,ComponentImport> componentImports = new HashMap<String,ComponentImport>();
+        final Map<String, ComponentImport> componentImports = new HashMap<String, ComponentImport>();
         final List<Element> elements = descriptorDocument.getRootElement().elements("component-import");
         for (final Element component : elements)
         {
@@ -252,7 +250,8 @@ public class TransformContext
         catch (final IOException e)
         {
             throw new IllegalArgumentException("File must be a jar", e);
-        } finally
+        }
+        finally
         {
             closeJarQuietly(jarFile);
         }
@@ -269,7 +268,8 @@ public class TransformContext
         catch (final IOException e)
         {
             throw new IllegalArgumentException("File must be a jar", e);
-        } finally
+        }
+        finally
         {
             closeJarQuietly(jarFile);
         }
@@ -277,17 +277,20 @@ public class TransformContext
 
     private void closeJarQuietly(final JarFile jarFile)
     {
-        if (jarFile!=null)
+        if (jarFile != null)
+        {
             try
-        {
+            {
                 jarFile.close();
-        } catch (final IOException e)
-        {
-            // ignore
+            }
+            catch (final IOException e)
+            {
+                // ignore
+            }
         }
     }
 
-    public void addRequiredHostComponent(HostComponentRegistration hostComponent)
+    public void addRequiredHostComponent(final HostComponentRegistration hostComponent)
     {
         requiredHostComponents.add(hostComponent);
     }
@@ -304,8 +307,7 @@ public class TransformContext
      * @param name id, name, or alias of the bean = basically any names which can be used to refer to the bean in Spring context.
      * @param source the source of the bean.
      */
-    public void trackBean(String name, String source)
-                                throws PluginTransformationException
+    public void trackBean(final String name, final String source) throws PluginTransformationException
     {
         // pre-conditions.
         if (StringUtils.isEmpty(name))
@@ -321,7 +323,8 @@ public class TransformContext
         // if it already exists, just explode.
         if (beanSourceMap.containsKey(name))
         {
-            String message = String.format("The bean identifier '%s' is used by two different beans from %s and %s", name, source, beanSourceMap.get(name));
+            final String message = String.format("The bean identifier '%s' is used by two different beans from %s and %s", name, source,
+                beanSourceMap.get(name));
             throw new PluginTransformationException(message);
         }
 
@@ -335,7 +338,7 @@ public class TransformContext
      *
      * @param name the bean name.
      */
-    public boolean beanExists(String name)
+    public boolean beanExists(final String name)
     {
         return beanSourceMap.containsKey(name);
     }
