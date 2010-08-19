@@ -1,5 +1,8 @@
 package com.atlassian.plugin.osgi.factory.transform;
 
+import static com.atlassian.plugin.osgi.factory.transform.JarUtils.getEntries;
+import static com.atlassian.plugin.osgi.factory.transform.JarUtils.getEntry;
+
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
@@ -14,18 +17,15 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
@@ -68,39 +68,18 @@ public final class TransformContext
         this.pluginArtifact = pluginArtifact;
         this.applicationKeys = (applicationKeys == null ? Collections.<String> emptySet() : applicationKeys);
 
-        JarFile jarFile = null;
-        try
-        {
-            jarFile = new JarFile(pluginArtifact.toFile());
-            final Manifest manifest = jarFile.getManifest();
-            if (manifest == null)
-            {
-                this.manifest = new Manifest();
-            }
-            else
-            {
-                this.manifest = manifest;
-            }
-        }
-        catch (final IOException e)
-        {
-            throw new IllegalArgumentException("File must be a jar", e);
-        }
-        finally
-        {
-            closeJarQuietly(jarFile);
-        }
+        manifest = JarUtils.getManifest(pluginArtifact.toFile());
         fileOverrides = new HashMap<String, byte[]>();
         bndInstructions = new HashMap<String, String>();
         descriptorDocument = retrieveDocFromJar(pluginArtifact, descriptorPath);
         extraImports = new ArrayList<String>();
         extraExports = new ArrayList<String>();
 
-        componentImports = Collections.unmodifiableMap(parseComponentImports(descriptorDocument));
+        componentImports = parseComponentImports(descriptorDocument);
         requiredHostComponents = new HashSet<HostComponentRegistration>();
     }
 
-    private Map<String, ComponentImport> parseComponentImports(final Document descriptorDocument)
+    private static Map<String, ComponentImport> parseComponentImports(final Document descriptorDocument)
     {
         final Map<String, ComponentImport> componentImports = new HashMap<String, ComponentImport>();
         @SuppressWarnings("unchecked")
@@ -110,12 +89,11 @@ public final class TransformContext
             final ComponentImport ci = new ComponentImport(component);
             componentImports.put(ci.getKey(), ci);
         }
-        return componentImports;
+        return Collections.unmodifiableMap(componentImports);
     }
 
     private Document retrieveDocFromJar(final PluginArtifact pluginArtifact, final String descriptorPath) throws PluginTransformationException
     {
-        Document document;
         InputStream stream = null;
         try
         {
@@ -124,14 +102,12 @@ public final class TransformContext
             {
                 throw new PluginTransformationException("Unable to access descriptor " + descriptorPath);
             }
-            final DocumentExposingDescriptorParser parser = new DocumentExposingDescriptorParser(stream);
-            document = parser.getDocument();
+            return new DocumentExposingDescriptorParser(stream).getDocument();
         }
         finally
         {
             IOUtils.closeQuietly(stream);
         }
-        return document;
     }
 
     public File getPluginFile()
@@ -220,7 +196,7 @@ public final class TransformContext
          * @throws com.atlassian.plugin.PluginParseException
          *          if there is a problem reading the descriptor from the XML {@link java.io.InputStream}.
          */
-        public DocumentExposingDescriptorParser(final InputStream source) throws PluginParseException
+        DocumentExposingDescriptorParser(final InputStream source) throws PluginParseException
         {
             // A null application key is fine here as we are only interested in the parsed document
             super(source, (String) null);
@@ -233,60 +209,14 @@ public final class TransformContext
         }
     }
 
-    public List<JarEntry> getPluginJarEntries()
+    public Iterable<JarEntry> getPluginJarEntries()
     {
-        final List<JarEntry> list = new ArrayList<JarEntry>();
-        JarFile jarFile = null;
-        try
-        {
-            jarFile = new JarFile(pluginArtifact.toFile());
-            final Enumeration<JarEntry> entries = jarFile.entries();
-            for (final Enumeration<JarEntry> e = entries; e.hasMoreElements();)
-            {
-                final JarEntry entry = e.nextElement();
-                list.add(entry);
-            }
-            return list;
-        }
-        catch (final IOException e)
-        {
-            throw new IllegalArgumentException("File must be a jar", e);
-        }
-        finally
-        {
-            closeJarQuietly(jarFile);
-        }
+        return getEntries(pluginArtifact.toFile());
     }
 
     public ZipEntry getPluginJarEntry(final String path)
     {
-        JarFile jarFile = null;
-        try
-        {
-            jarFile = new JarFile(pluginArtifact.toFile());
-            return jarFile.getEntry(path);
-        }
-        catch (final IOException e)
-        {
-            throw new IllegalArgumentException("File must be a jar", e);
-        }
-        finally
-        {
-            closeJarQuietly(jarFile);
-        }
-    }
-
-    private static void closeJarQuietly(final JarFile jarFile)
-    {
-        if (jarFile != null)
-        {
-            try
-            {
-                jarFile.close();
-            }
-            catch (final IOException ignore)
-            {}
-        }
+        return getEntry(pluginArtifact.toFile(), path);
     }
 
     public void addRequiredHostComponent(final HostComponentRegistration hostComponent)
