@@ -9,7 +9,6 @@ import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -28,13 +27,14 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
 
 /**
  * The transform context containing any configuration necessary to enact a JAR transformation
  *
  * @since 2.2.0
  */
-public class TransformContext
+public final class TransformContext
 {
     private final Manifest manifest;
     private final List<HostComponentRegistration> regs;
@@ -103,6 +103,7 @@ public class TransformContext
     private Map<String, ComponentImport> parseComponentImports(final Document descriptorDocument)
     {
         final Map<String, ComponentImport> componentImports = new HashMap<String, ComponentImport>();
+        @SuppressWarnings("unchecked")
         final List<Element> elements = descriptorDocument.getRootElement().elements("component-import");
         for (final Element component : elements)
         {
@@ -222,7 +223,7 @@ public class TransformContext
         public DocumentExposingDescriptorParser(final InputStream source) throws PluginParseException
         {
             // A null application key is fine here as we are only interested in the parsed document
-            super(source, null);
+            super(source, (String) null);
         }
 
         @Override
@@ -257,7 +258,7 @@ public class TransformContext
         }
     }
 
-    public Object getPluginJarEntry(final String path)
+    public ZipEntry getPluginJarEntry(final String path)
     {
         JarFile jarFile = null;
         try
@@ -275,7 +276,7 @@ public class TransformContext
         }
     }
 
-    private void closeJarQuietly(final JarFile jarFile)
+    private static void closeJarQuietly(final JarFile jarFile)
     {
         if (jarFile != null)
         {
@@ -283,10 +284,8 @@ public class TransformContext
             {
                 jarFile.close();
             }
-            catch (final IOException e)
-            {
-                // ignore
-            }
+            catch (final IOException ignore)
+            {}
         }
     }
 
@@ -309,16 +308,8 @@ public class TransformContext
      */
     public void trackBean(final String name, final String source) throws PluginTransformationException
     {
-        // pre-conditions.
-        if (StringUtils.isEmpty(name))
-        {
-            throw new IllegalArgumentException("empty bean name");
-        }
-
-        if (source == null)
-        {
-            throw new IllegalArgumentException("source of bean is required");
-        }
+        Validate.notNull(name, "empty bean name");
+        Validate.notNull(source, "source of bean is required");
 
         // if it already exists, just explode.
         if (beanSourceMap.containsKey(name))
