@@ -2,10 +2,14 @@ package com.atlassian.plugin.osgi.factory.transform;
 
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.osgi.factory.transform.stage.ComponentImportSpringStage;
+import com.atlassian.plugin.osgi.factory.transform.stage.ComponentSpringStage;
+import com.atlassian.plugin.osgi.factory.transform.stage.HostComponentSpringStage;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
+import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.test.PluginTestUtils;
 
@@ -26,9 +30,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import junit.framework.TestCase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestDefaultPluginTransformer extends TestCase
 {
+    private static final Logger LOG = LoggerFactory.getLogger(TestDefaultPluginTransformer.class);
+
     private DefaultPluginTransformer transformer;
     private File tmpDir;
 
@@ -98,6 +106,90 @@ public class TestDefaultPluginTransformer extends TestCase
         assertEquals("1.1", attrs.getValue(Constants.BUNDLE_VERSION));
 
         assertNotNull(jar.getEntry("META-INF/spring/atlassian-plugins-host-components.xml"));
+    }
+
+    public void testTransformWithBeanConflictBetweenComponentAndHostComponent() throws Exception
+    {
+        final File file = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  com.atlassian.plugin.osgi.factory.transform.Fooable bar;",
+                        "}")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='plugin1' key='first' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "<component key='host_component1' class='my.Foo'/>",
+                        "</atlassian-plugin>")
+                .build();
+
+        try
+        {
+            transformer.transform(new JarPluginArtifact(file), new ArrayList<HostComponentRegistration>()
+            {
+                {
+                    HostComponentRegistration reg = new StubHostComponentRegistration(Fooable.class);
+                    reg.getProperties().put(PropertyBuilder.BEAN_NAME, "host_component1");
+                    add(reg);
+                }
+            });
+
+            fail(PluginTransformationException.class.getSimpleName() + " expected");
+        }
+        catch (PluginTransformationException e)
+        {
+            // good, now check the content inside the error message.
+
+            // this check looks weird since it relies on message scraping
+            // but without all the information expected here, users would not be able to figure out what went wrong.
+            LOG.info(e.toString());
+            e.getMessage().contains("host_component1");
+            e.getMessage().contains(ComponentSpringStage.BEAN_SOURCE);
+            e.getMessage().contains(HostComponentSpringStage.BEAN_SOURCE);
+        }
+    }
+
+    public void testTransformWithBeanConflictBetweenComponentAndImportComponent() throws Exception
+    {
+        final File file = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "public class Foo {",
+                        "  com.atlassian.plugin.osgi.factory.transform.Fooable bar;",
+                        "}")
+                .addFormattedJava("com.atlassian.plugin.osgi.SomeInterface",
+                                  "package com.atlassian.plugin.osgi;",
+                                  "public interface SomeInterface {}")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='plugin1' key='first' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "<component key='component1' class='my.Foo'/>",
+                        "<component-import key='component1'>",
+                        "    <interface>com.atlassian.plugin.osgi.SomeInterface</interface>",
+                        "</component-import>",
+                        "</atlassian-plugin>")
+                .build();
+
+        try
+        {
+            transformer.transform(new JarPluginArtifact(file), new ArrayList<HostComponentRegistration>());
+            fail(PluginTransformationException.class.getSimpleName() + " expected");
+        }
+        catch (PluginTransformationException e)
+        {
+            // good, now check the content inside the error message.
+
+            // this check looks weird since it relies on message scraping
+            // but without all the information expected here, users would not be able to figure out what went wrong.
+            LOG.info(e.toString());
+            e.getMessage().contains("component1");
+            e.getMessage().contains(ComponentSpringStage.BEAN_SOURCE);
+            e.getMessage().contains(ComponentImportSpringStage.BEAN_SOURCE);
+        }
     }
 
     public void testGenerateCacheName() throws IOException

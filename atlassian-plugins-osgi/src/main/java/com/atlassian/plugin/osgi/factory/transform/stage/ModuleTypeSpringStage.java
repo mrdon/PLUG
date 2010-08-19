@@ -24,6 +24,8 @@ public class ModuleTypeSpringStage implements TransformStage
     static final String HOST_CONTAINER = "springHostContainer";
     static final String SPRING_HOST_CONTAINER = "com.atlassian.plugin.osgi.bridge.external.SpringHostContainer";
 
+    public static final String BEAN_SOURCE = "Module Type";
+
     public void execute(TransformContext context) throws PluginTransformationException
     {
         if (SpringHelper.shouldGenerateFile(context, SPRING_XML))
@@ -36,7 +38,13 @@ public class ModuleTypeSpringStage implements TransformStage
                 context.getExtraImports().add("com.atlassian.plugin.osgi.external");
                 context.getExtraImports().add("com.atlassian.plugin.osgi.bridge.external");
                 context.getExtraImports().add("com.atlassian.plugin");
+
+                // create a new bean.
                 Element hostContainerBean = root.addElement("beans:bean");
+
+                // make sure the new bean id is not already in use.
+                context.trackBean(HOST_CONTAINER, BEAN_SOURCE);
+
                 hostContainerBean.addAttribute("id", HOST_CONTAINER);
                 hostContainerBean.addAttribute("class", SPRING_HOST_CONTAINER);
 
@@ -44,6 +52,7 @@ public class ModuleTypeSpringStage implements TransformStage
                         rule(
                             test("@key").withError("The key is required"),
                             test("@class").withError("The class is required"));
+
                 for (Element e : elements)
                 {
                     if (!PluginUtils.doesModuleElementApplyToApplication(e, context.getApplicationKeys()))
@@ -52,7 +61,12 @@ public class ModuleTypeSpringStage implements TransformStage
                     }
                     validation.evaluate(e);
                     Element bean = root.addElement("beans:bean");
-                    bean.addAttribute("id", getBeanId(e));
+
+                    String beanId = getBeanId(e);
+                    // make sure the new bean id is not already in use.
+                    context.trackBean(beanId, BEAN_SOURCE);
+
+                    bean.addAttribute("id", beanId);
                     bean.addAttribute("class", "com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory");
 
                     Element arg = bean.addElement("beans:constructor-arg");
@@ -68,8 +82,12 @@ public class ModuleTypeSpringStage implements TransformStage
                     value3.setText(e.attributeValue("class"));
 
                     Element osgiService = root.addElement("osgi:service");
-                    osgiService.addAttribute("id", getBeanId(e) + "_osgiService");
-                    osgiService.addAttribute("ref", getBeanId(e));
+                    String serviceBeanId = getBeanId(e) + "_osgiService";
+                    // make sure the new bean id is not already in use.
+                    context.trackBean(serviceBeanId, BEAN_SOURCE);
+
+                    osgiService.addAttribute("id", serviceBeanId);
+                    osgiService.addAttribute("ref", beanId);
                     osgiService.addAttribute("auto-export", "interfaces");
                 }
             }

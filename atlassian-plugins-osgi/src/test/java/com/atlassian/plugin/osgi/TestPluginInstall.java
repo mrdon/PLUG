@@ -4,6 +4,7 @@ import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
@@ -665,6 +666,42 @@ public class TestPluginInstall extends PluginInContainerTestBase
         assertEquals(1, pluginManager.getEnabledPlugins().size());
         assertNotNull(pluginManager.getPlugin("first"));
         assertTrue(flag.get());
+    }
+
+    public void testInstallWithComponentBeanNameConflictedWithHostComponent() throws Exception
+    {
+        new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test' key='first' pluginsVersion='2'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "    </plugin-info>",
+                    "    <component key='host_component1' class='first.MyClass' interface='first.MyInterface' public='true'/>",
+                    "</atlassian-plugin>")
+                .addFormattedJava("com.atlassian.plugin.osgi.SomeInterface",
+                        "package com.atlassian.plugin.osgi;",
+                        "public interface SomeInterface {}")
+                .addFormattedJava("first.MyClass",
+                        "package first;",
+                        "import com.atlassian.plugin.osgi.SomeInterface;",
+                        "public class MyClass implements SomeInterface{",
+                        "}")
+                .build(pluginsDir);
+
+        initPluginManager(new HostComponentProvider()
+        {
+            public void provide(ComponentRegistrar registrar)
+            {
+                registrar.register(SomeInterface.class).forInstance(new SomeInterface(){}).withName("host_component1");
+            }
+        });
+
+        // there is a name conflict therefore this plugin should not have been enabled.
+        assertEquals(0, pluginManager.getEnabledPlugins().size());
+        assertTrue(pluginManager.getPlugins().toArray()[0] instanceof UnloadablePlugin);
+
+        // the error message has to mention the problematic component name otherwise users won't be able to figure out.
+        assertTrue(pluginManager.getPlugins().toArray(new UnloadablePlugin[1])[0].getErrorText().contains("host_component1"));
     }
 
     public void testInstallWithStrangePath() throws Exception

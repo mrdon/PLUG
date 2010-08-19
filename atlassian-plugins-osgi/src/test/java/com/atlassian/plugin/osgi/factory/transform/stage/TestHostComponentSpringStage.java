@@ -472,4 +472,22 @@ public class TestHostComponentSpringStage extends TestCase
             "not(beans:bean[@id='foo']/beans:property[@name='filter']/@value='(&(bean-name=foo)(plugins-host=true))']");
     }
 
+    public void testTransformBeanTracking() throws Exception
+    {
+        jar = new PluginJarBuilder().addFormattedJava("my.Foo", "package my;", "public class Foo {",
+            "  public Foo(javax.swing.table.TableModel bar) {}", "}").addPluginInformation("my.plugin", "my.plugin", "1.0").build();
+
+        final List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration>()
+        {
+            {
+                add(new MockRegistration("foo", TableModel.class));
+            }
+        };
+
+        final TransformContext context = new TransformContext(regs, systemExports, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
+        transformer.execute(context);
+
+        // the bean should exist. With no name explicitly given to the host component name, the bean name is auto-generated.
+        assertTrue(context.beanExists("bean0"));
+    }
 }

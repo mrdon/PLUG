@@ -36,6 +36,8 @@ public class HostComponentSpringStage implements TransformStage
     /** Path of generated Spring XML file */
     static final String SPRING_XML = "META-INF/spring/atlassian-plugins-host-components.xml";
 
+    public static final String BEAN_SOURCE = "Host Component";
+
     public void execute(TransformContext context) throws PluginTransformationException
     {
         if (SpringHelper.shouldGenerateFile(context, SPRING_XML))
@@ -100,7 +102,12 @@ public class HostComponentSpringStage implements TransformStage
                     // bean that returns the actual component instance
 
                     Element osgiService = root.addElement("beans:bean");
-                    osgiService.addAttribute("id", determineId(context.getComponentImports().keySet(), beanName, index));
+                    String beanId = determineId(context.getComponentImports().keySet(), beanName, index);
+
+                    // make sure the new bean id is not already in use.
+                    context.trackBean(beanId, BEAN_SOURCE);
+
+                    osgiService.addAttribute("id", beanId);
                     osgiService.addAttribute("lazy-init", "true");
 
                     // These are strings since we aren't compiling against the osgi-bridge jar

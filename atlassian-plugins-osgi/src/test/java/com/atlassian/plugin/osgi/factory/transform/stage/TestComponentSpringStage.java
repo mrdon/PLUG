@@ -145,6 +145,10 @@ public class TestComponentSpringStage extends TestCase
         transformer.execute(ctx);
 
         assertTrue(ctx.getExtraExports().contains("my"));
+
+        // the generated bean should be tracked.
+        assertTrue(ctx.beanExists("foo"));
+
         mockPluginArtifact.verify();
     }
 
@@ -170,6 +174,9 @@ public class TestComponentSpringStage extends TestCase
         transformer.execute(ctx);
 
         assertFalse(ctx.getExtraExports().contains("my"));
+        // the generated bean should be tracked.
+        assertTrue(ctx.beanExists("foo"));
+
         mockPluginArtifact.verify();
     }
 
@@ -195,6 +202,9 @@ public class TestComponentSpringStage extends TestCase
         transformer.execute(ctx);
 
         assertEquals(ctx.getExtraExports().indexOf("my"), ctx.getExtraExports().lastIndexOf("my"));
+        // the generated bean should be tracked.
+        assertTrue(ctx.beanExists("foo"));
+
         mockPluginArtifact.verify();
     }
 }

@@ -22,6 +22,8 @@ public class ComponentImportSpringStage implements TransformStage
     /** Path of generated Spring XML file */
     private static final String SPRING_XML = "META-INF/spring/atlassian-plugins-component-imports.xml";
 
+    public static final String BEAN_SOURCE = "Component Import";
+
     Logger log = LoggerFactory.getLogger(ComponentImportSpringStage.class);
 
     public void execute(TransformContext context) throws PluginTransformationException
@@ -39,6 +41,10 @@ public class ComponentImportSpringStage implements TransformStage
                     continue;
                 }
                 Element osgiReference = root.addElement("osgi:reference");
+
+                // make sure the new bean id is not already in use.
+                context.trackBean(comp.getKey(), BEAN_SOURCE);
+
                 osgiReference.addAttribute("id", comp.getKey());
 
                 if (comp.getFilter() != null)

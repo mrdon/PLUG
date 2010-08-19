@@ -23,6 +23,8 @@ public class ComponentSpringStage implements TransformStage
     /** Path of generated Spring XML file */
     private static final String SPRING_XML = "META-INF/spring/atlassian-plugins-components.xml";
 
+    public static final String BEAN_SOURCE = "Plugin Component";
+
     public void execute(TransformContext context) throws PluginTransformationException
     {
         if (SpringHelper.shouldGenerateFile(context, SPRING_XML))
@@ -47,8 +49,12 @@ public class ComponentSpringStage implements TransformStage
                 }
                 validation.evaluate(component);
 
+                String beanId = component.attributeValue("key");
+                // make sure the new bean id is not already in use.
+                context.trackBean(beanId, BEAN_SOURCE);
+
                 Element bean = root.addElement("beans:bean");
-                bean.addAttribute("id", component.attributeValue("key"));
+                bean.addAttribute("id", beanId);
                 bean.addAttribute("alias", component.attributeValue("alias"));
                 bean.addAttribute("class", component.attributeValue("class"));
                 bean.addAttribute("autowire", "default");

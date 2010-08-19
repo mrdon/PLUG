@@ -90,6 +90,9 @@ public class TestComponentImportSpringStage extends TestCase
         final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         stage.execute(context);
         assertTrue(context.getExtraImports().contains(SomeInterface.class.getPackage().getName()));
+
+        // bean "foo" should be created from the component-import element, therefore it should be tracked.
+        assertTrue(context.beanExists("foo"));
     }
 
     public void testTransformImportWarnUnverifiedService() throws Exception, DocumentException
@@ -109,6 +112,10 @@ public class TestComponentImportSpringStage extends TestCase
 
         final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(jar), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
         stage.execute(context);
+
+        // bean "foo" should be created from the component-import element, therefore it should be tracked.
+        assertTrue(context.beanExists("foo"));
+
         verify(stage.log).debug(anyString());
     }
 

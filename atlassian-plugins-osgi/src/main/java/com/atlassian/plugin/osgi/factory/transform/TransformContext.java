@@ -16,6 +16,7 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -50,6 +51,11 @@ public class TransformContext
     private boolean shouldRequireSpring = false;
     private final OsgiContainerManager osgiContainerManager;
     private Set<HostComponentRegistration> requiredHostComponents;
+
+    // The transformation is mainly about generating spring beans.
+    // We don't want to have name conflicts between them. This map helps keep track of that.
+    // The definition of this map is "beanName -> source".
+    private Map<String, String> beanSourceMap = new HashMap<String, String>();
 
     public TransformContext(final List<HostComponentRegistration> regs, final SystemExports systemExports,
                             final PluginArtifact pluginArtifact, final Set<String> applicationKeys, final String descriptorPath,
@@ -289,5 +295,48 @@ public class TransformContext
     public Set<HostComponentRegistration> getRequiredHostComponents()
     {
         return requiredHostComponents;
+    }
+
+    /**
+     * Track a bean by remembering its name and source.
+     * If there is already a bean with the same name, {@link PluginTransformationException} will be raised.
+     *
+     * @param name id, name, or alias of the bean = basically any names which can be used to refer to the bean in Spring context.
+     * @param source the source of the bean.
+     */
+    public void trackBean(String name, String source)
+                                throws PluginTransformationException
+    {
+        // pre-conditions.
+        if (StringUtils.isEmpty(name))
+        {
+            throw new IllegalArgumentException("empty bean name");
+        }
+
+        if (source == null)
+        {
+            throw new IllegalArgumentException("source of bean is required");
+        }
+
+        // if it already exists, just explode.
+        if (beanSourceMap.containsKey(name))
+        {
+            String message = String.format("The bean identifier '%s' is used by two different beans from %s and %s", name, source, beanSourceMap.get(name));
+            throw new PluginTransformationException(message);
+        }
+
+        // otherwise, just track it.
+        beanSourceMap.put(name, source);
+    }
+
+    /**
+     * Check if the bean has been tracked.
+     * This is used for testing only.
+     *
+     * @param name the bean name.
+     */
+    public boolean beanExists(String name)
+    {
+        return beanSourceMap.containsKey(name);
     }
 }
