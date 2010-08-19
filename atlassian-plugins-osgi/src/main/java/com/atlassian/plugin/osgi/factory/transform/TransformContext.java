@@ -16,6 +16,8 @@ import org.apache.commons.lang.Validate;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -30,8 +32,8 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
 /**
- * The transform context containing any configuration necessary to enact a JAR transformation
- *
+ * The transform context containing any configuration necessary to enact a JAR transformation.
+ * 
  * @since 2.2.0
  */
 public final class TransformContext
@@ -77,37 +79,6 @@ public final class TransformContext
 
         componentImports = parseComponentImports(descriptorDocument);
         requiredHostComponents = new HashSet<HostComponentRegistration>();
-    }
-
-    private static Map<String, ComponentImport> parseComponentImports(final Document descriptorDocument)
-    {
-        final Map<String, ComponentImport> componentImports = new HashMap<String, ComponentImport>();
-        @SuppressWarnings("unchecked")
-        final List<Element> elements = descriptorDocument.getRootElement().elements("component-import");
-        for (final Element component : elements)
-        {
-            final ComponentImport ci = new ComponentImport(component);
-            componentImports.put(ci.getKey(), ci);
-        }
-        return Collections.unmodifiableMap(componentImports);
-    }
-
-    private Document retrieveDocFromJar(final PluginArtifact pluginArtifact, final String descriptorPath) throws PluginTransformationException
-    {
-        InputStream stream = null;
-        try
-        {
-            stream = pluginArtifact.getResourceAsStream(descriptorPath);
-            if (stream == null)
-            {
-                throw new PluginTransformationException("Unable to access descriptor " + descriptorPath);
-            }
-            return new DocumentExposingDescriptorParser(stream).getDocument();
-        }
-        finally
-        {
-            IOUtils.closeQuietly(stream);
-        }
     }
 
     public File getPluginFile()
@@ -182,31 +153,11 @@ public final class TransformContext
         {
             getFileOverrides().put("META-INF/spring/", new byte[0]);
         }
-
     }
 
     public OsgiContainerManager getOsgiContainerManager()
     {
         return osgiContainerManager;
-    }
-
-    private static class DocumentExposingDescriptorParser extends XmlDescriptorParser
-    {
-        /**
-         * @throws com.atlassian.plugin.PluginParseException
-         *          if there is a problem reading the descriptor from the XML {@link java.io.InputStream}.
-         */
-        DocumentExposingDescriptorParser(final InputStream source) throws PluginParseException
-        {
-            // A null application key is fine here as we are only interested in the parsed document
-            super(source, (String) null);
-        }
-
-        @Override
-        public Document getDocument()
-        {
-            return super.getDocument();
-        }
     }
 
     public Iterable<JarEntry> getPluginJarEntries()
@@ -262,5 +213,62 @@ public final class TransformContext
     public boolean beanExists(final String name)
     {
         return beanSourceMap.containsKey(name);
+    }
+
+    //
+    // static utils
+    //
+
+    private static Map<String, ComponentImport> parseComponentImports(final Document descriptorDocument)
+    {
+        final Map<String, ComponentImport> componentImports = new HashMap<String, ComponentImport>();
+        @SuppressWarnings("unchecked")
+        final List<Element> elements = descriptorDocument.getRootElement().elements("component-import");
+        for (final Element component : elements)
+        {
+            final ComponentImport ci = new ComponentImport(component);
+            componentImports.put(ci.getKey(), ci);
+        }
+        return ImmutableMap.copyOf(componentImports);
+    }
+
+    private static Document retrieveDocFromJar(final PluginArtifact pluginArtifact, final String descriptorPath) throws PluginTransformationException
+    {
+        InputStream stream = null;
+        try
+        {
+            stream = pluginArtifact.getResourceAsStream(descriptorPath);
+            if (stream == null)
+            {
+                throw new PluginTransformationException("Unable to access descriptor " + descriptorPath);
+            }
+            return new DocumentExposingDescriptorParser(stream).getDocument();
+        }
+        finally
+        {
+            IOUtils.closeQuietly(stream);
+        }
+    }
+
+    /**
+     * Get the document (protected method on super-class).
+     */
+    private static class DocumentExposingDescriptorParser extends XmlDescriptorParser
+    {
+        /**
+         * @throws com.atlassian.plugin.PluginParseException
+         *          if there is a problem reading the descriptor from the XML {@link java.io.InputStream}.
+         */
+        DocumentExposingDescriptorParser(final InputStream source) throws PluginParseException
+        {
+            // A null application key is fine here as we are only interested in the parsed document
+            super(source, (String) null);
+        }
+
+        @Override
+        public Document getDocument()
+        {
+            return super.getDocument();
+        }
     }
 }
