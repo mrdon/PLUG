@@ -15,6 +15,8 @@ import java.util.zip.ZipEntry;
 
 /**
  * Utility methods for getting stuff out of a jar.
+ * 
+ * @since 2.6
  */
 final class JarUtils
 {
@@ -31,7 +33,7 @@ final class JarUtils
     }
 
     /**
-     * Get the {@link JarEntry entries} from a Jar file, or create a new one if there isn't one already.
+     * Get the {@link JarEntry entries} from a Jar file.
      * 
      * @param file the file that is the jar contents
      * @return the entries the jar contains.
@@ -42,10 +44,10 @@ final class JarUtils
     }
 
     /**
-     * Get the {@link JarEntry entries} from a Jar file, or create a new one if there isn't one already.
+     * Get a specific {@link ZipEntry entry} from a Jar file.
      * 
      * @param file the file that is the jar contents
-     * @return the entries the jar contains.
+     * @return the specified entry in the jar if it exists or null if it can't be found.
      */
     static ZipEntry getEntry(final File file, final String path)
     {
