@@ -49,13 +49,13 @@ final class JarUtils
      * @param file the file that is the jar contents
      * @return the specified entry in the jar if it exists or null if it can't be found.
      */
-    static ZipEntry getEntry(final File file, final String path)
+    static JarEntry getEntry(final File file, final String path)
     {
-        return withJar(file, new Extractor<ZipEntry>()
+        return withJar(file, new Extractor<JarEntry>()
         {
-            public ZipEntry get(final JarFile jarFile)
+            public JarEntry get(final JarFile jarFile)
             {
-                return jarFile.getEntry(path);
+                return jarFile.getJarEntry(path);
             }
         });
     }

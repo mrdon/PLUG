@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
 
 /**
  * The transform context containing any configuration necessary to enact a JAR transformation.
@@ -165,7 +164,7 @@ public final class TransformContext
         return getEntries(pluginArtifact.toFile());
     }
 
-    public ZipEntry getPluginJarEntry(final String path)
+    public JarEntry getPluginJarEntry(final String path)
     {
         return getEntry(pluginArtifact.toFile(), path);
     }
