@@ -1,13 +1,15 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
+import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.PluginAccessor;
 import junit.framework.TestCase;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
 
@@ -19,6 +21,8 @@ import com.atlassian.plugin.util.validation.ValidationException;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
+
+import static org.mockito.Mockito.*;
 
 public class TestComponentSpringStage extends TestCase
 {
@@ -206,5 +210,47 @@ public class TestComponentSpringStage extends TestCase
         assertTrue(ctx.beanExists("foo"));
 
         mockPluginArtifact.verify();
+    }
+
+    public void testImportManifestGenerationOnInterfaces() throws Exception
+    {
+        final ComponentSpringStage stage = new ComponentSpringStage();
+
+        final File pluginJar = new PluginJarBuilder()
+                .addFormattedJava("my.MyFooChild",
+                        "package my;",
+                        "public class MyFooChild extends com.atlassian.plugin.osgi.factory.transform.dummypackage2.DummyClass2 {",
+                        "}")
+                .addFormattedJava("my2.MyFooInterface",
+                        "package my2;",
+                        "public interface MyFooInterface {}")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='plugin1' key='first' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component key='component1' class='my.MyFooChild' public='true'>",
+                        "       <interface>com.atlassian.plugin.osgi.factory.transform.dummypackage0.DummyInterface0</interface>",
+                        "       <interface>com.atlassian.plugin.osgi.factory.transform.dummypackage1.DummyInterface1</interface>",
+                        "       <interface>my2.MyFooInterface</interface>",
+                        "    </component>",
+                        "</atlassian-plugin>")
+                .build();
+
+        ServiceReference serviceReference = mock(ServiceReference.class);
+        when(serviceReference.getProperty(Constants.OBJECTCLASS)).thenReturn(new String[] { "my.Service"});
+
+        OsgiContainerManager osgiContainerManager = mock(OsgiContainerManager.class);
+        when(osgiContainerManager.getRegisteredServices()).thenReturn(new ServiceReference[] {serviceReference});
+
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(pluginJar), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
+        stage.execute(context);
+
+        // don't import local interface.
+        assertFalse(context.getExtraImports().contains("my2.MyFooInterface"));
+
+        // import only interfaces that don't exist in the plugin itself.
+        assertTrue(context.getExtraImports().contains("com.atlassian.plugin.osgi.factory.transform.dummypackage1"));
+        assertTrue(context.getExtraImports().contains("com.atlassian.plugin.osgi.factory.transform.dummypackage0"));
     }
 }

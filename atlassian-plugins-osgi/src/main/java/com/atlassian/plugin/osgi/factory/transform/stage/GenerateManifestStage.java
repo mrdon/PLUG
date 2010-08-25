@@ -182,6 +182,7 @@ public class GenerateManifestStage implements TransformStage
         }
 
         // Check for the spring files, as the default header value looks here
+        // TODO: This is probly not correct since if there is no META-INF/spring/*.xml, it's still not spring-powered.
         if (context.getPluginArtifact().doesResourceExist("META-INF/spring/") ||
             context.shouldRequireSpring() ||
             context.getDescriptorDocument() != null)
@@ -201,12 +202,12 @@ public class GenerateManifestStage implements TransformStage
         }
         else
         {
-            StringBuffer headerBuf;
+            StringBuilder headerBuf;
             //Override existing timeout
-            if (header.indexOf(SPRING_CONTEXT_TIMEOUT) != -1)
+            if (header.contains(SPRING_CONTEXT_TIMEOUT))
             {
                 StringTokenizer tokenizer = new StringTokenizer(header, SPRING_CONTEXT_DELIM);
-                headerBuf = new StringBuffer();
+                headerBuf = new StringBuilder();
                 while (tokenizer.hasMoreElements())
                 {
                     String directive = (String) tokenizer.nextElement();
@@ -224,7 +225,7 @@ public class GenerateManifestStage implements TransformStage
             else
             {
                 //Append new timeout
-                headerBuf = new StringBuffer(header);
+                headerBuf = new StringBuilder(header);
                 headerBuf.append(SPRING_CONTEXT_DELIM + SPRING_CONTEXT_TIMEOUT + SPRING_TIMEOUT);
             }
             return headerBuf.toString();
@@ -300,6 +301,7 @@ public class GenerateManifestStage implements TransformStage
 
     private boolean isOsgiBundle(final Manifest manifest) throws IOException
     {
+        // OSGi core spec 4.2 section 3.5.2: The Bundle-SymbolicName manifest header is a mandatory header.
         return manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null;
     }
 

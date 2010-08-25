@@ -192,6 +192,47 @@ public class TestDefaultPluginTransformer extends TestCase
         }
     }
 
+    public void testImportManifestGenerationOnInterfaces() throws Exception
+    {
+        final File file = new PluginJarBuilder()
+                .addFormattedJava("my.MyFooChild",
+                        "package my;",
+                        "public class MyFooChild extends com.atlassian.plugin.osgi.factory.transform.dummypackage2.DummyClass2 {",
+                        "}")
+                .addFormattedJava("my2.MyFooInterface",
+                        "package my2;",
+                        "public interface MyFooInterface {}")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='plugin1' key='first' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component key='component1' class='my.MyFooChild' public='true'>",
+                        "       <interface>com.atlassian.plugin.osgi.factory.transform.dummypackage0.DummyInterface0</interface>",
+                        "       <interface>com.atlassian.plugin.osgi.factory.transform.dummypackage1.DummyInterface1</interface>",
+                        "       <interface>my2.MyFooInterface</interface>",
+                        "    </component>",
+                        "</atlassian-plugin>")
+                .build();
+
+        File outputFile = transformer.transform(new JarPluginArtifact(file), new ArrayList<HostComponentRegistration>());
+
+        JarFile outputJar = new JarFile(outputFile);
+        String importString = outputJar.getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
+
+        // this should be done by binary scanning.
+        assertTrue(importString.contains("com.atlassian.plugin.osgi.factory.transform.dummypackage2"));
+
+        // referred to by interface declaration.
+        assertTrue(importString.contains("com.atlassian.plugin.osgi.factory.transform.dummypackage1"));
+
+        // referred to by interface declaration
+        assertTrue(importString.contains("com.atlassian.plugin.osgi.factory.transform.dummypackage0"));
+
+        // should not import an interface which exists in plugin itself.
+        assertFalse(importString.contains("my2.MyFooInterface"));
+    }
+
     public void testGenerateCacheName() throws IOException
     {
         File tmp = File.createTempFile("asdf", ".jar", tmpDir);
@@ -204,7 +245,6 @@ public class TestDefaultPluginTransformer extends TestCase
 
         tmp = File.createTempFile("asdf", "asdf.s", tmpDir);
         assertTrue(DefaultPluginTransformer.generateCacheName(tmp).endsWith(String.valueOf(".s")));
-
     }
 
 }

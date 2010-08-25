@@ -676,7 +676,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
                     "    <plugin-info>",
                     "        <version>1.0</version>",
                     "    </plugin-info>",
-                    "    <component key='host_component1' class='first.MyClass' interface='first.MyInterface' public='true'/>",
+                    "    <component key='host_component1' class='first.MyClass' interface='first.MyInterface'/>",
                     "</atlassian-plugin>")
                 .addFormattedJava("com.atlassian.plugin.osgi.SomeInterface",
                         "package com.atlassian.plugin.osgi;",
