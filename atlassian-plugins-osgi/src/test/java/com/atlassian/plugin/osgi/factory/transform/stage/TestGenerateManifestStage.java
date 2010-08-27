@@ -236,6 +236,7 @@ public class TestGenerateManifestStage extends TestCase
                         "Manifest-Version: 1.0",
                         "Import-Package: javax.swing",
                         "Bundle-SymbolicName: my.foo.symbolicName",
+                        "Bundle-Version: 1.0",
                         "Bundle-ClassPath: .,foo")
                 .addResource("foo/bar.txt", "Something")
                 .addPluginInformation("innerjarcp", "Some name", "1.0")
@@ -248,9 +249,8 @@ public class TestGenerateManifestStage extends TestCase
         assertEquals(".,foo", attrs.getValue(Constants.BUNDLE_CLASSPATH));
         assertEquals("innerjarcp", attrs.getValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY));
         final String importPackage = attrs.getValue(Constants.IMPORT_PACKAGE);
-        assertTrue(importPackage.contains(AttributeSet.class.getPackage().getName()+","));
+        assertTrue(importPackage.contains(AttributeSet.class.getPackage().getName()));
         assertTrue(importPackage.contains("javax.swing"));
-
     }
 
     public void testGenerateManifestInvalidVersionWithExisting() throws Exception
@@ -361,6 +361,7 @@ public class TestGenerateManifestStage extends TestCase
                         "Manifest-Version: 1.0",
                         "Import-Package: javax.swing",
                         "Bundle-SymbolicName: my.foo.symbolicName",
+                        "Bundle-Version: 1.0",
                         "Spring-Context: *",
                         "Bundle-ClassPath: .,foo")
                 .addResource("foo/bar.txt", "Something")

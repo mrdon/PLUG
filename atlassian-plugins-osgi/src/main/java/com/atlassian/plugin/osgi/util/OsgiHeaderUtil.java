@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -158,6 +159,27 @@ public class OsgiHeaderUtil
 
     /**
      * Builds the header string from a map
+     * @param values The header values
+     * @return A string, suitable for inclusion into an OSGI header string
+     * @since 2.6
+     */
+    public static String buildHeader(Map<String,Map<String,String>> values)
+    {
+        StringBuilder header = new StringBuilder();
+        for (Iterator<Map.Entry<String,Map<String,String>>> i = values.entrySet().iterator(); i.hasNext(); )
+        {
+            Map.Entry<String,Map<String,String>> entry = i.next();
+            buildHeader(entry.getKey(), entry.getValue(), header);
+            if (i.hasNext())
+            {
+                header.append(",");
+            }
+        }
+        return header.toString();
+    }
+
+    /**
+     * Builds the header string from a map
      * @param key The header value
      * @param attrs The map of attributes
      * @return A string, suitable for inclusion into an OSGI header string
@@ -165,19 +187,29 @@ public class OsgiHeaderUtil
      */
     public static String buildHeader(String key, Map<String,String> attrs)
     {
-        StringBuilder fullPkg = new StringBuilder(key);
+        StringBuilder fullPkg = new StringBuilder();
+        buildHeader(key, attrs, fullPkg);
+        return fullPkg.toString();
+    }
+
+    /**
+     * Builds the header string from a map
+     * @since 2.6
+     */
+    private static void buildHeader(String key, Map<String,String> attrs, StringBuilder builder)
+    {
+        builder.append(key);
         if (attrs != null && !attrs.isEmpty())
         {
             for (Map.Entry<String,String> entry : attrs.entrySet())
             {
-                fullPkg.append(";");
-                fullPkg.append(entry.getKey());
-                fullPkg.append("=\"");
-                fullPkg.append(entry.getValue());
-                fullPkg.append("\"");
+                builder.append(";");
+                builder.append(entry.getKey());
+                builder.append("=\"");
+                builder.append(entry.getValue());
+                builder.append("\"");
             }
         }
-        return fullPkg.toString();
     }
 
     /**

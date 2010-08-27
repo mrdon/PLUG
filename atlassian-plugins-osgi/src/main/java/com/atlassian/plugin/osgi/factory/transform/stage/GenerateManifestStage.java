@@ -27,6 +27,7 @@ import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
+import sun.tools.jar.resources.jar;
 
 /**
  * Generates an OSGi manifest if not already defined.  Should be the last stage.
@@ -41,6 +42,7 @@ public class GenerateManifestStage implements TransformStage
     public static final String SPRING_CONTEXT = "Spring-Context";
     private static final String SPRING_CONTEXT_TIMEOUT = "timeout:=";
     private static final String SPRING_CONTEXT_DELIM = ";";
+    private static final String RESOLUTION_DIRECTIVE = "resolution:";
 
     public void execute(final TransformContext context) throws PluginTransformationException
     {
@@ -52,11 +54,12 @@ public class GenerateManifestStage implements TransformStage
             // We don't care about the modules, so we pass null
             final XmlDescriptorParser parser = new XmlDescriptorParser(context.getDescriptorDocument());
 
+            Manifest mf;
             if (isOsgiBundle(context.getManifest()))
             {
                 if (context.getExtraImports().isEmpty())
                 {
-                    final Manifest mf = builder.getJar().getManifest();
+                    mf = builder.getJar().getManifest();
                     for (Map.Entry<String,String> entry : getRequiredOsgiHeaders(context, parser.getKey()).entrySet())
                     {
                         mf.getMainAttributes().putValue(entry.getKey(), entry.getValue());
@@ -69,15 +72,16 @@ public class GenerateManifestStage implements TransformStage
                 else
                 {
                     // Possibly necessary due to Spring XML creation
+
                     assertSpringAvailableIfRequired(context);
+                    mf = builder.getJar().getManifest();
                     final String imports = addExtraImports(builder.getJar().getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE), context.getExtraImports());
-                    builder.setProperty(Constants.IMPORT_PACKAGE, imports);
+                    mf.getMainAttributes().putValue(Constants.IMPORT_PACKAGE, imports);
 
                     for (Map.Entry<String,String> entry : getRequiredOsgiHeaders(context, parser.getKey()).entrySet())
                     {
-                        builder.setProperty(entry.getKey(), entry.getValue());
+                        mf.getMainAttributes().putValue(entry.getKey(), entry.getValue());
                     }
-                    builder.mergeManifest(builder.getJar().getManifest());
                 }
             }
             else
@@ -133,18 +137,27 @@ public class GenerateManifestStage implements TransformStage
                     properties.put(Analyzer.EXPORT_PACKAGE, StringUtils.join(context.getExtraExports(), ','));
                 }
                 builder.setProperties(properties);
+                builder.calcManifest();
+                builder.getJar().close();
+                Jar jar = null;
+                try
+                {
+                    jar = builder.build();
+                    mf = jar.getManifest();
+                }
+                finally
+                {
+                    if (jar != null)
+                    {
+                        jar.close();
+                    }
+                }
             }
-
-            builder.calcManifest();
-            builder.getJar().close();
-            final Jar jar = builder.build();
-            final Manifest mf = jar.getManifest();
 
             enforceHostVersionsForUnknownImports(mf, context.getSystemExports());
             validateOsgiVersionIsValid(mf);
 
             writeManifestOverride(context, mf);
-            jar.close();
         }
         catch (final Exception t)
         {
@@ -302,23 +315,30 @@ public class GenerateManifestStage implements TransformStage
         return manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME) != null;
     }
 
-    private String addExtraImports(String imports, final List<String> extraImports)
+    private String addExtraImports(String importsLine, final List<String> extraImports)
     {
-        final StringBuilder referrers = new StringBuilder();
-        for (final String imp : extraImports)
+        Map<String,Map<String,String>> originalImports = OsgiHeaderUtil.parseHeader(importsLine);
+        for (String exImport : extraImports)
         {
-            referrers.append(imp).append(",");
+            if (!exImport.startsWith("java."))
+            {
+                Map attrs = originalImports.get(exImport);
+                if (attrs != null)
+                {
+                    Object resolution = attrs.get(RESOLUTION_DIRECTIVE);
+                    if (Constants.RESOLUTION_OPTIONAL.equals(resolution))
+                    {
+                        attrs.put(RESOLUTION_DIRECTIVE, Constants.RESOLUTION_MANDATORY);
+                    }
+                }
+                else
+                {
+                    originalImports.put(exImport, Collections.<String, String>emptyMap());
+                }
+            }
         }
 
-        if (imports != null && imports.length() > 0)
-        {
-            imports = referrers + imports;
-        }
-        else
-        {
-            imports = referrers.toString();
-        }
-        return imports;
+        return OsgiHeaderUtil.buildHeader(originalImports);
     }
 
     private static void header(final Properties properties, final String key, final Object value)
