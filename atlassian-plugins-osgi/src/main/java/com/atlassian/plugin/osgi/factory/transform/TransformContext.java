@@ -44,6 +44,7 @@ public final class TransformContext
     private final Document descriptorDocument;
     private final List<String> extraImports;
     private final List<String> extraExports;
+    private final Set<String> bundleClassPaths;
     private final PluginArtifact pluginArtifact;
     private final Map<String, ComponentImport> componentImports;
     private final SystemExports systemExports;
@@ -75,6 +76,7 @@ public final class TransformContext
         descriptorDocument = retrieveDocFromJar(pluginArtifact, descriptorPath);
         extraImports = new ArrayList<String>();
         extraExports = new ArrayList<String>();
+        bundleClassPaths = new HashSet<String>();
 
         componentImports = parseComponentImports(descriptorDocument);
         requiredHostComponents = new HashSet<HostComponentRegistration>();
@@ -123,6 +125,16 @@ public final class TransformContext
     public List<String> getExtraExports()
     {
         return extraExports;
+    }
+
+    public void addBundleClasspath(String classpath)
+    {
+        bundleClassPaths.add(classpath);
+    }
+
+    public Set<String> getBundleClassPaths()
+    {
+        return Collections.unmodifiableSet(bundleClassPaths);
     }
 
     public Map<String, ComponentImport> getComponentImports()

@@ -49,6 +49,7 @@ public class DefaultPluginTransformer implements PluginTransformer
         this(cache, systemExports, applicationKeys, pluginDescriptorPath, osgiContainerManager, new ArrayList<TransformStage>()
         {{
             add(new AddBundleOverridesStage());
+            add(new ScanInnerJarsStage());
             add(new ComponentImportSpringStage());
             add(new ComponentSpringStage());
             add(new ScanDescriptorForHostClassesStage());

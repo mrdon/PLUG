@@ -195,7 +195,7 @@ public class HostComponentSpringStage implements TransformStage
                     Set<String> referredClasses = cls.getReferredClasses();
                     for (String ref : referredClasses)
                     {
-                        String name = ref.replaceAll("/", ".").substring(0, ref.length() - ".class".length());
+                        String name = TransformStageUtils.jarPathToClassName(ref);
                         if (allHostComponents.contains(name))
                         {
                             matchedHostComponents.add(name);

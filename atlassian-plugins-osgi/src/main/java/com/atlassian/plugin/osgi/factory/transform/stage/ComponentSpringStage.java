@@ -6,21 +6,19 @@ import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException
 import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
 import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
-import com.atlassian.plugin.util.ClassLoaderUtils;
-import com.atlassian.plugin.util.ClassUtils;
 import com.atlassian.plugin.util.validation.ValidationPattern;
 import com.atlassian.plugin.util.PluginUtils;
+import org.apache.commons.io.IOUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
-import com.google.common.collect.Sets;
-import com.google.common.base.Predicate;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 /**
  * Transforms component tags in the plugin descriptor into the appropriate spring XML configuration file
@@ -119,8 +117,26 @@ public class ComponentSpringStage implements TransformStage
                 context.getFileOverrides().put(SPRING_XML, SpringHelper.documentToBytes(springDoc));
             }
 
-            // calculate the required imports this is (all the classes) - (classes available in the plugin)
-            context.getExtraImports().addAll(calculateRequiredImports(context.getPluginFile(), declaredInterfaces));
+            // calculate the required imports this is (all the classes) - (classes available in the plugin).
+            Set<String> requiredInterfaces = calculateRequiredImports(context.getPluginFile(), declaredInterfaces);
+
+            // if all the required interfaces are not entirely satisfied yet, we will have to search in inner jars.
+            if (requiredInterfaces.size() > 0)
+            {
+                try
+                {
+                    // subtract the outstanding required interfaces with interfaces found in inner jars.
+                    requiredInterfaces.removeAll(findClassesAvailableInInnerJars(context.getPluginFile(), context.getBundleClassPaths(), requiredInterfaces));
+                }
+                catch (IOException e)
+                {
+                    throw new PluginTransformationException("problem while scanning inner jars in the plugin", e);
+                }
+            }
+
+            
+            // dump all the outstanding imports as extra imports.
+            context.getExtraImports().addAll(TransformStageUtils.getPackageNames(requiredInterfaces));
         }
     }
 
@@ -154,7 +170,7 @@ public class ComponentSpringStage implements TransformStage
                 throw new PluginTransformationException("error while reading from plugin jar", e);
             }
 
-            final Set<String> requiredPackages = new HashSet<String>();
+            final Set<String> requiredClasses = new HashSet<String>();
 
             // we will only import only interfaces not available from the plugin bundle.
             for(String inf:declaredInterfaces)
@@ -162,15 +178,104 @@ public class ComponentSpringStage implements TransformStage
                 // if the plugin doesn't contain the interface.
                 if (!pluginClasses.contains(inf))
                 {
-                    // we then need to import the package
-                    requiredPackages.add(TransformStageUtils.getPackageName(inf));
+                    // we then need to it
+                    requiredClasses.add(inf);
                 }
             }
 
-            return requiredPackages;
+            return requiredClasses;
         }
 
         // if no need to import.
         return Collections.emptySet();
+    }
+
+    protected Set<String> findClassesAvailableInInnerJars(final File pluginFile,
+                                                          final Set<String> innerClasspaths,
+                                                          final Set<String> classesToLookFor) throws IOException
+    {
+        // this is where the output will go.
+        final Set<String> foundClasses = new HashSet<String>();
+
+        ZipFile pluginJarStream = null;
+        try
+        {
+            // open the plugin jar file for reading.
+            pluginJarStream = new ZipFile(pluginFile, ZipFile.OPEN_READ);
+
+            // for each jar in bundle classpath.
+            outerloop:
+            for(String classpath:innerClasspaths)
+            {
+                ZipEntry innerJarEntry = pluginJarStream.getEntry(classpath);
+
+                ZipInputStream innerJarStream = null;
+                try
+                {
+                    // scan classes in the inner jar by reading from stream.
+                    innerJarStream = new ZipInputStream(pluginJarStream.getInputStream(innerJarEntry));
+
+                    ZipEntry innerEntry;
+                    while((innerEntry=innerJarStream.getNextEntry()) != null)
+                    {
+                        // only if it's a class file.
+                        if (innerEntry.getName().endsWith(".class"))
+                        {
+                            // convert the entry name to class name so that we can use it to match.
+                            String innerClassName = TransformStageUtils.jarPathToClassName(innerEntry.getName());
+                            if (classesToLookFor.contains(innerClassName))
+                            {
+                                foundClasses.add(innerClassName);
+
+                                // early exit opportunity if all the required interfaces are satisfied.
+                                if (foundClasses.size() == classesToLookFor.size())
+                                {
+                                    break outerloop;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch(IOException ioe)
+                {
+                    throw new IOException("error while trying to scan inner jars:" + stringifyException(ioe));
+                }
+                finally
+                {
+                    IOUtils.closeQuietly(innerJarStream);
+                }
+            }
+        }
+        catch(IOException ioe)
+        {
+            throw new IOException("error while trying to scan plugin jar:" + stringifyException(ioe));
+        }
+        finally
+        {
+            // close the file.
+            if (pluginJarStream != null)
+            {
+                try
+                {
+                    pluginJarStream.close();
+                }
+                catch (IOException e)
+                {
+                    // quiet
+                }
+            }
+        }
+
+        return Collections.unmodifiableSet(foundClasses);
+    }
+
+    private String stringifyException(Exception e)
+    {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        pw.flush();
+        sw.flush();
+        return sw.toString();
     }
 }

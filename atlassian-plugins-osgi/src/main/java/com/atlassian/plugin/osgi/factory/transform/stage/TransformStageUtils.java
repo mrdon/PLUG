@@ -13,7 +13,7 @@ import java.util.zip.ZipInputStream;
 /**
  * Contains utility functions for use in TransformStage implementations.
  */
-public class TransformStageUtils
+public final class TransformStageUtils
 {
     /**
      * Not for instantiation.
@@ -62,10 +62,46 @@ public class TransformStageUtils
      * Extracts package name from the given class name.
      *
      * @param fullClassName a valid class name.
+     * @return package name.
      */
     static String getPackageName(String fullClassName)
     {
         // A valid java class name must have a dot in it.
         return fullClassName.substring(0, fullClassName.lastIndexOf("."));
+    }
+
+    /**
+     * Extract package names from the given set of classes.
+     *
+     * @param classes set of classes, cannot be null.
+     * @return a set of package names, can be empty but never null.
+     */
+    static Set<String> getPackageNames(final Set<String> classes)
+    {
+        final Set<String> packages = new HashSet<String>();
+
+        for(String clazz:classes)
+        {
+            packages.add(getPackageName(clazz));
+        }
+
+        return Collections.unmodifiableSet(packages);
+    }
+
+    /**
+     * Convert a jar path to class name.
+     * such as "com/atlassian/Test.class" -> "com.atlassian.Test".
+     *
+     * @param jarPath the entry name inside jar.
+     * @return class name, or null if the path is not a class file.
+     */
+    static String jarPathToClassName(String jarPath)
+    {
+        if (jarPath == null || !jarPath.contains(".class"))
+        {
+            return null;
+        }
+
+        return jarPath.replaceAll("/", ".").substring(0, jarPath.length() - ".class".length());
     }
 }

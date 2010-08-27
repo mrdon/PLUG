@@ -2,15 +2,11 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.HashMap;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.Manifest;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -112,17 +108,18 @@ public class GenerateManifestStage implements TransformStage
                 header(properties, Analyzer.BUNDLE_VENDOR, info.getVendorName());
                 header(properties, Analyzer.BUNDLE_DOCURL, info.getVendorUrl());
 
-                // Scan for embedded jars
-                final StringBuilder classpath = new StringBuilder();
-                classpath.append(".");
-                for (final JarEntry jarEntry : context.getPluginJarEntries())
-                {
-                    if (jarEntry.getName().startsWith("META-INF/lib/") && jarEntry.getName().endsWith(".jar"))
-                    {
-                        classpath.append(",").append(jarEntry.getName());
-                    }
-                }
-                header(properties, Analyzer.BUNDLE_CLASSPATH, classpath.toString());
+                List<String> bundleClassPaths = new ArrayList<String>();
+
+                // the jar root.
+                bundleClassPaths.add(".");
+
+                // inner jars. make the order deterministic here.
+                List<String> innerClassPaths = new ArrayList<String>(context.getBundleClassPaths());
+                Collections.sort(innerClassPaths);
+                bundleClassPaths.addAll(innerClassPaths);
+
+                // generate bundle classpath.
+                header(properties, Analyzer.BUNDLE_CLASSPATH, StringUtils.join(bundleClassPaths, ','));
 
                 // Process any bundle instructions in atlassian-plugin.xml
                 properties.putAll(context.getBndInstructions());

@@ -46,4 +46,13 @@ public class TestTransformStageUtils extends TestCase
         assertEquals("java.lang", TransformStageUtils.getPackageName("java.lang.Class"));
         assertEquals("com.hello.world", TransformStageUtils.getPackageName("com.hello.world.Class1$Inner1"));
     }
+
+    public void testJarPathToClassName()
+    {
+        assertEquals("com.atlassian.osgi.Test", TransformStageUtils.jarPathToClassName("com/atlassian/osgi/Test.class"));
+        assertEquals("Test", TransformStageUtils.jarPathToClassName("Test.class"));
+        assertEquals(null, TransformStageUtils.jarPathToClassName("META-INF/atlassian-plugin.xml"));
+        assertEquals(null, TransformStageUtils.jarPathToClassName(null));
+        assertEquals(null, TransformStageUtils.jarPathToClassName(""));
+    }
 }

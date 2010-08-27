@@ -194,7 +194,13 @@ public class TestDefaultPluginTransformer extends TestCase
 
     public void testImportManifestGenerationOnInterfaces() throws Exception
     {
-        final File file = new PluginJarBuilder()
+        final File innerJar = new PluginJarBuilder()
+                .addFormattedJava("my.innerpackage.InnerPackageInterface1",
+                        "package my.innerpackage;",
+                        "public interface InnerPackageInterface1 {}")
+                .build();
+
+        final File pluginJar = new PluginJarBuilder()
                 .addFormattedJava("my.MyFooChild",
                         "package my;",
                         "public class MyFooChild extends com.atlassian.plugin.osgi.factory.transform.dummypackage2.DummyClass2 {",
@@ -210,12 +216,14 @@ public class TestDefaultPluginTransformer extends TestCase
                         "    <component key='component1' class='my.MyFooChild' public='true'>",
                         "       <interface>com.atlassian.plugin.osgi.factory.transform.dummypackage0.DummyInterface0</interface>",
                         "       <interface>com.atlassian.plugin.osgi.factory.transform.dummypackage1.DummyInterface1</interface>",
+                        "       <interface>my.innerpackage.InnerPackageInterface1</interface>",
                         "       <interface>my2.MyFooInterface</interface>",
                         "    </component>",
                         "</atlassian-plugin>")
+                .addFile("META-INF/lib/mylib.jar", innerJar)
                 .build();
 
-        File outputFile = transformer.transform(new JarPluginArtifact(file), new ArrayList<HostComponentRegistration>());
+        File outputFile = transformer.transform(new JarPluginArtifact(pluginJar), new ArrayList<HostComponentRegistration>());
 
         JarFile outputJar = new JarFile(outputFile);
         String importString = outputJar.getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
@@ -231,6 +239,9 @@ public class TestDefaultPluginTransformer extends TestCase
 
         // should not import an interface which exists in plugin itself.
         assertFalse(importString.contains("my2.MyFooInterface"));
+
+        // should not import an interface which exists in inner jar.
+        assertFalse(importString.contains("my.innerpackage"));
     }
 
     public void testGenerateCacheName() throws IOException

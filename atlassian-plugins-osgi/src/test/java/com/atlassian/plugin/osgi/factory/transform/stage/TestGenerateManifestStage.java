@@ -374,27 +374,6 @@ public class TestGenerateManifestStage extends TestCase
         verify(log).warn(contains("Please add ';timeout:=60'"));
     }
 
-
-    public void testGenerateManifest_innerjars() throws URISyntaxException, PluginParseException, IOException
-    {
-        final File innerJar = new PluginJarBuilder("innerjar1").build();
-        final File innerJar2 = new PluginJarBuilder("innerjar2").build();
-        final File plugin = new PluginJarBuilder("plugin")
-                .addFile("META-INF/lib/innerjar.jar", innerJar)
-                .addFile("META-INF/lib/innerjar2.jar", innerJar2)
-                .addPluginInformation("innerjarcp", "Some name", "1.0")
-                .build();
-
-        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
-        final Attributes attrs = executeStage(context);
-
-        final Collection classpathEntries = Arrays.asList(attrs.getValue(Constants.BUNDLE_CLASSPATH).split(","));
-        assertEquals(3, classpathEntries.size());
-        assertTrue(classpathEntries.contains("."));
-        assertTrue(classpathEntries.contains("META-INF/lib/innerjar.jar"));
-        assertTrue(classpathEntries.contains("META-INF/lib/innerjar2.jar"));
-    }
-
     public void testGenerateManifest_innerjarsInImports() throws Exception, PluginParseException, IOException
     {
         final File innerJar = new PluginJarBuilder("innerjar")
@@ -413,6 +392,7 @@ public class TestGenerateManifestStage extends TestCase
                 .build();
 
         final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
+        context.addBundleClasspath("META-INF/lib/innerjar.jar");
         final Attributes attrs = executeStage(context);
 
         assertEquals("1.0", attrs.getValue(Constants.BUNDLE_VERSION));
