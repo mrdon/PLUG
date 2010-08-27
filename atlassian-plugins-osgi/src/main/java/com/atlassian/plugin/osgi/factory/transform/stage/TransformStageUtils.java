@@ -1,11 +1,16 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
+import static com.google.common.collect.Iterables.transform;
+
 import org.apache.commons.io.IOUtils;
+
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -13,14 +18,13 @@ import java.util.zip.ZipInputStream;
 /**
  * Contains utility functions for use in TransformStage implementations.
  */
-public final class TransformStageUtils
+final class TransformStageUtils
 {
     /**
      * Not for instantiation.
      */
     private TransformStageUtils()
-    {
-    }
+    {}
 
     /**
      * Calculate classes available in the plugin. This doesn't include classes in embedded jars.
@@ -30,9 +34,9 @@ public final class TransformStageUtils
      *
      * @throws java.io.IOException if there's problem reading the jarStream.
      */
-    static Set<String> extractPluginClasses(InputStream jarStream) throws IOException
+    static Set<String> extractPluginClasses(final InputStream jarStream) throws IOException
     {
-        Set<String> classes = new HashSet<String>();
+        final Set<String> classes = Sets.newHashSet();
         ZipInputStream zin = null;
 
         try
@@ -42,11 +46,10 @@ public final class TransformStageUtils
 
             while ((zipEntry = zin.getNextEntry()) != null)
             {
-                String path = zipEntry.getName();
-                if (path.endsWith(".class"))
+                final String path = jarPathToClassName(zipEntry.getName());
+                if (path != null)
                 {
-                    // truncate the final '.class' and convert all '/' to '.'.
-                    classes.add(path.substring(0, path.length() - ".class".length()).replaceAll("/", "."));
+                    classes.add(path);
                 }
             }
         }
@@ -64,10 +67,9 @@ public final class TransformStageUtils
      * @param fullClassName a valid class name.
      * @return package name.
      */
-    static String getPackageName(String fullClassName)
+    static String getPackageName(final String fullClassName)
     {
-        // A valid java class name must have a dot in it.
-        return fullClassName.substring(0, fullClassName.lastIndexOf("."));
+        return PackageName.INSTANCE.apply(fullClassName);
     }
 
     /**
@@ -76,16 +78,9 @@ public final class TransformStageUtils
      * @param classes set of classes, cannot be null.
      * @return a set of package names, can be empty but never null.
      */
-    static Set<String> getPackageNames(final Set<String> classes)
+    static Set<String> getPackageNames(final Iterable<String> classes)
     {
-        final Set<String> packages = new HashSet<String>();
-
-        for(String clazz:classes)
-        {
-            packages.add(getPackageName(clazz));
-        }
-
-        return Collections.unmodifiableSet(packages);
+        return ImmutableSet.copyOf(transform(classes, PackageName.INSTANCE));
     }
 
     /**
@@ -95,13 +90,27 @@ public final class TransformStageUtils
      * @param jarPath the entry name inside jar.
      * @return class name, or null if the path is not a class file.
      */
-    static String jarPathToClassName(String jarPath)
+    static String jarPathToClassName(final String jarPath)
     {
-        if (jarPath == null || !jarPath.contains(".class"))
+        if ((jarPath == null) || !jarPath.contains(".class"))
         {
             return null;
         }
 
         return jarPath.replaceAll("/", ".").substring(0, jarPath.length() - ".class".length());
+    }
+
+    /**
+     * Class name -> package name transformer.
+     */
+    enum PackageName implements Function<String, String>
+    {
+        INSTANCE;
+
+        public String apply(final String fullClassName)
+        {
+            // A valid java class name must have a dot in it.
+            return fullClassName.substring(0, fullClassName.lastIndexOf("."));
+        }
     }
 }
