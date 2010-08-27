@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.osgi.context.BundleContextAware;
+import org.springframework.osgi.service.ServiceUnavailableException;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -106,10 +107,12 @@ public class HostComponentFactoryBean implements FactoryBean, BundleContextAware
     {
         private static final Logger log = LoggerFactory.getLogger(DynamicServiceInvocationHandler.class);
         private volatile Object service;
+        private final String filter;
 
 
         DynamicServiceInvocationHandler(final BundleContext bundleContext, final String filter)
         {
+            this.filter = filter;
             try
             {
                 ServiceReference[] refs = bundleContext.getServiceReferences(null, filter);
@@ -142,6 +145,10 @@ public class HostComponentFactoryBean implements FactoryBean, BundleContextAware
 
         public Object invoke(final Object o, final Method method, final Object[] objects) throws Throwable
         {
+            if (service == null)
+            {
+                throw new IllegalStateException("Unable to locate host component with filter: " + filter);
+            }
             try
             {
                 return method.invoke(service, objects);

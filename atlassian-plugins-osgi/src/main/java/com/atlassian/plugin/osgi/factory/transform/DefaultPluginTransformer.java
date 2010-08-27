@@ -8,6 +8,7 @@ import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.util.PluginUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
+import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -259,8 +261,9 @@ public class DefaultPluginTransformer implements PluginTransformer
     {
         // get a temp file
         File tempFile = new File(bundleCacheDir, generateCacheName(zipFile));
+
         // delete it, otherwise you cannot rename your existing zip to it.
-        byte[] buf = new byte[1024];
+        byte[] buf = new byte[64 * 1024];
 
 
         ZipInputStream zin = null;
@@ -269,6 +272,7 @@ public class DefaultPluginTransformer implements PluginTransformer
         {
             zin = new ZipInputStream(new FileInputStream(zipFile));
             out = new ZipOutputStream(new FileOutputStream(tempFile));
+            out.setLevel(Deflater.NO_COMPRESSION);
 
             ZipEntry entry = zin.getNextEntry();
             while (entry != null)
