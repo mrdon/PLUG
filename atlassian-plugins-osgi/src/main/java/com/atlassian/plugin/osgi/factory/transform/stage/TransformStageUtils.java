@@ -23,6 +23,8 @@ import java.util.jar.JarInputStream;
 
 /**
  * Contains utility functions for use in TransformStage implementations.
+ *
+ * @since 2.6.0 
  */
 final class TransformStageUtils
 {

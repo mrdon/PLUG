@@ -8,6 +8,8 @@ import java.util.jar.JarEntry;
 
 /**
  * The stages which scan for inner jars in attempt to create bundle classpath.
+ *
+ * @since 2.6.0
  */
 public class ScanInnerJarsStage implements TransformStage
 {
