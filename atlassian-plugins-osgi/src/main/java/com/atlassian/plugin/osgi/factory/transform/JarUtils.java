@@ -24,8 +24,7 @@ public final class JarUtils
      * Not for instantiation.
      */
     private JarUtils()
-    {
-    }
+    {}
 
     /**
      * Get the {@link Manifest} from a Jar file, or create a new one if there isn't one already.
@@ -78,7 +77,7 @@ public final class JarUtils
      * @return the result of the extractor
      * @throws RuntimeException if there are problems accessing the jar contents.
      */
-    static <T> T withJar(final File file, final Extractor<T> extractor)
+    public static <T> T withJar(final File file, final Extractor<T> extractor)
     {
         JarFile jarFile = null;
         try
@@ -88,19 +87,11 @@ public final class JarUtils
         }
         catch (final IOException e)
         {
-            throw new IllegalArgumentException("File must be a jar", e);
+            throw new IllegalArgumentException("File must be a jar: " + file, e);
         }
         finally
         {
-            if (jarFile != null)
-            {
-                try
-                {
-                    jarFile.close();
-                }
-                catch (final IOException ignore)
-                {}
-            }
+            closeQuietly(jarFile);
         }
     }
 
@@ -109,7 +100,7 @@ public final class JarUtils
      *
      * @param jarFile the file to close.
      */
-    public static void closeQuietly(JarFile jarFile)
+    public static void closeQuietly(final JarFile jarFile)
     {
         if (jarFile != null)
         {
@@ -117,14 +108,12 @@ public final class JarUtils
             {
                 jarFile.close();
             }
-            catch (IOException e)
-            {
-                // quiet
-            }
+            catch (final IOException ignore)
+            {}
         }
     }
 
-    interface Extractor<T> extends Function<JarFile, T>
+    public interface Extractor<T> extends Function<JarFile, T>
     {}
 
     enum ManifestExtractor implements Extractor<Manifest>
