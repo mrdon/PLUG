@@ -23,7 +23,6 @@ import javax.print.attribute.AttributeSet;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -393,7 +392,7 @@ public class TestGenerateManifestStage extends TestCase
                 .build();
 
         final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(plugin), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
-        context.addBundleClasspath("META-INF/lib/innerjar.jar");
+        context.addBundleClasspathJar("META-INF/lib/innerjar.jar");
         final Attributes attrs = executeStage(context);
 
         assertEquals("1.0", attrs.getValue(Constants.BUNDLE_VERSION));

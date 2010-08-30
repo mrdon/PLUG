@@ -2,11 +2,16 @@ package com.atlassian.plugin.osgi.factory.transform.stage;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.*;
-import java.util.jar.JarEntry;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.jar.Manifest;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -27,7 +32,6 @@ import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.parsers.XmlDescriptorParser;
-import sun.tools.jar.resources.jar;
 
 /**
  * Generates an OSGi manifest if not already defined.  Should be the last stage.
@@ -118,7 +122,7 @@ public class GenerateManifestStage implements TransformStage
                 bundleClassPaths.add(".");
 
                 // inner jars. make the order deterministic here.
-                List<String> innerClassPaths = new ArrayList<String>(context.getBundleClassPaths());
+                List<String> innerClassPaths = new ArrayList<String>(context.getBundleClassPathJars());
                 Collections.sort(innerClassPaths);
                 bundleClassPaths.addAll(innerClassPaths);
 

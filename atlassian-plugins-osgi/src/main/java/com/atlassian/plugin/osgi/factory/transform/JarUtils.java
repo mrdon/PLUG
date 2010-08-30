@@ -18,8 +18,15 @@ import java.util.zip.ZipEntry;
  * 
  * @since 2.6
  */
-final class JarUtils
+public final class JarUtils
 {
+    /**
+     * Not for instantiation.
+     */
+    private JarUtils()
+    {
+    }
+
     /**
      * Get the {@link Manifest} from a Jar file, or create a new one if there isn't one already.
      * 
@@ -93,6 +100,26 @@ final class JarUtils
                 }
                 catch (final IOException ignore)
                 {}
+            }
+        }
+    }
+
+    /**
+     * Quietly close jar file.
+     *
+     * @param jarFile the file to close.
+     */
+    public static void closeQuietly(JarFile jarFile)
+    {
+        if (jarFile != null)
+        {
+            try
+            {
+                jarFile.close();
+            }
+            catch (IOException e)
+            {
+                // quiet
             }
         }
     }

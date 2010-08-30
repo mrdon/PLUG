@@ -21,7 +21,7 @@ public class ScanInnerJarsStage implements TransformStage
             if (jarEntry.getName().startsWith(INNER_JARS_BASE_LOCATION)
                 && jarEntry.getName().endsWith(".jar"))
             {
-                context.addBundleClasspath(jarEntry.getName());
+                context.addBundleClasspathJar(jarEntry.getName());
             }
         }
     }

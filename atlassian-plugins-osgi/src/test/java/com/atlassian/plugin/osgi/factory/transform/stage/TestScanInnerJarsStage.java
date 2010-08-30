@@ -49,11 +49,11 @@ public class TestScanInnerJarsStage extends TestCase
         stage.execute(context);
 
         // the inner jar in wrong location should not be found.
-        assertFalse(context.getBundleClassPaths().contains("myjar3.jar"));
+        assertFalse(context.getBundleClassPathJars().contains("myjar3.jar"));
 
         // the inner jars in the right location should be found.
-        assertEquals(context.getBundleClassPaths().size(), 2);
-        assertTrue(context.getBundleClassPaths().contains(ScanInnerJarsStage.INNER_JARS_BASE_LOCATION + "myjar1.jar"));
-        assertTrue(context.getBundleClassPaths().contains(ScanInnerJarsStage.INNER_JARS_BASE_LOCATION + "myjar2.jar"));
+        assertEquals(context.getBundleClassPathJars().size(), 2);
+        assertTrue(context.getBundleClassPathJars().contains(ScanInnerJarsStage.INNER_JARS_BASE_LOCATION + "myjar1.jar"));
+        assertTrue(context.getBundleClassPathJars().contains(ScanInnerJarsStage.INNER_JARS_BASE_LOCATION + "myjar2.jar"));
     }
 }
