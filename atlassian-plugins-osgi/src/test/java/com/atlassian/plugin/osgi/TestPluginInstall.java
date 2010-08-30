@@ -758,6 +758,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
         long start = System.currentTimeMillis();
         // Set dev mode temporarily
         System.setProperty("atlassian.dev.mode", "true");
+        System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "7");
         try
         {
             initPluginManager();
@@ -768,6 +769,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
         {
             // Undo dev mode
             System.setProperty("atlassian.dev.mode", "false");
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
         }
     }
 
