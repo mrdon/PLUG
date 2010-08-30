@@ -34,9 +34,7 @@ public class TestTransformStageUtils extends TestCase
                     "</atlassian-plugin>")
             .build();
 
-        FileInputStream fis = new FileInputStream(pluginFile);
-        JarInputStream jis = new JarInputStream(fis);
-        Set<String> classes = TransformStageUtils.scanJarForItems(jis, Sets.newHashSet("my.Foo"), TransformStageUtils.JarEntryToClassName.INSTANCE);
+        Set<String> classes = TransformStageUtils.scanJarForItems(new TransformStageUtils.JarFileStream(pluginFile), Sets.newHashSet("my.Foo"), TransformStageUtils.JarEntryToClassName.INSTANCE);
 
         assertEquals(1, classes.size());
         assertTrue(classes.contains("my.Foo"));
