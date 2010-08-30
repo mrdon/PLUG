@@ -129,7 +129,7 @@ public class ComponentSpringStage implements TransformStage
                                                               declaredInterfaces,
                                                               context.getBundleClassPathJars());
             }
-            catch (IOException e)
+            catch (PluginTransformationException e)
             {
                 throw new PluginTransformationException("Error while calculating import manifest", e);
             }
@@ -160,7 +160,7 @@ public class ComponentSpringStage implements TransformStage
      */
     private Set<String> calculateRequiredImports(final File pluginFile,
                                                  final Set<String> declaredInterfaces,
-                                                 final Set<String> innerJars) throws IOException
+                                                 final Set<String> innerJars)
     {
         // we only do it if at least one interface is declared as part of component element.
         if (declaredInterfaces.size() > 0)
@@ -176,6 +176,10 @@ public class ComponentSpringStage implements TransformStage
                 shallowMatches =TransformStageUtils.scanJarForItems(jarStream,
                                                                     declaredInterfaces,
                                                                     TransformStageUtils.JarEntryToClassName.INSTANCE);
+            }
+            catch (final IOException ioe)
+            {
+                throw new PluginTransformationException("Error reading jar:" + pluginFile.getName(), ioe);
             }
             finally
             {
