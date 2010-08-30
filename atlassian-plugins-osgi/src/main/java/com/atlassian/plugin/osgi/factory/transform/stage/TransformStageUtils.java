@@ -41,31 +41,25 @@ final class TransformStageUtils
      * @param mapper function which maps JarEntry to item which then can be matched against expectedItems, cannot be null.
      *
      * @return the set of matched items.
+     * @throws IOException if the inputStream can't find the next entry or it is somehow corrupt
      */
-    static Set<String> scanJarForItems(final JarInputStream inputStream, final Set<String> expectedItems, final Function<JarEntry, String> mapper)
+    static Set<String> scanJarForItems(final JarInputStream inputStream, final Set<String> expectedItems, final Function<JarEntry, String> mapper) throws IOException
     {
         final Set<String> matches = new HashSet<String>();
 
-        try
+        JarEntry entry;
+        while ((entry = inputStream.getNextJarEntry()) != null)
         {
-            JarEntry entry;
-            while ((entry = inputStream.getNextJarEntry()) != null)
+            final String item = mapper.apply(entry);
+            if ((item != null) && expectedItems.contains(item))
             {
-                final String item = mapper.apply(entry);
-                if ((item != null) && expectedItems.contains(item))
+                matches.add(item);
+                // early exit opportunity
+                if (matches.size() == expectedItems.size())
                 {
-                    matches.add(item);
-                    // early exit opportunity
-                    if (matches.size() == expectedItems.size())
-                    {
-                        break;
-                    }
+                    break;
                 }
             }
-        }
-        catch (final IOException ex)
-        {
-            throw new PluginTransformationException(ex);
         }
 
         return Collections.unmodifiableSet(matches);
