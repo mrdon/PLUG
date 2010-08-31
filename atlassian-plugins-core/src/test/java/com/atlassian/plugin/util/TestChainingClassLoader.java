@@ -113,6 +113,16 @@ public class TestChainingClassLoader extends TestCase
         assertEquals("foo", IOUtils.readLines(ccl.getResourceAsStream("my/foo.txt")).get(0));
     }
 
+    public void testLoadClassOnlyInChainedClassloaders() throws Exception
+    {
+        ClassLoader cl1 = new PluginJarBuilder().
+                getClassLoader();
+        ClassLoader cl2 = new PluginJarBuilder().
+                getClassLoader();
+        ChainingClassLoader ccl = new ChainingClassLoader(cl1, cl2);
+        assertEquals(cl1, ccl.loadClass(getClass().getName()).getClassLoader());
+    }
+
     private URLClassLoader buildClassLoaderWithResources(Map<String,String> files)
             throws IOException
     {
