@@ -153,11 +153,14 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
     private DownloadableResource locateBatchPluginResource(final BatchPluginResource batchResource)
     {
         final ModuleDescriptor<?> moduleDescriptor = pluginAccessor.getEnabledPluginModule(batchResource.getModuleCompleteKey());
-        for (final ResourceDescriptor resourceDescriptor : Iterables.filter(moduleDescriptor.getResourceDescriptors(), new TypeFilter(DOWNLOAD_TYPE)))
+        if (moduleDescriptor != null)
         {
-            if (isResourceInBatch(resourceDescriptor, batchResource))
+            for (final ResourceDescriptor resourceDescriptor : Iterables.filter(moduleDescriptor.getResourceDescriptors(), new TypeFilter(DOWNLOAD_TYPE)))
             {
-                batchResource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
+                if (isResourceInBatch(resourceDescriptor, batchResource))
+                {
+                    batchResource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
+                }
             }
         }
 
