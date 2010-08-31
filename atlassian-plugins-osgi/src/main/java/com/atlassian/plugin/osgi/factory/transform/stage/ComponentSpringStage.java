@@ -1,29 +1,28 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
-import static com.atlassian.plugin.osgi.factory.transform.stage.TransformStageUtils.scanJarForItems;
+import com.atlassian.plugin.osgi.factory.transform.TransformStage;
+import com.atlassian.plugin.osgi.factory.transform.TransformContext;
+import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
 import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
-import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
-import com.atlassian.plugin.osgi.factory.transform.TransformContext;
-import com.atlassian.plugin.osgi.factory.transform.TransformStage;
-import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.validation.ValidationPattern;
-
+import com.atlassian.plugin.util.PluginUtils;
+import com.google.common.collect.Sets;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
-
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.JarInputStream;
 
 /**
  * Transforms component tags in the plugin descriptor into the appropriate spring XML configuration file
@@ -37,28 +36,27 @@ public class ComponentSpringStage implements TransformStage
 
     public static final String BEAN_SOURCE = "Plugin Component";
 
-    public void execute(final TransformContext context) throws PluginTransformationException
+    private static final Logger LOG = LoggerFactory.getLogger(ComponentSpringStage.class);
+
+    public void execute(TransformContext context) throws PluginTransformationException
     {
         if (SpringHelper.shouldGenerateFile(context, SPRING_XML))
         {
-            final Document springDoc = SpringHelper.createSpringDocument();
-            final Element root = springDoc.getRootElement();
-            @SuppressWarnings("unchecked")
-            final List<Element> elements = context.getDescriptorDocument().getRootElement().elements("component");
+            Document springDoc = SpringHelper.createSpringDocument();
+            Element root = springDoc.getRootElement();
+            List<Element> elements = context.getDescriptorDocument().getRootElement().elements("component");
 
-            final ValidationPattern validation = createPattern().
-                rule(
-                    test("@key").withError("The key is required"),
-                    test("@class").withError("The class is required"),
-                    test("not(@public) or interface or @interface").
-                        withError("Interfaces must be declared for public components"),
-                    test("not(service-properties) or count(service-properties/entry[@key and @value]) > 0").
-                        withError("The service-properties element must contain at least one entry element with key and value attributes")
-            );
+            ValidationPattern validation = createPattern().
+                    rule(
+                        test("@key").withError("The key is required"),
+                        test("@class").withError("The class is required"),
+                        test("not(@public) or interface or @interface").withError("Interfaces must be declared for public components"),
+                        test("not(service-properties) or count(service-properties/entry[@key and @value]) > 0")
+                                .withError("The service-properties element must contain at least one entry element with key and value attributes"));
 
             final Set<String> declaredInterfaces = new HashSet<String>();
 
-            for (final Element component : elements)
+            for (Element component : elements)
             {
                 if (!PluginUtils.doesModuleElementApplyToApplication(component, context.getApplicationKeys()))
                 {
@@ -66,25 +64,24 @@ public class ComponentSpringStage implements TransformStage
                 }
                 validation.evaluate(component);
 
-                final String beanId = component.attributeValue("key");
+                String beanId = component.attributeValue("key");
                 // make sure the new bean id is not already in use.
                 context.trackBean(beanId, BEAN_SOURCE);
 
-                final Element bean = root.addElement("beans:bean");
+                Element bean = root.addElement("beans:bean");
                 bean.addAttribute("id", beanId);
                 bean.addAttribute("alias", component.attributeValue("alias"));
                 bean.addAttribute("class", component.attributeValue("class"));
                 bean.addAttribute("autowire", "default");
                 if ("true".equalsIgnoreCase(component.attributeValue("public")))
                 {
-                    final Element osgiService = root.addElement("osgi:service");
+                    Element osgiService = root.addElement("osgi:service");
                     osgiService.addAttribute("id", component.attributeValue("key") + "_osgiService");
                     osgiService.addAttribute("ref", component.attributeValue("key"));
 
-                    final List<String> interfaceNames = new ArrayList<String>();
-                    @SuppressWarnings("unchecked")
-                    final List<Element> compInterfaces = component.elements("interface");
-                    for (final Element inf : compInterfaces)
+                    List<String> interfaceNames = new ArrayList<String>();
+                    List<Element> compInterfaces = component.elements("interface");
+                    for (Element inf : compInterfaces)
                     {
                         interfaceNames.add(inf.getTextTrim());
                     }
@@ -96,23 +93,21 @@ public class ComponentSpringStage implements TransformStage
                     // Collect for the interface names which will be used for import generation.
                     declaredInterfaces.addAll(interfaceNames);
 
-                    final Element interfaces = osgiService.addElement("osgi:interfaces");
-                    for (final String name : interfaceNames)
+                    Element interfaces = osgiService.addElement("osgi:interfaces");
+                    for (String name : interfaceNames)
                     {
                         ensureExported(name, context);
-                        final Element e = interfaces.addElement("beans:value");
+                        Element e = interfaces.addElement("beans:value");
                         e.setText(name);
                     }
 
-                    final Element svcprops = component.element("service-properties");
+                    Element svcprops = component.element("service-properties");
                     if (svcprops != null)
                     {
-                        final Element targetSvcprops = osgiService.addElement("osgi:service-properties");
-                        @SuppressWarnings("unchecked")
-                        final List<Element> entries = svcprops.elements("entry");
-                        for (final Element prop : entries)
+                        Element targetSvcprops = osgiService.addElement("osgi:service-properties");
+                        for (Element prop : new ArrayList<Element>(svcprops.elements("entry")))
                         {
-                            final Element e = targetSvcprops.addElement("beans:entry");
+                            Element e = targetSvcprops.addElement("beans:entry");
                             e.addAttribute("key", prop.attributeValue("key"));
                             e.addAttribute("value", prop.attributeValue("value"));
                         }
@@ -127,20 +122,30 @@ public class ComponentSpringStage implements TransformStage
             }
 
             // calculate the required interfaces to be imported. this is (all the classes) - (classes available in the plugin).
-            Set<String> requiredInterfaces = calculateRequiredImports(context.getPluginFile(), declaredInterfaces, context.getBundleClassPathJars());
+            Set<String> requiredInterfaces;
+            try
+            {
+                requiredInterfaces = calculateRequiredImports(context.getPluginFile(),
+                                                              declaredInterfaces,
+                                                              context.getBundleClassPathJars());
+            }
+            catch (PluginTransformationException e)
+            {
+                throw new PluginTransformationException("Error while calculating import manifest", e);
+            }
 
             // dump all the outstanding imports as extra imports.
             context.getExtraImports().addAll(TransformStageUtils.getPackageNames(requiredInterfaces));
         }
     }
 
-    private void ensureExported(final String className, final TransformContext context)
+    private void ensureExported(String className, TransformContext context)
     {
-        final String pkg = className.substring(0, className.lastIndexOf('.'));
+        String pkg = className.substring(0, className.lastIndexOf('.'));
         if (!context.getExtraExports().contains(pkg))
         {
-            final String fileName = className.replace('.', '/') + ".class";
-
+            String fileName = className.replace('.','/') + ".class";
+            
             if (context.getPluginArtifact().doesResourceExist(fileName))
             {
                 context.getExtraExports().add(pkg);
@@ -153,14 +158,33 @@ public class ComponentSpringStage implements TransformStage
      *
      * @return the set of interfaces that cannot be resolved in the pluginFile.
      */
-    private Set<String> calculateRequiredImports(final File pluginFile, final Set<String> declaredInterfaces, final Set<String> innerJars) 
+    private Set<String> calculateRequiredImports(final File pluginFile,
+                                                 final Set<String> declaredInterfaces,
+                                                 final Set<String> innerJars)
     {
         // we only do it if at least one interface is declared as part of component element.
         if (declaredInterfaces.size() > 0)
         {
             // scan for class files of interest in the jar file, not including classes in inner jars.
-            final Set<String> shallowMatches = scanJarForItems(new TransformStageUtils.JarFileStream(pluginFile), declaredInterfaces,
-                TransformStageUtils.JarEntryToClassName.INSTANCE);
+            final Set<String> shallowMatches;
+            FileInputStream fis = null;
+            JarInputStream jarStream = null;
+            try
+            {
+                fis = new FileInputStream(pluginFile);
+                jarStream = new JarInputStream(fis);
+                shallowMatches =TransformStageUtils.scanJarForItems(jarStream,
+                                                                    declaredInterfaces,
+                                                                    TransformStageUtils.JarEntryToClassName.INSTANCE);
+            }
+            catch (final IOException ioe)
+            {
+                throw new PluginTransformationException("Error reading jar:" + pluginFile.getName(), ioe);
+            }
+            finally
+            {
+                TransformStageUtils.closeNestedStreamQuietly(jarStream, fis);
+            }
 
             // the outstanding set = declared set - shallow match set
             final Set<String> remainders = Sets.newHashSet(Sets.difference(declaredInterfaces, shallowMatches));

@@ -9,11 +9,9 @@ import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException
 import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.Function;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -45,32 +43,25 @@ final class TransformStageUtils
      * @param mapper function which maps JarEntry to item which then can be matched against expectedItems, cannot be null.
      *
      * @return the set of matched items.
+     * @throws IOException if the inputStream can't find the next entry or it is somehow corrupt
      */
-    static Set<String> scanJarForItems(final JarStreamSupplier supplier, final Set<String> expectedItems, final Function<JarEntry, String> mapper)
+    static Set<String> scanJarForItems(final JarInputStream inputStream, final Set<String> expectedItems, final Function<JarEntry, String> mapper) throws IOException
     {
-        final JarInputStream inputStream = supplier.get();
         final Set<String> matches = new HashSet<String>();
 
         JarEntry entry;
-        try
+        while ((entry = inputStream.getNextJarEntry()) != null)
         {
-            while ((entry = inputStream.getNextJarEntry()) != null)
+            final String item = mapper.apply(entry);
+            if ((item != null) && expectedItems.contains(item))
             {
-                final String item = mapper.apply(entry);
-                if ((item != null) && expectedItems.contains(item))
+                matches.add(item);
+                // early exit opportunity
+                if (matches.size() == expectedItems.size())
                 {
-                    matches.add(item);
-                    // early exit opportunity
-                    if (matches.size() == expectedItems.size())
-                    {
-                        break;
-                    }
+                    break;
                 }
             }
-        }
-        catch (final IOException ex)
-        {
-            throw new PluginTransformationException("Exception getting entries from JarInputStream: " + supplier, ex);
         }
 
         return Collections.unmodifiableSet(matches);
@@ -98,25 +89,23 @@ final class TransformStageUtils
                 // scan each inner jar.
                 for (final String innerJar : innerJars)
                 {
-                    final JarStreamSupplier innerJarStream = new JarStreamSupplier("Plugin file: ", pluginFile, " inner jar: ", innerJar)
+                    JarInputStream innerJarStream = null;
+                    try
                     {
-                        public JarInputStream get()
-                        {
-                            try
-                            {
-                                return new JarInputStream(pluginJarFile.getInputStream(pluginJarFile.getEntry(innerJar)));
-                            }
-                            catch (final IOException e)
-                            {
-                                throw new PluginTransformationException(
-                                    "Cannot open innerJar stream for pluginFile: " + pluginFile + " innerJar: " + innerJar, e);
-                            }
-                        }
-                    };
-                    // read inner jar into JarInputStream.
-                    final Set<String> innerMatches = scanJarForItems(innerJarStream, expectedClasses, JarEntryToClassName.INSTANCE);
-                    // recalculate the matches.
-                    matches.addAll(innerMatches);
+                        // read inner jar into JarInputStream.
+                        innerJarStream = new JarInputStream(pluginJarFile.getInputStream(pluginJarFile.getEntry(innerJar)));
+                        final Set<String> innerMatches = scanJarForItems(innerJarStream, expectedClasses, JarEntryToClassName.INSTANCE);
+                        // recalculate the matches.
+                        matches.addAll(innerMatches);
+                    }
+                    catch (final IOException ioe)
+                    {
+                        throw new PluginTransformationException("Error reading inner jar:" + innerJar + " in file: " + pluginFile, ioe);
+                    }
+                    finally
+                    {
+                        closeNestedStreamQuietly(innerJarStream);
+                    }
 
                     // early exit.
                     if (matches.size() == expectedClasses.size())
@@ -216,50 +205,6 @@ final class TransformStageUtils
             }
 
             return jarPath.replaceAll("/", ".").substring(0, jarPath.length() - ".class".length());
-        }
-    }
-
-    static abstract class JarStreamSupplier implements Supplier<JarInputStream>
-    {
-        private final Object[] names;
-
-        JarStreamSupplier(final Object... names)
-        {
-            this.names = names;
-        }
-
-        @Override
-        public String toString()
-        {
-            final StringBuilder result = new StringBuilder();
-            for (final Object name : names)
-            {
-                result.append(name);
-            }
-            return result.toString();
-        }
-    }
-
-    static class JarFileStream extends JarStreamSupplier
-    {
-        private final File pluginFile;
-
-        JarFileStream(final File pluginFile)
-        {
-            super("Plugin file: ", pluginFile);
-            this.pluginFile = pluginFile;
-        }
-
-        public JarInputStream get()
-        {
-            try
-            {
-                return new JarInputStream(new FileInputStream(pluginFile));
-            }
-            catch (final IOException e)
-            {
-                throw new PluginTransformationException("Cannot open stream for pluginFile: " + pluginFile, e);
-            }
         }
     }
 }
