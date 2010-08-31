@@ -1,18 +1,5 @@
 package com.atlassian.plugin.webresource;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import com.atlassian.plugin.util.PluginUtils;
-import com.atlassian.plugin.webresource.transformer.WebResourceTransformer;
-import com.atlassian.plugin.webresource.transformer.WebResourceTransformerModuleDescriptor;
-import junit.framework.TestCase;
-
-import org.dom4j.DocumentHelper;
-
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
@@ -22,9 +9,20 @@ import com.atlassian.plugin.servlet.DownloadableClasspathResource;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.ForwardableResource;
 import com.atlassian.plugin.servlet.ServletContextFactory;
+import com.atlassian.plugin.util.PluginUtils;
+import com.atlassian.plugin.webresource.transformer.WebResourceTransformer;
+import com.atlassian.plugin.webresource.transformer.WebResourceTransformerModuleDescriptor;
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
+import junit.framework.TestCase;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -404,6 +402,18 @@ public class TestPluginResourceLocatorImpl extends TestCase
         final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, params);
 
         assertTrue(resource instanceof BatchPluginResource);
+    }
+
+    public void testGetDownloadableBatchResourceWhenModuleIsUnkown() throws Exception
+    {
+        final String url = "/download/batch/" + TEST_MODULE_COMPLETE_KEY + "invalid.stuff" + "/all.css";
+        final Map<String, String> params = new TreeMap<String, String>();
+        params.put("ieonly", "true");
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY + "invalid.stuff")), null);
+
+        DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, params);
+        assertNull(resource);
     }
 
     public void testGetDownloadableBatchResourceFallbacksToSingle() throws Exception
