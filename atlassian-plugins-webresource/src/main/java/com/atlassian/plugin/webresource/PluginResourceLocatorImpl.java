@@ -167,11 +167,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         // if batch is empty, check if we can locate a plugin resource
         if (batchResource.isEmpty())
         {
-            final DownloadableResource resource = locatePluginResource(batchResource.getModuleCompleteKey(), batchResource.getResourceName());
-            if (resource != null)
-            {
-                return resource;
-            }
+            return locatePluginResource(batchResource.getModuleCompleteKey(), batchResource.getResourceName());
         }
 
         return batchResource;
