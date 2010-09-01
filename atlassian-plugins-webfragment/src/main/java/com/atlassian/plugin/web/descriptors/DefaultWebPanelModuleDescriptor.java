@@ -9,7 +9,6 @@ import org.dom4j.Element;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.hostcontainer.HostContainer;
@@ -96,7 +95,7 @@ import com.google.common.collect.Iterables;
  * 
  * @since 2.5.0
  */
-public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescriptor<WebPanel> implements WeightedDescriptor, StateAware, ConditionalDescriptor
+public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescriptor<WebPanel> implements WebPanelModuleDescriptor
 {
     /**
      * Host applications should use this string when registering the web panel
@@ -167,6 +166,7 @@ public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescrip
                         final EmbeddedTemplateWebPanel panel = hostContainer.create(EmbeddedTemplateWebPanel.class);
                         panel.setTemplateBody(body);
                         panel.setResourceType(getRequiredResourceType(resource));
+                        panel.setContextProvider(getContextProvider());
                         panel.setPlugin(plugin);
                         return panel;
                     }
@@ -181,6 +181,7 @@ public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescrip
                         final ResourceTemplateWebPanel panel = hostContainer.create(ResourceTemplateWebPanel.class);
                         panel.setResourceFilename(filename);
                         panel.setResourceType(getRequiredResourceType(resource));
+                        panel.setContextProvider(getContextProvider());
                         panel.setPlugin(plugin);
                         return panel;
                     }

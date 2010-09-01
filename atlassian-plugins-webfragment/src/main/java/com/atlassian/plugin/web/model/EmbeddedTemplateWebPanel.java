@@ -37,7 +37,7 @@ public class EmbeddedTemplateWebPanel extends AbstractWebPanel
         this.templateBody = templateBody;
     }
 
-    public String getHtml(Map<String, Object> context)
+    public String render(Map<String, Object> context)
     {
         try
         {

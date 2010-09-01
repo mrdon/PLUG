@@ -1,6 +1,7 @@
 package com.atlassian.plugin.web.model;
 
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.web.NoOpContextProvider;
 import com.atlassian.plugin.web.renderer.WebPanelRenderer;
 import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
@@ -17,11 +18,12 @@ public class EmbeddedTemplateWebPanelTest extends TestCase
         final PluginAccessor accessorMock = mock(PluginAccessor.class);
         when(accessorMock.getEnabledModulesByClass(WebPanelRenderer.class)).thenReturn(Collections.<WebPanelRenderer>emptyList());
 
-        final EmbeddedTemplateWebPanel embeddedTemplateWebPanel = new EmbeddedTemplateWebPanel(accessorMock);
-        embeddedTemplateWebPanel.setResourceType("static");
-        embeddedTemplateWebPanel.setTemplateBody("body");
+        final EmbeddedTemplateWebPanel webPanel = new EmbeddedTemplateWebPanel(accessorMock);
+        webPanel.setResourceType("static");
+        webPanel.setTemplateBody("body");
+        webPanel.setContextProvider(new NoOpContextProvider());
 
-        assertEquals("body", embeddedTemplateWebPanel.getHtml(Collections.<String, Object>emptyMap()));
+        assertEquals("body", webPanel.getHtml(Collections.<String, Object>emptyMap()));
     }
 
     public void testUnsupportedResourceType()
@@ -31,11 +33,12 @@ public class EmbeddedTemplateWebPanelTest extends TestCase
         when(renderer.getResourceType()).thenReturn("velocity");
         when(accessorMock.getEnabledModulesByClass(WebPanelRenderer.class)).thenReturn(ImmutableList.of(renderer));
 
-        final EmbeddedTemplateWebPanel embeddedTemplateWebPanel = new EmbeddedTemplateWebPanel(accessorMock);
-        embeddedTemplateWebPanel.setResourceType("unsupported-type");
-        embeddedTemplateWebPanel.setTemplateBody("body");
+        final EmbeddedTemplateWebPanel webPanel = new EmbeddedTemplateWebPanel(accessorMock);
+        webPanel.setResourceType("unsupported-type");
+        webPanel.setTemplateBody("body");
+        webPanel.setContextProvider(new NoOpContextProvider());
 
-        final String result = embeddedTemplateWebPanel.getHtml(Collections.<String, Object>emptyMap());
+        final String result = webPanel.getHtml(Collections.<String, Object>emptyMap());
         assertNotNull(result);
         assertTrue(result.toLowerCase().contains("error"));
     }

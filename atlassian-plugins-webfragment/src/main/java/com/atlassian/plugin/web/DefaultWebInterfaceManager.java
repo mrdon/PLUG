@@ -21,7 +21,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
     private WebFragmentHelper webFragmentHelper;
     private Map<String, List<WebSectionModuleDescriptor>> sections;
     private Map<String, List<WebItemModuleDescriptor>> items;
-    private Map<String, List<DefaultWebPanelModuleDescriptor>> panels;
+    private Map<String, List<WebPanelModuleDescriptor>> panels;
     private static final Logger log = LoggerFactory.getLogger(DefaultWebInterfaceManager.class);
 
     public static final WeightedDescriptorComparator WEIGHTED_DESCRIPTOR_COMPARATOR = new WeightedDescriptorComparator();
@@ -117,11 +117,11 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         return toWebPanels(getWebPanelDescriptors(location));
     }
 
-    private List<WebPanel> toWebPanels(List<DefaultWebPanelModuleDescriptor> descriptors)
+    private List<WebPanel> toWebPanels(List<WebPanelModuleDescriptor> descriptors)
     {
-        return Lists.transform(descriptors, new Function<DefaultWebPanelModuleDescriptor, WebPanel>()
+        return Lists.transform(descriptors, new Function<WebPanelModuleDescriptor, WebPanel>()
         {
-            public WebPanel apply(DefaultWebPanelModuleDescriptor from)
+            public WebPanel apply(WebPanelModuleDescriptor from)
             {
                 return from.getModule();
             }
@@ -129,7 +129,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
     }
 
     // TODO: probably succumb to Jed's gospel and refactor to Iterable
-    private List<DefaultWebPanelModuleDescriptor> getWebPanelDescriptors(String location)
+    private List<WebPanelModuleDescriptor> getWebPanelDescriptors(String location)
     {
         if (location == null)
         {
@@ -137,12 +137,12 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         }
         else
         {
-            List<DefaultWebPanelModuleDescriptor> result = panels.get(location);
+            List<WebPanelModuleDescriptor> result = panels.get(location);
             if (result == null) {
-                result = new ArrayList<DefaultWebPanelModuleDescriptor>(); // use a tree map so we get nice weight sorting
+                result = new ArrayList<WebPanelModuleDescriptor>(); // use a tree map so we get nice weight sorting
 
-                List<DefaultWebPanelModuleDescriptor> descriptors = pluginAccessor.getEnabledModuleDescriptorsByClass(DefaultWebPanelModuleDescriptor.class);
-                for (DefaultWebPanelModuleDescriptor descriptor : descriptors)
+                List<WebPanelModuleDescriptor> descriptors = pluginAccessor.getEnabledModuleDescriptorsByClass(WebPanelModuleDescriptor.class);
+                for (WebPanelModuleDescriptor descriptor : descriptors)
                 {
                     if (location.equalsIgnoreCase(descriptor.getLocation()))
                     {

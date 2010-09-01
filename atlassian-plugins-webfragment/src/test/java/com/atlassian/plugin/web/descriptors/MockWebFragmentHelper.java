@@ -27,6 +27,10 @@ public class MockWebFragmentHelper implements WebFragmentHelper
 
     public ContextProvider loadContextProvider(String className, Plugin plugin) throws ConditionLoadingException
     {
+        if (className.endsWith("TestContextProvider"))
+        {
+            return new TestContextProvider();
+        }
         return null;
     }
 
