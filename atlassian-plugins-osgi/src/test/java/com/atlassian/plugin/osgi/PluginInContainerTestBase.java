@@ -33,7 +33,6 @@ import com.atlassian.plugin.repositories.FilePluginInstaller;
 import com.google.common.collect.ImmutableSet;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -65,13 +64,12 @@ public abstract class PluginInContainerTestBase extends TestCase
     @Override
     public void setUp() throws Exception
     {
-        // Generate something more likely to be unique so we don't have to cleanup during init.
-        String tmpDirName = "plugin-temp-" + System.currentTimeMillis();
-        String tmpLocation = FilenameUtils.concat(System.getProperty("java.io.tmpdir"), tmpDirName);
-        tmpDir = new File(tmpLocation);
+        tmpDir = new File("target/plugin-temp").getAbsoluteFile();
+        if (tmpDir.exists())
+        {
+            FileUtils.cleanDirectory(tmpDir);
+        }
         tmpDir.mkdirs();
-        // a small leak should be ok for tests.
-        tmpDir.deleteOnExit();
         cacheDir = new File(tmpDir, "cache");
         cacheDir.mkdir();
         pluginsDir = new File(tmpDir, "plugins");
