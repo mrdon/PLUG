@@ -1,7 +1,5 @@
 package com.atlassian.plugin.util;
 
-import com.google.common.collect.ImmutableSet;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,13 +14,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
-
-import static java.util.Collections.emptyMap;
 
 /**
  * A class loader that delegates to a list of class loaders. The order is important as classes and resources will be
- * loaded from the first classloader that can load them.
+ * loaded from the first classloader that can load them.  This class is optimized for a small number of classloaders.
  *
  * @since 2.6.0
  */
@@ -56,6 +51,7 @@ public class ChainingClassLoader extends ClassLoader
      */
     public ChainingClassLoader(Map<String, String> resourceRedirects, ClassLoader... classLoaders)
     {
+        super(null);
         Validate.notNull(resourceRedirects);
         this.resourceRedirects = resourceRedirects;
 
