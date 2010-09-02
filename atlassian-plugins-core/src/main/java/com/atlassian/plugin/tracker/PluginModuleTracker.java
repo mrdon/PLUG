@@ -8,13 +8,12 @@ import com.atlassian.plugin.ModuleDescriptor;
  *
  * @since 2.6.0
  */
-public interface PluginModuleTracker<T extends ModuleDescriptor>
+public interface PluginModuleTracker<M, T extends ModuleDescriptor<M>>
 {
     /**
      * Implement this to customize how and which descriptors are stored
-     * @param <T> The descriptor type
      */
-    interface Customizer<T extends ModuleDescriptor>
+    interface Customizer<M, T extends ModuleDescriptor<M>>
     {
         /**
          * Called before adding the descriptor to the internal tracker
@@ -32,20 +31,19 @@ public interface PluginModuleTracker<T extends ModuleDescriptor>
     }
 
     /**
-     * @return a live view of enabled module descriptors
+     * @return a snapshot of the currently tracked enabled module descriptors
      */
     Iterable<T> getModuleDescriptors();
 
     /**
-     * Gets a live view of enabled module instances
-     * @param moduleClass The module class, for type safety
-     * @param <MT> The type of module class
+     * Gets a snapshot of the currently tracked enabled module instances
      * @return The module instances
      */
-    <MT> Iterable<MT> getModules(Class<MT> moduleClass);
+    Iterable<M> getModules();
 
     /**
-     * @return The number of module descriptors currently tracked.
+     * @return The number of module descriptors currently tracked.  Should only be used for reporting purposes as it
+     * only reflects the size at exactly the calling time.
      */
     int size();
 

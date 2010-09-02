@@ -32,14 +32,14 @@ public class TestDefaultPluginModuleTracker extends TestCase
         pluginAccessor = mock(PluginAccessor.class);
         when(pluginAccessor.getEnabledPlugins()).thenReturn(Collections.<Plugin>emptyList());
         pluginEventManager = new DefaultPluginEventManager();
-        tracker = new DefaultPluginModuleTracker(pluginAccessor, pluginEventManager);
+        tracker = new DefaultPluginModuleTracker<Object, MyModuleDescriptor>(pluginAccessor, pluginEventManager, MyModuleDescriptor.class);
     }
 
     public void testAddModule()
     {
         assertFalse(tracker.getModuleDescriptors().iterator().hasNext());
         assertEquals(0, tracker.size());
-        ModuleDescriptor descriptor = mock(ModuleDescriptor.class);
+        MyModuleDescriptor descriptor = mock(MyModuleDescriptor.class);
         pluginEventManager.broadcast(new PluginModuleEnabledEvent(descriptor));
         assertEquals(1, tracker.size());
         assertEquals(descriptor, tracker.getModuleDescriptors().iterator().next());
@@ -49,7 +49,7 @@ public class TestDefaultPluginModuleTracker extends TestCase
     {
         assertFalse(tracker.getModuleDescriptors().iterator().hasNext());
         assertEquals(0, tracker.size());
-        ModuleDescriptor descriptor = mock(ModuleDescriptor.class);
+        MyModuleDescriptor descriptor = mock(MyModuleDescriptor.class);
         pluginEventManager.broadcast(new PluginModuleEnabledEvent(descriptor));
         assertEquals(1, tracker.size());
         assertEquals(descriptor, tracker.getModuleDescriptors().iterator().next());
@@ -60,7 +60,7 @@ public class TestDefaultPluginModuleTracker extends TestCase
 
     public void testRemovePlugin()
     {
-        ModuleDescriptor descriptor = mock(ModuleDescriptor.class);
+        MyModuleDescriptor descriptor = mock(MyModuleDescriptor.class);
         Plugin plugin = mock(Plugin.class);
         when(descriptor.getPlugin()).thenReturn(plugin);
         when(plugin.getModuleDescriptors()).thenReturn(Arrays.<ModuleDescriptor<?>>asList(descriptor));
@@ -73,19 +73,22 @@ public class TestDefaultPluginModuleTracker extends TestCase
 
     public void testAddModuleWithCustomizer()
     {
-        ModuleDescriptor oldDescriptor = mock(ModuleDescriptor.class);
-        final ModuleDescriptor newDescriptor = mock(ModuleDescriptor.class);
-        PluginModuleTracker tracker = new DefaultPluginModuleTracker(pluginAccessor, pluginEventManager, new PluginModuleTracker.Customizer()
-        {
-            public ModuleDescriptor adding(ModuleDescriptor descriptor)
-            {
-                return newDescriptor;
-            }
+        MyModuleDescriptor oldDescriptor = mock(MyModuleDescriptor.class);
+        final MyModuleDescriptor newDescriptor = mock(MyModuleDescriptor.class);
+        PluginModuleTracker tracker = new DefaultPluginModuleTracker<Object, MyModuleDescriptor>(
+                pluginAccessor, pluginEventManager,
+                MyModuleDescriptor.class,
+                new PluginModuleTracker.Customizer<Object, MyModuleDescriptor>()
+                {
+                    public MyModuleDescriptor adding(MyModuleDescriptor descriptor)
+                    {
+                        return newDescriptor;
+                    }
 
-            public void removed(ModuleDescriptor descriptor)
-            {
-            }
-        });
+                    public void removed(MyModuleDescriptor descriptor)
+                    {
+                    }
+                });
         pluginEventManager.broadcast(new PluginModuleEnabledEvent(oldDescriptor));
         assertEquals(1, tracker.size());
         assertEquals(newDescriptor, tracker.getModuleDescriptors().iterator().next());
@@ -93,24 +96,31 @@ public class TestDefaultPluginModuleTracker extends TestCase
 
     public void testRemoveModuleWithCustomizer()
     {
-        ModuleDescriptor descriptor = mock(ModuleDescriptor.class);
+        MyModuleDescriptor descriptor = mock(MyModuleDescriptor.class);
         final AtomicBoolean removedCalled = new AtomicBoolean();
-        PluginModuleTracker tracker = new DefaultPluginModuleTracker(pluginAccessor, pluginEventManager, new PluginModuleTracker.Customizer()
-        {
-            public ModuleDescriptor adding(ModuleDescriptor descriptor)
-            {
-                return descriptor;
-            }
+        PluginModuleTracker tracker = new DefaultPluginModuleTracker<Object, MyModuleDescriptor>(
+                pluginAccessor, pluginEventManager,
+                MyModuleDescriptor.class,
+                new PluginModuleTracker.Customizer<Object, MyModuleDescriptor>()
+                {
+                    public MyModuleDescriptor adding(MyModuleDescriptor descriptor)
+                    {
+                        return descriptor;
+                    }
 
-            public void removed(ModuleDescriptor descriptor)
-            {
-                removedCalled.set(true);
-            }
-        });
+                    public void removed(MyModuleDescriptor descriptor)
+                    {
+                        removedCalled.set(true);
+                    }
+                });
         pluginEventManager.broadcast(new PluginModuleEnabledEvent(descriptor));
         assertEquals(1, tracker.size());
         pluginEventManager.broadcast(new PluginModuleDisabledEvent(descriptor));
         assertTrue(removedCalled.get());
+    }
+
+    public interface MyModuleDescriptor extends ModuleDescriptor<Object>
+    {
     }
 
 }
