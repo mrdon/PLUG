@@ -33,9 +33,9 @@
     </ciManagement>
 
     <scm>
-        <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/trunk</connection>
-        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/trunk</developerConnection>
-        <url>https://studio.atlassian.com/svn/PLUG/trunk</url>
+        <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.6.x</connection>
+        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.6.x</developerConnection>
+        <url>https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.6.x</url>
     </scm>
 
     <modules>
