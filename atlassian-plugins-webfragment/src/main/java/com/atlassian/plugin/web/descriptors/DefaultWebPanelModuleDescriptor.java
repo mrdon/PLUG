@@ -2,7 +2,9 @@ package com.atlassian.plugin.web.descriptors;
 
 import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.dom4j.Element;
@@ -166,9 +168,8 @@ public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescrip
                         final EmbeddedTemplateWebPanel panel = hostContainer.create(EmbeddedTemplateWebPanel.class);
                         panel.setTemplateBody(body);
                         panel.setResourceType(getRequiredResourceType(resource));
-                        panel.setContextProvider(getContextProvider());
                         panel.setPlugin(plugin);
-                        return panel;
+                        return new ContextAwareWebPanel(panel);
                     }
                 };
             }
@@ -181,9 +182,8 @@ public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescrip
                         final ResourceTemplateWebPanel panel = hostContainer.create(ResourceTemplateWebPanel.class);
                         panel.setResourceFilename(filename);
                         panel.setResourceType(getRequiredResourceType(resource));
-                        panel.setContextProvider(getContextProvider());
                         panel.setPlugin(plugin);
-                        return panel;
+                        return new ContextAwareWebPanel(panel);
                     }
                 };
             }
@@ -195,9 +195,24 @@ public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescrip
             {
                 public WebPanel get()
                 {
-                    return moduleFactory.createModule(moduleClassNameCopy, DefaultWebPanelModuleDescriptor.this);
+                    return new ContextAwareWebPanel(moduleFactory.createModule(moduleClassNameCopy, DefaultWebPanelModuleDescriptor.this));
                 }
             };
+        }
+    }
+
+    private class ContextAwareWebPanel implements WebPanel
+    {
+        private final WebPanel delegate;
+
+        private ContextAwareWebPanel(WebPanel delegate)
+        {
+            this.delegate = delegate;
+        }
+
+        public String getHtml(final Map<String, Object> context)
+        {
+            return delegate.getHtml(getContextProvider().getContextMap(new HashMap<String, Object>(context)));
         }
     }
 

@@ -39,7 +39,7 @@ public class ResourceTemplateWebPanel extends AbstractWebPanel
         this.resourceFilename = Preconditions.checkNotNull(resourceFilename, "resourceFilename");
     }
 
-    public String render(Map<String, Object> context)
+    public String getHtml(final Map<String, Object> context)
     {
         try
         {

@@ -1,7 +1,6 @@
 package com.atlassian.plugin.web.descriptors;
 
 import com.atlassian.plugin.util.Assertions;
-import com.atlassian.plugin.web.CopyingContextProvider;
 import com.atlassian.plugin.web.NoOpContextProvider;
 import org.dom4j.Element;
 
@@ -44,18 +43,17 @@ class ContextProviderElementParser
         Assertions.notNull("plugin == null", plugin);
         try
         {
-            final ContextProvider delegate;
             final Element contextProviderElement = element.element("context-provider");
             if (contextProviderElement == null)
             {
-                delegate = new NoOpContextProvider();
+                return new NoOpContextProvider();
             }
             else
             {
-                delegate = webFragmentHelper.loadContextProvider(contextProviderElement.attributeValue("class"), plugin);
-                delegate.init(LoaderUtils.getParams(contextProviderElement));
+                final ContextProvider context = webFragmentHelper.loadContextProvider(contextProviderElement.attributeValue("class"), plugin);
+                context.init(LoaderUtils.getParams(contextProviderElement));
+                return context;
             }
-            return new CopyingContextProvider(delegate);
         }
         catch (final ClassCastException e)
         {

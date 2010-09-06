@@ -20,6 +20,7 @@ public interface ContextProvider
     /**
      * Gets the additional context map to make available for the web fragment
      *
+     * @param context immutable render context provided by the app.
      * @return context map for velocity templates
      */
     public Map<String,Object> getContextMap(Map<String,Object> context);
