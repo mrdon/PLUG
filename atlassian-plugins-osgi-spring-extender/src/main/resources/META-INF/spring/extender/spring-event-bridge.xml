@@ -15,5 +15,10 @@
     <bean id="taskExecutor" class="com.atlassian.plugin.osgi.spring.ThreadPoolAsyncTaskExecutor" />
 
     <!-- Creates an application context that disables XML Schema validation -->
-    <bean id="applicationContextCreator" class="com.atlassian.plugin.osgi.spring.NonValidatingOsgiApplicationContextCreator" />
+    <bean id="applicationContextCreator" class="com.atlassian.plugin.osgi.spring.NonValidatingOsgiApplicationContextCreator">
+        <constructor-arg>
+            <osgi:list id="applicationContextPreProcessors" interface="com.atlassian.plugin.osgi.spring.external.ApplicationContextPreProcessor" cardinality="0..N"/>
+        </constructor-arg>
+    </bean>
+
 </beans>

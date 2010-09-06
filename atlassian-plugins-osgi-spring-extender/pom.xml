@@ -60,7 +60,9 @@
                             org.springframework.osgi*;version="[1.2.1,1.2.1]",
                             com_cenqua_clover;resolution:=optional
                         </Import-Package>
-                        <Export-Package />
+                        <Export-Package>
+                            com.atlassian.plugin.osgi.spring.external
+                        </Export-Package>
                         <Private-Package>com.atlassian.plugin.osgi.spring,org.springframework.osgi.atlassian</Private-Package>
                         <Embed-Dependency>*;scope=compile|runtime;inline=false;artifactId=!clover</Embed-Dependency>
                     </instructions>
