@@ -19,16 +19,10 @@ import com.atlassian.plugin.web.model.WebPanel;
  *
  * @since   2.6.0
  */
-public interface WebPanelModuleDescriptor extends ModuleDescriptor<WebPanel>, WeightedDescriptor, StateAware, ConditionalDescriptor
+public interface WebPanelModuleDescriptor extends ModuleDescriptor<WebPanel>, WeightedDescriptor, StateAware, ContextAware, ConditionalDescriptor
 {
     /**
      * Returns the location in the host application where the web panel should be embedded.
      */
     String getLocation();
-
-    /**
-     * Returns the ContextProvider that augments the context used to render the
-     * web panel.
-     */
-    ContextProvider getContextProvider();
 }

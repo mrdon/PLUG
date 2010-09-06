@@ -2,30 +2,22 @@ package com.atlassian.plugin.web.descriptors;
 
 import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
 import org.dom4j.Element;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
-import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.util.validation.ValidationPattern;
 import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.WebInterfaceManager;
-import com.atlassian.plugin.web.model.EmbeddedTemplateWebPanel;
-import com.atlassian.plugin.web.model.ResourceTemplateWebPanel;
 import com.atlassian.plugin.web.model.WebPanel;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
-import com.google.common.collect.Iterables;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -106,7 +98,7 @@ public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescrip
     public static final String XML_ELEMENT_NAME = "web-panel";
 
     private final WebInterfaceManager webInterfaceManager;
-    private final HostContainer hostContainer;
+    private WebPanelSupplierFactory webPanelSupplierFactory;
 
     /**
      * These suppliers are used to delay instantiation because the required
@@ -122,7 +114,7 @@ public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescrip
     public DefaultWebPanelModuleDescriptor(final HostContainer hostContainer, final ModuleFactory moduleClassFactory, final WebInterfaceManager webInterfaceManager)
     {
         super(moduleClassFactory);
-        this.hostContainer = hostContainer;
+        this.webPanelSupplierFactory = new WebPanelSupplierFactory(this, hostContainer, moduleFactory);
         this.webInterfaceManager = webInterfaceManager;
     }
 
@@ -154,51 +146,7 @@ public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescrip
             }
         };
 
-        if (moduleClassName == null)
-        {
-            final ResourceDescriptor resource = getRequiredViewResource();
-            final String filename = resource.getLocation();
-            if (StringUtils.isEmpty(filename))
-            {
-                final String body = Preconditions.checkNotNull(resource.getContent());
-                webPanelFactory = new Supplier<WebPanel>()
-                {
-                    public WebPanel get()
-                    {
-                        final EmbeddedTemplateWebPanel panel = hostContainer.create(EmbeddedTemplateWebPanel.class);
-                        panel.setTemplateBody(body);
-                        panel.setResourceType(getRequiredResourceType(resource));
-                        panel.setPlugin(plugin);
-                        return new ContextAwareWebPanel(panel);
-                    }
-                };
-            }
-            else
-            {
-                webPanelFactory = new Supplier<WebPanel>()
-                {
-                    public WebPanel get()
-                    {
-                        final ResourceTemplateWebPanel panel = hostContainer.create(ResourceTemplateWebPanel.class);
-                        panel.setResourceFilename(filename);
-                        panel.setResourceType(getRequiredResourceType(resource));
-                        panel.setPlugin(plugin);
-                        return new ContextAwareWebPanel(panel);
-                    }
-                };
-            }
-        }
-        else
-        {
-            final String moduleClassNameCopy = moduleClassName;
-            webPanelFactory = new Supplier<WebPanel>()
-            {
-                public WebPanel get()
-                {
-                    return new ContextAwareWebPanel(moduleFactory.createModule(moduleClassNameCopy, DefaultWebPanelModuleDescriptor.this));
-                }
-            };
-        }
+        webPanelFactory = webPanelSupplierFactory.build(moduleClassName);
     }
 
     private class ContextAwareWebPanel implements WebPanel
@@ -246,45 +194,7 @@ public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescrip
     @Override
     public WebPanel getModule()
     {
-        return webPanelFactory.get();
-    }
-
-    private String getRequiredResourceType(final ResourceDescriptor resource)
-    {
-        final String type = resource.getType();
-        if (StringUtils.isEmpty(type))
-        {
-            throw new PluginParseException("Resource element is lacking a type attribute.");
-        }
-        else
-        {
-            return type;
-        }
-    }
-
-    /**
-     * @return the (first) resource with attribute <code>name="view"</code>
-     * @throws PluginParseException when no resources with name "view" were
-     *             found.
-     */
-    private ResourceDescriptor getRequiredViewResource() throws PluginParseException
-    {
-        final Iterable<ResourceDescriptor> resources = Iterables.filter(getResourceDescriptors(), new Predicate<ResourceDescriptor>()
-        {
-            public boolean apply(final ResourceDescriptor input)
-            {
-                return "view".equals(input.getName());
-            }
-        });
-        final Iterator<ResourceDescriptor> iterator = resources.iterator();
-        if (!iterator.hasNext())
-        {
-            throw new PluginParseException("Required resource with name 'view' does not exist.");
-        }
-        else
-        {
-            return iterator.next();
-        }
+        return new ContextAwareWebPanel(webPanelFactory.get());
     }
 
     @Override

@@ -7,8 +7,6 @@ import com.atlassian.plugin.web.renderer.StaticWebPanelRenderer;
 import com.atlassian.plugin.web.renderer.WebPanelRenderer;
 import com.google.common.base.Preconditions;
 
-import java.util.Map;
-
 /**
  * @since   2.5.0
  */

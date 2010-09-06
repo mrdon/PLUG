@@ -3,14 +3,13 @@ package com.atlassian.plugin.web.descriptors;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.web.Condition;
-import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.model.WebLabel;
 import com.atlassian.plugin.web.model.WebParam;
 
 /**
  * A convenience interface for web fragment descriptors
  */
-public interface WebFragmentModuleDescriptor extends ModuleDescriptor<Void>, WeightedDescriptor, StateAware, ConditionalDescriptor
+public interface WebFragmentModuleDescriptor extends ModuleDescriptor<Void>, WeightedDescriptor, StateAware, ContextAware, ConditionalDescriptor
 {
     /**
      * @deprecated As of 2.5.0, use
@@ -33,8 +32,6 @@ public interface WebFragmentModuleDescriptor extends ModuleDescriptor<Void>, Wei
     WebLabel getTooltip();
 
     Condition getCondition();
-
-    ContextProvider getContextProvider();
 
     WebParam getWebParams();
 }
