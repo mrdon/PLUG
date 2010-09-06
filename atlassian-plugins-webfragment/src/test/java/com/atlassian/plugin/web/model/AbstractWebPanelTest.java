@@ -1,7 +1,6 @@
 package com.atlassian.plugin.web.model;
 
 import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.web.NoOpContextProvider;
 import com.atlassian.plugin.web.renderer.RendererException;
 import com.atlassian.plugin.web.renderer.StaticWebPanelRenderer;
 import com.atlassian.plugin.web.renderer.WebPanelRenderer;
@@ -19,7 +18,7 @@ public class AbstractWebPanelTest extends TestCase
     {
         AbstractWebPanel panel = new AbstractWebPanel(null)
         {
-            protected String render(Map<String, Object> context)
+            public String getHtml(Map<String, Object> context)
             {
                 final WebPanelRenderer renderer = getRenderer();
                 assertEquals(renderer, StaticWebPanelRenderer.RENDERER);
@@ -28,33 +27,7 @@ public class AbstractWebPanelTest extends TestCase
         };
 
         panel.setResourceType(StaticWebPanelRenderer.RESOURCE_TYPE);
-        panel.setContextProvider(new NoOpContextProvider());
         panel.getHtml(null);
-    }
-
-    public void testMissingContextRenderer()
-    {
-        final PluginAccessor accessorMock = mock(PluginAccessor.class);
-        when(accessorMock.getEnabledModulesByClass(WebPanelRenderer.class)).thenReturn(Collections.<WebPanelRenderer>emptyList());
-
-        AbstractWebPanel panel = new AbstractWebPanel(accessorMock)
-        {
-            protected String render(Map<String, Object> context)
-            {
-                return null;
-            }
-        };
-
-        panel.setResourceType("unsupported-type");
-        try
-        {
-            panel.getHtml(null);
-            fail("IllegalStateException expected");
-        }
-        catch (IllegalStateException e)
-        {
-            // expected
-        }
     }
 
     public void testUnsupportedRendererType()
@@ -64,7 +37,7 @@ public class AbstractWebPanelTest extends TestCase
 
         AbstractWebPanel panel = new AbstractWebPanel(accessorMock)
         {
-            protected String render(Map<String, Object> context)
+            public String getHtml(Map<String, Object> context)
             {
                 try
                 {
@@ -80,7 +53,6 @@ public class AbstractWebPanelTest extends TestCase
         };
 
         panel.setResourceType("unsupported-type");
-        panel.setContextProvider(new NoOpContextProvider());
         panel.getHtml(null);
     }
 
@@ -95,7 +67,7 @@ public class AbstractWebPanelTest extends TestCase
 
         AbstractWebPanel panel = new AbstractWebPanel(accessorMock)
         {
-            protected String render(Map<String, Object> context)
+            public String getHtml(Map<String, Object> context)
             {
                 final WebPanelRenderer webPanelRenderer = getRenderer();
                 assertNotNull(webPanelRenderer);
@@ -105,7 +77,6 @@ public class AbstractWebPanelTest extends TestCase
         };
 
         panel.setResourceType("velocity");
-        panel.setContextProvider(new NoOpContextProvider());
         panel.getHtml(null);
     }
 }

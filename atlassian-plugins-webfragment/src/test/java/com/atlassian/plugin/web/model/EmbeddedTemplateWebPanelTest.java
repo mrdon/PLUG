@@ -1,7 +1,6 @@
 package com.atlassian.plugin.web.model;
 
 import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.web.NoOpContextProvider;
 import com.atlassian.plugin.web.renderer.WebPanelRenderer;
 import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
@@ -21,7 +20,6 @@ public class EmbeddedTemplateWebPanelTest extends TestCase
         final EmbeddedTemplateWebPanel webPanel = new EmbeddedTemplateWebPanel(accessorMock);
         webPanel.setResourceType("static");
         webPanel.setTemplateBody("body");
-        webPanel.setContextProvider(new NoOpContextProvider());
 
         assertEquals("body", webPanel.getHtml(Collections.<String, Object>emptyMap()));
     }
@@ -36,7 +34,6 @@ public class EmbeddedTemplateWebPanelTest extends TestCase
         final EmbeddedTemplateWebPanel webPanel = new EmbeddedTemplateWebPanel(accessorMock);
         webPanel.setResourceType("unsupported-type");
         webPanel.setTemplateBody("body");
-        webPanel.setContextProvider(new NoOpContextProvider());
 
         final String result = webPanel.getHtml(Collections.<String, Object>emptyMap());
         assertNotNull(result);

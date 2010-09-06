@@ -2,7 +2,6 @@ package com.atlassian.plugin.web.model;
 
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.web.NoOpContextProvider;
 import com.atlassian.plugin.web.renderer.WebPanelRenderer;
 import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
@@ -25,7 +24,6 @@ public class ResourceTemplateWebPanelTest extends TestCase
         webPanel.setPlugin(plugin);
         webPanel.setResourceType("static");
         webPanel.setResourceFilename("ResourceTemplateWebPanelTest.txt");
-        webPanel.setContextProvider(new NoOpContextProvider());
 
         assertTrue(webPanel.getHtml(Collections.<String, Object>emptyMap())
             .contains("This file is used as web panel contents in unit tests."));
@@ -44,7 +42,6 @@ public class ResourceTemplateWebPanelTest extends TestCase
         webPanel.setPlugin(plugin);
         webPanel.setResourceType("unsupported-type");
         webPanel.setResourceFilename("ResourceTemplateWebPanelTest.txt");
-        webPanel.setContextProvider(new NoOpContextProvider());
 
         final String result = webPanel.getHtml(Collections.<String, Object>emptyMap());
         assertNotNull(result);
