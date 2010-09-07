@@ -21,6 +21,8 @@ import java.util.Iterator;
  * <br>
  * This class exists to simplify the {@link DefaultWebPanelModuleDescriptor} and
  * make it more testable.
+ *
+ * @since   2.6.0
  */
 class WebPanelSupplierFactory
 {
