@@ -10,8 +10,9 @@ import com.atlassian.plugin.Plugin;
 public interface PluginRetrievalService
 {
     /**
-     * @return the plugin of the service consumer.  Can be null if there is no corresponding {@Plugin} instance for the
-     * consuming bundle, as would be the case for a framework bundle, for example.
+     * @return the plugin of the service consumer that can be cached for the life of the plugin.
+     *         Can be null if there is no corresponding {@Plugin} instance for the consuming bundle, as would be the
+     *         case for a framework bundle, for example.
      */
     Plugin getPlugin();
 }
