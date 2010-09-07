@@ -1,5 +1,10 @@
 package com.atlassian.plugin.tracker;
 
+import static com.google.common.collect.Iterables.filter;
+import static com.google.common.collect.Iterables.transform;
+import static com.google.common.collect.Iterables.unmodifiableIterable;
+import static java.util.Collections.singleton;
+
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.event.PluginEventListener;
@@ -7,12 +12,10 @@ import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginDisabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
+
 import com.google.common.base.Function;
 
 import java.util.concurrent.CopyOnWriteArraySet;
-
-import static com.google.common.collect.Iterables.transform;
-import static com.google.common.collect.Iterables.unmodifiableIterable;
 
 /**
  * Tracks enabled plugin module descriptors, focusing on fast reads
@@ -21,82 +24,33 @@ import static com.google.common.collect.Iterables.unmodifiableIterable;
  */
 public class DefaultPluginModuleTracker<M, T extends ModuleDescriptor<M>> implements PluginModuleTracker<M, T>
 {
-    private final CopyOnWriteArraySet<T> moduleDescriptors;
     private final PluginEventManager pluginEventManager;
     private final Class<T> moduleDescriptorClass;
     private final Customizer<M, T> pluginModuleTrackerCustomizer;
+    private final CopyOnWriteArraySet<T> moduleDescriptors = new CopyOnWriteArraySet<T>();
     private final ModuleTransformer<M, T> moduleTransformer = new ModuleTransformer<M, T>();
 
-    public DefaultPluginModuleTracker(PluginAccessor pluginAccessor, PluginEventManager pluginEventManager,
-                                      Class<T> moduleDescriptorClass)
+    //
+    // ctors
+    //
+
+    public DefaultPluginModuleTracker(final PluginAccessor pluginAccessor, final PluginEventManager pluginEventManager, final Class<T> moduleDescriptorClass)
     {
         this(pluginAccessor, pluginEventManager, moduleDescriptorClass, new NoOpPluginModuleTrackerCustomizer<M, T>());
     }
 
-    public DefaultPluginModuleTracker(PluginAccessor pluginAccessor, PluginEventManager pluginEventManager,
-                                      Class<T> moduleDescriptorClass,
-                                      Customizer<M, T> pluginModuleTrackerCustomizer)
+    public DefaultPluginModuleTracker(final PluginAccessor pluginAccessor, final PluginEventManager pluginEventManager, final Class<T> moduleDescriptorClass, final Customizer<M, T> pluginModuleTrackerCustomizer)
     {
         this.pluginEventManager = pluginEventManager;
         this.moduleDescriptorClass = moduleDescriptorClass;
         this.pluginModuleTrackerCustomizer = pluginModuleTrackerCustomizer;
-        this.moduleDescriptors = new CopyOnWriteArraySet<T>();
         pluginEventManager.register(this);
-        for (T descriptor : pluginAccessor.getEnabledModuleDescriptorsByClass(moduleDescriptorClass))
-        {
-            addDescriptor(descriptor);
-        }
+        addDescriptors(pluginAccessor.getEnabledModuleDescriptorsByClass(moduleDescriptorClass));
     }
 
-    @PluginEventListener
-    public void onPluginModuleEnabled(PluginModuleEnabledEvent event)
-    {
-        ModuleDescriptor<?> moduleDescriptor = event.getModule();
-        if (moduleDescriptorClass.isAssignableFrom(moduleDescriptor.getClass()))
-        {
-            addDescriptor((T) moduleDescriptor);
-        }
-    }
-
-    private void addDescriptor(T moduleDescriptor)
-    {
-        T descriptor = pluginModuleTrackerCustomizer.adding(moduleDescriptor);
-        if (descriptor != null)
-        {
-            moduleDescriptors.add(descriptor);
-        }
-    }
-
-    @PluginEventListener
-    public void onPluginModuleDisabled(PluginModuleDisabledEvent event)
-    {
-        ModuleDescriptor moduleDescriptor = event.getModule();
-        if (moduleDescriptorClass.isAssignableFrom(moduleDescriptor.getClass()))
-        {
-            removeDescriptor((T) moduleDescriptor);
-        }
-
-    }
-
-    @PluginEventListener
-    public void onPluginDisabled(PluginDisabledEvent event)
-    {
-        for (ModuleDescriptor<?> descriptor : event.getPlugin().getModuleDescriptors())
-        {
-            if (moduleDescriptorClass.isAssignableFrom(descriptor.getClass()))
-            {
-                removeDescriptor((T) descriptor);
-            }
-        }
-    }
-
-    private void removeDescriptor(T descriptor)
-    {
-        if (moduleDescriptors.remove(descriptor))
-        {
-            pluginModuleTrackerCustomizer.removed(descriptor);
-        }
-    }
+    //
+    // PluginModuleTracker impl
+    //
 
     public Iterable<T> getModuleDescriptors()
     {
@@ -118,18 +72,81 @@ public class DefaultPluginModuleTracker<M, T extends ModuleDescriptor<M>> implem
         pluginEventManager.unregister(this);
     }
 
+    //
+    // plugin event listening
+    //
+
+    @PluginEventListener
+    public void onPluginModuleEnabled(final PluginModuleEnabledEvent event)
+    {
+        addDescriptors(singleton((ModuleDescriptor<?>) event.getModule()));
+    }
+
+    @PluginEventListener
+    public void onPluginModuleDisabled(final PluginModuleDisabledEvent event)
+    {
+        removeDescriptors(singleton((ModuleDescriptor<?>) event.getModule()));
+    }
+
+    @PluginEventListener
+    public void onPluginDisabled(final PluginDisabledEvent event)
+    {
+        removeDescriptors(event.getPlugin().getModuleDescriptors());
+    }
+
+    //
+    // module descriptor management
+    //
+
+    private void addDescriptors(final Iterable<? extends ModuleDescriptor<?>> descriptors)
+    {
+        for (final T descriptor : filtered(descriptors))
+        {
+            final T customized = pluginModuleTrackerCustomizer.adding(descriptor);
+            if (customized != null)
+            {
+                moduleDescriptors.add(customized);
+            }
+        }
+    }
+
+    private void removeDescriptors(final Iterable<? extends ModuleDescriptor<?>> descriptors)
+    {
+        for (final T descriptor : filtered(descriptors))
+        {
+            if (moduleDescriptors.remove(descriptor))
+            {
+                pluginModuleTrackerCustomizer.removed(descriptor);
+            }
+        }
+    }
+
+    /**
+     * The descriptors that match the supplied class.
+     */
+    private Iterable<T> filtered(final Iterable<? extends ModuleDescriptor<?>> descriptors)
+    {
+        return filter(descriptors, moduleDescriptorClass);
+    }
+
+    //
+    // inner classes
+    //
+
     private static class NoOpPluginModuleTrackerCustomizer<M, T extends ModuleDescriptor<M>> implements PluginModuleTracker.Customizer<M, T>
     {
-        public T adding(T descriptor)
+        public T adding(final T descriptor)
         {
             return descriptor;
         }
 
-        public void removed(T descriptor)
-        {
-        }
+        public void removed(final T descriptor)
+        {}
     }
 
+    /**
+     * Safely get the Module from a {@link ModuleDescriptor}.
+     */
     private static class ModuleTransformer<M, T extends ModuleDescriptor<M>> implements Function<T, M>
     {
         public M apply(final T from)
@@ -137,5 +154,4 @@ public class DefaultPluginModuleTracker<M, T extends ModuleDescriptor<M>> implem
             return from.getModule();
         }
     }
-
 }
