@@ -1,0 +1,52 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.atlassian.labs</groupId>
+    <artifactId>plugins3-plugin-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <name>plugins3-plugin-parent</name>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>com.atlassian.pom</groupId>
+        <artifactId>atlassian-public-pom</artifactId>
+        <version>24</version>
+    </parent>
+
+    <properties>
+        <plugins.version>2.7.0-SNAPSHOT</plugins.version>
+        <refapp.version>2.9.0-SNAPSHOT</refapp.version>
+        <jdkLevel>1.5</jdkLevel>
+    </properties>
+
+    <modules>
+        <module>plugins3-api</module>
+        <module>plugins3-plugin</module>
+        <module>plugins3-test-plugin</module>
+    </modules>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.4.3</version>
+                    <configuration>
+                        <excludes>
+                            <exclude>**/*$*</exclude>
+                            <exclude>it/**</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <scm>
+        <connection>scm:svn:https://labs.atlassian.com/svn/P3/trunk</connection>
+        <developerConnection>scm:svn:https://labs.atlassian.com/svn/P3/trunk</developerConnection>
+        <url>https://labs.atlassian.com/svn/P3/trunk</url>
+    </scm>
+</project>
