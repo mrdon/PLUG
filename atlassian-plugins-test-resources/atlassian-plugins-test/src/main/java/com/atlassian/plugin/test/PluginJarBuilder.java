@@ -53,6 +53,17 @@ public class PluginJarBuilder
         this.classLoader = classLoader;
     }
 
+    public PluginJarBuilder manifest(Map<String,String> manifest)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String,String> entry : manifest.entrySet())
+        {
+            sb.append(entry.getKey()).append(": ").append(entry.getValue()).append('\n');
+        }
+        sb.append('\n');
+        return addResource("META-INF/MANIFEST.MF", sb.toString());
+    }
+
     public PluginJarBuilder addFormattedJava(String className, String... lines) throws Exception
     {
         StringBuilder sb = new StringBuilder();

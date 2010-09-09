@@ -2,10 +2,12 @@ package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.osgi.external.SingleModuleDescriptorFactory;
+import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.servlet.DefaultServletModuleManager;
@@ -14,7 +16,9 @@ import com.atlassian.plugin.servlet.descriptors.ServletModuleDescriptor;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.WaitUntil;
+import com.google.common.collect.ImmutableMap;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -34,6 +38,17 @@ import static org.mockito.Mockito.when;
 
 public class TestPluginInstall extends PluginInContainerTestBase
 {
+    private static final String EMPTY_SPRING_CONFIG = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<beans xmlns=\"http://www.springframework.org/schema/beans\"\n"
+            + "       xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+            + "       xmlns:osgi=\"http://www.springframework.org/schema/osgi\"\n"
+            + "       xsi:schemaLocation=\"http://www.springframework.org/schema/beans\n"
+            + "           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd\n"
+            + "           http://www.springframework.org/schema/osgi\n"
+            + "           http://www.springframework.org/schema/osgi/spring-osgi.xsd\"\n"
+            + ">\n"
+            + "</beans>";
+
     public void testUpgradeOfBundledPlugin() throws Exception
     {
         final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(hostContainer);
@@ -668,6 +683,46 @@ public class TestPluginInstall extends PluginInContainerTestBase
         assertTrue(flag.get());
     }
 
+    public void testInstallWithManifestNoDescriptorWithSpringXml() throws Exception
+    {
+        new PluginJarBuilder("nodesc")
+                .manifest(new ImmutableMap.Builder<String, String>()
+                        .put(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, "nodesc")
+                        .put(Constants.BUNDLE_VERSION, "1.0")
+                        .build())
+                .addResource("META-INF/spring/foo.xml", EMPTY_SPRING_CONFIG)
+                .build(pluginsDir);
+
+        initPluginManager();
+
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+        Plugin plugin = pluginManager.getPlugin("nodesc");
+        assertNotNull(plugin);
+        assertEquals("1.0", plugin.getPluginInformation().getVersion());
+        assertEquals("nodesc", plugin.getKey());
+        assertEquals(0, plugin.getModuleDescriptors().size());
+    }
+
+    public void testInstallWithManifestNoDescriptorWithSpringHeader() throws Exception
+    {
+        new PluginJarBuilder("nodesc")
+                .manifest(new ImmutableMap.Builder<String, String>()
+                        .put(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, "nodesc")
+                        .put(Constants.BUNDLE_VERSION, "1.0")
+                        .put("Spring-Context", "*;timeout:=60")
+                        .build())
+                .build(pluginsDir);
+
+        initPluginManager();
+
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+        Plugin plugin = pluginManager.getPlugin("nodesc");
+        assertNotNull(plugin);
+        assertEquals("1.0", plugin.getPluginInformation().getVersion());
+        assertEquals("nodesc", plugin.getKey());
+        assertEquals(0, plugin.getModuleDescriptors().size());
+    }
+
     public void testInstallWithComponentBeanNameConflictedWithHostComponent() throws Exception
     {
         new PluginJarBuilder("first")
@@ -963,16 +1018,7 @@ public class TestPluginInstall extends PluginInContainerTestBase
         {
             final File dummySpringXMLFile = File.createTempFile("temp", "account-data-context.xml", new File(System.getProperty("java.io.tmpdir")));
             FileWriter fileWriter = new FileWriter(dummySpringXMLFile);
-            fileWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                    + "<beans xmlns=\"http://www.springframework.org/schema/beans\"\n"
-                    + "       xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-                    + "       xmlns:osgi=\"http://www.springframework.org/schema/osgi\"\n"
-                    + "       xsi:schemaLocation=\"http://www.springframework.org/schema/beans\n"
-                    + "           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd\n"
-                    + "           http://www.springframework.org/schema/osgi\n"
-                    + "           http://www.springframework.org/schema/osgi/spring-osgi.xsd\"\n"
-                    + ">\n"
-                    + "</beans>");
+            fileWriter.write(EMPTY_SPRING_CONFIG);
             fileWriter.close();
             final File propertiesFile = new File(cacheDir, ".properties");
 

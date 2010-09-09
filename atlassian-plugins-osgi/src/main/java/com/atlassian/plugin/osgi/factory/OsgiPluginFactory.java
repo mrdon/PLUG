@@ -1,24 +1,17 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
-import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.descriptors.ChainModuleDescriptorFactory;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.factories.PluginFactory;
-import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.OsgiPersistentCache;
-import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
-import com.atlassian.plugin.osgi.factory.descriptor.ComponentImportModuleDescriptor;
-import com.atlassian.plugin.osgi.factory.descriptor.ComponentModuleDescriptor;
-import com.atlassian.plugin.osgi.factory.descriptor.ModuleTypeModuleDescriptor;
 import com.atlassian.plugin.osgi.factory.transform.DefaultPluginTransformer;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformer;
@@ -33,15 +26,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.jar.Manifest;
 
 /**
- * Plugin loader that starts an OSGi container and loads plugins into it, wrapped as OSGi bundles.
+ * Plugin loader that starts an OSGi container and loads plugins into it, wrapped as OSGi bundles.  Supports
+ * <ul>
+ *  <li>Dynamic loading of module descriptors via OSGi services</li>
+ *  <li>Delayed enabling until the Spring container is active</li>
+ *  <li>XML or Jar manifest configuration</li>
+ * </ul>
  */
 public class OsgiPluginFactory implements PluginFactory
 {
@@ -53,23 +51,19 @@ public class OsgiPluginFactory implements PluginFactory
     private final PluginEventManager pluginEventManager;
     private final Set<String> applicationKeys;
     private final OsgiPersistentCache persistentCache;
-    private final ModuleDescriptorFactory transformedDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer())
-    {{
-            addModuleDescriptor("component", ComponentModuleDescriptor.class);
-            addModuleDescriptor("component-import", ComponentImportModuleDescriptor.class);
-            addModuleDescriptor("module-type", ModuleTypeModuleDescriptor.class);
-        }};
+
 
     private volatile PluginTransformer pluginTransformer;
 
     private ServiceTracker moduleDescriptorFactoryTracker;
+    private final OsgiChainedModuleDescriptorFactoryCreator osgiChainedModuleDescriptorFactoryCreator;
 
     public OsgiPluginFactory(String pluginDescriptorFileName, String applicationKey, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
         this(pluginDescriptorFileName, new HashSet<String>(Arrays.asList(applicationKey)), persistentCache, osgi, pluginEventManager);
     }
 
-    public OsgiPluginFactory(String pluginDescriptorFileName, Set<String> applicationKeys, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
+    public OsgiPluginFactory(String pluginDescriptorFileName, Set<String> applicationKeys, OsgiPersistentCache persistentCache, final OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
         Validate.notNull(pluginDescriptorFileName, "Plugin descriptor is required");
         Validate.notNull(osgi, "The OSGi container is required");
@@ -83,6 +77,13 @@ public class OsgiPluginFactory implements PluginFactory
         this.pluginEventManager = pluginEventManager;
         this.applicationKeys = applicationKeys;
         this.persistentCache = persistentCache;
+        this.osgiChainedModuleDescriptorFactoryCreator = new OsgiChainedModuleDescriptorFactoryCreator(new OsgiChainedModuleDescriptorFactoryCreator.ServiceTrackerFactory()
+        {
+            public ServiceTracker create(String className)
+            {
+                return osgi.getServiceTracker(className);
+            }
+        });
     }
 
     private PluginTransformer getPluginTransformer()
@@ -101,6 +102,57 @@ public class OsgiPluginFactory implements PluginFactory
     {
         Validate.notNull(pluginArtifact, "The plugin artifact is required");
 
+        String pluginKey = getPluginKeyFromDescriptor(pluginArtifact);
+        if (pluginKey == null)
+        {
+            pluginKey = getPluginKeyFromManifest(pluginArtifact);
+        }
+        return pluginKey;
+    }
+
+    /**
+     * @param pluginArtifact The plugin artifact
+     * @return The plugin key if a manifest is present and contains {@link OsgiPlugin.ATLASSIAN_PLUGIN_KEY} and 
+     * {@link Constants.BUNDLE_VERSION}
+     */
+    private String getPluginKeyFromManifest(PluginArtifact pluginArtifact)
+    {
+        Manifest mf = getManifest(pluginArtifact);
+        if (mf != null)
+        {
+            String key = mf.getMainAttributes().getValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY);
+            String version = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+            if (key != null && version != null)
+            {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    private Manifest getManifest(PluginArtifact pluginArtifact)
+    {
+        InputStream descriptorClassStream = pluginArtifact.getResourceAsStream("META-INF/MANIFEST.MF");
+        if (descriptorClassStream != null)
+        {
+            try
+            {
+                return new Manifest(descriptorClassStream);
+            }
+            catch (IOException e)
+            {
+                log.error("Cannot read manifest from plugin artifact " + pluginArtifact.getName(), e);
+            }
+            finally
+            {
+                IOUtils.closeQuietly(descriptorClassStream);
+            }
+        }
+        return null;
+    }
+
+    private String getPluginKeyFromDescriptor(PluginArtifact pluginArtifact)
+    {
         String pluginKey = null;
         InputStream descriptorStream = null;
         try
@@ -151,18 +203,26 @@ public class OsgiPluginFactory implements PluginFactory
         try
         {
             pluginDescriptor = pluginArtifact.getResourceAsStream(pluginDescriptorFileName);
-            if (pluginDescriptor == null)
+            if (pluginDescriptor != null)
             {
-                throw new PluginParseException("No descriptor found in classloader for : " + pluginArtifact);
+                ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory, pluginArtifact);
+                DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys.toArray(new String[applicationKeys.size()]));
+                final Plugin osgiPlugin = new OsgiPlugin(parser.getKey(), osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager);
+
+                // Temporarily configure plugin until it can be properly installed
+                plugin = parser.configurePlugin(combinedFactory, osgiPlugin);
             }
-
-            ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory, pluginArtifact);
-            DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys.toArray(new String[applicationKeys.size()]));
-
-            final Plugin osgiPlugin = new OsgiPlugin(parser.getKey(), osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager);
-
-            // Temporarily configure plugin until it can be properly installed
-            plugin = parser.configurePlugin(combinedFactory, osgiPlugin);
+            else
+            {
+                Manifest mf = getManifest(pluginArtifact);
+                String pluginKey = mf.getMainAttributes().getValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY);
+                plugin = new OsgiPlugin(pluginKey, osgi, pluginArtifact, pluginEventManager);
+                plugin.setKey(pluginKey);
+                plugin.setPluginsVersion(2);
+                PluginInformation info = new PluginInformation();
+                info.setVersion(mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
+                plugin.setPluginInformation(info);
+            }
         }
         catch (PluginTransformationException ex)
         {
@@ -182,67 +242,15 @@ public class OsgiPluginFactory implements PluginFactory
      * @param pluginArtifact
      * @return The composite factory
      */
-    private ModuleDescriptorFactory getChainedModuleDescriptorFactory(ModuleDescriptorFactory originalFactory, PluginArtifact pluginArtifact)
+    private ModuleDescriptorFactory getChainedModuleDescriptorFactory(ModuleDescriptorFactory originalFactory, final PluginArtifact pluginArtifact)
     {
-        // we really don't want two of these
-        synchronized (this)
+        return osgiChainedModuleDescriptorFactoryCreator.create(new OsgiChainedModuleDescriptorFactoryCreator.ResourceLocator()
         {
-            if (moduleDescriptorFactoryTracker == null)
+            public boolean doesResourceExist(String name)
             {
-                moduleDescriptorFactoryTracker = osgi.getServiceTracker(ModuleDescriptorFactory.class.getName());
+                return pluginArtifact.doesResourceExist(name);
             }
-        }
-
-        // Really shouldn't be null, but could be in tests since we can't mock a service tracker :(
-        if (moduleDescriptorFactoryTracker != null)
-        {
-            List<ModuleDescriptorFactory> factories = new ArrayList<ModuleDescriptorFactory>();
-
-            factories.add(transformedDescriptorFactory);
-            factories.add(originalFactory);
-            Object[] serviceObjs = moduleDescriptorFactoryTracker.getServices();
-
-            // Add all the dynamic module descriptor factories registered as osgi services
-            if (serviceObjs != null)
-            {
-                for (Object fac : serviceObjs)
-                {
-                    ModuleDescriptorFactory dynFactory = (ModuleDescriptorFactory) fac;
-                    if (dynFactory instanceof ListableModuleDescriptorFactory)
-                    {
-                        for (Class<ModuleDescriptor<?>> descriptor : ((ListableModuleDescriptorFactory)dynFactory).getModuleDescriptorClasses())
-                        {
-                            // This will only work for classes not in inner jars and breaks on first non-match
-                            if (!pluginArtifact.doesResourceExist(descriptor.getName().replace('.','/') + ".class"))
-                            {
-                                factories.add((ModuleDescriptorFactory) fac);
-                                break;
-                            }
-                            else
-                            {
-                                log.info("Detected a module descriptor - " + descriptor.getName() + " - which is also present in " +
-                                         "jar to be installed.  Skipping its module descriptor factory.");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        factories.add((ModuleDescriptorFactory) fac);
-                    }
-                }
-            }
-
-            // Catch all unknown descriptors as unrecognised
-            factories.add(new UnrecognisedModuleDescriptorFallbackFactory());
-
-            return new ChainModuleDescriptorFactory(factories.toArray(new ModuleDescriptorFactory[factories.size()]));
-        }
-        else
-        {
-            return originalFactory;
-        }
-
-
+        }, originalFactory);
     }
 
     private PluginArtifact createOsgiPluginJar(PluginArtifact pluginArtifact)

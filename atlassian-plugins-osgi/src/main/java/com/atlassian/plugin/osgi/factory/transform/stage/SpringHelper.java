@@ -92,28 +92,4 @@ class SpringHelper
             return false;
         }
     }
-
-    static boolean isSpringUsed(TransformContext context)
-    {
-        // Check to see if we've needed it so far
-        if (context.shouldRequireSpring())
-        {
-            return true;
-        }
-
-        // Check for the explicit context value
-        final String header = context.getManifest().getMainAttributes().getValue("Spring-Context");
-        if (header != null)
-        {
-            return true;
-        }
-
-        // Check for the spring files, as the default header value looks here
-        if (context.getPluginArtifact().doesResourceExist("META-INF/spring/"))
-        {
-            return true;
-        }
-
-        return false;
-    }
 }
