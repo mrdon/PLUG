@@ -19,7 +19,7 @@ public class DefaultPackageScannerConfiguration implements PackageScannerConfigu
             "org.tuckey.web.filters.urlrewrite.*", "org.bouncycastle*", "org.dom4j*", "org.jdom*", "com.perforce*", "org.slf4j*");
     private List<String> packageExcludes = Arrays.asList("com.springframework*", "org.apache.tomcat.*",
             "org.apache.catalina.*", "org.apache.jasper.*", "org.apache.coyote.*", "org.apache.naming*",
-            "org.apache.commons.logging*");
+            "org.apache.commons.logging*", "com.atlassian.plugin.osgi.bridge.*");
     private Map<String, String> packageVersions;
     private String hostVersion;
     private ServletContext servletContext;
