@@ -4,6 +4,7 @@ import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.ModuleDescriptorFactory;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.XmlPluginArtifact;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
@@ -136,6 +137,29 @@ public class TestOsgiPluginFactory extends TestCase
         final Plugin plugin = factory.create(new JarPluginArtifact(pluginFile), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiPlugin);
+    }
+
+    public void testCreateOsgiPluginWithManifestKeyNoVersion() throws PluginParseException, IOException
+    {
+        mockBundle.expectAndReturn("getSymbolicName", "plugin.key");
+        when(osgiContainerManager.getHostComponentRegistrations()).thenReturn(new ArrayList());
+        when(osgiContainerManager.getBundles()).thenReturn(new Bundle[] {(Bundle) mockSystemBundle.proxy()});
+
+        final File pluginFile = new PluginJarBuilder("loadwithxml")
+                .manifest(new ImmutableMap.Builder<String, String>()
+                        .put(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, "somekey")
+                        .build())
+                .build();
+
+        try
+        {
+            factory.create(new JarPluginArtifact(pluginFile), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+            fail("Should have failed due to no version");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            // test passed
+        }
     }
 
     public void testCanLoadWithXml() throws PluginParseException, IOException

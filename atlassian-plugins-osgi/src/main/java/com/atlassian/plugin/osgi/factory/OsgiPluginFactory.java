@@ -122,9 +122,16 @@ public class OsgiPluginFactory implements PluginFactory
         {
             String key = mf.getMainAttributes().getValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY);
             String version = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-            if (key != null && version != null)
+            if (key != null)
             {
-                return key;
+                if (version != null)
+                {
+                    return key;
+                }
+                else
+                {
+                    log.warn("Found plugin key '" + key + "' in the manifest but no bundle version, so it can't be loaded as an OsgiPlugin");
+                }
             }
         }
         return null;
@@ -191,6 +198,8 @@ public class OsgiPluginFactory implements PluginFactory
      * @param moduleDescriptorFactory The factory for plugin modules
      * @return The instantiated and populated plugin
      * @throws PluginParseException If the descriptor cannot be parsed
+     * @throws IllegalArgumentException If the plugin descriptor isn't found, and the plugin key and bundle version aren't
+     * specified in the manifest
      * @since 2.2.0
      */
     public Plugin create(PluginArtifact pluginArtifact, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
@@ -216,11 +225,15 @@ public class OsgiPluginFactory implements PluginFactory
             {
                 Manifest mf = getManifest(pluginArtifact);
                 String pluginKey = mf.getMainAttributes().getValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY);
+                String pluginVersion = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+                Validate.notEmpty(pluginKey);
+                Validate.notEmpty(pluginVersion);
+
                 plugin = new OsgiPlugin(pluginKey, osgi, pluginArtifact, pluginEventManager);
                 plugin.setKey(pluginKey);
                 plugin.setPluginsVersion(2);
                 PluginInformation info = new PluginInformation();
-                info.setVersion(mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
+                info.setVersion(pluginVersion);
                 plugin.setPluginInformation(info);
             }
         }
