@@ -7,6 +7,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.*;
 
+import com.atlassian.plugin.PluginInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -386,8 +387,11 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName, UrlMode urlMode)
     {
+        PluginInformation pluginInfo = moduleDescriptor.getPlugin().getPluginInformation();
+        String pluginVersion = pluginInfo != null ? pluginInfo.getVersion() : "unknown";
+        
         // "{base url}/s/{build num}/{system counter}/{plugin version}/_"
-        final String staticUrlPrefix = getStaticResourcePrefix(String.valueOf(moduleDescriptor.getPlugin().getPluginsVersion()), urlMode);
+        final String staticUrlPrefix = getStaticResourcePrefix(pluginVersion, urlMode);
         // "/download/resources/plugin.key:module.key/resource.name"
         return staticUrlPrefix + pluginResourceLocator.getResourceUrl(moduleDescriptor.getCompleteKey(), resourceName);
     }

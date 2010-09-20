@@ -652,7 +652,8 @@ public class TestWebResourceManagerImpl extends TestCase
     {
         final Plugin animalPlugin = new StaticPlugin();
         animalPlugin.setKey("confluence.extra.animal");
-        animalPlugin.setPluginsVersion(Integer.parseInt(ANIMAL_PLUGIN_VERSION));
+        animalPlugin.setPluginsVersion(5);
+        animalPlugin.getPluginInformation().setVersion(ANIMAL_PLUGIN_VERSION);
 
         mockPluginAccessor.expectAndReturn("getEnabledPluginModule", C.args(C.eq(moduleKey)),
             TestUtils.createWebResourceModuleDescriptor(moduleKey, animalPlugin));
