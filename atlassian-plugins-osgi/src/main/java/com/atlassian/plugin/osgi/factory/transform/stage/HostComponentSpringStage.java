@@ -143,14 +143,11 @@ public class HostComponentSpringStage implements TransformStage
     {
         try
         {
-            String list = OsgiHeaderUtil.findReferredPackages(matchedRegistrations);
-            if (list.length() > 0)
+            Set<String> referredPackages = OsgiHeaderUtil.findReferredPackages(matchedRegistrations);
+
+            for (String pkg:referredPackages)
             {
-                String[] packages = list.split(",");
-                for (String pkg : packages)
-                {
-                    extraImports.add(systemExports.getFullExport(pkg));
-                }
+                extraImports.add(systemExports.getFullExport(pkg));
             }
         }
         catch (IOException e)

@@ -6,10 +6,12 @@ import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
+import com.google.common.collect.Sets;
 import com.mockobjects.dynamic.Mock;
 import com.mockobjects.dynamic.C;
 import junit.framework.TestCase;
 
+import java.io.File;
 import java.io.IOException;
 import javax.servlet.ServletContext;
 import javax.print.attribute.HashAttributeSet;
@@ -30,24 +32,23 @@ public class TestOsgiHeaderUtil extends TestCase
 
     public void testFindReferredPackages() throws IOException
     {
-        String foundPackages = OsgiHeaderUtil.findReferredPackages(new ArrayList<HostComponentRegistration>()
+        Set<String> foundPackages = OsgiHeaderUtil.findReferredPackages(new ArrayList<HostComponentRegistration>()
         {{
             add(new StubHostComponentRegistration(OsgiHeaderUtil.class));
         }});
 
         assertTrue(foundPackages.contains(HostComponentRegistration.class.getPackage().getName()));
-
     }
 
     public void testFindReferredPackagesWithVersion() throws IOException
     {
-        String foundPackages = OsgiHeaderUtil.findReferredPackages(new ArrayList<HostComponentRegistration>()
+        Map<String, String> foundPackages = OsgiHeaderUtil.findReferredPackages(new ArrayList<HostComponentRegistration>()
         {{
             add(new StubHostComponentRegistration(OsgiHeaderUtil.class));
-        }}, Collections.singletonMap(HostComponentRegistration.class.getPackage().getName(), "1.0"));
+        }}, Collections.singletonMap(HostComponentRegistration.class.getPackage().getName(), "1.0.45"));
 
-        assertTrue(foundPackages.contains(HostComponentRegistration.class.getPackage().getName()+";version=1.0"));
-
+        assertTrue(foundPackages.containsKey(HostComponentRegistration.class.getPackage().getName()));
+        assertEquals(foundPackages.get(HostComponentRegistration.class.getPackage().getName()), "1.0.45");
     }
 
     public void testGetPluginKeyBundle()
@@ -77,4 +78,20 @@ public class TestOsgiHeaderUtil extends TestCase
         mf.getMainAttributes().putValue(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, "bar");
         assertEquals("bar", OsgiHeaderUtil.getPluginKey(mf));
     }
+
+    public void testGeneratePackageVersionString()
+    {
+        Map<String, String> input = new HashMap<String, String>();
+        input.put("foo.bar", "1.2");
+        input.put("foo.baz", null);
+
+        String output = OsgiHeaderUtil.generatePackageVersionString(input);
+
+        Set<String> set = Sets.newHashSet(output.split("[,]"));
+
+        assertTrue(set.contains("foo.bar;version=1.2"));
+        assertTrue(set.contains("foo.baz"));
+        assertEquals(2, set.size());
+    }
+
 }

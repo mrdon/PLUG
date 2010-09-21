@@ -5,25 +5,22 @@ import aQute.lib.osgi.Jar;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
-import com.atlassian.plugin.util.ClassLoaderUtils;
-import org.apache.commons.io.IOUtils;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.twdata.pkgscanner.ExportPackage;
 import org.twdata.pkgscanner.PackageScanner;
+
+import static com.atlassian.plugin.osgi.container.felix.ExportBuilderUtils.parseExportFile;
+import static com.atlassian.plugin.osgi.container.felix.ExportBuilderUtils.copyUnlessExist;
 import static org.twdata.pkgscanner.PackageScanner.exclude;
 import static org.twdata.pkgscanner.PackageScanner.include;
 import static org.twdata.pkgscanner.PackageScanner.jars;
 import static org.twdata.pkgscanner.PackageScanner.packages;
 
 import javax.servlet.ServletContext;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,9 +33,10 @@ import java.util.jar.Manifest;
  */
 class ExportsBuilder
 {
-
+    static final String OSGI_PACKAGES_PATH = "osgi-packages.txt";
     static final String JDK_PACKAGES_PATH = "jdk-packages.txt";
     static final String JDK6_PACKAGES_PATH = "jdk6-packages.txt";
+
     private static Logger log = LoggerFactory.getLogger(ExportsBuilder.class);
     private static String exportStringCache;
 
@@ -84,67 +82,60 @@ class ExportsBuilder
      */
     String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig){
 
-        String exports = null;
+        Map<String, String> exportPackages = new HashMap<String, String>();
 
-        StringBuilder origExports = new StringBuilder();
-        origExports.append("org.osgi.framework; version=1.4.1,");
-        origExports.append("org.osgi.service.packageadmin; version=1.2.0," );
-        origExports.append("org.osgi.service.startlevel; version=1.1.0,");
-        origExports.append("org.osgi.service.url; version=1.0.0,");
-        origExports.append("org.osgi.util; version=1.4.1,");
-        origExports.append("org.osgi.util.tracker; version=1.4.1,");
-        origExports.append("host.service.command; version=1.0.0,");
+        // The first part is osgi related packages.
+        copyUnlessExist(exportPackages, parseExportFile(OSGI_PACKAGES_PATH));
 
-        constructJdkExports(origExports, JDK_PACKAGES_PATH);
-        origExports.append(",");
+        // The second part is JDK packages.
+        copyUnlessExist(exportPackages, parseExportFile(JDK_PACKAGES_PATH));
 
+        // may need jdk6 packages too.
         if (System.getProperty("java.specification.version").equals("1.6")) {
-            constructJdkExports(origExports, JDK6_PACKAGES_PATH);
-            origExports.append(",");
+            copyUnlessExist(exportPackages, parseExportFile(JDK6_PACKAGES_PATH));
         }
 
-        Collection<ExportPackage> exportList = generateExports(packageScannerConfig);
-        constructAutoExports(origExports, exportList);
+        // Third part by scanning packages available via classloader. The versions are determined by jar names.
+        Collection<ExportPackage> scannedPackages = generateExports(packageScannerConfig);
+        copyUnlessExist(exportPackages, ExportBuilderUtils.toMap(scannedPackages));
 
-
+        // Fourth part by scanning host components since all the classes referred to by them must be available to consumers.
         try
         {
-            origExports.append(OsgiHeaderUtil.findReferredPackages(regs, packageScannerConfig.getPackageVersions()));
+            Map<String,String> referredPackages = OsgiHeaderUtil.findReferredPackages(regs, packageScannerConfig.getPackageVersions());
+            copyUnlessExist(exportPackages, referredPackages);
+        }
+        catch (IOException ex)
+        {
+            log.error("Unable to calculate necessary exports based on host components", ex);
+            return OsgiHeaderUtil.generatePackageVersionString(exportPackages);
+        }
 
+        String exports = null;
+        try
+        {
+            exports = OsgiHeaderUtil.generatePackageVersionString(exportPackages);
             Analyzer analyzer = new Analyzer();
             analyzer.setJar(new Jar("somename.jar"));
 
             // we pretend the exports are imports for the sake of the bnd tool, which would otherwise cut out
             // exports that weren't actually in the jar
-            analyzer.setProperty(Constants.IMPORT_PACKAGE, origExports.toString());
+            analyzer.setProperty(Constants.IMPORT_PACKAGE, exports);
             Manifest mf = analyzer.calcManifest();
 
             exports = mf.getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
-        } catch (IOException ex)
+        }
+        catch (IOException ex)
         {
             log.error("Unable to calculate necessary exports based on host components", ex);
-            exports = origExports.toString();
+            return exports;
         }
 
         if (log.isDebugEnabled()) {
             log.debug("Exports:\n"+exports.replaceAll(",", "\r\n"));
         }
-        return exports;
-    }
 
-    void constructAutoExports(StringBuilder sb, Collection<ExportPackage> packageExports) {
-        for (ExportPackage pkg : packageExports) {
-            sb.append(pkg.getPackageName());
-            if (pkg.getVersion() != null) {
-                try {
-                    Version.parseVersion(pkg.getVersion());
-                    sb.append(";version=").append(pkg.getVersion());
-                } catch (IllegalArgumentException ex) {
-                    log.info("Unable to parse version: "+pkg.getVersion());
-                }
-            }
-            sb.append(",");
-        }
+        return exports;
     }
 
     Collection<ExportPackage> generateExports(PackageScannerConfiguration packageScannerConfig)
@@ -217,32 +208,5 @@ class ExportsBuilder
             }
         }
         return slf4jFound;
-    }
-
-    void constructJdkExports(StringBuilder sb, String packageListPath)
-    {
-        InputStream in = null;
-        try
-        {
-            in = ClassLoaderUtils.getResourceAsStream(packageListPath, ExportsBuilder.class);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            String line;
-            while ((line = reader.readLine()) != null)
-            {
-                line = line.trim();
-                if (line.length() > 0)
-                {
-                    if (line.charAt(0) != '#')
-                    {
-                        if (sb.length() > 0)
-                            sb.append(',');
-                        sb.append(line);
-                    }
-                }
-            }
-        } catch (IOException e)
-        {
-            IOUtils.closeQuietly(in);
-        }
     }
 }

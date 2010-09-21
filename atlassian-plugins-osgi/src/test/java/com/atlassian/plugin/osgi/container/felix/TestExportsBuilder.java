@@ -6,8 +6,11 @@ import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
 import junit.framework.TestCase;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import org.twdata.pkgscanner.ExportPackage;
 
+import javax.management.Descriptor;
+import javax.management.DescriptorAccess;
 import javax.print.attribute.AttributeSet;
 import javax.print.attribute.HashAttributeSet;
 import javax.servlet.ServletContext;
@@ -19,7 +22,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TestExportsBuilder extends TestCase
 {
@@ -44,17 +49,6 @@ public class TestExportsBuilder extends TestCase
         assertFalse(exports.contains(",,"));
     }
 
-    public void testConstructAutoExports()
-    {
-        List<ExportPackage> exports = new ArrayList<ExportPackage>();
-        exports.add(new ExportPackage("foo.bar", "1.0", new File("/whatever/foobar-1.0.jar")));
-        exports.add(new ExportPackage("foo.bar", "1.0-asdf-asdf", new File("/whatever/foobar-1.0-asdf-asdf.jar")));
-        StringBuilder sb = new StringBuilder();
-        builder.constructAutoExports(sb, exports);
-
-        assertEquals("foo.bar;version=1.0,foo.bar,", sb.toString());
-    }
-
     public void testDetermineExportsIncludeServiceInterfaces()
     {
         List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration> () {{
@@ -66,16 +60,6 @@ public class TestExportsBuilder extends TestCase
         System.out.println(imports.replace(',','\n'));
         assertTrue(imports.contains(AttributeSet.class.getPackage().getName()));
         assertTrue(imports.contains("javax.swing.event"));
-    }
-
-    public void testConstructJdkExports()
-    {
-        StringBuilder sb = new StringBuilder();
-        builder.constructJdkExports(sb,"jdk-packages.test.txt");
-        assertEquals("foo.bar,foo.baz", sb.toString());
-        sb = new StringBuilder();
-        builder.constructJdkExports(sb, ExportsBuilder.JDK_PACKAGES_PATH);
-        assertTrue(sb.toString().contains("org.xml.sax"));
     }
 
     public void testConstructJdkExportsWithJdk5And6()
@@ -96,6 +80,43 @@ public class TestExportsBuilder extends TestCase
         }
     }
 
+
+    public void testDetermineExportWhileConflictExists()
+    {
+        final DescriptorAccess descAccess = new DescriptorAccess() {
+            public Descriptor getDescriptor()
+            {
+                return null;
+            }
+            public void setDescriptor(Descriptor inDescriptor)
+            {
+            }
+        };
+
+        List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration> () {{
+            add(new MockRegistration(descAccess, DescriptorAccess.class));
+        }};
+
+        DefaultPackageScannerConfiguration config = new DefaultPackageScannerConfiguration();
+        Map<String, String> versions = new HashMap<String, String>();
+        versions.put("javax.management", "1.2.3");
+        config.setPackageVersions(versions);
+
+        String exports = builder.determineExports(regs, config);
+
+        int packageCount = 0;
+        for(String imp:exports.split("[,]"))
+        {
+            if (imp.split("[;]")[0].equals("javax.management"))
+            {
+                packageCount++;
+            }
+        }
+
+        assertEquals("even though the package is found twice, we must export it only once", 1, packageCount);
+        assertFalse("found earlier always wins", exports.contains("javax.management;version=1.2.3"));
+        assertTrue("found earlier always wins", exports.contains(",javax.management,"));
+    }
 
     public void testGenerateExports() throws MalformedURLException
     {

@@ -14,7 +14,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -27,40 +29,65 @@ import java.util.jar.Manifest;
  */
 public class OsgiHeaderUtil
 {
-    static final String JDK_PACKAGES_PATH = "jdk-packages.txt";
-    static final String JDK6_PACKAGES_PATH = "jdk6-packages.txt";
     static Logger log = LoggerFactory.getLogger(OsgiHeaderUtil.class);
 
     /**
      * Finds all referred packages for host component registrations by scanning their declared interfaces' bytecode.
      *
      * @param registrations A list of host component registrations
-     * @return The referred packages in a format compatible with an OSGi header
+     * @return The set of referred packages.
      * @throws IOException If there are any problems scanning bytecode
      * @since 2.4.0
      */
-    public static String findReferredPackages(List<HostComponentRegistration> registrations) throws IOException
+    public static Set<String> findReferredPackages(List<HostComponentRegistration> registrations) throws IOException
     {
-        return findReferredPackages(registrations, Collections.<String, String>emptyMap());
+        return findReferredPackagesInternal(registrations);
     }
 
     /**
      * Finds all referred packages for host component registrations by scanning their declared interfaces' bytecode.
      *
      * @param registrations A list of host component registrations
-     * @return The referred packages in a format compatible with an OSGi header
+     * @return The referred package map ( package-> version ).
      * @throws IOException If there are any problems scanning bytecode
      */
-    public static String findReferredPackages(List<HostComponentRegistration> registrations, Map<String, String> packageVersions) throws IOException
+    public static Map<String, String> findReferredPackages(List<HostComponentRegistration> registrations, Map<String, String> packageVersions) throws IOException
     {
-        StringBuffer sb = new StringBuffer();
+        Set<String> referredPackages = findReferredPackagesInternal(registrations);
+        return matchPackageVersions(referredPackages, packageVersions);
+    }
+
+    static Map<String, String> matchPackageVersions(Set<String> packageNames, Map<String, String> packageVersions)
+    {
+        Map<String, String> output = new HashMap<String, String>();
+
+        for (String pkg : packageNames)
+        {
+            String version = packageVersions.get(pkg);
+
+            String effectiveKey = pkg;
+            String effectiveValue = null;
+
+            if (version != null) {
+                try {
+                    Version.parseVersion(version);
+                    effectiveValue = version;
+                } catch (IllegalArgumentException ex) {
+                    log.info("Unable to parse version: "+version);
+                }
+            }
+            output.put(effectiveKey, effectiveValue);
+        }
+
+        return Collections.unmodifiableMap(output);
+    }
+
+    static Set<String> findReferredPackagesInternal(List<HostComponentRegistration> registrations) throws IOException
+    {
         Set<String> referredPackages = new HashSet<String>();
         Set<String> referredClasses = new HashSet<String>();
-        if (registrations == null)
-        {
-            sb.append(",");
-        }
-        else
+
+        if (registrations != null)
         {
             for (HostComponentRegistration reg : registrations)
             {
@@ -68,7 +95,9 @@ public class OsgiHeaderUtil
 
                 // Make sure we scan all extended interfaces as well
                 for (Class inf : reg.getMainInterfaceClasses())
+                {
                     ClassUtils.findAllTypes(inf, classesToScan);
+                }
 
                 for (Class inf : classesToScan)
                 {
@@ -76,22 +105,9 @@ public class OsgiHeaderUtil
                     crawlReferenceTree(clsName, referredClasses, referredPackages, 1);
                 }
             }
-            for (String pkg : referredPackages)
-            {
-                String version = packageVersions.get(pkg);
-                sb.append(pkg);
-                if (version != null) {
-                    try {
-                        Version.parseVersion(version);
-                        sb.append(";version=").append(version);
-                    } catch (IllegalArgumentException ex) {
-                        log.info("Unable to parse version: "+version);
-                    }
-                }
-                sb.append(",");
-            }
         }
-        return sb.toString();
+
+        return Collections.unmodifiableSet(referredPackages);
     }
 
     /**
@@ -258,5 +274,39 @@ public class OsgiHeaderUtil
         }
         return key.toString();
 
+    }
+
+    /**
+     * Generate package version string such as "com.abc;version=1.2,com.atlassian".
+     * The output can be used for import or export.
+     *
+     * @param packages map of packagename->version.
+     */
+    public static String generatePackageVersionString(Map<String, String> packages)
+    {
+        if (packages == null || packages.size()==0)
+        {
+            return "";
+        }
+
+        final StringBuilder sb = new StringBuilder();
+
+        // add deterministism to string generation.
+        List<String> packageNames = new ArrayList<String>(packages.keySet());
+        Collections.sort(packageNames);
+
+        for(String packageName:packageNames)
+        {
+            sb.append(",");
+            sb.append(packageName);
+
+            if (packages.get(packageName) != null)
+            {
+                sb.append(";version=").append(packages.get(packageName));
+            }
+        }
+
+        sb.delete(0, 1);
+        return sb.toString();
     }
 }
