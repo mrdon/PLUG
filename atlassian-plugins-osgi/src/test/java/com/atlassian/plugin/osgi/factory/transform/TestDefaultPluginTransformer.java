@@ -10,9 +10,18 @@ import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
+import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.test.PluginTestUtils;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+import org.jaxen.SimpleNamespaceContext;
+import org.jaxen.XPath;
+import org.jaxen.dom4j.Dom4jXPath;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import static org.mockito.Mockito.mock;
@@ -20,10 +29,15 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -258,4 +272,93 @@ public class TestDefaultPluginTransformer extends TestCase
         assertTrue(DefaultPluginTransformer.generateCacheName(tmp).endsWith(String.valueOf(".s")));
     }
 
+    public void testTransformComponentMustNotPerformKeyConversion() throws Exception
+    {
+        File outputJarFile = runTransform();
+
+        assertBeanNames(outputJarFile, ComponentSpringStage.SPRING_XML,
+                        ImmutableMap.<String, String>builder().put("beans", "http://www.springframework.org/schema/beans").build(),
+                        "//beans:bean",
+                        Sets.newHashSet("TESTING1", "testing2"));
+    }
+
+    public void testTransformImportMustNotPerformKeyConversion() throws Exception
+    {
+        File outputJarFile = runTransform();
+
+        assertBeanNames(outputJarFile, ComponentImportSpringStage.SPRING_XML,
+                        ImmutableMap.<String, String>builder().put("osgi", "http://www.springframework.org/schema/osgi").build(),
+                        "//osgi:reference",
+                        Sets.newHashSet("TESTING3", "testing4"));
+    }
+
+    public void testTransformHostComponentMustNotPerformKeyConversion() throws Exception
+    {
+        File outputJarFile = runTransform();
+
+        assertBeanNames(outputJarFile, HostComponentSpringStage.SPRING_XML,
+                        ImmutableMap.<String, String>builder().put("beans", "http://www.springframework.org/schema/beans").build(),
+                        "//beans:bean",
+                        Sets.newHashSet("TESTING5", "testing6"));
+    }
+
+    private File runTransform() throws Exception
+    {
+        final File file = new PluginJarBuilder()
+                .addFormattedJava("my.Foo",
+                        "package my;",
+                        "import com.atlassian.plugin.osgi.factory.transform.Fooable;",
+                        "import com.atlassian.plugin.osgi.factory.transform.FooChild;",
+                        "public class Foo {",
+                        "  private Fooable bar;",
+                        "  public Foo(Fooable bar, FooChild child) { this.bar = bar;} ",
+                        "}")
+                .addFormattedJava("com.atlassian.plugin.osgi.SomeInterface",
+                                  "package com.atlassian.plugin.osgi;",
+                                  "public interface SomeInterface {}")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='plugin1' key='first' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "   <component key='TESTING1' class='my.Foo'/>",
+                        "   <component key='testing2' class='my.Foo'/>",
+                        "   <component-import key='TESTING3'>",
+                        "       <interface>com.atlassian.plugin.osgi.SomeInterface</interface>",
+                        "   </component-import>",
+                        "   <component-import key='testing4'>",
+                        "       <interface>com.atlassian.plugin.osgi.SomeInterface</interface>",
+                        "   </component-import>",
+                        "</atlassian-plugin>")
+                .build();
+
+        MockRegistration mockReg1 = new MockRegistration(new Foo(), Fooable.class);
+        mockReg1.getProperties().put(PropertyBuilder.BEAN_NAME, "TESTING5");
+        MockRegistration mockReg2 = new MockRegistration(new FooChild(), FooChild.class);
+        mockReg2.getProperties().put(PropertyBuilder.BEAN_NAME, "testing6");
+
+        return transformer.transform(new JarPluginArtifact(file), Arrays.<HostComponentRegistration>asList(mockReg1, mockReg2));
+    }
+
+    private void assertBeanNames(File outputJarFile, String springFileLocation,
+                                 Map<String, String> namespaces, String xpathQuery,
+                                 Set<String> expectedIds) throws Exception
+    {
+        JarFile jarFile = new JarFile(outputJarFile);
+        InputStream inputStream = jarFile.getInputStream(jarFile.getEntry(springFileLocation));
+
+        SAXReader saxReader = new SAXReader();
+        Document document = saxReader.read(inputStream);
+
+        XPath xpath = new Dom4jXPath(xpathQuery);
+        xpath.setNamespaceContext(new SimpleNamespaceContext(namespaces));
+        Set<String> foundBeanNames = new HashSet<String>();
+        List<Element> elems = xpath.selectNodes(document);
+        for(Element elem:elems)
+        {
+            foundBeanNames.add(elem.attribute("id").getValue());
+        }
+
+        assertEquals(expectedIds, foundBeanNames);
+    }
 }
