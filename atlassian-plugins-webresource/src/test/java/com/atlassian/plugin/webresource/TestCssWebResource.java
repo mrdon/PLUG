@@ -60,4 +60,31 @@ public class TestCssWebResource extends TestCase
                     "<![endif]-->\n",
                     cssWebResource.formatResource(url, params));
     }
+
+    public void testFormatConditionalResource()
+    {
+        final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master-ie.css";
+
+        Map params = new HashMap();
+        params.put("condition", "IE");
+        params.put("media", "screen");
+        assertEquals("<!--[if IE]>\n" +
+                    "<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" media=\"screen\">\n" +
+                    "<![endif]-->\n",
+                    cssWebResource.formatResource(url, params));
+    }
+
+    public void testFormatConditionOverridesIEResource()
+    {
+        final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master-ie.css";
+
+        Map params = new HashMap();
+        params.put("condition", "!IE");
+        params.put("ieonly", "true");
+        params.put("media", "screen");
+        assertEquals("<!--[if !IE]>\n" +
+                    "<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" media=\"screen\">\n" +
+                    "<![endif]-->\n",
+                    cssWebResource.formatResource(url, params));
+    }
 }

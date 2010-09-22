@@ -14,6 +14,7 @@ public class CssWebResource extends AbstractWebResourceFormatter
     private static final String CSS_EXTENSION = ".css";
     private static final String MEDIA_PARAM = "media";
     private static final String IEONLY_PARAM = "ieonly";
+    private static final String CONDITION_PARAM = "condition";
 
     private static final List<String> HANDLED_PARAMETERS = Arrays.asList("title", MEDIA_PARAM, "charset");
 
@@ -40,7 +41,13 @@ public class CssWebResource extends AbstractWebResourceFormatter
         buffer.append(">\n");
 
         // ie conditional commment
-        if (BooleanUtils.toBoolean(params.get(IEONLY_PARAM)))
+        if (params.containsKey(CONDITION_PARAM))
+        {
+            String condition = params.get(CONDITION_PARAM);
+            buffer.insert(0, "<!--[if " + condition + "]>\n");
+            buffer.append("<![endif]-->\n");
+        }
+        else if (BooleanUtils.toBoolean(params.get(IEONLY_PARAM)))
         {
             buffer.insert(0, "<!--[if IE]>\n");
             buffer.append("<![endif]-->\n");
