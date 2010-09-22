@@ -34,7 +34,7 @@ public class HostComponentSpringStage implements TransformStage
     private static final Logger log = LoggerFactory.getLogger(HostComponentSpringStage.class);
 
     /** Path of generated Spring XML file */
-    public static final String SPRING_XML = "META-INF/spring/atlassian-plugins-host-components.xml";
+    private static final String SPRING_XML = "META-INF/spring/atlassian-plugins-host-components.xml";
 
     public static final String BEAN_SOURCE = "Host Component";
 

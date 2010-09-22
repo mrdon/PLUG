@@ -32,7 +32,7 @@ import java.util.jar.JarInputStream;
 public class ComponentSpringStage implements TransformStage
 {
     /** Path of generated Spring XML file */
-    public static final String SPRING_XML = "META-INF/spring/atlassian-plugins-components.xml";
+    private static final String SPRING_XML = "META-INF/spring/atlassian-plugins-components.xml";
 
     public static final String BEAN_SOURCE = "Plugin Component";
 

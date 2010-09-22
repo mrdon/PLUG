@@ -276,7 +276,7 @@ public class TestDefaultPluginTransformer extends TestCase
     {
         File outputJarFile = runTransform();
 
-        assertBeanNames(outputJarFile, ComponentSpringStage.SPRING_XML,
+        assertBeanNames(outputJarFile, "META-INF/spring/atlassian-plugins-components.xml",
                         ImmutableMap.<String, String>builder().put("beans", "http://www.springframework.org/schema/beans").build(),
                         "//beans:bean",
                         Sets.newHashSet("TESTING1", "testing2"));
@@ -286,7 +286,7 @@ public class TestDefaultPluginTransformer extends TestCase
     {
         File outputJarFile = runTransform();
 
-        assertBeanNames(outputJarFile, ComponentImportSpringStage.SPRING_XML,
+        assertBeanNames(outputJarFile, "META-INF/spring/atlassian-plugins-component-imports.xml",
                         ImmutableMap.<String, String>builder().put("osgi", "http://www.springframework.org/schema/osgi").build(),
                         "//osgi:reference",
                         Sets.newHashSet("TESTING3", "testing4"));
@@ -296,7 +296,7 @@ public class TestDefaultPluginTransformer extends TestCase
     {
         File outputJarFile = runTransform();
 
-        assertBeanNames(outputJarFile, HostComponentSpringStage.SPRING_XML,
+        assertBeanNames(outputJarFile, "META-INF/spring/atlassian-plugins-host-components.xml",
                         ImmutableMap.<String, String>builder().put("beans", "http://www.springframework.org/schema/beans").build(),
                         "//beans:bean",
                         Sets.newHashSet("TESTING5", "testing6"));

@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 public class ComponentImportSpringStage implements TransformStage
 {
     /** Path of generated Spring XML file */
-    public static final String SPRING_XML = "META-INF/spring/atlassian-plugins-component-imports.xml";
+    private static final String SPRING_XML = "META-INF/spring/atlassian-plugins-component-imports.xml";
 
     public static final String BEAN_SOURCE = "Component Import";
 
