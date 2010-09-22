@@ -114,7 +114,6 @@ public class TestExportsBuilder extends TestCase
         }
 
         assertEquals("even though the package is found twice, we must export it only once", 1, packageCount);
-        assertFalse("found earlier always wins", exports.contains("javax.management;version=1.2.3"));
         assertTrue("found earlier always wins", exports.contains(",javax.management,"));
     }
 

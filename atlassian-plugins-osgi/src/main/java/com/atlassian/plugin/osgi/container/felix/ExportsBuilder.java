@@ -51,7 +51,8 @@ class ExportsBuilder
      * @param packageScannerConfig The configuration for the package scanning
      * @return A list of exports, in a format compatible with OSGi headers
      */
-    public String getExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig) {
+    public String getExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig)
+    {
         if (exportStringCache == null)
         {
             exportStringCache = determineExports(regs, packageScannerConfig);
@@ -69,7 +70,8 @@ class ExportsBuilder
      * @deprecated Please use {@link #getExports}. Deprecated since 2.3.6
      */
     @SuppressWarnings ({ "UnusedDeclaration" })
-    public String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig, File cacheDir){
+    public String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig, File cacheDir)
+    {
         return determineExports(regs, packageScannerConfig);
     }
 
@@ -80,8 +82,8 @@ class ExportsBuilder
      * @param packageScannerConfig The configuration for the package scanning
      * @return A list of exports, in a format compatible with OSGi headers
      */
-    String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig){
-
+    String determineExports(List<HostComponentRegistration> regs, PackageScannerConfiguration packageScannerConfig)
+    {
         Map<String, String> exportPackages = new HashMap<String, String>();
 
         // The first part is osgi related packages.
@@ -102,7 +104,7 @@ class ExportsBuilder
         // Fourth part by scanning host components since all the classes referred to by them must be available to consumers.
         try
         {
-            Map<String,String> referredPackages = OsgiHeaderUtil.findReferredPackages(regs, packageScannerConfig.getPackageVersions());
+            Map<String,String> referredPackages = OsgiHeaderUtil.findReferredPackageVersions(regs, packageScannerConfig.getPackageVersions());
             copyUnlessExist(exportPackages, referredPackages);
         }
         catch (IOException ex)
@@ -111,27 +113,25 @@ class ExportsBuilder
             return OsgiHeaderUtil.generatePackageVersionString(exportPackages);
         }
 
-        String exports = null;
+        String exports = OsgiHeaderUtil.generatePackageVersionString(exportPackages);
+        Analyzer analyzer = new Analyzer();
+        analyzer.setJar(new Jar("somename.jar"));
+
         try
         {
-            exports = OsgiHeaderUtil.generatePackageVersionString(exportPackages);
-            Analyzer analyzer = new Analyzer();
-            analyzer.setJar(new Jar("somename.jar"));
-
             // we pretend the exports are imports for the sake of the bnd tool, which would otherwise cut out
             // exports that weren't actually in the jar
             analyzer.setProperty(Constants.IMPORT_PACKAGE, exports);
             Manifest mf = analyzer.calcManifest();
-
             exports = mf.getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
         }
         catch (IOException ex)
         {
             log.error("Unable to calculate necessary exports based on host components", ex);
-            return exports;
         }
 
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled())
+        {
             log.debug("Exports:\n"+exports.replaceAll(",", "\r\n"));
         }
 

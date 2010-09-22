@@ -2,26 +2,14 @@ package com.atlassian.plugin.osgi.util;
 
 import com.atlassian.plugin.osgi.factory.transform.StubHostComponentRegistration;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
-import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
-import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
-import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
 import com.google.common.collect.Sets;
-import com.mockobjects.dynamic.Mock;
-import com.mockobjects.dynamic.C;
 import junit.framework.TestCase;
 
-import java.io.File;
 import java.io.IOException;
-import javax.servlet.ServletContext;
-import javax.print.attribute.HashAttributeSet;
-import javax.swing.table.TableModel;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.text.AttributeSet;
 import java.util.*;
 import java.util.jar.Manifest;
 
-import org.twdata.pkgscanner.ExportPackage;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import static org.mockito.Mockito.mock;
@@ -32,7 +20,7 @@ public class TestOsgiHeaderUtil extends TestCase
 
     public void testFindReferredPackages() throws IOException
     {
-        Set<String> foundPackages = OsgiHeaderUtil.findReferredPackages(new ArrayList<HostComponentRegistration>()
+        Set<String> foundPackages = OsgiHeaderUtil.findReferredPackageNames(new ArrayList<HostComponentRegistration>()
         {{
             add(new StubHostComponentRegistration(OsgiHeaderUtil.class));
         }});
@@ -42,7 +30,7 @@ public class TestOsgiHeaderUtil extends TestCase
 
     public void testFindReferredPackagesWithVersion() throws IOException
     {
-        Map<String, String> foundPackages = OsgiHeaderUtil.findReferredPackages(new ArrayList<HostComponentRegistration>()
+        Map<String, String> foundPackages = OsgiHeaderUtil.findReferredPackageVersions(new ArrayList<HostComponentRegistration>()
         {{
             add(new StubHostComponentRegistration(OsgiHeaderUtil.class));
         }}, Collections.singletonMap(HostComponentRegistration.class.getPackage().getName(), "1.0.45"));

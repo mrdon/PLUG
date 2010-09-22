@@ -37,9 +37,9 @@ public class OsgiHeaderUtil
      * @param registrations A list of host component registrations
      * @return The set of referred packages.
      * @throws IOException If there are any problems scanning bytecode
-     * @since 2.4.0
+     * @since 2.7.0
      */
-    public static Set<String> findReferredPackages(List<HostComponentRegistration> registrations) throws IOException
+    public static Set<String> findReferredPackageNames(List<HostComponentRegistration> registrations) throws IOException
     {
         return findReferredPackagesInternal(registrations);
     }
@@ -50,11 +50,79 @@ public class OsgiHeaderUtil
      * @param registrations A list of host component registrations
      * @return The referred package map ( package-> version ).
      * @throws IOException If there are any problems scanning bytecode
+     * @since 2.7.0
      */
-    public static Map<String, String> findReferredPackages(List<HostComponentRegistration> registrations, Map<String, String> packageVersions) throws IOException
+    public static Map<String, String> findReferredPackageVersions(List<HostComponentRegistration> registrations, Map<String, String> packageVersions) throws IOException
     {
         Set<String> referredPackages = findReferredPackagesInternal(registrations);
         return matchPackageVersions(referredPackages, packageVersions);
+    }
+
+    /**
+     * Finds all referred packages for host component registrations by scanning their declared interfaces' bytecode.
+     *
+     * @param registrations A list of host component registrations
+     * @return The referred packages in a format compatible with an OSGi header
+     * @throws IOException If there are any problems scanning bytecode
+     * @since 2.4.0
+     * @deprecated Since 2.7.0, use {@link #findReferredPackageNames(java.util.List)} instead.
+     */
+    @Deprecated
+    public static String findReferredPackages(List<HostComponentRegistration> registrations) throws IOException
+    {
+        return findReferredPackages(registrations, Collections.<String, String>emptyMap());
+    }
+
+    /**
+     * Finds all referred packages for host component registrations by scanning their declared interfaces' bytecode.
+     *
+     * @param registrations A list of host component registrations
+     * @return The referred packages in a format compatible with an OSGi header
+     * @throws IOException If there are any problems scanning bytecode
+     * @deprecated Since 2.7.0, use {@link #findReferredPackageVersions(java.util.List, java.util.Map)} instead.
+     */
+    @Deprecated
+    public static String findReferredPackages(List<HostComponentRegistration> registrations, Map<String, String> packageVersions) throws IOException
+    {
+        StringBuffer sb = new StringBuffer();
+        Set<String> referredPackages = new HashSet<String>();
+        Set<String> referredClasses = new HashSet<String>();
+        if (registrations == null)
+        {
+            sb.append(",");
+        }
+        else
+        {
+            for (HostComponentRegistration reg : registrations)
+            {
+                Set<Class> classesToScan = new HashSet<Class>();
+
+                // Make sure we scan all extended interfaces as well
+                for (Class inf : reg.getMainInterfaceClasses())
+                    ClassUtils.findAllTypes(inf, classesToScan);
+
+                for (Class inf : classesToScan)
+                {
+                    String clsName = inf.getName().replace('.','/')+".class";
+                    crawlReferenceTree(clsName, referredClasses, referredPackages, 1);
+                }
+            }
+            for (String pkg : referredPackages)
+            {
+                String version = packageVersions.get(pkg);
+                sb.append(pkg);
+                if (version != null) {
+                    try {
+                        Version.parseVersion(version);
+                        sb.append(";version=").append(version);
+                    } catch (IllegalArgumentException ex) {
+                        log.info("Unable to parse version: "+version);
+                    }
+                }
+                sb.append(",");
+            }
+        }
+        return sb.toString();
     }
 
     static Map<String, String> matchPackageVersions(Set<String> packageNames, Map<String, String> packageVersions)
@@ -68,11 +136,15 @@ public class OsgiHeaderUtil
             String effectiveKey = pkg;
             String effectiveValue = null;
 
-            if (version != null) {
-                try {
+            if (version != null)
+            {
+                try
+                {
                     Version.parseVersion(version);
                     effectiveValue = version;
-                } catch (IllegalArgumentException ex) {
+                }
+                catch (IllegalArgumentException ex)
+                {
                     log.info("Unable to parse version: "+version);
                 }
             }
@@ -300,13 +372,16 @@ public class OsgiHeaderUtil
             sb.append(",");
             sb.append(packageName);
 
-            if (packages.get(packageName) != null)
+            String version = packages.get(packageName);
+            if (version != null)
             {
-                sb.append(";version=").append(packages.get(packageName));
+                sb.append(";version=").append(version);
             }
         }
 
+        // delete the initial ",".
         sb.delete(0, 1);
+
         return sb.toString();
     }
 }
