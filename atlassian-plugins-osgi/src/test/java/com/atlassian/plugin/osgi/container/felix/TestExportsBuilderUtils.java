@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.container.felix;
 import com.atlassian.plugin.util.ClassLoaderStack;
 import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
+import org.osgi.framework.Version;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,9 +31,9 @@ public class TestExportsBuilderUtils extends TestCase
     public void testParseExportNoVersions() throws IOException
     {
         Map<String, String> expected = new HashMap<String, String>();
-        expected.put("com.atlassian.dummy", null);
-        expected.put("com.atlassian.dummy.sub", null);
-        expected.put("com.atlassian.wahaha", null);
+        expected.put("com.atlassian.dummy", Version.emptyVersion.toString());
+        expected.put("com.atlassian.dummy.sub", Version.emptyVersion.toString());
+        expected.put("com.atlassian.wahaha", Version.emptyVersion.toString());
 
         runParsingTest(expected, " # comment",
                                  "com.atlassian.dummy",
@@ -45,8 +46,8 @@ public class TestExportsBuilderUtils extends TestCase
         Map<String, String> content = ExportBuilderUtils.parseExportFile("jdk-packages.test.txt");
 
         Map<String, String> expected = new HashMap<String, String>();
-        expected.put("foo.bar", null);
-        expected.put("foo.baz", null);
+        expected.put("foo.bar", Version.emptyVersion.toString());
+        expected.put("foo.baz", Version.emptyVersion.toString());
 
         assertEquals(expected, content);
     }

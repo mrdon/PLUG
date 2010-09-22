@@ -5,6 +5,8 @@ import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.util.ClassUtils;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.io.IOUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -30,6 +32,7 @@ import java.util.jar.Manifest;
 public class OsgiHeaderUtil
 {
     static Logger log = LoggerFactory.getLogger(OsgiHeaderUtil.class);
+    private static final String EMPTY_OSGI_VERSION = Version.emptyVersion.toString();
 
     /**
      * Finds all referred packages for host component registrations by scanning their declared interfaces' bytecode.
@@ -134,7 +137,7 @@ public class OsgiHeaderUtil
             String version = packageVersions.get(pkg);
 
             String effectiveKey = pkg;
-            String effectiveValue = null;
+            String effectiveValue = EMPTY_OSGI_VERSION;
 
             if (version != null)
             {
@@ -151,7 +154,7 @@ public class OsgiHeaderUtil
             output.put(effectiveKey, effectiveValue);
         }
 
-        return Collections.unmodifiableMap(output);
+        return ImmutableMap.copyOf(output);
     }
 
     static Set<String> findReferredPackagesInternal(List<HostComponentRegistration> registrations) throws IOException
@@ -179,7 +182,7 @@ public class OsgiHeaderUtil
             }
         }
 
-        return Collections.unmodifiableSet(referredPackages);
+        return ImmutableSet.copyOf(referredPackages);
     }
 
     /**
@@ -373,7 +376,9 @@ public class OsgiHeaderUtil
             sb.append(packageName);
 
             String version = packages.get(packageName);
-            if (version != null)
+
+            // we can drop the version component if it's empty for a slight performance gain.
+            if (version != null && !version.equals(EMPTY_OSGI_VERSION))
             {
                 sb.append(";version=").append(version);
             }

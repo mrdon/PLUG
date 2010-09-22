@@ -3,8 +3,10 @@ package com.atlassian.plugin.osgi.container.felix;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
+import org.osgi.framework.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.twdata.pkgscanner.DefaultOsgiVersionConverter;
@@ -21,6 +23,7 @@ final class ExportBuilderUtils
 {
     private static Logger LOG = LoggerFactory.getLogger(ExportBuilderUtils.class);
     private static final DefaultOsgiVersionConverter converter = new DefaultOsgiVersionConverter();
+    private static final String EMPTY_OSGI_VERSION = Version.emptyVersion.toString();
 
     /**
      * Not for instantiation.
@@ -41,14 +44,14 @@ final class ExportBuilderUtils
             }
             else
             {
-                return null;
+                return EMPTY_OSGI_VERSION;
             }
         }
     };
 
     /**
      * Reads export file and return a map of package->version.
-     * Returned versions are in OSGi format but can be null if not specified in the file.
+     * Returned versions are in OSGi format which can be 0.0.0 if not specified in the file.
      *
      * @param exportFilePath the file path, never null.
      *
@@ -68,7 +71,7 @@ final class ExportBuilderUtils
         catch (IOException e)
         {
             LOG.warn("Problem occurred while processing package export:" + exportFilePath, e);
-            return Collections.emptyMap();
+            return ImmutableMap.of();
         }
         finally
         {
@@ -76,7 +79,8 @@ final class ExportBuilderUtils
         }
 
         // convert version strings to osgi format and return the resultant map.
-        return Collections.unmodifiableMap(Maps.transformValues(Maps.fromProperties(props), CONVERT_VERSION));
+        // this Maps.transformValues returns a view backed by immutable map in this case so itself is already immutable.
+        return Maps.transformValues(Maps.fromProperties(props), CONVERT_VERSION);
     }
 
     /**
@@ -101,8 +105,9 @@ final class ExportBuilderUtils
         Map<String, String> output = new HashMap<String, String>();
         for (ExportPackage pkg : exportPackages)
         {
-            output.put(pkg.getPackageName(), pkg.getVersion());
+            String version = pkg.getVersion() == null ? EMPTY_OSGI_VERSION : pkg.getVersion();
+            output.put(pkg.getPackageName(), version);
         }
-        return Collections.unmodifiableMap(output);
+        return ImmutableMap.copyOf(output);
     }
 }

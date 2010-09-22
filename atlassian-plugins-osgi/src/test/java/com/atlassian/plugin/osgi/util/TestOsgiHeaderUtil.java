@@ -12,6 +12,8 @@ import java.util.jar.Manifest;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -71,7 +73,7 @@ public class TestOsgiHeaderUtil extends TestCase
     {
         Map<String, String> input = new HashMap<String, String>();
         input.put("foo.bar", "1.2");
-        input.put("foo.baz", null);
+        input.put("foo.baz", Version.emptyVersion.toString());
 
         String output = OsgiHeaderUtil.generatePackageVersionString(input);
 
