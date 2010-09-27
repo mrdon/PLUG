@@ -1,11 +1,8 @@
 package com.atlassian.plugin.osgi.container.felix;
 
-import com.atlassian.plugin.metadata.Dummy1;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
-import com.atlassian.plugin.util.PluginFrameworkUtils;
-import com.google.common.collect.ImmutableMap;
 import junit.framework.TestCase;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -83,6 +80,7 @@ public class TestExportsBuilder extends TestCase
         }
     }
 
+
     public void testDetermineExportWhileConflictExists()
     {
         final DescriptorAccess descAccess = new DescriptorAccess() {
@@ -100,7 +98,9 @@ public class TestExportsBuilder extends TestCase
         }};
 
         DefaultPackageScannerConfiguration config = new DefaultPackageScannerConfiguration();
-        config.setPackageVersions(ImmutableMap.of("javax.management", "1.2.3"));
+        Map<String, String> versions = new HashMap<String, String>();
+        versions.put("javax.management", "1.2.3");
+        config.setPackageVersions(versions);
 
         String exports = builder.determineExports(regs, config);
 
@@ -115,21 +115,6 @@ public class TestExportsBuilder extends TestCase
 
         assertEquals("even though the package is found twice, we must export it only once", 1, packageCount);
         assertTrue("found earlier always wins", exports.contains(",javax.management,"));
-    }
-
-    public void testOverrideConflictingPackagesInPlugins()
-    {
-        List<HostComponentRegistration> regs = new ArrayList<HostComponentRegistration> () {{
-            add(new MockRegistration(new Dummy1(), Dummy1.class));
-        }};
-
-        DefaultPackageScannerConfiguration config = new DefaultPackageScannerConfiguration();
-        config.setPackageVersions(ImmutableMap.of("com.atlassian.plugin.metadata", "98.76.54"));
-
-        String exports = builder.determineExports(regs, config);
-
-        assertTrue("for conflicting packages always use the version of plugin framework first",
-                   exports.contains(",com.atlassian.plugin.metadata;version=\"" + PluginFrameworkUtils.getPluginFrameworkVersion().replace("-", ".") + "\","));
     }
 
     public void testGenerateExports() throws MalformedURLException

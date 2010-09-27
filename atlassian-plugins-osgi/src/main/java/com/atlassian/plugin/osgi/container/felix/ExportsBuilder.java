@@ -5,13 +5,9 @@ import aQute.lib.osgi.Jar;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
-import com.atlassian.plugin.util.PluginFrameworkUtils;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.twdata.pkgscanner.DefaultOsgiVersionConverter;
 import org.twdata.pkgscanner.ExportPackage;
 import org.twdata.pkgscanner.PackageScanner;
 
@@ -30,7 +26,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.jar.Manifest;
 
 /**
@@ -44,12 +39,6 @@ class ExportsBuilder
 
     private static Logger log = LoggerFactory.getLogger(ExportsBuilder.class);
     private static String exportStringCache;
-
-    /**
-     * Gets the package names from plugin framework which might be in conflicts with its plugins.
-     * It sounds rare and weird but it has occurred at least once.
-     */
-    private static final Set<String> PLUG_PACKAGE_CONFLICTS = Sets.newHashSet("com.atlassian.plugin.metadata");
 
     /**
      * Gets the framework exports taking into account host components and package scanner configuration.
@@ -99,10 +88,6 @@ class ExportsBuilder
 
         // The first part is osgi related packages.
         copyUnlessExist(exportPackages, parseExportFile(OSGI_PACKAGES_PATH));
-
-        // This is a workaround when plugins use package names already in use by plugin framework
-        // which sometimes causes the plugin framework to export wrong package versions.
-        copyUnlessExist(exportPackages, getConflictingPluginFrameworkPackageVersions());
 
         // The second part is JDK packages.
         copyUnlessExist(exportPackages, parseExportFile(JDK_PACKAGES_PATH));
@@ -203,24 +188,6 @@ class ExportsBuilder
                     + " scanning, most likely due to an application server bug.");
         }
         return exports;
-    }
-
-    private static Map<String, String> getConflictingPluginFrameworkPackageVersions()
-    {
-        final String plugVersion = PluginFrameworkUtils.getPluginFrameworkVersion();
-
-        // convert the maven format to osgi format before use.
-        DefaultOsgiVersionConverter converter = new DefaultOsgiVersionConverter();
-        final String plugOsgiVersion = converter.getVersion(plugVersion);
-
-        // build the package version map as output.
-        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-        for (String pkg : PLUG_PACKAGE_CONFLICTS)
-        {
-            builder.put(pkg, plugOsgiVersion);
-        }
-
-        return builder.build();
     }
 
     /**

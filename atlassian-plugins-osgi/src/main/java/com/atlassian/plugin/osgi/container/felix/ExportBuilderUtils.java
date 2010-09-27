@@ -14,6 +14,7 @@ import org.twdata.pkgscanner.ExportPackage;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
