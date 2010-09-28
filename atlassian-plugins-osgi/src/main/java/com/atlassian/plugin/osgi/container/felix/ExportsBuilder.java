@@ -1,11 +1,9 @@
 package com.atlassian.plugin.osgi.container.felix;
 
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Jar;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
-import org.osgi.framework.Constants;
+import com.google.common.base.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.twdata.pkgscanner.ExportPackage;
@@ -26,7 +24,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.jar.Manifest;
 
 /**
  * Builds the OSGi package exports string.  Uses a file to cache the scanned results, keyed by the application version.
@@ -110,32 +107,9 @@ class ExportsBuilder
         catch (IOException ex)
         {
             log.error("Unable to calculate necessary exports based on host components", ex);
-            return OsgiHeaderUtil.generatePackageVersionString(exportPackages);
         }
 
-        String exports = OsgiHeaderUtil.generatePackageVersionString(exportPackages);
-        Analyzer analyzer = new Analyzer();
-        analyzer.setJar(new Jar("somename.jar"));
-
-        try
-        {
-            // we pretend the exports are imports for the sake of the bnd tool, which would otherwise cut out
-            // exports that weren't actually in the jar
-            analyzer.setProperty(Constants.IMPORT_PACKAGE, exports);
-            Manifest mf = analyzer.calcManifest();
-            exports = mf.getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
-        }
-        catch (IOException ex)
-        {
-            log.error("Unable to calculate necessary exports based on host components", ex);
-        }
-
-        if (log.isDebugEnabled())
-        {
-            log.debug("Exports:\n"+exports.replaceAll(",", "\r\n"));
-        }
-
-        return exports;
+        return OsgiHeaderUtil.generatePackageVersionString(exportPackages);
     }
 
     Collection<ExportPackage> generateExports(PackageScannerConfiguration packageScannerConfig)

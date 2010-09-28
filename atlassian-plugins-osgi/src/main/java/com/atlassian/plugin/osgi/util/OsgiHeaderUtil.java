@@ -5,8 +5,10 @@ import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.util.ClassUtils;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import org.apache.commons.io.IOUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -36,6 +38,7 @@ public class OsgiHeaderUtil
 
     /**
      * Finds all referred packages for host component registrations by scanning their declared interfaces' bytecode.
+     * Packages starting with "java." are ignored.
      *
      * @param registrations A list of host component registrations
      * @return The set of referred packages.
@@ -159,8 +162,8 @@ public class OsgiHeaderUtil
 
     static Set<String> findReferredPackagesInternal(List<HostComponentRegistration> registrations) throws IOException
     {
-        Set<String> referredPackages = new HashSet<String>();
-        Set<String> referredClasses = new HashSet<String>();
+        final Set<String> referredPackages = new HashSet<String>();
+        final Set<String> referredClasses = new HashSet<String>();
 
         if (registrations != null)
         {
@@ -184,6 +187,28 @@ public class OsgiHeaderUtil
 
         return ImmutableSet.copyOf(referredPackages);
     }
+
+    /**
+     * Helps filter "java." packages.
+     */
+    private static final Predicate<String> JAVA_PACKAGE_FILTER = new Predicate<String>()
+    {
+        public boolean apply(String pkg)
+        {
+            return !pkg.startsWith("java.");
+        }
+    };
+
+    /**
+     * Helps filter class entries under "java." packages.
+     */
+    private static final Predicate<String> JAVA_CLASS_FILTER = new Predicate<String>()
+    {
+        public boolean apply(String classEntry)
+        {
+            return !classEntry.startsWith("java/");
+        }
+    };
 
     /**
      * This will crawl the class interfaces to the desired level.
@@ -223,9 +248,12 @@ public class OsgiHeaderUtil
                 return;
             }
             Clazz clz = new Clazz(className, in);
-            packageImports.addAll(clz.getReferred().keySet());
 
-            Set<String> referredClasses = clz.getReferredClasses();
+            // ignore java packages.
+            packageImports.addAll(Sets.filter(clz.getReferred().keySet(), JAVA_PACKAGE_FILTER));
+
+            // ignore classes in java packages.
+            Set<String> referredClasses = Sets.filter(clz.getReferredClasses(), JAVA_CLASS_FILTER);
             for (String ref : referredClasses)
                 crawlReferenceTree(ref, scannedClasses, packageImports, level-1);
         }
@@ -233,7 +261,6 @@ public class OsgiHeaderUtil
         {
             IOUtils.closeQuietly(in);
         }
-
     }
 
     /**
@@ -347,8 +374,8 @@ public class OsgiHeaderUtil
         {
             key = bundleName + "-" + version;
         }
-        return key.toString();
 
+        return key.toString();
     }
 
     /**

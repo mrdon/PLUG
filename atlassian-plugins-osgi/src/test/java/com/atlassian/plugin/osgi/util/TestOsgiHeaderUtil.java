@@ -1,8 +1,10 @@
 package com.atlassian.plugin.osgi.util;
 
+import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.osgi.factory.transform.StubHostComponentRegistration;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
+import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
 import com.google.common.collect.Sets;
 import junit.framework.TestCase;
 
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.jar.Manifest;
 
+import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -28,6 +31,15 @@ public class TestOsgiHeaderUtil extends TestCase
         }});
 
         assertTrue(foundPackages.contains(HostComponentRegistration.class.getPackage().getName()));
+    }
+
+    public void testFindReferredPackagesMustNotReturnJavaPackages() throws IOException
+    {
+        List<HostComponentRegistration> regs = Arrays.<HostComponentRegistration>asList(new MockRegistration(Mockito.mock(DummyClass.class), DummyClass.class));
+
+        Set<String> foundPackages = OsgiHeaderUtil.findReferredPackageNames(regs);
+
+        assertFalse(foundPackages.contains("java.lang"));
     }
 
     public void testFindReferredPackagesWithVersion() throws IOException
@@ -82,6 +94,11 @@ public class TestOsgiHeaderUtil extends TestCase
         assertTrue(set.contains("foo.bar;version=1.2"));
         assertTrue(set.contains("foo.baz"));
         assertEquals(2, set.size());
+    }
+
+    private static interface DummyClass
+    {
+        void doSomething(Object obj);
     }
 
 }
