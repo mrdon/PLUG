@@ -1,7 +1,5 @@
 package com.atlassian.plugin.util;
 
-import com.google.common.collect.Sets;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
@@ -12,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Class utility methods
@@ -19,7 +18,8 @@ import java.util.Set;
 public class ClassUtils
 {
     private ClassUtils()
-    {}
+    {
+    }
 
     /**
      * Finds all super classes and interfaces for a given class
@@ -27,9 +27,11 @@ public class ClassUtils
      * @param cls The class to scan
      * @return The collected related classes found
      */
-    public static Set<Class<?>> findAllTypes(final Class<?> cls)
+    public static Set<Class> findAllTypes(Class cls)
     {
-        return findAllTypes(cls, Sets.<Class<?>> newHashSet());
+        Set<Class> types = new HashSet<Class>();
+        findAllTypes(cls, types);
+        return types;
     }
 
     /**
@@ -38,17 +40,17 @@ public class ClassUtils
      * @param cls   The class to scan
      * @param types The collected related classes found
      */
-    public static Set<Class<?>> findAllTypes(final Class<?> cls, final Set<Class<?>> types)
+    public static void findAllTypes(Class cls, Set<Class> types)
     {
         if (cls == null)
         {
-            return types;
+            return;
         }
 
         // check to ensure it hasn't been scanned yet
         if (types.contains(cls))
         {
-            return types;
+            return;
         }
 
         types.add(cls);
@@ -58,7 +60,6 @@ public class ClassUtils
         {
             findAllTypes(cls.getInterfaces()[x], types);
         }
-        return types;
     }
 
     /**
@@ -67,11 +68,11 @@ public class ClassUtils
      * @param type the type
      * @return the underlying class
      */
-    private static Class<?> getClass(final Type type)
+    private static Class<?> getClass(Type type)
     {
-        if (type instanceof Class<?>)
+        if (type instanceof Class)
         {
-            return (Class<?>) type;
+            return (Class) type;
         }
         else if (type instanceof ParameterizedType)
         {
@@ -79,15 +80,21 @@ public class ClassUtils
         }
         else if (type instanceof GenericArrayType)
         {
-            final Type componentType = ((GenericArrayType) type).getGenericComponentType();
-            final Class<?> componentClass = getClass(componentType);
+            Type componentType = ((GenericArrayType) type).getGenericComponentType();
+            Class<?> componentClass = getClass(componentType);
             if (componentClass != null)
             {
                 return Array.newInstance(componentClass, 0).getClass();
             }
+            else
+            {
+                return null;
+            }
+        }
+        else
+        {
             return null;
         }
-        return null;
     }
 
     /**
@@ -99,26 +106,27 @@ public class ClassUtils
      * @throws IllegalArgumentException If the child class is not the base of the baseClass
      * @since 2.5.0
      */
-    public static <T> List<Class<?>> getTypeArguments(final Class<T> baseClass, final Class<? extends T> childClass)
+    public static <T> List<Class<?>> getTypeArguments(
+            Class<T> baseClass, Class<? extends T> childClass)
     {
-        final Map<Type, Type> resolvedTypes = new HashMap<Type, Type>();
+        Map<Type, Type> resolvedTypes = new HashMap<Type, Type>();
         Type type = childClass;
-        Class<?> typeClass = getClass(type);
+        Class typeClass = getClass(type);
         // start walking up the inheritance hierarchy until we hit baseClass
         while (!typeClass.equals(baseClass))
         {
-            if (type instanceof Class<?>)
+            if (type instanceof Class)
             {
                 // there is no useful information for us in raw types, so just keep going.
-                type = ((Class<?>) type).getGenericSuperclass();
+                type = ((Class) type).getGenericSuperclass();
             }
             else
             {
-                final ParameterizedType parameterizedType = (ParameterizedType) type;
-                final Class<?> rawType = (Class<?>) parameterizedType.getRawType();
+                ParameterizedType parameterizedType = (ParameterizedType) type;
+                Class<?> rawType = (Class) parameterizedType.getRawType();
 
-                final Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-                final TypeVariable<?>[] typeParameters = rawType.getTypeParameters();
+                Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                TypeVariable<?>[] typeParameters = rawType.getTypeParameters();
                 for (int i = 0; i < actualTypeArguments.length; i++)
                 {
                     resolvedTypes.put(typeParameters[i], actualTypeArguments[i]);
@@ -139,15 +147,15 @@ public class ClassUtils
         // finally, for each actual type argument provided to baseClass, determine (if possible)
         // the raw class for that type argument.
         Type[] actualTypeArguments;
-        if (type instanceof Class<?>)
+        if (type instanceof Class)
         {
-            actualTypeArguments = ((Class<?>) type).getTypeParameters();
+            actualTypeArguments = ((Class) type).getTypeParameters();
         }
         else
         {
             actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
         }
-        final List<Class<?>> typeArgumentsAsClasses = new ArrayList<Class<?>>();
+        List<Class<?>> typeArgumentsAsClasses = new ArrayList<Class<?>>();
         // resolve types by chasing down type variables.
         for (Type baseType : actualTypeArguments)
         {
