@@ -109,7 +109,14 @@ class ExportsBuilder
             log.error("Unable to calculate necessary exports based on host components", ex);
         }
 
-        return OsgiHeaderUtil.generatePackageVersionString(exportPackages);
+        final String exports = OsgiHeaderUtil.generatePackageVersionString(exportPackages);
+
+        if (log.isDebugEnabled())
+        {
+            log.debug("Exports:\n"+exports.replaceAll(",", "\r\n"));
+        }
+
+        return exports;
     }
 
     Collection<ExportPackage> generateExports(PackageScannerConfiguration packageScannerConfig)
