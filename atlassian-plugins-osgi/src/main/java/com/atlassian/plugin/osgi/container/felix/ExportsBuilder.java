@@ -3,9 +3,12 @@ package com.atlassian.plugin.osgi.container.felix;
 import com.atlassian.plugin.osgi.container.PackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
+import com.atlassian.plugin.util.PluginFrameworkUtils;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.twdata.pkgscanner.DefaultOsgiVersionConverter;
 import org.twdata.pkgscanner.ExportPackage;
 import org.twdata.pkgscanner.PackageScanner;
 
@@ -36,6 +39,14 @@ class ExportsBuilder
 
     private static Logger log = LoggerFactory.getLogger(ExportsBuilder.class);
     private static String exportStringCache;
+
+    private static final Predicate<String> UNDER_PLUGIN_FRAMEWORK = new Predicate<String>()
+    {
+        public boolean apply(String pkg)
+        {
+            return pkg.startsWith("com.atlassian.plugin.");
+        }
+    };
 
     /**
      * Gets the framework exports taking into account host components and package scanner configuration.
@@ -109,6 +120,10 @@ class ExportsBuilder
             log.error("Unable to calculate necessary exports based on host components", ex);
         }
 
+        // All the packages under plugin framework namespace must be exported as the plugin framework's version.
+        enforceFrameworkVersion(exportPackages);
+
+        // Generate the actual export string in OSGi spec.
         final String exports = OsgiHeaderUtil.generatePackageVersionString(exportPackages);
 
         if (log.isDebugEnabled())
@@ -117,6 +132,20 @@ class ExportsBuilder
         }
 
         return exports;
+    }
+
+    private void enforceFrameworkVersion(Map<String, String> exportPackages)
+    {
+        final String frameworkVersion = PluginFrameworkUtils.getPluginFrameworkVersion();
+
+        // convert the version to OSGi format.
+        DefaultOsgiVersionConverter converter = new DefaultOsgiVersionConverter();
+        final String frameworkVersionOsgi = converter.getVersion(frameworkVersion);
+
+        for(String pkg: Sets.filter(exportPackages.keySet(), UNDER_PLUGIN_FRAMEWORK))
+        {
+            exportPackages.put(pkg, frameworkVersionOsgi);
+        }
     }
 
     Collection<ExportPackage> generateExports(PackageScannerConfiguration packageScannerConfig)

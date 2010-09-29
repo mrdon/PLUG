@@ -1,8 +1,12 @@
 package com.atlassian.plugin.osgi.container.felix;
 
+import com.atlassian.plugin.testpackage1.Dummy1;
 import com.atlassian.plugin.osgi.container.impl.DefaultPackageScannerConfiguration;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.impl.MockRegistration;
+import com.atlassian.plugin.util.PluginFrameworkUtils;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import junit.framework.TestCase;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -22,9 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class TestExportsBuilder extends TestCase
 {
@@ -80,7 +82,6 @@ public class TestExportsBuilder extends TestCase
         }
     }
 
-
     public void testDetermineExportWhileConflictExists()
     {
         final DescriptorAccess descAccess = new DescriptorAccess() {
@@ -98,9 +99,7 @@ public class TestExportsBuilder extends TestCase
         }};
 
         DefaultPackageScannerConfiguration config = new DefaultPackageScannerConfiguration();
-        Map<String, String> versions = new HashMap<String, String>();
-        versions.put("javax.management", "1.2.3");
-        config.setPackageVersions(versions);
+        config.setPackageVersions(ImmutableMap.of("javax.management", "1.2.3"));
 
         String exports = builder.determineExports(regs, config);
 
@@ -115,6 +114,20 @@ public class TestExportsBuilder extends TestCase
 
         assertEquals("even though the package is found twice, we must export it only once", 1, packageCount);
         assertTrue("found earlier always wins", exports.contains(",javax.management,"));
+    }
+
+    public void testPackagesUnderPluginFrameworkExportedAsPluginFrameworkVersion()
+    {
+        DefaultPackageScannerConfiguration config = new DefaultPackageScannerConfiguration();
+        config.setPackageVersions(ImmutableMap.of("com.atlassian.plugin.testpackage1", "98.76.54"));
+        config.setPackageIncludes(ImmutableList.<String>of("org.slf4j*"));
+
+        String exports = builder.determineExports(ImmutableList.<HostComponentRegistration>of(new MockRegistration(new Dummy1(){}, Dummy1.class)), config);
+
+        assertTrue("any packages under com.atlassian.plugin must be exported as the framework version",
+                   exports.contains("com.atlassian.plugin.testpackage1;version=" + PluginFrameworkUtils.getPluginFrameworkVersion().replace("-", ".") + ","));
+        assertFalse("any packages under com.atlassian.plugin must be exported as the framework version",
+                   exports.contains("com.atlassian.plugin.testpackage1;version=98.76.54,"));
     }
 
     public void testGenerateExports() throws MalformedURLException
