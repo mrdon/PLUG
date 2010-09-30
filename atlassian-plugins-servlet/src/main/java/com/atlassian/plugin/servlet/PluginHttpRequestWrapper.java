@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpSession;
 
 import com.atlassian.plugin.servlet.descriptors.BaseServletModuleDescriptor;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * A request wrapper for requests bound for servlets declared in plugins.  Does the necessary path
@@ -72,25 +73,55 @@ public class PluginHttpRequestWrapper extends HttpServletRequestWrapper
     private String findBasePath(BaseServletModuleDescriptor<?> descriptor)
     {
         String pathInfo = super.getPathInfo();
+
         if (pathInfo != null)
         {
+            // Exact match
+            for (String basePath : descriptor.getPaths())
+            {
+                if (basePath.equals(pathInfo))
+                {
+                    return basePath;
+                }
+            }
+
+            // Prefix match
+            final String[] pathInfoComponents = StringUtils.split(pathInfo, '/');
             for (String basePath : descriptor.getPaths())
             {
                 if (isPathMapping(basePath))
                 {
-                    if (pathInfo.startsWith(getMappingRootPath(basePath)))
+                    final String mappingRootPath = getMappingRootPath(basePath);
+                    final String[] mappingRootPathComponents = StringUtils.split(mappingRootPath, '/');
+
+                    if (arrayStartsWith(pathInfoComponents, mappingRootPathComponents))
                     {
-                        return getMappingRootPath(basePath);
+                        return mappingRootPath;
                     }
-                }
-                else if (basePath.equals(pathInfo))
-                {
-                    // Exact match
-                    return basePath;
                 }
             }
         }
         return null;
+    }
+
+    private static boolean arrayStartsWith(String[] array, String[] prefixArray)
+    {
+        // prefix array cannot be longer than the array.
+        if (prefixArray.length > array.length)
+        {
+            return false;
+        }
+
+        // Assume the last bit less likely to match.
+        for (int i=prefixArray.length-1; i>=0; i--)
+        {
+            if (!prefixArray[i].equals(array[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private boolean isPathMapping(String path)
@@ -100,7 +131,7 @@ public class PluginHttpRequestWrapper extends HttpServletRequestWrapper
 
     private String getMappingRootPath(String pathMapping)
     {
-        return pathMapping.substring(0, pathMapping.length() - 2);
+        return pathMapping.substring(0, pathMapping.length() - "/*".length());
     }
 
     @Override

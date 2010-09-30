@@ -88,4 +88,16 @@ public class TestPluginHttpRequestWrapper extends TestCase
         assertEquals("bar", wrappedSession.getAttribute("foo"));
     }
 
+    public void testPrefixingWildcardsMatching()
+    {
+        PluginHttpRequestWrapper request = getWrappedRequest("/context/plugins", "/plugin/servlet-two/path/to/resource",
+            new ServletModuleDescriptorBuilder()
+                    .withPath("/plugin/servlet/*")
+                    .withPath("/plugin/servlet-two/*")
+                    .build());
+
+        // should match the second mapping.
+        assertEquals("/context/plugins/plugin/servlet-two", request.getServletPath());
+        assertEquals("/path/to/resource", request.getPathInfo());
+    }
 }
