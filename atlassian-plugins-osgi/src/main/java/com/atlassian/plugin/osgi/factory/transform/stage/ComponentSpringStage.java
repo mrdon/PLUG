@@ -9,6 +9,7 @@ import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 import com.atlassian.plugin.util.validation.ValidationPattern;
 import com.atlassian.plugin.util.PluginUtils;
 import com.google.common.collect.Sets;
+import org.apache.commons.lang.StringUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.slf4j.Logger;
@@ -70,9 +71,17 @@ public class ComponentSpringStage implements TransformStage
 
                 Element bean = root.addElement("beans:bean");
                 bean.addAttribute("id", beanId);
-                bean.addAttribute("alias", component.attributeValue("alias"));
                 bean.addAttribute("class", component.attributeValue("class"));
                 bean.addAttribute("autowire", "default");
+
+                // alias attribute in atlassian-plugin gets converted into alias element.
+                if (!StringUtils.isBlank(component.attributeValue("alias")))
+                {
+                    Element alias = root.addElement("beans:alias");
+                    alias.addAttribute("name", beanId);
+                    alias.addAttribute("alias", component.attributeValue("alias"));
+                }
+
                 if ("true".equalsIgnoreCase(component.attributeValue("public")))
                 {
                     Element osgiService = root.addElement("osgi:service");

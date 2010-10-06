@@ -37,7 +37,9 @@ public class TestComponentSpringStage extends TestCase
         Element component = pluginRoot.addElement("component");
         component.addAttribute("key", "foo");
         component.addAttribute("class", "my.Foo");
-        SpringTransformerTestHelper.transform(transformer, pluginRoot, "beans:bean[@id='foo' and @class='my.Foo']");
+        component.addAttribute("alias", "hohoho");
+        SpringTransformerTestHelper.transform(transformer, pluginRoot, "beans:bean[@id='foo' and @class='my.Foo']",
+                                                                       "beans:alias[@name='foo' and @alias='hohoho']");
 
         // public component, interface
         pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
