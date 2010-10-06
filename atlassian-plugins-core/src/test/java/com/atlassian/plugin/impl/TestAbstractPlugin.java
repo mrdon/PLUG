@@ -23,6 +23,20 @@ public class TestAbstractPlugin extends TestCase
         assertTrue(p2.compareTo(p1) < 0);
     }
 
+    public void testCompareToOnVersionWithMilestone()
+    {
+        final AbstractPlugin p1 = createAbstractPlugin();
+        p1.setKey("foo");
+        p1.getPluginInformation().setVersion("1.2.m2");
+        final AbstractPlugin p2 = createAbstractPlugin();
+        p2.setKey("foo");
+        p2.getPluginInformation().setVersion("1.2.1");
+
+        // v1.2.1 should be after v1.2.m2
+        assertTrue(p1.compareTo(p2) < 0);
+        assertTrue(p2.compareTo(p1) > 0);
+    }
+
     public void testCompareToOnVersion()
     {
         final AbstractPlugin p1 = createAbstractPlugin();

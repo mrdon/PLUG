@@ -54,6 +54,8 @@ public class TestVersionStringComparator extends TestCase
         assertSecondGreater("1.0a", "1.1a");
         assertSecondGreater("1.0a", "2.0a");
         assertSecondGreater("1.5", "1.6a");
+        assertSecondGreater("1.2-m2", "1.2.0");
+        assertSecondGreater("1.2-m2", "1.2.1");
     }
 
     public void testBetas()
@@ -76,6 +78,7 @@ public class TestVersionStringComparator extends TestCase
     {
         assertBothSame("1.01", "1.1");
         assertSecondGreater("1.0a", "1.0");
+//        assertSecondGreater("1.0", "1.0a");
         assertSecondGreater("1.0-beta10", "1.0-beta2");
     }
 
@@ -110,8 +113,8 @@ public class TestVersionStringComparator extends TestCase
         assertBothSame(second, second);
 
         // check for symmetry
-        assertEquals(first.toString() + " < " + second.toString(), 1, comparator.compare(second, first));
-        assertEquals(first.toString() + " < " + second.toString(), -1, comparator.compare(first, second));
+        assertTrue(first.toString() + " < " + second.toString(), comparator.compare(second, first) > 0);
+        assertTrue(first.toString() + " < " + second.toString(), comparator.compare(first, second) < 0);
     }
 
     private void assertValidVersion(final String string)

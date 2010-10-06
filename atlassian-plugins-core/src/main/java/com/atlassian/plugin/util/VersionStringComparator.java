@@ -3,6 +3,8 @@ package com.atlassian.plugin.util;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Comparator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Compares dotted version strings of varying length. Makes a best effort with
@@ -98,6 +100,8 @@ public class VersionStringComparator implements Comparator<String>
     {
         public static final int FIRST_GREATER = 1;
         public static final int SECOND_GREATER = -1;
+        private Pattern startWithIntPattern = Pattern.compile("(^\\d+)");
+
 
         //        public int compare(Object o1, Object o2)
         //        {
@@ -128,22 +132,30 @@ public class VersionStringComparator implements Comparator<String>
                 return 0;
             }
 
-            // 2.3-alpha < 2.3.0
-            if ("0".equals(component1))
+            // Handles the case where we are comparing 1.5 to 1.6a
+            final Integer comp1IntPart = getStartingInteger(component1);
+            final Integer comp2IntPart = getStartingInteger(component2);
+            if (comp1IntPart != null && comp2IntPart != null)
             {
-                return FIRST_GREATER;
-            }
-            if ("0".equals(component2))
-            {
-                return SECOND_GREATER;
+                if (comp1IntPart > comp2IntPart)
+                {
+                    return FIRST_GREATER;
+                }
+                else if (comp2IntPart > comp1IntPart)
+                {
+                    return SECOND_GREATER;
+                }
             }
 
-            // 2.3a < 2.3
-            if (isInteger(component1) && component2.startsWith(component1))
+            // 2.3-alpha < 2.3.0 and 2.3a < 2.3
+            // fixes PLUG-672. We are safe to do the integer check here since above we have
+            // already determined that one of the two components are not an integer and that one does not start with
+            // an int that may be larger than the other component
+            if (isInteger(component1))
             {
                 return FIRST_GREATER;
             }
-            if (isInteger(component2) && component1.startsWith(component2))
+            if (isInteger(component2))
             {
                 return SECOND_GREATER;
             }
@@ -156,5 +168,17 @@ public class VersionStringComparator implements Comparator<String>
         {
             return string.matches("\\d+");
         }
+
+        private Integer getStartingInteger(final String string)
+        {
+            Matcher matcher = startWithIntPattern.matcher(string);
+            if (matcher.find())
+            {
+                // If we found a starting digit group then lets return it
+                return new Integer(matcher.group(1));
+            }
+            return null;
+        }
+
     }
 }
