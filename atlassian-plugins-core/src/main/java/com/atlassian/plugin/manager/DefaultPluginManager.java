@@ -439,7 +439,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         {
             log.info("Installed plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
         }
-        getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.INSTALL).toState());
+        updateRequiresRestartState(plugin.getKey(), PluginRestartState.INSTALL);
     }
 
     private void markPluginUpgradeThatRequiresRestart(final Plugin plugin)
@@ -448,7 +448,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         {
             log.info("Upgraded plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
         }
-        getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.UPGRADE).toState());
+        updateRequiresRestartState(plugin.getKey(), PluginRestartState.UPGRADE);
     }
 
     private void markPluginUninstallThatRequiresRestart(final Plugin plugin)
@@ -457,7 +457,12 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         {
             log.info("Uninstalled plugin '" + plugin.getKey() + "' requires a restart due to the following modules: " + PluginUtils.getPluginModulesThatRequireRestart(plugin));
         }
-        getStore().save(getBuilder().setPluginRestartState(plugin.getKey(), PluginRestartState.REMOVE).toState());
+        updateRequiresRestartState(plugin.getKey(), PluginRestartState.REMOVE);
+    }
+
+    protected void updateRequiresRestartState(final String pluginKey, final PluginRestartState pluginRestartState)
+    {
+        getStore().save(getBuilder().setPluginRestartState(pluginKey, pluginRestartState).toState());
     }
 
     /**
@@ -514,7 +519,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             pluginInstaller.revertInstalledPlugin(pluginKey);
             plugins.remove(pluginKey);
         }
-        getStore().save(getBuilder().setPluginRestartState(pluginKey, PluginRestartState.NONE).toState());
+        updateRequiresRestartState(pluginKey, PluginRestartState.NONE);
     }
 
     protected void removeStateFromStore(final PluginPersistentStateStore stateStore, final Plugin plugin)
