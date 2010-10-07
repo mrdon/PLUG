@@ -330,12 +330,6 @@
                                 </artifactItem>
 
                                 <artifactItem>
-                                    <groupId>org.springframework</groupId>
-                                    <artifactId>spring-orm</artifactId>
-                                    <version>${springVersion}</version>
-                                </artifactItem>
-
-                                <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
 
                                     <artifactId>spring-osgi-annotation</artifactId>
@@ -370,13 +364,7 @@
                                     <groupId>org.slf4j</groupId>
                                     <artifactId>jcl-over-slf4j</artifactId>
                                 </artifactItem>
-                                <!--
-                                <artifactItem>
-                                    <groupId>org.aopalliance</groupId>
-                                    <artifactId>com.springsource.org.aopalliance</artifactId>
-                                    <version>1.0.0</version>
-                                </artifactItem>
-                                -->
+
                             </artifactItems>
                             <outputDirectory>${frameworkBundleDirectory}</outputDirectory>
 
