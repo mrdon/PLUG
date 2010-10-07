@@ -256,12 +256,85 @@
                         </goals>
                         <configuration>
                             <artifactItems>
+
+                                <artifactItem>
+                                    <groupId>org.aopalliance</groupId>
+                                    <artifactId>com.springsource.org.aopalliance</artifactId>
+                                    <version>1.0.0</version>
+                                </artifactItem>
+
                                 <artifactItem>
                                     <groupId>org.springframework</groupId>
-                                    <artifactId>spring</artifactId>
-
+                                    <artifactId>spring-asm</artifactId>
                                     <version>${springVersion}</version>
                                 </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-core</artifactId>
+                                    <version>${springVersion}</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-expression</artifactId>
+                                    <version>${springVersion}</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-beans</artifactId>
+                                    <version>${springVersion}</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-aop</artifactId>
+                                    <version>${springVersion}</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-context</artifactId>
+                                    <version>${springVersion}</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-context-support</artifactId>
+                                    <version>${springVersion}</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-tx</artifactId>
+                                    <version>${springVersion}</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-jdbc</artifactId>
+                                    <version>${springVersion}</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-orm</artifactId>
+                                    <version>${springVersion}</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-oxm</artifactId>
+                                    <version>${springVersion}</version>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-orm</artifactId>
+                                    <version>${springVersion}</version>
+                                </artifactItem>
+
                                 <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
 
