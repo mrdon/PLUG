@@ -27,6 +27,7 @@ public class VersionStringComparator implements Comparator<String>
     public static final String DELIMITER_PATTERN = "[\\.,-]";
     public static final String COMPONENT_PATTERN = "[\\d\\w]+";
     public static final String VALID_VERSION_PATTERN = COMPONENT_PATTERN + "(" + DELIMITER_PATTERN + COMPONENT_PATTERN + ")*";
+    private static final Pattern START_WITH_INT_PATTERN = Pattern.compile("(^\\d+)");
 
     public static boolean isValidVersionString(final String version)
     {
@@ -100,16 +101,6 @@ public class VersionStringComparator implements Comparator<String>
     {
         public static final int FIRST_GREATER = 1;
         public static final int SECOND_GREATER = -1;
-        private Pattern startWithIntPattern = Pattern.compile("(^\\d+)");
-
-
-        //        public int compare(Object o1, Object o2)
-        //        {
-        //            if (!(o1 instanceof String)) return 0;
-        //            if (!(o2 instanceof String)) return 0;
-        //
-        //            return compare((String) o1, (String) o2);
-        //        }
 
         public int compare(final String component1, final String component2)
         {
@@ -171,7 +162,7 @@ public class VersionStringComparator implements Comparator<String>
 
         private Integer getStartingInteger(final String string)
         {
-            Matcher matcher = startWithIntPattern.matcher(string);
+            Matcher matcher = START_WITH_INT_PATTERN.matcher(string);
             if (matcher.find())
             {
                 // If we found a starting digit group then lets return it
