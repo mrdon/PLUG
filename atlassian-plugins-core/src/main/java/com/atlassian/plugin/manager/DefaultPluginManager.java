@@ -460,13 +460,20 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         updateRequiresRestartState(plugin.getKey(), PluginRestartState.REMOVE);
     }
 
-    protected void updateRequiresRestartState(final String pluginKey, final PluginRestartState pluginRestartState)
+    private void updateRequiresRestartState(final String pluginKey, final PluginRestartState pluginRestartState)
     {
         getStore().save(getBuilder().setPluginRestartState(pluginKey, pluginRestartState).toState());
+        onUpdateRequiresRestartState(pluginKey, pluginRestartState);
+    }
+
+    protected void onUpdateRequiresRestartState(final String pluginKey, final PluginRestartState pluginRestartState)
+    {
+        // nothing to do in this implementation
     }
 
     /**
-     * @param plugin
+     * Uninstalls the given plugin, emitting disabled and uninstalled events as it does so.
+     * @param plugin the plugin to uninstall.
      * @throws PluginException If the plugin or loader doesn't support
      *             uninstallation
      */
