@@ -34,7 +34,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     String key;
     String name;
     protected String moduleClassName;
-    Class<T> moduleClass;
+    protected Class<T> moduleClass;
     String description;
     boolean enabledByDefault = true;
     boolean systemModule = false;

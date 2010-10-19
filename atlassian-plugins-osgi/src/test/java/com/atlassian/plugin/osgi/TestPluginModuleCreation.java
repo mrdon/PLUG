@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.ClassPathPluginLoader;
@@ -44,6 +45,7 @@ public class TestPluginModuleCreation extends PluginInContainerTestBase
                         "    <servlet key='foo' class='first.MyServlet'>",
                         "       <url-pattern>/foo</url-pattern>",
                         "    </servlet>",
+                        "    <component key='obj' class='com.atlassian.plugin.osgi.test.TestServlet'/>",
                         "</atlassian-plugin>")
                 .addFormattedJava("first.MyServlet",
                         "package first;",
@@ -74,6 +76,7 @@ public class TestPluginModuleCreation extends PluginInContainerTestBase
 
         assertEquals(1, pluginManager.getEnabledPlugins().size());
         assertEquals("first.MyServlet", pluginManager.getPlugin("first").getModuleDescriptor("foo").getModule().getClass().getName());
+        assertEquals(1, pluginManager.getPlugin("first").getModuleDescriptorsByModuleClass(TestServlet.class).size());
     }
 
     public void testInstallPlugins1AndGetModuleClass() throws Exception

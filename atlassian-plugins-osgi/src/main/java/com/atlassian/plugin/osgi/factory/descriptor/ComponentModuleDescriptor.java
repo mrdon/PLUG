@@ -23,7 +23,15 @@ public class ComponentModuleDescriptor<Object> extends AbstractModuleDescriptor
     @Override
     protected void loadClass(Plugin plugin, String clazz) throws PluginParseException
     {
-        // do nothing
+        try
+        {
+            // this should have been done once by Spring so should never throw exception.
+            this.moduleClass = plugin.loadClass(clazz, null);
+        }
+        catch (ClassNotFoundException e)
+        {
+            throw new PluginParseException("cannot load component class", e);
+        }
     }
 
     @Override
