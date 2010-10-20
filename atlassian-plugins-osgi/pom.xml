@@ -324,12 +324,6 @@
                                 </artifactItem>
 
                                 <artifactItem>
-                                    <groupId>org.springframework</groupId>
-                                    <artifactId>spring-oxm</artifactId>
-                                    <version>${springVersion}</version>
-                                </artifactItem>
-
-                                <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
 
                                     <artifactId>spring-osgi-annotation</artifactId>
