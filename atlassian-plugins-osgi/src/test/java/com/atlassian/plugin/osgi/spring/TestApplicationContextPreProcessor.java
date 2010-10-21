@@ -9,7 +9,7 @@ import java.io.File;
 /**
  *
  */
-public class TestApplicationContextPreProcessor extends PluginInContainerTestBase
+public abstract class TestApplicationContextPreProcessor extends PluginInContainerTestBase
 {
     public void testCustomPreProcessor() throws Exception
     {
