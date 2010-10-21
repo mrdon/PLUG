@@ -12,6 +12,7 @@ import com.atlassian.plugin.test.PluginJarBuilder;
 
 import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 
 import java.io.IOException;
 import java.io.File;
@@ -71,7 +72,7 @@ public abstract class FrameworkRestartTestBase extends PluginInContainerTestBase
         executor.shutdown();
         executor.awaitTermination(300, TimeUnit.SECONDS);
         // warm up the cache
-        startPluginFramework();
+        initPluginManager(prov, factory);
         pluginManager.shutdown();
     }
 
@@ -81,9 +82,19 @@ public abstract class FrameworkRestartTestBase extends PluginInContainerTestBase
     {
         initPluginManager(prov, factory);
         assertEquals(pluginManager.getPlugins().size(), pluginManager.getEnabledPlugins().size());
+
         for (Bundle bundle : osgiContainerManager.getBundles())
         {
-            assertEquals("Bundle " + bundle.getSymbolicName() + " was not active: " + bundle.getState(), Bundle.ACTIVE, bundle.getState());
+            final boolean isFragment = (bundle.getHeaders().get(Constants.FRAGMENT_HOST) != null);
+
+            if (isFragment)
+            {
+                assertEquals("Fragment Bundle " + bundle.getSymbolicName() + " was not resolved: " + bundle.getState(), Bundle.RESOLVED, bundle.getState());
+            }
+            else
+            {
+                assertEquals("Bundle " + bundle.getSymbolicName() + " was not active: " + bundle.getState(), Bundle.ACTIVE, bundle.getState());
+            }
         }
     }
 
