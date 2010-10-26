@@ -34,7 +34,7 @@ public class TestClassUtils extends TestCase
         ), ClassUtils.findAllTypes(ArrayList.class));
     }
 
-    public void testFindParentTypesNoBoundary()
+    public void testFindAllTypesWithBoundaryButNoBoundarySupplied()
     {
         assertEquals(newHashSet(
                 List.class,
@@ -50,7 +50,7 @@ public class TestClassUtils extends TestCase
         ), ClassUtils.findAllTypesWithBoundary(ArrayList.class));
     }
 
-    public void testFindParentTypes()
+    public void testFindAllTypesWithBoundary()
     {
         assertEquals(newHashSet(
                 Iterable.class,
