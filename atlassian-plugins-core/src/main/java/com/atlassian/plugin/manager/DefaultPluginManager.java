@@ -57,6 +57,7 @@ import com.atlassian.plugin.predicate.ModuleDescriptorOfTypePredicate;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.predicate.ModuleOfClassPredicate;
 import com.atlassian.plugin.predicate.PluginPredicate;
+import com.atlassian.plugin.util.ClassUtils;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.util.concurrent.CopyOnWriteMap;
 
@@ -79,6 +80,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -109,6 +112,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     private final PluginsClassLoader classLoader;
     private final PluginEnabler pluginEnabler = new PluginEnabler(this, this);
     private final StateTracker tracker = new StateTracker();
+    private final ConcurrentMap<Class, List<? extends ModuleDescriptor<?>>> moduleClassToDescriptorsCache = new ConcurrentHashMap<Class, List<? extends ModuleDescriptor<?>>>();
 
     /**
      * Installer used for storing plugins. Used by
@@ -172,6 +176,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
         getStore().save(getBuilder().clearPluginRestartState().toState());
 
+        moduleClassToDescriptorsCache.clear();
         pluginEventManager.broadcast(new PluginFrameworkStartedEvent(this, this));
         stopWatch.stop();
         log.info("Plugin system started in " + stopWatch);
@@ -198,6 +203,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             log.error("At least one error occured while broadcasting the PluginFrameworkShutdownEvent. We will continue to shutdown the Plugin Manager anyway.");
         }
         plugins.clear();
+        moduleClassToDescriptorsCache.clear();
         pluginEventManager.unregister(this);
         tracker.setState(StateTracker.State.SHUTDOWN);
     }
@@ -1039,6 +1045,20 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz)
     {
+        // If the snapshot is available at this stage, we just return it, otherwise calculate a new one.
+        List<D> listOfType = (List<D>) moduleClassToDescriptorsCache.get(descriptorClazz);
+
+        if (listOfType == null)
+        {
+            listOfType = Collections.unmodifiableList(getEnabledModuleDescriptorsByClassRaw(descriptorClazz));
+            moduleClassToDescriptorsCache.put(descriptorClazz, listOfType);
+        }
+
+        return listOfType;
+    }
+
+    private <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClassRaw(final Class<D> descriptorClazz)
+    {
         final List<D> result = new LinkedList<D>();
         for (final Plugin plugin : plugins.values())
         {
@@ -1535,4 +1555,27 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     @Deprecated
     public void setDescriptorParserFactory(final DescriptorParserFactory descriptorParserFactory)
     {}
+
+    @PluginEventListener
+    public void onModuleEnabled(PluginModuleEnabledEvent evt)
+    {
+        invalidateModuleClassToDescriptorsCache(evt.getModule().getClass());
+    }
+
+    @PluginEventListener
+    public void onModuleDisabled(PluginModuleDisabledEvent evt)
+    {
+        invalidateModuleClassToDescriptorsCache(evt.getModule().getClass());
+    }
+
+    private <D extends ModuleDescriptor<?>> void invalidateModuleClassToDescriptorsCache(Class<D> moduleClass)
+    {
+        // invalidate the cache for the class itself and also its parent classes.
+        // this is not atomic though it should be very rare that we want to grasp descriptors of a class
+        // and descriptors of its parent class plus then use them together in such a way that inconsistency causes problems.
+        for(Class clazz : ClassUtils.findAllTypesWithBoundary(moduleClass, ModuleDescriptor.class))
+        {
+            moduleClassToDescriptorsCache.remove(clazz);
+        }
+    }
 }

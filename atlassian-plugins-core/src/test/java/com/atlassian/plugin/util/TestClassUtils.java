@@ -34,6 +34,32 @@ public class TestClassUtils extends TestCase
         ), ClassUtils.findAllTypes(ArrayList.class));
     }
 
+    public void testFindParentTypesNoBoundary()
+    {
+        assertEquals(newHashSet(
+                List.class,
+                AbstractList.class,
+                Cloneable.class,
+                RandomAccess.class,
+                AbstractCollection.class,
+                Iterable.class,
+                Collection.class,
+                ArrayList.class,
+                Object.class,
+                Serializable.class
+        ), ClassUtils.findAllTypesWithBoundary(ArrayList.class));
+    }
+
+    public void testFindParentTypes()
+    {
+        assertEquals(newHashSet(
+                Iterable.class,
+                Collection.class,
+                Object.class,
+                AbstractCollection.class
+        ), ClassUtils.findAllTypesWithBoundary(AbstractCollection.class, Iterable.class));
+    }
+
     public void testGetTypeArguments()
     {
         assertEquals(asList(String.class), ClassUtils.getTypeArguments(BaseClass.class, Child.class));

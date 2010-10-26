@@ -1,5 +1,7 @@
 package com.atlassian.plugin.util;
 
+import com.google.common.collect.Sets;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
@@ -15,14 +17,14 @@ import java.util.HashSet;
 /**
  * Class utility methods
  */
-public class ClassUtils
+public final class ClassUtils
 {
     private ClassUtils()
     {
     }
 
     /**
-     * Finds all super classes and interfaces for a given class
+     * Finds all super classes and interfaces for a given class (inclusive of the given class itself).
      *
      * @param cls The class to scan
      * @return The collected related classes found
@@ -35,12 +37,41 @@ public class ClassUtils
     }
 
     /**
-     * Finds all super classes and interfaces for a given class
+     * Finds all super classes and interfaces for a given class (inclusive of the given class itself).
      *
      * @param cls   The class to scan
      * @param types The collected related classes found
      */
     public static void findAllTypes(Class cls, Set<Class> types)
+    {
+        findAllTypesWithBoundary(cls, types, null);
+    }
+
+    /**
+     * Finds all super classes and interfaces for a given class (inclusive of the given class itself) while stop if going beyond the boundary classes.
+     *
+     * @param cls The class to scan
+     * @param boundaryClasses the classes from which their supers and interfaces are not to be included
+     * @return The collected related classes found
+     */
+    public static Set<Class> findAllTypesWithBoundary(Class cls, Class... boundaryClasses)
+    {
+        final Set<Class> types = new HashSet<Class>();
+        final Set<Class> boundary = Sets.newHashSet(boundaryClasses);
+
+        findAllTypesWithBoundary(cls, types, boundary);
+
+        return types;
+    }
+
+    /**
+     * Finds all super classes and interfaces for a given class (inclusive of the given class itself) while stop if going beyond the boundary classes.
+     *
+     * @param cls   The class to scan
+     * @param types The collected related classes found
+     * @param boundaryClasses the classes from which their supers and interfaces are not to be included
+     */
+    public static void findAllTypesWithBoundary(Class cls, Set<Class> types, Set<Class> boundaryClasses)
     {
         if (cls == null)
         {
@@ -55,10 +86,14 @@ public class ClassUtils
 
         types.add(cls);
 
-        findAllTypes(cls.getSuperclass(), types);
-        for (int x = 0; x < cls.getInterfaces().length; x++)
+        if ((boundaryClasses == null) || (!boundaryClasses.contains(cls)))
         {
-            findAllTypes(cls.getInterfaces()[x], types);
+            findAllTypesWithBoundary(cls.getSuperclass(), types, boundaryClasses);
+
+            for (int x = 0; x < cls.getInterfaces().length; x++)
+            {
+                findAllTypesWithBoundary(cls.getInterfaces()[x], types, boundaryClasses);
+            }
         }
     }
 
