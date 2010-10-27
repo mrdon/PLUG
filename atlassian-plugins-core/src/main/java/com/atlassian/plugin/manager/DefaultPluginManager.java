@@ -1523,7 +1523,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         {
             public List<? extends ModuleDescriptor<?>> apply(Class<? extends ModuleDescriptor<?>> descriptorClazz)
             {
-                return getEnabledModuleDescriptorsByClassInternal(descriptorClazz);
+                return Collections.unmodifiableList(getEnabledModuleDescriptorsByClassInternal(descriptorClazz));
             }
         });
 
