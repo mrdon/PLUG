@@ -57,11 +57,9 @@ import com.atlassian.plugin.predicate.ModuleDescriptorOfTypePredicate;
 import com.atlassian.plugin.predicate.ModuleDescriptorPredicate;
 import com.atlassian.plugin.predicate.ModuleOfClassPredicate;
 import com.atlassian.plugin.predicate.PluginPredicate;
-import com.atlassian.plugin.util.ClassUtils;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.util.concurrent.CopyOnWriteMap;
 
-import com.google.common.collect.MapMaker;
 import org.apache.commons.lang.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +79,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * This implementation delegates the initiation and classloading of plugins to a
@@ -124,8 +121,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     private final Map<Plugin, PluginLoader> pluginToPluginLoader = new HashMap<Plugin, PluginLoader>();
 
-    private ModuleDescriptorCache moduleDescriptorCache = new ModuleDescriptorCache();
-
     public DefaultPluginManager(final PluginPersistentStateStore store, final List<PluginLoader> pluginLoaders, final ModuleDescriptorFactory moduleDescriptorFactory, final PluginEventManager pluginEventManager)
     {
         this.pluginLoaders = notNull("Plugin Loaders list must not be null.", pluginLoaders);
@@ -134,7 +129,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         this.pluginEventManager = notNull("PluginEventManager must not be null.", pluginEventManager);
 
         this.pluginEventManager.register(this);
-        this.pluginEventManager.register(this.moduleDescriptorCache);
         classLoader = new PluginsClassLoader(null, this, pluginEventManager);
     }
 
@@ -178,7 +172,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
         getStore().save(getBuilder().clearPluginRestartState().toState());
 
-        moduleDescriptorCache.clear();
         pluginEventManager.broadcast(new PluginFrameworkStartedEvent(this, this));
         stopWatch.stop();
         log.info("Plugin system started in " + stopWatch);
@@ -205,8 +198,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             log.error("At least one error occured while broadcasting the PluginFrameworkShutdownEvent. We will continue to shutdown the Plugin Manager anyway.");
         }
         plugins.clear();
-        moduleDescriptorCache.clear();
-        pluginEventManager.unregister(moduleDescriptorCache);
         pluginEventManager.unregister(this);
         tracker.setState(StateTracker.State.SHUTDOWN);
     }
@@ -1048,7 +1039,36 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz)
     {
-        return (List<D>) moduleDescriptorCache.getEnabledModuleDescriptorsByClass(descriptorClazz);
+        final List<D> result = new LinkedList<D>();
+        for (final Plugin plugin : plugins.values())
+        {
+            // Skip disabled plugins
+            if (!isPluginEnabled(plugin.getKey()))
+            {
+                if (log.isDebugEnabled())
+                {
+                    log.debug("Plugin [" + plugin.getKey() + "] is disabled.");
+                }
+                continue;
+            }
+
+            for (final ModuleDescriptor<?> module : plugin.getModuleDescriptors())
+            {
+                if (descriptorClazz.isInstance(module))
+                {
+                    if (isPluginModuleEnabled(module.getCompleteKey()))
+                    {
+                        result.add(descriptorClazz.cast(module));
+                    }
+                    else if (log.isDebugEnabled())
+                    {
+                        log.debug("Module [" + module.getCompleteKey() + "] is disabled.");
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 
     public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz, final boolean verbose)
@@ -1515,86 +1535,4 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     @Deprecated
     public void setDescriptorParserFactory(final DescriptorParserFactory descriptorParserFactory)
     {}
-
-    public class ModuleDescriptorCache
-    {
-        private final ConcurrentMap<Class<? extends ModuleDescriptor<?>>, List<? extends ModuleDescriptor<?>>> moduleClassToDescriptorsCache
-                = new MapMaker().makeComputingMap(new Function<Class<? extends ModuleDescriptor<?>>, List<? extends ModuleDescriptor<?>>>()
-        {
-            public List<? extends ModuleDescriptor<?>> apply(Class<? extends ModuleDescriptor<?>> descriptorClazz)
-            {
-                return Collections.unmodifiableList(getEnabledModuleDescriptorsByClassInternal(descriptorClazz));
-            }
-        });
-
-        private <D extends ModuleDescriptor<?>> List<? extends ModuleDescriptor<?>> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz)
-        {
-            return moduleClassToDescriptorsCache.get(descriptorClazz);
-        }
-
-        private <D extends ModuleDescriptor<?>> List<? extends ModuleDescriptor<?>> getEnabledModuleDescriptorsByClassInternal(final Class<D> descriptorClazz)
-        {
-            final List<D> result = new LinkedList<D>();
-            for (final Plugin plugin : plugins.values())
-            {
-                // Skip disabled plugins
-                if (!isPluginEnabled(plugin.getKey()))
-                {
-                    if (log.isDebugEnabled())
-                    {
-                        log.debug("Plugin [" + plugin.getKey() + "] is disabled.");
-                    }
-                    continue;
-                }
-
-                for (final ModuleDescriptor<?> module : plugin.getModuleDescriptors())
-                {
-                    if (descriptorClazz.isInstance(module))
-                    {
-                        if (isPluginModuleEnabled(module.getCompleteKey()))
-                        {
-                            result.add(descriptorClazz.cast(module));
-                        }
-                        else if (log.isDebugEnabled())
-                        {
-                            log.debug("Module [" + module.getCompleteKey() + "] is disabled.");
-                        }
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        @PluginEventListener
-        public void onModuleEnabled(PluginModuleEnabledEvent evt)
-        {
-            invalidateModuleClassToDescriptorsCache(evt.getModule().getClass());
-        }
-
-        @PluginEventListener
-        public void onModuleDisabled(PluginModuleDisabledEvent evt)
-        {
-            invalidateModuleClassToDescriptorsCache(evt.getModule().getClass());
-        }
-
-        private <D extends ModuleDescriptor<?>> void invalidateModuleClassToDescriptorsCache(Class<D> moduleClass)
-        {
-            // invalidate the cache for the class itself and also its parent classes.
-            // this is not atomic though it should be very rare that we want to grasp descriptors of a class
-            // and descriptors of its parent class plus then use them together in such a way that inconsistency causes problems.
-            for(Class clazz : ClassUtils.findAllTypesWithBoundary(moduleClass, ModuleDescriptor.class))
-            {
-                moduleClassToDescriptorsCache.remove(clazz);
-            }
-        }
-
-        /**
-         * Clear to whole cache.
-         */
-        private void clear()
-        {
-            moduleClassToDescriptorsCache.clear();
-        }
-    }
 }
