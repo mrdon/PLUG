@@ -154,4 +154,22 @@ public class DefaultPluginModuleTracker<M, T extends ModuleDescriptor<M>> implem
             return from.getModule();
         }
     }
+
+    /**
+     * Static factory method for constructing trackers generically where M is not known.
+     *
+     * @param <M> The module class, generically inferred.
+     * @param <T> The module descriptor class.
+     * @param pluginAccessor For getting the enabled descriptors of a certain type.
+     * @param pluginEventManager For being told about changes to the enabled plugins.
+     * @param moduleDescriptorClass The type of module descriptors we are interested in.
+     * @return a PluginModuleTracker useful for fast and upd to date caching of the currently enabled module descriptors.
+     * @since 2.7.0
+     */
+    public static <M, T extends ModuleDescriptor<M>> PluginModuleTracker<M, T> create(final PluginAccessor pluginAccessor, final PluginEventManager pluginEventManager, final Class<? extends ModuleDescriptor<?>> moduleDescriptorClass)
+    {
+        @SuppressWarnings("unchecked")
+        final Class<T> klass = (Class<T>) moduleDescriptorClass;
+        return new DefaultPluginModuleTracker<M, T>(pluginAccessor, pluginEventManager, klass);
+    }
 }

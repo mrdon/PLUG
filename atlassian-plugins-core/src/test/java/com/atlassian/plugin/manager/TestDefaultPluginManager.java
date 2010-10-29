@@ -60,14 +60,14 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
     /**
      * the object being tested
      */
-    private DefaultPluginManager manager;
+    protected DefaultPluginManager manager;
 
     private PluginPersistentStateStore pluginStateStore;
     private List<PluginLoader> pluginLoaders;
     private DefaultModuleDescriptorFactory moduleDescriptorFactory; // we should be able to use the interface here?
 
     private DirectoryPluginLoader directoryPluginLoader;
-    private PluginEventManager pluginEventManager;
+    protected PluginEventManager pluginEventManager;
 
     @Override
     protected void setUp() throws Exception
@@ -96,6 +96,11 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         }
 
         super.tearDown();
+    }
+
+    protected PluginAccessor getPluginAccessor()
+    {
+        return manager;
     }
 
     public void testRetrievePlugins() throws PluginParseException
@@ -179,9 +184,9 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         manager.init();
 
 
-        assertEquals(1, manager.getPlugins().size());
-        assertEquals(0, manager.getEnabledPlugins().size());
-        plugin = manager.getPlugin("foo");
+        assertEquals(1, getPluginAccessor().getPlugins().size());
+        assertEquals(0, getPluginAccessor().getEnabledPlugins().size());
+        plugin = getPluginAccessor().getPlugin("foo");
         assertFalse(plugin.getPluginState() == PluginState.ENABLED);
         assertTrue(plugin instanceof UnloadablePlugin);
         assertTrue(listener.isCalled());
@@ -227,14 +232,14 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders.add(loader);
         manager.init();
 
-        assertEquals(1, manager.getPlugins().size());
-        assertEquals(1, manager.getEnabledPlugins().size());
-        plugin = manager.getPlugin("foo");
+        assertEquals(1, getPluginAccessor().getPlugins().size());
+        assertEquals(1, getPluginAccessor().getEnabledPlugins().size());
+        plugin = getPluginAccessor().getPlugin("foo");
         assertTrue(plugin.getPluginState() == PluginState.ENABLED);
-        assertTrue(manager.isPluginEnabled("foo"));
+        assertTrue(getPluginAccessor().isPluginEnabled("foo"));
         plugin.disable();
         assertFalse(plugin.getPluginState() == PluginState.ENABLED);
-        assertFalse(manager.isPluginEnabled("foo"));
+        assertFalse(getPluginAccessor().isPluginEnabled("foo"));
     }
 
     public void testDisablePluginModuleWithCannotDisableAnnotation()
@@ -253,11 +258,11 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         // First, make sure we can disable the bear module
         manager.disablePluginModule(disablableModuleKey);
-        assertNull(manager.getEnabledPluginModule(disablableModuleKey));
+        assertNull(getPluginAccessor().getEnabledPluginModule(disablableModuleKey));
 
         // Now, make sure we can't disable the veg module
         manager.disablePluginModule(moduleKey);
-        assertNotNull(manager.getEnabledPluginModule(moduleKey));
+        assertNotNull(getPluginAccessor().getEnabledPluginModule(moduleKey));
     }
 
     public void testDisablePluginModuleWithCannotDisableAnnotationinSuperclass()
@@ -277,11 +282,11 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         // First, make sure we can disable the bear module
         manager.disablePluginModule(disablableModuleKey);
-        assertNull(manager.getEnabledPluginModule(disablableModuleKey));
+        assertNull(getPluginAccessor().getEnabledPluginModule(disablableModuleKey));
 
         // Now, make sure we can't disable the vegSubclass module
         manager.disablePluginModule(moduleKey);
-        assertNotNull(manager.getEnabledPluginModule(moduleKey));
+        assertNotNull(getPluginAccessor().getEnabledPluginModule(moduleKey));
     }
 
     public void testEnabledDisabledRetrieval() throws PluginParseException
@@ -300,71 +305,71 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         manager.init();
 
         // check non existent plugins don't show
-        assertNull(manager.getPlugin("bull:shit"));
-        assertNull(manager.getEnabledPlugin("bull:shit"));
-        assertNull(manager.getPluginModule("bull:shit"));
-        assertNull(manager.getEnabledPluginModule("bull:shit"));
-        assertTrue(manager.getEnabledModuleDescriptorsByClass(NothingModuleDescriptor.class).isEmpty());
-        assertTrue(manager.getEnabledModuleDescriptorsByType("bullshit").isEmpty());
+        assertNull(getPluginAccessor().getPlugin("bull:shit"));
+        assertNull(getPluginAccessor().getEnabledPlugin("bull:shit"));
+        assertNull(getPluginAccessor().getPluginModule("bull:shit"));
+        assertNull(getPluginAccessor().getEnabledPluginModule("bull:shit"));
+        assertTrue(getPluginAccessor().getEnabledModuleDescriptorsByClass(NothingModuleDescriptor.class).isEmpty());
+        assertTrue(getPluginAccessor().getEnabledModuleDescriptorsByType("bullshit").isEmpty());
 
         final String pluginKey = "test.atlassian.plugin";
         final String moduleKey = pluginKey + ":bear";
 
         // retrieve everything when enabled
-        assertNotNull(manager.getPlugin(pluginKey));
-        assertNotNull(manager.getEnabledPlugin(pluginKey));
-        assertNotNull(manager.getPluginModule(moduleKey));
-        assertNotNull(manager.getEnabledPluginModule(moduleKey));
-        assertNull(manager.getEnabledPluginModule(pluginKey + ":shit"));
-        assertFalse(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
-        assertFalse(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
-        assertFalse(manager.getEnabledModulesByClass(MockBear.class).isEmpty());
-        assertEquals(new MockBear(), manager.getEnabledModulesByClass(MockBear.class).get(0));
+        assertNotNull(getPluginAccessor().getPlugin(pluginKey));
+        assertNotNull(getPluginAccessor().getEnabledPlugin(pluginKey));
+        assertNotNull(getPluginAccessor().getPluginModule(moduleKey));
+        assertNotNull(getPluginAccessor().getEnabledPluginModule(moduleKey));
+        assertNull(getPluginAccessor().getEnabledPluginModule(pluginKey + ":shit"));
+        assertFalse(getPluginAccessor().getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
+        assertFalse(getPluginAccessor().getEnabledModuleDescriptorsByType("animal").isEmpty());
+        assertFalse(getPluginAccessor().getEnabledModulesByClass(MockBear.class).isEmpty());
+        assertEquals(new MockBear(), getPluginAccessor().getEnabledModulesByClass(MockBear.class).get(0));
         enabledListener.assertCalled();
 
         // now only retrieve via always retrieve methods
         manager.disablePlugin(pluginKey);
-        assertNotNull(manager.getPlugin(pluginKey));
-        assertNull(manager.getEnabledPlugin(pluginKey));
-        assertNotNull(manager.getPluginModule(moduleKey));
-        assertNull(manager.getEnabledPluginModule(moduleKey));
-        assertTrue(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
-        assertTrue(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
-        assertTrue(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
+        assertNotNull(getPluginAccessor().getPlugin(pluginKey));
+        assertNull(getPluginAccessor().getEnabledPlugin(pluginKey));
+        assertNotNull(getPluginAccessor().getPluginModule(moduleKey));
+        assertNull(getPluginAccessor().getEnabledPluginModule(moduleKey));
+        assertTrue(getPluginAccessor().getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
+        assertTrue(getPluginAccessor().getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
+        assertTrue(getPluginAccessor().getEnabledModuleDescriptorsByType("animal").isEmpty());
         disabledListener.assertCalled();
 
         // now enable again and check back to start
         manager.enablePlugin(pluginKey);
-        assertNotNull(manager.getPlugin(pluginKey));
-        assertNotNull(manager.getEnabledPlugin(pluginKey));
-        assertNotNull(manager.getPluginModule(moduleKey));
-        assertNotNull(manager.getEnabledPluginModule(moduleKey));
-        assertFalse(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
-        assertFalse(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
-        assertFalse(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
+        assertNotNull(getPluginAccessor().getPlugin(pluginKey));
+        assertNotNull(getPluginAccessor().getEnabledPlugin(pluginKey));
+        assertNotNull(getPluginAccessor().getPluginModule(moduleKey));
+        assertNotNull(getPluginAccessor().getEnabledPluginModule(moduleKey));
+        assertFalse(getPluginAccessor().getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
+        assertFalse(getPluginAccessor().getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
+        assertFalse(getPluginAccessor().getEnabledModuleDescriptorsByType("animal").isEmpty());
         enabledListener.assertCalled();
 
         // now let's disable the module, but not the plugin
         pluginEventManager.register(new FailListener(PluginEnabledEvent.class));
         manager.disablePluginModule(moduleKey);
-        assertNotNull(manager.getPlugin(pluginKey));
-        assertNotNull(manager.getEnabledPlugin(pluginKey));
-        assertNotNull(manager.getPluginModule(moduleKey));
-        assertNull(manager.getEnabledPluginModule(moduleKey));
-        assertTrue(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
-        assertTrue(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
-        assertTrue(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
+        assertNotNull(getPluginAccessor().getPlugin(pluginKey));
+        assertNotNull(getPluginAccessor().getEnabledPlugin(pluginKey));
+        assertNotNull(getPluginAccessor().getPluginModule(moduleKey));
+        assertNull(getPluginAccessor().getEnabledPluginModule(moduleKey));
+        assertTrue(getPluginAccessor().getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
+        assertTrue(getPluginAccessor().getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
+        assertTrue(getPluginAccessor().getEnabledModuleDescriptorsByType("animal").isEmpty());
 
         // now enable the module again
         pluginEventManager.register(new FailListener(PluginDisabledEvent.class));
         manager.enablePluginModule(moduleKey);
-        assertNotNull(manager.getPlugin(pluginKey));
-        assertNotNull(manager.getEnabledPlugin(pluginKey));
-        assertNotNull(manager.getPluginModule(moduleKey));
-        assertNotNull(manager.getEnabledPluginModule(moduleKey));
-        assertFalse(manager.getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
-        assertFalse(manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
-        assertFalse(manager.getEnabledModuleDescriptorsByType("animal").isEmpty());
+        assertNotNull(getPluginAccessor().getPlugin(pluginKey));
+        assertNotNull(getPluginAccessor().getEnabledPlugin(pluginKey));
+        assertNotNull(getPluginAccessor().getPluginModule(moduleKey));
+        assertNotNull(getPluginAccessor().getEnabledPluginModule(moduleKey));
+        assertFalse(getPluginAccessor().getEnabledModulesByClass(com.atlassian.plugin.mock.MockBear.class).isEmpty());
+        assertFalse(getPluginAccessor().getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class).isEmpty());
+        assertFalse(getPluginAccessor().getEnabledModuleDescriptorsByType("animal").isEmpty());
     }
 
     public void testDuplicatePluginKeysAreBad() throws PluginParseException
@@ -391,7 +396,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders.add(new MultiplePluginLoader("test-atlassian-plugin-newer.xml"));
         pluginLoaders.add(new MultiplePluginLoader("test-atlassian-plugin.xml", "test-another-plugin.xml"));
         manager.init();
-        assertEquals(2, manager.getEnabledPlugins().size());
+        assertEquals(2, getPluginAccessor().getEnabledPlugins().size());
     }
 
     public void testLoadOlderDuplicatePluginDoesNotTryToEnableIt()
@@ -449,15 +454,15 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginStateStore.save(PluginPersistentState.Builder.create(pluginStateStore.load()).setEnabled(manager.getPlugin("test.atlassian.plugin"),
                 false).toState());
 
-        assertFalse(manager.isPluginEnabled("test.atlassian.plugin"));
+        assertFalse(getPluginAccessor().isPluginEnabled("test.atlassian.plugin"));
         manager.shutdown();
 
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
         manager.init();
 
-        final Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        final Plugin plugin = getPluginAccessor().getPlugin("test.atlassian.plugin");
         assertEquals("1.1", plugin.getPluginInformation().getVersion());
-        assertFalse(manager.isPluginEnabled("test.atlassian.plugin"));
+        assertFalse(getPluginAccessor().isPluginEnabled("test.atlassian.plugin"));
     }
 
     public void testLoadNewerDuplicateDynamicPluginPreservesModuleState() throws PluginParseException
@@ -469,17 +474,17 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         manager.init();
 
         pluginStateStore.save(PluginPersistentState.Builder.create(pluginStateStore.load()).setEnabled(
-                manager.getPluginModule("test.atlassian.plugin:bear"), false).toState());
+                getPluginAccessor().getPluginModule("test.atlassian.plugin:bear"), false).toState());
 
         manager.shutdown();
 
         pluginLoaders.add(new SinglePluginLoaderWithRemoval("test-atlassian-plugin-newer.xml"));
         manager.init();
 
-        final Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        final Plugin plugin = getPluginAccessor().getPlugin("test.atlassian.plugin");
         assertEquals("1.1", plugin.getPluginInformation().getVersion());
-        assertFalse(manager.isPluginModuleEnabled("test.atlassian.plugin:bear"));
-        assertTrue(manager.isPluginModuleEnabled("test.atlassian.plugin:gold"));
+        assertFalse(getPluginAccessor().isPluginModuleEnabled("test.atlassian.plugin:bear"));
+        assertTrue(getPluginAccessor().isPluginModuleEnabled("test.atlassian.plugin:gold"));
     }
 
     public void testLoadChangedDynamicPluginWithSameVersionNumberReplacesExisting() throws PluginParseException
@@ -492,7 +497,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        final Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        final Plugin plugin = getPluginAccessor().getPlugin("test.atlassian.plugin");
         assertEquals("Test Plugin (Changed)", plugin.getName());
     }
 
@@ -505,7 +510,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPluginPredicate.expectAndReturn("matches", C.eq(plugin), true);
 
         manager.addPlugins(null, Collections.singletonList(plugin));
-        final Collection<Plugin> plugins = manager.getPlugins((PluginPredicate) mockPluginPredicate.proxy());
+        final Collection<Plugin> plugins = getPluginAccessor().getPlugins((PluginPredicate) mockPluginPredicate.proxy());
 
         assertEquals(1, plugins.size());
         assertTrue(plugins.contains(plugin));
@@ -521,7 +526,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         mockPluginPredicate.expectAndReturn("matches", C.eq(plugin), false);
 
         manager.addPlugins(null, Collections.singletonList(plugin));
-        final Collection<Plugin> plugins = manager.getPlugins((PluginPredicate) mockPluginPredicate.proxy());
+        final Collection<Plugin> plugins = getPluginAccessor().getPlugins((PluginPredicate) mockPluginPredicate.proxy());
 
         assertEquals(0, plugins.size());
         mockPluginPredicate.verify();
@@ -551,7 +556,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         manager.addPlugins(null, Collections.singletonList(plugin));
         @SuppressWarnings("unchecked")
         final ModuleDescriptorPredicate<MockThing> predicate = (ModuleDescriptorPredicate<MockThing>) mockModulePredicate.proxy();
-        final Collection<MockThing> modules = manager.getModules(predicate);
+        final Collection<MockThing> modules = getPluginAccessor().getModules(predicate);
 
         assertEquals(1, modules.size());
         assertTrue(modules.contains(module));
@@ -582,13 +587,13 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         manager.enablePlugin("bad");
         manager.enablePlugin("good");
 
-        assertTrue(manager.isPluginEnabled("bad"));
-        assertTrue(manager.isPluginEnabled("good"));
-        final Collection<Object> modules = manager.getEnabledModulesByClass(Object.class);
+        assertTrue(getPluginAccessor().isPluginEnabled("bad"));
+        assertTrue(getPluginAccessor().isPluginEnabled("good"));
+        final Collection<Object> modules = getPluginAccessor().getEnabledModulesByClass(Object.class);
 
         assertEquals(1, modules.size());
-        assertFalse(manager.isPluginEnabled("bad"));
-        assertTrue(manager.isPluginEnabled("good"));
+        assertFalse(getPluginAccessor().isPluginEnabled("bad"));
+        assertTrue(getPluginAccessor().isPluginEnabled("good"));
     }
 
     public void testGetPluginModulesWithModuleNotMatchingPredicate() throws Exception
@@ -610,7 +615,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         manager.addPlugins(null, Collections.singletonList(plugin));
         @SuppressWarnings("unchecked")
         final ModuleDescriptorPredicate<MockThing> predicate = (ModuleDescriptorPredicate<MockThing>) mockModulePredicate.proxy();
-        final Collection<MockThing> modules = manager.getModules(predicate);
+        final Collection<MockThing> modules = getPluginAccessor().getModules(predicate);
 
         assertEquals(0, modules.size());
 
@@ -636,7 +641,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         manager.addPlugins(null, Collections.singletonList(plugin));
         @SuppressWarnings("unchecked")
         final ModuleDescriptorPredicate<MockThing> predicate = (ModuleDescriptorPredicate<MockThing>) mockModulePredicate.proxy();
-        final Collection<ModuleDescriptor<MockThing>> modules = manager.getModuleDescriptors(predicate);
+        final Collection<ModuleDescriptor<MockThing>> modules = getPluginAccessor().getModuleDescriptors(predicate);
 
         assertEquals(1, modules.size());
         assertTrue(modules.contains(moduleDescriptor));
@@ -663,7 +668,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         manager.addPlugins(null, Collections.singletonList(plugin));
         @SuppressWarnings("unchecked")
         final ModuleDescriptorPredicate<MockThing> predicate = (ModuleDescriptorPredicate<MockThing>) mockModulePredicate.proxy();
-        final Collection<MockThing> modules = manager.getModules(predicate);
+        final Collection<MockThing> modules = getPluginAccessor().getModules(predicate);
 
         assertEquals(0, modules.size());
 
@@ -699,7 +704,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         assertEquals("Test Plugin", plugin.getName());
 
         final ModuleDescriptor<?> bear = plugin.getModuleDescriptor("bear");
-        assertEquals(bear, manager.getPluginModule("test.atlassian.plugin:bear"));
+        assertEquals(bear, getPluginAccessor().getPluginModule("test.atlassian.plugin:bear"));
     }
 
     public void testGetModuleByModuleClassOneFound() throws PluginParseException
@@ -711,13 +716,13 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        final List<MockAnimalModuleDescriptor> animalDescriptors = manager.getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class);
+        final List<MockAnimalModuleDescriptor> animalDescriptors = getPluginAccessor().getEnabledModuleDescriptorsByClass(MockAnimalModuleDescriptor.class);
         assertNotNull(animalDescriptors);
         assertEquals(1, animalDescriptors.size());
         final ModuleDescriptor<MockAnimal> moduleDescriptor = animalDescriptors.iterator().next();
         assertEquals("Bear Animal", moduleDescriptor.getName());
 
-        final List<MockMineralModuleDescriptor> mineralDescriptors = manager.getEnabledModuleDescriptorsByClass(MockMineralModuleDescriptor.class);
+        final List<MockMineralModuleDescriptor> mineralDescriptors = getPluginAccessor().getEnabledModuleDescriptorsByClass(MockMineralModuleDescriptor.class);
         assertNotNull(mineralDescriptors);
         assertEquals(1, mineralDescriptors.size());
         final ModuleDescriptor<MockMineral> mineralDescriptor = mineralDescriptors.iterator().next();
@@ -733,24 +738,24 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        final Collection<MockBear> bearModules = manager.getEnabledModulesByClassAndDescriptor(
+        final Collection<MockBear> bearModules = getPluginAccessor().getEnabledModulesByClassAndDescriptor(
                 new Class[]{MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class}, MockBear.class);
         assertNotNull(bearModules);
         assertEquals(1, bearModules.size());
         assertTrue(bearModules.iterator().next() instanceof MockBear);
 
-        final Collection<MockBear> noModules = manager.getEnabledModulesByClassAndDescriptor(new Class[]{}, MockBear.class);
+        final Collection<MockBear> noModules = getPluginAccessor().getEnabledModulesByClassAndDescriptor(new Class[]{}, MockBear.class);
         assertNotNull(noModules);
         assertEquals(0, noModules.size());
 
-        final Collection<MockThing> mockThings = manager.getEnabledModulesByClassAndDescriptor(
+        final Collection<MockThing> mockThings = getPluginAccessor().getEnabledModulesByClassAndDescriptor(
                 new Class[]{MockAnimalModuleDescriptor.class, MockMineralModuleDescriptor.class}, MockThing.class);
         assertNotNull(mockThings);
         assertEquals(2, mockThings.size());
         assertTrue(mockThings.iterator().next() instanceof MockThing);
         assertTrue(mockThings.iterator().next() instanceof MockThing);
 
-        final Collection<MockThing> mockThingsFromMineral = manager.getEnabledModulesByClassAndDescriptor(
+        final Collection<MockThing> mockThingsFromMineral = getPluginAccessor().getEnabledModulesByClassAndDescriptor(
                 new Class[]{MockMineralModuleDescriptor.class}, MockThing.class);
         assertNotNull(mockThingsFromMineral);
         assertEquals(1, mockThingsFromMineral.size());
@@ -775,7 +780,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             }
         }
 
-        final Collection<MockSilver> descriptors = manager.getEnabledModulesByClass(MockSilver.class);
+        final Collection<MockSilver> descriptors = getPluginAccessor().getEnabledModulesByClass(MockSilver.class);
         assertNotNull(descriptors);
         assertTrue(descriptors.isEmpty());
     }
@@ -789,13 +794,13 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        Collection<ModuleDescriptor<MockThing>> descriptors = manager.getEnabledModuleDescriptorsByType("animal");
+        Collection<ModuleDescriptor<MockThing>> descriptors = getPluginAccessor().getEnabledModuleDescriptorsByType("animal");
         assertNotNull(descriptors);
         assertEquals(1, descriptors.size());
         ModuleDescriptor<MockThing> moduleDescriptor = descriptors.iterator().next();
         assertEquals("Bear Animal", moduleDescriptor.getName());
 
-        descriptors = manager.getEnabledModuleDescriptorsByType("mineral");
+        descriptors = getPluginAccessor().getEnabledModuleDescriptorsByType("mineral");
         assertNotNull(descriptors);
         assertEquals(1, descriptors.size());
         moduleDescriptor = descriptors.iterator().next();
@@ -803,7 +808,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         try
         {
-            manager.getEnabledModuleDescriptorsByType("foobar");
+            getPluginAccessor().getEnabledModuleDescriptorsByType("foobar");
         }
         catch (final IllegalArgumentException e)
         {
@@ -1457,15 +1462,15 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        assertEquals(3, manager.getPlugins().size());
-        assertNotNull(manager.getPlugin("test.atlassian.plugin"));
-        assertTrue(manager.isPluginEnabled("test.atlassian.plugin"));
-        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
-        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.atlassian.plugin"));
+        assertEquals(3, getPluginAccessor().getPlugins().size());
+        assertNotNull(getPluginAccessor().getPlugin("test.atlassian.plugin"));
+        assertTrue(getPluginAccessor().isPluginEnabled("test.atlassian.plugin"));
+        assertEquals(1, getPluginAccessor().getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+        assertEquals(PluginRestartState.NONE, getPluginAccessor().getPluginRestartState("test.atlassian.plugin"));
 
         try
         {
-            manager.uninstall(manager.getPlugin("test.atlassian.plugin"));
+            manager.uninstall(getPluginAccessor().getPlugin("test.atlassian.plugin"));
             fail();
         }
         catch (final PluginException ex)
@@ -1473,11 +1478,11 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             // test passed
         }
 
-        assertEquals(3, manager.getPlugins().size());
-        assertNotNull(manager.getPlugin("test.atlassian.plugin"));
-        assertTrue(manager.isPluginEnabled("test.atlassian.plugin"));
-        assertEquals(PluginRestartState.NONE, manager.getPluginRestartState("test.atlassian.plugin"));
-        assertEquals(1, manager.getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
+        assertEquals(3, getPluginAccessor().getPlugins().size());
+        assertNotNull(getPluginAccessor().getPlugin("test.atlassian.plugin"));
+        assertTrue(getPluginAccessor().isPluginEnabled("test.atlassian.plugin"));
+        assertEquals(PluginRestartState.NONE, getPluginAccessor().getPluginRestartState("test.atlassian.plugin"));
+        assertEquals(1, getPluginAccessor().getEnabledModuleDescriptorsByClass(RequiresRestartModuleDescriptor.class).size());
     }
 
     private DefaultPluginManager makeClassLoadingPluginManager() throws PluginParseException
@@ -1539,7 +1544,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         when(plugin.getModuleDescriptor("foo")).thenReturn((ModuleDescriptor)moduleDescriptor);
         pluginEventManager.broadcast(new PluginModuleAvailableEvent(moduleDescriptor));
 
-        assertTrue(manager.isPluginModuleEnabled("dynPlugin:foo"));
+        assertTrue(getPluginAccessor().isPluginModuleEnabled("dynPlugin:foo"));
         assertTrue(listener.called);
     }
 
@@ -1571,7 +1576,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         when(plugin.getModuleDescriptor("foo")).thenReturn((ModuleDescriptor)moduleDescriptor);
         pluginEventManager.broadcast(new PluginModuleAvailableEvent(moduleDescriptor));
 
-        assertFalse(manager.isPluginModuleEnabled("dynPlugin:foo"));
+        assertFalse(getPluginAccessor().isPluginModuleEnabled("dynPlugin:foo"));
         assertFalse(listener.called);
     }
 
@@ -1598,7 +1603,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         when(plugin.getModuleDescriptors()).thenReturn(mods);
         when(plugin.getModuleDescriptor("foo")).thenReturn((ModuleDescriptor)moduleDescriptor);
         pluginEventManager.broadcast(new PluginModuleAvailableEvent(moduleDescriptor));
-        assertTrue(manager.isPluginModuleEnabled("dynPlugin:foo"));
+        assertTrue(getPluginAccessor().isPluginModuleEnabled("dynPlugin:foo"));
         assertFalse(listener.called);
         pluginEventManager.broadcast(new PluginModuleUnavailableEvent(moduleDescriptor));
         assertTrue(listener.called);
@@ -1630,7 +1635,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginEventManager.register(moduleDisabledListener);
         when(plugin.getPluginState()).thenReturn(PluginState.DISABLED);
         pluginEventManager.broadcast(new PluginContainerUnavailableEvent("dynPlugin"));
-        assertFalse(manager.isPluginEnabled("dynPlugin"));
+        assertFalse(getPluginAccessor().isPluginEnabled("dynPlugin"));
         assertTrue(listener.called);
         assertFalse(moduleDisabledListener.called);
     }
@@ -1674,7 +1679,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         manager.init();
 
-        final Plugin plugin = manager.getPlugin("test.atlassian.plugin");
+        final Plugin plugin = getPluginAccessor().getPlugin("test.atlassian.plugin");
         assertFalse(plugin.isUninstallable());
         assertNotNull(plugin.getResourceAsStream("test-atlassian-plugin.xml"));
 
@@ -2143,7 +2148,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         manager.init();
         try
         {
-            manager.getPlugin(null);
+            getPluginAccessor().getPlugin(null);
             fail();
         }
         catch (IllegalArgumentException ex)
