@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class EnabledModuleCachingPluginAccessor extends ForwardingPluginAccessor implements PluginAccessor
 {
     private final PluginEventManager pluginEventManager;
-    private final Cache cache = new Cache();
+    private final ConcurrentMap<Class<ModuleDescriptor<Object>>, PluginModuleTracker<Object, ModuleDescriptor<Object>>> cache = new MapMaker().makeComputingMap(new PluginModuleTrackerFactory());
 
     public EnabledModuleCachingPluginAccessor(final PluginAccessor delegate, final PluginEventManager pluginEventManager)
     {
@@ -33,22 +33,17 @@ public final class EnabledModuleCachingPluginAccessor extends ForwardingPluginAc
     @Override
     public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz)
     {
-        return copyOf(cache.descriptors(descriptorClazz));
+        return copyOf(descriptors(descriptorClazz));
     }
 
     /**
      * Cache implementation.
      */
-    final class Cache
+    <D> Iterable<D> descriptors(final Class<D> moduleDescriptorClass)
     {
-        private final ConcurrentMap<Class<ModuleDescriptor<Object>>, PluginModuleTracker<Object, ModuleDescriptor<Object>>> cache = new MapMaker().makeComputingMap(new PluginModuleTrackerFactory());
-
-        <D> Iterable<D> descriptors(final Class<D> moduleDescriptorClass)
-        {
-            @SuppressWarnings("unchecked")
-            final Iterable<D> descriptors = (Iterable<D>) cache.get(moduleDescriptorClass).getModuleDescriptors();
-            return descriptors;
-        }
+        @SuppressWarnings("unchecked")
+        final Iterable<D> descriptors = (Iterable<D>) cache.get(moduleDescriptorClass).getModuleDescriptors();
+        return descriptors;
     }
 
     final class PluginModuleTrackerFactory implements Function<Class<ModuleDescriptor<Object>>, PluginModuleTracker<Object, ModuleDescriptor<Object>>>
