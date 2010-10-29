@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * A caching decorator which caches {@link #getEnabledModuleDescriptorsByClass(Class)} on {@link com.atlassian.plugin.PluginAccessor} interface.
+ *
+ * @since 2.7.0
  */
 public class EnabledModuleCachingPluginAccessor implements PluginAccessor
 {
