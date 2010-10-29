@@ -31,19 +31,9 @@ abstract class ForwardingPluginAccessor implements PluginAccessor
         return delegate.getClassLoader();
     }
 
-    public Class<?> getDynamicPluginClass(final String className) throws ClassNotFoundException
-    {
-        return delegate.getDynamicPluginClass(className);
-    }
-
     public InputStream getDynamicResourceAsStream(final String resourcePath)
     {
         return delegate.getDynamicResourceAsStream(resourcePath);
-    }
-
-    public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz, final boolean verbose)
-    {
-        return delegate.getEnabledModuleDescriptorsByClass(descriptorClazz, verbose);
     }
 
     public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz)
@@ -51,24 +41,9 @@ abstract class ForwardingPluginAccessor implements PluginAccessor
         return delegate.getEnabledModuleDescriptorsByClass(descriptorClazz);
     }
 
-    public <M> List<ModuleDescriptor<M>> getEnabledModuleDescriptorsByType(final String type) throws PluginParseException
-    {
-        return delegate.getEnabledModuleDescriptorsByType(type);
-    }
-
     public <M> List<M> getEnabledModulesByClass(final Class<M> moduleClass)
     {
         return delegate.getEnabledModulesByClass(moduleClass);
-    }
-
-    public <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>> descriptorClass, final Class<M> moduleClass)
-    {
-        return delegate.getEnabledModulesByClassAndDescriptor(descriptorClass, moduleClass);
-    }
-
-    public <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>>[] descriptorClazz, final Class<M> moduleClass)
-    {
-        return delegate.getEnabledModulesByClassAndDescriptor(descriptorClazz, moduleClass);
     }
 
     public Plugin getEnabledPlugin(final String pluginKey) throws IllegalArgumentException
@@ -106,11 +81,6 @@ abstract class ForwardingPluginAccessor implements PluginAccessor
         return delegate.getPluginModule(completeKey);
     }
 
-    public InputStream getPluginResourceAsStream(final String pluginKey, final String resourcePath)
-    {
-        return delegate.getPluginResourceAsStream(pluginKey, resourcePath);
-    }
-
     public PluginRestartState getPluginRestartState(final String key)
     {
         return delegate.getPluginRestartState(key);
@@ -141,4 +111,49 @@ abstract class ForwardingPluginAccessor implements PluginAccessor
         return delegate.isSystemPlugin(key);
     }
 
+    //
+    // deprecated
+    //
+
+    public Class<?> getDynamicPluginClass(final String className) throws ClassNotFoundException
+    {
+        @SuppressWarnings("deprecation")
+        final Class<?> result = delegate.getDynamicPluginClass(className);
+        return result;
+    }
+
+    public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz, final boolean verbose)
+    {
+        @SuppressWarnings("deprecation")
+        final List<D> result = delegate.getEnabledModuleDescriptorsByClass(descriptorClazz, verbose);
+        return result;
+    }
+
+    public <M> List<ModuleDescriptor<M>> getEnabledModuleDescriptorsByType(final String type) throws PluginParseException
+    {
+        @SuppressWarnings("deprecation")
+        final List<ModuleDescriptor<M>> result = delegate.getEnabledModuleDescriptorsByType(type);
+        return result;
+    }
+
+    public <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>> descriptorClass, final Class<M> moduleClass)
+    {
+        @SuppressWarnings("deprecation")
+        final List<M> result = delegate.getEnabledModulesByClassAndDescriptor(descriptorClass, moduleClass);
+        return result;
+    }
+
+    public <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>>[] descriptorClazz, final Class<M> moduleClass)
+    {
+        @SuppressWarnings("deprecation")
+        final List<M> result = delegate.getEnabledModulesByClassAndDescriptor(descriptorClazz, moduleClass);
+        return result;
+    }
+
+    public InputStream getPluginResourceAsStream(final String pluginKey, final String resourcePath)
+    {
+        @SuppressWarnings("deprecation")
+        final InputStream result = delegate.getPluginResourceAsStream(pluginKey, resourcePath);
+        return result;
+    }
 }
