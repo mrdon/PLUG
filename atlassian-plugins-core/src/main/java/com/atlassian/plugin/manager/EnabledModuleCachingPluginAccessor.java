@@ -1,11 +1,11 @@
 package com.atlassian.plugin.manager;
 
+import static com.atlassian.plugin.tracker.DefaultPluginModuleTracker.create;
 import static com.google.common.collect.ImmutableList.copyOf;
 
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.tracker.DefaultPluginModuleTracker;
 import com.atlassian.plugin.tracker.PluginModuleTracker;
 
 import com.google.common.base.Function;
@@ -50,8 +50,7 @@ public final class EnabledModuleCachingPluginAccessor extends ForwardingPluginAc
     {
         public PluginModuleTracker<Object, ModuleDescriptor<Object>> apply(final Class<ModuleDescriptor<Object>> moduleDescriptorClass)
         {
-            // need some generic trickery here as we don't know the specific moduleDescriptor type
-            return DefaultPluginModuleTracker.create(delegate, pluginEventManager, moduleDescriptorClass);
+            return create(delegate, pluginEventManager, moduleDescriptorClass);
         }
     }
 }
