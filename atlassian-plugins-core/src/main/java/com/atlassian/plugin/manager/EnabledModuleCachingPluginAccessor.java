@@ -1,6 +1,7 @@
 package com.atlassian.plugin.manager;
 
 import static com.atlassian.plugin.tracker.DefaultPluginModuleTracker.create;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.copyOf;
 
 import com.atlassian.plugin.ModuleDescriptor;
@@ -27,7 +28,7 @@ public final class EnabledModuleCachingPluginAccessor extends ForwardingPluginAc
     public EnabledModuleCachingPluginAccessor(final PluginAccessor delegate, final PluginEventManager pluginEventManager)
     {
         super(delegate);
-        this.pluginEventManager = pluginEventManager;
+        this.pluginEventManager = checkNotNull(pluginEventManager);
     }
 
     @Override

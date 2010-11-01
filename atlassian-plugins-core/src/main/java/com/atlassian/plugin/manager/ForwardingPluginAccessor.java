@@ -1,5 +1,7 @@
 package com.atlassian.plugin.manager;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
@@ -23,7 +25,7 @@ abstract class ForwardingPluginAccessor implements PluginAccessor
 
     ForwardingPluginAccessor(final PluginAccessor delegate)
     {
-        this.delegate = delegate;
+        this.delegate = checkNotNull(delegate);
     }
 
     public ClassLoader getClassLoader()
