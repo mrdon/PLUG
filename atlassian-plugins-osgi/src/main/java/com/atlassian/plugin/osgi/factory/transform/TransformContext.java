@@ -17,6 +17,8 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 
 import com.google.common.collect.ImmutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
@@ -52,6 +54,8 @@ public final class TransformContext
     private boolean shouldRequireSpring = false;
     private final OsgiContainerManager osgiContainerManager;
     private final Set<HostComponentRegistration> requiredHostComponents;
+
+    private static final Logger LOG = LoggerFactory.getLogger(TransformContext.class);
 
     // The transformation is mainly about generating spring beans.
     // We don't want to have name conflicts between them. This map helps keep track of that.
@@ -206,9 +210,12 @@ public final class TransformContext
         // if it already exists, just explode.
         if (beanSourceMap.containsKey(name))
         {
-            final String message = String.format("The bean identifier '%s' is used by two different beans from %s and %s", name, source,
-                beanSourceMap.get(name));
-            throw new PluginTransformationException(message);
+            final String message = String.format("The bean identifier '%s' is used by two different beans from %s and %s."
+                                                 + "This is a bad practice and may not be supported in newer plugin framework version.",
+                                                 name, source, beanSourceMap.get(name));
+            // TODO: turn this warning into exception in the future. PLUG-682
+            LOG.warn(message);
+            //throw new PluginTransformationException(message);
         }
 
         // otherwise, just track it.

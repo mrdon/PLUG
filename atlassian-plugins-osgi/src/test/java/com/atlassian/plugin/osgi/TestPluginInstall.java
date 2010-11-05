@@ -723,7 +723,8 @@ public class TestPluginInstall extends PluginInContainerTestBase
         assertEquals(0, plugin.getModuleDescriptors().size());
     }
 
-    public void testInstallWithComponentBeanNameConflictedWithHostComponent() throws Exception
+    // TODO: turn this back on PLUG-682
+    public void notTestInstallWithComponentBeanNameConflictedWithHostComponent() throws Exception
     {
         new PluginJarBuilder("first")
                 .addFormattedResource("atlassian-plugin.xml",
