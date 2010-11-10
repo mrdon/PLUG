@@ -2,7 +2,7 @@
 # Copied from the packages frame in the Javadocs - http://java.sun.com/javase/6/docs/api/index.html
 
 javax.activation
-javax.annotation
+javax.annotation;version="1.0"
 javax.annotation.processing
 javax.jws
 javax.jws.soap
