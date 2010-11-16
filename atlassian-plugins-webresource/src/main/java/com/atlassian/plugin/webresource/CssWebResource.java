@@ -14,7 +14,7 @@ public class CssWebResource extends AbstractWebResourceFormatter
     private static final String CSS_EXTENSION = ".css";
     private static final String MEDIA_PARAM = "media";
     private static final String IEONLY_PARAM = "ieonly";
-    private static final String CONDITION_PARAM = "condition";
+    private static final String CONDITION_PARAM = "conditionalComment";
 
     private static final List<String> HANDLED_PARAMETERS = Arrays.asList("title", MEDIA_PARAM, "charset");
 

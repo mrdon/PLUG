@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public interface PluginResourceLocator
 {
-    String[] BATCH_PARAMS = new String[] { "ieonly", "media", "content-type", "cache" };
+    String[] BATCH_PARAMS = new String[] { "ieonly", "media", "content-type", "cache", "conditionalComment" };
 
     /**
      * Returns true if this locator can parse the given url.

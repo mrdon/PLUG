@@ -20,10 +20,12 @@ import org.dom4j.Element;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -385,6 +387,35 @@ public class TestPluginResourceLocatorImpl extends TestCase
         params.put("ieonly", "true");
 
         final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors(ieResourceName, "master.css");
+
+        final Mock mockPlugin = new Mock(Plugin.class);
+        final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
+        mockModuleDescriptor.expectAndReturn("getPluginKey", TEST_PLUGIN_KEY);
+        mockModuleDescriptor.expectAndReturn("getCompleteKey", TEST_MODULE_COMPLETE_KEY);
+        mockModuleDescriptor.expectAndReturn("getResourceDescriptors", resourceDescriptors);
+        mockModuleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq(ieResourceName)), new ResourceLocation("", ieResourceName, "download",
+            "text/css", "", Collections.EMPTY_MAP));
+
+        mockPluginAccessor.matchAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
+        mockPluginAccessor.matchAndReturn("getPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
+        mockPluginAccessor.matchAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), mockPlugin.proxy());
+
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, params);
+
+        assertTrue(resource instanceof BatchPluginResource);
+    }
+
+    public void testGetDownloadableBatchResourceWithConditionalComments() throws Exception
+    {
+        final String url = "/download/batch/" + TEST_MODULE_COMPLETE_KEY + "/all.css";
+        final String ieResourceName = "master-conditional.css";
+        final Map<String, String> params = new TreeMap<String, String>();
+        params.put("conditionalComment", "IE");
+
+        final List<ResourceDescriptor> resourceDescriptors = asList(
+                TestUtils.createResourceDescriptor(ieResourceName, new HashMap(params)),
+                TestUtils.createResourceDescriptor(ieResourceName));
 
         final Mock mockPlugin = new Mock(Plugin.class);
         final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);

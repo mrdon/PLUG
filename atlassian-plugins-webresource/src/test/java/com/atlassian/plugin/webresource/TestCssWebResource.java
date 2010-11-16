@@ -66,7 +66,7 @@ public class TestCssWebResource extends TestCase
         final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master-ie.css";
 
         Map params = new HashMap();
-        params.put("condition", "IE");
+        params.put("conditionalComment", "IE");
         params.put("media", "screen");
         assertEquals("<!--[if IE]>\n" +
                     "<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" media=\"screen\">\n" +
@@ -79,7 +79,7 @@ public class TestCssWebResource extends TestCase
         final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master-ie.css";
 
         Map params = new HashMap();
-        params.put("condition", "!IE");
+        params.put("conditionalComment", "!IE");
         params.put("ieonly", "true");
         params.put("media", "screen");
         assertEquals("<!--[if !IE]>\n" +
