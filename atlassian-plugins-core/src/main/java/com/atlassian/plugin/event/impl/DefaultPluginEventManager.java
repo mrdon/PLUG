@@ -1,8 +1,9 @@
 package com.atlassian.plugin.event.impl;
 
+import static com.atlassian.plugin.util.Assertions.notNull;
+
 import com.atlassian.event.api.EventListener;
 import com.atlassian.event.api.EventPublisher;
-import com.atlassian.event.config.EventThreadPoolConfiguration;
 import com.atlassian.event.config.ListenerHandlersConfiguration;
 import com.atlassian.event.internal.AsynchronousAbleEventDispatcher;
 import com.atlassian.event.internal.EventExecutorFactoryImpl;
@@ -18,25 +19,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Simple, synchronous event manager that uses one or more method selectors to determine event listeners.  The default
- * method selectors are {@link MethodNameListenerMethodSelector} and {@link AnnotationListenerMethodSelector}.
+ * Simple, synchronous event manager that uses one or more method selectors to determine event listeners.
+ * <p>
+ * The default method selectors are {@link MethodNameListenerMethodSelector} and 
+ * {@link AnnotationListenerMethodSelector}.
  */
 public class DefaultPluginEventManager implements PluginEventManager
 {
     private final EventPublisher publisher;
 
     /**
-     * Constructor that looks for an arbitrary selectors
-     * @param selectors List of selectors that determine which are listener methods
+     * Uses the supplied selectors to determine listener methods.
+     * 
+     * @param selectors used to determine which are listener methods
      */
-    public DefaultPluginEventManager(final ListenerMethodSelector[] selectors)
+    public DefaultPluginEventManager(final ListenerMethodSelector... selectors)
     {
-        ListenerHandlersConfiguration configuration = new ListenerHandlersConfiguration()
+        final ListenerHandlersConfiguration configuration = new ListenerHandlersConfiguration()
         {
             public List<ListenerHandler> getListenerHandlers()
             {
-                List<ListenerHandler> handlers = new ArrayList<ListenerHandler>(selectors.length);
-                for(ListenerMethodSelector selector : selectors)
+                final List<ListenerHandler> handlers = new ArrayList<ListenerHandler>(selectors.length);
+                for (final ListenerMethodSelector selector : selectors)
                 {
                     handlers.add(new MethodSelectorListenerHandler(selector));
                 }
@@ -44,52 +48,52 @@ public class DefaultPluginEventManager implements PluginEventManager
             }
         };
 
-        EventThreadPoolConfiguration threadPoolConfiguration = new EventThreadPoolConfigurationImpl();
-        EventExecutorFactory factory = new EventExecutorFactoryImpl(threadPoolConfiguration);
-        EventDispatcher dispatcher = new AsynchronousAbleEventDispatcher(factory);
-        publisher = new EventPublisherImpl(dispatcher, configuration);
+        final EventExecutorFactory executorFactory = new EventExecutorFactoryImpl(new EventThreadPoolConfigurationImpl());
+        final EventDispatcher eventDispatcher = new AsynchronousAbleEventDispatcher(executorFactory);
+        publisher = new EventPublisherImpl(eventDispatcher, configuration);
     }
 
     public DefaultPluginEventManager()
     {
-        this(new ListenerMethodSelector[] {new MethodNameListenerMethodSelector(), new AnnotationListenerMethodSelector(), new AnnotationListenerMethodSelector(EventListener.class)});
+        this(defaultMethodSelectors());
     }
 
     /**
-     * Default constructor that delegates all event publication to an {@code EventPublisher}
+     * Delegate all event publication to the supplied {@code EventPublisher}.
      */
-    public DefaultPluginEventManager(EventPublisher publisher)
+    public DefaultPluginEventManager(final EventPublisher publisher)
     {
-        this.publisher = publisher;
+        this.publisher = notNull("publisher", publisher);
     }
 
-    public void register(Object listener)
+    public void register(final Object listener)
     {
-        if (listener == null)
-        {
-            throw new IllegalArgumentException("Listener cannot be null");
-        }
-        publisher.register(listener);
+        publisher.register(notNull("listener", listener));
     }
 
-    public void unregister(Object listener)
+    public void unregister(final Object listener)
     {
-        if (listener == null)
-        {
-            throw new IllegalArgumentException("Listener cannot be null");
-        }
-        publisher.unregister(listener);
+        publisher.unregister(notNull("listener", listener));
     }
 
-    public void broadcast(Object event) throws NotificationException
+    public void broadcast(final Object event) throws NotificationException
     {
+        notNull("event", event);
         try
         {
             publisher.publish(event);
         }
-        catch (RuntimeException e)
+        catch (final RuntimeException e)
         {
             throw new NotificationException(e);
         }
+    }
+
+    static ListenerMethodSelector[] defaultMethodSelectors()
+    {
+        final ListenerMethodSelector methodNames = new MethodNameListenerMethodSelector();
+        final ListenerMethodSelector pluginEvent = new AnnotationListenerMethodSelector();
+        final ListenerMethodSelector eventListener = new AnnotationListenerMethodSelector(EventListener.class);
+        return new ListenerMethodSelector[] { methodNames, pluginEvent, eventListener };
     }
 }
