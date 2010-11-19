@@ -2,7 +2,12 @@
 # Copied from the packages frame in the Javadocs - http://java.sun.com/javase/6/docs/api/index.html
 
 javax.activation
-javax.annotation
+# JSR-250's annotations are imported by Spring (org.springframework, bundled in com.atlassian.plugins:atlassian-plugins-osgi)
+# The import is javax.annotation;version="[1.0.0, 2.0.0)";resolution:=optional, thus this export must specify this version or 
+# Felix will just export as 0.0.0.1_<jse-name> version.
+# If the javax.annotation is *not* wired to Spring, the result will be that the org.springframework.context.annotation.CommonAnnotationBeanPostProcessor
+# is not added to the application context instances of the plugins. This will at least affect GreenHopper since it uses @Resource in DefaultWorklogHistoryCache.
+javax.annotation;version="1.0"
 javax.annotation.processing
 javax.jws
 javax.jws.soap
