@@ -27,6 +27,10 @@ public class ContextClassLoaderSwitchingUtil
         {
             runInContext(newClassLoader, callable(runnable));
         }
+        catch (RuntimeException re)
+        {
+            throw re;
+        }
         catch (Exception e)
         {
             // Do nothing, this can't happen
