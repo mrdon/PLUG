@@ -114,48 +114,42 @@ abstract class ForwardingPluginAccessor implements PluginAccessor
     }
 
     //
-    // deprecated
+    // deprecated methods
     //
 
+    @Deprecated
     public Class<?> getDynamicPluginClass(final String className) throws ClassNotFoundException
     {
-        @SuppressWarnings("deprecation")
-        final Class<?> result = delegate.getDynamicPluginClass(className);
-        return result;
+        return delegate.getDynamicPluginClass(className);
     }
 
+    @Deprecated
     public <D extends ModuleDescriptor<?>> List<D> getEnabledModuleDescriptorsByClass(final Class<D> descriptorClazz, final boolean verbose)
     {
-        @SuppressWarnings("deprecation")
-        final List<D> result = delegate.getEnabledModuleDescriptorsByClass(descriptorClazz, verbose);
-        return result;
+        return delegate.getEnabledModuleDescriptorsByClass(descriptorClazz, verbose);
     }
 
+    @Deprecated
     public <M> List<ModuleDescriptor<M>> getEnabledModuleDescriptorsByType(final String type) throws PluginParseException
     {
-        @SuppressWarnings("deprecation")
-        final List<ModuleDescriptor<M>> result = delegate.getEnabledModuleDescriptorsByType(type);
-        return result;
+        return delegate.<M> getEnabledModuleDescriptorsByType(type);
     }
 
+    @Deprecated
     public <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>> descriptorClass, final Class<M> moduleClass)
     {
-        @SuppressWarnings("deprecation")
-        final List<M> result = delegate.getEnabledModulesByClassAndDescriptor(descriptorClass, moduleClass);
-        return result;
+        return delegate.getEnabledModulesByClassAndDescriptor(descriptorClass, moduleClass);
     }
 
+    @Deprecated
     public <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>>[] descriptorClazz, final Class<M> moduleClass)
     {
-        @SuppressWarnings("deprecation")
-        final List<M> result = delegate.getEnabledModulesByClassAndDescriptor(descriptorClazz, moduleClass);
-        return result;
+        return delegate.getEnabledModulesByClassAndDescriptor(descriptorClazz, moduleClass);
     }
 
+    @Deprecated
     public InputStream getPluginResourceAsStream(final String pluginKey, final String resourcePath)
     {
-        @SuppressWarnings("deprecation")
-        final InputStream result = delegate.getPluginResourceAsStream(pluginKey, resourcePath);
-        return result;
+        return delegate.getPluginResourceAsStream(pluginKey, resourcePath);
     }
 }
