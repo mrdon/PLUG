@@ -8,8 +8,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 import org.apache.commons.lang.StringUtils;
@@ -63,13 +65,21 @@ public class GenerateManifestStage implements TransformStage
             {
                 if (context.getExtraImports().isEmpty())
                 {
+                    boolean modified = false;
                     mf = builder.getJar().getManifest();
                     for (Map.Entry<String,String> entry : getRequiredOsgiHeaders(context, parser.getKey()).entrySet())
                     {
-                        mf.getMainAttributes().putValue(entry.getKey(), entry.getValue());
+                        if (manifestDoesntHaveRequiredOsgiHeader(mf, entry))
+                        {
+                            mf.getMainAttributes().putValue(entry.getKey(), entry.getValue());
+                            modified = true;
+                        }
                     }
                     validateOsgiVersionIsValid(mf);
-                    writeManifestOverride(context, mf);
+                    if (modified)
+                    {
+                        writeManifestOverride(context, mf);
+                    }
                     // skip any manifest manipulation by bnd
                     return;
                 }
@@ -343,6 +353,15 @@ public class GenerateManifestStage implements TransformStage
         }
 
         return OsgiHeaderUtil.buildHeader(originalImports);
+    }
+
+    private boolean manifestDoesntHaveRequiredOsgiHeader(Manifest mf, Entry<String, String> entry)
+    {
+        if (mf.getMainAttributes().containsKey(new Attributes.Name(entry.getKey())))
+        {
+            return !entry.getValue().equals(mf.getMainAttributes().getValue(entry.getKey()));
+        }
+        return true;
     }
 
     private static void header(final Properties properties, final String key, final Object value)
