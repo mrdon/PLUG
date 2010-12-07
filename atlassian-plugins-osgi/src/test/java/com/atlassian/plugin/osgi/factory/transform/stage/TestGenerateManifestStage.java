@@ -316,6 +316,69 @@ public class TestGenerateManifestStage extends TestCase
 
     }
 
+    public void testThatGeneratingManifestWithExistingManifestWithSimilarSpringAndAtlassianPluginKeyDoesNotRecreateTheManifest() throws Exception
+    {
+        final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0",
+                        "Spring-Context: *;timeout:=60",
+                        "Atlassian-Plugin-Key: someKey",
+                        "Bundle-Version: 4.2.0.jira40",
+                        "Bundle-SymbolicName: my.foo.symbolicName")
+                .build();
+
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
+        final Attributes attrs = executeStage(context);
+        assertEquals("someKey", attrs.getValue("Atlassian-Plugin-Key"));
+        assertEquals("*;timeout:=60", attrs.getValue("Spring-Context"));
+        assertNull(context.getFileOverrides().get("META-INF/MANIFEST.MF"));
+    }
+
+    public void testThatGeneratingManifestWithExistingManifestWithDifferentSpringTimeoutRecreatesTheManifest() throws Exception
+    {
+        try
+        {
+            System.setProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT, "333");
+            stage = new GenerateManifestStage();
+            final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0")
+                    .addFormattedResource("META-INF/MANIFEST.MF",
+                            "Manifest-Version: 1.0",
+                            "Spring-Context: *;timeout:=60",
+                            "Atlassian-Plugin-Key: someKey",
+                            "Bundle-Version: 4.2.0.jira40",
+                            "Bundle-SymbolicName: my.foo.symbolicName")
+                    .build();
+
+            final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
+            final Attributes attrs = executeStage(context);
+            assertEquals("someKey", attrs.getValue("Atlassian-Plugin-Key"));
+            assertEquals("*;timeout:=333", attrs.getValue("Spring-Context"));
+            assertNotNull(context.getFileOverrides().get("META-INF/MANIFEST.MF"));
+        }
+        finally
+        {
+            System.clearProperty(PluginUtils.ATLASSIAN_PLUGINS_ENABLE_WAIT);
+        }
+    }
+
+    public void testThatGeneratingManifestWithExistingManifestWithDifferentAtlassianPluginKeyRecreatesTheManifest() throws Exception
+    {
+        final File file = new PluginJarBuilder().addPluginInformation("someKey", "someName", "1.0")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                        "Manifest-Version: 1.0",
+                        "Spring-Context: *;timeout:=60",
+                        "Atlassian-Plugin-Key: anotherKey",
+                        "Bundle-Version: 4.2.0.jira40",
+                        "Bundle-SymbolicName: my.foo.symbolicName")
+                .build();
+
+        final TransformContext context = new TransformContext(null, SystemExports.NONE, new JarPluginArtifact(file), null, PluginAccessor.Descriptor.FILENAME, osgiContainerManager);
+        final Attributes attrs = executeStage(context);
+        assertEquals("someKey", attrs.getValue("Atlassian-Plugin-Key"));
+        assertEquals("*;timeout:=60", attrs.getValue("Spring-Context"));
+        assertNotNull(context.getFileOverrides().get("META-INF/MANIFEST.MF"));
+    }
+
     public void testGenerateManifestWithExistingManifestWithSpringWithDescriptor() throws Exception
     {
         final File plugin = new PluginJarBuilder("plugin")
@@ -444,8 +507,15 @@ public class TestGenerateManifestStage extends TestCase
     private Attributes executeStage(final TransformContext context) throws IOException
     {
         stage.execute(context);
-        final Manifest mf = new Manifest(new ByteArrayInputStream(context.getFileOverrides().get("META-INF/MANIFEST.MF")));
-        final Attributes attrs = mf.getMainAttributes();
-        return attrs;
+        Manifest mf;
+        if (context.getFileOverrides().get("META-INF/MANIFEST.MF") != null)
+        {
+            mf = new Manifest(new ByteArrayInputStream(context.getFileOverrides().get("META-INF/MANIFEST.MF")));
+        }
+        else
+        {
+            mf = context.getManifest();
+        }
+        return mf.getMainAttributes();
     }
 }
