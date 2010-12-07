@@ -105,7 +105,7 @@ public class OsgiPluginFactory implements PluginFactory
         Validate.notNull(applicationKeys, "The application keys are required");
         Validate.notNull(persistentCache, "The osgi persistent cache is required");
         Validate.notNull(persistentCache, "The plugin event manager is required");
-        Validate.notNull(pluginTransformerFactory);
+        Validate.notNull(pluginTransformerFactory, "The plugin transformer factory is required");
 
         this.osgi = osgi;
         this.pluginDescriptorFileName = pluginDescriptorFileName;
