@@ -8,7 +8,6 @@ import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.util.PluginUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -37,6 +36,25 @@ public class DefaultPluginTransformer implements PluginTransformer
     private final OsgiContainerManager osgiContainerManager;
 
     /**
+     * Gets the default list of transform stages performed by the transformer. Clients wishing to add stages to the
+     * transformation process should use this list as a template rather than creating their own from scratch.
+     */
+    public static ArrayList<TransformStage> getDefaultTransformStages()
+    {
+        return new ArrayList<TransformStage>()
+        {{
+                add(new AddBundleOverridesStage());
+                add(new ScanInnerJarsStage());
+                add(new ComponentImportSpringStage());
+                add(new ComponentSpringStage());
+                add(new ScanDescriptorForHostClassesStage());
+                add(new ModuleTypeSpringStage());
+                add(new HostComponentSpringStage());
+                add(new GenerateManifestStage());
+        }};
+    }
+
+    /**
      * Constructs a transformer with the default stages
      *
      * @param cache The OSGi cache configuration for transformed plugins
@@ -45,20 +63,9 @@ public class DefaultPluginTransformer implements PluginTransformer
      * @since 2.2.0
      */
     public DefaultPluginTransformer(OsgiPersistentCache cache, SystemExports systemExports, Set<String> applicationKeys, String pluginDescriptorPath,
-        OsgiContainerManager osgiContainerManager
-    )
+        OsgiContainerManager osgiContainerManager)
     {
-        this(cache, systemExports, applicationKeys, pluginDescriptorPath, osgiContainerManager, new ArrayList<TransformStage>()
-        {{
-            add(new AddBundleOverridesStage());
-            add(new ScanInnerJarsStage());
-            add(new ComponentImportSpringStage());
-            add(new ComponentSpringStage());
-            add(new ScanDescriptorForHostClassesStage());
-            add(new ModuleTypeSpringStage());
-            add(new HostComponentSpringStage());
-            add(new GenerateManifestStage());
-        }});
+        this(cache, systemExports, applicationKeys, pluginDescriptorPath, osgiContainerManager, getDefaultTransformStages());
     }
 
     /**

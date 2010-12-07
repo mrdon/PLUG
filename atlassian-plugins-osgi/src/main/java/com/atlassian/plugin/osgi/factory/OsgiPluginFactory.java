@@ -45,31 +45,60 @@ public class OsgiPluginFactory implements PluginFactory
 {
     private static final Logger log = LoggerFactory.getLogger(OsgiPluginFactory.class);
 
+    public interface PluginTransformerFactory
+    {
+        PluginTransformer newPluginTransformer(OsgiPersistentCache cache, SystemExports systemExports, Set<String> applicationKeys, String pluginDescriptorPath, OsgiContainerManager osgi);
+    }
+
+    public static class DefaultPluginTransformerFactory implements PluginTransformerFactory
+    {
+        public PluginTransformer newPluginTransformer(OsgiPersistentCache cache, SystemExports systemExports, Set<String> applicationKeys, String pluginDescriptorPath, OsgiContainerManager osgi)
+        {
+            return new DefaultPluginTransformer(cache, systemExports, applicationKeys, pluginDescriptorPath, osgi);
+        }
+    }
+
     private final OsgiContainerManager osgi;
     private final String pluginDescriptorFileName;
     private final DescriptorParserFactory descriptorParserFactory;
     private final PluginEventManager pluginEventManager;
     private final Set<String> applicationKeys;
     private final OsgiPersistentCache persistentCache;
-
+    private final PluginTransformerFactory pluginTransformerFactory;
 
     private volatile PluginTransformer pluginTransformer;
 
     private ServiceTracker moduleDescriptorFactoryTracker;
     private final OsgiChainedModuleDescriptorFactoryCreator osgiChainedModuleDescriptorFactoryCreator;
 
+    /**
+     * Old constructor retained for backwards compatibility
+     * @deprecated
+     */
     public OsgiPluginFactory(String pluginDescriptorFileName, String applicationKey, OsgiPersistentCache persistentCache, OsgiContainerManager osgi, PluginEventManager pluginEventManager)
     {
         this(pluginDescriptorFileName, new HashSet<String>(Arrays.asList(applicationKey)), persistentCache, osgi, pluginEventManager);
     }
 
+    /**
+     * Default constructor
+     */
     public OsgiPluginFactory(String pluginDescriptorFileName, Set<String> applicationKeys, OsgiPersistentCache persistentCache, final OsgiContainerManager osgi, PluginEventManager pluginEventManager)
+    {
+        this(pluginDescriptorFileName, applicationKeys, persistentCache, osgi, pluginEventManager, new DefaultPluginTransformerFactory());
+    }
+
+    /**
+     * Constructor for implementations that want to override the DefaultPluginTransformer with a custom implementation
+     */
+    public OsgiPluginFactory(String pluginDescriptorFileName, Set<String> applicationKeys, OsgiPersistentCache persistentCache, final OsgiContainerManager osgi, PluginEventManager pluginEventManager, PluginTransformerFactory pluginTransformerFactory)
     {
         Validate.notNull(pluginDescriptorFileName, "Plugin descriptor is required");
         Validate.notNull(osgi, "The OSGi container is required");
         Validate.notNull(applicationKeys, "The application keys are required");
         Validate.notNull(persistentCache, "The osgi persistent cache is required");
         Validate.notNull(persistentCache, "The plugin event manager is required");
+        Validate.notNull(pluginTransformerFactory);
 
         this.osgi = osgi;
         this.pluginDescriptorFileName = pluginDescriptorFileName;
@@ -84,7 +113,9 @@ public class OsgiPluginFactory implements PluginFactory
                 return osgi.getServiceTracker(className);
             }
         });
+        this.pluginTransformerFactory = pluginTransformerFactory;
     }
+
 
     private PluginTransformer getPluginTransformer()
     {
@@ -93,7 +124,7 @@ public class OsgiPluginFactory implements PluginFactory
             String exportString = (String) osgi.getBundles()[0].getHeaders()
                     .get(Constants.EXPORT_PACKAGE);
             SystemExports exports = new SystemExports(exportString);
-            pluginTransformer = new DefaultPluginTransformer(persistentCache, exports, applicationKeys, pluginDescriptorFileName, osgi);
+            pluginTransformer = pluginTransformerFactory.newPluginTransformer(persistentCache, exports, applicationKeys, pluginDescriptorFileName, osgi);
         }
         return pluginTransformer;
     }
@@ -112,7 +143,7 @@ public class OsgiPluginFactory implements PluginFactory
 
     /**
      * @param pluginArtifact The plugin artifact
-     * @return The plugin key if a manifest is present and contains {@link OsgiPlugin.ATLASSIAN_PLUGIN_KEY} and 
+     * @return The plugin key if a manifest is present and contains {@link OsgiPlugin.ATLASSIAN_PLUGIN_KEY} and
      * {@link Constants.BUNDLE_VERSION}
      */
     private String getPluginKeyFromManifest(PluginArtifact pluginArtifact)
