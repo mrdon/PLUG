@@ -1,9 +1,11 @@
 package com.atlassian.plugin.osgi.factory;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import com.atlassian.plugin.AutowireCapablePlugin;
-import junit.framework.TestCase;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+
+import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -12,8 +14,10 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.context.support.GenericApplicationContext;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
+import junit.framework.TestCase;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TestOsgiPluginInstalledHelper extends TestCase
 {
@@ -91,6 +95,14 @@ public class TestOsgiPluginInstalledHelper extends TestCase
         }
     }
 
+    public void testBundlesAreResolvedIfOnlyInstalled()
+    {
+        Mockito.when(bundle.getState()).thenReturn(Bundle.INSTALLED);
+        helper.getRequiredPlugins();
+        Mockito.verify(packageAdmin).resolveBundles(new Bundle[]{bundle});
+    }
+    
+    
     public static class ChildBean {
     }
 
