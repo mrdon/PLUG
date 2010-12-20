@@ -1,5 +1,10 @@
 package com.atlassian.plugin.osgi.factory;
 
+import java.io.InputStream;
+import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.IllegalPluginStateException;
 import com.atlassian.plugin.module.ContainerAccessor;
@@ -9,16 +14,15 @@ import com.atlassian.plugin.osgi.spring.SpringContainerAccessor;
 import com.atlassian.plugin.osgi.util.BundleClassLoaderAccessor;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
+
 import org.apache.commons.lang.Validate;
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
-
-import java.io.InputStream;
-import java.net.URL;
-import java.util.HashSet;
-import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper class that implements the methods assuming the OSGi plugin has been installed
@@ -27,6 +31,8 @@ import java.util.Set;
  */
 class OsgiPluginInstalledHelper implements OsgiPluginHelper
 {
+    private static final Logger log = LoggerFactory.getLogger(OsgiPluginInstalledHelper.class);
+    
     private final ClassLoader bundleClassLoader;
     private final Bundle bundle;
     private final PackageAdmin packageAdmin;
@@ -130,6 +136,14 @@ class OsgiPluginInstalledHelper implements OsgiPluginHelper
 
     public Set<String> getRequiredPlugins()
     {
+        /* A bundle must move from INSTALLED to RESOLVED before we can get its import */
+        if (bundle.getState() == Bundle.INSTALLED)
+        {
+            log.debug("Bundle is in INSTALLED for {}", bundle.getSymbolicName());
+            packageAdmin.resolveBundles(new Bundle[]{bundle});
+            log.debug("Bundle state is now {}", bundle.getState());
+        }
+        
         final Set<String> keys = new HashSet<String>();
         getRequiredPluginsFromExports(keys);
 
