@@ -53,9 +53,18 @@ public final class PluginFrameworkUtils
         try
         {
             in = ClassLoaderUtils.getResourceAsStream(BUILD_PROPERTY_PATH, PluginFrameworkUtils.class);
-            // this should automatically get rid of comment lines.
-            props.load(in);
-            return props.getProperty("version");
+            if (in != null)
+            {
+                // this should automatically get rid of comment lines.
+                props.load(in);
+                return props.getProperty("version");
+            }
+            else
+            {
+                // probably ran via IDEA where pom.properties won't exist
+                return "2.7.0";
+            }
+
         }
         catch (IOException e)
         {
