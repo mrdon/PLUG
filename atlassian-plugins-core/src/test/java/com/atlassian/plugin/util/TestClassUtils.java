@@ -49,7 +49,7 @@ public class TestClassUtils extends TestCase
         try
         {
             URL log4jUrl = getClass().getClassLoader().getResource("log4j.properties");
-            URL root = new URL(log4jUrl.toExternalForm() + "/../");
+            URL root = new URL(new URL(log4jUrl.toExternalForm()), ".");
 
             URLClassLoader urlCl = new URLClassLoader(new URL[] {root}, new FilteredClassLoader(MySuperClass.class));
             ClosableClassLoader wrapCl = new ClosableClassLoader(getClass().getClassLoader());
