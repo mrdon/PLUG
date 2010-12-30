@@ -2,6 +2,7 @@ package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
@@ -589,5 +590,38 @@ public class TestPluginDependencies extends PluginInContainerTestBase
         long timeWaitingForRefresh = System.currentTimeMillis() - start;
         assertTrue("Refresh seemed to have timed out, which is bad", timeWaitingForRefresh < FelixOsgiContainerManager.REFRESH_TIMEOUT * 1000);
         assertEquals(0, pluginManager.getEnabledPlugins().size());
+    }
+    
+    public void testEnablingDisabledDependentPluginRecursivelyEnablesDependency() throws Exception
+    {
+        new PluginJarBuilder("osgi")
+                .addFormattedResource("META-INF/MANIFEST.MF",
+                    "Manifest-Version: 1.0",
+                    "Bundle-SymbolicName: myA",
+                    "Bundle-Version: 1.0",
+                    "Export-Package: testpackage",
+                    "")
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test' key='myA-1.0' pluginsVersion='2' state='disabled'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "    </plugin-info>",
+                    "</atlassian-plugin>")
+                .build(pluginsDir);
+        
+        new PluginJarBuilder("osgi")
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test' key='consumer' pluginsVersion='2' state='disabled'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "        <bundle-instructions><Import-Package>testpackage</Import-Package></bundle-instructions>",
+                    "    </plugin-info>",
+                    "</atlassian-plugin>")
+                .build(pluginsDir);
+        
+        initPluginManager();
+
+        Plugin plugin = pluginManager.getPlugin("consumer");
+        assertEquals(Collections.singleton("myA-1.0"), plugin.getRequiredPlugins());
     }
 }
