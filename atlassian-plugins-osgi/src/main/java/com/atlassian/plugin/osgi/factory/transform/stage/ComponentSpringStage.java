@@ -1,5 +1,6 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
+import com.atlassian.multitenant.MultiTenantContext;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
@@ -65,13 +66,13 @@ public class ComponentSpringStage implements TransformStage
                 }
                 validation.evaluate(component);
 
+
                 String beanId = component.attributeValue("key");
                 // make sure the new bean id is not already in use.
                 context.trackBean(beanId, BEAN_SOURCE);
 
                 Element bean = root.addElement("beans:bean");
                 bean.addAttribute("id", beanId);
-                bean.addAttribute("class", component.attributeValue("class"));
                 bean.addAttribute("autowire", "default");
 
                 // alias attribute in atlassian-plugin gets converted into alias element.
@@ -82,22 +83,59 @@ public class ComponentSpringStage implements TransformStage
                     alias.addAttribute("alias", component.attributeValue("alias"));
                 }
 
+                List<String> interfaceNames = new ArrayList<String>();
+                List<Element> compInterfaces = component.elements("interface");
+                for (Element inf : compInterfaces)
+                {
+                    interfaceNames.add(inf.getTextTrim());
+                }
+                if (component.attributeValue("interface") != null)
+                {
+                    interfaceNames.add(component.attributeValue("interface"));
+                }
+
+                // If stateful is true, then we declare the class to be a MultiTenantComponentFactoryBean, which instantiates
+                // a proxy that a different instance for each tenant sits behind.
+                boolean stateful = Boolean.parseBoolean(component.attributeValue("stateful"));
+                if (stateful && MultiTenantContext.isEnabled())
+                {
+                    bean.addAttribute("class", "com.atlassian.plugin.osgi.bridge.external.MultiTenantComponentFactoryBean");
+                    bean.addElement("beans:property").addAttribute("name", "implementation")
+                            .addAttribute("value", component.attributeValue("class"));
+                    // Lazy load means it will be loaded the first time something calls it, rather than when the tenant
+                    // is added
+                    Element lazy = bean.addElement("beans:property").addAttribute("name", "lazyLoad");
+                    if (component.attribute("lazy") == null || Boolean.parseBoolean(component.attributeValue("lazy")))
+                    {
+                        lazy.addAttribute("value", "true");
+                    }
+                    else
+                    {
+                        lazy.addAttribute("value", "false");
+                    }
+                    if (!interfaceNames.isEmpty())
+                    {
+                        Element interfaces = bean.addElement("beans:property").addAttribute("name", "interfaces")
+                                .addElement("beans:list");
+                        for (String interfaceName : interfaceNames)
+                        {
+                            Element e = interfaces.addElement("beans:value");
+                            e.setText(interfaceName);
+                        }
+                    }
+                    ensureMultiTenantImported(context);
+                }
+                else
+                {
+                    bean.addAttribute("class", component.attributeValue("class"));
+                }
+
                 if ("true".equalsIgnoreCase(component.attributeValue("public")))
                 {
                     Element osgiService = root.addElement("osgi:service");
                     osgiService.addAttribute("id", component.attributeValue("key") + "_osgiService");
                     osgiService.addAttribute("ref", component.attributeValue("key"));
 
-                    List<String> interfaceNames = new ArrayList<String>();
-                    List<Element> compInterfaces = component.elements("interface");
-                    for (Element inf : compInterfaces)
-                    {
-                        interfaceNames.add(inf.getTextTrim());
-                    }
-                    if (component.attributeValue("interface") != null)
-                    {
-                        interfaceNames.add(component.attributeValue("interface"));
-                    }
 
                     // Collect for the interface names which will be used for import generation.
                     declaredInterfaces.addAll(interfaceNames);
@@ -159,6 +197,14 @@ public class ComponentSpringStage implements TransformStage
             {
                 context.getExtraExports().add(pkg);
             }
+        }
+    }
+
+    void ensureMultiTenantImported(TransformContext context)
+    {
+        if (!context.getExtraImports().contains("com.atlassian.plugin.osgi.bridge.external"))
+        {
+            context.getExtraImports().add("com.atlassian.plugin.osgi.bridge.external");
         }
     }
 

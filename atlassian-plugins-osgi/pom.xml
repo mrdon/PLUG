@@ -324,8 +324,13 @@
                                 </artifactItem>
 
                                 <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-web</artifactId>
+                                    <version>${springVersion}</version>
+                                </artifactItem>
+                                
+                                <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
-
                                     <artifactId>spring-osgi-annotation</artifactId>
                                     <version>${springDmVersion}</version>
                                 </artifactItem>
@@ -333,13 +338,11 @@
                                 <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
                                     <artifactId>spring-osgi-core</artifactId>
-
                                     <version>${springDmVersion}</version>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>org.springframework.osgi</groupId>
                                     <artifactId>spring-osgi-extender</artifactId>
-
                                     <version>${springDmVersion}</version>
                                 </artifactItem>
                                 <artifactItem>
@@ -493,7 +496,7 @@
         <dependency>
             <groupId>org.twdata.pkgscanner</groupId>
             <artifactId>package-scanner</artifactId>
-            <version>0.9.4</version>
+            <version>0.9.5</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

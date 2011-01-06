@@ -1,8 +1,9 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
+import com.atlassian.multitenant.MultiTenantContext;
+import com.atlassian.multitenant.MultiTenantManager;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.PluginAccessor;
-import com.google.common.collect.Sets;
 import junit.framework.TestCase;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -13,7 +14,6 @@ import org.osgi.framework.ServiceReference;
 import java.io.File;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
-import java.util.Set;
 
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
@@ -28,6 +28,11 @@ import static org.mockito.Mockito.*;
 
 public class TestComponentSpringStage extends TestCase
 {
+    public void tearDown()
+    {
+        MultiTenantContext.setManager(null);
+    }
+
     public void testTransform() throws IOException, DocumentException
     {
         ComponentSpringStage transformer = new ComponentSpringStage();
@@ -257,4 +262,60 @@ public class TestComponentSpringStage extends TestCase
         assertTrue(context.getExtraImports().contains("com.atlassian.plugin.osgi.factory.transform.dummypackage1"));
         assertTrue(context.getExtraImports().contains("com.atlassian.plugin.osgi.factory.transform.dummypackage0"));
     }
+
+    public void testStatefulMultiTenantDisabled() throws Exception
+    {
+        ComponentSpringStage transformer = new ComponentSpringStage();
+
+        Element pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
+        Element component = pluginRoot.addElement("component");
+        component.addAttribute("key", "foo");
+        component.addAttribute("class", "my.Foo");
+        component.addAttribute("stateful", "true");
+        SpringTransformerTestHelper.transform(transformer, pluginRoot, "beans:bean[@id='foo' and @class='my.Foo']");
+    }
+
+    public void testStatefulMultiTenantEnabled() throws Exception
+    {
+        // Multitenant library is enabled if a manager is set
+        MultiTenantContext.setManager(mock(MultiTenantManager.class));
+        
+        ComponentSpringStage transformer = new ComponentSpringStage();
+
+        // no interfaces, lazy
+        Element pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
+        Element component = pluginRoot.addElement("component");
+        component.addAttribute("key", "foo");
+        component.addAttribute("class", "my.Foo");
+        component.addAttribute("stateful", "true");
+        SpringTransformerTestHelper.transform(transformer, pluginRoot, "beans:bean[@id='foo' and @class='com.atlassian.plugin.osgi.bridge.external.MultiTenantComponentFactoryBean']",
+                "//beans:property[@name='implementation' and @value='my.Foo']",
+                "//beans:property[@name='lazyLoad' and @value='true']");
+
+        // an interface, lazy
+        pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
+        component = pluginRoot.addElement("component");
+        component.addAttribute("key", "foo");
+        component.addAttribute("class", "my.Foo");
+        component.addAttribute("stateful", "true");
+        Element inf = component.addElement("interface");
+        inf.setText("my.IFoo");
+        SpringTransformerTestHelper.transform(transformer, pluginRoot, "beans:bean[@id='foo' and @class='com.atlassian.plugin.osgi.bridge.external.MultiTenantComponentFactoryBean']",
+                "//beans:property[@name='implementation' and @value='my.Foo']",
+                "//beans:property[@name='lazyLoad' and @value='true']",
+                "//beans:property[@name='interfaces' and beans:list/beans:value='my.IFoo']");
+
+        // no interfaces, not lazy
+        pluginRoot = DocumentHelper.createDocument().addElement("atlassian-plugin");
+        component = pluginRoot.addElement("component");
+        component.addAttribute("key", "foo");
+        component.addAttribute("class", "my.Foo");
+        component.addAttribute("stateful", "true");
+        component.addAttribute("lazy", "false");
+        SpringTransformerTestHelper.transform(transformer, pluginRoot, "beans:bean[@id='foo' and @class='com.atlassian.plugin.osgi.bridge.external.MultiTenantComponentFactoryBean']",
+                "//beans:property[@name='implementation' and @value='my.Foo']",
+                "//beans:property[@name='lazyLoad' and @value='false']");
+
+    }
+
 }
