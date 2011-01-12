@@ -41,6 +41,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -75,10 +76,12 @@ public abstract class PluginInContainerTestBase extends TestCase
         pluginsDir = new File(tmpDir, "plugins");
         pluginsDir.mkdir();
         this.pluginEventManager = new DefaultPluginEventManager();
-        moduleFactory = new PrefixDelegatingModuleFactory(ImmutableSet.<PrefixModuleFactory>of(
-            new ClassPrefixModuleFactory(hostContainer),
-            new BeanPrefixModuleFactory()));
+        final PrefixDelegatingModuleFactory moduleFactory =
+                new PrefixDelegatingModuleFactory(
+                        Collections.<PrefixModuleFactory>singleton(new BeanPrefixModuleFactory()));
+        this.moduleFactory = moduleFactory;
         hostContainer = createHostContainer(new HashMap<Class<?>, Object>());
+        moduleFactory.addPrefixModuleFactory(new ClassPrefixModuleFactory(hostContainer));
     }
 
     protected SimpleConstructorHostContainer createHostContainer(Map<Class<?>, Object> originalContext)

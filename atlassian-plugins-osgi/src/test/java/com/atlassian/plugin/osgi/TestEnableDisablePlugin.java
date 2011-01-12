@@ -1,17 +1,13 @@
 package com.atlassian.plugin.osgi;
 
-import com.atlassian.plugin.AutowireCapablePlugin;
-import com.atlassian.plugin.DefaultModuleDescriptorFactory;
-import com.atlassian.plugin.JarPluginArtifact;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginRestartState;
-import com.atlassian.plugin.PluginState;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.test.PluginJarBuilder;
+import my.FooModule;
 import org.osgi.framework.Bundle;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -69,7 +65,81 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
 
         assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
     }
-    
+
+/* TODO: Partial test implementation for PLUG-701 */
+//    public void testEnableDisableEnableWithModuleTypeModule() throws Exception {
+//        initPluginManager();
+//        pluginManager.installPlugin(new JarPluginArtifact(new PluginJarBuilder()
+//                .addFormattedResource(
+//                        "atlassian-plugin.xml",
+//                        "<atlassian-plugin name='Foo Module Type Provider' key='test.fooModuleTypeProvider' pluginsVersion='2'>",
+//                        "    <plugin-info>",
+//                        "        <version>1.0</version>",
+//                        "        <bundle-instructions>",
+//                        "            <Export-Package>my</Export-Package>",
+//                        "        </bundle-instructions>",
+//                        "    </plugin-info>",
+//                        "    <module-type key='foo-module' class='my.FooModuleDescriptor'/>",
+//                        "</atlassian-plugin>")
+//                .addFormattedJava(
+//                        // If you update this, you must also update the compiled version of my.FooModule
+//                        "my.FooModule",
+//                        "package my;",
+//                        "",
+//                        "public interface FooModule {",
+//                        "}")
+//                .addFormattedJava(
+//                        "my.FooModuleDescriptor",
+//                        "package my;",
+//                        "",
+//                        "import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;",
+//                        "import com.atlassian.plugin.module.ModuleFactory;",
+//                        "",
+//                        "public class FooModuleDescriptor extends AbstractModuleDescriptor {",
+//                        "",
+//                        "   public FooModuleDescriptor(ModuleFactory moduleFactory) {",
+//                        "       super(moduleFactory);",
+//                        "   }",
+//                        "",
+//                        "   public Object getModule() {",
+//                        "       return moduleFactory.createModule(moduleClassName, this);",
+//                        "   }",
+//                        "",
+//                        "}")
+//                .build()));
+//        pluginManager.installPlugin(new JarPluginArtifact(new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+//                "<atlassian-plugin name='Foo Module Type Implementer' key='test.fooModuleTypeImplementer' pluginsVersion='2'>",
+//                "    <plugin-info>",
+//                "        <version>1.0</version>",
+//                "        <bundle-instructions>",
+//                "            <Import-Package>my</Import-Package>",
+//                "        </bundle-instructions>",
+//                "    </plugin-info>",
+//                "    <foo-module key='myFooModule' class='my.impl.FooModuleImpl'/>",
+//                "</atlassian-plugin>")
+//                .addFormattedJava(
+//                        "my.impl.FooModuleImpl",
+//                        "package my.impl;",
+//                        "",
+//                        "import my.FooModule;",
+//                        "",
+//                        "public class FooModuleImpl implements FooModule {",
+//                        "}")
+//                .build()));
+//
+//        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeProvider:foo-module"));
+//        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeImplementer:myFooModule"));
+//        final ModuleDescriptor<?> fooDescriptor = pluginManager.getEnabledPluginModule("test.fooModuleTypeImplementer:myFooModule");
+//        assertNotNull(fooDescriptor);
+//        final Object foo = fooDescriptor.getModule();
+//        assertNotNull(foo);
+//        assertTrue(foo.getClass().getName().equals(FooModule.class.getName()));
+//
+//        pluginManager.disablePluginModule("test.fooModuleTypeProvider:foo-module");
+//
+//        assertTrue(false);
+//    }
+
     public void testDisableEnableOfPluginThatRequiresRestart() throws Exception
     {
         final DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
@@ -124,6 +194,8 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
                     "        <bundle-instructions><Import-Package>my</Import-Package></bundle-instructions>",
                     "    </plugin-info>",
                     "</atlassian-plugin>")
+                .addFormattedResource("META-INF/spring/test.xml",
+                        "")
                 .addJava("my2.Bar", "package my2;" +
                         "public class Bar implements my.Foo {}");
 
