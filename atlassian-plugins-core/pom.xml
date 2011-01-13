@@ -87,7 +87,7 @@
         <dependency>
             <groupId>com.atlassian.multitenant</groupId>
             <artifactId>multitenant-core</artifactId>
-            <version>1.0-m8</version>
+            <version>1.0-m14</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>

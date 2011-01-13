@@ -20,7 +20,7 @@ import org.springframework.context.ApplicationContextAware;
  * tenant.  Components are lazily instantiated, and DisposableBeans destroy() methods are called when a tenant is
  * stopped.
  */
-public class MultiTenantComponentFactoryBean implements FactoryBean, ApplicationContextAware, BeanNameAware
+public class MultiTenantComponentFactoryBean implements FactoryBean, ApplicationContextAware, BeanNameAware, DisposableBean
 {
     private static final Logger log = LoggerFactory.getLogger(MultiTenantComponentFactoryBean.class);
 
@@ -30,6 +30,7 @@ public class MultiTenantComponentFactoryBean implements FactoryBean, Application
     private Object proxy;
     private ApplicationContext applicationContext;
     private String name;
+    private MultiTenantComponentMap map;
 
     public synchronized Object getObject() throws Exception
     {
@@ -45,8 +46,7 @@ public class MultiTenantComponentFactoryBean implements FactoryBean, Application
             {
                 strategy = MultiTenantComponentMap.LazyLoadStrategy.EAGER_LOAD;
             }
-            MultiTenantComponentMap map = factory.createComponentMapBuilder(new FactoryBeanCreator())
-                    .setLazyLoad(strategy).construct();
+            map = factory.createComponentMapBuilder(new FactoryBeanCreator()).setLazyLoad(strategy).construct();
 
             if (interfaces != null && interfaces.length > 0)
             {
@@ -71,6 +71,11 @@ public class MultiTenantComponentFactoryBean implements FactoryBean, Application
             return interfaces[0];
         }
         return null;
+    }
+
+    public void destroy() throws Exception
+    {
+        map.destroy();
     }
 
     public boolean isSingleton()

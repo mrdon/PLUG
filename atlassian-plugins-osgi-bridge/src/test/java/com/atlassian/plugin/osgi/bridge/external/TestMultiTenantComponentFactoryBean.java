@@ -70,6 +70,9 @@ public class TestMultiTenantComponentFactoryBean extends TestCase
         when(beanFactory.createBean(ArrayList.class, AutowireCapableBeanFactory.AUTOWIRE_AUTODETECT, false)).thenReturn(theObject);
         assertSame(theObject, creator.create(null));
         assertTrue(creator instanceof MultiTenantDestroyer);
+
+        factoryBean.destroy();
+        verify(map).destroy();
     }
 
     public void testComponentNoInterfaces() throws Exception
