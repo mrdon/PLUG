@@ -11,6 +11,7 @@ import junit.framework.TestCase;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.twdata.pkgscanner.DefaultOsgiVersionConverter;
 import org.twdata.pkgscanner.ExportPackage;
 
 import javax.management.Descriptor;
@@ -31,8 +32,9 @@ import java.util.List;
 public class TestExportsBuilder extends TestCase
 {
     private ExportsBuilder builder;
+  private String osgiVersionString;
 
-    @Override
+  @Override
     public void setUp() throws Exception
     {
         builder = new ExportsBuilder();
@@ -123,9 +125,11 @@ public class TestExportsBuilder extends TestCase
         config.setPackageIncludes(ImmutableList.<String>of("org.slf4j*"));
 
         String exports = builder.determineExports(ImmutableList.<HostComponentRegistration>of(new MockRegistration(new Dummy1(){}, Dummy1.class)), config);
+        DefaultOsgiVersionConverter versionConverter = new DefaultOsgiVersionConverter();
 
-        assertTrue("any packages under com.atlassian.plugin must be exported as the framework version",
-                   exports.contains("com.atlassian.plugin.testpackage1;version=" + PluginFrameworkUtils.getPluginFrameworkVersion().replace("-", ".") + ","));
+      osgiVersionString = versionConverter.getVersion(PluginFrameworkUtils.getPluginFrameworkVersion());
+      assertTrue("any packages under com.atlassian.plugin must be exported as the framework version: " + osgiVersionString + "\n:" + exports,
+            exports.contains("com.atlassian.plugin.testpackage1;version=" + osgiVersionString + ","));
         assertFalse("any packages under com.atlassian.plugin must be exported as the framework version",
                    exports.contains("com.atlassian.plugin.testpackage1;version=98.76.54,"));
     }
