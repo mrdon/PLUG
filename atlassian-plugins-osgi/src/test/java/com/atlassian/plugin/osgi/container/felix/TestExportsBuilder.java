@@ -125,13 +125,12 @@ public class TestExportsBuilder extends TestCase
         config.setPackageIncludes(ImmutableList.<String>of("org.slf4j*"));
 
         String exports = builder.determineExports(ImmutableList.<HostComponentRegistration>of(new MockRegistration(new Dummy1(){}, Dummy1.class)), config);
-        DefaultOsgiVersionConverter versionConverter = new DefaultOsgiVersionConverter();
 
-      osgiVersionString = versionConverter.getVersion(PluginFrameworkUtils.getPluginFrameworkVersion());
-      assertTrue("any packages under com.atlassian.plugin must be exported as the framework version: " + osgiVersionString + "\n:" + exports,
-            exports.contains("com.atlassian.plugin.testpackage1;version=" + osgiVersionString + ","));
+        osgiVersionString = new DefaultOsgiVersionConverter().getVersion(PluginFrameworkUtils.getPluginFrameworkVersion());
+        assertTrue("any packages under com.atlassian.plugin must be exported as the framework version: " + osgiVersionString + ", but is: " + exports,
+                exports.contains("com.atlassian.plugin.testpackage1;version=" + osgiVersionString + ","));
         assertFalse("any packages under com.atlassian.plugin must be exported as the framework version",
-                   exports.contains("com.atlassian.plugin.testpackage1;version=98.76.54,"));
+                exports.contains("com.atlassian.plugin.testpackage1;version=98.76.54,"));
     }
 
     public void testGenerateExports() throws MalformedURLException
