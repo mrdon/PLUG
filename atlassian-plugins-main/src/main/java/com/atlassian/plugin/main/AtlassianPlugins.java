@@ -98,6 +98,9 @@ public class AtlassianPlugins
                 pluginEventManager);
         pluginManagerRef.set(pluginManager);
 
+        osgiPluginDeployer.setPluginAccessor(pluginManager);
+        osgiPluginDeployer.setPluginController(pluginManager);
+
         pluginManager.setPluginInstaller(new FilePluginInstaller(config.getPluginDirectory()));
 
         if (config.getHotDeployPollingPeriod() > 0)

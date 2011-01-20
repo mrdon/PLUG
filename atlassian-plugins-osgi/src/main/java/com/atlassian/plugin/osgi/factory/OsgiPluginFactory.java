@@ -1,11 +1,6 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.JarPluginArtifact;
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginInformation;
-import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -16,6 +11,7 @@ import com.atlassian.plugin.osgi.factory.transform.DefaultPluginTransformer;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformer;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
+import com.atlassian.plugin.osgi.module.ModuleTypeDependantsDisabler;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import org.apache.commons.io.IOUtils;
@@ -65,6 +61,7 @@ public class OsgiPluginFactory implements PluginFactory
     private final Set<String> applicationKeys;
     private final OsgiPersistentCache persistentCache;
     private final PluginTransformerFactory pluginTransformerFactory;
+    private final ModuleTypeDependantsDisabler moduleTypeDependantsDisabler = new ModuleTypeDependantsDisabler();
 
     private volatile PluginTransformer pluginTransformer;
 
@@ -114,6 +111,8 @@ public class OsgiPluginFactory implements PluginFactory
             }
         });
         this.pluginTransformerFactory = pluginTransformerFactory;
+
+        pluginEventManager.register(moduleTypeDependantsDisabler);
     }
 
 
@@ -277,6 +276,14 @@ public class OsgiPluginFactory implements PluginFactory
             IOUtils.closeQuietly(pluginDescriptor);
         }
         return plugin;
+    }
+
+    public void setPluginAccessor(PluginAccessor pluginAccessor) {
+        moduleTypeDependantsDisabler.setPluginAccessor(pluginAccessor);
+    }
+
+    public void setPluginController(PluginController pluginController) {
+        moduleTypeDependantsDisabler.setPluginController(pluginController);
     }
 
     /**

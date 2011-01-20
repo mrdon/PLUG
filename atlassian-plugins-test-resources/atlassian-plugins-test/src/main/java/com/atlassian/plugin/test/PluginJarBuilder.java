@@ -64,6 +64,13 @@ public class PluginJarBuilder
         return addResource("META-INF/MANIFEST.MF", sb.toString());
     }
 
+    public PluginJarBuilder addClass(Class<?> aClass) throws IOException {
+        jarContents.put(
+                aClass.getName().replace('.', '/') + ".class",
+                IOUtils.toByteArray(aClass.getResourceAsStream(aClass.getSimpleName() + ".class")));
+        return this;
+    }
+
     public PluginJarBuilder addFormattedJava(String className, String... lines) throws Exception
     {
         StringBuilder sb = new StringBuilder();

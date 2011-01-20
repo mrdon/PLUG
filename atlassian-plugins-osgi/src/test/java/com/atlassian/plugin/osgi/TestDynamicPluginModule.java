@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
+import my.FooModule;
+import my.FooModuleDescriptor;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.ServiceReference;
@@ -624,10 +626,8 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                 .build();
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        WaitUntil.invoke(new BasicWaitCondition()
-        {
-            public boolean isFinished()
-            {
+        WaitUntil.invoke(new BasicWaitCondition() {
+            public boolean isFinished() {
                 return pluginManager.getPlugin("test.plugin")
                         .getModuleDescriptor("dum2")
                         .getClass()
@@ -768,6 +768,72 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
         descriptors = pluginManager.getPlugin("test.plugin")
                 .getModuleDescriptors();
         assertEquals(1, descriptors.size());
+    }
+
+    public void testEnableDisableEnableWithModuleTypeModule() throws Exception {
+        initPluginManager();
+        pluginManager.installPlugin(new JarPluginArtifact(new PluginJarBuilder()
+                .addFormattedResource(
+                        "atlassian-plugin.xml",
+                        "<atlassian-plugin name='Foo Module Type Provider' key='test.fooModuleTypeProvider' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "        <bundle-instructions>",
+                        "            <Export-Package>my</Export-Package>",
+                        "        </bundle-instructions>",
+                        "    </plugin-info>",
+                        "    <module-type key='foo-module' class='my.FooModuleDescriptor'/>",
+                        "</atlassian-plugin>")
+                .addClass(FooModule.class)
+                .addClass(FooModuleDescriptor.class)
+                .build()));
+        pluginManager.installPlugin(new JarPluginArtifact(new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Foo Module Type Implementer' key='test.fooModuleTypeImplementer' pluginsVersion='2'>",
+                "    <plugin-info>",
+                "        <version>1.0</version>",
+                "        <bundle-instructions>",
+                "            <Import-Package>my</Import-Package>",
+                "        </bundle-instructions>",
+                "    </plugin-info>",
+                "    <foo-module key='myFooModule' class='my.impl.FooModuleImpl'/>",
+                "</atlassian-plugin>")
+                .addFormattedJava(
+                        "my.impl.FooModuleImpl",
+                        "package my.impl;",
+                        "",
+                        "import my.FooModule;",
+                        "",
+                        "public class FooModuleImpl implements FooModule {",
+                        "}")
+                .build()));
+
+        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeProvider:foo-module"));
+        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeImplementer:myFooModule"));
+        final ModuleDescriptor<?> fooDescriptor1 = pluginManager.getEnabledPluginModule("test.fooModuleTypeImplementer:myFooModule");
+        assertNotNull(fooDescriptor1);
+        final Object foo1 = fooDescriptor1.getModule();
+        assertNotNull(foo1);
+        assertTrue(foo1.getClass().getName().equals("my.impl.FooModuleImpl"));
+
+        pluginManager.disablePluginModule("test.fooModuleTypeProvider:foo-module");
+
+        assertFalse(pluginManager.isPluginModuleEnabled("test.fooModuleTypeProvider:foo-module"));
+        assertFalse(pluginManager.isPluginModuleEnabled("test.fooModuleTypeImplementer:myFooModule"));
+        assertNull(pluginManager.getEnabledPluginModule("test.fooModuleTypeImplementer:myFooModule"));
+
+        pluginManager.enablePluginModule("test.fooModuleTypeProvider:foo-module");
+
+        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeProvider:foo-module"));
+
+        pluginManager.enablePluginModule("test.fooModuleTypeImplementer:myFooModule");
+
+        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeImplementer:myFooModule"));
+        final ModuleDescriptor<?> fooDescriptor = pluginManager.getEnabledPluginModule("test.fooModuleTypeImplementer:myFooModule");
+        assertNotNull(fooDescriptor);
+        final Object foo = fooDescriptor.getModule();
+        assertNotNull(foo);
+        assertTrue(foo.getClass().getName().equals("my.impl.FooModuleImpl"));
+
     }
 
     public static class PluginModuleEnabledListener
