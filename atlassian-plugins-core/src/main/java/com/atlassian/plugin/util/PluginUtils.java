@@ -3,6 +3,7 @@ package com.atlassian.plugin.util;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.descriptors.RequiresRestart;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
 
@@ -84,8 +85,16 @@ public class PluginUtils
     {
         Validate.notNull(keys);
         Validate.notNull(element);
-        String key = element.attributeValue("application");
-        return !(key != null && !keys.contains(key));
+        String keyList = element.attributeValue("application");
+        if (keyList == null) {
+            return true;
+        }
+        for (final String key : keyList.split(",\\s*")) {
+            if (keys.contains(key)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
