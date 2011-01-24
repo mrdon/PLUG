@@ -20,6 +20,8 @@ import java.util.Map;
 
 import org.dom4j.DocumentException;
 
+import static java.util.Arrays.asList;
+
 public class TestWebResourceManagerImpl extends TestCase
 {
 
@@ -92,6 +94,32 @@ public class TestWebResourceManagerImpl extends TestCase
         assertTrue(resources.contains(resource2));
     }
 
+    public void testRequireResourcesWithCondition() throws ClassNotFoundException
+    {
+        String resource1 = "test.atlassian:cool-stuff";
+        String resource2 = "test.atlassian:hot-stuff";
+        Plugin plugin = TestUtils.createTestPlugin("test.atlassian", "1", AlwaysTrueCondition.class, AlwaysFalseCondition.class);
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource1)),
+                new WebResourceModuleDescriptorBuilder(plugin, "cool-stuff")
+                        .setCondition(AlwaysTrueCondition.class)
+                        .addDescriptor("cool.js")
+                        .build());
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource2)),
+                new WebResourceModuleDescriptorBuilder(plugin, "hot-stuff")
+                        .setCondition(AlwaysFalseCondition.class)
+                        .addDescriptor("hot.js")
+                        .build());
+
+        setupRequestCache();
+        webResourceManager.requireResource(resource1);
+        webResourceManager.requireResource(resource2);
+
+        String tags = webResourceManager.getRequiredResources();
+        assertTrue(tags.contains(resource1));
+        assertFalse(tags.contains(resource2));
+    }
+
     public void testRequireResourcesWithDependencies()
     {
         String resource = "test.atlassian:cool-stuff";
@@ -111,6 +139,32 @@ public class TestWebResourceManagerImpl extends TestCase
         Object[] resourceArray = resources.toArray();
         assertEquals(dependencyResource, resourceArray[0]);
         assertEquals(resource, resourceArray[1]);
+    }
+
+    public void testRequireResourcesWithDependencyHiddenByCondition() throws ClassNotFoundException
+    {
+        String resource1 = "test.atlassian:cool-stuff";
+        String resource2 = "test.atlassian:hot-stuff";
+        Plugin plugin = TestUtils.createTestPlugin("test.atlassian", "1", AlwaysTrueCondition.class, AlwaysFalseCondition.class);
+
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource1)),
+                new WebResourceModuleDescriptorBuilder(plugin, "cool-stuff")
+                        .setCondition(AlwaysTrueCondition.class)
+                        .addDependency(resource2)
+                        .addDescriptor("cool.js")
+                        .build());
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource2)),
+                new WebResourceModuleDescriptorBuilder(plugin, "hot-stuff")
+                        .setCondition(AlwaysFalseCondition.class)
+                        .addDescriptor("hot.js")
+                        .build());
+
+        setupRequestCache();
+        webResourceManager.requireResource(resource1);
+
+        String tags = webResourceManager.getRequiredResources();
+        assertTrue(tags.contains(resource1));
+        assertFalse(tags.contains(resource2));
     }
 
     public void testRequireResourcesWithCyclicDependency()
@@ -217,6 +271,37 @@ public class TestWebResourceManagerImpl extends TestCase
         assertFalse(resources.contains(resourceA + ".css"));
         assertFalse(resources.contains(resourceB + ".css"));
         assertTrue(resources.contains(resourceC + ".css"));
+    }
+
+    public void testGetResourceContextWithCondition() throws ClassNotFoundException
+    {
+        String resource1 = "test.atlassian:cool-stuff";
+        String resource2 = "test.atlassian:hot-stuff";
+        Plugin plugin = TestUtils.createTestPlugin("test.atlassian", "1", AlwaysTrueCondition.class, AlwaysFalseCondition.class);
+        WebResourceModuleDescriptor resource1Descriptor =  new WebResourceModuleDescriptorBuilder(plugin, "cool-stuff")
+                        .setCondition(AlwaysTrueCondition.class)
+                        .addDescriptor("cool.js")
+                        .addContext("foo")
+                        .build();
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource1)),resource1Descriptor);
+
+        WebResourceModuleDescriptor resource2Descriptor = new WebResourceModuleDescriptorBuilder(plugin, "hot-stuff")
+                .setCondition(AlwaysFalseCondition.class)
+                .addDescriptor("hot.js")
+                .addContext("foo")
+                .build();
+        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(resource2)),
+                resource2Descriptor);
+
+        mockPluginAccessor.matchAndReturn("getEnabledModuleDescriptorsByClass", C.args(C.eq(WebResourceModuleDescriptor.class)),
+                asList(resource1Descriptor, resource2Descriptor));
+
+        setupRequestCache();
+        webResourceManager.requireResourcesForContext("foo");
+
+        String tags = webResourceManager.getRequiredResources();
+        assertTrue(tags.contains(resource1));
+        assertFalse(tags.contains(resource2));
     }
 
     private Map setupRequestCache()
@@ -802,7 +887,7 @@ public class TestWebResourceManagerImpl extends TestCase
         assertTrue(cssRef2Index < jsRef1Index);
     }
 
-    public void testRequireResourceInSuperbatch()
+    public void testRequireResourceInSuperbatch() throws ClassNotFoundException
     {
         resourceBatchingConfiguration.enabled = true;
         Map requestCache = setupRequestCache();
@@ -814,7 +899,7 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(0, resources.size());
     }
 
-    public void testRequireResourceWithDependencyInSuperbatch() throws DocumentException
+    public void testRequireResourceWithDependencyInSuperbatch() throws DocumentException, ClassNotFoundException
     {
         resourceBatchingConfiguration.enabled = true;
         mockOutSuperbatchPluginAccesses();
@@ -831,7 +916,7 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals("test.atlassian:included-resource", resources.iterator().next());
     }
 
-    public void testSuperBatchResolution() throws DocumentException
+    public void testSuperBatchResolution() throws DocumentException, ClassNotFoundException
     {
         TestUtils.setupSuperbatchTestContent(resourceBatchingConfiguration, mockPluginAccessor, testPlugin);
         mockOutSuperbatchPluginAccesses();
@@ -853,7 +938,7 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(0, jsResources.get(0).getParams().size());
     }
 
-    private void mockOutSuperbatchPluginAccesses()
+    private void mockOutSuperbatchPluginAccesses() throws ClassNotFoundException
     {
         mockOutPluginModule("test.atlassian:superbatch");
         mockOutPluginModule("test.atlassian:superbatch2");
@@ -861,7 +946,7 @@ public class TestWebResourceManagerImpl extends TestCase
         mockPluginAccessor.matchAndReturn("getEnabledPluginModule", "test.atlassian:missing-plugin", null);
     }
 
-    private void mockOutPluginModule(String moduleKey)
+    private void mockOutPluginModule(String moduleKey) throws ClassNotFoundException
     {
         Plugin p = TestUtils.createTestPlugin();
         WebResourceModuleDescriptor module = TestUtils.createWebResourceModuleDescriptor(moduleKey, p);

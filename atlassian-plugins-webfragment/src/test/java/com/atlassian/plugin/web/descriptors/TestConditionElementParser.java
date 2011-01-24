@@ -3,6 +3,7 @@ package com.atlassian.plugin.web.descriptors;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.Condition;
+import com.atlassian.plugin.web.conditions.ConditionLoadingException;
 import junit.framework.TestCase;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -19,7 +20,13 @@ public class TestConditionElementParser extends TestCase
     private static final String NOT_FALSE = "<condition class=\"com.atlassian.plugin.web.conditions.NeverDisplayCondition\" invert=\"true\" />";
     private static final String NOT_TRUE = "<condition class=\"com.atlassian.plugin.web.conditions.AlwaysDisplayCondition\" invert=\"true\" />";
 
-    private final ConditionElementParser conditionElementParser = new ConditionElementParser(new MockWebFragmentHelper());
+    private final ConditionElementParser conditionElementParser = new ConditionElementParser(new ConditionElementParser.ConditionFactory()
+    {
+        public Condition create(String className, Plugin plugin) throws ConditionLoadingException
+        {
+            return new MockWebFragmentHelper().loadCondition(className, plugin);
+        }
+    });
 
     public void testSimple() throws DocumentException, PluginParseException
     {

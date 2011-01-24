@@ -21,6 +21,7 @@ public interface WebFragmentHelper
      * @param plugin the plugin from which the condition came
      * @return the condition instance
      * @throws ConditionLoadingException If the condition was unable to be created
+     * @deprecated Since 2.7.0, will use HostContainer.create in future versions
      */
     Condition loadCondition(String className, Plugin plugin) throws ConditionLoadingException;
 
@@ -34,6 +35,7 @@ public interface WebFragmentHelper
      * @param plugin the plugin from which the context provider came
      * @return the context provider instance
      * @throws ConditionLoadingException If the context provider was unable to be created
+     * * @deprecated Since 2.7.0, will use HostContainer.create in future versions
      */
     ContextProvider loadContextProvider(String className, Plugin plugin) throws ConditionLoadingException;
 

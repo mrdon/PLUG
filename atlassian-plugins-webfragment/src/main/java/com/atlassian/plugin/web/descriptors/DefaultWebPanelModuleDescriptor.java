@@ -2,6 +2,7 @@ package com.atlassian.plugin.web.descriptors;
 
 import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
+import com.atlassian.plugin.web.conditions.ConditionLoadingException;
 import org.dom4j.Element;
 
 import com.atlassian.plugin.Plugin;
@@ -129,7 +130,13 @@ public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescrip
         {
             public Condition get()
             {
-                return new ConditionElementParser(webInterfaceManager.getWebFragmentHelper()).makeConditions(plugin, element, ConditionElementParser.CompositeType.AND);
+                return new ConditionElementParser(new ConditionElementParser.ConditionFactory()
+                {
+                    public Condition create(String className, Plugin plugin) throws ConditionLoadingException
+                    {
+                        return webInterfaceManager.getWebFragmentHelper().loadCondition(className, plugin);
+                    }
+                }).makeConditions(plugin, element, ConditionElementParser.CompositeType.AND);
             }
         };
         contextProviderFactory = new Supplier<ContextProvider>()
