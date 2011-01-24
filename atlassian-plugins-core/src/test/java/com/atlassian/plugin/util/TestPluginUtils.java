@@ -67,9 +67,16 @@ public class TestPluginUtils extends TestCase
         testDoesModuleElementApplyToApplication("jira", true);
         testDoesModuleElementApplyToApplication("bamboo", false);
         testDoesModuleElementApplyToApplication(null, true);
+        testDoesModuleElementApplyToApplication("", true);
+        testDoesModuleElementApplyToApplication(" ", true);
+        testDoesModuleElementApplyToApplication(",", true);
+        testDoesModuleElementApplyToApplication(", ,, ", true);
         testDoesModuleElementApplyToApplication("jira,bamboo", true);
         testDoesModuleElementApplyToApplication("bamboo, confluence", true);
         testDoesModuleElementApplyToApplication("bamboo,crowd", false);
+        testDoesModuleElementApplyToApplication("bamboo ,jira", true);
+        testDoesModuleElementApplyToApplication("bamboo,,jira,", true);
+        testDoesModuleElementApplyToApplication("bamboo, crowd,", false);
     }
 
     private void testDoesModuleElementApplyToApplication(final String applicationAttribute, final boolean expectedResult) {

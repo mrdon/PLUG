@@ -89,7 +89,11 @@ public class PluginUtils
         if (keyList == null) {
             return true;
         }
-        for (final String key : keyList.split(",\\s*")) {
+        final String[] split = keyList.split("\\s*,[,\\s]*");
+        if (split.length == 0 || (split.length == 1 && split[0].trim().isEmpty())) {
+            return true;
+        }
+        for (final String key : split) {
             if (keys.contains(key)) {
                 return true;
             }
