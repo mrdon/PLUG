@@ -836,6 +836,35 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
 
     }
 
+    public void testEnableDisableEnableWithUnimplementedModuleTypeModule() throws Exception {
+        initPluginManager();
+        pluginManager.installPlugin(new JarPluginArtifact(new PluginJarBuilder()
+                .addFormattedResource(
+                        "atlassian-plugin.xml",
+                        "<atlassian-plugin name='Foo Module Type Provider' key='test.fooModuleTypeProvider' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "        <bundle-instructions>",
+                        "            <Export-Package>my</Export-Package>",
+                        "        </bundle-instructions>",
+                        "    </plugin-info>",
+                        "    <module-type key='foo-module' class='my.FooModuleDescriptor'/>",
+                        "</atlassian-plugin>")
+                .addClass(FooModule.class)
+                .addClass(FooModuleDescriptor.class)
+                .build()));
+
+        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeProvider:foo-module"));
+
+        pluginManager.disablePluginModule("test.fooModuleTypeProvider:foo-module");
+
+        assertFalse(pluginManager.isPluginModuleEnabled("test.fooModuleTypeProvider:foo-module"));
+
+        pluginManager.enablePluginModule("test.fooModuleTypeProvider:foo-module");
+
+        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeProvider:foo-module"));
+    }
+
     public static class PluginModuleEnabledListener
     {
         public volatile boolean called;
