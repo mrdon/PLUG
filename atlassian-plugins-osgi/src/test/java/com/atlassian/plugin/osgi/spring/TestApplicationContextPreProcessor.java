@@ -15,7 +15,7 @@ public class TestApplicationContextPreProcessor extends PluginInContainerTestBas
 {
     public void testCustomPreProcessor() throws Exception
     {
-        if (System.getProperty("java.version").startsWith("1.6"))
+        if (!System.getProperty("java.version").startsWith("1.5"))
         {
 
             new PluginJarBuilder("testPreProcessor")
