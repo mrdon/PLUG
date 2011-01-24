@@ -3,6 +3,7 @@ package com.atlassian.plugin.web.descriptors;
 import java.util.Iterator;
 import java.util.List;
 
+import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.util.Assertions;
 import org.dom4j.Element;
 
@@ -10,7 +11,6 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.loaders.LoaderUtils;
 import com.atlassian.plugin.web.Condition;
-import com.atlassian.plugin.web.WebFragmentHelper;
 import com.atlassian.plugin.web.conditions.AbstractCompositeCondition;
 import com.atlassian.plugin.web.conditions.AndCompositeCondition;
 import com.atlassian.plugin.web.conditions.ConditionLoadingException;
@@ -27,14 +27,14 @@ import com.atlassian.plugin.web.conditions.OrCompositeCondition;
  * 
  * @since 2.5.0
  */
-class ConditionElementParser
+public class ConditionElementParser
 {
-    static class CompositeType
+    public static class CompositeType
     {
-        static final int OR = 0;
-        static final int AND = 1;
+        public static final int OR = 0;
+        public static final int AND = 1;
 
-        static int parse(final String type) throws PluginParseException
+        public static int parse(final String type) throws PluginParseException
         {
             if ("or".equalsIgnoreCase(type))
             {
@@ -49,21 +49,28 @@ class ConditionElementParser
                 throw new PluginParseException("Invalid condition type specified. type = " + type);
             }
         }
-
     }
 
-    private final WebFragmentHelper webFragmentHelper;
-
-    public ConditionElementParser(final WebFragmentHelper webFragmentHelper)
+    /**
+     * Creates a condition.  Only temporary until conditions for web fragments can be converted to use {@link HostContainer}
+     */
+    public static interface ConditionFactory
     {
-        this.webFragmentHelper = webFragmentHelper;
+        Condition create(String className, Plugin plugin) throws ConditionLoadingException;
+    }
+
+    private final ConditionFactory conditionFactory;
+
+    public ConditionElementParser(ConditionFactory conditionFactory)
+    {
+        this.conditionFactory = conditionFactory;
     }
 
     /**
      * Create a condition for when this web fragment should be displayed.
      * 
      * @param element Element of web-section, web-item, or web-panel.
-     * @param type logical operator type {@link #getCompositeType}
+     * @param type logical operator type
      * @throws com.atlassian.plugin.PluginParseException
      */
     @SuppressWarnings("unchecked")
@@ -140,7 +147,7 @@ class ConditionElementParser
     {
         try
         {
-            final Condition condition = webFragmentHelper.loadCondition(element.attributeValue("class"), plugin);
+            final Condition condition = conditionFactory.create(element.attributeValue("class"), plugin);
             condition.init(LoaderUtils.getParams(element));
 
             if ((element.attribute("invert") != null) && "true".equals(element.attributeValue("invert")))

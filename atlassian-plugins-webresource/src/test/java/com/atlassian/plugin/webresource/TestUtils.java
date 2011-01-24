@@ -4,9 +4,11 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
+import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.mockobjects.dynamic.Mock;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
+import org.mockito.Matchers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.when;
 
 public class TestUtils
 {
@@ -38,7 +45,7 @@ public class TestUtils
     static WebResourceModuleDescriptor createWebResourceModuleDescriptor(final String completeKey,
         final Plugin p, final List<ResourceDescriptor> resourceDescriptors, final List<String> dependencies, final Set<String> contexts)
     {
-        return new WebResourceModuleDescriptor()
+        return new WebResourceModuleDescriptor(new DefaultHostContainer())
         {
             @Override
             public String getCompleteKey()
@@ -152,19 +159,22 @@ public class TestUtils
         return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt");
     }
 
-    static Plugin createTestPlugin()
+    static Plugin createTestPlugin() throws ClassNotFoundException
     {
         return createTestPlugin("test.atlassian", "1");
     }
 
-    static Plugin createTestPlugin(String pluginKey, String version)
+    static Plugin createTestPlugin(String pluginKey, String version, Class... loadableClasses) throws ClassNotFoundException
     {
-        final Mock mockPlugin = new Mock(Plugin.class);
+        final Plugin plugin = mock(Plugin.class);
         PluginInformation pluginInfo = new PluginInformation();
         pluginInfo.setVersion(version);
-        mockPlugin.matchAndReturn("getPluginInformation", pluginInfo);
-        mockPlugin.matchAndReturn("getKey", pluginKey);
-
-        return (Plugin) mockPlugin.proxy();
+        stub(plugin.getPluginInformation()).toReturn(pluginInfo);
+        stub(plugin.getKey()).toReturn(pluginKey);
+        for (Class loadableClass : loadableClasses)
+        {
+            when(plugin.loadClass(Matchers.eq(loadableClass.getName()), (Class<?>) any())).thenReturn((Class<Object>) TestUtils.class.getClassLoader().loadClass(loadableClass.getName()));
+        }
+        return plugin;
     }
 }

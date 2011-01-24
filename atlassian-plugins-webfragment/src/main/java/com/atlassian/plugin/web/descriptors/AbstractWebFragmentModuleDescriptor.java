@@ -2,6 +2,7 @@ package com.atlassian.plugin.web.descriptors;
 
 import java.util.List;
 
+import com.atlassian.plugin.web.conditions.ConditionLoadingException;
 import org.dom4j.Element;
 
 import com.atlassian.plugin.Plugin;
@@ -59,7 +60,6 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
      * 
      * @param element Element of web-section or web-item
      * @param type logical operator type
-     *            {@link ConditionElementParser#get(String)}
      * @throws PluginParseException
      */
     protected Condition makeConditions(final Element element, final int type) throws PluginParseException
@@ -156,7 +156,13 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     public void setWebInterfaceManager(final WebInterfaceManager webInterfaceManager)
     {
         this.webInterfaceManager = webInterfaceManager;
-        this.conditionElementParser = new ConditionElementParser(webInterfaceManager.getWebFragmentHelper());
+        this.conditionElementParser = new ConditionElementParser(new ConditionElementParser.ConditionFactory()
+        {
+            public Condition create(String className, Plugin plugin) throws ConditionLoadingException
+            {
+                return webInterfaceManager.getWebFragmentHelper().loadCondition(className, plugin);
+            }
+        });
         this.contextProviderElementParser = new ContextProviderElementParser(webInterfaceManager.getWebFragmentHelper());
     }
 
