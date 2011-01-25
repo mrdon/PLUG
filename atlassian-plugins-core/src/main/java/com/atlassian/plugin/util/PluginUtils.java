@@ -90,7 +90,7 @@ public class PluginUtils
             return true;
         }
         final String[] split = keyList.split("\\s*,[,\\s]*");
-        if (split.length == 0 || (split.length == 1 && split[0].trim().isEmpty())) {
+        if (split.length == 0 || (split.length == 1 && split[0].trim().length() == 0)) {
             return true;
         }
         for (final String key : split) {
