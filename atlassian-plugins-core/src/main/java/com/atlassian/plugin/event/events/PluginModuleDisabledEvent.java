@@ -12,13 +12,25 @@ public class PluginModuleDisabledEvent
 {
     private final ModuleDescriptor module;
 
-    public PluginModuleDisabledEvent(ModuleDescriptor module)
+    private final boolean persistent;
+
+    public PluginModuleDisabledEvent(ModuleDescriptor module, boolean persistent)
     {
         this.module = module;
+        this.persistent = persistent;
     }
 
     public ModuleDescriptor getModule()
     {
         return module;
     }
+
+    /**
+     * @return <code>true</code> iff this disabling will be persistent, i.e. it is not a transient, such as for an
+     *  upgrade.
+     */
+    public boolean isPersistent() {
+        return persistent;
+    }
+
 }

@@ -1,11 +1,13 @@
 package com.atlassian.plugin.osgi.factory.descriptor;
 
+import com.atlassian.plugin.HasDependentModules;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.module.ModuleFactory;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -13,7 +15,7 @@ import java.util.List;
  *
  * @since 2.2.0
  */
-public class ModuleTypeModuleDescriptor extends AbstractModuleDescriptor<ModuleDescriptor<?>>
+public class ModuleTypeModuleDescriptor extends AbstractModuleDescriptor<ModuleDescriptor<?>> implements HasDependentModules
 {
     public ModuleTypeModuleDescriptor()
     {
@@ -27,11 +29,14 @@ public class ModuleTypeModuleDescriptor extends AbstractModuleDescriptor<ModuleD
 
     public void disableDependants(PluginAccessor pluginAccessor, PluginController pluginController) {
         loadClass(plugin, moduleClassName);
-        final List<ModuleDescriptor<?>> dependants = pluginAccessor.getEnabledModuleDescriptorsByClass(moduleClass);
         for (final ModuleDescriptor<?> dependant :
-                dependants) {
+                getDependentModules(pluginAccessor)) {
             pluginController.disablePluginModule(dependant.getCompleteKey());
         }
+    }
+
+    public Collection<ModuleDescriptor<?>> getDependentModules(final PluginAccessor pluginAccessor) {
+        return pluginAccessor.getEnabledModuleDescriptorsByClass(moduleClass);
     }
 
 }

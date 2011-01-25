@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
+import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
@@ -807,13 +808,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                         "}")
                 .build()));
 
-        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeProvider:foo-module"));
-        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeImplementer:myFooModule"));
-        final ModuleDescriptor<?> fooDescriptor1 = pluginManager.getEnabledPluginModule("test.fooModuleTypeImplementer:myFooModule");
-        assertNotNull(fooDescriptor1);
-        final Object foo1 = fooDescriptor1.getModule();
-        assertNotNull(foo1);
-        assertTrue(foo1.getClass().getName().equals("my.impl.FooModuleImpl"));
+        assertFooImplEnabledAndGetInitialisationTime();
 
         pluginManager.disablePluginModule("test.fooModuleTypeProvider:foo-module");
 
@@ -827,12 +822,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
 
         pluginManager.enablePluginModule("test.fooModuleTypeImplementer:myFooModule");
 
-        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeImplementer:myFooModule"));
-        final ModuleDescriptor<?> fooDescriptor = pluginManager.getEnabledPluginModule("test.fooModuleTypeImplementer:myFooModule");
-        assertNotNull(fooDescriptor);
-        final Object foo = fooDescriptor.getModule();
-        assertNotNull(foo);
-        assertTrue(foo.getClass().getName().equals("my.impl.FooModuleImpl"));
+        assertFooImplEnabledAndGetInitialisationTime();
 
     }
 
@@ -863,6 +853,68 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
         pluginManager.enablePluginModule("test.fooModuleTypeProvider:foo-module");
 
         assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeProvider:foo-module"));
+    }
+
+    public void testInstallUninstallInstallWithModuleTypePlugin() throws Exception {
+        final PluginArtifact moduleTypeProviderArtifact = new JarPluginArtifact(new PluginJarBuilder()
+                .addFormattedResource(
+                        "atlassian-plugin.xml",
+                        "<atlassian-plugin name='Foo Module Type Provider' key='test.fooModuleTypeProvider' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "        <bundle-instructions>",
+                        "            <Export-Package>my</Export-Package>",
+                        "        </bundle-instructions>",
+                        "    </plugin-info>",
+                        "    <module-type key='foo-module' class='my.FooModuleDescriptor'/>",
+                        "</atlassian-plugin>")
+                .addClass(FooModule.class)
+                .addClass(FooModuleDescriptor.class)
+                .build());
+        final PluginArtifact moduleTypeImplementerArtifact = new JarPluginArtifact(new PluginJarBuilder().addFormattedResource("atlassian-plugin.xml",
+                "<atlassian-plugin name='Foo Module Type Implementer' key='test.fooModuleTypeImplementer' pluginsVersion='2'>",
+                "    <plugin-info>",
+                "        <version>1.0</version>",
+                "        <bundle-instructions>",
+                "            <Import-Package>my</Import-Package>",
+                "        </bundle-instructions>",
+                "    </plugin-info>",
+                "    <foo-module key='myFooModule' class='my.impl.FooModuleImpl'/>",
+                "</atlassian-plugin>")
+                .addFormattedJava(
+                        "my.impl.FooModuleImpl",
+                        "package my.impl;",
+                        "",
+                        "import my.FooModule;",
+                        "",
+                        "public class FooModuleImpl implements FooModule {",
+                        "}")
+                .build());
+
+        initPluginManager();
+        pluginManager.installPlugin(moduleTypeProviderArtifact);
+        pluginManager.installPlugin(moduleTypeImplementerArtifact);
+
+        final long foo1InitialisationTime = assertFooImplEnabledAndGetInitialisationTime();
+
+        pluginManager.installPlugin(moduleTypeProviderArtifact);
+
+        final long foo2InitialisationTime = assertFooImplEnabledAndGetInitialisationTime();
+
+        assertTrue("FooModuleImpl implements old version of FooModule", foo2InitialisationTime > foo1InitialisationTime);
+
+    }
+
+    private long assertFooImplEnabledAndGetInitialisationTime() throws IllegalAccessException, NoSuchFieldException {
+        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeProvider:foo-module"));
+        assertTrue(pluginManager.isPluginModuleEnabled("test.fooModuleTypeImplementer:myFooModule"));
+        final ModuleDescriptor<?> fooDescriptor = pluginManager.getEnabledPluginModule("test.fooModuleTypeImplementer:myFooModule");
+        assertNotNull(fooDescriptor);
+        final Object foo = fooDescriptor.getModule();
+        assertNotNull(foo);
+        final Class<? extends Object> fooClass = foo.getClass();
+        assertTrue(fooClass.getName().equals("my.impl.FooModuleImpl"));
+        return fooClass.getField("INITIALISATION_TIME").getLong(foo);
     }
 
     public static class PluginModuleEnabledListener

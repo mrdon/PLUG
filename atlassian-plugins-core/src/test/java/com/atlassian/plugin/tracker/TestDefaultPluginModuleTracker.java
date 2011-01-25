@@ -53,7 +53,7 @@ public class TestDefaultPluginModuleTracker extends TestCase
         pluginEventManager.broadcast(new PluginModuleEnabledEvent(descriptor));
         assertEquals(1, tracker.size());
         assertEquals(descriptor, tracker.getModuleDescriptors().iterator().next());
-        pluginEventManager.broadcast(new PluginModuleDisabledEvent(descriptor));
+        pluginEventManager.broadcast(new PluginModuleDisabledEvent(descriptor, true));
         assertFalse(tracker.getModuleDescriptors().iterator().hasNext());
         assertEquals(0, tracker.size());
     }
@@ -115,7 +115,7 @@ public class TestDefaultPluginModuleTracker extends TestCase
                 });
         pluginEventManager.broadcast(new PluginModuleEnabledEvent(descriptor));
         assertEquals(1, tracker.size());
-        pluginEventManager.broadcast(new PluginModuleDisabledEvent(descriptor));
+        pluginEventManager.broadcast(new PluginModuleDisabledEvent(descriptor, true));
         assertTrue(removedCalled.get());
     }
 

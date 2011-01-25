@@ -7,21 +7,7 @@ import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Maps.filterKeys;
 
-import com.atlassian.plugin.ModuleCompleteKey;
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.PluginController;
-import com.atlassian.plugin.PluginException;
-import com.atlassian.plugin.PluginInstaller;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.PluginRestartState;
-import com.atlassian.plugin.PluginState;
-import com.atlassian.plugin.PluginSystemLifecycle;
-import com.atlassian.plugin.RevertablePluginInstaller;
-import com.atlassian.plugin.StateAware;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.classloader.PluginsClassLoader;
 import com.atlassian.plugin.descriptors.CannotDisable;
 import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
@@ -325,11 +311,26 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
         for (final Map.Entry<String, PluginArtifact> entry : validatedArtifacts.entrySet())
         {
+            final Plugin existingPlugin = getPlugin(entry.getKey());
+            if (existingPlugin != null) {
+                disableDependentModulesOfPlugin(existingPlugin);
+            }
             pluginInstaller.installPlugin(entry.getKey(), entry.getValue());
         }
 
         scanForNewPlugins();
         return validatedArtifacts.keySet();
+    }
+
+    private void disableDependentModulesOfPlugin(final Plugin plugin) {
+        final Collection<ModuleDescriptor<?>> moduleDescriptors = plugin.getModuleDescriptors();
+        for (final ModuleDescriptor<?> moduleDescriptor : moduleDescriptors) {
+            if (moduleDescriptor instanceof HasDependentModules) {
+                for (final ModuleDescriptor<?> dependentModuleDescriptor : ((HasDependentModules) moduleDescriptor).getDependentModules(this)) {
+                    disablePluginModuleNoPersist(dependentModuleDescriptor);
+                }
+            }
+        }
     }
 
     /**
@@ -1322,10 +1323,14 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             // if the module was actually disabled, you'd have to reenable each
             // one when enabling the plugin
 
-            if (isPluginModuleEnabled(module.getCompleteKey()))
-            {
-                publishModuleDisabledEvents(module);
-            }
+            disablePluginModuleNoPersist(module);
+        }
+    }
+
+    private void disablePluginModuleNoPersist(final ModuleDescriptor<?> module) {
+        if (isPluginModuleEnabled(module.getCompleteKey()))
+        {
+            publishModuleDisabledEvents(module, false);
         }
     }
 
@@ -1366,10 +1371,10 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     protected void notifyModuleDisabled(final ModuleDescriptor<?> module)
     {
-        publishModuleDisabledEvents(module);
+        publishModuleDisabledEvents(module, true);
     }
 
-    private void publishModuleDisabledEvents(final ModuleDescriptor<?> module)
+    private void publishModuleDisabledEvents(final ModuleDescriptor<?> module, final boolean persistent)
     {
         if (log.isDebugEnabled())
         {
@@ -1381,7 +1386,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             ((StateAware) module).disabled();
         }
 
-        pluginEventManager.broadcast(new PluginModuleDisabledEvent(module));
+        pluginEventManager.broadcast(new PluginModuleDisabledEvent(module, persistent));
     }
 
     public void enablePluginModule(final String completeKey)

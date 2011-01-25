@@ -25,9 +25,11 @@ public class ModuleTypeDependantsDisabler {
 
     @EventListener
     public void onPluginModuleDisabled(PluginModuleDisabledEvent event) {
-        final ModuleDescriptor moduleDescriptor = event.getModule();
-        if (moduleDescriptor instanceof ModuleTypeModuleDescriptor) {
-            ((ModuleTypeModuleDescriptor) moduleDescriptor).disableDependants(pluginAccessor, pluginController);
+        if (event.isPersistent()) {
+            final ModuleDescriptor moduleDescriptor = event.getModule();
+            if (moduleDescriptor instanceof ModuleTypeModuleDescriptor) {
+                ((ModuleTypeModuleDescriptor) moduleDescriptor).disableDependants(pluginAccessor, pluginController);
+            }
         }
     }
 
