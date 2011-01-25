@@ -1,12 +1,15 @@
 package com.atlassian.plugin.util;
 
+import com.google.common.collect.Sets;
 import junit.framework.TestCase;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.Plugin;
 import com.mockobjects.dynamic.Mock;
+import org.dom4j.Element;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 public class TestPluginUtils extends TestCase
 {
@@ -58,4 +61,29 @@ public class TestPluginUtils extends TestCase
 
     @RequiresRestart
     static class RequiresRestartModuleDescriptor extends MockUnusedModuleDescriptor {}
+
+    public void testDoesModuleElementApplyToApplication()
+    {
+        testDoesModuleElementApplyToApplication("jira", true);
+        testDoesModuleElementApplyToApplication("bamboo", false);
+        testDoesModuleElementApplyToApplication(null, true);
+        testDoesModuleElementApplyToApplication("", true);
+        testDoesModuleElementApplyToApplication(" ", true);
+        testDoesModuleElementApplyToApplication(",", true);
+        testDoesModuleElementApplyToApplication(", ,, ", true);
+        testDoesModuleElementApplyToApplication("jira,bamboo", true);
+        testDoesModuleElementApplyToApplication("bamboo, confluence", true);
+        testDoesModuleElementApplyToApplication("bamboo,crowd", false);
+        testDoesModuleElementApplyToApplication("bamboo ,jira", true);
+        testDoesModuleElementApplyToApplication("bamboo,,jira,", true);
+        testDoesModuleElementApplyToApplication("bamboo, crowd,", false);
+    }
+
+    private void testDoesModuleElementApplyToApplication(final String applicationAttribute, final boolean expectedResult) {
+        final Mock mockElement = new Mock(Element.class);
+        mockElement.expectAndReturn("attributeValue", "application", applicationAttribute);
+        assertEquals(expectedResult, PluginUtils.doesModuleElementApplyToApplication((Element) mockElement.proxy(), Sets.newHashSet("jira", "confluence")));
+        mockElement.verify();
+    }
+
 }
