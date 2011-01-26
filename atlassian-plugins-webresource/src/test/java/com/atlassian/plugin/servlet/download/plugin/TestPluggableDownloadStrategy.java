@@ -107,7 +107,7 @@ public class TestPluggableDownloadStrategy extends TestCase
         strategy.pluginModuleEnabled(new PluginModuleEnabledEvent(module));
         assertTrue(strategy.matches("/lion/something"));
 
-        strategy.pluginModuleDisabled(new PluginModuleDisabledEvent(module));
+        strategy.pluginModuleDisabled(new PluginModuleDisabledEvent(module, true));
         assertFalse(strategy.matches("/lion/something"));
     }
 
