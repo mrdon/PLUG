@@ -102,7 +102,7 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
 
         if (!((WebResourceModuleDescriptor) moduleDescriptor).shouldDisplay())
         {
-            log.warn("Cannot include web resource module {} as its condition fails", moduleDescriptor.getCompleteKey());
+            log.debug("Cannot include web resource module {} as its condition fails", moduleDescriptor.getCompleteKey());
             return;
         }
 
