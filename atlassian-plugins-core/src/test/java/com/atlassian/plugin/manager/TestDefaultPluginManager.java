@@ -41,15 +41,16 @@ import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
+import org.mockito.verification.VerificationMode;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
@@ -2189,6 +2190,106 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         {
             return called;
         }
+    }
+
+    public void testPluginUpgradeTemporarilyDisablesDependentModules() throws Exception {
+        PluginArtifact pluginArtifactWithDependants = Mockito.mock(PluginArtifact.class);
+        PluginInstaller pluginInstaller = Mockito.mock(PluginInstaller.class);
+        DynamicPluginLoader pluginLoader = Mockito.mock(DynamicPluginLoader.class);
+        Plugin pluginWithDependants1 = Mockito.mock(Plugin.class);
+        Plugin pluginDependant = Mockito.mock(Plugin.class);
+        Plugin pluginWithDependants2 = Mockito.mock(Plugin.class);
+        ModuleDescriptor pluginDependantDescriptor = Mockito.mock(ModuleDescriptor.class);
+
+        Mockito.when(pluginLoader.loadAllPlugins(Mockito.<ModuleDescriptorFactory>any())).thenReturn(Arrays.asList(pluginWithDependants1, pluginDependant));
+        Mockito.when(pluginLoader.canLoad(Matchers.same(pluginArtifactWithDependants))).thenReturn("test.plugin.with.dependants");
+        Mockito.when(pluginLoader.supportsAddition()).thenReturn(true);
+        Mockito.when(pluginLoader.supportsRemoval()).thenReturn(true);
+        Mockito.when(pluginWithDependants1.getKey()).thenReturn("test.plugin.with.dependants");
+        Mockito.when(pluginWithDependants1.isEnabledByDefault()).thenReturn(true);
+        Mockito.when(pluginWithDependants1.getPluginState()).thenReturn(PluginState.ENABLED);
+        Mockito.when(pluginWithDependants1.getModuleDescriptors()).thenReturn(Collections.<ModuleDescriptor<?>>singleton(new ModuleWithDependantsModuleDescriptor(pluginDependantDescriptor)));
+        Mockito.when(pluginWithDependants1.isUninstallable()).thenReturn(true);
+        Mockito.when(pluginWithDependants2.getKey()).thenReturn("test.plugin.with.dependants");
+        Mockito.when(pluginWithDependants2.getModuleDescriptors()).thenReturn(Collections.<ModuleDescriptor<?>>singleton(new ModuleWithDependantsModuleDescriptor(pluginDependantDescriptor)));
+        Mockito.when(pluginWithDependants2.isEnabledByDefault()).thenReturn(true);
+        Mockito.when(pluginWithDependants2.getPluginState()).thenReturn(PluginState.ENABLED);
+        Mockito.when(pluginDependant.getKey()).thenReturn("test.plugin.dependant");
+        Mockito.when(pluginDependant.isUninstallable()).thenReturn(true);
+        Mockito.when(pluginDependant.compareTo(Matchers.same(pluginWithDependants1))).thenReturn(-1);
+        Mockito.when(pluginDependant.compareTo(Matchers.same(pluginWithDependants2))).thenReturn(-1);
+        Mockito.when(pluginWithDependants1.compareTo(Matchers.same(pluginDependant))).thenReturn(1);
+        Mockito.when(pluginWithDependants2.compareTo(Matchers.same(pluginDependant))).thenReturn(1);
+        Mockito.when(pluginWithDependants2.compareTo(Matchers.same(pluginWithDependants1))).thenReturn(1);
+        Mockito.when(pluginWithDependants1.compareTo(Matchers.same(pluginWithDependants2))).thenReturn(-1);
+        Mockito.when(pluginDependant.isEnabledByDefault()).thenReturn(true);
+        Mockito.when(pluginDependant.getPluginState()).thenReturn(PluginState.ENABLED);
+        Mockito.when(pluginDependant.getModuleDescriptors()).thenReturn(Collections.<ModuleDescriptor<?>>singleton(pluginDependantDescriptor));
+        Mockito.when(pluginDependant.getModuleDescriptor("module")).thenReturn(pluginDependantDescriptor);
+        Mockito.when(pluginDependantDescriptor.getCompleteKey()).thenReturn("test.plugin.dependant:module");
+        Mockito.when(pluginDependantDescriptor.isEnabledByDefault()).thenReturn(true);
+
+        pluginLoaders.add(pluginLoader);
+
+        manager.setPluginInstaller(pluginInstaller);
+
+        manager.init();
+
+        Mockito.verify(pluginWithDependants1).enable();
+        Mockito.verify(pluginDependant).enable();
+        assertTrue(manager.isPluginEnabled("test.plugin.with.dependants"));
+        assertTrue(manager.isPluginEnabled("test.plugin.dependant"));
+        assertTrue(manager.isPluginModuleEnabled("test.plugin.dependant:module"));
+
+        final DependantModuleDisabledListener listener = new DependantModuleDisabledListener();
+        pluginEventManager.register(listener);
+
+        Mockito.when(pluginLoader.addFoundPlugins(Matchers.<ModuleDescriptorFactory>any())).thenReturn(Arrays.asList(pluginWithDependants2));
+
+        manager.installPlugins(pluginArtifactWithDependants);
+
+        Mockito.verify(pluginInstaller).installPlugin(Mockito.eq("test.plugin.with.dependants"), Mockito.same(pluginArtifactWithDependants));
+        Mockito.verify(pluginWithDependants1).disable();
+        Mockito.verify(pluginWithDependants2).enable();
+        listener.assertEventFired();
+        assertTrue(manager.isPluginEnabled("test.plugin.with.dependants"));
+        assertTrue(manager.isPluginEnabled("test.plugin.dependant"));
+        assertTrue(manager.isPluginModuleEnabled("test.plugin.dependant:module"));
+    }
+
+    private static class ModuleWithDependantsModuleDescriptor extends AbstractModuleDescriptor<Void> implements HasDependentModules {
+
+        private final ModuleDescriptor<?> dependantDescriptor;
+
+        public ModuleWithDependantsModuleDescriptor(ModuleDescriptor<?> dependantDescriptor) {
+            this.dependantDescriptor = dependantDescriptor;
+        }
+
+        @Override
+        public Void getModule() {
+            return null;
+        }
+
+        public Collection<ModuleDescriptor<?>> getDependentModules(PluginAccessor pluginAccessor) {
+            return Collections.<ModuleDescriptor<?>>singleton(dependantDescriptor);
+        }
+
+    }
+
+    public static class DependantModuleDisabledListener {
+
+        private final AtomicReference<PluginModuleDisabledEvent> event = new AtomicReference<PluginModuleDisabledEvent>();
+
+        @PluginEventListener
+        public void onPluginDisabled(final PluginModuleDisabledEvent event) {
+            this.event.compareAndSet(null, event);
+        }
+
+        private void assertEventFired() {
+            assertNotNull(event.get());
+            assertFalse(event.get().isPersistent());
+        }
+
     }
 
     public Plugin createPluginWithVersion(final String version)

@@ -313,7 +313,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         {
             final Plugin existingPlugin = getPlugin(entry.getKey());
             if (existingPlugin != null) {
-                disableDependentModulesOfPlugin(existingPlugin);
+                disableDependentModulesOfPluginNoPersist(existingPlugin);
             }
             pluginInstaller.installPlugin(entry.getKey(), entry.getValue());
         }
@@ -322,7 +322,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         return validatedArtifacts.keySet();
     }
 
-    private void disableDependentModulesOfPlugin(final Plugin plugin) {
+    private void disableDependentModulesOfPluginNoPersist(final Plugin plugin) {
         final Collection<ModuleDescriptor<?>> moduleDescriptors = plugin.getModuleDescriptors();
         for (final ModuleDescriptor<?> moduleDescriptor : moduleDescriptors) {
             if (moduleDescriptor instanceof HasDependentModules) {

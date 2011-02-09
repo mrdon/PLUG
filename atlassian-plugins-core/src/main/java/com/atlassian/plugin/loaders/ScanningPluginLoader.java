@@ -45,7 +45,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
 
     /**
      * Constructor that provides a default plugin artifact factory
-     *
+     *                                                                                     `
      * @param scanner The scanner to use to detect new plugins
      * @param pluginFactories The deployers that will handle turning an artifact into a plugin
      * @param pluginEventManager The event manager, used for listening for shutdown events

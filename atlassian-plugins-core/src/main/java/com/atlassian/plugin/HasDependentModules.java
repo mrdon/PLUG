@@ -5,7 +5,7 @@ import java.util.Collection;
 /**
  * To be implemented by all {@link ModuleDescriptor}s that describe a module that can have dependent modules.
  *
- * @since 2.7.0
+ * @since 2.8.0
  */
 public interface HasDependentModules {
 

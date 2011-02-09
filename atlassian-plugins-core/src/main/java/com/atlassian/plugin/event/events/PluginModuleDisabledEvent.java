@@ -28,6 +28,7 @@ public class PluginModuleDisabledEvent
     /**
      * @return <code>true</code> iff this disabling will be persistent, i.e. it is not a transient, such as for an
      *  upgrade.
+     * @since 2.8.0
      */
     public boolean isPersistent() {
         return persistent;
