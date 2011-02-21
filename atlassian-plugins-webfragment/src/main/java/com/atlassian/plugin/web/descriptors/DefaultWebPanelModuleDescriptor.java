@@ -90,7 +90,7 @@ import java.util.Map;
  * 
  * @since 2.5.0
  */
-public final class DefaultWebPanelModuleDescriptor extends AbstractModuleDescriptor<WebPanel> implements WebPanelModuleDescriptor
+public class DefaultWebPanelModuleDescriptor extends AbstractModuleDescriptor<WebPanel> implements WebPanelModuleDescriptor
 {
     /**
      * Host applications should use this string when registering the web panel
