@@ -421,18 +421,20 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     {
         try
         {
+            if (getPluginState() == PluginState.ENABLING)
+            {
+                logAndClearOustandingDependencies();
+            }
+            helper.onDisable();
+            pluginEventManager.unregister(this);
+
             // Only disable underlying bundle if this is a truly dynamic plugin
             if (!PluginUtils.doesPluginRequireRestart(this))
             {
-                if (getPluginState() == PluginState.ENABLING)
-                {
-                    logAndClearOustandingDependencies();
-                }
-                helper.onDisable();
-                pluginEventManager.unregister(this);
                 getBundle().stop();
-                treatSpringBeanFactoryCreationAsRefresh = false;
             }
+
+            treatSpringBeanFactoryCreationAsRefresh = false;
         }
         catch (final BundleException e)
         {
