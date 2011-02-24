@@ -166,8 +166,7 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
 
         for (final ModuleDescriptor<?> moduleDescriptor : plugin.getModuleDescriptors())
         {
-            if (moduleDescriptor.getClass()
-                    .isAssignableFrom(descriptor))
+            if (descriptor.isAssignableFrom(moduleDescriptor.getClass()))
             {
                 result.add(descriptor.cast(moduleDescriptor));
             }
