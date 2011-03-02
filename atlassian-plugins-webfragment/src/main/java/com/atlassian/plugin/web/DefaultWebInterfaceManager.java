@@ -109,7 +109,12 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
 
     public List<WebPanel> getDisplayableWebPanels(String location, Map<String, Object> context)
     {
-        return toWebPanels(filterFragmentsByCondition(getWebPanelDescriptors(location), context));
+        return toWebPanels(getDisplayableWebPanelDescriptors(location, context));
+    }
+
+    public List<WebPanelModuleDescriptor> getDisplayableWebPanelDescriptors(String location, Map<String, Object> context)
+    {
+        return filterFragmentsByCondition(getWebPanelDescriptors(location), context);
     }
 
     public List<WebPanel> getWebPanels(String location)
@@ -128,8 +133,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         });
     }
 
-    // TODO: probably succumb to Jed's gospel and refactor to Iterable
-    private List<WebPanelModuleDescriptor> getWebPanelDescriptors(String location)
+    public List<WebPanelModuleDescriptor> getWebPanelDescriptors(String location)
     {
         if (location == null)
         {
@@ -186,9 +190,9 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
 
     public void refresh()
     {
-        sections = Collections.synchronizedMap(new HashMap());
-        items = Collections.synchronizedMap(new HashMap());
-        panels = Collections.synchronizedMap(new HashMap());
+        sections = Collections.synchronizedMap(new HashMap<String, List<WebSectionModuleDescriptor>>());
+        items = Collections.synchronizedMap(new HashMap<String, List<WebItemModuleDescriptor>>());
+        panels = Collections.synchronizedMap(new HashMap<String, List<WebPanelModuleDescriptor>>());
     }
 
     /**

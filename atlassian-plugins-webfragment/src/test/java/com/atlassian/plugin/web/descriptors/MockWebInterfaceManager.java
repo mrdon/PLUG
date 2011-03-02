@@ -14,27 +14,37 @@ public class MockWebInterfaceManager implements WebInterfaceManager
         return false;
     }
 
-    public List getSections(String location)
+    public List<WebSectionModuleDescriptor> getSections(String location)
     {
         return null;
     }
 
-    public List getDisplayableSections(String location, Map context)
+    public List<WebSectionModuleDescriptor> getDisplayableSections(String location, Map context)
     {
         return null;
     }
 
-    public List getItems(String section)
+    public List<WebItemModuleDescriptor> getItems(String section)
     {
         return null;
     }
 
-    public List getDisplayableItems(String section, Map context)
+    public List<WebItemModuleDescriptor> getDisplayableItems(String section, Map context)
     {
         return null;
     }
 
     public List<WebPanel> getDisplayableWebPanels(String location, Map<String, Object> context)
+    {
+        return null;
+    }
+
+    public List<WebPanelModuleDescriptor> getWebPanelDescriptors(String location)
+    {
+        return null;
+    }
+
+    public List<WebPanelModuleDescriptor> getDisplayableWebPanelDescriptors(String location, Map<String, Object> context)
     {
         return null;
     }

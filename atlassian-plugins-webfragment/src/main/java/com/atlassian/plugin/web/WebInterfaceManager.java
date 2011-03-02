@@ -1,6 +1,7 @@
 package com.atlassian.plugin.web;
 
 import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
+import com.atlassian.plugin.web.descriptors.WebPanelModuleDescriptor;
 import com.atlassian.plugin.web.descriptors.WebSectionModuleDescriptor;
 import com.atlassian.plugin.web.model.WebPanel;
 
@@ -53,6 +54,21 @@ public interface WebInterfaceManager
      * <i>viewable in a given context</i> in the given location.
      */
     List<WebPanel> getDisplayableWebPanels(String location, Map<String,Object> context);
+
+    /**
+     * @param location
+     * @return  A list of all {@link com.atlassian.plugin.web.descriptors.WebPanelModuleDescriptor} module instances
+     * for the given location.
+     */
+    List<WebPanelModuleDescriptor> getWebPanelDescriptors(String location);
+
+    /**
+     * @param location
+     * @param context
+     * @return  A list of all {@link com.atlassian.plugin.web.descriptors.WebPanelModuleDescriptor} module instances
+     * <i>viewable in a given context</i> in the given location.
+     */
+    List<WebPanelModuleDescriptor> getDisplayableWebPanelDescriptors(String location, Map<String, Object> context);
 
     /**
      * Refresh the contents of the web interface manager.
