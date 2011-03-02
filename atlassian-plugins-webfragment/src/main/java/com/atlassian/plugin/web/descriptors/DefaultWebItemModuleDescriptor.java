@@ -13,7 +13,7 @@ import org.dom4j.Element;
 /**
  * Represents a pluggable link.
  */
-public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDescriptor implements WebItemModuleDescriptor
+public class DefaultWebItemModuleDescriptor extends AbstractWebFragmentModuleDescriptor<Void> implements WebItemModuleDescriptor
 {
     private String section;
     private WebIcon icon;

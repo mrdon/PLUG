@@ -61,7 +61,7 @@ public class DefaultWebLabel extends DefaultWebParam implements WebLabel
             }
             else
             {
-                List arguments = new ArrayList();
+                List<String> arguments = new ArrayList<String>();
 
                 // we know here because it's a tree map that the params are in alphabetical order
                 for (Iterator iterator = params.keySet().iterator(); iterator.hasNext();)

@@ -9,7 +9,7 @@ import com.atlassian.plugin.web.model.WebParam;
 /**
  * A convenience interface for web fragment descriptors
  */
-public interface WebFragmentModuleDescriptor extends ModuleDescriptor<Void>, WeightedDescriptor, StateAware, ContextAware, ConditionalDescriptor
+public interface WebFragmentModuleDescriptor<T> extends ModuleDescriptor<T>, WeightedDescriptor, StateAware, ContextAware, ConditionalDescriptor
 {
     /**
      * @deprecated As of 2.5.0, use
@@ -20,7 +20,7 @@ public interface WebFragmentModuleDescriptor extends ModuleDescriptor<Void>, Wei
 
     /**
      * @deprecated As of 2.5.0, use
-     *             {@link ConditionElementParser.CompositeType.AND}
+     *             {@link ConditionElementParser.CompositeType#AND}
      */
     @Deprecated
     int COMPOSITE_TYPE_AND = ConditionElementParser.CompositeType.AND;

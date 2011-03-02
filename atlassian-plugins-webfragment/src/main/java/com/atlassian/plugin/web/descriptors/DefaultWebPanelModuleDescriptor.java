@@ -90,7 +90,7 @@ import java.util.Map;
  * 
  * @since 2.5.0
  */
-public class DefaultWebPanelModuleDescriptor extends AbstractModuleDescriptor<WebPanel> implements WebPanelModuleDescriptor
+public class DefaultWebPanelModuleDescriptor extends AbstractWebFragmentModuleDescriptor<WebPanel> implements WebPanelModuleDescriptor
 {
     /**
      * Host applications should use this string when registering the web panel
@@ -98,7 +98,6 @@ public class DefaultWebPanelModuleDescriptor extends AbstractModuleDescriptor<We
      */
     public static final String XML_ELEMENT_NAME = "web-panel";
 
-    private final WebInterfaceManager webInterfaceManager;
     private WebPanelSupplierFactory webPanelSupplierFactory;
 
     /**
@@ -106,15 +105,13 @@ public class DefaultWebPanelModuleDescriptor extends AbstractModuleDescriptor<We
      * spring beans are not available for injection during the init() phase.
      */
     private Supplier<WebPanel> webPanelFactory;
-    private Supplier<Condition> conditionFactory;
-    private Supplier<ContextProvider> contextProviderFactory;
 
     private int weight;
     private String location;
 
     public DefaultWebPanelModuleDescriptor(final HostContainer hostContainer, final ModuleFactory moduleClassFactory, final WebInterfaceManager webInterfaceManager)
     {
-        super(moduleClassFactory);
+        super(moduleClassFactory, webInterfaceManager);
         this.webPanelSupplierFactory = new WebPanelSupplierFactory(this, hostContainer, moduleFactory);
         this.webInterfaceManager = webInterfaceManager;
     }
@@ -126,32 +123,6 @@ public class DefaultWebPanelModuleDescriptor extends AbstractModuleDescriptor<We
 
         weight = WeightElementParser.getWeight(element);
         location = element.attributeValue("location");
-        conditionFactory = new Supplier<Condition>()
-        {
-            public Condition get()
-            {
-                return new ConditionElementParser(new ConditionElementParser.ConditionFactory()
-                {
-                    public Condition create(String className, Plugin plugin) throws ConditionLoadingException
-                    {
-                        return webInterfaceManager.getWebFragmentHelper().loadCondition(className, plugin);
-                    }
-                }).makeConditions(plugin, element, ConditionElementParser.CompositeType.AND);
-            }
-        };
-        contextProviderFactory = new Supplier<ContextProvider>()
-        {
-            private ContextProvider contextProvider;
-
-            public ContextProvider get()
-            {
-                if (contextProvider == null)
-                {
-                    contextProvider = new ContextProviderElementParser(webInterfaceManager.getWebFragmentHelper()).makeContextProvider(plugin, element);
-                }
-                return contextProvider;
-            }
-        };
 
         webPanelFactory = webPanelSupplierFactory.build(moduleClassName);
     }
@@ -186,16 +157,6 @@ public class DefaultWebPanelModuleDescriptor extends AbstractModuleDescriptor<We
     public int getWeight()
     {
         return weight;
-    }
-
-    public Condition getCondition()
-    {
-        return conditionFactory.get();
-    }
-
-    public ContextProvider getContextProvider()
-    {
-        return contextProviderFactory.get();
     }
 
     @Override

@@ -21,7 +21,7 @@ import com.atlassian.plugin.web.model.WebParam;
 /**
  * An abstract convenience class for web fragment descriptors.
  */
-public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModuleDescriptor<Void> implements StateAware, WebFragmentModuleDescriptor
+public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractModuleDescriptor<T> implements StateAware, WebFragmentModuleDescriptor<T>
 {
     protected WebInterfaceManager webInterfaceManager;
     protected Element element;
@@ -44,6 +44,11 @@ public abstract class AbstractWebFragmentModuleDescriptor extends AbstractModule
     public AbstractWebFragmentModuleDescriptor()
     {
         super(ModuleFactory.LEGACY_MODULE_FACTORY);
+    }
+
+    public AbstractWebFragmentModuleDescriptor(ModuleFactory moduleClassFactory, WebInterfaceManager webInterfaceManager) {
+        super(moduleClassFactory);
+        setWebInterfaceManager(webInterfaceManager);
     }
 
     @Override

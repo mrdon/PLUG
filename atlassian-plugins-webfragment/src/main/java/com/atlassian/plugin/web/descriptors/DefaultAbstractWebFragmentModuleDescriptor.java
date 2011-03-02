@@ -20,11 +20,11 @@ import com.atlassian.plugin.web.model.WebParam;
  * Wrapper for {@link WebFragmentModuleDescriptor}, so that it could be extended
  * by application specific wrappers to provide additional methods.
  */
-public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, WebFragmentModuleDescriptor
+public class DefaultAbstractWebFragmentModuleDescriptor<T> implements StateAware, WebFragmentModuleDescriptor<T>
 {
-    private final WebFragmentModuleDescriptor decoratedDescriptor;
+    private final WebFragmentModuleDescriptor<T> decoratedDescriptor;
 
-    public DefaultAbstractWebFragmentModuleDescriptor(final WebFragmentModuleDescriptor abstractDescriptor)
+    public DefaultAbstractWebFragmentModuleDescriptor(final WebFragmentModuleDescriptor<T> abstractDescriptor)
     {
         decoratedDescriptor = abstractDescriptor;
     }
@@ -54,7 +54,7 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
         return decoratedDescriptor.getKey();
     }
 
-    public Void getModule()
+    public T getModule()
     {
         return null;
     }
@@ -131,7 +131,7 @@ public class DefaultAbstractWebFragmentModuleDescriptor implements StateAware, W
         return decoratedDescriptor.getDescription();
     }
 
-    public Class<Void> getModuleClass()
+    public Class<T> getModuleClass()
     {
         return decoratedDescriptor.getModuleClass();
     }

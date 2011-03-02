@@ -56,9 +56,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         {
             result = new ArrayList<WebSectionModuleDescriptor>(); // use a tree map so we get nice weight sorting
             List<WebSectionModuleDescriptor> descriptors = pluginAccessor.getEnabledModuleDescriptorsByClass(WebSectionModuleDescriptor.class);
-            for (Iterator iterator = descriptors.iterator(); iterator.hasNext();)
-            {
-                WebSectionModuleDescriptor descriptor = (WebSectionModuleDescriptor) iterator.next();
+            for (WebSectionModuleDescriptor descriptor : descriptors) {
                 if (location.equalsIgnoreCase(descriptor.getLocation()))
                     result.add(descriptor);
             }
@@ -88,9 +86,7 @@ public class DefaultWebInterfaceManager implements WebInterfaceManager
         {
             result = new ArrayList<WebItemModuleDescriptor>(); // use a tree map so we get nice weight sorting
             List<WebItemModuleDescriptor> descriptors = pluginAccessor.getEnabledModuleDescriptorsByClass(WebItemModuleDescriptor.class);
-            for (Iterator iterator = descriptors.iterator(); iterator.hasNext();)
-            {
-                WebItemModuleDescriptor descriptor = (WebItemModuleDescriptor) iterator.next();
+            for (WebItemModuleDescriptor descriptor : descriptors) {
                 if (section.equalsIgnoreCase(descriptor.getSection()))
                     result.add(descriptor);
             }

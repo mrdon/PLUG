@@ -7,6 +7,7 @@ import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.web.NoOpContextProvider;
+import com.atlassian.plugin.web.WebFragmentHelper;
 import com.atlassian.plugin.web.WebInterfaceManager;
 import com.atlassian.plugin.web.model.EmbeddedTemplateWebPanel;
 import com.atlassian.plugin.web.model.ResourceTemplateWebPanel;
@@ -28,16 +29,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class TestDefaultWebPanelModuleDescriptor extends TestCase
 {
     private WebPanelModuleDescriptor descriptor;
     private final Plugin plugin = new MockPlugin(this.getClass().getName());
     private HostContainer hostContainer = mock(HostContainer.class);
-    private WebInterfaceManager webInterfaceManager = new MockWebInterfaceManager();
+    private WebInterfaceManager webInterfaceManager = spy(new MockWebInterfaceManager());
     private ModuleFactory moduleClassFactory = mock(ModuleFactory.class);
     private PluginAccessor pluginAccessor = mock(PluginAccessor.class);
     private Map<String, Object> context = new HashMap<String, Object>();
@@ -87,6 +86,7 @@ public class TestDefaultWebPanelModuleDescriptor extends TestCase
                                     "  <resource name=\"view\" type=\"static\"><![CDATA[<b>Hello World!</b>]]></resource>\n" +
                                     "</web-panel>";
         descriptor.init(plugin, createElement(webPanelXml));
+        descriptor.enabled();
 
         assertEquals("atl.header", descriptor.getLocation());
         assertContextProvider(NoOpContextProvider.class);
@@ -100,6 +100,7 @@ public class TestDefaultWebPanelModuleDescriptor extends TestCase
                                     "  <context-provider class=\"com.atlassian.plugin.web.descriptors.MockContextProvider\" />\n" +
                                     "</web-panel>";
         descriptor.init(plugin, createElement(webPanelXml));
+        descriptor.enabled();
 
         final WebPanelRenderer renderer = new MockVelocityRenderer();
         when(pluginAccessor.getEnabledModulesByClass(WebPanelRenderer.class)).thenReturn(ImmutableList.of(renderer));
@@ -116,6 +117,7 @@ public class TestDefaultWebPanelModuleDescriptor extends TestCase
                                     "</web-panel>";
 
         descriptor.init(plugin, createElement(webPanelXml));
+        descriptor.enabled();
 
         assertContextProvider(NoOpContextProvider.class);
 
@@ -130,6 +132,7 @@ public class TestDefaultWebPanelModuleDescriptor extends TestCase
                                     "  <context-provider class=\"com.atlassian.plugin.web.descriptors.MockContextProvider\" />\n" +
                                     "</web-panel>";
         descriptor.init(plugin, createElement(webPanelXml));
+        descriptor.enabled();
 
         final WebPanelRenderer renderer = new MockVelocityRenderer();
         when(pluginAccessor.getEnabledModulesByClass(WebPanelRenderer.class)).thenReturn(ImmutableList.of(renderer));
@@ -145,6 +148,7 @@ public class TestDefaultWebPanelModuleDescriptor extends TestCase
 
         final String webPanelXml = "<web-panel key=\"myPanel\" location=\"atl.header\" class=\"com.atlassian.plugin.web.descriptors.MockWebPanel\"/>";
         descriptor.init(plugin, createElement(webPanelXml));
+        descriptor.enabled();
 
         assertRendered(MockWebPanel.NOTHING_IN_CONTEXT, new HashMap<String, Object>());
     }
@@ -157,12 +161,33 @@ public class TestDefaultWebPanelModuleDescriptor extends TestCase
                                     "  <context-provider class=\"com.atlassian.plugin.web.descriptors.MockContextProvider\" />\n" +
                                     "</web-panel>";
         descriptor.init(plugin, createElement(webPanelXml));
+        descriptor.enabled();
 
         HashMap<String, Object> originalContext = new HashMap<String, Object>();
         assertRendered(MockContextProvider.DATA_ADDED_TO_CONTEXT, originalContext);
 
         // Confirm that the original context was protected from the ContextProvider's changes
         assertEquals(0, originalContext.size());
+    }
+
+    public void testSimpleLabelTemplate() throws DocumentException, PluginParseException
+    {
+        WebFragmentHelper fragmentHelper = spy(webInterfaceManager.getWebFragmentHelper());
+        when(webInterfaceManager.getWebFragmentHelper()).thenReturn(fragmentHelper);
+
+        when(fragmentHelper.renderVelocityFragment(eq("Hello ${x}"), any(Map.class))).thenReturn("It Worked!");
+
+        final String webPanelXml = "<web-panel key=\"myPanel\" location=\"atl.header\">\n" +
+                                    "  <resource name=\"view\" type=\"static\"><![CDATA[<b>Hello World!</b>]]></resource>\n" +
+                                    "  <label>Hello ${x}</label>" +
+                                    "</web-panel>";
+        descriptor.init(plugin, createElement(webPanelXml));
+        descriptor.enabled();
+
+        assertContextProvider(NoOpContextProvider.class);
+        Map<String,Object> ctx = new HashMap<String, Object>();
+        ctx.put("x", "foo");
+        assertEquals("It Worked!", descriptor.getWebLabel().getDisplayableLabel(null, ctx));
     }
 
     private void assertRendered(String expectedHtml, Map<String, Object> originalContext)
