@@ -1,5 +1,6 @@
 package com.atlassian.plugin.osgi.factory;
 
+import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginModuleAvailableEvent;
 import com.atlassian.plugin.event.events.PluginModuleUnavailableEvent;
@@ -85,7 +86,7 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
                     plugin.addModuleDescriptor(descriptor);
                     if (log.isInfoEnabled())
                     {
-                        log.info("Turned plugin module " + descriptor.getCompleteKey() + " into module " + descriptor);
+                        log.info("Turned unrecognized plugin module " + descriptor.getCompleteKey() + " into module " + descriptor);
                     }
                     pluginEventManager.broadcast(new PluginModuleAvailableEvent(descriptor));
                 }
@@ -143,8 +144,9 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
                     unrecognisedModuleDescriptor.init(plugin, source);
                     unrecognisedModuleDescriptor.setErrorText(UnrecognisedModuleDescriptorFallbackFactory.DESCRIPTOR_TEXT);
                     plugin.addModuleDescriptor(unrecognisedModuleDescriptor);
+
                     pluginEventManager.broadcast(new PluginModuleAvailableEvent(unrecognisedModuleDescriptor));
-                    if (log.isInfoEnabled())
+                    if (log.isInfoEnabled() && plugin.getPluginState() == PluginState.ENABLED)
                     {
                         log.info("Removed plugin module " + unrecognisedModuleDescriptor.getCompleteKey() + " as its factory was uninstalled");
                     }

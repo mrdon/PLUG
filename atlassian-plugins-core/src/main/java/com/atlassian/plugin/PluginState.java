@@ -23,6 +23,13 @@ public enum PluginState
     ENABLED,
 
     /**
+     * The plugin is in the process of being disabled
+     *
+     * @since 2.8.0
+     */
+    DISABLING,
+
+    /**
      * The plugin has been disabled
      */
     DISABLED,

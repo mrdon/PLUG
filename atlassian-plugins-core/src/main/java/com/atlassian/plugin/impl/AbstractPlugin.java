@@ -278,11 +278,13 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         }
         try
         {
+            setPluginState(PluginState.DISABLING);
             disableInternal();
             setPluginState(PluginState.DISABLED);
         }
         catch (final PluginException ex)
         {
+            setPluginState(PluginState.ENABLED);
             log.warn("Unable to disable plugin '" + getKey() + "'", ex);
             throw ex;
         }
