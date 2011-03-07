@@ -1,11 +1,12 @@
 package com.atlassian.plugin.webresource;
 
+import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
-import com.mockobjects.dynamic.Mock;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.mockito.Matchers;
@@ -133,7 +134,7 @@ public class TestUtils
         return new ResourceDescriptor(DocumentHelper.parseText(xml).getRootElement());
     }
 
-    static void setupSuperbatchTestContent(TestResourceBatchingConfiguration resourceBatchingConfiguration, Mock mockPluginAccessor, Plugin testPlugin)
+    static void setupSuperbatchTestContent(TestResourceBatchingConfiguration resourceBatchingConfiguration, PluginAccessor mockPluginAccessor, Plugin testPlugin)
             throws DocumentException
     {
         resourceBatchingConfiguration.enabled = true;
@@ -146,12 +147,12 @@ public class TestUtils
         ResourceDescriptor pluginCssResource = TestUtils.createResourceDescriptor("plugin.css");
         ResourceDescriptor pluginJsResource = TestUtils.createResourceDescriptor("plugin.js");
 
-        WebResourceModuleDescriptor master = TestUtils.createWebResourceModuleDescriptor("test.atlassian:superbatch", testPlugin, Arrays.asList(masterCssResource, ieOnlyasterCssResource, masterJavascriptResource, irrelevantParameterCssResource));
-        WebResourceModuleDescriptor plugin = TestUtils.createWebResourceModuleDescriptor("test.atlassian:superbatch2", testPlugin, Arrays.asList(pluginCssResource, pluginJsResource));
+        ModuleDescriptor master = TestUtils.createWebResourceModuleDescriptor("test.atlassian:superbatch", testPlugin, Arrays.asList(masterCssResource, ieOnlyasterCssResource, masterJavascriptResource, irrelevantParameterCssResource));
+        ModuleDescriptor plugin = TestUtils.createWebResourceModuleDescriptor("test.atlassian:superbatch2", testPlugin, Arrays.asList(pluginCssResource, pluginJsResource));
 
-        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", "test.atlassian:superbatch", master);
-        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", "test.atlassian:superbatch2", plugin);
-        mockPluginAccessor.matchAndReturn("getEnabledPluginModule", "test.atlassian:missing-plugin", null);
+        when(mockPluginAccessor.getEnabledPluginModule("test.atlassian:superbatch")).thenReturn(master);
+        when(mockPluginAccessor.getEnabledPluginModule("test.atlassian:superbatch2")).thenReturn(plugin);
+        when(mockPluginAccessor.getEnabledPluginModule("test.atlassian:missing-plugin")).thenReturn(null);
     }
 
     private static String escapeXMLCharacters(String input)
