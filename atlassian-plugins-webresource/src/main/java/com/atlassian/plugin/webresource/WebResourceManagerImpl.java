@@ -345,8 +345,12 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public String getStaticResourcePrefix(UrlMode urlMode)
     {
-        // "{base url}/s/{build num}/{system counter}/_"
-        return webResourceIntegration.getBaseUrl(urlMode) + "/" + STATIC_RESOURCE_PREFIX + "/" + webResourceIntegration.getSystemBuildNumber() + "/" + webResourceIntegration.getSystemCounter() + "/" + STATIC_RESOURCE_SUFFIX;
+        // "{base url}/s/{lang?}/{build num}/{system counter}/_"
+        // {lang} is optional
+        String lang = webResourceIntegration.getStaticResourceLocale();
+        return webResourceIntegration.getBaseUrl(urlMode) + "/" + STATIC_RESOURCE_PREFIX + "/" +
+                (lang != null ? lang + "/" : "") +
+                webResourceIntegration.getSystemBuildNumber() + "/" + webResourceIntegration.getSystemCounter() + "/" + STATIC_RESOURCE_SUFFIX;
     }
 
     public String getStaticResourcePrefix(String resourceCounter)
@@ -356,8 +360,12 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public String getStaticResourcePrefix(String resourceCounter, UrlMode urlMode)
     {
-        // "{base url}/s/{build num}/{system counter}/{resource counter}/_"
-        return webResourceIntegration.getBaseUrl(urlMode) + "/" + STATIC_RESOURCE_PREFIX + "/" + webResourceIntegration.getSystemBuildNumber() + "/" + webResourceIntegration.getSystemCounter() + "/" + resourceCounter + "/" + STATIC_RESOURCE_SUFFIX;
+        // "{base url}/s/{lang?}/{build num}/{system counter}/{resource counter}/_"
+        // {lang} is optional
+        String lang = webResourceIntegration.getStaticResourceLocale();
+        return webResourceIntegration.getBaseUrl(urlMode) + "/" + STATIC_RESOURCE_PREFIX + "/" +
+                (lang != null ? lang + "/" : "") +
+                webResourceIntegration.getSystemBuildNumber() + "/" + webResourceIntegration.getSystemCounter() + "/" + resourceCounter + "/" + STATIC_RESOURCE_SUFFIX;
     }
 
     public String getStaticPluginResource(final String moduleCompleteKey, final String resourceName)

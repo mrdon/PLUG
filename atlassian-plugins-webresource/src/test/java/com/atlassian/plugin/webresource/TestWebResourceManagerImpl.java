@@ -53,7 +53,7 @@ public class TestWebResourceManagerImpl extends TestCase
         when(mockWebResourceIntegration.getBaseUrl(UrlMode.AUTO)).thenReturn("");
         when(mockWebResourceIntegration.getSystemBuildNumber()).thenReturn(SYSTEM_BUILD_NUMBER);
         when(mockWebResourceIntegration.getSystemCounter()).thenReturn(SYSTEM_COUNTER);
-//        when(mockWebResourceIntegration.getStaticResourceLocale()).thenReturn(null);
+        when(mockWebResourceIntegration.getStaticResourceLocale()).thenReturn(null);
 
         testPlugin = TestUtils.createTestPlugin();
     }
@@ -880,6 +880,63 @@ public class TestWebResourceManagerImpl extends TestCase
         Collection resources = (Collection) requestCache.get(WebResourceManagerImpl.REQUEST_CACHE_RESOURCE_KEY);
         assertEquals(1, resources.size());
         assertEquals("test.atlassian:included-resource", resources.iterator().next());
+    }
+
+    public void testGetStaticPrefixResourceWithLocale()
+    {
+        testGetStaticPrefixResourceWithLocale(UrlMode.ABSOLUTE, true);
+        testGetStaticPrefixResourceWithLocale(UrlMode.RELATIVE, false);
+        testGetStaticPrefixResourceWithLocale(UrlMode.AUTO, false);
+    }
+
+    private void testGetStaticPrefixResourceWithLocale(UrlMode urlMode, boolean baseUrlExpected)
+    {
+        String expected = setupGetStaticPrefixResourceWithLocale(baseUrlExpected);
+        assertEquals(expected, webResourceManager.getStaticResourcePrefix(urlMode));
+    }
+
+    private String setupGetStaticPrefixResourceWithLocale(boolean baseUrlExpected)
+    {
+        when(mockWebResourceIntegration.getStaticResourceLocale()).thenReturn("de_DE");
+        return (baseUrlExpected ? BASEURL : "") +
+                "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" +
+                "de_DE/" +
+                SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER +
+                "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
+    }
+
+    public void testStaticPluginResourceWithLocale()
+    {
+        testStaticPluginResourceWithLocale(UrlMode.ABSOLUTE, true);
+        testStaticPluginResourceWithLocale(UrlMode.RELATIVE, false);
+        testStaticPluginResourceWithLocale(UrlMode.AUTO, false);
+    }
+
+    private void testStaticPluginResourceWithLocale(UrlMode urlMode, boolean baseUrlExpected)
+    {
+        final String moduleKey = "confluence.extra.animal:animal";
+        final String resourceName = "foo.js";
+        String expected = setupStaticPluginResourceWithLocale(moduleKey, resourceName, baseUrlExpected);
+        assertEquals(expected, webResourceManager.getStaticPluginResource(moduleKey, resourceName, urlMode));
+    }
+
+    private String setupStaticPluginResourceWithLocale(final String moduleKey, final String resourceName, boolean baseUrlExpected)
+    {
+        when(mockWebResourceIntegration.getStaticResourceLocale()).thenReturn("de_DE");
+        String ver = "2";
+        final Plugin animalPlugin = new StaticPlugin();
+        animalPlugin.setKey("confluence.extra.animal");
+        animalPlugin.setPluginsVersion(5);
+        animalPlugin.getPluginInformation().setVersion(ver);
+
+        final ModuleDescriptor moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(moduleKey, animalPlugin);
+        when(mockPluginAccessor.getEnabledPluginModule(moduleKey)).thenReturn(moduleDescriptor);
+
+        return (baseUrlExpected ? BASEURL : "") +
+                "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/de_DE/" + SYSTEM_BUILD_NUMBER +
+                "/" + SYSTEM_COUNTER + "/" + ver + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX +
+                "/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX +
+                "/" + moduleKey + "/" + resourceName;
     }
 
     public void testSuperBatchResolution() throws DocumentException, ClassNotFoundException

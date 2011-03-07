@@ -84,4 +84,11 @@ public interface WebResourceIntegration
      * @return a version number
      */
     String getSuperBatchVersion();
+
+    /**
+     * The locale identifier that should be inserted into static resource urls for the current request, if appropriate.
+     * @return null if the url should not have a locale component
+     */
+    String getStaticResourceLocale();
+
 }
