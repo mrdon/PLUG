@@ -1,0 +1,8 @@
+# packages from osgi
+org.osgi.framework=1.4.1
+org.osgi.service.packageadmin=1.2.0
+org.osgi.service.startlevel=1.1.0
+org.osgi.service.url=1.0.0
+org.osgi.util=1.4.1
+org.osgi.util.tracker=1.4.1
+host.service.command=1.0.0
