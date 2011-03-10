@@ -9,6 +9,8 @@ import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.event.events.PluginContainerFailedEvent;
 import com.atlassian.plugin.event.events.PluginContainerRefreshedEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkShutdownEvent;
+import com.atlassian.plugin.event.events.PluginFrameworkStartedEvent;
 import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.module.ContainerAccessor;
@@ -58,6 +60,13 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     public static final String ATLASSIAN_PLUGIN_KEY = "Atlassian-Plugin-Key";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final BundleListener bundleStopListener;
+
+    // Until the framework is actually done starting we want to ignore @RequiresRestart. Where this comes into play
+    // is when we have one version of a plugin (e.g. via bundled-plugins.zip) installed but then discover a newer
+    // one in installed-plugins. Clearly we can't "require a restart" between those two stages. And since nothing has
+    // been published outside of plugins yet (and thus can't be cached by the host app) the @RequiresRestart is
+    // meaningless.
+    private volatile boolean frameworkStarted = false;
 
     public OsgiPlugin(final String key, final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginEventManager pluginEventManager)
     {
@@ -191,6 +200,18 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
             getLog().error("Unable to start the Spring context for plugin " + getKey(), event.getCause());
             setPluginState(PluginState.DISABLED);
         }
+    }
+
+    @PluginEventListener
+    public void onPluginFrameworkStartedEvent(final PluginFrameworkStartedEvent event)
+    {
+        frameworkStarted = true;
+    }
+
+    @PluginEventListener
+    public void onPluginFrameworkShutdownEvent(final PluginFrameworkShutdownEvent event)
+    {
+        frameworkStarted = false;
     }
 
     @PluginEventListener
@@ -422,7 +443,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         try
         {
             // Only disable underlying bundle if this is a truly dynamic plugin
-            if (!PluginUtils.doesPluginRequireRestart(this))
+            if (!requiresRestart())
             {
                 if (getPluginState() == PluginState.ENABLING)
                 {
@@ -438,6 +459,11 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         {
             throw new OsgiContainerException("Cannot stop plugin: " + getKey(), e);
         }
+    }
+
+    private boolean requiresRestart()
+    {
+        return frameworkStarted && PluginUtils.doesPluginRequireRestart(this);
     }
 
     private void logAndClearOustandingDependencies()
