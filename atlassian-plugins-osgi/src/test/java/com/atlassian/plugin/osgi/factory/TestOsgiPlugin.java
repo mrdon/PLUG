@@ -70,6 +70,7 @@ public class TestOsgiPlugin extends TestCase
     public void testDisabledOnNonDynamicPlugin() throws BundleException
     {
         plugin.addModuleDescriptor(new StaticModuleDescriptor());
+        plugin.onPluginFrameworkStartedEvent(null);
         when(bundle.getState()).thenReturn(Bundle.ACTIVE);
         plugin.disable();
         verify(bundle, never()).stop();
