@@ -110,7 +110,7 @@ public abstract class AbstractPlugin implements Plugin, Comparable<Plugin>
         for (final ModuleDescriptor<?> moduleDescriptor : modules.values())
         {
             final Class<?> moduleClass = moduleDescriptor.getModuleClass();
-            if (aClass.isAssignableFrom(moduleClass))
+            if (moduleClass != null && aClass.isAssignableFrom(moduleClass))
             {
                 @SuppressWarnings("unchecked")
                 final ModuleDescriptor<T> typedModuleDescriptor = (ModuleDescriptor<T>) moduleDescriptor;
