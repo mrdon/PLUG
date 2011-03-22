@@ -61,6 +61,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final BundleListener bundleStopListener;
 
+    // FIXME: temporary hack until 2.8 when we can use PluginState.DISABLING
+    private volatile boolean disabling = false;
+
     // Until the framework is actually done starting we want to ignore @RequiresRestart. Where this comes into play
     // is when we have one version of a plugin (e.g. via bundled-plugins.zip) installed but then discover a newer
     // one in installed-plugins. Clearly we can't "require a restart" between those two stages. And since nothing has
@@ -442,6 +445,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     {
         try
         {
+            disabling = true;
             if (getPluginState() == PluginState.ENABLING)
             {
                 logAndClearOustandingDependencies();
@@ -461,6 +465,15 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         {
             throw new OsgiContainerException("Cannot stop plugin: " + getKey(), e);
         }
+        finally
+        {
+            disabling = false;
+        }
+    }
+
+    boolean isDisabling()
+    {
+        return disabling;
     }
 
     private boolean requiresRestart()

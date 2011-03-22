@@ -135,20 +135,26 @@ class UnrecognizedModuleDescriptorServiceTrackerCustomizer implements ServiceTra
         {
             for (final ModuleDescriptor<?> descriptor : getModuleDescriptorsByDescriptorClass(moduleDescriptorClass))
             {
-                pluginEventManager.broadcast(new PluginModuleUnavailableEvent(descriptor));
+                if (!plugin.isDisabling())
+                {
+                    pluginEventManager.broadcast(new PluginModuleUnavailableEvent(descriptor));
+                }
                 final UnrecognisedModuleDescriptor unrecognisedModuleDescriptor = new UnrecognisedModuleDescriptor();
                 final Element source = plugin.getModuleElements().get(descriptor.getKey());
-                if (source != null)
+                if (source != null )
                 {
                     unrecognisedModuleDescriptor.init(plugin, source);
                     unrecognisedModuleDescriptor.setErrorText(UnrecognisedModuleDescriptorFallbackFactory.DESCRIPTOR_TEXT);
                     plugin.addModuleDescriptor(unrecognisedModuleDescriptor);
-                    pluginEventManager.broadcast(new PluginModuleAvailableEvent(unrecognisedModuleDescriptor));
-                    if (log.isInfoEnabled())
-                    {
-                        log.info("Removed plugin module " + unrecognisedModuleDescriptor.getCompleteKey() + " as its factory was uninstalled");
-                    }
 
+                    if (!plugin.isDisabling())
+                    {
+                        pluginEventManager.broadcast(new PluginModuleAvailableEvent(unrecognisedModuleDescriptor));
+                        if (log.isInfoEnabled())
+                        {
+                            log.info("Removed plugin module " + unrecognisedModuleDescriptor.getCompleteKey() + " as its factory was uninstalled");
+                        }
+                    }
                 }
             }
         }

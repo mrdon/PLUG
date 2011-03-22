@@ -2,8 +2,6 @@ package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
 import com.atlassian.plugin.JarPluginArtifact;
-import com.atlassian.plugin.event.PluginEventListener;
-import com.atlassian.plugin.event.events.PluginRefreshedEvent;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
 import com.atlassian.plugin.osgi.container.felix.FelixOsgiContainerManager;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
@@ -401,6 +399,63 @@ public class TestPluginDependencies extends PluginInContainerTestBase
         pluginManager.installPlugin(new JarPluginArtifact(updatedJar));
         assertEquals(3, pluginManager.getEnabledPlugins().size());
         assertEquals("hi", ((OsgiPlugin)pluginManager.getPlugin("test2.plugin")).autowire(TestPluginInstall.Callable3Aware.class).call());
+    }
+
+    public void testUpgradeOfBundledPluginWithRefreshingAffectingOtherPluginsCheckingModuleEvents() throws Exception
+    {
+        DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
+        factory.addModuleDescriptor("dummy", EventTrackingModuleDescriptor.class);
+
+
+        PluginJarBuilder hostBuilder = new PluginJarBuilder("first")
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test' key='host' pluginsVersion='2'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "        <bundle-instructions><Export-Package>my</Export-Package></bundle-instructions>",
+                    "    </plugin-info>",
+                    "    <dummy key='foo'/>",
+                    "</atlassian-plugin>")
+                .addFormattedJava("my.Serviceable",
+                    "package my;",
+                    "public interface Serviceable {}");
+        final File hostJar = hostBuilder.build();
+
+        final File clientJar = new PluginJarBuilder("second", hostBuilder.getClassLoader())
+                .addFormattedResource("atlassian-plugin.xml",
+                    "<atlassian-plugin name='Test 2' key='client' pluginsVersion='2'>",
+                    "    <plugin-info>",
+                    "        <version>1.0</version>",
+                    "    </plugin-info>",
+                    "    <dummy key='foo'/>",
+                    "</atlassian-plugin>")
+                .addFormattedJava("my2.Service",
+                    "package my2;",
+                    "public class Service implements my.Serviceable {}")
+                .build();
+
+        initBundlingPluginManager(factory, hostJar);
+        assertEquals(1, pluginManager.getEnabledPlugins().size());
+
+        pluginManager.installPlugin(new JarPluginArtifact(clientJar));
+
+        EventTrackingModuleDescriptor hostModule = (EventTrackingModuleDescriptor) pluginManager.getPlugin("host").getModuleDescriptor("foo");
+        assertEquals(1, hostModule.getEnabledCount());
+        assertEquals(0, hostModule.getDisabledCount());
+
+        EventTrackingModuleDescriptor clientModule = (EventTrackingModuleDescriptor) pluginManager.getPlugin("client").getModuleDescriptor("foo");
+        assertEquals(1, clientModule.getEnabledCount());
+        assertEquals(0, clientModule.getDisabledCount());
+
+        pluginManager.installPlugin(new JarPluginArtifact(hostJar));
+
+        hostModule = (EventTrackingModuleDescriptor) pluginManager.getPlugin("host").getModuleDescriptor("foo");
+        assertEquals(1, hostModule.getEnabledCount());
+        assertEquals(0, hostModule.getDisabledCount());
+
+        clientModule = (EventTrackingModuleDescriptor) pluginManager.getPlugin("client").getModuleDescriptor("foo");
+        assertEquals(1, clientModule.getDisabledCount());
+        assertEquals(2, clientModule.getEnabledCount());
     }
 
     public void testUpgradeWithRefreshingAffectingOtherPluginsWithClassLoadingOnShutdown() throws Exception

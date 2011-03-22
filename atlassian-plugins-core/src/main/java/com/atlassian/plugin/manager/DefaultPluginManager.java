@@ -648,6 +648,9 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
                 {
                     try
                     {
+                        // Disable all plugins now before the upgrade, as an upgrade of a bundled plugin
+                        // may trigger a package refresh, bringing down dependent plugins
+                        pluginsToEnable.addAll(disableDependentPlugins(plugin));
                         updatePlugin(existingPlugin, plugin);
                         pluginsToEnable.remove(existingPlugin);
                         pluginUpgraded = true;
@@ -683,7 +686,6 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
             }
             if (pluginUpgraded)
             {
-                pluginsToEnable.addAll(disableDependentPlugins(plugin));
                 pluginEventManager.broadcast(new PluginUpgradedEvent(plugin));
             }
             plugins.put(plugin.getKey(), plugin);
@@ -694,7 +696,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         pluginEnabler.enable(pluginsToEnable);
 
         // handle the plugins that were able to be successfully enabled
-        for (final Plugin plugin : pluginsToInstall)
+        for (final Plugin plugin : pluginsToEnable)
         {
             if (plugin.getPluginState() == PluginState.ENABLED)
             {
@@ -990,8 +992,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     @Deprecated
     public <M> List<M> getEnabledModulesByClassAndDescriptor(final Class<ModuleDescriptor<M>>[] descriptorClasses, final Class<M> moduleClass)
     {
-        final Iterable<ModuleDescriptor<M>> moduleDescriptors = filterDescriptors(getEnabledModuleDescriptorsByModuleClass(moduleClass),
-            new ModuleDescriptorOfClassPredicate<M>(descriptorClasses));
+        final Iterable<ModuleDescriptor<M>> moduleDescriptors = filterDescriptors(getEnabledModuleDescriptorsByModuleClass(moduleClass), new ModuleDescriptorOfClassPredicate<M>(descriptorClasses));
 
         return getModules(moduleDescriptors);
     }
@@ -1217,9 +1218,9 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         boolean success = true;
 
         // This can happen if the plugin available event is fired as part of the plugin initialization process
-        if (!isPluginEnabled(plugin.getKey()))
+        if (pluginEnabler.isPluginBeingEnabled(plugin))
         {
-            log.debug("The plugin isn't enabled, so we won't bother trying to enable it");
+            log.debug("The plugin is currently being enabled, so we won't bother trying to enable the '" + descriptor.getKey() + " module");
             return success;
         }
 

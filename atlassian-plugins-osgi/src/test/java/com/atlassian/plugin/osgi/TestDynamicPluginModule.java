@@ -15,6 +15,7 @@ import com.atlassian.plugin.web.descriptors.WebItemModuleDescriptor;
 import com.atlassian.plugin.util.WaitUntil;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -60,15 +61,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                         "  }",
                         "}")
                 .build();
-        final File pluginJar2 = new PluginJarBuilder("fooUser")
-                .addFormattedResource("atlassian-plugin.xml",
-                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
-                        "    <plugin-info>",
-                        "        <version>1.0</version>",
-                        "    </plugin-info>",
-                        "    <foo key='dum2'/>",
-                        "</atlassian-plugin>")
-                .build();
+        final File pluginJar2 = buildDynamicModuleClientJar();
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
@@ -98,31 +91,11 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                         "  public Object getModule(){return null;}",
                         "}")
                 .build();
-        final File pluginJar2 = new PluginJarBuilder("fooUser")
-                .addFormattedResource("atlassian-plugin.xml",
-                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
-                        "    <plugin-info>",
-                        "        <version>1.0</version>",
-                        "    </plugin-info>",
-                        "    <foo key='dum2'/>",
-                        "</atlassian-plugin>")
-                .build();
+        final File pluginJar2 = buildDynamicModuleClientJar();
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
-        WaitUntil.invoke(new BasicWaitCondition()
-        {
-            public boolean isFinished()
-            {
-                return pluginManager.getPlugin("test.plugin")
-                        .getModuleDescriptors()
-                        .iterator()
-                        .next()
-                        .getClass()
-                        .getSimpleName()
-                        .equals("MyModuleDescriptor");
-            }
-        });
+        assertTrue(waitForDynamicModuleEnabled());
 
         // uninstall the module - the test plugin modules should revert back to Unrecognised
         pluginManager.uninstall(pluginManager.getPlugin("test.plugin.module"));
@@ -144,19 +117,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
         });
         // reinstall the module - the test plugin modules should be correct again
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        WaitUntil.invoke(new BasicWaitCondition()
-        {
-            public boolean isFinished()
-            {
-                return pluginManager.getPlugin("test.plugin")
-                        .getModuleDescriptors()
-                        .iterator()
-                        .next()
-                        .getClass()
-                        .getSimpleName()
-                        .equals("MyModuleDescriptor");
-            }
-        });
+        assertTrue(waitForDynamicModuleEnabled());
     }
 
     public void testDynamicPluginModuleUsingModuleTypeDescriptorWithImmediateReinstall() throws Exception
@@ -177,7 +138,28 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                         "  public Object getModule(){return null;}",
                         "}")
                 .build();
-        final File pluginJar2 = new PluginJarBuilder("fooUser")
+        final File pluginJar2 = buildDynamicModuleClientJar();
+
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        assertTrue(waitForDynamicModuleEnabled());
+
+        PluginModuleDisabledListener disabledListener = new PluginModuleDisabledListener("dum2");
+        PluginModuleEnabledListener enabledListener = new PluginModuleEnabledListener("dum2");
+        pluginEventManager.register(disabledListener);
+        pluginEventManager.register(enabledListener);
+
+        // reinstall the module - the test plugin modules should be correct again
+        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        assertTrue(waitForDynamicModuleEnabled());
+
+        assertEquals(1, enabledListener.called);
+        assertEquals(1, disabledListener.called);
+    }
+
+    private File buildDynamicModuleClientJar() throws IOException
+    {
+        return new PluginJarBuilder("fooUser")
                 .addFormattedResource("atlassian-plugin.xml",
                         "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
                         "    <plugin-info>",
@@ -186,36 +168,15 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                         "    <foo key='dum2'/>",
                         "</atlassian-plugin>")
                 .build();
+    }
 
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
-        WaitUntil.invoke(new BasicWaitCondition()
+    private boolean waitForDynamicModuleEnabled()
+    {
+        return WaitUntil.invoke(new BasicWaitCondition()
         {
             public boolean isFinished()
             {
-                return pluginManager.getPlugin("test.plugin")
-                        .getModuleDescriptors()
-                        .iterator()
-                        .next()
-                        .getClass()
-                        .getSimpleName()
-                        .equals("MyModuleDescriptor");
-            }
-        });
-
-        // reinstall the module - the test plugin modules should be correct again
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        WaitUntil.invoke(new BasicWaitCondition()
-        {
-            public boolean isFinished()
-            {
-                return pluginManager.getPlugin("test.plugin")
-                        .getModuleDescriptors()
-                        .iterator()
-                        .next()
-                        .getClass()
-                        .getSimpleName()
-                        .equals("MyModuleDescriptor");
+                return pluginManager.getPlugin("test.plugin").getModuleDescriptors().iterator().next().getClass().getSimpleName().equals("MyModuleDescriptor");
             }
         });
     }
@@ -241,15 +202,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
         initBundlingPluginManager(factory, pluginJar);
         assertEquals(1, pluginManager.getEnabledPlugins().size());
 
-        final File pluginClientOld = new PluginJarBuilder("fooUser")
-                .addFormattedResource("atlassian-plugin.xml",
-                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
-                        "    <plugin-info>",
-                        "        <version>1.0</version>",
-                        "    </plugin-info>",
-                        "    <foo key='dum2'/>",
-                        "</atlassian-plugin>")
-                .build();
+        final File pluginClientOld = buildDynamicModuleClientJar();
         final File pluginClientNew = new PluginJarBuilder("fooUser")
                 .addFormattedResource("atlassian-plugin.xml",
                         "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
@@ -261,19 +214,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                 .build();
         pluginManager.installPlugins(new JarPluginArtifact(pluginClientOld), new JarPluginArtifact(pluginClientNew));
 
-        WaitUntil.invoke(new BasicWaitCondition()
-        {
-            public boolean isFinished()
-            {
-                return pluginManager.getPlugin("test.plugin")
-                        .getModuleDescriptors()
-                        .iterator()
-                        .next()
-                        .getClass()
-                        .getSimpleName()
-                        .equals("MyModuleDescriptor");
-            }
-        });
+        assertTrue(waitForDynamicModuleEnabled());
 
         assertEquals(2, pluginManager.getEnabledPlugins().size());
         assertEquals("2.0", pluginManager.getPlugin("test.plugin").getPluginInformation().getVersion());
@@ -368,15 +309,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                         "  public Object getModule(){return null;}",
                         "}")
                 .build();
-        final File pluginJar2 = new PluginJarBuilder("fooUser")
-                .addFormattedResource("atlassian-plugin.xml",
-                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
-                        "    <plugin-info>",
-                        "        <version>1.0</version>",
-                        "    </plugin-info>",
-                        "    <foo key='dum2'/>",
-                        "</atlassian-plugin>")
-                .build();
+        final File pluginJar2 = buildDynamicModuleClientJar();
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
@@ -397,6 +330,58 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
         final ModuleDescriptor<?> descriptor = descriptors.iterator()
                 .next();
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
+    }
+
+    public void testDynamicPluginModuleWithClientAndHostEnabledSimultaneouslyCheckEvents() throws Exception
+    {
+        initPluginManager();
+
+        final File pluginJar = new PluginJarBuilder("pluginType")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test' key='host' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <component key='foo' class='foo.MyModuleDescriptorFactory' public='true'>",
+                        "       <interface>com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory</interface>",
+                        "    </component>",
+                        "</atlassian-plugin>")
+                .addFormattedJava("foo.MyModuleDescriptorFactory",
+                        "package foo;",
+                        "public class MyModuleDescriptorFactory extends com.atlassian.plugin.DefaultModuleDescriptorFactory ",
+                        "                                       implements com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory{",
+                        "  public MyModuleDescriptorFactory() throws Exception{",
+                        "    super();",
+                        "    Thread.sleep(500);",
+                        "    System.out.println('starting descriptor factory');",
+                        "    addModuleDescriptor('foo', com.atlassian.plugin.osgi.EventTrackingModuleDescriptor.class);",
+                        "  }",
+                        "  public java.util.Set getModuleDescriptorClasses() {",
+                        "    return java.util.Collections.singleton('foo');",
+                        "  }",
+                        "}")
+                .build();
+        final File pluginJar2 = new PluginJarBuilder("fooUser")
+                .addFormattedResource("atlassian-plugin.xml",
+                        "<atlassian-plugin name='Test 2' key='client' pluginsVersion='2'>",
+                        "    <plugin-info>",
+                        "        <version>1.0</version>",
+                        "    </plugin-info>",
+                        "    <foo key='dum2'/>",
+                        "</atlassian-plugin>")
+                .build();
+
+        pluginManager.installPlugins(new JarPluginArtifact(pluginJar), new JarPluginArtifact(pluginJar2));
+
+        WaitUntil.invoke(new BasicWaitCondition()
+        {
+            public boolean isFinished()
+            {
+                return pluginManager.getPlugin("client").getModuleDescriptor("dum2").getClass().getSimpleName().equals("EventTrackingModuleDescriptor");
+            }
+        });
+        EventTrackingModuleDescriptor desc = (EventTrackingModuleDescriptor) pluginManager.getPlugin("client").getModuleDescriptor("dum2");
+        assertEquals(1, desc.getEnabledCount());
     }
 
 
@@ -430,31 +415,11 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                         "}")
 
                 .build();
-        final File pluginJar2 = new PluginJarBuilder("fooUser")
-                .addFormattedResource("atlassian-plugin.xml",
-                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
-                        "    <plugin-info>",
-                        "        <version>1.0</version>",
-                        "    </plugin-info>",
-                        "    <foo key='dum2'/>",
-                        "</atlassian-plugin>")
-                .build();
+        final File pluginJar2 = buildDynamicModuleClientJar();
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
-        WaitUntil.invoke(new BasicWaitCondition()
-        {
-            public boolean isFinished()
-            {
-                return pluginManager.getPlugin("test.plugin")
-                        .getModuleDescriptors()
-                        .iterator()
-                        .next()
-                        .getClass()
-                        .getSimpleName()
-                        .equals("MyModuleDescriptor");
-            }
-        });
+        assertTrue(waitForDynamicModuleEnabled());
         final Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin")
                 .getModuleDescriptors();
         assertEquals(1, descriptors.size());
@@ -480,37 +445,13 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                         "    </plugin-info>",
                         "    <module-type key='foo' class='foo.MyModuleDescriptor' />",
                         "</atlassian-plugin>")
-                .addFormattedJava("foo.MyModuleDescriptor",
-                        "package foo;",
-                        "public class MyModuleDescriptor extends com.atlassian.plugin.descriptors.AbstractModuleDescriptor {",
-                        "  public Object getModule(){return null;}",
-                        "}")
+                .addFormattedJava("foo.MyModuleDescriptor", "package foo;", "public class MyModuleDescriptor extends com.atlassian.plugin.descriptors.AbstractModuleDescriptor {", "  public Object getModule(){return null;}", "}")
                 .build();
-        final File pluginJar2 = new PluginJarBuilder("fooUser")
-                .addFormattedResource("atlassian-plugin.xml",
-                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
-                        "    <plugin-info>",
-                        "        <version>1.0</version>",
-                        "    </plugin-info>",
-                        "    <foo key='dum2'/>",
-                        "</atlassian-plugin>")
-                .build();
+        final File pluginJar2 = buildDynamicModuleClientJar();
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        WaitUntil.invoke(new BasicWaitCondition()
-        {
-            public boolean isFinished()
-            {
-                return pluginManager.getPlugin("test.plugin")
-                        .getModuleDescriptors()
-                        .iterator()
-                        .next()
-                        .getClass()
-                        .getSimpleName()
-                        .equals("MyModuleDescriptor");
-            }
-        });
+        waitForDynamicModuleEnabled();
 
         Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin")
                 .getModuleDescriptors();
@@ -575,15 +516,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                         "  public Object getModule(){return null;}",
                         "}")
                 .build();
-        final File pluginJar2 = new PluginJarBuilder("fooUser")
-                .addFormattedResource("atlassian-plugin.xml",
-                        "<atlassian-plugin name='Test 2' key='test.plugin' pluginsVersion='2'>",
-                        "    <plugin-info>",
-                        "        <version>1.0</version>",
-                        "    </plugin-info>",
-                        "    <foo key='dum2'/>",
-                        "</atlassian-plugin>")
-                .build();
+        final File pluginJar2 = buildDynamicModuleClientJar();
 
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
         pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
@@ -628,11 +561,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
         {
             public boolean isFinished()
             {
-                return pluginManager.getPlugin("test.plugin")
-                        .getModuleDescriptor("dum2")
-                        .getClass()
-                        .getSimpleName()
-                        .equals("MyModuleDescriptor");
+                return pluginManager.getPlugin("test.plugin").getModuleDescriptor("dum2").getClass().getSimpleName().equals("MyModuleDescriptor");
             }
         });
         final Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin")
@@ -682,8 +611,8 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                 .getModuleDescriptor("dum2");
         assertEquals("MyModuleDescriptor", descriptor.getClass().getSimpleName());
 
-        PluginModuleDisabledListener disabledListener = new PluginModuleDisabledListener();
-        PluginModuleEnabledListener enabledListener = new PluginModuleEnabledListener();
+        PluginModuleDisabledListener disabledListener = new PluginModuleDisabledListener("dum2");
+        PluginModuleEnabledListener enabledListener = new PluginModuleEnabledListener("dum2");
         pluginEventManager.register(disabledListener);
         pluginEventManager.register(enabledListener);
 
@@ -706,8 +635,8 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                 .getModuleDescriptor("dum2");
         assertEquals("MyModuleDescriptor", newdescriptor.getClass().getSimpleName());
         assertTrue(descriptor.getClass() != newdescriptor.getClass());
-        assertTrue(disabledListener.called);
-        assertTrue(enabledListener.called);
+        assertEquals(1, disabledListener.called);
+        assertEquals(1, enabledListener.called);
     }
 
     public void testDynamicModuleDescriptor() throws Exception
@@ -772,21 +701,41 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
 
     public static class PluginModuleEnabledListener
     {
-        public volatile boolean called;
+        public volatile int called;
+        private final String key;
+
+        public PluginModuleEnabledListener(String key)
+        {
+            this.key = key;
+        }
+
         @PluginEventListener
         public void onEnable(PluginModuleEnabledEvent event)
         {
-            called = true;
+            if (event.getModule().getKey().equals(key))
+            {
+                called++;
+            }
         }
     }
 
     public static class PluginModuleDisabledListener
     {
-        public volatile boolean called;
+        public volatile int called;
+        private final String key;
+
+        public PluginModuleDisabledListener(String key)
+        {
+            this.key = key;
+        }
+
         @PluginEventListener
         public void onDisable(PluginModuleDisabledEvent event)
         {
-            called = true;
+            if (event.getModule().getKey().equals(key))
+            {
+                called++;
+            }
         }
     }
 }

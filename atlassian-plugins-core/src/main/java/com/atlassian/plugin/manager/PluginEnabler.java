@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.ImmutableList;
@@ -33,6 +34,7 @@ class PluginEnabler
 
     private final PluginAccessor pluginAccessor;
     private final PluginController pluginController;
+    private final Set<Plugin> pluginsBeingEnabled = new CopyOnWriteArraySet<Plugin>();
 
     public PluginEnabler(PluginAccessor pluginAccessor, PluginController pluginController)
     {
@@ -75,12 +77,34 @@ class PluginEnabler
     }
 
     /**
+     * @param plugin The plugin to test
+     * @return If the plugin is currently part of a set that is being enabled
+     */
+    boolean isPluginBeingEnabled(Plugin plugin)
+    {
+        return pluginsBeingEnabled.contains(plugin);
+    }
+
+    /**
      * Enables a collection of plugins at once, waiting for 60 seconds.  If any plugins are still in the enabling state,
      * the plugins are explicitly disabled.
      *
      * @param plugins The plugins to enable
      */
     void enable(Collection<Plugin> plugins)
+    {
+        pluginsBeingEnabled.addAll(plugins);
+        try
+        {
+            actualEnable(plugins);
+        }
+        finally
+        {
+            pluginsBeingEnabled.removeAll(plugins);
+        }
+    }
+
+    private void actualEnable(Collection<Plugin> plugins)
     {
         final Set<Plugin> pluginsInEnablingState = new HashSet<Plugin>();
         for (final Plugin plugin : plugins)
@@ -106,6 +130,7 @@ class PluginEnabler
             {
                 private long singlePluginTimeout;
                 private long singlePluginWarn;
+
                 public boolean isFinished()
                 {
                     if (singlePluginTimeout > 0 && singlePluginTimeout < System.currentTimeMillis())
@@ -125,8 +150,7 @@ class PluginEnabler
                         final long currentTime = System.currentTimeMillis();
                         if (singlePluginTimeout == 0)
                         {
-                            log.info("Only one plugin left not enabled. Resetting the timeout to " +
-                                    (LAST_PLUGIN_TIMEOUT/1000) + " seconds.");
+                            log.info("Only one plugin left not enabled. Resetting the timeout to " + (LAST_PLUGIN_TIMEOUT / 1000) + " seconds.");
 
                             singlePluginWarn = currentTime + LAST_PLUGIN_WARN_TIMEOUT;
                             singlePluginTimeout = currentTime + LAST_PLUGIN_TIMEOUT;
@@ -140,9 +164,7 @@ class PluginEnabler
                             final Plugin plugin = pluginsInEnablingState.iterator().next();
                             final long remainingWait = Math.max(0, Math.round((singlePluginTimeout - currentTime) / 1000.0));
 
-                            log.warn("Plugin '" + plugin + "' did not enable within " + (LAST_PLUGIN_WARN_TIMEOUT / 1000) + " seconds."
-                                    + "The plugin should not take this long to enable. Will only attempt to load plugin for another '"
-                                    + remainingWait + "' seconds.");
+                            log.warn("Plugin '" + plugin + "' did not enable within " + (LAST_PLUGIN_WARN_TIMEOUT / 1000) + " seconds." + "The plugin should not take this long to enable. Will only attempt to load plugin for another '" + remainingWait + "' seconds.");
                             singlePluginWarn = Long.MAX_VALUE;
                         }
                     }
