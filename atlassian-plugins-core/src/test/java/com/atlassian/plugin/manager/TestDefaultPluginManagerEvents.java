@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.io.File;
+import static java.util.Arrays.asList;
 
 public class TestDefaultPluginManagerEvents extends TestCase
 {
@@ -106,14 +107,23 @@ public class TestDefaultPluginManagerEvents extends TestCase
             PluginModuleEnabledEvent.class,
             PluginEnabledEvent.class);
         assertListEquals(listener.getEventPluginOrModuleKeys(),
-            "test.atlassian.plugin:bear",
+            asList("test.atlassian.plugin:bear",
             "test.atlassian.plugin:gold",
             "test.atlassian.plugin:veg",
             "test.atlassian.plugin",
             "test.atlassian.plugin.classloaded:paddington",
             "test.atlassian.plugin.classloaded",
             "test.atlassian.plugin.classloaded2:pooh",
-            "test.atlassian.plugin.classloaded2");
+            "test.atlassian.plugin.classloaded2"),
+            asList("test.atlassian.plugin:bear",
+            "test.atlassian.plugin:gold",
+            "test.atlassian.plugin:veg",
+            "test.atlassian.plugin",
+            "test.atlassian.plugin.classloaded2:pooh",
+            "test.atlassian.plugin.classloaded2",
+            "test.atlassian.plugin.classloaded:paddington",
+            "test.atlassian.plugin.classloaded"));
+        ;
     }
 
     public void testDisablePlugin() throws Exception
@@ -213,6 +223,21 @@ public class TestDefaultPluginManagerEvents extends TestCase
     }
 
     // yeah, the expected values should come first in jUnit, but varargs are so convenient...
+
+    private static void assertListEquals(List<String> actual, List<String>... oneOfExpected)
+    {
+        boolean found = false;
+        for (List<String> expected : oneOfExpected)
+        {
+            if (actual.equals(expected))
+            {
+                found = true;
+                break;
+            }
+        }
+        assertTrue("Unexpected list: " + actual, found);
+    }
+
     private static void assertListEquals(List actual, Object... expected)
     {
         String message = "Expected list was: " + Arrays.toString(expected) + ", " +
@@ -223,4 +248,6 @@ public class TestDefaultPluginManagerEvents extends TestCase
             assertEquals(message, expected[i], actual.get(i));
         }
     }
+
+
 }
