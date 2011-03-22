@@ -81,24 +81,10 @@ public class OsgiChainedModuleDescriptorFactoryCreator
             for (Object fac : serviceObjs)
             {
                 ModuleDescriptorFactory dynFactory = (ModuleDescriptorFactory) fac;
-                if (dynFactory instanceof ListableModuleDescriptorFactory)
-                {
-                    for (Class<ModuleDescriptor<?>> descriptor : ((ListableModuleDescriptorFactory)dynFactory).getModuleDescriptorClasses())
-                    {
-                        // This will only work for classes not in inner jars and breaks on first non-match
-                        if (!resourceLocator.doesResourceExist(descriptor.getName().replace('.','/') + ".class"))
-                        {
-                            factories.add((ModuleDescriptorFactory) fac);
-                            break;
-                        }
-                        else
-                        {
-                            log.info("Detected a module descriptor - " + descriptor.getName() + " - which is also present in " +
-                                     "jar to be installed.  Skipping its module descriptor factory.");
-                        }
-                    }
-                }
-                else
+
+                // don't add Listable descriptor factories (module-type users) as the module type could get disabled
+                // between here and when the plugin is actually looking for listable factories
+                if (!(dynFactory instanceof ListableModuleDescriptorFactory))
                 {
                     factories.add((ModuleDescriptorFactory) fac);
                 }

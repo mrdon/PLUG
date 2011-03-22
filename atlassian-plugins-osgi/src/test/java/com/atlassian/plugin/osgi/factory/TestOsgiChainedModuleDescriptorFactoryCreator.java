@@ -64,10 +64,9 @@ public class TestOsgiChainedModuleDescriptorFactoryCreator extends TestCase
     private ModuleDescriptorFactory createModuleDescriptorFactory(String prefix, ModuleDescriptor moduleDescriptor)
             throws IllegalAccessException, InstantiationException, ClassNotFoundException
     {
-        ListableModuleDescriptorFactory moduleDescriptorFactory = mock(ListableModuleDescriptorFactory.class);
+        ModuleDescriptorFactory moduleDescriptorFactory = mock(ModuleDescriptorFactory.class);
         when(moduleDescriptorFactory.hasModuleDescriptor(prefix)).thenReturn(true);
         when(moduleDescriptorFactory.getModuleDescriptor(prefix)).thenReturn(moduleDescriptor);
-        when(moduleDescriptorFactory.getModuleDescriptorClasses()).thenReturn(new HashSet(asList(moduleDescriptor.getClass())));
         return moduleDescriptorFactory;
     }
 }
