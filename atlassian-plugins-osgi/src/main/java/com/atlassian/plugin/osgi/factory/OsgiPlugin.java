@@ -440,10 +440,10 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     @Override
     protected synchronized void disableInternal() throws OsgiContainerException, IllegalPluginStateException
     {
-        try
+        // Only disable underlying bundle if this is a truly dynamic plugin
+        if (!requiresRestart())
         {
-            // Only disable underlying bundle if this is a truly dynamic plugin
-            if (!requiresRestart())
+            try
             {
                 if (getPluginState() == PluginState.ENABLING)
                 {
@@ -454,10 +454,10 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
                 getBundle().stop();
                 treatSpringBeanFactoryCreationAsRefresh = false;
             }
-        }
-        catch (final BundleException e)
-        {
-            throw new OsgiContainerException("Cannot stop plugin: " + getKey(), e);
+            catch (final BundleException e)
+            {
+                throw new OsgiContainerException("Cannot stop plugin: " + getKey(), e);
+            }
         }
     }
 

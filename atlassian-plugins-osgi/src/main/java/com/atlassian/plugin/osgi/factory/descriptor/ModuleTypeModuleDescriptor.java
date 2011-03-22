@@ -1,21 +1,17 @@
 package com.atlassian.plugin.osgi.factory.descriptor;
 
-import com.atlassian.plugin.HasDependentModules;
 import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.PluginController;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.descriptors.CannotDisable;
 import com.atlassian.plugin.module.ModuleFactory;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Module descriptor for dynamic module types.  Shouldn't be directly used outside providing read-only information.
  *
  * @since 2.2.0
  */
-public class ModuleTypeModuleDescriptor extends AbstractModuleDescriptor<ModuleDescriptor<?>> implements HasDependentModules
+@CannotDisable
+public class ModuleTypeModuleDescriptor extends AbstractModuleDescriptor<ModuleDescriptor<?>>
 {
     public ModuleTypeModuleDescriptor()
     {
@@ -25,18 +21,6 @@ public class ModuleTypeModuleDescriptor extends AbstractModuleDescriptor<ModuleD
     public ModuleDescriptor<?> getModule()
     {
         throw new UnsupportedOperationException();
-    }
-
-    public void disableDependants(PluginAccessor pluginAccessor, PluginController pluginController) {
-        loadClass(plugin, moduleClassName);
-        for (final ModuleDescriptor<?> dependant :
-                getDependentModules(pluginAccessor)) {
-            pluginController.disablePluginModule(dependant.getCompleteKey());
-        }
-    }
-
-    public Collection<ModuleDescriptor<?>> getDependentModules(final PluginAccessor pluginAccessor) {
-        return pluginAccessor.getEnabledModuleDescriptorsByClass(moduleClass);
     }
 
 }

@@ -136,7 +136,7 @@ public class TestDefaultPluginManagerEvents extends TestCase
     {
         manager.disablePlugin("test.atlassian.plugin");
         listener.reset();
-        manager.enablePlugin("test.atlassian.plugin");
+        manager.enablePlugins("test.atlassian.plugin");
 
         assertListEquals(listener.getEventClasses(),
             PluginModuleEnabledEvent.class,

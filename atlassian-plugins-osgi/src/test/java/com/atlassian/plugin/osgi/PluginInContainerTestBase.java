@@ -131,8 +131,6 @@ public abstract class PluginInContainerTestBase extends TestCase
         final DirectoryPluginLoader loader = new DirectoryPluginLoader(pluginsDir, Arrays.asList(legacyFactory, osgiPluginDeployer, osgiBundleFactory),
                 new DefaultPluginEventManager());
         initPluginManager(moduleDescriptorFactory, loader);
-        osgiPluginDeployer.setPluginAccessor(pluginManager);
-        osgiPluginDeployer.setPluginController(pluginManager);
     }
 
     protected void initPluginManager(final HostComponentProvider hostComponentProvider, final ModuleDescriptorFactory moduleDescriptorFactory)

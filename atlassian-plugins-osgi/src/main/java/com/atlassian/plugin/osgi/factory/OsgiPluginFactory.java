@@ -11,7 +11,6 @@ import com.atlassian.plugin.osgi.factory.transform.DefaultPluginTransformer;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformer;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
-import com.atlassian.plugin.osgi.module.ModuleTypeDependantsDisabler;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import org.apache.commons.io.IOUtils;
@@ -61,7 +60,6 @@ public class OsgiPluginFactory implements PluginFactory
     private final Set<String> applicationKeys;
     private final OsgiPersistentCache persistentCache;
     private final PluginTransformerFactory pluginTransformerFactory;
-    private final ModuleTypeDependantsDisabler moduleTypeDependantsDisabler = new ModuleTypeDependantsDisabler();
 
     private volatile PluginTransformer pluginTransformer;
 
@@ -112,7 +110,6 @@ public class OsgiPluginFactory implements PluginFactory
         });
         this.pluginTransformerFactory = pluginTransformerFactory;
 
-        pluginEventManager.register(moduleTypeDependantsDisabler);
     }
 
 
@@ -276,14 +273,6 @@ public class OsgiPluginFactory implements PluginFactory
             IOUtils.closeQuietly(pluginDescriptor);
         }
         return plugin;
-    }
-
-    public void setPluginAccessor(PluginAccessor pluginAccessor) {
-        moduleTypeDependantsDisabler.setPluginAccessor(pluginAccessor);
-    }
-
-    public void setPluginController(PluginController pluginController) {
-        moduleTypeDependantsDisabler.setPluginController(pluginController);
     }
 
     /**
