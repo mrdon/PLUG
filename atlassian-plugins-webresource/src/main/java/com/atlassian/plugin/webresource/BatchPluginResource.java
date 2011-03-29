@@ -9,6 +9,8 @@ import com.atlassian.plugin.Plugin;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -221,11 +223,20 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
 
             for (final Map.Entry<String, String> entry : params.entrySet())
             {
-                sb.append(entry.getKey()).append("=").append(entry.getValue());
-
-                if (++count < params.size())
+                try
                 {
-                    sb.append("&");
+                    sb.append(URLEncoder.encode(entry.getKey(), "UTF-8"))
+                      .append("=")
+                      .append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+
+                    if (++count < params.size())
+                    {
+                        sb.append("&");
+                    }
+                }
+                catch (UnsupportedEncodingException e)
+                {
+                    log.error("Could not encode parameter to url for [" + entry.getKey() + "] with value [" + entry.getValue() + "]", e);
                 }
             }
         }
