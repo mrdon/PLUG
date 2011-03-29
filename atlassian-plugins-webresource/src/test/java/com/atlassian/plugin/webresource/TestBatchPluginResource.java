@@ -102,11 +102,11 @@ public class TestBatchPluginResource extends TestCase
     public void testGetUrlWithParams()
     {
         final Map<String, String> params = new TreeMap<String, String>();
+        params.put("conditionalComment", "lt IE 9");
         params.put("foo", "bar");
-        params.put("moo", "cow");
 
         final BatchPluginResource resource = new BatchPluginResource("test.plugin:webresources", "js", params);
-        assertEquals("/download/batch/test.plugin:webresources/test.plugin:webresources.js?foo=bar&moo=cow", resource.getUrl());
+        assertEquals("/download/batch/test.plugin:webresources/test.plugin:webresources.js?conditionalComment=lt+IE+9&foo=bar", resource.getUrl());
     }
 
     public void testRoundTrip() throws Exception
