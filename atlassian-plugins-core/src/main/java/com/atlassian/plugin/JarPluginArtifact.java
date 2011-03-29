@@ -44,19 +44,20 @@ public class JarPluginArtifact implements PluginArtifact
     {
         Validate.notNull(fileName, "The file name must not be null");
         final JarFile jar;
+        final ZipEntry entry;
         try
         {
             jar = new JarFile(jarFile);
+            entry = jar.getEntry(fileName);
+            if (entry == null)
+            {
+                jar.close();
+                return null;
+            }
         }
         catch (IOException e)
         {
             throw new PluginParseException("Cannot open JAR file for reading: " + jarFile, e);
-        }
-
-        ZipEntry entry = jar.getEntry(fileName);
-        if (entry == null)
-        {
-            return null;
         }
 
         InputStream descriptorStream;
