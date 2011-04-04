@@ -88,6 +88,7 @@ public class XmlDescriptorParser implements DescriptorParser
     protected Document createDocument(final InputStream source) throws PluginParseException
     {
         final SAXReader reader = new SAXReader();
+        reader.setMergeAdjacentText(true);
         try
         {
             return reader.read(source);
