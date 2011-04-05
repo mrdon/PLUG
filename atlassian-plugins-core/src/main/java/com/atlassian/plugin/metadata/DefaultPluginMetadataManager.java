@@ -1,11 +1,11 @@
 package com.atlassian.plugin.metadata;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import net.jcip.annotations.Immutable;
-
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.descriptors.CannotDisable;
+import net.jcip.annotations.Immutable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A default implementation that uses the {@link com.atlassian.plugin.metadata.ClasspathFilePluginMetadata}
@@ -35,13 +35,15 @@ public final class DefaultPluginMetadataManager implements PluginMetadataManager
     }
 
     /**
-     * A plugin is determined to be non-user if
+     * <p>A plugin is determined to be non-user if
      * {@link com.atlassian.plugin.Plugin#isBundledPlugin()} is true or if the
      * host application has indicated to the plugins system that a plugin was
-     * provided by it. NOTE: If a user has upgraded a bundled plugin then the
+     * provided by it.</p>
+     *
+     * <p><strong>NOTE:</strong> If a user has upgraded a bundled plugin then the
      * decision of whether it is user installed plugin is determined by if the
      * application has indicated to the plugins system that a plugin was
-     * provided or not.
+     * provided or not.</p>
      */
     public boolean isUserInstalled(final Plugin plugin)
     {
@@ -49,6 +51,15 @@ public final class DefaultPluginMetadataManager implements PluginMetadataManager
         // It is user installed if it has not been marked as provided by the
         // application and it was not bundled.
         return !plugin.isBundledPlugin() && !metadata.applicationProvided(plugin);
+    }
+
+    /**
+     * A plugin is determined to be &quot;system&quot; if
+     * {@link #isUserInstalled(com.atlassian.plugin.Plugin)} is false.
+     */
+    public boolean isSystemProvided(Plugin plugin)
+    {
+        return !isUserInstalled(plugin);
     }
 
     /**

@@ -13,14 +13,23 @@ import com.atlassian.plugin.Plugin;
 public interface PluginMetadataManager
 {
     /**
-     * This is used to determine if the plugin was provided by the host
-     * application or provided by a user.
+     * Determines if the plugin was installed by a user.
      * 
      * @param plugin used to determine the state, not null.
-     * @return true if the plugin was not provided by the host application,
+     * @return true if the plugin was installed by a user,
      *         false otherwise.
      */
     boolean isUserInstalled(Plugin plugin);
+
+    /**
+     * This is used to determine if the plugin was provided by the host
+     * application.
+     *
+     * @param plugin used to determine the state, not null.
+     * @return true if the plugin was provided by the host application,
+     *         false otherwise.
+     */
+    boolean isSystemProvided(Plugin plugin);
 
     /**
      * This is used to determine if a plugin is considered optional. If an

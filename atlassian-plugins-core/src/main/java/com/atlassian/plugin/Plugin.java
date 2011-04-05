@@ -136,8 +136,8 @@ public interface Plugin extends Resourced, Comparable<Plugin>
      * Whether the plugin is a "system" plugin that shouldn't be made visible to the user.
      *
      * @return {@code true} if this plugin is a "system" plugin.
-     * @deprecated since 2.6.0 use {@link com.atlassian.plugin.metadata.PluginMetadataManager#isUserInstalled(Plugin)} instead,
-     * please keep in mind that the logic is reversed.
+     * @deprecated since 2.6.0 use {@link com.atlassian.plugin.metadata.PluginMetadataManager#isSystemProvided(Plugin)}}
+     * instead.
      */
     boolean isSystemPlugin();
 
