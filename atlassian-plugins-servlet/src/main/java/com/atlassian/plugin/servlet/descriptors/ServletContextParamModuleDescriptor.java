@@ -3,6 +3,7 @@ package com.atlassian.plugin.servlet.descriptors;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.descriptors.CannotDisable;
 import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.util.validation.ValidationPattern;
 import org.dom4j.Element;
@@ -10,10 +11,12 @@ import org.dom4j.Element;
 import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
 /**
- * Allows plugin developers to specify init parameters they would like added to the plugin local {@link javax.servlet.ServletContext}.
+ * Allows plugin developers to specify init parameters they would like added to the plugin local
+ * {@link javax.servlet.ServletContext}.
  *
  * @since 2.1.0
  */
+@CannotDisable
 public class ServletContextParamModuleDescriptor extends AbstractModuleDescriptor<Void>
 {
     private String paramName;
