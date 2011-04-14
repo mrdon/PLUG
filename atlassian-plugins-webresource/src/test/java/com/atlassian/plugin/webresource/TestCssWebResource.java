@@ -1,6 +1,7 @@
 package com.atlassian.plugin.webresource;
 
 import junit.framework.TestCase;
+import org.apache.commons.lang.StringEscapeUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,13 +33,22 @@ public class TestCssWebResource extends TestCase
         final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master.css";
 
         assertEquals("<link type=\"text/css\" rel=\"stylesheet\" href=\"" + url + "\" media=\"all\">\n",
-                    cssWebResource.formatResource(url, new HashMap()));
+                    cssWebResource.formatResource(url, new HashMap<String, String>()));
+    }
+
+    // PLUG-753
+    public void testUrlIsEscaped()
+    {
+        final String url = "/confluence/s/en\"><script>alert(document.cookie)</script>/2153/1/1/_/download/superbatch/css/batch.css";
+
+        assertEquals("<link type=\"text/css\" rel=\"stylesheet\" href=\"" + StringEscapeUtils.escapeHtml(url) +
+                "\" media=\"all\">\n", cssWebResource.formatResource(url, new HashMap<String, String>()));
     }
 
     public void testFormatResourceWithParameters()
     {
         final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master.css";
-        HashMap params = new HashMap();
+        Map<String, String> params = new HashMap<String, String>();
         params.put("title", "Confluence Master CSS");
         params.put("charset", "utf-8");
         params.put("foo", "bar"); // test invalid parameter
@@ -52,7 +62,7 @@ public class TestCssWebResource extends TestCase
     {
         final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master-ie.css";
 
-        Map params = new HashMap();
+        Map<String, String> params = new HashMap<String, String>();
         params.put("ieonly", "true");
         params.put("media", "screen");
         assertEquals("<!--[if IE]>\n" +
@@ -65,7 +75,7 @@ public class TestCssWebResource extends TestCase
     {
         final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master-ie.css";
 
-        Map params = new HashMap();
+        Map<String, String> params = new HashMap<String, String>();
         params.put("conditionalComment", "IE");
         params.put("media", "screen");
         assertEquals("<!--[if IE]>\n" +
@@ -78,7 +88,7 @@ public class TestCssWebResource extends TestCase
     {
         final String url = "/confluence/download/resources/confluence.web.resources:master-styles/master-ie.css";
 
-        Map params = new HashMap();
+        Map<String, String> params = new HashMap<String, String>();
         params.put("conditionalComment", "!IE");
         params.put("ieonly", "true");
         params.put("media", "screen");
