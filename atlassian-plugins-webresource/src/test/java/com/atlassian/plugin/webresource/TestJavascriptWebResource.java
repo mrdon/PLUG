@@ -1,6 +1,7 @@
 package com.atlassian.plugin.webresource;
 
 import junit.framework.TestCase;
+import org.apache.commons.lang.StringEscapeUtils;
 
 import java.util.HashMap;
 
@@ -30,6 +31,15 @@ public class TestJavascriptWebResource extends TestCase
     {
         final String url = "/confluence/download/resources/confluence.web.resources:ajs/atlassian.js";
         assertEquals("<script type=\"text/javascript\" src=\"" + url + "\" ></script>\n",
-                     javascriptWebResource.formatResource(url, new HashMap()));
+                     javascriptWebResource.formatResource(url, new HashMap<String, String>()));
+    }
+    
+    // PLUG-753
+    public void testUrlIsEscaped()
+    {
+        final String url = "/confluence/s/en\"><script>alert(document.cookie)</script>/2153/1/1/_/download/superbatch/js/batch.js";
+
+        assertEquals("<script type=\"text/javascript\" src=\"" + StringEscapeUtils.escapeHtml(url) +
+                "\" ></script>\n", javascriptWebResource.formatResource(url, new HashMap<String, String>()));
     }
 }

@@ -1,5 +1,6 @@
 package com.atlassian.plugin.webresource;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.BooleanUtils;
 
@@ -26,7 +27,8 @@ public class CssWebResource extends AbstractWebResourceFormatter
     public String formatResource(String url, Map<String, String> params)
     {
         StringBuffer buffer = new StringBuffer();
-        buffer.append("<link type=\"text/css\" rel=\"stylesheet\" href=\"").append(url).append("\"");
+        buffer.append("<link type=\"text/css\" rel=\"stylesheet\" href=\"");
+        buffer.append(StringEscapeUtils.escapeHtml(url)).append("\"");
         List attributes = getParametersAsAttributes(params);
         if (attributes != null && attributes.size() > 0)
         {

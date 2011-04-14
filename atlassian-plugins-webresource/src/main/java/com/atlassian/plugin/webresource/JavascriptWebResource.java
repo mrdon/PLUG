@@ -1,5 +1,6 @@
 package com.atlassian.plugin.webresource;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Map;
@@ -21,7 +22,7 @@ public class JavascriptWebResource extends AbstractWebResourceFormatter
     public String formatResource(String url, Map<String, String> params)
     {
         StringBuffer buffer = new StringBuffer("<script type=\"text/javascript\" ");
-        buffer.append("src=\"").append(url).append("\" ");
+        buffer.append("src=\"").append(StringEscapeUtils.escapeHtml(url)).append("\" ");
         buffer.append(StringUtils.join(getParametersAsAttributes(params).iterator(), " "));
         buffer.append("></script>\n");
         return buffer.toString();
