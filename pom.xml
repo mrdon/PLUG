@@ -387,7 +387,7 @@
     <properties>
         <jdkLevel>1.5</jdkLevel>
         <springDmVersion>1.2.1</springDmVersion>
-        <springVersion>2.5.6.SEC01</springVersion>
+        <springVersion>2.5.6.SEC02</springVersion>
     </properties>
 </project>
 
