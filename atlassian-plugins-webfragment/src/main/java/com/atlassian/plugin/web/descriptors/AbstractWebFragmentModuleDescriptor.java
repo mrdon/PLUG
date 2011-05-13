@@ -1,22 +1,22 @@
 package com.atlassian.plugin.web.descriptors;
 
-import java.util.List;
-
-import com.atlassian.plugin.web.conditions.ConditionLoadingException;
-import org.dom4j.Element;
-
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.StateAware;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
+import com.atlassian.plugin.descriptors.ModuleDescriptors;
 import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.web.Condition;
 import com.atlassian.plugin.web.ContextProvider;
 import com.atlassian.plugin.web.WebInterfaceManager;
+import com.atlassian.plugin.web.conditions.ConditionLoadingException;
 import com.atlassian.plugin.web.model.DefaultWebLabel;
 import com.atlassian.plugin.web.model.DefaultWebParam;
 import com.atlassian.plugin.web.model.WebLabel;
 import com.atlassian.plugin.web.model.WebParam;
+import org.dom4j.Element;
+
+import java.util.List;
 
 /**
  * An abstract convenience class for web fragment descriptors.
@@ -184,5 +184,17 @@ public abstract class AbstractWebFragmentModuleDescriptor<T> extends AbstractMod
     public WebParam getWebParams()
     {
         return params;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        return new ModuleDescriptors.EqualsBuilder().descriptor(this).isEqualTo(obj);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new ModuleDescriptors.HashCodeBuilder().descriptor(this).toHashCode();
     }
 }

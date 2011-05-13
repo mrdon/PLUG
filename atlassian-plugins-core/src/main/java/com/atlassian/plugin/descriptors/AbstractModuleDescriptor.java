@@ -1,15 +1,5 @@
 package com.atlassian.plugin.descriptors;
 
-import static com.atlassian.plugin.util.Assertions.notNull;
-import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
-import static com.atlassian.plugin.util.validation.ValidationPattern.test;
-
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang.Validate;
-import org.dom4j.Element;
-
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
@@ -25,8 +15,17 @@ import com.atlassian.plugin.util.ClassUtils;
 import com.atlassian.plugin.util.JavaVersionUtils;
 import com.atlassian.plugin.util.validation.ValidationPattern;
 import com.atlassian.util.concurrent.NotNull;
+import org.apache.commons.lang.Validate;
+import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
+
+import static com.atlassian.plugin.util.Assertions.notNull;
+import static com.atlassian.plugin.util.validation.ValidationPattern.createPattern;
+import static com.atlassian.plugin.util.validation.ValidationPattern.test;
 
 public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>, StateAware
 {
@@ -61,7 +60,7 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     }
 
     /**
-     * @Deprecated since 2.5.0 use the constructor which requires a
+     * @deprecated since 2.5.0 use the constructor which requires a
      *             {@link com.atlassian.plugin.module.ModuleFactory}
      */
     @Deprecated
@@ -391,6 +390,8 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
 
     /**
      * Sets the plugin for the ModuleDescriptor
+     *
+     * @param plugin The plugin to set for this descriptor.
      */
     public void setPlugin(final Plugin plugin)
     {
@@ -399,11 +400,23 @@ public abstract class AbstractModuleDescriptor<T> implements ModuleDescriptor<T>
     }
 
     /**
-     * @return The plugin this module descriptor is associated with
+     * @return The plugin this module descriptor is associated with.
      */
     public Plugin getPlugin()
     {
         return plugin;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        return new ModuleDescriptors.EqualsBuilder().descriptor(this).isEqualTo(obj);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new ModuleDescriptors.HashCodeBuilder().descriptor(this).toHashCode();
     }
 
     @Override

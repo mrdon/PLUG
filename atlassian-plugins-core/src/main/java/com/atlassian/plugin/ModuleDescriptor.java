@@ -1,10 +1,9 @@
 package com.atlassian.plugin;
 
-import java.util.Map;
-
+import com.atlassian.util.concurrent.NotNull;
 import org.dom4j.Element;
 
-import com.atlassian.util.concurrent.NotNull;
+import java.util.Map;
 
 public interface ModuleDescriptor<T> extends Resourced
 {
@@ -142,4 +141,37 @@ public interface ModuleDescriptor<T> extends Resourced
      * @return The plugin this module descriptor is associated with
      */
     Plugin getPlugin();
+
+    /**
+	 * <p>Compares the specified object with this module descriptor for equality.</p>
+	 *
+     * <p>Returns <tt>true</tt> if the given object is also a module descriptor and the two descriptors have the same
+     * &quot;complete key&quot; as determined by {@link #getCompleteKey()}.</p>
+     *
+     * This ensures that the <tt>equals</tt> method works properly across
+	 * different implementations of the <tt>ModuleDescriptor</tt> interface.
+	 *
+	 * @param obj object to be compared for equality with this module descriptor.
+	 * @return <tt>true</tt> if the specified object is equal to this module descriptor.
+     * @since 2.8.0
+     */
+    boolean equals(Object obj);
+
+    /**
+     * Returns the hash code value for this module descriptor.  The hash code
+	 * of a module descriptor <tt>d</tt> is defined to be: <pre>
+	 *     getCompleteKey() == null ? 0 : getCompleteKey().hashCode()
+         * </pre>
+	 * This ensures that <tt>d1.equals(d2)</tt> implies that
+	 * <tt>d1.hashCode()==d2.hashCode()</tt> for any two Module Descriptors
+	 * <tt>d1</tt> and <tt>d2</tt>, as required by the general
+	 * contract of <tt>Object.hashCode</tt>.
+     *
+     * @return the hash code value for this module descriptor.
+     * @see Object#hashCode()
+	 * @see Object#equals(Object)
+	 * @see #equals(Object)
+     * @since 2.8.0
+     */
+    int hashCode();
 }
