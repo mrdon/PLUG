@@ -21,8 +21,10 @@ import org.dom4j.Element;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import static java.util.Arrays.asList;
@@ -469,6 +471,38 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
         assertTrue(resource instanceof DownloadableClasspathResource);
     }
+
+    public void testGetDownloadableContextBatchResource() throws Exception
+   {
+       final String url = "/download/batch/context/foo.css";
+
+       final String cssResource = "master.css";
+       final String jssResource = "master.js";
+       final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors(cssResource, jssResource);
+
+       final Mock mockPlugin = new Mock(Plugin.class);
+       final Mock mockModuleDescriptor = new Mock(ModuleDescriptor.class);
+       mockModuleDescriptor.matchAndReturn("getPluginKey", TEST_PLUGIN_KEY);
+       mockModuleDescriptor.expectAndReturn("getResourceLocation", C.args(C.eq("download"), C.eq(cssResource)), new ResourceLocation("", cssResource, "download",
+            "text/css", "", Collections.EMPTY_MAP));
+
+       mockPluginAccessor.matchAndReturn("isPluginModuleEnabled", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), Boolean.TRUE);
+       mockPluginAccessor.matchAndReturn("getEnabledPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
+       mockPluginAccessor.matchAndReturn("getPluginModule", C.args(C.eq(TEST_MODULE_COMPLETE_KEY)), mockModuleDescriptor.proxy());
+       mockPluginAccessor.matchAndReturn("getPlugin", C.args(C.eq(TEST_PLUGIN_KEY)), mockPlugin.proxy());
+
+       Set<String> contexts = new HashSet<String>();
+       contexts.add("foo");
+       contexts.add("bar");
+       WebResourceModuleDescriptor webResourceModuleDescriptor = TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY,
+               (Plugin) mockPlugin.proxy(), resourceDescriptors, Collections.<String>emptyList(), contexts);
+
+       mockPluginAccessor.matchAndReturn("getEnabledModuleDescriptorsByClass", C.args(C.eq(WebResourceModuleDescriptor.class)), Collections.singletonList(webResourceModuleDescriptor));
+
+       final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String>emptyMap());
+
+       assertTrue(resource instanceof BatchPluginResource);
+   }
 
     public void testGetDownloadableSuperBatchResource() throws Exception
     {
