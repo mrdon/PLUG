@@ -152,29 +152,18 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     private DownloadableResource locateBatchPluginResource(final BatchPluginResource batchResource)
     {
-        if("context".equals(batchResource.getModuleCompleteKey()))
+        final ModuleDescriptor<?> moduleDescriptor = pluginAccessor.getEnabledPluginModule(batchResource.getModuleCompleteKey());
+        if (moduleDescriptor != null)
         {
-            String context = batchResource.getResourceName();
-            context = context.substring(0, context.lastIndexOf("."));
-            final List<WebResourceModuleDescriptor> webResourceModuleDescriptors =
-                    pluginAccessor.getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class);
-
-            for (WebResourceModuleDescriptor webResourceModuleDescriptor : webResourceModuleDescriptors)
+            for (final ResourceDescriptor resourceDescriptor : Iterables.filter(moduleDescriptor.getResourceDescriptors(), new TypeFilter(DOWNLOAD_TYPE)))
             {
-                if (webResourceModuleDescriptor.getContexts().contains(context))
+                if (isResourceInBatch(resourceDescriptor, batchResource))
                 {
-                    addBatchResources(batchResource, webResourceModuleDescriptor);
+                    batchResource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
                 }
             }
         }
-        else
-        {
-            final ModuleDescriptor<?> moduleDescriptor = pluginAccessor.getEnabledPluginModule(batchResource.getModuleCompleteKey());
-            if (moduleDescriptor != null)
-            {
-                addBatchResources(batchResource, moduleDescriptor);
-            }
-        }
+
         // if batch is empty, check if we can locate a plugin resource
         if (batchResource.isEmpty())
         {
@@ -182,17 +171,6 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         }
 
         return batchResource;
-    }
-
-    private void addBatchResources(BatchPluginResource batchResource, ModuleDescriptor<?> moduleDescriptor)
-    {
-        for (final ResourceDescriptor resourceDescriptor : Iterables.filter(moduleDescriptor.getResourceDescriptors(), new TypeFilter(DOWNLOAD_TYPE)))
-        {
-            if (isResourceInBatch(resourceDescriptor, batchResource))
-            {
-                batchResource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
-            }
-        }
     }
 
     private boolean isResourceInBatch(final ResourceDescriptor resourceDescriptor, final BatchResource batchResource)
