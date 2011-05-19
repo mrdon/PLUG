@@ -846,6 +846,53 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         }
     }
 
+
+
+    public void testGetEnabledPluginsDoesNotReturnEnablingPlugins() throws Exception
+    {
+        final Mock mockPluginLoader = new Mock(PluginLoader.class);
+
+        final Plugin firstPlugin = new StaticPlugin();
+        firstPlugin.setKey("first");
+        firstPlugin.setEnabledByDefault(false);
+        firstPlugin.setPluginInformation(new PluginInformation());
+        manager.enablePluginState(firstPlugin, pluginStateStore);
+
+        final Plugin secondPlugin = new StaticPlugin()
+        {
+            public PluginState enableInternal()
+            {
+                try
+                {
+                    // Assert here when the first plugin has been started but this plugin still has not been loaded
+                    assertEquals(2, manager.getPlugins().size());
+                    assertEquals("First plugin should not be enabled", 0, manager.getEnabledPlugins().size());
+                }
+                catch (Exception e)
+                {
+                    throw new RuntimeException(e);
+                }
+                return PluginState.ENABLED;
+            }
+
+            public void disableInternal()
+            {
+                // do nothing
+            }
+        };
+        secondPlugin.setKey("second");
+        secondPlugin.setEnabledByDefault(false);
+        secondPlugin.setPluginInformation(new PluginInformation());
+        manager.enablePluginState(secondPlugin, pluginStateStore);
+
+        mockPluginLoader.expectAndReturn("loadAllPlugins", C.ANY_ARGS, Arrays.asList(firstPlugin, secondPlugin));
+
+        final PluginLoader proxy = (PluginLoader) mockPluginLoader.proxy();
+        pluginLoaders.add(proxy);
+
+        manager.init();
+    }
+
     public void testFindingNewPlugins() throws PluginParseException, IOException
     {
         createFillAndCleanTempPluginDirectory();

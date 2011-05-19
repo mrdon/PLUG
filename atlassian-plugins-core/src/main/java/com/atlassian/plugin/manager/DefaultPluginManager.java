@@ -620,7 +620,7 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
      */
     protected void addPlugins(final PluginLoader loader, final Collection<Plugin> pluginsToInstall) throws PluginParseException
     {
-        final Set<Plugin> pluginsToEnable = new HashSet<Plugin>();
+        final List<Plugin> pluginsToEnable = new ArrayList<Plugin>();
 
         // Install plugins, looking for upgrades and duplicates
         for (final Plugin plugin : new TreeSet<Plugin>(pluginsToInstall))
@@ -1449,7 +1449,10 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     {
         final Plugin plugin = plugins.get(notNull("The plugin key must be specified", key));
 
-        return (plugin != null) && ((plugin.getPluginState() == PluginState.ENABLED) && getState().isEnabled(plugin));
+        return plugin != null &&
+               plugin.getPluginState() == PluginState.ENABLED &&
+               getState().isEnabled(plugin) &&
+               !pluginEnabler.isPluginBeingEnabled(plugin);
     }
 
     public InputStream getDynamicResourceAsStream(final String name)
