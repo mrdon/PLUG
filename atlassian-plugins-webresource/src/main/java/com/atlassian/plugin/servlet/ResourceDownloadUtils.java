@@ -14,7 +14,8 @@ import javax.servlet.http.HttpServletResponse;
 public class ResourceDownloadUtils
 {
     private static final Logger log = LoggerFactory.getLogger(ResourceDownloadUtils.class);
-    private static final long ONE_YEAR = 60L * 60L * 24L * 365L;
+    private static final long ONE_YEAR_SECONDS = 60L * 60L * 24L * 365L;
+    private static final long ONE_YEAR_MILLISECONDS = 1000 * ONE_YEAR_SECONDS;
 
     /**
      * @deprecated Since 2.0. Use {@link IOUtils#copy(InputStream, OutputStream)} instead. The method calling
@@ -37,15 +38,15 @@ public class ResourceDownloadUtils
     }
 
     /**
-     * Set 'expire' headers to cache for ten years. Also adds the additional cache control values passed in.
+     * Set 'expire' headers to cache for one year. Also adds the additional cache control values passed in.
      * Note, this method resets the cache control headers if set previously. 
      */
     public static void addCachingHeaders(final HttpServletResponse httpServletResponse, final String... cacheControls)
     {
         if (!Boolean.getBoolean("atlassian.disable.caches"))
         {
-            httpServletResponse.setDateHeader("Expires", System.currentTimeMillis() + ONE_YEAR);
-            httpServletResponse.setHeader("Cache-Control", "max-age=" + ONE_YEAR);
+            httpServletResponse.setDateHeader("Expires", System.currentTimeMillis() + ONE_YEAR_MILLISECONDS);
+            httpServletResponse.setHeader("Cache-Control", "max-age=" + ONE_YEAR_SECONDS);
             for (final String cacheControl : cacheControls)
             {
                 httpServletResponse.addHeader("Cache-Control", cacheControl);
@@ -54,7 +55,7 @@ public class ResourceDownloadUtils
     }
 
     /**
-     * Set 'expire' headers to cache for ten years, with public caching turned on.
+     * Set 'expire' headers to cache for one year, with public caching turned on.
      *
      * @deprecated Please use {@link #addPublicCachingHeaders(HttpServletRequest, HttpServletResponse)} or
      * {@link #addPrivateCachingHeaders(HttpServletRequest, HttpServletResponse)} instead.
