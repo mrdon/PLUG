@@ -140,9 +140,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     }
 
     /**
-     * @return pluginArtifact if one exists. Depending on how the plugin was deployed there may be no {@link
-     *         PluginArtifact}
-     *
+     * @return pluginArtifact of this plugin
      * @since 2.9.0
      */
     public PluginArtifact getPluginArtifact()
