@@ -60,6 +60,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     public static final String ATLASSIAN_PLUGIN_KEY = "Atlassian-Plugin-Key";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final BundleListener bundleStopListener;
+    private final PluginArtifact pluginArtifact;
 
     // Until the framework is actually done starting we want to ignore @RequiresRestart. Where this comes into play
     // is when we have one version of a plugin (e.g. via bundled-plugins.zip) installed but then discover a newer
@@ -75,6 +76,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         Validate.notNull(artifact, "The osgi container is required");
         Validate.notNull(pluginEventManager, "The osgi container is required");
 
+        this.pluginArtifact = artifact;
         this.helper = new OsgiPluginUninstalledHelper(key, mgr, artifact);
         this.pluginEventManager = pluginEventManager;
         this.packageAdmin = extractPackageAdminFromOsgi(mgr);
@@ -101,6 +103,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         this.pluginEventManager = pluginEventManager;
         this.packageAdmin = null;
         this.bundleStopListener = null;
+        this.pluginArtifact = null;
     }
 
     /**
@@ -134,6 +137,17 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     public boolean isDeleteable()
     {
         return true;
+    }
+
+    /**
+     * @return pluginArtifact if one exists. Depending on how the plugin was deployed there may be no {@link
+     *         PluginArtifact}
+     *
+     * @since 2.9.0
+     */
+    public PluginArtifact getPluginArtifact()
+    {
+        return pluginArtifact;
     }
 
     /**
