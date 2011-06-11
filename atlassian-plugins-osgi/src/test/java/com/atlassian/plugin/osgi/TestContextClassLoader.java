@@ -1,6 +1,7 @@
 package com.atlassian.plugin.osgi;
 
 import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ContextClassLoaderStrategy;
@@ -35,7 +36,7 @@ public class TestContextClassLoader extends PluginInContainerTestBase {
         };
 
         initPluginManager(prov);
-        pluginManager.installPlugin(new JarPluginArtifact(plugin));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(plugin)));
 
         assertNotNull(comp.cl);
         assertNotNull(comp.testClass);
@@ -67,7 +68,7 @@ public class TestContextClassLoader extends PluginInContainerTestBase {
         };
 
         initPluginManager(prov);
-        pluginManager.installPlugin(new JarPluginArtifact(plugin));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(plugin)));
 
         assertNotNull(comp.cl);
         assertNull(comp.testClass);
@@ -97,7 +98,7 @@ public class TestContextClassLoader extends PluginInContainerTestBase {
         };
 
         initPluginManager(prov);
-        pluginManager.installPlugin(new JarPluginArtifact(plugin));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(plugin)));
 
         assertNotNull(comp.cl);
         assertNotNull(comp.testClass);
@@ -127,7 +128,7 @@ public class TestContextClassLoader extends PluginInContainerTestBase {
         };
 
         initPluginManager(prov);
-        pluginManager.installPlugin(new JarPluginArtifact(plugin));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(plugin)));
 
         assertNotNull(comp.cl);
         assertNotNull(comp.testClass);

@@ -1,5 +1,6 @@
 package com.atlassian.plugin;
 
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.io.IOUtils;
 
@@ -15,12 +16,29 @@ import java.io.*;
  */
 public class JarPluginArtifact implements PluginArtifact
 {
-    private final File jarFile;
+    private final DeploymentUnit deploymentUnit;
 
-    public JarPluginArtifact(File jarFile)
+    /**
+     * @since 2.9.0
+     * @param deploymentUnit
+     */
+    public JarPluginArtifact(final DeploymentUnit deploymentUnit)
     {
-        Validate.notNull(jarFile);
-        this.jarFile = jarFile;
+        this.deploymentUnit = deploymentUnit;
+    }
+
+    /**
+     * @deprecated use {@link #JarPluginArtifact(DeploymentUnit)}
+     * @param file
+     */
+    public JarPluginArtifact(final File file)
+    {
+        this.deploymentUnit = new DeploymentUnit(file);
+    }
+
+    public DeploymentUnit getDeploymentUnit()
+    {
+        return deploymentUnit;
     }
 
     public boolean doesResourceExist(String name)
@@ -47,7 +65,7 @@ public class JarPluginArtifact implements PluginArtifact
         final ZipEntry entry;
         try
         {
-            jar = new JarFile(jarFile);
+            jar = new JarFile(deploymentUnit.getPath());
             entry = jar.getEntry(fileName);
             if (entry == null)
             {
@@ -57,7 +75,7 @@ public class JarPluginArtifact implements PluginArtifact
         }
         catch (IOException e)
         {
-            throw new PluginParseException("Cannot open JAR file for reading: " + jarFile, e);
+            throw new PluginParseException("Cannot open JAR file for reading: " + deploymentUnit.getPath(), e);
         }
 
         InputStream descriptorStream;
@@ -76,14 +94,14 @@ public class JarPluginArtifact implements PluginArtifact
         }
         catch (IOException e)
         {
-            throw new PluginParseException("Cannot retrieve " + fileName + " from plugin JAR [" + jarFile + "]", e);
+            throw new PluginParseException("Cannot retrieve " + fileName + " from plugin JAR [" + deploymentUnit.getPath() + "]", e);
         }
         return descriptorStream;
     }
 
     public String getName()
     {
-        return jarFile.getName();
+        return deploymentUnit.getPath().getName();
     }
 
     @Override
@@ -100,16 +118,16 @@ public class JarPluginArtifact implements PluginArtifact
     {
         try
         {
-            return new BufferedInputStream(new FileInputStream(jarFile));
+            return new BufferedInputStream(new FileInputStream(deploymentUnit.getPath()));
         }
         catch (FileNotFoundException e)
         {
-            throw new RuntimeException("Could not open JAR file for reading: " + jarFile, e);
+            throw new RuntimeException("Could not open JAR file for reading: " + deploymentUnit.getPath(), e);
         }
     }
 
     public File toFile()
     {
-        return jarFile;
+        return deploymentUnit.getPath();
     }
 }

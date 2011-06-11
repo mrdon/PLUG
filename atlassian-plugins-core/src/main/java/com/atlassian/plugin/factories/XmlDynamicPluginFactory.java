@@ -68,7 +68,7 @@ public class XmlDynamicPluginFactory implements PluginFactory
     @Deprecated
     public Plugin create(final DeploymentUnit deploymentUnit, final ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        return create(new XmlPluginArtifact(deploymentUnit.getPath()), moduleDescriptorFactory);
+        return create(new XmlPluginArtifact(deploymentUnit), moduleDescriptorFactory);
     }
 
     /**

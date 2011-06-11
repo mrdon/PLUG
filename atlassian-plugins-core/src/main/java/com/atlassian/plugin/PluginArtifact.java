@@ -1,5 +1,7 @@
 package com.atlassian.plugin;
 
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
+
 import java.io.InputStream;
 import java.io.File;
 
@@ -41,4 +43,6 @@ public interface PluginArtifact
      * @since 2.2.0
      */
     File toFile();
+
+    DeploymentUnit getDeploymentUnit();
 }

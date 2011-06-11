@@ -1,5 +1,7 @@
 package com.atlassian.plugin;
 
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
+
 import java.io.*;
 
 /**
@@ -9,11 +11,29 @@ import java.io.*;
  */
 public class XmlPluginArtifact implements PluginArtifact
 {
-    private final File xmlFile;
+    private final DeploymentUnit deploymentUnit;
 
-    public XmlPluginArtifact(File xmlFile)
+    /**
+     * @since 2.9.0
+     * @param deploymentUnit
+     */
+    public XmlPluginArtifact(final DeploymentUnit deploymentUnit)
     {
-        this.xmlFile = xmlFile;
+        this.deploymentUnit = deploymentUnit;
+    }
+
+    /**
+     * @deprecated use {@link #XmlPluginArtifact(DeploymentUnit)}
+     * @param file to deploy
+     */
+    public XmlPluginArtifact(final File file)
+    {
+        this.deploymentUnit = new DeploymentUnit(file);
+    }
+
+    public DeploymentUnit getDeploymentUnit()
+    {
+        return deploymentUnit;
     }
 
     /**
@@ -34,7 +54,7 @@ public class XmlPluginArtifact implements PluginArtifact
 
     public String getName()
     {
-        return xmlFile.getName();
+        return deploymentUnit.getPath().getName();
     }
 
     /**
@@ -45,16 +65,16 @@ public class XmlPluginArtifact implements PluginArtifact
     {
         try
         {
-            return new BufferedInputStream(new FileInputStream(xmlFile));
+            return new BufferedInputStream(new FileInputStream(deploymentUnit.getPath()));
         }
         catch (FileNotFoundException e)
         {
-            throw new RuntimeException("Could not find XML file for eading: " + xmlFile, e);
+            throw new RuntimeException("Could not find XML file for eading: " + deploymentUnit.getPath(), e);
         }
     }
 
     public File toFile()
     {
-        return xmlFile;
+        return deploymentUnit.getPath();
     }
 }

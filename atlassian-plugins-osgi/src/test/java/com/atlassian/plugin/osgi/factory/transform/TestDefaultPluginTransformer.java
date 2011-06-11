@@ -2,6 +2,7 @@ package com.atlassian.plugin.osgi.factory.transform;
 
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.factory.transform.stage.ComponentImportSpringStage;
 import com.atlassian.plugin.osgi.factory.transform.stage.ComponentSpringStage;
 import com.atlassian.plugin.osgi.factory.transform.stage.HostComponentSpringStage;
@@ -103,7 +104,7 @@ public class TestDefaultPluginTransformer extends TestCase
                 .addPluginInformation("foo", "foo", "1.1")
                 .build();
 
-        final File copy = transformer.transform(new JarPluginArtifact(file), new ArrayList<HostComponentRegistration>()
+        final File copy = transformer.transform(new JarPluginArtifact(new DeploymentUnit(file)), new ArrayList<HostComponentRegistration>()
         {
             {
                 add(new StubHostComponentRegistration(Fooable.class));
@@ -142,7 +143,7 @@ public class TestDefaultPluginTransformer extends TestCase
 
         try
         {
-            transformer.transform(new JarPluginArtifact(file), new ArrayList<HostComponentRegistration>()
+            transformer.transform(new JarPluginArtifact(new DeploymentUnit(file)), new ArrayList<HostComponentRegistration>()
             {
                 {
                     HostComponentRegistration reg = new StubHostComponentRegistration(Fooable.class);
@@ -192,7 +193,7 @@ public class TestDefaultPluginTransformer extends TestCase
 
         try
         {
-            transformer.transform(new JarPluginArtifact(file), new ArrayList<HostComponentRegistration>());
+            transformer.transform(new JarPluginArtifact(new DeploymentUnit(file)), new ArrayList<HostComponentRegistration>());
             fail(PluginTransformationException.class.getSimpleName() + " expected");
         }
         catch (PluginTransformationException e)
@@ -239,7 +240,7 @@ public class TestDefaultPluginTransformer extends TestCase
                 .addFile("META-INF/lib/mylib.jar", innerJar)
                 .build();
 
-        File outputFile = transformer.transform(new JarPluginArtifact(pluginJar), new ArrayList<HostComponentRegistration>());
+        File outputFile = transformer.transform(new JarPluginArtifact(new DeploymentUnit(pluginJar)), new ArrayList<HostComponentRegistration>());
 
         JarFile outputJar = new JarFile(outputFile);
         String importString = outputJar.getManifest().getMainAttributes().getValue(Constants.IMPORT_PACKAGE);
@@ -339,7 +340,7 @@ public class TestDefaultPluginTransformer extends TestCase
         MockRegistration mockReg2 = new MockRegistration(new FooChild(), FooChild.class);
         mockReg2.getProperties().put(PropertyBuilder.BEAN_NAME, "testing6");
 
-        return transformer.transform(new JarPluginArtifact(file), Arrays.<HostComponentRegistration>asList(mockReg1, mockReg2));
+        return transformer.transform(new JarPluginArtifact(new DeploymentUnit(file)), Arrays.<HostComponentRegistration>asList(mockReg1, mockReg2));
     }
 
     private void assertBeanNames(File outputJarFile, String springFileLocation,

@@ -5,6 +5,7 @@ import com.atlassian.plugin.PluginArtifact;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.events.PluginModuleDisabledEvent;
 import com.atlassian.plugin.event.events.PluginModuleEnabledEvent;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
@@ -66,8 +67,8 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                 .build();
         final File pluginJar2 = buildDynamicModuleClientJar();
 
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(pluginJar)));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(pluginJar2)));
         final Collection<ModuleDescriptor<?>> descriptors = pluginManager.getPlugin("test.plugin")
                 .getModuleDescriptors();
         assertEquals(1, descriptors.size());
@@ -96,8 +97,8 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                 .build();
         final File pluginJar2 = buildDynamicModuleClientJar();
 
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(pluginJar)));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(pluginJar2)));
         assertTrue(waitForDynamicModuleEnabled());
 
         // uninstall the module - the test plugin modules should revert back to Unrecognised
@@ -119,7 +120,7 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
             }
         });
         // reinstall the module - the test plugin modules should be correct again
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(pluginJar)));
         assertTrue(waitForDynamicModuleEnabled());
     }
 
@@ -137,8 +138,8 @@ public class TestDynamicPluginModule extends PluginInContainerTestBase
                 .build();
         final File pluginJar2 = buildDynamicModuleClientJar();
 
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar2));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(pluginJar)));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(pluginJar2)));
         assertTrue(waitForDynamicModuleEnabled());
 
         PluginModuleDisabledListener disabledListener = new PluginModuleDisabledListener("dum2");

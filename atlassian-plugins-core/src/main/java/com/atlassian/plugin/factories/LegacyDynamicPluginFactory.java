@@ -46,7 +46,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
      */
     public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
-        return create(new JarPluginArtifact(deploymentUnit.getPath()), moduleDescriptorFactory);
+        return create(new JarPluginArtifact(deploymentUnit), moduleDescriptorFactory);
     }
 
     /**
@@ -105,7 +105,7 @@ public class LegacyDynamicPluginFactory implements PluginFactory
      */
     protected Plugin createPlugin(DeploymentUnit deploymentUnit, PluginClassLoader loader)
     {
-        return createPlugin(new JarPluginArtifact(deploymentUnit.getPath()), loader);
+        return createPlugin(new JarPluginArtifact(deploymentUnit), loader);
     }
 
     /**

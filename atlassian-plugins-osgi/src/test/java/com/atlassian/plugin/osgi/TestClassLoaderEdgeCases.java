@@ -1,5 +1,6 @@
 package com.atlassian.plugin.osgi;
 
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.test.PluginJarBuilder;
 import com.atlassian.plugin.JarPluginArtifact;
 import com.atlassian.plugin.DefaultModuleDescriptorFactory;
@@ -47,7 +48,7 @@ public class TestClassLoaderEdgeCases extends PluginInContainerTestBase
         DefaultModuleDescriptorFactory factory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
         factory.addModuleDescriptor("object", ObjectModuleDescriptor.class);
         initPluginManager(null, factory);
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(pluginJar)));
         assertEquals(1, pluginManager.getEnabledPlugins().size());
         OsgiPlugin plugin = (OsgiPlugin) pluginManager.getPlugin("test.privatejar.plugin");
         assertEquals("Test", plugin.getName());

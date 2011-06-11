@@ -1,5 +1,7 @@
 package com.atlassian.plugin;
 
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
+
 import java.io.File;
 import java.net.URI;
 
@@ -10,33 +12,30 @@ import java.net.URI;
  */
 public class DefaultPluginArtifactFactory implements PluginArtifactFactory
 {
-    /**
-     * Creates the artifact by looking at the file extension
-     *
-     * @param artifactUri The artifact URI
-     * @return The created artifact
-     * @throws IllegalArgumentException If an artifact cannot be created from the URL
-     */
-    public PluginArtifact create(URI artifactUri)
+    public PluginArtifact create(final DeploymentUnit deploymentUnit) throws IllegalArgumentException
     {
         PluginArtifact artifact = null;
+
+        URI artifactUri = deploymentUnit.getPath().toURI();
 
         String protocol = artifactUri.getScheme();
 
         if ("file".equalsIgnoreCase(protocol))
         {
             File artifactFile = new File(artifactUri);
-           
+
             String file = artifactFile.getName();
             if (file.endsWith(".jar"))
-                artifact = new JarPluginArtifact(artifactFile);
+                artifact = new JarPluginArtifact(deploymentUnit);
             else if (file.endsWith(".xml"))
-                artifact = new XmlPluginArtifact(artifactFile);
+                artifact = new XmlPluginArtifact(deploymentUnit);
         }
 
         if (artifact == null)
             throw new IllegalArgumentException("The artifact URI " + artifactUri + " is not a valid plugin artifact");
-        
+
         return artifact;
     }
+
+
 }

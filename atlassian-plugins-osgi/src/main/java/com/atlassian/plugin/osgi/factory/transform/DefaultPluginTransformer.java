@@ -1,5 +1,6 @@
 package com.atlassian.plugin.osgi.factory.transform;
 
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.factory.transform.stage.*;
 import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
@@ -169,7 +170,7 @@ public class DefaultPluginTransformer implements PluginTransformer
      */
     public File transform(File pluginJar, List<HostComponentRegistration> regs) throws PluginTransformationException
     {
-        return transform(new JarPluginArtifact(pluginJar), regs);
+        return transform(new JarPluginArtifact(new DeploymentUnit(pluginJar)), regs);
     }
 
     /**

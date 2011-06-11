@@ -215,7 +215,7 @@ public class OsgiPluginFactory implements PluginFactory
     public Plugin create(DeploymentUnit deploymentUnit, ModuleDescriptorFactory moduleDescriptorFactory) throws PluginParseException
     {
         Validate.notNull(deploymentUnit, "The deployment unit is required");
-        return create(new JarPluginArtifact(deploymentUnit.getPath()), moduleDescriptorFactory);
+        return create(new JarPluginArtifact(deploymentUnit), moduleDescriptorFactory);
     }
 
     /**
@@ -293,10 +293,10 @@ public class OsgiPluginFactory implements PluginFactory
         }, originalFactory);
     }
 
-    private PluginArtifact createOsgiPluginJar(PluginArtifact pluginArtifact)
+    private OsgiPluginArtifact createOsgiPluginJar(PluginArtifact pluginArtifact)
     {
         File transformedFile = getPluginTransformer().transform(pluginArtifact, osgi.getHostComponentRegistrations());
-        return new JarPluginArtifact(transformedFile);
+        return new OsgiPluginArtifact(new DeploymentUnit(transformedFile), pluginArtifact.getDeploymentUnit());
     }
 
     private Plugin reportUnloadablePlugin(File file, Exception e)

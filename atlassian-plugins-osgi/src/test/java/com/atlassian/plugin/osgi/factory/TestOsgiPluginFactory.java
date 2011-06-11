@@ -8,6 +8,7 @@ import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.XmlPluginArtifact;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.container.impl.DefaultOsgiPersistentCache;
 import com.atlassian.plugin.test.PluginJarBuilder;
@@ -89,7 +90,7 @@ public class TestOsgiPluginFactory extends TestCase
         mockBundle.expectAndReturn("getSymbolicName", "plugin.key");
         when(osgiContainerManager.getHostComponentRegistrations()).thenReturn(new ArrayList());
         when(osgiContainerManager.getBundles()).thenReturn(new Bundle[] {(Bundle) mockSystemBundle.proxy()});
-        final Plugin plugin = factory.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+        final Plugin plugin = factory.create(new JarPluginArtifact(new DeploymentUnit(jar)), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiPlugin);
     }
@@ -102,7 +103,7 @@ public class TestOsgiPluginFactory extends TestCase
         when(osgiContainerManager.getBundles()).thenReturn(new Bundle[] {(Bundle) mockSystemBundle.proxy()});
         try
         {
-            factory.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+            factory.create(new JarPluginArtifact(new DeploymentUnit(jar)), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
             fail("Should have complained about osgi version");
         }
         catch (PluginParseException ex)
@@ -117,7 +118,7 @@ public class TestOsgiPluginFactory extends TestCase
         mockBundle.expectAndReturn("getSymbolicName", "plugin.key");
         when(osgiContainerManager.getHostComponentRegistrations()).thenReturn(new ArrayList());
         when(osgiContainerManager.getBundles()).thenReturn(new Bundle[] {(Bundle) mockSystemBundle.proxy()});
-        Plugin plugin = factory.create(new JarPluginArtifact(jar), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+        Plugin plugin = factory.create(new JarPluginArtifact(new DeploymentUnit(jar)), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertTrue(plugin instanceof OsgiPlugin);
     }
 
@@ -134,7 +135,7 @@ public class TestOsgiPluginFactory extends TestCase
                         .build())
                 .build();
 
-        final Plugin plugin = factory.create(new JarPluginArtifact(pluginFile), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+        final Plugin plugin = factory.create(new JarPluginArtifact(new DeploymentUnit(jar)), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiPlugin);
     }
@@ -153,7 +154,7 @@ public class TestOsgiPluginFactory extends TestCase
 
         try
         {
-            factory.create(new JarPluginArtifact(pluginFile), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+            factory.create(new JarPluginArtifact(new DeploymentUnit(jar)), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
             fail("Should have failed due to no version");
         }
         catch (IllegalArgumentException ex)
@@ -165,7 +166,7 @@ public class TestOsgiPluginFactory extends TestCase
     public void testCanLoadWithXml() throws PluginParseException, IOException
     {
         final File plugin = new PluginJarBuilder("loadwithxml").addPluginInformation("foo.bar", "", "1.0").build();
-        final String key = factory.canCreate(new JarPluginArtifact(plugin));
+        final String key = factory.canCreate(new JarPluginArtifact(new DeploymentUnit(jar)));
         assertEquals("foo.bar", key);
     }
 
@@ -173,7 +174,7 @@ public class TestOsgiPluginFactory extends TestCase
     {
         File xmlFile = new File(tmpDir, "plugin.xml");
         FileUtils.writeStringToFile(xmlFile, "<somexml />");
-        final String key = factory.canCreate(new XmlPluginArtifact(xmlFile));
+        final String key = factory.canCreate(new XmlPluginArtifact(new DeploymentUnit(jar)));
         assertNull(key);
     }
 
@@ -182,14 +183,14 @@ public class TestOsgiPluginFactory extends TestCase
         final File plugin = new PluginJarBuilder("loadwithxml")
                 .addResource("foo.xml", "<foo/>")
                 .buildWithNoManifest();
-        final String key = factory.canCreate(new JarPluginArtifact(plugin));
+        final String key = factory.canCreate(new JarPluginArtifact(new DeploymentUnit(plugin)));
         assertNull(key);
     }
 
     public void testCanLoadNoXml() throws PluginParseException, IOException
     {
         final File plugin = new PluginJarBuilder("loadwithxml").build();
-        final String key = factory.canCreate(new JarPluginArtifact(plugin));
+        final String key = factory.canCreate(new JarPluginArtifact(new DeploymentUnit(plugin)));
         assertNull(key);
     }
 
@@ -201,7 +202,7 @@ public class TestOsgiPluginFactory extends TestCase
                         .put(Constants.BUNDLE_VERSION, "1.0")
                         .build())
                 .build();
-        final String key = factory.canCreate(new JarPluginArtifact(plugin));
+        final String key = factory.canCreate(new JarPluginArtifact(new DeploymentUnit(plugin)));
         assertEquals("somekey", key);
     }
 
@@ -212,7 +213,7 @@ public class TestOsgiPluginFactory extends TestCase
                         .put(OsgiPlugin.ATLASSIAN_PLUGIN_KEY, "somekey")
                         .build())
                 .build();
-        final String key = factory.canCreate(new JarPluginArtifact(plugin));
+        final String key = factory.canCreate(new JarPluginArtifact(new DeploymentUnit(plugin)));
         assertNull(key);
     }
 

@@ -3,6 +3,7 @@ package com.atlassian.plugin.osgi.factory;
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.event.impl.DefaultPluginEventManager;
 import com.atlassian.plugin.impl.UnloadablePlugin;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.test.PluginJarBuilder;
@@ -42,7 +43,7 @@ public class TestOsgiBundleFactory extends TestCase {
                         "Bundle-SymbolicName: my.foo.symbolicName\n" +
                         "Bundle-Version: 1.0\n")
             .build();
-        assertEquals("my.foo.symbolicName-1.0", deployer.canCreate(new JarPluginArtifact(bundle)));
+        assertEquals("my.foo.symbolicName-1.0", deployer.canCreate(new JarPluginArtifact(new DeploymentUnit(bundle))));
     }
 
     public void testCanDeployStaticPluginWithManifest() throws PluginParseException, IOException
@@ -54,7 +55,7 @@ public class TestOsgiBundleFactory extends TestCase {
                         "Bundle-Version: 1.0\n")
             .addPluginInformation("foo", "Foo", "1.0", 1)
             .build();
-        assertEquals(null, deployer.canCreate(new JarPluginArtifact(bundle)));
+        assertEquals(null, deployer.canCreate(new JarPluginArtifact(new DeploymentUnit(bundle))));
     }
 
     public void testCanDeployNoBundle() throws IOException, PluginParseException {
@@ -62,7 +63,7 @@ public class TestOsgiBundleFactory extends TestCase {
         File plugin = new PluginJarBuilder("someplugin")
             .addPluginInformation("my.foo.symb", "name", "1.0")
             .build();
-        assertNull(deployer.canCreate(new JarPluginArtifact(plugin)));
+        assertNull(deployer.canCreate(new JarPluginArtifact(new DeploymentUnit(plugin))));
     }
 
     public void testCanDeployNonJar() throws IOException, PluginParseException {
@@ -70,6 +71,11 @@ public class TestOsgiBundleFactory extends TestCase {
         final File tmp = File.createTempFile("foo", "bar");
         assertNull(deployer.canCreate(new PluginArtifact()
         {
+            public DeploymentUnit getDeploymentUnit()
+            {
+                return new DeploymentUnit(tmp);
+            }
+
             public boolean doesResourceExist(String name)
             {
                 return false;
@@ -115,7 +121,7 @@ public class TestOsgiBundleFactory extends TestCase {
         mockBundle.matchAndReturn("getHeaders", dict);
         mockBundle.expectAndReturn("getSymbolicName", "my.foo.symbolicName");
         mockOsgi.expectAndReturn("installBundle", C.ANY_ARGS, mockBundle.proxy());
-        Plugin plugin = deployer.create(new JarPluginArtifact(bundle), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+        Plugin plugin = deployer.create(new JarPluginArtifact(new DeploymentUnit(bundle)), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof OsgiBundlePlugin);
         assertEquals("acme", plugin.getPluginInformation().getVendorName());
@@ -133,7 +139,7 @@ public class TestOsgiBundleFactory extends TestCase {
             .build();
         //noinspection ThrowableInstanceNeverThrown
         mockOsgi.expectAndThrow("installBundle", C.ANY_ARGS, new OsgiContainerException("Bad install"));
-        Plugin plugin = deployer.create(new JarPluginArtifact(bundle), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
+        Plugin plugin = deployer.create(new JarPluginArtifact(new DeploymentUnit(bundle)), (ModuleDescriptorFactory) new Mock(ModuleDescriptorFactory.class).proxy());
         assertNotNull(plugin);
         assertTrue(plugin instanceof UnloadablePlugin);
         mockOsgi.verify();

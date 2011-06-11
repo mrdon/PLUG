@@ -9,6 +9,7 @@ import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.hostcontainer.DefaultHostContainer;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentProvider;
 import com.atlassian.plugin.test.PluginJarBuilder;
@@ -28,7 +29,7 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
                         "public class Foo {}")
                 .build();
         initPluginManager(null);
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(pluginJar)));
         Plugin plugin = pluginManager.getPlugin("enabledisable");
         assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
         pluginManager.disablePlugin("enabledisable");
@@ -57,7 +58,7 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
                         "}")
                 .build();
         initPluginManager(null);
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(pluginJar)));
         Plugin plugin = pluginManager.getPlugin("enabledisablewithcomponent");
         assertEquals(PluginState.ENABLED, plugin.getPluginState());
         assertNotNull(((AutowireCapablePlugin)plugin).autowire(plugin.loadClass("my.Foo", this.getClass())));
@@ -128,8 +129,8 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
                         "public class Bar implements my.Foo {}");
 
         initPluginManager(null);
-        pluginManager.installPlugin(new JarPluginArtifact(builderProvider.build()));
-        pluginManager.installPlugin(new JarPluginArtifact(builderConsumer.build()));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(builderProvider.build())));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(builderProvider.build())));
 
         Plugin provider = pluginManager.getPlugin("provider");
         Plugin consumer = pluginManager.getPlugin("consumer");
@@ -265,8 +266,8 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
                         "public class Bar implements my.Foo {}");
 
         initPluginManager(null);
-        pluginManager.installPlugin(new JarPluginArtifact(builderProvider.build()));
-        pluginManager.installPlugin(new JarPluginArtifact(builderConsumer.build()));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(builderProvider.build())));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(builderProvider.build())));
 
         Plugin provider = pluginManager.getPlugin("provider");
         Plugin consumer = pluginManager.getPlugin("consumer");
@@ -325,7 +326,7 @@ public class TestEnableDisablePlugin extends PluginInContainerTestBase
             }
         });
 
-        pluginManager.installPlugin(new JarPluginArtifact(pluginJar));
+        pluginManager.installPlugin(new JarPluginArtifact(new DeploymentUnit(pluginJar)));
         assertTrue(pluginManager.getPlugin("longrunning").getPluginState() == PluginState.ENABLED);
         final ServiceTracker tracker = osgiContainerManager.getServiceTracker("com.atlassian.plugin.osgi.Callable3");
         final Callable3 service = (Callable3) tracker.getService();

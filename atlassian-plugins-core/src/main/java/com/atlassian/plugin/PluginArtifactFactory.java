@@ -1,5 +1,7 @@
 package com.atlassian.plugin;
 
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
+
 import java.net.URI;
 
 /**
@@ -11,9 +13,9 @@ public interface PluginArtifactFactory
 {
     /**
      * Creates a plugin artifact
-     * @param artifactUri The artifact URI
+     * @param deploymentUnit of the artifact
      * @return The artifact.  Must not return null
      * @throws IllegalArgumentException If the artifact cannot be created
      */
-    PluginArtifact create(URI artifactUri) throws IllegalArgumentException;
+    PluginArtifact create(DeploymentUnit deploymentUnit) throws IllegalArgumentException;
 }

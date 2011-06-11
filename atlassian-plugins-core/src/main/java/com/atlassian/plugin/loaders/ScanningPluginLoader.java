@@ -109,7 +109,7 @@ public class ScanningPluginLoader implements DynamicPluginLoader
         {
             try
             {
-                final PluginArtifact artifact = pluginArtifactFactory.create(deploymentUnit.getPath().toURI());
+                final PluginArtifact artifact = pluginArtifactFactory.create(deploymentUnit);
                 pluginKey = factory.canCreate(artifact);
                 if (pluginKey != null)
                 {

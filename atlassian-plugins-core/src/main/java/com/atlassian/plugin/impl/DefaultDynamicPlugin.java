@@ -19,11 +19,6 @@ public class DefaultDynamicPlugin extends AbstractPlugin
     private final PluginArtifact pluginArtifact;
     private final PluginClassLoader loader;
 
-    public DefaultDynamicPlugin(final DeploymentUnit deploymentUnit, final PluginClassLoader loader)
-    {
-        this(new JarPluginArtifact(deploymentUnit.getPath()), loader);
-    }
-
     public DefaultDynamicPlugin(final PluginArtifact pluginArtifact, final PluginClassLoader loader)
     {
         Validate.notNull(pluginArtifact, "The plugin artifact cannot be null");
