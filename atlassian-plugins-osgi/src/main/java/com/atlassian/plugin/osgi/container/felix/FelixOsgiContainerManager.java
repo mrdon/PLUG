@@ -603,6 +603,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
                 @Override
                 public void close()
                 {
+                    super.close();
                     trackedTrackers.remove(this);
                 }
             };
