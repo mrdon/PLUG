@@ -11,6 +11,8 @@ import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 import java.io.File;
 import java.io.IOException;
@@ -293,5 +295,19 @@ public class TestFelixOsgiContainerManager extends TestCase
         } catch (ClassNotFoundException ex) {
             // no worries
         }
+    }
+
+    public void testServiceTrackerIsClosed() throws URISyntaxException, IOException, BundleException
+    {
+        felix.start();
+        // PackageAdmin is an example of service which is loaded by default in Felix
+        ServiceTracker tracker = felix.getServiceTracker(PackageAdmin.class.getCanonicalName());
+        Object[] trackedServices = tracker.getServices();
+        assertNotNull("Unable to perform the test: no service to track", trackedServices);
+
+        tracker.close();
+
+        trackedServices = tracker.getServices();
+        assertNull(trackedServices);
     }
 }
