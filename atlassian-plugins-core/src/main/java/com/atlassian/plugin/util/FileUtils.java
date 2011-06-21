@@ -4,6 +4,7 @@ import com.atlassian.plugin.util.zip.UrlUnzipper;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.slf4j.Logger;
@@ -31,6 +32,27 @@ public class FileUtils
         catch (IOException e)
         {
             log.error("Found " + zipUrl + ", but failed to read file", e);
+        }
+    }
+
+    /**
+     * If possible, return the File equivalent of a URL.
+     * @return the file, or null if it does not represent a file
+     */
+    public static File toFile(final URL url)
+    {
+        if (!"file".equalsIgnoreCase(url.getProtocol())) {
+            return null;
+        }
+
+        try
+        {
+            return new File(url.toURI());
+        }
+        catch (URISyntaxException e)
+        {
+            log.error("Could not convert file:// url to a File", e);
+            return null;
         }
     }
 
