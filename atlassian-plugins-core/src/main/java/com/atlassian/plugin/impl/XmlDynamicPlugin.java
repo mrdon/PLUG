@@ -1,5 +1,7 @@
 package com.atlassian.plugin.impl;
 
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginArtifactBackedPlugin;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 
 import java.io.InputStream;
@@ -10,8 +12,14 @@ import java.net.URL;
  *
  * @since 2.1.0
  */
-public class XmlDynamicPlugin extends AbstractPlugin
+public class XmlDynamicPlugin extends AbstractPlugin implements PluginArtifactBackedPlugin
 {
+    private final PluginArtifact pluginArtifact;
+
+    public XmlDynamicPlugin(PluginArtifact pluginArtifact)
+    {
+        this.pluginArtifact = pluginArtifact;
+    }
 
     public boolean isUninstallable()
     {
@@ -49,5 +57,10 @@ public class XmlDynamicPlugin extends AbstractPlugin
     public InputStream getResourceAsStream(final String name)
     {
         return ClassLoaderUtils.getResourceAsStream(name, getClass());
+    }
+
+    public PluginArtifact getPluginArtifact()
+    {
+        return pluginArtifact;
     }
 }

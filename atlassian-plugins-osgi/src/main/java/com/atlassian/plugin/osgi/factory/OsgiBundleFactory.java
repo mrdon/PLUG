@@ -1,18 +1,23 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.*;
+import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.event.PluginEventManager;
-import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.factories.PluginFactory;
+import com.atlassian.plugin.impl.UnloadablePlugin;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.osgi.container.OsgiContainerException;
 import com.atlassian.plugin.osgi.container.OsgiContainerManager;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.parsers.DescriptorParser;
-import org.apache.commons.lang.Validate;
 import org.apache.commons.io.IOUtils;
-import org.osgi.framework.Constants;
+import org.apache.commons.lang.Validate;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +129,7 @@ public class OsgiBundleFactory implements PluginFactory
             return reportUnloadablePlugin(file, ex);
         }
         String key = OsgiHeaderUtil.getPluginKey(bundle);
-        return new OsgiBundlePlugin(bundle, key, pluginEventManager);
+        return new OsgiBundlePlugin(bundle, key, pluginArtifact, pluginEventManager);
     }
 
     private Plugin reportUnloadablePlugin(File file, Exception e)

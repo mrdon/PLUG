@@ -10,7 +10,6 @@ import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import com.atlassian.plugin.parsers.DescriptorParser;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.parsers.XmlDescriptorParserFactory;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
 import org.dom4j.DocumentException;
@@ -91,7 +90,7 @@ public class XmlDynamicPluginFactory implements PluginFactory
             // The plugin we get back may not be the same (in the case of an UnloadablePlugin), so add what gets returned, rather than the original
             final DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor,
                 applicationKeys.toArray(new String[applicationKeys.size()]));
-            return parser.configurePlugin(moduleDescriptorFactory, new XmlDynamicPlugin());
+            return parser.configurePlugin(moduleDescriptorFactory, new XmlDynamicPlugin(pluginArtifact));
         }
         catch (final RuntimeException e)
         {

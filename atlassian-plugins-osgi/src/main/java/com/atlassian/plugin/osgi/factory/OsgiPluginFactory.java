@@ -1,6 +1,11 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.*;
+import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.ModuleDescriptorFactory;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginInformation;
+import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.UnloadablePlugin;
@@ -243,7 +248,7 @@ public class OsgiPluginFactory implements PluginFactory
             {
                 ModuleDescriptorFactory combinedFactory = getChainedModuleDescriptorFactory(moduleDescriptorFactory, pluginArtifact);
                 DescriptorParser parser = descriptorParserFactory.getInstance(pluginDescriptor, applicationKeys.toArray(new String[applicationKeys.size()]));
-                final Plugin osgiPlugin = new OsgiPlugin(parser.getKey(), osgi, createOsgiPluginJar(pluginArtifact), pluginEventManager);
+                final Plugin osgiPlugin = new OsgiPlugin(parser.getKey(), osgi, createOsgiPluginJar(pluginArtifact), pluginArtifact, pluginEventManager);
 
                 // Temporarily configure plugin until it can be properly installed
                 plugin = parser.configurePlugin(combinedFactory, osgiPlugin);
@@ -256,7 +261,7 @@ public class OsgiPluginFactory implements PluginFactory
                 Validate.notEmpty(pluginKey);
                 Validate.notEmpty(pluginVersion);
 
-                plugin = new OsgiPlugin(pluginKey, osgi, pluginArtifact, pluginEventManager);
+                plugin = new OsgiPlugin(pluginKey, osgi, pluginArtifact, pluginArtifact, pluginEventManager);
                 plugin.setKey(pluginKey);
                 plugin.setPluginsVersion(2);
                 PluginInformation info = new PluginInformation();
