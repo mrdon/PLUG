@@ -1,15 +1,20 @@
 package com.atlassian.plugin.loaders;
 
+import com.atlassian.plugin.PluginException;
+import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
 import org.apache.commons.lang.Validate;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.*;
-
-import com.atlassian.plugin.loaders.classloading.*;
-import com.atlassian.plugin.PluginException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Scans the filesystem for changed or added plugin files and stores a map of the currently known ones.  Files beginning
@@ -17,7 +22,7 @@ import com.atlassian.plugin.PluginException;
  *
  * @since 2.1.0
  */
-class DirectoryScanner implements com.atlassian.plugin.loaders.classloading.Scanner
+public class DirectoryScanner implements com.atlassian.plugin.loaders.classloading.Scanner
 {
     private static Logger log = LoggerFactory.getLogger(DirectoryScanner.class);
 
