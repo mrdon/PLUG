@@ -5,10 +5,11 @@ package com.atlassian.plugin.util;
  */
 public class JavaVersionUtils
 {
+    private static final Float SPEC_VERSION = Float.valueOf(System.getProperty("java.specification.version"));
+
     public static boolean satisfiesMinVersion(float versionNumber)
     {
-        float specVersion = Float.valueOf(System.getProperty("java.specification.version"));
-        return specVersion >= versionNumber;
+        return SPEC_VERSION >= versionNumber;
     }
 
     public static Float resolveVersionFromString(String versionStr)
