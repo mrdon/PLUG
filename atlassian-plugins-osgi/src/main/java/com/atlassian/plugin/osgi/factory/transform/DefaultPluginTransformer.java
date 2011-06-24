@@ -274,7 +274,7 @@ public class DefaultPluginTransformer implements PluginTransformer
         try
         {
             zin = new ZipInputStream(new FileInputStream(zipFile));
-            out = new ZipOutputStream(new FileOutputStream(tempFile));
+            out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile)));
             out.setLevel(Deflater.NO_COMPRESSION);
 
             ZipEntry entry = zin.getNextEntry();
