@@ -41,6 +41,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     protected static final List<WebResourceFormatter> webResourceFormatters = Arrays.asList(CssWebResource.FORMATTER, JavascriptWebResource.FORMATTER);
 
     private static final boolean IGNORE_SUPERBATCHING = false;
+    private Set<String> includedContexts = new HashSet<String>();
 
     public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration)
     {
@@ -69,16 +70,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void requireResourcesForContext(String context)
     {
-        final List<WebResourceModuleDescriptor> webResourceModuleDescriptors =
-                webResourceIntegration.getPluginAccessor().getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class);
-
-        for (WebResourceModuleDescriptor webResourceModuleDescriptor : webResourceModuleDescriptors)
-        {
-            if (webResourceModuleDescriptor.getContexts().contains(context))
-            {
-                requireResource(webResourceModuleDescriptor.getCompleteKey());
-            }
-        }
+        includedContexts.add(context);
 	}
 
     private LinkedHashSet<String> getIncludedResourceNames()
@@ -195,6 +187,8 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         List<PluginResource> resourcesToInclude = new ArrayList<PluginResource>();
         resourcesToInclude.addAll(getSuperBatchResources(filter));
+        ContextBatchBuilder builder = new ContextBatchBuilder(webResourceIntegration, pluginResourceLocator, batchingConfiguration, dependencyResolver);
+        resourcesToInclude.addAll(builder.build(includedContexts, filter));
         resourcesToInclude.addAll(getModuleResources(getIncludedResourceNames(), filter));
 
         writeResourceTags(resourcesToInclude, writer, urlMode);
