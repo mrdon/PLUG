@@ -20,8 +20,8 @@ public class ContextBatchBuilder
     private final ResourceBatchingConfiguration batchingConfiguration;
     private final ResourceDependencyResolver dependencyResolver;
 
-    List<String> allIncludedResources = new ArrayList<String>();
-    List<PluginResource> contextBatches = new ArrayList<PluginResource>();
+    private List<String> allIncludedResources = new ArrayList<String>();
+    private List<PluginResource> contextBatches = new ArrayList<PluginResource>();
 
     public ContextBatchBuilder(WebResourceIntegration webResourceIntegration, PluginResourceLocator pluginResourceLocator, ResourceBatchingConfiguration batchingConfiguration, ResourceDependencyResolver dependencyResolver)
     {
