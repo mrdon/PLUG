@@ -9,7 +9,7 @@ import com.atlassian.plugin.factories.PluginFactory;
 public interface PluginArtifactBackedPlugin extends Plugin
 {
     /**
-     * @return the original, unprocessed or transformed {@link PluginArtifact} used to create this plugin instance.
+     * @return the original, unprocessed or transformed {@link PluginArtifact} used to create this plugin instance. Cannot be null.
      * @since 2.9.0
      */
     PluginArtifact getPluginArtifact();
