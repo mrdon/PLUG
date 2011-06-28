@@ -5,8 +5,10 @@ import static com.google.common.collect.Iterables.filter;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import com.atlassian.plugin.util.PluginUtils;
@@ -69,7 +71,11 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     public boolean matches(final String url)
     {
-        return SuperBatchPluginResource.matches(url) || SuperBatchSubResource.matches(url) || SinglePluginResource.matches(url) || BatchPluginResource.matches(url);
+        return SuperBatchPluginResource.matches(url) ||
+                SuperBatchSubResource.matches(url) ||
+                SinglePluginResource.matches(url) ||
+                BatchPluginResource.matches(url) ||
+                ContextBatchPluginResource.matches(url);
     }
 
     public DownloadableResource getDownloadableResource(final String url, final Map<String, String> queryParams)
@@ -83,6 +89,10 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             if (SuperBatchSubResource.matches(url))
             {
                 return locateSuperBatchSubPluginResource(SuperBatchSubResource.parse(url, queryParams));
+            }
+            if (ContextBatchPluginResource.matches(url))
+            {
+                return locateContextBatchPluginResource(ContextBatchPluginResource.parse(url, queryParams));
             }
             if (BatchPluginResource.matches(url))
             {
@@ -148,6 +158,49 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         }
         log.warn("Could not locate resource in superbatch: " + superBatchSubResource.getResourceName());
         return superBatchSubResource;
+    }
+
+    // TODO - clean up redundant code
+    private DownloadableResource locateContextBatchPluginResource(final ContextBatchPluginResource batchResource)
+    {
+        if (log.isDebugEnabled())
+        {
+            log.debug(batchResource.toString());
+        }
+
+        List<String> contexts = batchResource.getContexts();
+        Set<String> alreadyIncluded = new HashSet<String>();
+
+        for (String context : contexts)
+        {
+            for (final String moduleKey : dependencyResolver.getDependenciesInContext(context))
+            {
+                final ModuleDescriptor<?> moduleDescriptor = pluginAccessor.getEnabledPluginModule(moduleKey);
+                if (moduleDescriptor == null)
+                {
+                    log.info("Resource batching configuration refers to plugin that does not exist: " + moduleKey);
+                }
+                else
+                {
+                    if (log.isDebugEnabled())
+                    {
+                        log.debug("searching resources in: " + moduleKey);
+                    }
+
+                    for (final ResourceDescriptor resourceDescriptor : filter(moduleDescriptor.getResourceDescriptors(), new Resources.TypeFilter(DOWNLOAD_TYPE)))
+                    {
+                        final String completeKey = moduleKey + ":" + resourceDescriptor.getName();
+                        if (isResourceInBatch(resourceDescriptor, batchResource) && !alreadyIncluded.contains(completeKey))
+                        {
+                            batchResource.add(locatePluginResource(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName()));
+                            alreadyIncluded.add(completeKey);
+                        }
+                    }
+                }
+            }
+        }
+
+        return batchResource;
     }
 
     private DownloadableResource locateBatchPluginResource(final BatchPluginResource batchResource)

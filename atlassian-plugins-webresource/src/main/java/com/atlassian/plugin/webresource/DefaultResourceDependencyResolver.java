@@ -63,6 +63,27 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
         return orderedResourceKeys;
     }
 
+    // TODO store/cache this result
+    public Set<String> getDependenciesInContext(String context)
+    {
+        Set<String> contextResources = new LinkedHashSet<String>();
+        List<WebResourceModuleDescriptor> descriptors = webResourceIntegration.getPluginAccessor().getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class);
+        for (WebResourceModuleDescriptor descriptor : descriptors)
+        {
+            if (descriptor.getContexts().contains(context))
+            {
+                LinkedHashSet<String> dependencies = getDependencies(descriptor.getCompleteKey(), true);
+                for (String dependency : dependencies) {
+                    if (!contextResources.contains(dependency))
+                    {
+                        contextResources.add(dependency);
+                    }
+                }
+            }
+        }
+        return contextResources;
+    }
+
     /**
      * Adds the resources as well as its dependencies in order to the given ordered set. This method uses recursion
      * to add a resouce's dependent resources also to the set. You should call this method with a new stack

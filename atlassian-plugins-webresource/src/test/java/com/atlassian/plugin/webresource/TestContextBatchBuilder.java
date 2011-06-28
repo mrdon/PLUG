@@ -25,16 +25,16 @@ public class TestContextBatchBuilder extends TestCase
 
     @Mock
     private WebResourceIntegration mockWebResourceIntegration;
-    private PluginResourceLocator pluginResourceLocator;
     @Mock
     private ResourceBatchingConfiguration mockBatchingConfiguration;
     @Mock
-    private ResourceDependencyResolver mockDependencyResolver;
-    @Mock
     private PluginAccessor mockPluginAccessor;
 
+    private ResourceDependencyResolver dependencyResolver;
+    private PluginResourceLocator pluginResourceLocator;
+
     private Plugin plugin;
-    List<WebResourceModuleDescriptor> moduleDescriptors = new ArrayList<WebResourceModuleDescriptor>();
+    private List<WebResourceModuleDescriptor> moduleDescriptors = new ArrayList<WebResourceModuleDescriptor>();
     private ContextBatchBuilder builder;
 
     @Override
@@ -43,12 +43,15 @@ public class TestContextBatchBuilder extends TestCase
         super.setUp();
         MockitoAnnotations.initMocks(this);
 
-        plugin = TestUtils.createTestPlugin();
         when(mockWebResourceIntegration.getPluginAccessor()).thenReturn(mockPluginAccessor);
         when(mockPluginAccessor.getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class)).thenReturn(moduleDescriptors);
-        pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, null);
 
-        builder = new ContextBatchBuilder(mockWebResourceIntegration, pluginResourceLocator, mockBatchingConfiguration, mockDependencyResolver);
+        plugin = TestUtils.createTestPlugin();
+        // TODO - Mock these
+        pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, null);
+        dependencyResolver = new DefaultResourceDependencyResolver(mockWebResourceIntegration, mockBatchingConfiguration);
+
+        builder = new ContextBatchBuilder(mockWebResourceIntegration, pluginResourceLocator, mockBatchingConfiguration, dependencyResolver);
     }
 
     @Override
@@ -57,7 +60,7 @@ public class TestContextBatchBuilder extends TestCase
         mockWebResourceIntegration = null;
         pluginResourceLocator = null;
         mockBatchingConfiguration = null;
-        mockDependencyResolver = null;
+        dependencyResolver = null;
         mockPluginAccessor = null;
 
         plugin = null;
@@ -86,10 +89,10 @@ public class TestContextBatchBuilder extends TestCase
         List<PluginResource> resources = builder.build(contexts);
 
         assertEquals(4, resources.size());
-        assertEquals("/download/superbatch/css/xmen", resources.get(0).getUrl());
-        assertEquals("/download/superbatch/js/xmen", resources.get(1).getUrl());
-        assertEquals("/download/superbatch/css/brotherhood", resources.get(2).getUrl());
-        assertEquals("/download/superbatch/js/brotherhood", resources.get(3).getUrl());
+        assertEquals("/download/contextbatch/css/xmen.css", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/js/xmen.js", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood.css", resources.get(2).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood.js", resources.get(3).getUrl());
 
         assertEquals(2, builder.getAllIncludedResources().size());
     }
@@ -113,8 +116,8 @@ public class TestContextBatchBuilder extends TestCase
         List<PluginResource> resources = builder.build(contexts);
 
         assertEquals(2, resources.size());
-        assertEquals("/download/superbatch/css/xmen+brotherhood", resources.get(0).getUrl());
-        assertEquals("/download/superbatch/js/xmen+brotherhood", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/css/xmen+brotherhood.css", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/js/xmen+brotherhood.js", resources.get(1).getUrl());
 
         assertEquals(2, builder.getAllIncludedResources().size());
     }
@@ -145,10 +148,10 @@ public class TestContextBatchBuilder extends TestCase
         List<PluginResource> resources = builder.build(contexts);
 
         assertEquals(4, resources.size());
-        assertEquals("/download/superbatch/css/xmen", resources.get(0).getUrl());
-        assertEquals("/download/superbatch/js/xmen", resources.get(1).getUrl());
-        assertEquals("/download/superbatch/css/brotherhood", resources.get(2).getUrl());
-        assertEquals("/download/superbatch/js/brotherhood", resources.get(3).getUrl());
+        assertEquals("/download/contextbatch/css/xmen.css", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/js/xmen.js", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood.css", resources.get(2).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood.js", resources.get(3).getUrl());
 
         assertEquals(4, builder.getAllIncludedResources().size());
     }
@@ -176,10 +179,10 @@ public class TestContextBatchBuilder extends TestCase
         List<PluginResource> resources = builder.build(contexts);
 
         assertEquals(4, resources.size());
-        assertEquals("/download/superbatch/css/xmen", resources.get(0).getUrl());
-        assertEquals("/download/superbatch/js/xmen", resources.get(1).getUrl());
-        assertEquals("/download/superbatch/css/brotherhood", resources.get(2).getUrl());
-        assertEquals("/download/superbatch/js/brotherhood", resources.get(3).getUrl());
+        assertEquals("/download/contextbatch/css/xmen.css", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/js/xmen.js", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood.css", resources.get(2).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood.js", resources.get(3).getUrl());
 
         assertEquals(3, builder.getAllIncludedResources().size());
     }
@@ -214,8 +217,8 @@ public class TestContextBatchBuilder extends TestCase
         List<PluginResource> resources = builder.build(contexts);
 
         assertEquals(2, resources.size());
-        assertEquals("/download/superbatch/css/xmen+government", resources.get(0).getUrl());
-        assertEquals("/download/superbatch/js/xmen+government", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/css/xmen+government.css", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/js/xmen+government.js", resources.get(1).getUrl());
 
         assertEquals(3, builder.getAllIncludedResources().size());
     }
@@ -239,12 +242,12 @@ public class TestContextBatchBuilder extends TestCase
         List<PluginResource> resources = builder.build(contexts);
 
         assertEquals(6, resources.size());
-        assertEquals("/download/superbatch/css/xmen", resources.get(0).getUrl());
-        assertEquals("/download/superbatch/js/xmen", resources.get(1).getUrl());
-        assertEquals("/download/superbatch/css/xmen?ieonly=true", resources.get(2).getUrl());
-        assertEquals("/download/superbatch/css/brotherhood", resources.get(3).getUrl());
-        assertEquals("/download/superbatch/js/brotherhood", resources.get(4).getUrl());
-        assertEquals("/download/superbatch/css/brotherhood?ieonly=true", resources.get(5).getUrl());
+        assertEquals("/download/contextbatch/css/xmen.css", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/js/xmen.js", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/css/xmen.css?ieonly=true", resources.get(2).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood.css", resources.get(3).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood.js", resources.get(4).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood.css?ieonly=true", resources.get(5).getUrl());
 
         assertEquals(2, builder.getAllIncludedResources().size());
     }
@@ -275,12 +278,12 @@ public class TestContextBatchBuilder extends TestCase
 
         // We currently batch all resource params even if there isn't any overlap in a particular context/param combination
         assertEquals(6, resources.size());
-        assertEquals("/download/superbatch/css/xmen+rogue", resources.get(0).getUrl());
-        assertEquals("/download/superbatch/js/xmen+rogue", resources.get(1).getUrl());
-        assertEquals("/download/superbatch/css/xmen+rogue?ieonly=true", resources.get(2).getUrl());
-        assertEquals("/download/superbatch/css/brotherhood", resources.get(3).getUrl());
-        assertEquals("/download/superbatch/js/brotherhood", resources.get(4).getUrl());
-        assertEquals("/download/superbatch/css/brotherhood?ieonly=true", resources.get(5).getUrl());
+        assertEquals("/download/contextbatch/css/xmen+rogue.css", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/js/xmen+rogue.js", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/css/xmen+rogue.css?ieonly=true", resources.get(2).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood.css", resources.get(3).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood.js", resources.get(4).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood.css?ieonly=true", resources.get(5).getUrl());
 
         assertEquals(3, builder.getAllIncludedResources().size());
     }
@@ -299,14 +302,10 @@ public class TestContextBatchBuilder extends TestCase
         contextSet.addAll(contexts);
 
         WebResourceModuleDescriptor moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(completeKey,
-                plugin, descriptors, Collections.<String>emptyList(), contextSet);
+                plugin, descriptors, dependencies, contextSet);
 
         moduleDescriptors.add(moduleDescriptor);
 
-        LinkedHashSet<String> dependenciesSet = new LinkedHashSet<String>(dependencies);
-        dependenciesSet.add(completeKey);
-
         when(mockPluginAccessor.getEnabledPluginModule(completeKey)).thenReturn((ModuleDescriptor) moduleDescriptor);
-        when(mockDependencyResolver.getDependencies(completeKey, true)).thenReturn(dependenciesSet);
     }
 }

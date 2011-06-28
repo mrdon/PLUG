@@ -84,7 +84,11 @@ public class ContextBatchBuilder
                     {
                         if (!mergeList.contains(processed) && resourcesPerContext.get(processed).contains(contextResource))
                         {
-                            log.debug("Context: {} shares a resource with {}: {}", new String[] {context, processed, contextResource});
+                            if (log.isDebugEnabled())
+                            {
+                                log.debug("Context: {} shares a resource with {}: {}", new String[] {context, processed, contextResource});
+                            }
+
                             mergeList.add(processed);
                         }
                     }

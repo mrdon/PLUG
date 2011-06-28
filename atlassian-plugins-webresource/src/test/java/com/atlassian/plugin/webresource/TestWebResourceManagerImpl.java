@@ -252,8 +252,10 @@ public class TestWebResourceManagerImpl extends TestCase
         webResourceManager.includeResources(writer);
         String resources = writer.toString();
         assertFalse(resources.contains(resourceA + ".css"));
-        assertTrue(resources.contains(resourceB + ".css"));
-        assertTrue(resources.contains(resourceC + ".css"));
+        assertFalse(resources.contains(resourceB + ".css"));
+        assertFalse(resources.contains(resourceC + ".css"));
+        assertTrue(resources.contains("/contextbatch/css/foo.css"));
+        assertFalse(resources.contains("/contextbatch/css/bar.css"));
 
         // write includes for all resources for "bar":
         webResourceManager.requireResourcesForContext("bar");
@@ -262,9 +264,12 @@ public class TestWebResourceManagerImpl extends TestCase
         resources = writer.toString();
         assertFalse(resources.contains(resourceA + ".css"));
         assertFalse(resources.contains(resourceB + ".css"));
-        assertTrue(resources.contains(resourceC + ".css"));
+        assertFalse(resources.contains(resourceC + ".css"));
+        assertFalse(resources.contains("/contextbatch/css/foo.css"));
+        assertTrue(resources.contains("/contextbatch/css/bar.css"));
     }
 
+    // TODO - skip conditional resources
     public void testGetResourceContextWithCondition() throws ClassNotFoundException
     {
         String resource1 = "test.atlassian:cool-stuff";
@@ -290,8 +295,9 @@ public class TestWebResourceManagerImpl extends TestCase
         webResourceManager.requireResourcesForContext("foo");
 
         String tags = webResourceManager.getRequiredResources();
-        assertTrue(tags.contains(resource1));
+        assertFalse(tags.contains(resource1));
         assertFalse(tags.contains(resource2));
+        assertTrue(tags.contains("foo.js"));
     }
 
     private Map setupRequestCache()

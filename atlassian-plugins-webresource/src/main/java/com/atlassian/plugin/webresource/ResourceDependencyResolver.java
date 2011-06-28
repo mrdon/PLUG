@@ -1,6 +1,7 @@
 package com.atlassian.plugin.webresource;
 
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 interface ResourceDependencyResolver
 {
@@ -18,4 +19,11 @@ interface ResourceDependencyResolver
      * @param excludeSuperBatchedResources whether or not to exclude resources that are part of the super batch.
      */
     public LinkedHashSet<String> getDependencies(String moduleKey, boolean excludeSuperBatchedResources);
+
+    /**
+     * Returns an ordered set of the resources in a given context and its dependencies.
+     * @param context - the context to retrieve dependencies from.
+     * @return an ordered set of the resources in a given context and its dependencies.
+     */
+    public Set<String> getDependenciesInContext(String context);
 }

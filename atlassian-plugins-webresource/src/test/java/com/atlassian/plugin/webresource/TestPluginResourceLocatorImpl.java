@@ -21,13 +21,14 @@ import org.mockito.MockitoAnnotations;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import static java.util.Arrays.asList;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class TestPluginResourceLocatorImpl extends TestCase
 {
@@ -52,7 +53,8 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
         MockitoAnnotations.initMocks(this);
         when(mockWebResourceIntegration.getPluginAccessor()).thenReturn(mockPluginAccessor);
-        
+
+        // TODO - Mock dependency resolver.
         pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, mockServletContextFactory, mockBatchingConfiguration);
     }
 
@@ -514,6 +516,124 @@ public class TestPluginResourceLocatorImpl extends TestCase
         final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String> emptyMap());
         assertTrue(resource instanceof DownloadableClasspathResource);
     }
+
+    public void testGetDownloadableContextBatchResource() throws Exception
+    {
+        Set<String> contexts = new HashSet<String>();
+        final String context = "contextA";
+        contexts.add(context);
+        contexts.add("contextB");
+        final String url = "/download/contextbatch/css/contextA.css";
+        final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("atlassian.css", "master.css");
+
+        final Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
+        final WebResourceModuleDescriptor webModuleDescriptor = TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY,
+                testPlugin, resourceDescriptors, Collections.<String>emptyList(), contexts);
+
+        when(mockPluginAccessor.getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class)).thenReturn(Arrays.asList(webModuleDescriptor));
+        when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn((ModuleDescriptor) webModuleDescriptor);
+
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String> emptyMap());
+        assertTrue(resource instanceof ContextBatchPluginResource);
+
+        ContextBatchPluginResource contextBatchPluginResource = (ContextBatchPluginResource) resource;
+        assertEquals(1, contextBatchPluginResource.getContexts().size());
+        assertEquals(context, contextBatchPluginResource.getContexts().get(0));
+        verify(mockPluginAccessor, times(4)).getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY);
+    }
+
+    public void testGetDownloadableMergedContextBatchResource() throws Exception
+    {
+        Set<String> contexts1 = new HashSet<String>();
+        final String context1 = "contextA";
+        contexts1.add(context1);
+
+        Set<String> contexts2 = new HashSet<String>();
+        final String context2 = "contextB";
+        contexts2.add(context2);
+        final String url = "/download/contextbatch/css/contextA+contextB.css";
+
+        final Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
+
+        final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("atlassian.css", "master.css");
+        final String completeKey1 = TEST_PLUGIN_KEY + ":" + "a-resources";
+        final WebResourceModuleDescriptor webModuleDescriptor1 = TestUtils.createWebResourceModuleDescriptor(completeKey1,
+                testPlugin, resourceDescriptors1, Collections.<String>emptyList(), contexts1);
+
+        final List<ResourceDescriptor> resourceDescriptors2 = TestUtils.createResourceDescriptors("test.css", "default.css");
+        final String completeKey2 = TEST_PLUGIN_KEY + ":" + "b-resources";
+        final WebResourceModuleDescriptor webModuleDescriptor2 = TestUtils.createWebResourceModuleDescriptor(completeKey2,
+                testPlugin, resourceDescriptors2, Collections.<String>emptyList(), contexts2);
+
+        when(mockPluginAccessor.getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class)).thenReturn(Arrays.asList(webModuleDescriptor1, webModuleDescriptor2));
+
+        when(mockPluginAccessor.getEnabledPluginModule(completeKey1)).thenReturn((ModuleDescriptor) webModuleDescriptor1);
+        when(mockPluginAccessor.getEnabledPluginModule(completeKey2)).thenReturn((ModuleDescriptor) webModuleDescriptor2);
+
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String> emptyMap());
+        assertTrue(resource instanceof ContextBatchPluginResource);
+
+        ContextBatchPluginResource contextBatchPluginResource = (ContextBatchPluginResource) resource;
+        assertEquals(2, contextBatchPluginResource.getContexts().size());
+        assertEquals(context1, contextBatchPluginResource.getContexts().get(0));
+        assertEquals(context2, contextBatchPluginResource.getContexts().get(1));
+
+        verify(mockPluginAccessor, times(4)).getEnabledPluginModule(completeKey1);
+        verify(mockPluginAccessor, times(4)).getEnabledPluginModule(completeKey2);
+    }
+
+    public void testGetDownloadableMergedContextBatchResourceWithOverlap() throws Exception
+    {
+        Set<String> contexts1 = new HashSet<String>();
+        final String context1 = "contextA";
+        contexts1.add(context1);
+
+        Set<String> contexts2 = new HashSet<String>();
+        final String context2 = "contextB";
+        contexts2.add(context2);
+        final String url = "/download/contextbatch/css/contextA+contextB.css";
+
+        final Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
+
+        final List<ResourceDescriptor> parentResourceDescriptors = TestUtils.createResourceDescriptors("parent.css");
+        final String parentKey = TEST_PLUGIN_KEY + ":" + "parent-resources";
+        final WebResourceModuleDescriptor parentWebModuleDescriptor = TestUtils.createWebResourceModuleDescriptor(parentKey,
+                testPlugin, parentResourceDescriptors);
+
+        final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("atlassian.css", "master.css");
+        final String completeKey1 = TEST_PLUGIN_KEY + ":" + "a-resources";
+        final WebResourceModuleDescriptor webModuleDescriptor1 = TestUtils.createWebResourceModuleDescriptor(completeKey1,
+                testPlugin, resourceDescriptors1, Arrays.asList(parentKey), contexts1);
+
+        final List<ResourceDescriptor> resourceDescriptors2 = TestUtils.createResourceDescriptors("test.css", "default.css");
+        final String completeKey2 = TEST_PLUGIN_KEY + ":" + "b-resources";
+        final WebResourceModuleDescriptor webModuleDescriptor2 = TestUtils.createWebResourceModuleDescriptor(completeKey2,
+                testPlugin, resourceDescriptors2, Arrays.asList(parentKey), contexts2);
+
+        when(mockPluginAccessor.getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class)).thenReturn(Arrays.asList(parentWebModuleDescriptor, webModuleDescriptor1, webModuleDescriptor2));
+
+        when(mockPluginAccessor.getEnabledPluginModule(parentKey)).thenReturn((ModuleDescriptor) parentWebModuleDescriptor);
+        when(mockPluginAccessor.getEnabledPluginModule(completeKey1)).thenReturn((ModuleDescriptor) webModuleDescriptor1);
+        when(mockPluginAccessor.getEnabledPluginModule(completeKey2)).thenReturn((ModuleDescriptor) webModuleDescriptor2);
+
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String> emptyMap());
+        assertTrue(resource instanceof ContextBatchPluginResource);
+
+        ContextBatchPluginResource contextBatchPluginResource = (ContextBatchPluginResource) resource;
+        assertEquals(2, contextBatchPluginResource.getContexts().size());
+        assertEquals(context1, contextBatchPluginResource.getContexts().get(0));
+        assertEquals(context2, contextBatchPluginResource.getContexts().get(1));
+
+        verify(mockPluginAccessor, times(4)).getEnabledPluginModule(completeKey1);
+        verify(mockPluginAccessor, times(4)).getEnabledPluginModule(completeKey2);
+
+        // TODO - work out a better way to ensure that the parent isn't included twice.
+        // 2 for dependency resolution
+        // 2 for resource expansion
+        // 1 for resource descriptor download
+        verify(mockPluginAccessor, times(5)).getEnabledPluginModule(parentKey);
+    }
+
 
     public void testSplitLastPathPart()
     {
