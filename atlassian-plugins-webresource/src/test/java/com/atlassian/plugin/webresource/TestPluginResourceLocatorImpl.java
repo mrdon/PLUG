@@ -63,6 +63,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         mockWebResourceIntegration = null;
         mockPluginAccessor = null;
         mockServletContextFactory = null;
+        mockBatchingConfiguration = null;
 
         super.tearDown();
     }
@@ -244,7 +245,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn(mockModuleDescriptor);
         when(mockPluginAccessor.getPlugin(TEST_PLUGIN_KEY)).thenReturn(mockPlugin);
 
-        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String>emptyMap());
 
         assertTrue(resource instanceof ForwardableResource);
     }
@@ -258,12 +259,12 @@ public class TestPluginResourceLocatorImpl extends TestCase
         final ModuleDescriptor mockModuleDescriptor = mock(ModuleDescriptor.class);
         when(mockModuleDescriptor.getPluginKey()).thenReturn(TEST_PLUGIN_KEY);
         when(mockModuleDescriptor.getResourceLocation("download", resourceName)).thenReturn(new ResourceLocation("", resourceName, "download", "text/css",
-            "", Collections.EMPTY_MAP));
+            "", Collections.<String, String>emptyMap()));
 
         when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn(mockModuleDescriptor);
         when(mockPluginAccessor.getPlugin(TEST_PLUGIN_KEY)).thenReturn(mockPlugin);
 
-        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String>emptyMap());
 
         assertTrue(resource instanceof DownloadableClasspathResource);
     }
@@ -293,14 +294,14 @@ public class TestPluginResourceLocatorImpl extends TestCase
         WebResourceModuleDescriptor descriptor = mock(WebResourceModuleDescriptor.class);
         when(descriptor.getPluginKey()).thenReturn(TEST_PLUGIN_KEY);
         when(descriptor.getResourceLocation("download", resourceName)).thenReturn(new ResourceLocation("", resourceName, "download", "text/css",
-            "", Collections.EMPTY_MAP));
+            "", Collections.<String, String>emptyMap()));
         when(descriptor.getTransformations()).thenReturn(Arrays.asList(trans));
 
         when(mockPluginAccessor.getEnabledModuleDescriptorsByClass(WebResourceTransformerModuleDescriptor.class)).thenReturn(Arrays.asList(transDescriptor));
         when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn((ModuleDescriptor) descriptor);
         when(mockPluginAccessor.getPlugin(TEST_PLUGIN_KEY)).thenReturn(mockPlugin);
 
-        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String>emptyMap());
 
         assertTrue(resource == transformedResource);
     }
@@ -330,14 +331,14 @@ public class TestPluginResourceLocatorImpl extends TestCase
         WebResourceModuleDescriptor descriptor = mock(WebResourceModuleDescriptor.class);
         when(descriptor.getPluginKey()).thenReturn(TEST_PLUGIN_KEY);
         when(descriptor.getResourceLocation("download", resourceName)).thenReturn(new ResourceLocation("", resourceName, "download", "text/css",
-            "", Collections.EMPTY_MAP));
+            "", Collections.<String, String>emptyMap()));
         when(descriptor.getTransformations()).thenReturn(Arrays.asList(trans));
 
         when(mockPluginAccessor.getEnabledModuleDescriptorsByClass(WebResourceTransformerModuleDescriptor.class)).thenReturn(Arrays.asList(transDescriptor));
         when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn((ModuleDescriptor) descriptor);
         when(mockPluginAccessor.getPlugin(TEST_PLUGIN_KEY)).thenReturn(mockPlugin);
 
-        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String>emptyMap());
 
         assertTrue(resource instanceof DownloadableClasspathResource);
     }
@@ -367,14 +368,14 @@ public class TestPluginResourceLocatorImpl extends TestCase
         WebResourceModuleDescriptor descriptor = mock(WebResourceModuleDescriptor.class);
         when(descriptor.getPluginKey()).thenReturn(TEST_PLUGIN_KEY);
         when(descriptor.getResourceLocation("download", resourceName)).thenReturn(new ResourceLocation("", resourceName, "download", "text/css",
-            "", Collections.EMPTY_MAP));
+            "", Collections.<String, String>emptyMap()));
         when(descriptor.getTransformations()).thenReturn(Arrays.asList(trans));
 
         when(mockPluginAccessor.getEnabledModuleDescriptorsByClass(WebResourceTransformerModuleDescriptor.class)).thenReturn(Arrays.asList(transDescriptor));
         when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn((ModuleDescriptor) descriptor);
         when(mockPluginAccessor.getPlugin(TEST_PLUGIN_KEY)).thenReturn(mockPlugin);
 
-        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String>emptyMap());
 
         assertTrue(resource instanceof DownloadableClasspathResource);
     }
@@ -394,7 +395,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         when(mockModuleDescriptor.getCompleteKey()).thenReturn(TEST_MODULE_COMPLETE_KEY);
         when(mockModuleDescriptor.getResourceDescriptors()).thenReturn(resourceDescriptors);
         when(mockModuleDescriptor.getResourceLocation("download", ieResourceName)).thenReturn(new ResourceLocation("", ieResourceName, "download",
-            "text/css", "", Collections.EMPTY_MAP));
+            "text/css", "", Collections.<String, String>emptyMap()));
 
         when(mockPluginAccessor.isPluginModuleEnabled(TEST_MODULE_COMPLETE_KEY)).thenReturn(Boolean.TRUE);
         when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn(mockModuleDescriptor);
@@ -414,7 +415,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         params.put("conditionalComment", "IE");
 
         final List<ResourceDescriptor> resourceDescriptors = asList(
-                TestUtils.createResourceDescriptor(ieResourceName, new HashMap(params)),
+                TestUtils.createResourceDescriptor(ieResourceName, new HashMap<String, String>(params)),
                 TestUtils.createResourceDescriptor(ieResourceName));
 
         final Plugin mockPlugin = mock(Plugin.class);
@@ -423,7 +424,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         when(mockModuleDescriptor.getCompleteKey()).thenReturn(TEST_MODULE_COMPLETE_KEY);
         when(mockModuleDescriptor.getResourceDescriptors()).thenReturn(resourceDescriptors);
         when(mockModuleDescriptor.getResourceLocation("download", ieResourceName)).thenReturn(new ResourceLocation("", ieResourceName, "download",
-            "text/css", "", Collections.EMPTY_MAP));
+            "text/css", "", Collections.<String, String>emptyMap()));
 
         when(mockPluginAccessor.isPluginModuleEnabled(TEST_MODULE_COMPLETE_KEY)).thenReturn(Boolean.TRUE);
         when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn(mockModuleDescriptor);
@@ -457,14 +458,14 @@ public class TestPluginResourceLocatorImpl extends TestCase
         when(mockModuleDescriptor.getPluginKey()).thenReturn(TEST_PLUGIN_KEY);
         when(mockModuleDescriptor.getCompleteKey()).thenReturn(TEST_MODULE_COMPLETE_KEY);
         when(mockModuleDescriptor.getResourceLocation("download", resourceName)).thenReturn(new ResourceLocation("", resourceName, "download", "text/css",
-            "", Collections.EMPTY_MAP));
+            "", Collections.<String, String>emptyMap()));
 
         when(mockPluginAccessor.isPluginModuleEnabled(TEST_MODULE_COMPLETE_KEY)).thenReturn(Boolean.TRUE);
         when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn(mockModuleDescriptor);
         when(mockPluginAccessor.getPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn(mockModuleDescriptor);
         when(mockPluginAccessor.getPlugin(TEST_PLUGIN_KEY)).thenReturn(mockPlugin);
 
-        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.EMPTY_MAP);
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String>emptyMap());
 
         assertTrue(resource instanceof DownloadableClasspathResource);
     }
