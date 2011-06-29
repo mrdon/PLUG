@@ -2,6 +2,7 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Stack;
@@ -64,9 +65,9 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
     }
 
     // TODO store/cache this result
-    public Set<String> getDependenciesInContext(String context)
+    public List<String> getDependenciesInContext(String context)
     {
-        Set<String> contextResources = new LinkedHashSet<String>();
+        List<String> contextResources = new ArrayList<String>();
         List<WebResourceModuleDescriptor> descriptors = webResourceIntegration.getPluginAccessor().getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class);
         for (WebResourceModuleDescriptor descriptor : descriptors)
         {

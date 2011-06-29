@@ -1,6 +1,7 @@
 package com.atlassian.plugin.webresource;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 interface ResourceDependencyResolver
@@ -21,9 +22,9 @@ interface ResourceDependencyResolver
     public LinkedHashSet<String> getDependencies(String moduleKey, boolean excludeSuperBatchedResources);
 
     /**
-     * Returns an ordered set of the resources in a given context and its dependencies.
+     * Returns an ordered list of the resources in a given context and its dependencies.
      * @param context - the context to retrieve dependencies from.
-     * @return an ordered set of the resources in a given context and its dependencies.
+     * @return an ordered list of the resources in a given context and its dependencies.
      */
-    public Set<String> getDependenciesInContext(String context);
+    public List<String> getDependenciesInContext(String context);
 }

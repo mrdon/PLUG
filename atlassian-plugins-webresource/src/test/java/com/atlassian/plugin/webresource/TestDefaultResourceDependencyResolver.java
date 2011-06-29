@@ -9,6 +9,7 @@ import com.atlassian.plugin.Plugin;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
@@ -65,18 +66,8 @@ public class TestDefaultResourceDependencyResolver extends TestCase
 
     public void testSuperBatchingNotEnabled()
     {
-        dependencyResolver = new DefaultResourceDependencyResolver(mockWebResourceIntegration, new ResourceBatchingConfiguration() {
-
-            public boolean isSuperBatchingEnabled()
-            {
-                return false;
-            }
-
-            public List<String> getSuperBatchModuleCompleteKeys()
-            {
-                return null;
-            }
-        });
+        when(mockBatchingConfiguration.isSuperBatchingEnabled()).thenReturn(true);
+        when(mockBatchingConfiguration.getSuperBatchModuleCompleteKeys()).thenReturn(superBatchKeys);
 
         assertTrue(dependencyResolver.getSuperBatchDependencies().isEmpty());
     }
@@ -203,7 +194,7 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         addModuleDescriptor(moduleKey1, Collections.<String>emptyList(), contexts1);
         addModuleDescriptor(moduleKey2, Collections.<String>emptyList(), contexts2);
 
-        Set<String> resources = dependencyResolver.getDependenciesInContext(context1);
+        List<String> resources = dependencyResolver.getDependenciesInContext(context1);
         assertOrder(resources, moduleKey1);
 
         resources = dependencyResolver.getDependenciesInContext(context2);
@@ -221,7 +212,7 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         addModuleDescriptor(moduleKey1, Collections.<String>emptyList(), contexts);
         addModuleDescriptor(moduleKey2, Collections.<String>emptyList(), contexts);
 
-        Set<String> resources = dependencyResolver.getDependenciesInContext(context);
+        List<String> resources = dependencyResolver.getDependenciesInContext(context);
         assertOrder(resources, moduleKey1, moduleKey2);
     }
 
@@ -241,7 +232,7 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         // Even if the parent is added last, it should appear first in the list.
         addModuleDescriptor(sharedModuleKey);
 
-        Set<String> resources = dependencyResolver.getDependenciesInContext(context1);
+        List<String> resources = dependencyResolver.getDependenciesInContext(context1);
         assertOrder(resources, sharedModuleKey, moduleKey1);
 
         resources = dependencyResolver.getDependenciesInContext(context2);
@@ -262,7 +253,7 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         // Even if the parent is added last, it should appear first in the list.
         addModuleDescriptor(sharedModuleKey);
 
-        Set<String> resources = dependencyResolver.getDependenciesInContext(context);
+        List<String> resources = dependencyResolver.getDependenciesInContext(context);
         assertOrder(resources, sharedModuleKey, moduleKey1, moduleKey2);
     }
 
@@ -277,7 +268,7 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         addModuleDescriptor(parentModuleKey, Collections.<String>emptyList(), contexts1);
         addModuleDescriptor(moduleKey1, Arrays.asList(parentModuleKey), contexts1);
 
-        Set<String> resources = dependencyResolver.getDependenciesInContext(context1);
+        List<String> resources = dependencyResolver.getDependenciesInContext(context1);
         assertOrder(resources, parentModuleKey, moduleKey1);
     }
 
@@ -301,7 +292,7 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         when(mockPluginAccessor.getEnabledPluginModule(moduleKey)).thenReturn((ModuleDescriptor) webResourceModuleDescriptor);
     }
 
-    private void assertOrder(Set<String> resources, String... expectedResources)
+    private void assertOrder(Collection<String> resources, String... expectedResources)
     {
         assertEquals(resources.size(), expectedResources.length);
 
