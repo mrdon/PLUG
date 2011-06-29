@@ -198,7 +198,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         List<PluginResource> resourcesToInclude = new ArrayList<PluginResource>();
         resourcesToInclude.addAll(getSuperBatchResources(filter));
-        ContextBatchBuilder builder = new ContextBatchBuilder(webResourceIntegration, pluginResourceLocator, batchingConfiguration, dependencyResolver);
+        ContextBatchBuilder builder = new ContextBatchBuilder(pluginResourceLocator, dependencyResolver);
         resourcesToInclude.addAll(builder.build(getIncludedContexts(), filter));
         resourcesToInclude.addAll(getModuleResources(getIncludedResourceNames(), builder.getAllIncludedResources(), filter));
 

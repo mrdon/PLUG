@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,19 +14,15 @@ public class ContextBatchBuilder
 {
     private static final Logger log = LoggerFactory.getLogger(WebResourceManagerImpl.class);
 
-    private final WebResourceIntegration webResourceIntegration;
     private final PluginResourceLocator pluginResourceLocator;
-    private final ResourceBatchingConfiguration batchingConfiguration;
     private final ResourceDependencyResolver dependencyResolver;
 
     private List<String> allIncludedResources = new ArrayList<String>();
     private List<PluginResource> contextBatches = new ArrayList<PluginResource>();
 
-    public ContextBatchBuilder(WebResourceIntegration webResourceIntegration, PluginResourceLocator pluginResourceLocator, ResourceBatchingConfiguration batchingConfiguration, ResourceDependencyResolver dependencyResolver)
+    public ContextBatchBuilder(PluginResourceLocator pluginResourceLocator, ResourceDependencyResolver dependencyResolver)
     {
-        this.webResourceIntegration = webResourceIntegration;
         this.pluginResourceLocator = pluginResourceLocator;
-        this.batchingConfiguration = batchingConfiguration;
         this.dependencyResolver = dependencyResolver;
     }
 
@@ -49,7 +44,7 @@ public class ContextBatchBuilder
 
         for (String context : includedContexts)
         {
-            List<String> contextResources = getContextResources(context);
+            Set<String> contextResources = dependencyResolver.getDependenciesInContext(context);
             Set<Map<String, String>> params = new HashSet<Map<String, String>>();
             List<String> mergeList = new ArrayList<String>();
             for (String contextResource : contextResources)
@@ -139,31 +134,6 @@ public class ContextBatchBuilder
     public List<String> getAllIncludedResources()
     {
         return allIncludedResources;
-    }
-
-    /**
-     * Returns all the resources (including dependencies) within a given context.
-     * @param context a context to search
-     * @return all resources within a context
-     */
-    private List<String> getContextResources(String context)
-    {
-        List<String> contextResources = new ArrayList<String>();
-        List<WebResourceModuleDescriptor> descriptors = webResourceIntegration.getPluginAccessor().getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class);
-        for (WebResourceModuleDescriptor descriptor : descriptors)
-        {
-            if (descriptor.getContexts().contains(context))
-            {
-                LinkedHashSet<String> dependencies = dependencyResolver.getDependencies(descriptor.getCompleteKey(), true);
-                for (String dependency : dependencies) {
-                    if (!contextResources.contains(dependency))
-                    {
-                        contextResources.add(dependency);
-                    }
-                }
-            }
-        }
-        return contextResources;
     }
 
     private static String getType(String path)

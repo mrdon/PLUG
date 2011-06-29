@@ -54,7 +54,6 @@ public class TestPluginResourceLocatorImpl extends TestCase
         MockitoAnnotations.initMocks(this);
         when(mockWebResourceIntegration.getPluginAccessor()).thenReturn(mockPluginAccessor);
 
-        // TODO - Mock dependency resolver.
         pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, mockServletContextFactory, mockBatchingConfiguration);
     }
 

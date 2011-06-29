@@ -15,9 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-/**
- * TODO - write something
- */
 public class ContextBatchPluginResource implements DownloadableResource, BatchResource, PluginResource
 {
     static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + "contextbatch" + PATH_SEPARATOR;
