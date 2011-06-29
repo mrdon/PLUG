@@ -100,21 +100,4 @@ public class ContextBatch
     {
         return resourceTypes;
     }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ContextBatch that = (ContextBatch) o;
-
-        return !(key != null ? !key.equals(that.key) : that.key != null);
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return key != null ? key.hashCode() : 0;
-    }
 }

@@ -1,6 +1,5 @@
 package com.atlassian.plugin.webresource;
 
-import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import junit.framework.TestCase;
 import org.mockito.Mock;
@@ -8,6 +7,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,7 +23,6 @@ public class TestContextBatchBuilder extends TestCase
     @Mock
     private PluginResourceLocator mockPluginResourceLocator;
 
-    private Plugin plugin;
     private ContextBatchBuilder builder;
 
     @Override
@@ -32,7 +31,6 @@ public class TestContextBatchBuilder extends TestCase
         super.setUp();
         MockitoAnnotations.initMocks(this);
 
-        plugin = TestUtils.createTestPlugin();
         builder = new ContextBatchBuilder(mockPluginResourceLocator, mockDependencyResolver);
     }
 
@@ -42,7 +40,6 @@ public class TestContextBatchBuilder extends TestCase
         mockPluginResourceLocator = null;
         mockDependencyResolver = null;
 
-        plugin = null;
         builder = null;
 
         super.tearDown();
@@ -306,7 +303,7 @@ public class TestContextBatchBuilder extends TestCase
             fullKeyDescriptors.add(PLUGIN_KEY + key);
         }
 
-        when(mockDependencyResolver.getDependenciesInContext(context)).thenReturn(fullKeyDescriptors);
+        when(mockDependencyResolver.getDependenciesInContext(context, Collections.<String>emptySet())).thenReturn(fullKeyDescriptors);
     }
 
     private void addModuleDescriptor(String moduleKey, List<ResourceDescriptor> descriptors)

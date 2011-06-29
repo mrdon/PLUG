@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class ContextBatchBuilder
@@ -16,6 +16,7 @@ public class ContextBatchBuilder
     private final ResourceDependencyResolver dependencyResolver;
 
     private List<String> allIncludedResources = new ArrayList<String>();
+    private Set<String> skippedResources = new HashSet<String>();
     private List<PluginResource> contextBatches = new ArrayList<PluginResource>();
 
     public ContextBatchBuilder(PluginResourceLocator pluginResourceLocator, ResourceDependencyResolver dependencyResolver)
@@ -39,7 +40,7 @@ public class ContextBatchBuilder
 
         for (String context : includedContexts)
         {
-            ContextBatch contextBatch = new ContextBatch(context, dependencyResolver.getDependenciesInContext(context));
+            ContextBatch contextBatch = new ContextBatch(context, dependencyResolver.getDependenciesInContext(context, skippedResources));
             List<ContextBatch> mergeList = new ArrayList<ContextBatch>();
             for (String contextResource : contextBatch.getResources())
             {
@@ -108,5 +109,10 @@ public class ContextBatchBuilder
     public List<String> getAllIncludedResources()
     {
         return allIncludedResources;
+    }
+
+    public Set<String> getSkippedResources()
+    {
+        return skippedResources;
     }
 }

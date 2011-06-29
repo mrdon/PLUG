@@ -1,21 +1,20 @@
 package com.atlassian.plugin.webresource;
 
-import apple.awt.CPanel;
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import junit.framework.TestCase;
-import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.Plugin;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.Collections;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.mockito.Mockito.when;
@@ -272,6 +271,37 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         assertOrder(resources, parentModuleKey, moduleKey1);
     }
 
+    public void testSkippedConditions() throws ClassNotFoundException
+    {
+        testPlugin = TestUtils.createTestPlugin("test.atlassian", "1", AlwaysTrueCondition.class, AlwaysFalseCondition.class);
+        String moduleKey1 = "test.atlassian:foo";
+        String parentModuleKey = "test.atlassian:parent";
+        String skippedParentModuleKey = "test.atlassian:skipped-parent";
+        String skippedModuleKey = "test.atlassian:skipped";
+
+        final String context1 = "connie";
+        Set<String> contexts1 = new HashSet<String>(Arrays.asList(context1));
+
+        addModuleDescriptor(parentModuleKey, Collections.<String>emptyList(), contexts1);
+        addModuleDescriptor(moduleKey1, Arrays.asList(parentModuleKey), contexts1);
+        addModuleDescriptor(skippedParentModuleKey, Collections.<String>emptyList());
+
+        WebResourceModuleDescriptor skippedModuleDescriptor =  new WebResourceModuleDescriptorBuilder(testPlugin, "skipped")
+                .setCondition(AlwaysTrueCondition.class)
+                .addDescriptor("skipped.js")
+                .addDependency(skippedParentModuleKey)
+                .addContext(context1)
+                .build();
+        addModuleDescriptor(skippedModuleDescriptor);
+
+        Set<String> skippedResources = new HashSet<String>();
+        List<String> resources = dependencyResolver.getDependenciesInContext(context1, skippedResources);
+        assertOrder(resources, parentModuleKey, moduleKey1);
+
+        // The parent shouldn't be included
+        assertOrder(skippedResources, skippedModuleKey);
+    }
+
     private void addModuleDescriptor(String moduleKey)
     {
         addModuleDescriptor(moduleKey, Collections.<String>emptyList());
@@ -287,9 +317,14 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         final WebResourceModuleDescriptor webResourceModuleDescriptor = TestUtils.createWebResourceModuleDescriptor(moduleKey, testPlugin,
                 Collections.<ResourceDescriptor>emptyList(), dependencies, contexts);
 
+        addModuleDescriptor(webResourceModuleDescriptor);
+    }
+
+    private void addModuleDescriptor(WebResourceModuleDescriptor webResourceModuleDescriptor)
+    {
         moduleDescriptors.add(webResourceModuleDescriptor);
 
-        when(mockPluginAccessor.getEnabledPluginModule(moduleKey)).thenReturn((ModuleDescriptor) webResourceModuleDescriptor);
+        when(mockPluginAccessor.getEnabledPluginModule(webResourceModuleDescriptor.getCompleteKey())).thenReturn((ModuleDescriptor) webResourceModuleDescriptor);
     }
 
     private void assertOrder(Collection<String> resources, String... expectedResources)
