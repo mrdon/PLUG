@@ -17,25 +17,12 @@ import java.util.StringTokenizer;
 
 public class ContextBatchPluginResource implements DownloadableResource, BatchResource, PluginResource
 {
+    // TODO - BN - redefine the URL scheme.
     static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + "contextbatch" + PATH_SEPARATOR;
 
     private final BatchPluginResource delegate;
     private final String resourceName;
     private List<String> contexts;
-
-    public static boolean matches(String path)
-    {
-        return path.indexOf(URL_PREFIX) != -1;
-    }
-
-    public static ContextBatchPluginResource parse(String path, Map<String, String> params)
-    {
-        final int fullStopIndex = path.lastIndexOf(".");
-        final int slashIndex = path.lastIndexOf("/");
-        String type = path.substring(fullStopIndex + 1);
-        String resourceName = path.substring(slashIndex + 1, fullStopIndex);
-        return new ContextBatchPluginResource(resourceName, type, params);
-    }
 
     public ContextBatchPluginResource(String resourceName, String type, Map<String, String> params)
     {
@@ -92,7 +79,7 @@ public class ContextBatchPluginResource implements DownloadableResource, BatchRe
 
     public String getUrl()
     {
-        // TODO - work out a better naming scheme.
+        // TODO - BN - work out a better naming scheme.
         String encodedName;
         try
         {

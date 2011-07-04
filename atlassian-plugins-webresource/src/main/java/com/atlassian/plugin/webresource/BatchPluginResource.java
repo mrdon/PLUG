@@ -62,7 +62,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * This constructor should only ever be used internally within this class. It does not ensure that the resourceName's
      * file extension is the same as the given type. It is up to the calling code to ensure this.
      */
-    private BatchPluginResource(final String resourceName, final String moduleCompleteKey, final String type, final Map<String, String> params)
+    BatchPluginResource(final String resourceName, final String moduleCompleteKey, final String type, final Map<String, String> params)
     {
         this.resourceName = resourceName;
         this.moduleCompleteKey = moduleCompleteKey;
@@ -155,43 +155,6 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
             return contentType;
         }
         return null;
-    }
-
-    /**
-     * Parses the given url and query parameter map into a BatchPluginResource. Query paramters must be
-     * passed in through the map, any in the url String will be ignored.
-     * @param url         the url to parse
-     * @param queryParams a map of String key and value pairs representing the query parameters in the url
-     * @return the parsed BatchPluginResource
-     * @throws UrlParseException if the url passed in is not a valid batch resource url
-     */
-    public static BatchPluginResource parse(String url, final Map<String, String> queryParams) throws UrlParseException
-    {
-        final int startIndex = url.indexOf(URL_PREFIX) + URL_PREFIX.length() + 1;
-
-        if (url.indexOf('?') != -1) // remove query parameters
-        {
-            url = url.substring(0, url.indexOf('?'));
-        }
-
-        final String typeAndModuleKey = url.substring(startIndex);
-        final String[] parts = typeAndModuleKey.split("/", 2);
-
-        if (parts.length < 2)
-        {
-            throw new UrlParseException("Could not parse invalid batch resource url: " + url);
-        }
-
-        final String moduleKey = parts[0];
-        final String resourceName = parts[1];
-        final String type = resourceName.substring(resourceName.lastIndexOf('.') + 1);
-
-        return new BatchPluginResource(resourceName, moduleKey, type, queryParams);
-    }
-
-    public static boolean matches(final String url)
-    {
-        return url.indexOf(URL_PREFIX) != -1;
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.atlassian.plugin.webresource;
 
+import com.atlassian.plugin.servlet.DownloadableResource;
+
 import java.util.Map;
 
 /**
@@ -10,4 +12,6 @@ public interface BatchResource
     String getType();
 
     Map<String, String> getParams();
+
+    void add(DownloadableResource resource);
 }

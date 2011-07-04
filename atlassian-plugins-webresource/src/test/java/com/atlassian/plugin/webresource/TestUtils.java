@@ -21,7 +21,6 @@ import java.util.TreeMap;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.when;
 
 public class TestUtils
@@ -170,8 +169,8 @@ public class TestUtils
         final Plugin plugin = mock(Plugin.class);
         PluginInformation pluginInfo = new PluginInformation();
         pluginInfo.setVersion(version);
-        stub(plugin.getPluginInformation()).toReturn(pluginInfo);
-        stub(plugin.getKey()).toReturn(pluginKey);
+        when(plugin.getPluginInformation()).thenReturn(pluginInfo);
+        when(plugin.getKey()).thenReturn(pluginKey);
         for (Class loadableClass : loadableClasses)
         {
             when(plugin.loadClass(Matchers.eq(loadableClass.getName()), (Class<?>) any())).thenReturn((Class<Object>) TestUtils.class.getClassLoader().loadClass(loadableClass.getName()));

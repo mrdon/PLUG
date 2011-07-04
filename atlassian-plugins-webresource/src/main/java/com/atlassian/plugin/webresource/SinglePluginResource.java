@@ -77,36 +77,4 @@ public class SinglePluginResource implements PluginResource
     {
         return URL_PREFIX + PATH_SEPARATOR + moduleCompleteKey + PATH_SEPARATOR + resourceName;
     }
-
-    public static boolean matches(final String url)
-    {
-        return url.indexOf(URL_PREFIX) != -1;
-    }
-
-    /**
-     * Parses the given url into a SinglePluginResource.
-     *
-     * @param url the url to parse
-     * @return The parsed SinglePluginResource.
-     * @throws UrlParseException if the url passed in is not a valid plugin resource url
-     */
-    public static SinglePluginResource parse(final String url) throws UrlParseException
-    {
-        final int indexOfPrefix = url.indexOf(SinglePluginResource.URL_PREFIX);
-        String libraryAndResource = url.substring(indexOfPrefix + SinglePluginResource.URL_PREFIX.length() + 1);
-
-        if (libraryAndResource.indexOf('?') != -1) // remove query parameters
-        {
-            libraryAndResource = libraryAndResource.substring(0, libraryAndResource.indexOf('?'));
-        }
-
-        final String[] parts = libraryAndResource.split("/", 2);
-
-        if (parts.length != 2)
-        {
-            throw new UrlParseException("Could not parse invalid plugin resource url: " + url);
-        }
-
-        return new SinglePluginResource(parts[1], parts[0], url.substring(0, indexOfPrefix).length() > 0);
-    }
 }

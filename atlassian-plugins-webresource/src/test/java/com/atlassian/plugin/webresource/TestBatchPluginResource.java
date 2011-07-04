@@ -14,85 +14,6 @@ import junit.framework.TestCase;
 
 public class TestBatchPluginResource extends TestCase
 {
-    public void testIsCacheSupported() throws Exception
-    {
-        final BatchPluginResource resource = BatchPluginResource.parse("/download/batch/test.plugin:webresources/test.plugin:webresources.css",
-            Collections.<String, String>emptyMap());
-        assertTrue(resource.isCacheSupported());
-
-        final Map<String, String> queryParams = new TreeMap<String, String>();
-        queryParams.put("cache", "false");
-        final BatchPluginResource resource2 = BatchPluginResource.parse("/download/batch/test.plugin:webresources/test.plugin:webresources.css",
-            queryParams);
-        assertFalse(resource2.isCacheSupported());
-    }
-
-    public void testParse() throws Exception
-    {
-        final BatchPluginResource resource = BatchPluginResource.parse("/download/batch/test.plugin:webresources/test.plugin:webresources.css",
-            Collections.<String, String>emptyMap());
-        assertEquals("css", resource.getType());
-        assertEquals("test.plugin:webresources", resource.getModuleCompleteKey());
-
-        final Map<String, String> params = resource.getParams();
-
-        assertEquals(0, params.size());
-    }
-
-    public void testParseWithParams() throws Exception
-    {
-        final Map<String, String> queryParams = new TreeMap<String, String>();
-        queryParams.put("ieonly", "true");
-        queryParams.put("foo", "bar");
-
-        final BatchPluginResource resource = BatchPluginResource.parse("/download/batch/test.plugin:webresources/test.plugin:webresources.css",
-            queryParams);
-        assertEquals("css", resource.getType());
-        assertEquals("test.plugin:webresources", resource.getModuleCompleteKey());
-
-        final Map<String, String> params = new TreeMap<String, String>();
-        params.put("ieonly", "true");
-        params.put("foo", "bar");
-
-        assertEquals(params, resource.getParams());
-    }
-
-    public void testParseWithParams2() throws Exception
-    {
-        final Map<String, String> queryParams = new TreeMap<String, String>();
-        queryParams.put("ieonly", "true");
-        queryParams.put("foo", "bar");
-
-        final BatchPluginResource resource = BatchPluginResource.parse("/download/batch/test.plugin:webresources/test.plugin:webresources.css?ieonly=true&foo=bar",
-            queryParams);
-        assertEquals("css", resource.getType());
-        assertEquals("test.plugin:webresources", resource.getModuleCompleteKey());
-
-        final Map<String, String> params = new TreeMap<String, String>();
-        params.put("ieonly", "true");
-        params.put("foo", "bar");
-
-        assertEquals(params, resource.getParams());
-    }
-
-    public void testParseWithParamsAndRandomPrefix() throws Exception
-    {
-        final Map<String, String> queryParams = new TreeMap<String, String>();
-        queryParams.put("ieonly", "true");
-        queryParams.put("foo", "bar");
-
-        final BatchPluginResource resource = BatchPluginResource.parse("/random/stuff/download/batch/test.plugin:webresources/test.plugin:webresources.css?ieonly=true&foo=bar",
-            queryParams);
-        assertEquals("css", resource.getType());
-        assertEquals("test.plugin:webresources", resource.getModuleCompleteKey());
-
-        final Map<String, String> params = new TreeMap<String, String>();
-        params.put("ieonly", "true");
-        params.put("foo", "bar");
-
-        assertEquals(params, resource.getParams());
-    }
-
     public void testGetUrl()
     {
         final BatchPluginResource resource = new BatchPluginResource("test.plugin:webresources", "js", Collections.<String, String>emptyMap());
@@ -109,21 +30,6 @@ public class TestBatchPluginResource extends TestCase
         assertEquals("/download/batch/test.plugin:webresources/test.plugin:webresources.js?conditionalComment=lt+IE+9&foo=bar", resource.getUrl());
     }
 
-    public void testRoundTrip() throws Exception
-    {
-        final Map<String, String> params = new TreeMap<String, String>();
-        params.put("foo", "bar");
-
-        final String moduleKey = "test.plugin:webresources";
-        final BatchPluginResource resource = new BatchPluginResource(moduleKey, "js", params);
-        final String url = resource.getUrl();
-        final BatchPluginResource parsedResource = BatchPluginResource.parse(url, params);
-
-        assertEquals(resource.getType(), parsedResource.getType());
-        assertEquals(resource.getModuleCompleteKey(), parsedResource.getModuleCompleteKey());
-        assertEquals(resource.getParams(), parsedResource.getParams());
-        assertEquals(moduleKey + ".js", resource.getResourceName());
-    }
 
     public void testEquals()
     {
@@ -179,18 +85,5 @@ public class TestBatchPluginResource extends TestCase
 
         final String actualResponse = baos.toString();
         assertEquals("Test1\nTest2\n", actualResponse);
-    }
-
-    public void testParseInvlaidUrlThrowsException()
-    {
-        try
-        {
-            BatchPluginResource.parse("/download/batch/blah.css", Collections.<String, String>emptyMap());
-            fail("Should have thrown exception for invalid url");
-        }
-        catch (UrlParseException e)
-        {
-            //expected
-        }
     }
 }

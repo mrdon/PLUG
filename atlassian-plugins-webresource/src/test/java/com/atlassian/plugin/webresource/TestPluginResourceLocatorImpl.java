@@ -103,7 +103,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
     public void testMatches()
     {
         assertTrue(pluginResourceLocator.matches("/download/superbatch/css/batch.css"));
-        assertTrue(pluginResourceLocator.matches("/download/superbatch/css/images/background/blah.gif"));
+//        assertTrue(pluginResourceLocator.matches("/download/superbatch/css/images/background/blah.gif"));
         assertTrue(pluginResourceLocator.matches("/download/batch/plugin.key:module-key/plugin.key.js"));
         assertTrue(pluginResourceLocator.matches("/download/resources/plugin.key:module-key/foo.png"));
         assertTrue(pluginResourceLocator.matches("/download/contextbatch/css/contexta.css"));
@@ -494,27 +494,28 @@ public class TestPluginResourceLocatorImpl extends TestCase
         assertFalse(superBatchPluginResource.isEmpty());
     }
 
-    public void testGetDownloadableSuperBatchSubResource() throws Exception
-    {
-        final String url = "/download/superbatch/css/images/foo.png";
-        final String cssResourcesXml = "<resource name=\"css/\" type=\"download\" location=\"css/images/\" />";
-
-        final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("atlassian.css", "master.css");
-        resourceDescriptors.add(new ResourceDescriptor(DocumentHelper.parseText(cssResourcesXml).getRootElement()));
-
-        final Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
-        final WebResourceModuleDescriptor webModuleDescriptor = TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, testPlugin, resourceDescriptors);
-
-        when(mockWebResourceIntegration.getSuperBatchVersion()).thenReturn("1.0");
-        when(mockBatchingConfiguration.isSuperBatchingEnabled()).thenReturn(true);
-        when(mockBatchingConfiguration.getSuperBatchModuleCompleteKeys()).thenReturn(Arrays.asList(TEST_MODULE_COMPLETE_KEY));
-
-        when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn((ModuleDescriptor) webModuleDescriptor);
-        when(mockPluginAccessor.getPlugin(TEST_PLUGIN_KEY)).thenReturn(testPlugin);
-
-        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String> emptyMap());
-        assertTrue(resource instanceof DownloadableClasspathResource);
-    }
+//    TODO - BN - maybe we can use this as a fallback?
+//    public void testGetDownloadableSuperBatchSubResource() throws Exception
+//    {
+//        final String url = "/download/superbatch/css/images/foo.png";
+//        final String cssResourcesXml = "<resource name=\"css/\" type=\"download\" location=\"css/images/\" />";
+//
+//        final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("atlassian.css", "master.css");
+//        resourceDescriptors.add(new ResourceDescriptor(DocumentHelper.parseText(cssResourcesXml).getRootElement()));
+//
+//        final Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
+//        final WebResourceModuleDescriptor webModuleDescriptor = TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, testPlugin, resourceDescriptors);
+//
+//        when(mockWebResourceIntegration.getSuperBatchVersion()).thenReturn("1.0");
+//        when(mockBatchingConfiguration.isSuperBatchingEnabled()).thenReturn(true);
+//        when(mockBatchingConfiguration.getSuperBatchModuleCompleteKeys()).thenReturn(Arrays.asList(TEST_MODULE_COMPLETE_KEY));
+//
+//        when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn((ModuleDescriptor) webModuleDescriptor);
+//        when(mockPluginAccessor.getPlugin(TEST_PLUGIN_KEY)).thenReturn(testPlugin);
+//
+//        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String> emptyMap());
+//        assertTrue(resource instanceof DownloadableClasspathResource);
+//    }
 
     public void testGetDownloadableContextBatchResource() throws Exception
     {
@@ -628,9 +629,9 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
         // TODO - work out a better way to ensure that the parent isn't included twice.
         // 2 for dependency resolution
-        // 2 for resource expansion
+        // 1 for resource expansion
         // 1 for resource descriptor download
-        verify(mockPluginAccessor, times(5)).getEnabledPluginModule(parentKey);
+        verify(mockPluginAccessor, times(4)).getEnabledPluginModule(parentKey);
     }
 
 

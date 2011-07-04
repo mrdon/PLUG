@@ -28,21 +28,9 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
     private final BatchPluginResource delegate;
     private final String resourceName;
 
-    public static boolean matches(String path)
-    {
-        String type = getType(path);
-        return path.indexOf(URL_PREFIX) != -1 && endsWith(path, DEFAULT_RESOURCE_NAME_PREFIX, ".", type);
-    }
-
     public static SuperBatchPluginResource createBatchFor(PluginResource pluginResource)
     {
         return new SuperBatchPluginResource(getType(pluginResource.getResourceName()), pluginResource.getParams());
-    }
-
-    public static SuperBatchPluginResource parse(String path, Map<String, String> params)
-    {
-        String type = path.substring(path.lastIndexOf(".") + 1);
-        return new SuperBatchPluginResource(type, params);
     }
 
     protected static String getType(String path)
