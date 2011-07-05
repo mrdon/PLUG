@@ -13,6 +13,8 @@ import java.util.Set;
  * (skipped) resources. Some of the input contexts may have been merged into cross-context batches.
  * The batches are constructed in such a way that no batch is dependent on another.
  * The output batches and resources may be intermingled so as to preserve the input order as much as possible.
+ *
+ * @since 2.10
  */
 public class ContextBatchBuilder
 {

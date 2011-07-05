@@ -69,7 +69,6 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
         return getDependenciesInContext(context, new LinkedHashSet<String>());
     }
 
-    // TODO store/cache this result
     public List<String> getDependenciesInContext(String context, Set<String> skippedResources)
     {
         List<String> contextResources = new ArrayList<String>();

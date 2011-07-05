@@ -38,7 +38,7 @@ class ContextBatch
     ContextBatch(String key, List<String> contexts, List<String> resources, Set<PluginResourceBatchParams> resourceParams)
     {
         this.key = key;
-        this.contexts = contexts;
+        this.contexts = Collections.unmodifiableList(contexts);
 
         this.resources = Collections.unmodifiableList(resources);
         this.resourceParams = Collections.unmodifiableSet(resourceParams);
