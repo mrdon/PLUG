@@ -203,7 +203,9 @@ public class WebResourceManagerImpl implements WebResourceManager
         ContextBatchBuilder builder = new ContextBatchBuilder(pluginResourceLocator, dependencyResolver);
         resourcesToInclude.addAll(builder.build(getIncludedContexts(), filter));
         for (String skippedResource : builder.getSkippedResources())
+        {
             requireResource(skippedResource);
+        }
 
         resourcesToInclude.addAll(getModuleResources(getIncludedResourceNames(), builder.getAllIncludedResources(), filter));
 

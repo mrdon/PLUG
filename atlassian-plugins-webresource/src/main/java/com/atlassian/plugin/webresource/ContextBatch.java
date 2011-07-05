@@ -1,41 +1,70 @@
 package com.atlassian.plugin.webresource;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.atlassian.plugin.webresource.ContextBatchPluginResource.CONTEXT_SEPARATOR;
+
 /**
- * A intermediary object used for constructing and merging context batches.
+ * An intermediary object used for constructing and merging context batches.
+ * This is a bean that holds the different resources and parameters that apply
+ * to a particular batch.
+ * The batch can include one or more contexts.
+ * Resources are expected to be dependency order, with no duplicates.
  */
-public class ContextBatch
+class ContextBatch
 {
-    private String key;
-    private List<String> contexts;
+    private final String key;
+    private final List<String> contexts;
 
-    private List<String> resources;
-    private Set<ResourceType> resourceTypes;
+    private final List<String> resources;
+    private final Set<PluginResourceBatchParams> resourceParams;
 
-    public ContextBatch(String context, List<String> resources)
+    ContextBatch(String context, List<String> resources)
     {
         this.key = context;
-        contexts = new ArrayList<String>();
-        contexts.add(context);
+        contexts = Collections.unmodifiableList(Arrays.asList(context));
 
-        this.resources = resources;
-        this.resourceTypes = new HashSet<ResourceType>();
+        this.resources = Collections.unmodifiableList(resources);
+        this.resourceParams = new HashSet<PluginResourceBatchParams>();
     }
 
-    public void merge(ContextBatch contextBatch)
+    ContextBatch(String key, List<String> contexts, List<String> resources, Set<PluginResourceBatchParams> resourceParams)
     {
-        this.key += "+" + contextBatch.getKey();
-        this.contexts.addAll(contextBatch.getContexts());
+        this.key = key;
+        this.contexts = contexts;
+
+        this.resources = Collections.unmodifiableList(resources);
+        this.resourceParams = Collections.unmodifiableSet(resourceParams);
+    }
+
+    /**
+     * Merges two context batches into a single context batch.
+     * @param contextBatch1 - the context to merge into
+     * @param contextBatch2 - the context to add
+     * @return a single context batch.
+     */
+    public static ContextBatch merge(ContextBatch contextBatch1, ContextBatch contextBatch2)
+    {
+        String newKey = contextBatch1.getKey() + CONTEXT_SEPARATOR + contextBatch2.getKey();
+
+        List<String> newContexts = new ArrayList<String>(contextBatch1.getContexts());
+        newContexts.addAll(contextBatch2.getContexts());
+
+        List<String> newResources = new ArrayList<String>(contextBatch1.getResources());
+        newResources.addAll(contextBatch2.getResources());
 
         // Merge assumes that the merged batched doesn't overlap with the current one.
-        this.resources.addAll(contextBatch.getResources());
-        this.resourceTypes.addAll(contextBatch.getResourceTypes());
+        Set<PluginResourceBatchParams> newResourceParams = new HashSet<PluginResourceBatchParams>(contextBatch1.getResourceParams());
+        newResourceParams.addAll(contextBatch2.getResourceParams());
+
+        return new ContextBatch(newKey, newContexts, newResources, newResourceParams);
     }
 
     public boolean isResourceIncluded(String resource)
@@ -46,39 +75,32 @@ public class ContextBatch
     public void addResourceType(PluginResource pluginResource)
     {
         Map<String, String> parameters = new HashMap<String, String>(PluginResourceLocator.BATCH_PARAMS.length);
-        String type = getType(pluginResource.getResourceName());
+        String type = ResourceUtils.getType(pluginResource.getResourceName());
         for (String s : PluginResourceLocator.BATCH_PARAMS)
         {
             if (pluginResource.getParams().get(s) != null)
+            {
                 parameters.put(s, pluginResource.getParams().get(s));
+            }
         }
 
-        ResourceType resourceType = new ResourceType(type, parameters);
+        PluginResourceBatchParams resourceType = new PluginResourceBatchParams(type, parameters);
 
-        if (!resourceTypes.contains(resourceType))
+        if (!resourceParams.contains(resourceType))
         {
-            resourceTypes.add(resourceType);
+            resourceParams.add(resourceType);
         }
     }
 
     public List<ContextBatchPluginResource> buildPluginResources()
     {
         List<ContextBatchPluginResource> pluginResources = new ArrayList<ContextBatchPluginResource>();
-        for (ResourceType resourceType : resourceTypes)
+        for (PluginResourceBatchParams resourceParam : resourceParams)
         {
-            pluginResources.add(new ContextBatchPluginResource(key, resourceType.getType(), resourceType.getParameters()));
+            pluginResources.add(new ContextBatchPluginResource(key, contexts, resourceParam.getType(), resourceParam.getParameters()));
         }
 
         return  pluginResources;
-    }
-
-    private static String getType(String path)
-    {
-        int index = path.lastIndexOf('.');
-        if (index > -1 && index < path.length())
-            return path.substring(index + 1);
-
-        return "";
     }
 
     public String getKey()
@@ -96,8 +118,8 @@ public class ContextBatch
         return resources;
     }
 
-    public Set<ResourceType> getResourceTypes()
+    public Set<PluginResourceBatchParams> getResourceParams()
     {
-        return resourceTypes;
+        return resourceParams;
     }
 }

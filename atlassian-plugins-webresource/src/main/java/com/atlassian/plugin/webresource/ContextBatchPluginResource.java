@@ -8,41 +8,31 @@ import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PAT
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 public class ContextBatchPluginResource implements DownloadableResource, BatchResource, PluginResource
 {
-    // TODO - BN - redefine the URL scheme.
+    static final String CONTEXT_SEPARATOR = ",";
+
     static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + "contextbatch" + PATH_SEPARATOR;
+    static final String DEFAULT_RESOURCE_NAME_PREFIX = "batch";
 
     private final BatchPluginResource delegate;
     private final String resourceName;
-    private List<String> contexts;
+    private final String key;
+    private final List<String> contexts;
 
-    public ContextBatchPluginResource(String resourceName, String type, Map<String, String> params)
+    public ContextBatchPluginResource(String key, List<String> contexts, String type, Map<String, String> params)
     {
-        this.resourceName = resourceName + "." + type;
+        this.resourceName = DEFAULT_RESOURCE_NAME_PREFIX + "." + type;
         this.delegate = new BatchPluginResource(null, type, params);
+        this.key = key;
+        this.contexts = contexts;
     }
 
     public List<String> getContexts()
     {
-        if (contexts == null)
-        {
-            contexts = new ArrayList<String>();
-
-            String temp = resourceName.substring(0, resourceName.lastIndexOf("."));
-            StringTokenizer st = new StringTokenizer(temp, "+ ");
-            while (st.hasMoreTokens())
-            {
-                contexts.add(st.nextToken());
-            }
-        }
         return contexts;
     }
 
@@ -79,19 +69,9 @@ public class ContextBatchPluginResource implements DownloadableResource, BatchRe
 
     public String getUrl()
     {
-        // TODO - BN - work out a better naming scheme.
-        String encodedName;
-        try
-        {
-            encodedName = URLEncoder.encode(URLEncoder.encode(resourceName, "UTF-8"), "UTF-8");
-        }
-        catch (UnsupportedEncodingException e)
-        {
-            encodedName = resourceName;
-        }
         StringBuilder buf = new StringBuilder(URL_PREFIX.length() + 20);
         buf.append(URL_PREFIX).append(getType()).append(PATH_SEPARATOR)
-                .append(encodedName);
+                .append(key).append(PATH_SEPARATOR).append(resourceName);
         delegate.addParamsToUrl(buf, delegate.getParams());
         return buf.toString();
     }

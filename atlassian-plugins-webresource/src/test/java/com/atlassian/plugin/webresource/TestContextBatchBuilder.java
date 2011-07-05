@@ -66,10 +66,10 @@ public class TestContextBatchBuilder extends TestCase
         List<PluginResource> resources = builder.build(contexts);
 
         assertEquals(4, resources.size());
-        assertEquals("/download/contextbatch/js/xmen.js", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen.css", resources.get(1).getUrl());
-        assertEquals("/download/contextbatch/js/brotherhood.js", resources.get(2).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood.css", resources.get(3).getUrl());
+        assertEquals("/download/contextbatch/js/xmen/batch.js", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/css/xmen/batch.css", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood/batch.js", resources.get(2).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood/batch.css", resources.get(3).getUrl());
 
         assertEquals(2, builder.getAllIncludedResources().size());
     }
@@ -95,8 +95,8 @@ public class TestContextBatchBuilder extends TestCase
         List<PluginResource> resources = builder.build(contexts);
 
         assertEquals(2, resources.size());
-        assertEquals("/download/contextbatch/js/xmen%252Bbrotherhood.js", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen%252Bbrotherhood.css", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/js/xmen,brotherhood/batch.js", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/css/xmen,brotherhood/batch.css", resources.get(1).getUrl());
 
         assertEquals(2, builder.getAllIncludedResources().size());
     }
@@ -130,10 +130,10 @@ public class TestContextBatchBuilder extends TestCase
         List<PluginResource> resources = builder.build(contexts);
 
         assertEquals(4, resources.size());
-        assertEquals("/download/contextbatch/js/xmen.js", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen.css", resources.get(1).getUrl());
-        assertEquals("/download/contextbatch/js/brotherhood.js", resources.get(2).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood.css", resources.get(3).getUrl());
+        assertEquals("/download/contextbatch/js/xmen/batch.js", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/css/xmen/batch.css", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood/batch.js", resources.get(2).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood/batch.css", resources.get(3).getUrl());
 
         assertEquals(4, builder.getAllIncludedResources().size());
     }
@@ -171,8 +171,8 @@ public class TestContextBatchBuilder extends TestCase
         List<PluginResource> resources = builder.build(contexts);
 
         assertEquals(2, resources.size());
-        assertEquals("/download/contextbatch/js/xmen%252Bgovernment.js", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen%252Bgovernment.css", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/js/xmen,government/batch.js", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/css/xmen,government/batch.css", resources.get(1).getUrl());
 
         assertEquals(3, builder.getAllIncludedResources().size());
     }
@@ -216,10 +216,10 @@ public class TestContextBatchBuilder extends TestCase
         List<PluginResource> resources = builder.build(contexts);
 
         assertEquals(4, resources.size());
-        assertEquals("/download/contextbatch/js/xmen%252Bbrotherhood%252Brogue.js", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen%252Bbrotherhood%252Brogue.css", resources.get(1).getUrl());
-        assertEquals("/download/contextbatch/js/normals.js", resources.get(2).getUrl());
-        assertEquals("/download/contextbatch/css/normals.css", resources.get(3).getUrl());
+        assertEquals("/download/contextbatch/js/normals/batch.js", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/css/normals/batch.css", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/js/xmen,brotherhood,rogue/batch.js", resources.get(2).getUrl());
+        assertEquals("/download/contextbatch/css/xmen,brotherhood,rogue/batch.css", resources.get(3).getUrl());
 
         assertEquals(4, builder.getAllIncludedResources().size());
     }
@@ -245,12 +245,12 @@ public class TestContextBatchBuilder extends TestCase
         List<PluginResource> resources = builder.build(contexts);
 
         assertEquals(6, resources.size());
-        assertEquals("/download/contextbatch/css/xmen.css?ieonly=true", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/js/xmen.js", resources.get(1).getUrl());
-        assertEquals("/download/contextbatch/css/xmen.css", resources.get(2).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood.css?ieonly=true", resources.get(3).getUrl());
-        assertEquals("/download/contextbatch/js/brotherhood.js", resources.get(4).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood.css", resources.get(5).getUrl());
+        assertEquals("/download/contextbatch/css/xmen/batch.css?ieonly=true", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/js/xmen/batch.js", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/css/xmen/batch.css", resources.get(2).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood/batch.css?ieonly=true", resources.get(3).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood/batch.js", resources.get(4).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood/batch.css", resources.get(5).getUrl());
 
         assertEquals(2, builder.getAllIncludedResources().size());
     }
@@ -284,12 +284,12 @@ public class TestContextBatchBuilder extends TestCase
 
         // We currently batch all resource params even if there isn't any overlap in a particular context/param combination
         assertEquals(6, resources.size());
-        assertEquals("/download/contextbatch/css/xmen%252Brogue.css?ieonly=true", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/js/xmen%252Brogue.js", resources.get(1).getUrl());
-        assertEquals("/download/contextbatch/css/xmen%252Brogue.css", resources.get(2).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood.css?ieonly=true", resources.get(3).getUrl());
-        assertEquals("/download/contextbatch/js/brotherhood.js", resources.get(4).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood.css", resources.get(5).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood/batch.css?ieonly=true", resources.get(0).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood/batch.js", resources.get(1).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood/batch.css", resources.get(2).getUrl());
+        assertEquals("/download/contextbatch/js/xmen,rogue/batch.js", resources.get(3).getUrl());
+        assertEquals("/download/contextbatch/css/xmen,rogue/batch.css?ieonly=true", resources.get(4).getUrl());
+        assertEquals("/download/contextbatch/css/xmen,rogue/batch.css", resources.get(5).getUrl());
 
         assertEquals(3, builder.getAllIncludedResources().size());
     }

@@ -4,7 +4,6 @@ import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.DownloadException;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
-import static com.atlassian.plugin.util.EfficientStringUtils.endsWith;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -30,16 +29,7 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
 
     public static SuperBatchPluginResource createBatchFor(PluginResource pluginResource)
     {
-        return new SuperBatchPluginResource(getType(pluginResource.getResourceName()), pluginResource.getParams());
-    }
-
-    protected static String getType(String path)
-    {
-        int index = path.lastIndexOf('.');
-        if (index > -1 && index < path.length())
-            return path.substring(index + 1);
-
-        return "";
+        return new SuperBatchPluginResource(ResourceUtils.getType(pluginResource.getResourceName()), pluginResource.getParams());
     }
 
     public SuperBatchPluginResource(String type, Map<String, String> params)

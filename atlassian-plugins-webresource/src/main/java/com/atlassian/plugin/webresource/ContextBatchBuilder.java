@@ -8,6 +8,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Performs a calculation on many referenced contexts, and produces an set of intermingled batched-contexts and residual
+ * (skipped) resources. Some of the input contexts may have been merged into cross-context batches.
+ * The batches are constructed in such a way that no batch is dependent on another.
+ * The output batches and resources may be intermingled so as to preserve the input order as much as possible.
+ */
 public class ContextBatchBuilder
 {
     private static final Logger log = LoggerFactory.getLogger(WebResourceManagerImpl.class);
@@ -15,9 +21,9 @@ public class ContextBatchBuilder
     private final PluginResourceLocator pluginResourceLocator;
     private final ResourceDependencyResolver dependencyResolver;
 
-    private List<String> allIncludedResources = new ArrayList<String>();
-    private Set<String> skippedResources = new HashSet<String>();
-    private List<PluginResource> contextBatches = new ArrayList<PluginResource>();
+    private final  List<String> allIncludedResources = new ArrayList<String>();
+    private final Set<String> skippedResources = new HashSet<String>();
+    private final List<PluginResource> contextBatches = new ArrayList<PluginResource>();
 
     public ContextBatchBuilder(PluginResourceLocator pluginResourceLocator, ResourceDependencyResolver dependencyResolver)
     {
@@ -60,6 +66,7 @@ public class ContextBatchBuilder
                 else
                 {
                     // we have an overlapping context, find it.
+                    // IMPORTANT: Don't add the overlapping resource to the batch otherwise there'll be duplicates
                     for (ContextBatch batch : batches)
                     {
                         if (!mergeList.contains(batch) && batch.isResourceIncluded(contextResource))
@@ -79,15 +86,17 @@ public class ContextBatchBuilder
             if (!mergeList.isEmpty())
             {
                 ContextBatch mergedBatch = mergeList.get(0);
+                batches.remove(mergedBatch);
 
                 for (int i = 1; i < mergeList.size(); i++)
                 {
                     final ContextBatch mergingBatch = mergeList.get(i);
-                    mergedBatch.merge(mergingBatch);
+                    mergedBatch = ContextBatch.merge(mergedBatch, mergingBatch);
                     batches.remove(mergingBatch);
                 }
 
-                mergedBatch.merge(contextBatch);
+                mergedBatch = ContextBatch.merge(mergedBatch, contextBatch);
+                batches.add(mergedBatch);
             }
             else
             {

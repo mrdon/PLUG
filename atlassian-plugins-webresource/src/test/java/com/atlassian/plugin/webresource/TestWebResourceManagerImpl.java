@@ -254,8 +254,8 @@ public class TestWebResourceManagerImpl extends TestCase
         assertFalse(resources.contains(resourceA + ".css"));
         assertFalse(resources.contains(resourceB + ".css"));
         assertFalse(resources.contains(resourceC + ".css"));
-        assertTrue(resources.contains("/contextbatch/css/foo.css"));
-        assertFalse(resources.contains("/contextbatch/css/bar.css"));
+        assertTrue(resources.contains("/contextbatch/css/foo/batch.css"));
+        assertFalse(resources.contains("/contextbatch/css/bar/batch.css"));
 
         // write includes for all resources for "bar":
         webResourceManager.requireResourcesForContext("bar");
@@ -265,8 +265,8 @@ public class TestWebResourceManagerImpl extends TestCase
         assertFalse(resources.contains(resourceA + ".css"));
         assertFalse(resources.contains(resourceB + ".css"));
         assertFalse(resources.contains(resourceC + ".css"));
-        assertFalse(resources.contains("/contextbatch/css/foo.css"));
-        assertTrue(resources.contains("/contextbatch/css/bar.css"));
+        assertFalse(resources.contains("/contextbatch/css/foo/batch.css"));
+        assertTrue(resources.contains("/contextbatch/css/bar/batch.css"));
     }
 
     public void testGetResourceContextWithCondition() throws ClassNotFoundException, DocumentException
@@ -303,7 +303,7 @@ public class TestWebResourceManagerImpl extends TestCase
         String tags = webResourceManager.getRequiredResources();
         assertTrue(tags.contains(resource1));
         assertFalse(tags.contains(resource2));
-        assertTrue(tags.contains("foo.js"));
+        assertTrue(tags.contains("foo/batch.js"));
     }
 
     private Map<String, Object> setupRequestCache()

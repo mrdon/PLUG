@@ -106,7 +106,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
 //        assertTrue(pluginResourceLocator.matches("/download/superbatch/css/images/background/blah.gif"));
         assertTrue(pluginResourceLocator.matches("/download/batch/plugin.key:module-key/plugin.key.js"));
         assertTrue(pluginResourceLocator.matches("/download/resources/plugin.key:module-key/foo.png"));
-        assertTrue(pluginResourceLocator.matches("/download/contextbatch/css/contexta.css"));
+        assertTrue(pluginResourceLocator.matches("/download/contextbatch/css/contexta/batch.css"));
     }
 
     public void testNotMatches()
@@ -523,7 +523,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         final String context = "contextA";
         contexts.add(context);
         contexts.add("contextB");
-        final String url = "/download/contextbatch/css/contextA.css";
+        final String url = "/download/contextbatch/css/contextA/batch.css";
         final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("atlassian.css", "master.css");
 
         final Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
@@ -551,7 +551,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         Set<String> contexts2 = new HashSet<String>();
         final String context2 = "contextB";
         contexts2.add(context2);
-        final String url = "/download/contextbatch/css/contextA+contextB.css";
+        final String url = "/download/contextbatch/css/contextA,contextB/batch.css";
 
         final Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
 
@@ -591,7 +591,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         Set<String> contexts2 = new HashSet<String>();
         final String context2 = "contextB";
         contexts2.add(context2);
-        final String url = "/download/contextbatch/css/contextA+contextB.css";
+        final String url = "/download/contextbatch/css/contextA,contextB/batch.css";
 
         final Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
 

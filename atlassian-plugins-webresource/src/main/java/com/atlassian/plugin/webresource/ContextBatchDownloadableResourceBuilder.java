@@ -4,11 +4,16 @@ import com.atlassian.plugin.PluginAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
+import static com.atlassian.plugin.util.EfficientStringUtils.endsWith;
 import static com.atlassian.plugin.webresource.ContextBatchPluginResource.URL_PREFIX;
+import static com.atlassian.plugin.webresource.SuperBatchPluginResource.DEFAULT_RESOURCE_NAME_PREFIX;
 
 public class ContextBatchDownloadableResourceBuilder extends AbstractBatchResourceBuilder
 {
@@ -24,7 +29,8 @@ public class ContextBatchDownloadableResourceBuilder extends AbstractBatchResour
 
     public boolean matches(String path)
     {
-        return path.indexOf(URL_PREFIX) > -1;
+        String type = ResourceUtils.getType(path);
+        return path.indexOf(URL_PREFIX + type) > -1 && endsWith(path, DEFAULT_RESOURCE_NAME_PREFIX, ".", type);
     }
 
     public ContextBatchPluginResource parse(String path, Map<String, String> params)
@@ -55,9 +61,18 @@ public class ContextBatchDownloadableResourceBuilder extends AbstractBatchResour
     private ContextBatchPluginResource getResource(String path, Map<String, String> params)
     {
         final int fullStopIndex = path.lastIndexOf(".");
-        final int slashIndex = path.lastIndexOf("/");
-        String type = path.substring(fullStopIndex + 1);
-        String resourceName = path.substring(slashIndex + 1, fullStopIndex);
-        return new ContextBatchPluginResource(resourceName, type, params);
+        final String type = path.substring(fullStopIndex + 1);
+
+        int secondSlashIndex = path.lastIndexOf(PATH_SEPARATOR);
+        int firstSlashIndex = path.lastIndexOf(PATH_SEPARATOR, secondSlashIndex - 1);
+        String key = path.substring(firstSlashIndex + 1, secondSlashIndex);
+        List<String> contexts = parseContexts(key);
+
+        return new ContextBatchPluginResource(key, contexts, type, params);
+    }
+
+    private List<String> parseContexts(String key)
+    {
+        return Arrays.asList(key.split(ContextBatchPluginResource.CONTEXT_SEPARATOR));
     }
 }

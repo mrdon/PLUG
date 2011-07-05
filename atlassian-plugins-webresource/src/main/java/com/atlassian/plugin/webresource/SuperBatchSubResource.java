@@ -22,7 +22,7 @@ public class SuperBatchSubResource extends SuperBatchPluginResource
 
     public static SuperBatchSubResource parse(String path, Map<String, String> params)
     {
-        String type = getType(path);
+        String type = ResourceUtils.getType(path);
         int i = path.indexOf('?');
         if (i != -1) // remove query parameters
         {

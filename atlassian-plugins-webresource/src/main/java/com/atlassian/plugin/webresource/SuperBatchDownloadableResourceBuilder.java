@@ -9,7 +9,6 @@ import java.util.Map;
 import static com.atlassian.plugin.util.EfficientStringUtils.endsWith;
 import static com.atlassian.plugin.webresource.SuperBatchPluginResource.DEFAULT_RESOURCE_NAME_PREFIX;
 import static com.atlassian.plugin.webresource.SuperBatchPluginResource.URL_PREFIX;
-import static com.atlassian.plugin.webresource.SuperBatchPluginResource.getType;
 
 public class SuperBatchDownloadableResourceBuilder extends AbstractBatchResourceBuilder
 {
@@ -25,7 +24,7 @@ public class SuperBatchDownloadableResourceBuilder extends AbstractBatchResource
 
     public boolean matches(String path)
     {
-        String type = getType(path);
+        String type = ResourceUtils.getType(path);
         return path.indexOf(URL_PREFIX) != -1 && endsWith(path, DEFAULT_RESOURCE_NAME_PREFIX, ".", type);
 
     }
