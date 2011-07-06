@@ -9,11 +9,10 @@ import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Sets.newHashSet;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,28 +25,6 @@ import java.util.Set;
  */
 class ContextBatch
 {
-    private final String key;
-    private final Iterable<String> contexts;
-
-    private final Iterable<String> resources;
-    private final Set<PluginResourceBatchParams> resourceParams;
-
-    ContextBatch(final String context, final List<String> resources)
-    {
-        key = context;
-        contexts = copyOf(Arrays.asList(context));
-        this.resources = copyOf(resources);
-        resourceParams = newHashSet();
-    }
-
-    ContextBatch(final String key, final Iterable<String> contexts, final Iterable<String> resources, final Iterable<PluginResourceBatchParams> resourceParams)
-    {
-        this.key = key;
-        this.contexts = copyOf(contexts);
-        this.resources = copyOf(resources);
-        this.resourceParams = newHashSet(resourceParams);
-    }
-
     /**
      * Merges two context batches into a single context batch.
      * @param b1 - the context to merge into
@@ -62,6 +39,24 @@ class ContextBatch
         // Merge assumes that the merged batched doesn't overlap with the current one.
         final Iterable<PluginResourceBatchParams> params = concat(b1.getResourceParams(), b2.getResourceParams());
         return new ContextBatch(key, contexts, resources, params);
+    }
+
+    private final String key;
+    private final Iterable<String> contexts;
+    private final Iterable<String> resources;
+    private final Set<PluginResourceBatchParams> resourceParams;
+
+    ContextBatch(final String context, final Iterable<String> resources)
+    {
+        this(context, ImmutableList.of(context), resources, ImmutableList.<PluginResourceBatchParams> of());
+    }
+
+    ContextBatch(final String key, final Iterable<String> contexts, final Iterable<String> resources, final Iterable<PluginResourceBatchParams> resourceParams)
+    {
+        this.key = key;
+        this.contexts = copyOf(contexts);
+        this.resources = copyOf(resources);
+        this.resourceParams = newHashSet(resourceParams);
     }
 
     boolean isResourceIncluded(final String resource)
