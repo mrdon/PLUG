@@ -103,12 +103,13 @@ public class SingleDownloadableResourceBuilder implements DownloadableResourceBu
 
     private Plugin getPlugin(final String moduleKey)
     {
-        if ((moduleKey.indexOf(':') < 0) || (moduleKey.indexOf(':') == moduleKey.length() - 1))
+        final int semicolonIndex = moduleKey.indexOf(':');
+        if ((semicolonIndex < 0) || (semicolonIndex == moduleKey.length() - 1))
         {
             return null;
         }
 
-        return pluginAccessor.getPlugin(moduleKey.substring(0, moduleKey.indexOf(':')));
+        return pluginAccessor.getPlugin(moduleKey.substring(0, semicolonIndex));
     }
 
     private DownloadableResource getResourceFromModule(final ModuleDescriptor<?> moduleDescriptor, final String resourcePath, final String filePath)

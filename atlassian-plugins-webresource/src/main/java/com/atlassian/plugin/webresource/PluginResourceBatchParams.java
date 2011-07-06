@@ -1,8 +1,8 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.util.concurrent.NotNull;
+import com.google.common.collect.ImmutableMap;
 
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -18,7 +18,7 @@ class PluginResourceBatchParams
     public PluginResourceBatchParams(@NotNull String type, @NotNull Map<String, String> parameters)
     {
         this.type = type;
-        this.parameters = Collections.unmodifiableMap(parameters);
+        this.parameters = ImmutableMap.copyOf(parameters);
     }
 
     public String getType()

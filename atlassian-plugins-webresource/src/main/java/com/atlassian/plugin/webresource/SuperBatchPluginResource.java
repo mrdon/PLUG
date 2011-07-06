@@ -8,6 +8,8 @@ import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PAT
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,15 +34,25 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
         return new SuperBatchPluginResource(ResourceUtils.getType(pluginResource.getResourceName()), pluginResource.getParams());
     }
 
+    /**
+     * Creates a super batch resource without the included resources
+     * @param type the type of resource (CSS/JS)
+     * @param params the parameters (ieOnly,media)
+     */
     public SuperBatchPluginResource(String type, Map<String, String> params)
     {
-        this(DEFAULT_RESOURCE_NAME_PREFIX + "." + type, type, params);
+        this(type, params, Collections.<DownloadableResource>emptyList());
     }
 
-    protected SuperBatchPluginResource(String resourceName, String type, Map<String, String> params)
+    public SuperBatchPluginResource(String type, Map<String, String> params, List<DownloadableResource> resources)
+    {
+        this(DEFAULT_RESOURCE_NAME_PREFIX + "." + type, type, params, resources);
+    }
+
+    protected SuperBatchPluginResource(String resourceName, String type, Map<String, String> params, List<DownloadableResource> resources)
     {
         this.resourceName = resourceName;
-        this.delegate = new BatchPluginResource(null, type, params);
+        this.delegate = new BatchPluginResource(null, type, params, resources);
     }
 
     public boolean isResourceModified(HttpServletRequest request, HttpServletResponse response)
@@ -61,11 +73,6 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
     public String getContentType()
     {
         return delegate.getContentType();
-    }
-
-    public void add(DownloadableResource downloadableResource)
-    {
-        delegate.add(downloadableResource);
     }
 
     public boolean isEmpty()

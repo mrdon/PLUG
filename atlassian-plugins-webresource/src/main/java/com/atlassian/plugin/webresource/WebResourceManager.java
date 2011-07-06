@@ -252,7 +252,9 @@ public interface WebResourceManager
      *                decide
      * @return A prefix that can be used to prefix 'static system' resources.
      * @since 2.3.0
+     * @deprecated As of 2.10.0, replaced by {@link WebResourceUrlProvider#getStaticResourcePrefix(UrlMode)}
      */
+    @Deprecated
     String getStaticResourcePrefix(UrlMode urlMode);
 
     /**
@@ -305,7 +307,9 @@ public interface WebResourceManager
      *                        implementation to decide
      * @return A prefix that can be used to prefix 'static system' resources.
      * @since 2.3.0
+     * @deprecated As of 2.10.0, replaced by {@link WebResourceUrlProvider#getStaticResourcePrefix(String, UrlMode)}
      */
+    @Deprecated
     String getStaticResourcePrefix(String resourceCounter, UrlMode urlMode);
 
     /**
@@ -352,7 +356,9 @@ public interface WebResourceManager
      *                          implementation to decide
      * @return A url that can be used to request 'plugin' resources.
      * @since 2.3.0
+     * @deprecated As of 2.10.0, replaced by {@link WebResourceUrlProvider#getStaticPluginResourceUrl(String, String, UrlMode)}
      */
+    @Deprecated
     String getStaticPluginResource(String moduleCompleteKey, String resourceName, UrlMode urlMode);
 
     /**
@@ -402,6 +408,7 @@ public interface WebResourceManager
      * @return returns the url of this plugin resource
      * @see #getStaticPluginResource(String, String, UrlMode)
      * @since 2.3.0
+     * @deprecated As of 2.10.0, replaced by {@link WebResourceUrlProvider#getStaticPluginResourceUrl(com.atlassian.plugin.ModuleDescriptor, String, UrlMode)}
      */
     String getStaticPluginResource(ModuleDescriptor<?> moduleDescriptor, String resourceName, UrlMode urlMode);
 

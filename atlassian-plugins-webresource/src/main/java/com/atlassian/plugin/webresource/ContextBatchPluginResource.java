@@ -8,9 +8,19 @@ import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PAT
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Represents a batch of all resources that declare themselves as part of a given context(s).
+ *
+ * The URL for batch resources is /download/contextbatch/&lt;type>/&lt;contextname>/batch.&lt;type. The additional type part in the path
+ * is simply there to make the number of path-parts identical with other resources, so relative URLs will still work
+ * in CSS files.
+ *
+ * @since 2.10
+ */
 public class ContextBatchPluginResource implements DownloadableResource, BatchResource, PluginResource
 {
     static final String CONTEXT_SEPARATOR = ",";
@@ -25,8 +35,13 @@ public class ContextBatchPluginResource implements DownloadableResource, BatchRe
 
     public ContextBatchPluginResource(String key, List<String> contexts, String type, Map<String, String> params)
     {
+        this(key, contexts, type, params, Collections.<DownloadableResource>emptyList());
+    }
+
+    public ContextBatchPluginResource(String key, List<String> contexts, String type, Map<String, String> params, List<DownloadableResource> resources)
+    {
         this.resourceName = DEFAULT_RESOURCE_NAME_PREFIX + "." + type;
-        this.delegate = new BatchPluginResource(null, type, params);
+        this.delegate = new BatchPluginResource(null, type, params, resources);
         this.key = key;
         this.contexts = contexts;
     }
@@ -35,7 +50,6 @@ public class ContextBatchPluginResource implements DownloadableResource, BatchRe
     {
         return contexts;
     }
-
 
     public boolean isResourceModified(HttpServletRequest request, HttpServletResponse response)
     {
@@ -55,11 +69,6 @@ public class ContextBatchPluginResource implements DownloadableResource, BatchRe
     public String getContentType()
     {
         return delegate.getContentType();
-    }
-
-    public void add(DownloadableResource downloadableResource)
-    {
-        delegate.add(downloadableResource);
     }
 
     public boolean isEmpty()

@@ -1,9 +1,11 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.servlet.DownloadableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -21,9 +23,9 @@ public class ContextBatchDownloadableResourceBuilder extends AbstractBatchResour
     private final ResourceDependencyResolver dependencyResolver;
 
     public ContextBatchDownloadableResourceBuilder(ResourceDependencyResolver dependencyResolver, PluginAccessor pluginAccessor,
-                                                   WebResourceIntegration webResourceIntegration, DownloadableResourceFinder resourceFinder)
+                                                   WebResourceUrlProvider webResourceUrlProvider, DownloadableResourceFinder resourceFinder)
     {
-        super(pluginAccessor, webResourceIntegration, resourceFinder);
+        super(pluginAccessor, webResourceUrlProvider, resourceFinder);
         this.dependencyResolver = dependencyResolver;
     }
 
@@ -35,43 +37,42 @@ public class ContextBatchDownloadableResourceBuilder extends AbstractBatchResour
 
     public ContextBatchPluginResource parse(String path, Map<String, String> params)
     {
-        ContextBatchPluginResource batchResource = getResource(path, params);
+        String type = ResourceUtils.getType(path);
+        String key = getKey(path);
+        List<String> contexts = getContexts(key);
+
+        Set<String> alreadyIncluded = new HashSet<String>();
+        List<DownloadableResource> resources = new ArrayList<DownloadableResource>();
+        for (String context : contexts)
+        {
+            for (final String moduleKey : dependencyResolver.getDependenciesInContext(context))
+            {
+                if (!alreadyIncluded.contains(moduleKey))
+                {
+                    resources.addAll(resolve(moduleKey, type, params));
+                    alreadyIncluded.add(moduleKey);
+                }
+            }
+        }
+
+        ContextBatchPluginResource batchResource = new ContextBatchPluginResource(key, contexts, type, params, resources);
 
         if (log.isDebugEnabled())
         {
             log.debug(batchResource.toString());
         }
 
-        Set<String> alreadyIncluded = new HashSet<String>();
-        for (String context : batchResource.getContexts())
-        {
-            for (final String moduleKey : dependencyResolver.getDependenciesInContext(context))
-            {
-                if (!alreadyIncluded.contains(moduleKey))
-                {
-                    addModuleToBatch(moduleKey, batchResource);
-                    alreadyIncluded.add(moduleKey);
-                }
-            }
-        }
-
         return batchResource;
     }
 
-    private ContextBatchPluginResource getResource(String path, Map<String, String> params)
+    private String getKey(String path)
     {
-        final int fullStopIndex = path.lastIndexOf(".");
-        final String type = path.substring(fullStopIndex + 1);
-
         int secondSlashIndex = path.lastIndexOf(PATH_SEPARATOR);
         int firstSlashIndex = path.lastIndexOf(PATH_SEPARATOR, secondSlashIndex - 1);
-        String key = path.substring(firstSlashIndex + 1, secondSlashIndex);
-        List<String> contexts = parseContexts(key);
-
-        return new ContextBatchPluginResource(key, contexts, type, params);
+        return path.substring(firstSlashIndex + 1, secondSlashIndex);
     }
 
-    private List<String> parseContexts(String key)
+    private List<String> getContexts(String key)
     {
         return Arrays.asList(key.split(ContextBatchPluginResource.CONTEXT_SEPARATOR));
     }

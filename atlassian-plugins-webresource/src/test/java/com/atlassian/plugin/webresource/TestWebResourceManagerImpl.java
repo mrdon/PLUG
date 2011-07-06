@@ -4,8 +4,6 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.impl.StaticPlugin;
-import com.atlassian.plugin.servlet.AbstractFileServerServlet;
 import static org.mockito.Mockito.*;
 import junit.framework.TestCase;
 
@@ -27,12 +25,12 @@ public class TestWebResourceManagerImpl extends TestCase
 
     private WebResourceIntegration mockWebResourceIntegration = mock(WebResourceIntegration.class);
     private PluginAccessor mockPluginAccessor = mock(PluginAccessor.class);
+    private WebResourceUrlProvider mockUrlProvider = mock(WebResourceUrlProvider.class);
     private TestResourceBatchingConfiguration resourceBatchingConfiguration;
     private PluginResourceLocator pluginResourceLocator;
     private WebResourceManagerImpl webResourceManager;
     private Plugin testPlugin;
 
-    private static final String ANIMAL_PLUGIN_VERSION = "2";
     private static final String BASEURL = "http://www.foo.com";
     private static final String SYSTEM_COUNTER = "123";
     private static final String SYSTEM_BUILD_NUMBER = "650";
@@ -45,16 +43,12 @@ public class TestWebResourceManagerImpl extends TestCase
 
         resourceBatchingConfiguration = new TestResourceBatchingConfiguration();
         pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, null);
-        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, resourceBatchingConfiguration);
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, mockUrlProvider, resourceBatchingConfiguration);
 
-        when(mockWebResourceIntegration.getBaseUrl()).thenReturn(BASEURL);
-        when(mockWebResourceIntegration.getBaseUrl(UrlMode.ABSOLUTE)).thenReturn(BASEURL);
-        when(mockWebResourceIntegration.getBaseUrl(UrlMode.RELATIVE)).thenReturn("");
-        when(mockWebResourceIntegration.getBaseUrl(UrlMode.AUTO)).thenReturn("");
-        when(mockWebResourceIntegration.getSystemBuildNumber()).thenReturn(SYSTEM_BUILD_NUMBER);
-        when(mockWebResourceIntegration.getSystemCounter()).thenReturn(SYSTEM_COUNTER);
-        when(mockWebResourceIntegration.getStaticResourceLocale()).thenReturn(null);
-
+        when(mockUrlProvider.getBaseUrl()).thenReturn(BASEURL);
+        when(mockUrlProvider.getBaseUrl(UrlMode.ABSOLUTE)).thenReturn(BASEURL);
+        when(mockUrlProvider.getBaseUrl(UrlMode.AUTO)).thenReturn("");
+        when(mockUrlProvider.getBaseUrl(UrlMode.RELATIVE)).thenReturn("");
         testPlugin = TestUtils.createTestPlugin();
     }
 
@@ -440,7 +434,7 @@ public class TestWebResourceManagerImpl extends TestCase
             }
         };
         
-        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, batchingConfiguration);
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, mockUrlProvider, batchingConfiguration);
         
         final List<ResourceDescriptor> resourceDescriptorsA = TestUtils.createResourceDescriptors("resourceA.css");
         final List<ResourceDescriptor> resourceDescriptorsB = TestUtils.createResourceDescriptors("resourceB.css");
@@ -552,9 +546,11 @@ public class TestWebResourceManagerImpl extends TestCase
 
         mockEnabledPluginModule(completeModuleKey, TestUtils.createWebResourceModuleDescriptor(completeModuleKey, testPlugin, descriptors));
 
-        return (baseUrlExpected ? BASEURL : "") +
-            "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX  + "/" + SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER +
-            "/" + testPlugin.getPluginInformation().getVersion() + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
+        final String staticPrefix = (baseUrlExpected ? BASEURL : "") +
+                "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER +
+                "/" + testPlugin.getPluginInformation().getVersion() + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
+        when(mockUrlProvider.getStaticResourcePrefix(eq("1"), isA(UrlMode.class))).thenReturn(staticPrefix);
+        return staticPrefix + BatchPluginResource.URL_PREFIX;
     }
 
     // testRequireResourceWithCacheParameter
@@ -603,134 +599,6 @@ public class TestWebResourceManagerImpl extends TestCase
                "/" + completeModuleKey + "/" + completeModuleKey + ".js?cache=false";
     }
 
-    // testGetStaticResourcePrefix
-
-    public void testGetStaticResourcePrefix()
-    {
-        final String expectedPrefix = setupGetStaticResourcePrefix(false);
-        assertEquals(expectedPrefix, webResourceManager.getStaticResourcePrefix());
-    }
-
-    public void testGetStaticResourcePrefixWithAbsoluteUrlMode()
-    {
-        testGetStaticResourcePrefix(UrlMode.ABSOLUTE, true);
-    }
-
-    public void testGetStaticResourcePrefixWithRelativeUrlMode()
-    {
-        testGetStaticResourcePrefix(UrlMode.RELATIVE, false);
-    }
-
-    public void testGetStaticResourcePrefixWithAutoUrlMode()
-    {
-        testGetStaticResourcePrefix(UrlMode.AUTO, false);
-    }
-
-    private void testGetStaticResourcePrefix(UrlMode urlMode, boolean baseUrlExpected)
-    {
-        final String expectedPrefix = setupGetStaticResourcePrefix(baseUrlExpected);
-        assertEquals(expectedPrefix, webResourceManager.getStaticResourcePrefix(urlMode));
-    }
-
-    private String setupGetStaticResourcePrefix(boolean baseUrlExpected)
-    {
-        return (baseUrlExpected ? BASEURL : "") +
-            "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" +
-            SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
-    }
-
-    // testGetStaticResourcePrefixWithCounter
-
-    public void testGetStaticResourcePrefixWithCounter()
-    {
-        final String resourceCounter = "456";
-        final String expectedPrefix = setupGetStaticResourcePrefixWithCounter(false, resourceCounter);
-        assertEquals(expectedPrefix, webResourceManager.getStaticResourcePrefix(resourceCounter));
-    }
-
-    public void testGetStaticResourcePrefixWithCounterAndAbsoluteUrlMode()
-    {
-        testGetStaticResourcePrefixWithCounter(UrlMode.ABSOLUTE, true);
-    }
-
-    public void testGetStaticResourcePrefixWithCounterAndRelativeUrlMode()
-    {
-        testGetStaticResourcePrefixWithCounter(UrlMode.RELATIVE, false);
-    }
-
-    public void testGetStaticResourcePrefixWithCounterAndAutoUrlMode()
-    {
-        testGetStaticResourcePrefixWithCounter(UrlMode.AUTO, false);
-    }
-
-    private void testGetStaticResourcePrefixWithCounter(UrlMode urlMode, boolean baseUrlExpected)
-    {
-        final String resourceCounter = "456";
-        final String expectedPrefix = setupGetStaticResourcePrefixWithCounter(baseUrlExpected, resourceCounter);
-        assertEquals(expectedPrefix, webResourceManager.getStaticResourcePrefix(resourceCounter, urlMode));
-    }
-
-    private String setupGetStaticResourcePrefixWithCounter(boolean baseUrlExpected, String resourceCounter)
-    {
-        return (baseUrlExpected ? BASEURL : "") +
-            "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" +
-            SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER + "/" + resourceCounter +
-            "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
-    }
-
-    // testGetStaticPluginResourcePrefix
-
-    public void testGetStaticPluginResourcePrefix()
-    {
-        final String moduleKey = "confluence.extra.animal:animal";
-        final String resourceName = "foo.js";
-
-        final String expectedPrefix = setupGetStaticPluginResourcePrefix(false, moduleKey, resourceName);        
-
-        assertEquals(expectedPrefix, webResourceManager.getStaticPluginResource(moduleKey, resourceName));
-    }
-
-    public void testGetStaticPluginResourcePrefixWithAbsoluteUrlMode()
-    {
-        testGetStaticPluginResourcePrefix(UrlMode.ABSOLUTE, true);
-    }
-
-    public void testGetStaticPluginResourcePrefixWithRelativeUrlMode()
-    {
-        testGetStaticPluginResourcePrefix(UrlMode.RELATIVE, false);
-    }
-
-    public void testGetStaticPluginResourcePrefixWithAutoUrlMode()
-    {
-        testGetStaticPluginResourcePrefix(UrlMode.AUTO, false);
-    }
-
-    private void testGetStaticPluginResourcePrefix(UrlMode urlMode, boolean baseUrlExpected)
-    {
-        final String moduleKey = "confluence.extra.animal:animal";
-        final String resourceName = "foo.js";
-
-        final String expectedPrefix = setupGetStaticPluginResourcePrefix(baseUrlExpected, moduleKey, resourceName);
-
-        assertEquals(expectedPrefix, webResourceManager.getStaticPluginResource(moduleKey, resourceName, urlMode));
-    }
-
-    private String setupGetStaticPluginResourcePrefix(boolean baseUrlExpected, String moduleKey, String resourceName)
-    {
-        final Plugin animalPlugin = new StaticPlugin();
-        animalPlugin.setKey("confluence.extra.animal");
-        animalPlugin.setPluginsVersion(5);
-        animalPlugin.getPluginInformation().setVersion(ANIMAL_PLUGIN_VERSION);
-
-        mockEnabledPluginModule(moduleKey, TestUtils.createWebResourceModuleDescriptor(moduleKey, animalPlugin));
-
-        return (baseUrlExpected ? BASEURL : "") +
-            "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER +
-            "/" + SYSTEM_COUNTER + "/" + ANIMAL_PLUGIN_VERSION + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX +
-            "/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX +
-            "/" + moduleKey + "/" + resourceName;
-    }
-
     public void testGetRequiredResourcesWithFilter() throws Exception
     {
         final String moduleKey = "cool-resources";
@@ -745,9 +613,11 @@ public class TestWebResourceManagerImpl extends TestCase
         // test includeResources(writer, type) method
         webResourceManager.requireResource(completeModuleKey);
 
-        String staticBase = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX  + "/" + SYSTEM_BUILD_NUMBER
-            + "/" + SYSTEM_COUNTER + "/" + testPlugin.getPluginInformation().getVersion() + "/"
-            + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
+        final String staticPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER
+                + "/" + SYSTEM_COUNTER + "/" + testPlugin.getPluginInformation().getVersion() + "/"
+                + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
+        when(mockUrlProvider.getStaticResourcePrefix("1", UrlMode.ABSOLUTE)).thenReturn(staticPrefix);
+        String staticBase = staticPrefix + BatchPluginResource.URL_PREFIX;
 
         String cssRef = "href=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".css";
         String jsRef = "src=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".js";
@@ -836,9 +706,11 @@ public class TestWebResourceManagerImpl extends TestCase
         webResourceManager.requireResource(completeModuleKey1);
         webResourceManager.requireResource(completeModuleKey2);
 
-        String staticBase = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX  + "/" + SYSTEM_BUILD_NUMBER
-            + "/" + SYSTEM_COUNTER + "/" + plugin.getPluginInformation().getVersion() + "/"
-            + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX + BatchPluginResource.URL_PREFIX;
+        final String staticPrefix = BASEURL + "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" + SYSTEM_BUILD_NUMBER
+                + "/" + SYSTEM_COUNTER + "/" + plugin.getPluginInformation().getVersion() + "/"
+                + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
+        when(mockUrlProvider.getStaticResourcePrefix("1", UrlMode.ABSOLUTE)).thenReturn(staticPrefix);
+        String staticBase = staticPrefix + BatchPluginResource.URL_PREFIX;
 
         String cssRef1 = "href=\"" + staticBase + "/" + completeModuleKey1 + "/" + completeModuleKey1 + ".css";
         String cssRef2 = "href=\"" + staticBase + "/" + completeModuleKey2 + "/" + completeModuleKey2 + ".css";
@@ -888,63 +760,6 @@ public class TestWebResourceManagerImpl extends TestCase
         Collection resources = (Collection) requestCache.get(WebResourceManagerImpl.REQUEST_CACHE_RESOURCE_KEY);
         assertEquals(1, resources.size());
         assertEquals("test.atlassian:included-resource", resources.iterator().next());
-    }
-
-    public void testGetStaticPrefixResourceWithLocale()
-    {
-        testGetStaticPrefixResourceWithLocale(UrlMode.ABSOLUTE, true);
-        testGetStaticPrefixResourceWithLocale(UrlMode.RELATIVE, false);
-        testGetStaticPrefixResourceWithLocale(UrlMode.AUTO, false);
-    }
-
-    private void testGetStaticPrefixResourceWithLocale(UrlMode urlMode, boolean baseUrlExpected)
-    {
-        String expected = setupGetStaticPrefixResourceWithLocale(baseUrlExpected);
-        assertEquals(expected, webResourceManager.getStaticResourcePrefix(urlMode));
-    }
-
-    private String setupGetStaticPrefixResourceWithLocale(boolean baseUrlExpected)
-    {
-        when(mockWebResourceIntegration.getStaticResourceLocale()).thenReturn("de_DE");
-        return (baseUrlExpected ? BASEURL : "") +
-                "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/" +
-                "de_DE/" +
-                SYSTEM_BUILD_NUMBER + "/" + SYSTEM_COUNTER +
-                "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX;
-    }
-
-    public void testStaticPluginResourceWithLocale()
-    {
-        testStaticPluginResourceWithLocale(UrlMode.ABSOLUTE, true);
-        testStaticPluginResourceWithLocale(UrlMode.RELATIVE, false);
-        testStaticPluginResourceWithLocale(UrlMode.AUTO, false);
-    }
-
-    private void testStaticPluginResourceWithLocale(UrlMode urlMode, boolean baseUrlExpected)
-    {
-        final String moduleKey = "confluence.extra.animal:animal";
-        final String resourceName = "foo.js";
-        String expected = setupStaticPluginResourceWithLocale(moduleKey, resourceName, baseUrlExpected);
-        assertEquals(expected, webResourceManager.getStaticPluginResource(moduleKey, resourceName, urlMode));
-    }
-
-    private String setupStaticPluginResourceWithLocale(final String moduleKey, final String resourceName, boolean baseUrlExpected)
-    {
-        when(mockWebResourceIntegration.getStaticResourceLocale()).thenReturn("de_DE");
-        String ver = "2";
-        final Plugin animalPlugin = new StaticPlugin();
-        animalPlugin.setKey("confluence.extra.animal");
-        animalPlugin.setPluginsVersion(5);
-        animalPlugin.getPluginInformation().setVersion(ver);
-
-        final ModuleDescriptor moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(moduleKey, animalPlugin);
-        when(mockPluginAccessor.getEnabledPluginModule(moduleKey)).thenReturn(moduleDescriptor);
-
-        return (baseUrlExpected ? BASEURL : "") +
-                "/" + WebResourceManagerImpl.STATIC_RESOURCE_PREFIX + "/de_DE/" + SYSTEM_BUILD_NUMBER +
-                "/" + SYSTEM_COUNTER + "/" + ver + "/" + WebResourceManagerImpl.STATIC_RESOURCE_SUFFIX +
-                "/" + AbstractFileServerServlet.SERVLET_PATH + "/" + AbstractFileServerServlet.RESOURCE_URL_PREFIX +
-                "/" + moduleKey + "/" + resourceName;
     }
 
     public void testSuperBatchResolution() throws DocumentException, ClassNotFoundException

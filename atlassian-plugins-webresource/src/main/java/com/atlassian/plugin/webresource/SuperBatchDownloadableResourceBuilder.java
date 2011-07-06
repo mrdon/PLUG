@@ -1,9 +1,12 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.servlet.DownloadableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static com.atlassian.plugin.util.EfficientStringUtils.endsWith;
@@ -16,9 +19,9 @@ public class SuperBatchDownloadableResourceBuilder extends AbstractBatchResource
     private final ResourceDependencyResolver dependencyResolver;
 
     public SuperBatchDownloadableResourceBuilder(ResourceDependencyResolver dependencyResolver, PluginAccessor pluginAccessor,
-                                                 WebResourceIntegration webResourceIntegration, DownloadableResourceFinder resourceFinder)
+                                                 WebResourceUrlProvider webResourceUrlProvider, DownloadableResourceFinder resourceFinder)
     {
-        super(pluginAccessor, webResourceIntegration, resourceFinder);
+        super(pluginAccessor, webResourceUrlProvider, resourceFinder);
         this.dependencyResolver = dependencyResolver;
     }
 
@@ -31,18 +34,21 @@ public class SuperBatchDownloadableResourceBuilder extends AbstractBatchResource
 
     public SuperBatchPluginResource parse(String path, Map<String, String> params)
     {
-        String type = path.substring(path.lastIndexOf(".") + 1);
-        SuperBatchPluginResource batchResource = new SuperBatchPluginResource(type, params);
+        String type = ResourceUtils.getType(path);
+
+        List<DownloadableResource> resources = new ArrayList<DownloadableResource>();
+        for (final String moduleKey : dependencyResolver.getSuperBatchDependencies())
+        {
+            resources.addAll(resolve(moduleKey, type, params));
+        }
+
+        SuperBatchPluginResource batchResource = new SuperBatchPluginResource(type, params, resources);
 
         if (log.isDebugEnabled())
         {
             log.debug(batchResource.toString());
         }
 
-        for (final String moduleKey : dependencyResolver.getSuperBatchDependencies())
-        {
-            addModuleToBatch(moduleKey, batchResource);
-        }
         return batchResource;
     }
 }

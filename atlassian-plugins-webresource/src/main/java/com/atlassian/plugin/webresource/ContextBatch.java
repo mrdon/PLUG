@@ -1,5 +1,8 @@
 package com.atlassian.plugin.webresource;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,19 +32,19 @@ class ContextBatch
     ContextBatch(String context, List<String> resources)
     {
         this.key = context;
-        contexts = Collections.unmodifiableList(Arrays.asList(context));
+        contexts = ImmutableList.copyOf(Arrays.asList(context));
 
-        this.resources = Collections.unmodifiableList(resources);
+        this.resources = ImmutableList.copyOf(resources);
         this.resourceParams = new HashSet<PluginResourceBatchParams>();
     }
 
     ContextBatch(String key, List<String> contexts, List<String> resources, Set<PluginResourceBatchParams> resourceParams)
     {
         this.key = key;
-        this.contexts = Collections.unmodifiableList(contexts);
+        this.contexts = ImmutableList.copyOf(contexts);
 
-        this.resources = Collections.unmodifiableList(resources);
-        this.resourceParams = Collections.unmodifiableSet(resourceParams);
+        this.resources = ImmutableList.copyOf(resources);
+        this.resourceParams = ImmutableSet.copyOf(resourceParams);
     }
 
     /**
@@ -120,6 +123,6 @@ class ContextBatch
 
     public Set<PluginResourceBatchParams> getResourceParams()
     {
-        return resourceParams;
+        return Collections.unmodifiableSet(resourceParams);
     }
 }

@@ -9,6 +9,7 @@ import junit.framework.TestCase;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +24,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
     @Mock
     private PluginAccessor mockPluginAccessor;   
     @Mock
-    private WebResourceIntegration mockWebResourceIntegration;    
+    private WebResourceUrlProvider mockWebResourceUrlProvider;
     @Mock
     private DownloadableResourceFinder mockResourceFinder;
 
@@ -37,7 +38,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
         super.setUp();
         
         MockitoAnnotations.initMocks(this);
-        builder = new SingleBatchDownloadableResourceBuilder(mockPluginAccessor, mockWebResourceIntegration, mockResourceFinder);
+        builder = new SingleBatchDownloadableResourceBuilder(mockPluginAccessor, mockWebResourceUrlProvider, mockResourceFinder);
 
         plugin = TestUtils.createTestPlugin("test.plugin", "1.0");
     }
@@ -46,7 +47,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
     public void tearDown() throws Exception
     {
         mockPluginAccessor = null;
-        mockWebResourceIntegration = null;
+        mockWebResourceUrlProvider = null;
         mockResourceFinder = null;
         plugin = null;
         moduleDescriptor = null;
@@ -129,7 +130,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
         moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(MODULE_KEY, plugin, resourceDescriptors);
         when(mockPluginAccessor.getEnabledPluginModule(MODULE_KEY)).thenReturn((ModuleDescriptor) moduleDescriptor);
 
-        final DownloadableResource resource = builder.parse("/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css?ieonly=true&foo=bar",
+        final DownloadableResource resource = builder.parse("/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css",
                 queryParams);
         BatchPluginResource batchResource = (BatchPluginResource) resource;
         assertEquals("css", batchResource.getType());
@@ -152,7 +153,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
         moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(MODULE_KEY, plugin, resourceDescriptors);
         when(mockPluginAccessor.getEnabledPluginModule(MODULE_KEY)).thenReturn((ModuleDescriptor) moduleDescriptor);
 
-        final DownloadableResource resource = builder.parse("/random/stuff/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css?ieonly=true&foo=bar",
+        final DownloadableResource resource = builder.parse("/random/stuff/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css",
                 queryParams);
         BatchPluginResource batchResource = (BatchPluginResource) resource;
         assertEquals("css", batchResource.getType());
@@ -176,9 +177,10 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
         when(mockPluginAccessor.getEnabledPluginModule(MODULE_KEY)).thenReturn((ModuleDescriptor) moduleDescriptor);
 
         final String moduleKey = MODULE_KEY;
-        final BatchPluginResource batchResource = new BatchPluginResource(moduleKey, "js", params);
-        final String url = batchResource.getUrl();
-        final DownloadableResource parsedResource = builder.parse(url, params);
+        final BatchPluginResource batchResource = new BatchPluginResource(moduleKey, "js", params, Collections.<DownloadableResource>emptyList());
+        final String urlString = batchResource.getUrl();
+        URI uri = new URI(urlString);
+        final DownloadableResource parsedResource = builder.parse(uri.getPath(), params);
 
         BatchPluginResource parsedBatchResource = (BatchPluginResource) parsedResource;
         assertEquals(batchResource.getType(), parsedBatchResource.getType());

@@ -41,6 +41,8 @@ public class TestPluginResourceLocatorImpl extends TestCase
     private ServletContextFactory mockServletContextFactory;
     @Mock
     private ResourceBatchingConfiguration mockBatchingConfiguration;
+    @Mock
+    private WebResourceUrlProvider mockWebResourceUrlProvider;
 
     private static final String TEST_PLUGIN_KEY = "test.plugin";
     private static final String TEST_MODULE_KEY = "web-resources";
@@ -54,7 +56,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         MockitoAnnotations.initMocks(this);
         when(mockWebResourceIntegration.getPluginAccessor()).thenReturn(mockPluginAccessor);
 
-        pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, mockServletContextFactory, mockBatchingConfiguration);
+        pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, mockServletContextFactory, mockWebResourceUrlProvider, mockBatchingConfiguration);
     }
 
     @Override
@@ -65,6 +67,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         mockPluginAccessor = null;
         mockServletContextFactory = null;
         mockBatchingConfiguration = null;
+        mockWebResourceUrlProvider = null;
 
         super.tearDown();
     }
@@ -103,10 +106,11 @@ public class TestPluginResourceLocatorImpl extends TestCase
     public void testMatches()
     {
         assertTrue(pluginResourceLocator.matches("/download/superbatch/css/batch.css"));
-//        assertTrue(pluginResourceLocator.matches("/download/superbatch/css/images/background/blah.gif"));
+        assertTrue(pluginResourceLocator.matches("/download/superbatch/css/images/background/blah.gif"));
         assertTrue(pluginResourceLocator.matches("/download/batch/plugin.key:module-key/plugin.key.js"));
         assertTrue(pluginResourceLocator.matches("/download/resources/plugin.key:module-key/foo.png"));
         assertTrue(pluginResourceLocator.matches("/download/contextbatch/css/contexta/batch.css"));
+        assertTrue(pluginResourceLocator.matches("/download/contextbatch/css/contexta/images/blah.png"));
     }
 
     public void testNotMatches()
@@ -117,7 +121,8 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
     public void testGetAndParseUrl()
     {
-        final String url = pluginResourceLocator.getResourceUrl("plugin.key:my-resources", "foo.css");
+        SinglePluginResource resource = new SinglePluginResource("plugin.key:my-resources", "foo.css", false);
+        final String url = resource.getUrl();
         assertTrue(pluginResourceLocator.matches(url));
     }
 
@@ -494,28 +499,54 @@ public class TestPluginResourceLocatorImpl extends TestCase
         assertFalse(superBatchPluginResource.isEmpty());
     }
 
-//    TODO - BN - maybe we can use this as a fallback?
-//    public void testGetDownloadableSuperBatchSubResource() throws Exception
-//    {
-//        final String url = "/download/superbatch/css/images/foo.png";
-//        final String cssResourcesXml = "<resource name=\"css/\" type=\"download\" location=\"css/images/\" />";
-//
-//        final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("atlassian.css", "master.css");
-//        resourceDescriptors.add(new ResourceDescriptor(DocumentHelper.parseText(cssResourcesXml).getRootElement()));
-//
-//        final Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
-//        final WebResourceModuleDescriptor webModuleDescriptor = TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, testPlugin, resourceDescriptors);
-//
-//        when(mockWebResourceIntegration.getSuperBatchVersion()).thenReturn("1.0");
-//        when(mockBatchingConfiguration.isSuperBatchingEnabled()).thenReturn(true);
-//        when(mockBatchingConfiguration.getSuperBatchModuleCompleteKeys()).thenReturn(Arrays.asList(TEST_MODULE_COMPLETE_KEY));
-//
-//        when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn((ModuleDescriptor) webModuleDescriptor);
-//        when(mockPluginAccessor.getPlugin(TEST_PLUGIN_KEY)).thenReturn(testPlugin);
-//
-//        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String> emptyMap());
-//        assertTrue(resource instanceof DownloadableClasspathResource);
-//    }
+    public void testGetDownloadableSuperBatchSubResource() throws Exception
+    {
+        final String url = "/download/superbatch/css/images/foo.png";
+        final String cssResourcesXml = "<resource name=\"css/\" type=\"download\" location=\"css/images/\" />";
+
+        final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("atlassian.css", "master.css");
+        resourceDescriptors.add(new ResourceDescriptor(DocumentHelper.parseText(cssResourcesXml).getRootElement()));
+
+        final Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
+        final WebResourceModuleDescriptor webModuleDescriptor = TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, testPlugin, resourceDescriptors);
+
+        when(mockWebResourceIntegration.getSuperBatchVersion()).thenReturn("1.0");
+        when(mockBatchingConfiguration.isSuperBatchingEnabled()).thenReturn(true);
+        when(mockBatchingConfiguration.getSuperBatchModuleCompleteKeys()).thenReturn(Arrays.asList(TEST_MODULE_COMPLETE_KEY));
+
+        when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn((ModuleDescriptor) webModuleDescriptor);
+        when(mockPluginAccessor.getPlugin(TEST_PLUGIN_KEY)).thenReturn(testPlugin);
+
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String> emptyMap());
+        assertTrue(resource instanceof BatchSubResource);
+        assertFalse(((BatchSubResource) resource).isEmpty());
+    }
+
+    public void testGetDownloadableContextBatchSubResource() throws Exception
+    {
+        final String url = "/download/contextbatch/css/contexta,contextb/images/foo.png";
+        final String cssResourcesXml = "<resource name=\"css/\" type=\"download\" location=\"css/images/\" />";
+
+        final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("atlassian.css", "master.css");
+        resourceDescriptors.add(new ResourceDescriptor(DocumentHelper.parseText(cssResourcesXml).getRootElement()));
+
+        String context = "contexta";
+        Set<String> contexts = new HashSet<String>();
+        contexts.add(context);
+
+        final Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
+        final WebResourceModuleDescriptor webModuleDescriptor = TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY,
+                testPlugin, resourceDescriptors, Collections.<String>emptyList(), contexts);
+
+        when(mockPluginAccessor.getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class)).thenReturn(Arrays.asList(webModuleDescriptor));
+        when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn((ModuleDescriptor) webModuleDescriptor);
+        when(mockPluginAccessor.getPlugin(TEST_PLUGIN_KEY)).thenReturn(testPlugin);
+
+        final DownloadableResource resource = pluginResourceLocator.getDownloadableResource(url, Collections.<String, String> emptyMap());
+        assertTrue(resource instanceof BatchSubResource);
+        assertFalse(((BatchSubResource) resource).isEmpty());
+    }
+
 
     public void testGetDownloadableContextBatchResource() throws Exception
     {

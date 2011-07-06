@@ -37,6 +37,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     protected final WebResourceIntegration webResourceIntegration;
     protected final PluginResourceLocator pluginResourceLocator;
+    private final WebResourceUrlProvider webResourceUrlProvider;
     protected final ResourceBatchingConfiguration batchingConfiguration;
     protected final ResourceDependencyResolver dependencyResolver;
     protected static final List<WebResourceFormatter> webResourceFormatters = Arrays.asList(CssWebResource.FORMATTER, JavascriptWebResource.FORMATTER);
@@ -45,19 +46,21 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration)
     {
-        this(pluginResourceLocator,  webResourceIntegration, new DefaultResourceBatchingConfiguration());
-    }
-
-    public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration, ResourceBatchingConfiguration batchingConfiguration)
-    {
-        this(pluginResourceLocator, webResourceIntegration, batchingConfiguration, new DefaultResourceDependencyResolver(webResourceIntegration, batchingConfiguration));
+        this(pluginResourceLocator,  webResourceIntegration, new WebResourceUrlProviderImpl(webResourceIntegration), new DefaultResourceBatchingConfiguration());
     }
 
     public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration,
-        ResourceBatchingConfiguration batchingConfiguration, ResourceDependencyResolver dependencyResolver)
+                                  WebResourceUrlProvider webResourceUrlProvider, ResourceBatchingConfiguration batchingConfiguration)
+    {
+        this(pluginResourceLocator, webResourceIntegration, webResourceUrlProvider, batchingConfiguration, new DefaultResourceDependencyResolver(webResourceIntegration, batchingConfiguration));
+    }
+
+    public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration,
+        WebResourceUrlProvider webResourceUrlProvider, ResourceBatchingConfiguration batchingConfiguration, ResourceDependencyResolver dependencyResolver)
     {
         this.pluginResourceLocator = pluginResourceLocator;
         this.webResourceIntegration = webResourceIntegration;
+        this.webResourceUrlProvider = webResourceUrlProvider;
         this.batchingConfiguration = batchingConfiguration;
         this.dependencyResolver = dependencyResolver;
     }
@@ -311,11 +314,11 @@ public class WebResourceManagerImpl implements WebResourceManager
         String url = resource.getUrl();
         if (resource.isCacheSupported())
         {
-            url = getStaticResourcePrefix(resource.getVersion(webResourceIntegration), urlMode) + url;
+            url = webResourceUrlProvider.getStaticResourcePrefix(resource.getVersion(webResourceIntegration), urlMode) + url;
         }
         else
         {
-            url = webResourceIntegration.getBaseUrl(urlMode) + url;
+            url = webResourceUrlProvider.getBaseUrl(urlMode) + url;
         }
         writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writer);
     }
@@ -363,12 +366,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public String getStaticResourcePrefix(UrlMode urlMode)
     {
-        // "{base url}/s/{lang?}/{build num}/{system counter}/_"
-        // {lang} is optional
-        String lang = webResourceIntegration.getStaticResourceLocale();
-        return webResourceIntegration.getBaseUrl(urlMode) + "/" + STATIC_RESOURCE_PREFIX + "/" +
-                (lang != null ? lang + "/" : "") +
-                webResourceIntegration.getSystemBuildNumber() + "/" + webResourceIntegration.getSystemCounter() + "/" + STATIC_RESOURCE_SUFFIX;
+        return webResourceUrlProvider.getStaticResourcePrefix(urlMode);
     }
 
     public String getStaticResourcePrefix(String resourceCounter)
@@ -378,12 +376,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public String getStaticResourcePrefix(String resourceCounter, UrlMode urlMode)
     {
-        // "{base url}/s/{lang?}/{build num}/{system counter}/{resource counter}/_"
-        // {lang} is optional
-        String lang = webResourceIntegration.getStaticResourceLocale();
-        return webResourceIntegration.getBaseUrl(urlMode) + "/" + STATIC_RESOURCE_PREFIX + "/" +
-                (lang != null ? lang + "/" : "") +
-                webResourceIntegration.getSystemBuildNumber() + "/" + webResourceIntegration.getSystemCounter() + "/" + resourceCounter + "/" + STATIC_RESOURCE_SUFFIX;
+        return webResourceUrlProvider.getStaticResourcePrefix(resourceCounter, urlMode);
     }
 
     public String getStaticPluginResource(final String moduleCompleteKey, final String resourceName)
@@ -393,13 +386,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public String getStaticPluginResource(final String moduleCompleteKey, final String resourceName, final UrlMode urlMode)
     {
-        final ModuleDescriptor<?> moduleDescriptor = webResourceIntegration.getPluginAccessor().getEnabledPluginModule(moduleCompleteKey);
-        if (moduleDescriptor == null)
-        {
-            return null;
-        }
-
-        return getStaticPluginResource(moduleDescriptor, resourceName, urlMode);
+        return webResourceUrlProvider.getStaticPluginResourceUrl(moduleCompleteKey, resourceName, urlMode);
     }
 
     /**
@@ -413,13 +400,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName, UrlMode urlMode)
     {
-        PluginInformation pluginInfo = moduleDescriptor.getPlugin().getPluginInformation();
-        String pluginVersion = pluginInfo != null ? pluginInfo.getVersion() : "unknown";
-
-        // "{base url}/s/{build num}/{system counter}/{plugin version}/_"
-        final String staticUrlPrefix = getStaticResourcePrefix(pluginVersion, urlMode);
-        // "/download/resources/plugin.key:module.key/resource.name"
-        return staticUrlPrefix + pluginResourceLocator.getResourceUrl(moduleDescriptor.getCompleteKey(), resourceName);
+        return webResourceUrlProvider.getStaticPluginResourceUrl(moduleDescriptor, resourceName, urlMode);
     }
 
     /* Deprecated methods */

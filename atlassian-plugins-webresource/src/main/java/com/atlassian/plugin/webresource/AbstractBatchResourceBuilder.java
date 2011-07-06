@@ -8,6 +8,10 @@ import com.atlassian.plugin.servlet.DownloadableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import static com.atlassian.plugin.util.EfficientStringUtils.endsWith;
 import static com.atlassian.plugin.webresource.PluginResourceLocator.BATCH_PARAMS;
 import static com.google.common.collect.Iterables.filter;
@@ -23,18 +27,19 @@ public abstract class AbstractBatchResourceBuilder implements DownloadableResour
     private static final String DOWNLOAD_TYPE = "download";
 
     private final PluginAccessor pluginAccessor;
-    private final WebResourceIntegration webResourceIntegration;
+    private final WebResourceUrlProvider webResourceUrlProvider;
     protected DownloadableResourceFinder resourceFinder;
 
-    public AbstractBatchResourceBuilder(PluginAccessor pluginAccessor, WebResourceIntegration webResourceIntegration, DownloadableResourceFinder resourceFinder)
+    public AbstractBatchResourceBuilder(PluginAccessor pluginAccessor, WebResourceUrlProvider webResourceUrlProvider, DownloadableResourceFinder resourceFinder)
     {
         this.pluginAccessor = pluginAccessor;
-        this.webResourceIntegration = webResourceIntegration;
+        this.webResourceUrlProvider = webResourceUrlProvider;
         this.resourceFinder = resourceFinder;
     }
 
-    protected void addModuleToBatch(String moduleKey, BatchResource batchResource)
+    protected List<DownloadableResource> resolve(String moduleKey, String batchType, Map<String, String> batchParams)
     {
+        List<DownloadableResource> resources = new ArrayList<DownloadableResource>();
         final ModuleDescriptor<?> moduleDescriptor = pluginAccessor.getEnabledPluginModule(moduleKey);
         if (moduleDescriptor == null)
         {
@@ -49,16 +54,20 @@ public abstract class AbstractBatchResourceBuilder implements DownloadableResour
 
             for (final ResourceDescriptor resourceDescriptor : filter(moduleDescriptor.getResourceDescriptors(), new Resources.TypeFilter(DOWNLOAD_TYPE)))
             {
-                if (isResourceInBatch(resourceDescriptor, batchResource))
+                if (isResourceInBatch(resourceDescriptor, batchType, batchParams))
                 {
                     DownloadableResource downloadableResource = resourceFinder.find(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName());
                     if (RelativeURLTransformResource.matches(resourceDescriptor))
-                        downloadableResource = new RelativeURLTransformResource(webResourceIntegration, moduleDescriptor, downloadableResource);
+                    {
+                        downloadableResource = new RelativeURLTransformResource(webResourceUrlProvider, moduleDescriptor, downloadableResource);
+                    }
 
-                    batchResource.add(downloadableResource);
+                    resources.add(downloadableResource);
                 }
             }
         }
+
+        return resources;
     }
 
     protected DownloadableResourceFinder getResourceFinder()
@@ -66,9 +75,9 @@ public abstract class AbstractBatchResourceBuilder implements DownloadableResour
         return resourceFinder;
     }
 
-    private boolean isResourceInBatch(final ResourceDescriptor resourceDescriptor, final BatchResource batchResource)
+    private boolean isResourceInBatch(final ResourceDescriptor resourceDescriptor, final String batchType, final Map<String, String> batchParams)
     {
-        if (!descriptorTypeMatchesResourceType(resourceDescriptor, batchResource.getType()))
+        if (!descriptorTypeMatchesResourceType(resourceDescriptor, batchType))
         {
             return false;
         }
@@ -80,7 +89,7 @@ public abstract class AbstractBatchResourceBuilder implements DownloadableResour
 
         for (final String param : BATCH_PARAMS)
         {
-            final String batchValue = batchResource.getParams().get(param);
+            final String batchValue = batchParams.get(param);
             final String resourceValue = resourceDescriptor.getParameter(param);
 
             if ((batchValue == null) && (resourceValue != null))

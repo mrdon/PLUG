@@ -4,6 +4,7 @@ import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARA
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.RESOURCE_URL_PREFIX;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
 import com.atlassian.plugin.Plugin;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.Collections;
 import java.util.Map;
@@ -39,7 +40,7 @@ public class SinglePluginResource implements PluginResource
         this.resourceName = resourceName;
         this.moduleCompleteKey = moduleCompleteKey;
         this.cached = cached;
-        this.params = params;
+        this.params = ImmutableMap.copyOf(params);
     }
 
     public String getResourceName()
@@ -54,7 +55,7 @@ public class SinglePluginResource implements PluginResource
 
     public Map<String, String> getParams()
     {
-        return Collections.unmodifiableMap(params);
+        return params;
     }
 
     public String getVersion(WebResourceIntegration integration)

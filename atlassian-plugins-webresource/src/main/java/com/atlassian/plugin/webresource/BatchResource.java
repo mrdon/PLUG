@@ -12,6 +12,4 @@ public interface BatchResource
     String getType();
 
     Map<String, String> getParams();
-
-    void add(DownloadableResource resource);
 }

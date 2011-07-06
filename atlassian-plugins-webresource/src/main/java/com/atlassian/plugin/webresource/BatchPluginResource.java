@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +18,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,23 +52,47 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * For example: test.plugin:resources.js
      * <p/>
      * Note that name of the batch does not identify what the batch includes and could have been static e.g. batch.js
+     * @param moduleCompleteKey - the key of the plugin module
+     * @param type - the type of resource (CSS/JS)
+     * @param params - the parameters of the resource (ieonly, media, etc)
      */
     public BatchPluginResource(final String moduleCompleteKey, final String type, final Map<String, String> params)
     {
-        this(moduleCompleteKey + "." + type, moduleCompleteKey, type, params);
+        this(moduleCompleteKey + "." + type, moduleCompleteKey, type, params, Collections.<DownloadableResource>emptyList());
+    }
+
+    /**
+     * A constructor that creates a default resource name for the batch in the format: moduleCompleteKey.type
+     * For example: test.plugin:resources.js
+     * <p/>
+     * This constructor includes the resources that are contained in the batch, and so is primarily for use
+     * when serving the resource.
+     * @param moduleCompleteKey - the key of the plugin module
+     * @param type - the type of resource (CSS/JS)
+     * @param params - the parameters of the resource (ieonly, media, etc)
+     * @param resources - the resources included in the batch.
+     */
+    public BatchPluginResource(final String moduleCompleteKey, final String type, final Map<String, String> params, final List<DownloadableResource> resources)
+    {
+        this(moduleCompleteKey + "." + type, moduleCompleteKey, type, params, resources);
     }
 
     /**
      * This constructor should only ever be used internally within this class. It does not ensure that the resourceName's
      * file extension is the same as the given type. It is up to the calling code to ensure this.
+     * @param resourceName - the full name of the resource
+     * @param moduleCompleteKey - the key of the plugin module
+     * @param type - the type of resource (CSS/JS)
+     * @param params - the parameters of the resource (ieonly, media, etc)
+     * @param resources - the resources included in the batch.
      */
-    BatchPluginResource(final String resourceName, final String moduleCompleteKey, final String type, final Map<String, String> params)
+    BatchPluginResource(final String resourceName, final String moduleCompleteKey, final String type, final Map<String, String> params, final List<DownloadableResource> resources)
     {
         this.resourceName = resourceName;
         this.moduleCompleteKey = moduleCompleteKey;
         this.type = type;
         this.params = params;
-        resources = new ArrayList<DownloadableResource>();
+        this.resources = ImmutableList.copyOf(resources);
     }
 
     /**
@@ -77,11 +101,6 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
     public boolean isEmpty()
     {
         return resources.isEmpty();
-    }
-
-    public void add(final DownloadableResource resource)
-    {
-        resources.add(resource);
     }
 
     public boolean isResourceModified(final HttpServletRequest request, final HttpServletResponse response)
