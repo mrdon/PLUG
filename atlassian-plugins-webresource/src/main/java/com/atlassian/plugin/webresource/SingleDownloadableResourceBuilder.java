@@ -1,5 +1,8 @@
 package com.atlassian.plugin.webresource;
 
+import static com.atlassian.plugin.webresource.PluginResourceLocatorImpl.RESOURCE_SOURCE_PARAM;
+import static com.atlassian.plugin.webresource.SinglePluginResource.URL_PREFIX;
+
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
@@ -9,13 +12,11 @@ import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.DownloadableWebResource;
 import com.atlassian.plugin.servlet.ForwardableResource;
 import com.atlassian.plugin.servlet.ServletContextFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-
-import static com.atlassian.plugin.webresource.PluginResourceLocatorImpl.RESOURCE_SOURCE_PARAM;
-import static com.atlassian.plugin.webresource.SinglePluginResource.URL_PREFIX;
 
 public class SingleDownloadableResourceBuilder implements DownloadableResourceBuilder, DownloadableResourceFinder
 {
@@ -25,18 +26,18 @@ public class SingleDownloadableResourceBuilder implements DownloadableResourceBu
     private final PluginAccessor pluginAccessor;
     final private ServletContextFactory servletContextFactory;
 
-    public SingleDownloadableResourceBuilder(PluginAccessor pluginAccessor, ServletContextFactory servletContextFactory)
+    public SingleDownloadableResourceBuilder(final PluginAccessor pluginAccessor, final ServletContextFactory servletContextFactory)
     {
         this.pluginAccessor = pluginAccessor;
         this.servletContextFactory = servletContextFactory;
     }
 
-    public boolean matches(String path)
+    public boolean matches(final String path)
     {
         return path.indexOf(URL_PREFIX) != -1;
     }
 
-    public DownloadableResource parse(String path, Map<String, String> params) throws UrlParseException
+    public DownloadableResource parse(final String path, final Map<String, String> params) throws UrlParseException
     {
         final int indexOfPrefix = path.indexOf(URL_PREFIX);
         String libraryAndResource = path.substring(indexOfPrefix + URL_PREFIX.length() + 1);
@@ -53,12 +54,12 @@ public class SingleDownloadableResourceBuilder implements DownloadableResourceBu
             throw new UrlParseException("Could not parse invalid plugin resource url: " + path);
         }
 
-        PluginResource resource = new SinglePluginResource(parts[1], parts[0], path.substring(0, indexOfPrefix).length() > 0);
+        final PluginResource resource = new SinglePluginResource(parts[1], parts[0], path.substring(0, indexOfPrefix).length() > 0);
 
         return find(resource.getModuleCompleteKey(), resource.getResourceName());
     }
 
-    public DownloadableResource find(String moduleKey, String resourceName)
+    public DownloadableResource find(final String moduleKey, final String resourceName)
     {
         return locatePluginResource(moduleKey, resourceName);
     }
@@ -160,9 +161,7 @@ public class SingleDownloadableResourceBuilder implements DownloadableResourceBu
         return getResourceFromPlugin(plugin, nextParts[0], nextParts[1] + filePath);
     }
 
-    private DownloadableResource getDownloadablePluginResource(final Plugin plugin, final ResourceLocation resourceLocation,
-                                                               ModuleDescriptor descriptor, final String filePath,
-                                                               final boolean disableMinification)
+    private DownloadableResource getDownloadablePluginResource(final Plugin plugin, final ResourceLocation resourceLocation, final ModuleDescriptor<?> descriptor, final String filePath, final boolean disableMinification)
     {
         final String sourceParam = resourceLocation.getParameter(RESOURCE_SOURCE_PARAM);
 
@@ -177,7 +176,8 @@ public class SingleDownloadableResourceBuilder implements DownloadableResourceBu
         // serve static resources from the web application - batching supported
         if ("webContextStatic".equalsIgnoreCase(sourceParam))
         {
-            actualResource = new DownloadableWebResource(plugin, resourceLocation, filePath, servletContextFactory.getServletContext(), disableMinification);
+            actualResource = new DownloadableWebResource(plugin, resourceLocation, filePath, servletContextFactory.getServletContext(),
+                disableMinification);
         }
         else
         {
@@ -189,8 +189,8 @@ public class SingleDownloadableResourceBuilder implements DownloadableResourceBu
         if (descriptor instanceof WebResourceModuleDescriptor)
         {
             DownloadableResource lastResource = actualResource;
-            WebResourceModuleDescriptor desc = (WebResourceModuleDescriptor) descriptor;
-            for (WebResourceTransformation list : desc.getTransformations())
+            final WebResourceModuleDescriptor desc = (WebResourceModuleDescriptor) descriptor;
+            for (final WebResourceTransformation list : desc.getTransformations())
             {
                 if (list.matches(resourceLocation))
                 {
@@ -202,7 +202,7 @@ public class SingleDownloadableResourceBuilder implements DownloadableResourceBu
         return result;
     }
 
-        // pacakge protected so we can test it
+    // pacakge protected so we can test it
     String[] splitLastPathPart(final String resourcePath)
     {
         int indexOfSlash = resourcePath.lastIndexOf('/');
