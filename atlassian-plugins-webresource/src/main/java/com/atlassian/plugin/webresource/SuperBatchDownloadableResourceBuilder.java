@@ -1,54 +1,44 @@
 package com.atlassian.plugin.webresource;
 
-import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.servlet.DownloadableResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import static com.atlassian.plugin.util.EfficientStringUtils.endsWith;
 import static com.atlassian.plugin.webresource.SuperBatchPluginResource.DEFAULT_RESOURCE_NAME_PREFIX;
 import static com.atlassian.plugin.webresource.SuperBatchPluginResource.URL_PREFIX;
+import static com.google.common.collect.Iterables.concat;
 
-public class SuperBatchDownloadableResourceBuilder extends AbstractBatchResourceBuilder
+import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.servlet.DownloadableResource;
+
+import com.google.common.collect.ImmutableList;
+
+import java.util.Map;
+
+/**
+ * @since 2.10
+ */
+class SuperBatchDownloadableResourceBuilder extends AbstractBatchResourceBuilder
 {
-    private static final Logger log = LoggerFactory.getLogger(SuperBatchDownloadableResourceBuilder.class);
     private final ResourceDependencyResolver dependencyResolver;
 
-    public SuperBatchDownloadableResourceBuilder(ResourceDependencyResolver dependencyResolver, PluginAccessor pluginAccessor,
-                                                 WebResourceUrlProvider webResourceUrlProvider, DownloadableResourceFinder resourceFinder)
+    public SuperBatchDownloadableResourceBuilder(final ResourceDependencyResolver dependencyResolver, final PluginAccessor pluginAccessor, final WebResourceUrlProvider webResourceUrlProvider, final DownloadableResourceFinder resourceFinder)
     {
         super(pluginAccessor, webResourceUrlProvider, resourceFinder);
         this.dependencyResolver = dependencyResolver;
     }
 
-    public boolean matches(String path)
+    public boolean matches(final String path)
     {
-        String type = ResourceUtils.getType(path);
-        return path.indexOf(URL_PREFIX) != -1 && endsWith(path, DEFAULT_RESOURCE_NAME_PREFIX, ".", type);
-
+        final String type = ResourceUtils.getType(path);
+        return (path.indexOf(URL_PREFIX) != -1) && endsWith(path, DEFAULT_RESOURCE_NAME_PREFIX, ".", type);
     }
 
-    public SuperBatchPluginResource parse(String path, Map<String, String> params)
+    public SuperBatchPluginResource parse(final String path, final Map<String, String> params)
     {
-        String type = ResourceUtils.getType(path);
-
-        List<DownloadableResource> resources = new ArrayList<DownloadableResource>();
+        final String type = ResourceUtils.getType(path);
+        Iterable<DownloadableResource> resources = ImmutableList.of();
         for (final String moduleKey : dependencyResolver.getSuperBatchDependencies())
         {
-            resources.addAll(resolve(moduleKey, type, params));
+            resources = concat(resources, resolve(moduleKey, type, params));
         }
-
-        SuperBatchPluginResource batchResource = new SuperBatchPluginResource(type, params, resources);
-
-        if (log.isDebugEnabled())
-        {
-            log.debug(batchResource.toString());
-        }
-
-        return batchResource;
+        return new SuperBatchPluginResource(type, params, resources);
     }
 }

@@ -2,25 +2,29 @@ package com.atlassian.plugin.webresource;
 
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
+import static com.google.common.collect.ImmutableList.copyOf;
+import static com.google.common.collect.Iterables.any;
 
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
-import com.atlassian.plugin.Plugin;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.google.common.collect.ImmutableList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents a batch of plugin resources. <p/>
@@ -41,11 +45,11 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      */
     static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + "batch";
 
-    final private String type;
-    final private String moduleCompleteKey;
-    final private Map<String, String> params;
-    final private String resourceName;
-    final private List<DownloadableResource> resources;
+    private final String type;
+    private final String moduleCompleteKey;
+    private final Map<String, String> params;
+    private final String resourceName;
+    private final Iterable<DownloadableResource> resources;
 
     /**
      * A constructor that creates a default resource name for the batch in the format: moduleCompleteKey.type
@@ -58,7 +62,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      */
     public BatchPluginResource(final String moduleCompleteKey, final String type, final Map<String, String> params)
     {
-        this(moduleCompleteKey + "." + type, moduleCompleteKey, type, params, Collections.<DownloadableResource>emptyList());
+        this(moduleCompleteKey + "." + type, moduleCompleteKey, type, params, Collections.<DownloadableResource> emptyList());
     }
 
     /**
@@ -72,7 +76,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * @param params - the parameters of the resource (ieonly, media, etc)
      * @param resources - the resources included in the batch.
      */
-    public BatchPluginResource(final String moduleCompleteKey, final String type, final Map<String, String> params, final List<DownloadableResource> resources)
+    public BatchPluginResource(final String moduleCompleteKey, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources)
     {
         this(moduleCompleteKey + "." + type, moduleCompleteKey, type, params, resources);
     }
@@ -86,13 +90,13 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * @param params - the parameters of the resource (ieonly, media, etc)
      * @param resources - the resources included in the batch.
      */
-    BatchPluginResource(final String resourceName, final String moduleCompleteKey, final String type, final Map<String, String> params, final List<DownloadableResource> resources)
+    BatchPluginResource(final String resourceName, final String moduleCompleteKey, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources)
     {
         this.resourceName = resourceName;
         this.moduleCompleteKey = moduleCompleteKey;
         this.type = type;
-        this.params = params;
-        this.resources = ImmutableList.copyOf(resources);
+        this.params = ImmutableMap.copyOf(params);
+        this.resources = copyOf(resources);
     }
 
     /**
@@ -100,24 +104,26 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      */
     public boolean isEmpty()
     {
-        return resources.isEmpty();
+        return Iterables.isEmpty(resources);
     }
 
     public boolean isResourceModified(final HttpServletRequest request, final HttpServletResponse response)
     {
-        for (final DownloadableResource resource : resources)
+        return any(resources, new Predicate<DownloadableResource>()
         {
-            if (resource.isResourceModified(request, response))
+            public boolean apply(final DownloadableResource resource)
             {
-                return true;
+                return resource.isResourceModified(request, response);
             }
-        }
-        return false;
+        });
     }
 
     public void serveResource(final HttpServletRequest request, final HttpServletResponse response) throws DownloadException
     {
-        log.debug("Start to serve batch " + toString());
+        if (log.isDebugEnabled())
+        {
+            log.debug("Start to serve batch " + toString());
+        }
         for (final DownloadableResource resource : resources)
         {
             resource.serveResource(request, response);
@@ -131,38 +137,6 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         {
             resource.streamResource(out);
             writeNewLine(out);
-        }
-    }
-
-    /**
-     * If a minified files follows another file and the former does not have a free floating carriage return AND ends in
-     * a // comment then the one line minified file will in fact be lost from view in a batched send.  So we need
-     * to put a new line between files
-     *
-     * @param response the HTTP response
-     * @throws com.atlassian.plugin.servlet.DownloadException wraps an IOException (probably client abort)
-     */
-    private void writeNewLine(final HttpServletResponse response) throws DownloadException
-    {
-        try
-        {
-            writeNewLine(response.getOutputStream());
-        }
-        catch (final IOException e)
-        {
-            throw new DownloadException(e);
-        }
-    }
-
-    private void writeNewLine(final OutputStream out) throws DownloadException
-    {
-        try
-        {
-            out.write('\n');
-        }
-        catch (final IOException e)
-        {
-            throw new DownloadException(e);
         }
     }
 
@@ -190,13 +164,11 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
     {
         final StringBuilder sb = new StringBuilder();
         sb.append(URL_PREFIX).append(PATH_SEPARATOR).append(moduleCompleteKey).append(PATH_SEPARATOR).append(resourceName);
-
         addParamsToUrl(sb, params);
-
         return sb.toString();
     }
 
-    protected void addParamsToUrl(StringBuilder sb, Map<String, String> params)
+    protected void addParamsToUrl(final StringBuilder sb, final Map<String, String> params)
     {
         if (params.size() > 0)
         {
@@ -207,16 +179,14 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
             {
                 try
                 {
-                    sb.append(URLEncoder.encode(entry.getKey(), "UTF-8"))
-                      .append("=")
-                      .append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+                    sb.append(URLEncoder.encode(entry.getKey(), "UTF-8")).append("=").append(URLEncoder.encode(entry.getValue(), "UTF-8"));
 
                     if (++count < params.size())
                     {
                         sb.append("&");
                     }
                 }
-                catch (UnsupportedEncodingException e)
+                catch (final UnsupportedEncodingException e)
                 {
                     log.error("Could not encode parameter to url for [" + entry.getKey() + "] with value [" + entry.getValue() + "]", e);
                 }
@@ -231,10 +201,10 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
 
     public Map<String, String> getParams()
     {
-        return Collections.unmodifiableMap(params);
+        return params;
     }
 
-    public String getVersion(WebResourceIntegration integration)
+    public String getVersion(final WebResourceIntegration integration)
     {
         final Plugin plugin = integration.getPluginAccessor().getEnabledPluginModule(getModuleCompleteKey()).getPlugin();
         return plugin.getPluginInformation().getVersion();
@@ -299,5 +269,37 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
     public String toString()
     {
         return "[moduleCompleteKey=" + moduleCompleteKey + ", type=" + type + ", params=" + params + "]";
+    }
+
+    /**
+     * If a minified files follows another file and the former does not have a free floating carriage return AND ends in
+     * a // comment then the one line minified file will in fact be lost from view in a batched send.  So we need
+     * to put a new line between files
+     *
+     * @param response the HTTP response
+     * @throws com.atlassian.plugin.servlet.DownloadException wraps an IOException (probably client abort)
+     */
+    private static void writeNewLine(final HttpServletResponse response) throws DownloadException
+    {
+        try
+        {
+            writeNewLine(response.getOutputStream());
+        }
+        catch (final IOException e)
+        {
+            throw new DownloadException(e);
+        }
+    }
+
+    private static void writeNewLine(final OutputStream out) throws DownloadException
+    {
+        try
+        {
+            out.write('\n');
+        }
+        catch (final IOException e)
+        {
+            throw new DownloadException(e);
+        }
     }
 }

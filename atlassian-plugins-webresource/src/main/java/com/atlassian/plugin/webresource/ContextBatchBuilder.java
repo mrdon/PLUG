@@ -1,7 +1,12 @@
 package com.atlassian.plugin.webresource;
 
+import static com.google.common.collect.Iterables.concat;
+import static com.google.common.collect.Iterables.transform;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -16,46 +21,45 @@ import java.util.Set;
  *
  * @since 2.10
  */
-public class ContextBatchBuilder
+class ContextBatchBuilder
 {
     private static final Logger log = LoggerFactory.getLogger(WebResourceManagerImpl.class);
 
     private final PluginResourceLocator pluginResourceLocator;
     private final ResourceDependencyResolver dependencyResolver;
 
-    private final  List<String> allIncludedResources = new ArrayList<String>();
+    private final List<String> allIncludedResources = new ArrayList<String>();
     private final Set<String> skippedResources = new HashSet<String>();
-    private final List<PluginResource> contextBatches = new ArrayList<PluginResource>();
 
-    public ContextBatchBuilder(PluginResourceLocator pluginResourceLocator, ResourceDependencyResolver dependencyResolver)
+    ContextBatchBuilder(final PluginResourceLocator pluginResourceLocator, final ResourceDependencyResolver dependencyResolver)
     {
         this.pluginResourceLocator = pluginResourceLocator;
         this.dependencyResolver = dependencyResolver;
     }
 
-    public List<PluginResource> build(Set<String> includedContexts)
+    Iterable<PluginResource> build(final Iterable<String> includedContexts)
     {
         return build(includedContexts, DefaultWebResourceFilter.INSTANCE);
     }
 
-    public List<PluginResource> build(Set<String> includedContexts, WebResourceFilter filter)
+    Iterable<PluginResource> build(final Iterable<String> includedContexts, final WebResourceFilter filter)
     {
         // There are three levels to consider here. In order:
         // 1. Type (CSS/JS)
         // 2. Parameters (ieOnly, media, etc)
         // 3. Context
-        List<ContextBatch> batches = new ArrayList<ContextBatch>();
+        final List<ContextBatch> batches = new ArrayList<ContextBatch>();
 
-        for (String context : includedContexts)
+        for (final String context : includedContexts)
         {
-            ContextBatch contextBatch = new ContextBatch(context, dependencyResolver.getDependenciesInContext(context, skippedResources));
-            List<ContextBatch> mergeList = new ArrayList<ContextBatch>();
-            for (String contextResource : contextBatch.getResources())
+            final ContextBatch contextBatch = new ContextBatch(context, dependencyResolver.getDependenciesInContext(context, skippedResources));
+            final List<ContextBatch> mergeList = new ArrayList<ContextBatch>();
+            for (final String contextResource : contextBatch.getResources())
             {
                 // only go deeper if it is not already included
                 if (!allIncludedResources.contains(contextResource))
                 {
-                    for (PluginResource pluginResource : pluginResourceLocator.getPluginResources(contextResource))
+                    for (final PluginResource pluginResource : pluginResourceLocator.getPluginResources(contextResource))
                     {
                         if (filter.matches(pluginResource.getResourceName()))
                         {
@@ -69,13 +73,13 @@ public class ContextBatchBuilder
                 {
                     // we have an overlapping context, find it.
                     // IMPORTANT: Don't add the overlapping resource to the batch otherwise there'll be duplicates
-                    for (ContextBatch batch : batches)
+                    for (final ContextBatch batch : batches)
                     {
                         if (!mergeList.contains(batch) && batch.isResourceIncluded(contextResource))
                         {
                             if (log.isDebugEnabled())
                             {
-                                log.debug("Context: {} shares a resource with {}: {}", new String[] {context, batch.getKey(), contextResource});
+                                log.debug("Context: {} shares a resource with {}: {}", new String[] { context, batch.getKey(), contextResource });
                             }
 
                             mergeList.add(batch);
@@ -105,24 +109,24 @@ public class ContextBatchBuilder
                 // Otherwise just add a new one
                 batches.add(contextBatch);
             }
-
         }
 
         // Build the batch resources
-        for (ContextBatch batch : batches)
+        return concat(transform(batches, new Function<ContextBatch, Iterable<PluginResource>>()
         {
-            contextBatches.addAll(batch.buildPluginResources());
-        }
-
-        return contextBatches;
+            public Iterable<PluginResource> apply(final ContextBatch batch)
+            {
+                return batch.buildPluginResources();
+            };
+        }));
     }
 
-    public List<String> getAllIncludedResources()
+    Iterable<String> getAllIncludedResources()
     {
         return allIncludedResources;
     }
 
-    public Set<String> getSkippedResources()
+    Iterable<String> getSkippedResources()
     {
         return skippedResources;
     }

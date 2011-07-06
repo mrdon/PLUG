@@ -1,25 +1,30 @@
 package com.atlassian.plugin.webresource;
 
+import static com.atlassian.plugin.util.EfficientStringUtils.endsWith;
+import static com.atlassian.plugin.webresource.PluginResourceLocator.BATCH_PARAMS;
+import static com.google.common.base.Predicates.notNull;
+import static com.google.common.collect.Iterables.filter;
+import static com.google.common.collect.Iterables.transform;
+import static java.util.Collections.emptyList;
+
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.Resources;
+import com.atlassian.plugin.Resources.TypeFilter;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.servlet.DownloadableResource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 
-import static com.atlassian.plugin.util.EfficientStringUtils.endsWith;
-import static com.atlassian.plugin.webresource.PluginResourceLocator.BATCH_PARAMS;
-import static com.google.common.collect.Iterables.filter;
+import java.util.Map;
 
 /**
  * This class is used to add individual resources into a larger batch resource.
  */
-public abstract class AbstractBatchResourceBuilder implements DownloadableResourceBuilder
+abstract class AbstractBatchResourceBuilder implements DownloadableResourceBuilder
 {
     private static final Logger log = LoggerFactory.getLogger(AbstractBatchResourceBuilder.class);
     private static final String RESOURCE_SOURCE_PARAM = "source";
@@ -30,47 +35,55 @@ public abstract class AbstractBatchResourceBuilder implements DownloadableResour
     private final WebResourceUrlProvider webResourceUrlProvider;
     protected DownloadableResourceFinder resourceFinder;
 
-    public AbstractBatchResourceBuilder(PluginAccessor pluginAccessor, WebResourceUrlProvider webResourceUrlProvider, DownloadableResourceFinder resourceFinder)
+    AbstractBatchResourceBuilder(final PluginAccessor pluginAccessor, final WebResourceUrlProvider webResourceUrlProvider, final DownloadableResourceFinder resourceFinder)
     {
         this.pluginAccessor = pluginAccessor;
         this.webResourceUrlProvider = webResourceUrlProvider;
         this.resourceFinder = resourceFinder;
     }
 
-    protected List<DownloadableResource> resolve(String moduleKey, String batchType, Map<String, String> batchParams)
+    Iterable<DownloadableResource> resolve(final String moduleKey, final String batchType, final Map<String, String> batchParams)
     {
-        List<DownloadableResource> resources = new ArrayList<DownloadableResource>();
-        final ModuleDescriptor<?> moduleDescriptor = pluginAccessor.getEnabledPluginModule(moduleKey);
-        if (moduleDescriptor == null)
+        final ModuleDescriptor<?> desc = pluginAccessor.getEnabledPluginModule(moduleKey);
+        if (desc == null)
         {
-            log.info("Resource batching configuration refers to plugin that does not exist: " + moduleKey);
-        }
-        else
-        {
-            if (log.isDebugEnabled())
+            if (log.isInfoEnabled())
             {
-                log.debug("searching resources in: " + moduleKey);
+                log.info("Resource batching configuration refers to plugin that does not exist: " + moduleKey);
             }
+            return emptyList();
+        }
+        if (log.isDebugEnabled())
+        {
+            log.debug("searching resources in: " + moduleKey);
+        }
 
-            for (final ResourceDescriptor resourceDescriptor : filter(moduleDescriptor.getResourceDescriptors(), new Resources.TypeFilter(DOWNLOAD_TYPE)))
+        final Iterable<ResourceDescriptor> downloadDescriptors = filter(desc.getResourceDescriptors(), new TypeFilter(DOWNLOAD_TYPE));
+        final Iterable<ResourceDescriptor> inBatch = filter(downloadDescriptors, new Predicate<ResourceDescriptor>()
+        {
+            public boolean apply(final ResourceDescriptor resourceDescriptor)
             {
-                if (isResourceInBatch(resourceDescriptor, batchType, batchParams))
+                return isResourceInBatch(resourceDescriptor, batchType, batchParams);
+            }
+        });
+        //final Iterable<ResourceDescriptor> matched = filter(inBatch, RelativeURLTransformResource.matcher);
+        final Iterable<DownloadableResource> resources = transform(inBatch, new Function<ResourceDescriptor, DownloadableResource>()
+        {
+            public DownloadableResource apply(final ResourceDescriptor from)
+            {
+                final DownloadableResource result = resourceFinder.find(desc.getCompleteKey(), from.getName());
+                if (RelativeURLTransformResource.matches(from))
                 {
-                    DownloadableResource downloadableResource = resourceFinder.find(moduleDescriptor.getCompleteKey(), resourceDescriptor.getName());
-                    if (RelativeURLTransformResource.matches(resourceDescriptor))
-                    {
-                        downloadableResource = new RelativeURLTransformResource(webResourceUrlProvider, moduleDescriptor, downloadableResource);
-                    }
-
-                    resources.add(downloadableResource);
+                    return new RelativeURLTransformResource(webResourceUrlProvider, desc, result);
                 }
-            }
-        }
+                return result;
+            };
+        });
 
-        return resources;
+        return filter(resources, notNull());
     }
 
-    protected DownloadableResourceFinder getResourceFinder()
+    DownloadableResourceFinder getResourceFinder()
     {
         return resourceFinder;
     }
@@ -114,7 +127,6 @@ public abstract class AbstractBatchResourceBuilder implements DownloadableResour
     private boolean skipBatch(final ResourceDescriptor resourceDescriptor)
     {
         // you can't batch forwarded requests
-        return "false".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_BATCH_PARAM))
-            || "webContext".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_SOURCE_PARAM));
+        return "false".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_BATCH_PARAM)) || "webContext".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_SOURCE_PARAM));
     }
 }

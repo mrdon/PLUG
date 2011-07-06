@@ -1,16 +1,17 @@
 package com.atlassian.plugin.webresource;
 
-import com.atlassian.plugin.servlet.DownloadableResource;
-import com.atlassian.plugin.servlet.DownloadException;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import com.atlassian.plugin.servlet.DownloadException;
+import com.atlassian.plugin.servlet.DownloadableResource;
+
 import java.io.OutputStream;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Represents a batch of all resources that declare themselves as part of a given context(s).
@@ -21,7 +22,7 @@ import java.util.Map;
  *
  * @since 2.10
  */
-public class ContextBatchPluginResource implements DownloadableResource, BatchResource, PluginResource
+class ContextBatchPluginResource implements DownloadableResource, BatchResource, PluginResource
 {
     static final String CONTEXT_SEPARATOR = ",";
 
@@ -31,37 +32,37 @@ public class ContextBatchPluginResource implements DownloadableResource, BatchRe
     private final BatchPluginResource delegate;
     private final String resourceName;
     private final String key;
-    private final List<String> contexts;
+    private final Iterable<String> contexts;
 
-    public ContextBatchPluginResource(String key, List<String> contexts, String type, Map<String, String> params)
+    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String type, final Map<String, String> params)
     {
-        this(key, contexts, type, params, Collections.<DownloadableResource>emptyList());
+        this(key, contexts, type, params, Collections.<DownloadableResource> emptyList());
     }
 
-    public ContextBatchPluginResource(String key, List<String> contexts, String type, Map<String, String> params, List<DownloadableResource> resources)
+    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources)
     {
-        this.resourceName = DEFAULT_RESOURCE_NAME_PREFIX + "." + type;
-        this.delegate = new BatchPluginResource(null, type, params, resources);
+        resourceName = DEFAULT_RESOURCE_NAME_PREFIX + "." + type;
+        delegate = new BatchPluginResource(null, type, params, resources);
         this.key = key;
         this.contexts = contexts;
     }
 
-    public List<String> getContexts()
+    Iterable<String> getContexts()
     {
         return contexts;
     }
 
-    public boolean isResourceModified(HttpServletRequest request, HttpServletResponse response)
+    public boolean isResourceModified(final HttpServletRequest request, final HttpServletResponse response)
     {
         return delegate.isResourceModified(request, response);
     }
 
-    public void serveResource(HttpServletRequest request, HttpServletResponse response) throws DownloadException
+    public void serveResource(final HttpServletRequest request, final HttpServletResponse response) throws DownloadException
     {
         delegate.serveResource(request, response);
     }
 
-    public void streamResource(OutputStream out) throws DownloadException
+    public void streamResource(final OutputStream out) throws DownloadException
     {
         delegate.streamResource(out);
     }
@@ -71,16 +72,15 @@ public class ContextBatchPluginResource implements DownloadableResource, BatchRe
         return delegate.getContentType();
     }
 
-    public boolean isEmpty()
+    boolean isEmpty()
     {
         return delegate.isEmpty();
     }
 
     public String getUrl()
     {
-        StringBuilder buf = new StringBuilder(URL_PREFIX.length() + 20);
-        buf.append(URL_PREFIX).append(getType()).append(PATH_SEPARATOR)
-                .append(key).append(PATH_SEPARATOR).append(resourceName);
+        final StringBuilder buf = new StringBuilder(URL_PREFIX.length() + 20);
+        buf.append(URL_PREFIX).append(getType()).append(PATH_SEPARATOR).append(key).append(PATH_SEPARATOR).append(resourceName);
         delegate.addParamsToUrl(buf, delegate.getParams());
         return buf.toString();
     }
@@ -90,7 +90,7 @@ public class ContextBatchPluginResource implements DownloadableResource, BatchRe
         return delegate.getParams();
     }
 
-    public String getVersion(WebResourceIntegration integration)
+    public String getVersion(final WebResourceIntegration integration)
     {
         return integration.getSuperBatchVersion();
     }

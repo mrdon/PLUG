@@ -1,7 +1,11 @@
 package com.atlassian.plugin.webresource;
 
+import static com.google.common.collect.Iterables.get;
+import static com.google.common.collect.Iterables.size;
+import static org.mockito.Mockito.when;
+
 import com.atlassian.plugin.elements.ResourceDescriptor;
-import junit.framework.TestCase;
+
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -12,7 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.mockito.Mockito.when;
+import junit.framework.TestCase;
 
 public class TestContextBatchBuilder extends TestCase
 {
@@ -47,9 +51,9 @@ public class TestContextBatchBuilder extends TestCase
 
     public void testNoOverlapAndNoDependencies() throws Exception
     {
-        String context1 = "xmen";
-        String context2 = "brotherhood";
-        Set<String> contexts = new HashSet<String>();
+        final String context1 = "xmen";
+        final String context2 = "brotherhood";
+        final Set<String> contexts = new HashSet<String>();
         contexts.add(context1);
         contexts.add(context2);
 
@@ -63,22 +67,22 @@ public class TestContextBatchBuilder extends TestCase
         addContext(context1, Arrays.asList(moduleKey1));
         addContext(context2, Arrays.asList(moduleKey2));
 
-        List<PluginResource> resources = builder.build(contexts);
+        final Iterable<PluginResource> resources = builder.build(contexts);
 
-        assertEquals(4, resources.size());
-        assertEquals("/download/contextbatch/js/xmen/batch.js", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen/batch.css", resources.get(1).getUrl());
-        assertEquals("/download/contextbatch/js/brotherhood/batch.js", resources.get(2).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood/batch.css", resources.get(3).getUrl());
+        assertEquals(4, size(resources));
+        assertEquals("/download/contextbatch/js/xmen/batch.js", get(resources, 0).getUrl());
+        assertEquals("/download/contextbatch/css/xmen/batch.css", get(resources, 1).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood/batch.js", get(resources, 2).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood/batch.css", get(resources, 3).getUrl());
 
-        assertEquals(2, builder.getAllIncludedResources().size());
+        assertEquals(2, size(builder.getAllIncludedResources()));
     }
 
     public void testOverlappingAndNoDependencies() throws Exception
     {
-        String context1 = "xmen";
-        String context2 = "brotherhood";
-        Set<String> contexts = new HashSet<String>();
+        final String context1 = "xmen";
+        final String context2 = "brotherhood";
+        final Set<String> contexts = new HashSet<String>();
         contexts.add(context1);
         contexts.add(context2);
 
@@ -92,20 +96,20 @@ public class TestContextBatchBuilder extends TestCase
         addContext(context1, Arrays.asList(moduleKey1, moduleKey2));
         addContext(context2, Arrays.asList(moduleKey1, moduleKey2));
 
-        List<PluginResource> resources = builder.build(contexts);
+        final Iterable<PluginResource> resources = builder.build(contexts);
 
-        assertEquals(2, resources.size());
-        assertEquals("/download/contextbatch/js/xmen,brotherhood/batch.js", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen,brotherhood/batch.css", resources.get(1).getUrl());
+        assertEquals(2, size(resources));
+        assertEquals("/download/contextbatch/js/xmen,brotherhood/batch.js", get(resources, 0).getUrl());
+        assertEquals("/download/contextbatch/css/xmen,brotherhood/batch.css", get(resources, 1).getUrl());
 
-        assertEquals(2, builder.getAllIncludedResources().size());
+        assertEquals(2, size(builder.getAllIncludedResources()));
     }
 
     public void testDependenciesNoOverlap() throws Exception
     {
-        String context1 = "xmen";
-        String context2 = "brotherhood";
-        Set<String> contexts = new HashSet<String>();
+        final String context1 = "xmen";
+        final String context2 = "brotherhood";
+        final Set<String> contexts = new HashSet<String>();
         contexts.add(context1);
         contexts.add(context2);
 
@@ -127,23 +131,23 @@ public class TestContextBatchBuilder extends TestCase
         addModuleDescriptor(dependentModule2, dependentResourceDescriptors2);
         addContext(context2, Arrays.asList(moduleKey2, dependentModule2));
 
-        List<PluginResource> resources = builder.build(contexts);
+        final Iterable<PluginResource> resources = builder.build(contexts);
 
-        assertEquals(4, resources.size());
-        assertEquals("/download/contextbatch/js/xmen/batch.js", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen/batch.css", resources.get(1).getUrl());
-        assertEquals("/download/contextbatch/js/brotherhood/batch.js", resources.get(2).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood/batch.css", resources.get(3).getUrl());
+        assertEquals(4, size(resources));
+        assertEquals("/download/contextbatch/js/xmen/batch.js", get(resources, 0).getUrl());
+        assertEquals("/download/contextbatch/css/xmen/batch.css", get(resources, 1).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood/batch.js", get(resources, 2).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood/batch.css", get(resources, 3).getUrl());
 
-        assertEquals(4, builder.getAllIncludedResources().size());
+        assertEquals(4, size(builder.getAllIncludedResources()));
     }
 
     public void testOverlappingDependencies() throws Exception
     {
-        String context1 = "xmen";
-        String context2 = "government";
-        String context3 = "brotherhood";
-        Set<String> contexts = new HashSet<String>();
+        final String context1 = "xmen";
+        final String context2 = "government";
+        final String context3 = "brotherhood";
+        final Set<String> contexts = new HashSet<String>();
         contexts.add(context1);
         contexts.add(context2);
 
@@ -168,23 +172,23 @@ public class TestContextBatchBuilder extends TestCase
         addModuleDescriptor(moduleKey2, resourceDescriptors2);
         addContext(context3, Arrays.asList(moduleKey2));
 
-        List<PluginResource> resources = builder.build(contexts);
+        final Iterable<PluginResource> resources = builder.build(contexts);
 
-        assertEquals(2, resources.size());
-        assertEquals("/download/contextbatch/js/xmen,government/batch.js", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen,government/batch.css", resources.get(1).getUrl());
+        assertEquals(2, size(resources));
+        assertEquals("/download/contextbatch/js/xmen,government/batch.js", get(resources, 0).getUrl());
+        assertEquals("/download/contextbatch/css/xmen,government/batch.css", get(resources, 1).getUrl());
 
-        assertEquals(3, builder.getAllIncludedResources().size());
+        assertEquals(3, size(builder.getAllIncludedResources()));
     }
 
     public void testMultipleOverlappingContexts() throws Exception
     {
-        String context1 = "xmen";
-        String context2 = "brotherhood";
-        String context3 = "rogue";
-        String context4 = "normals";
+        final String context1 = "xmen";
+        final String context2 = "brotherhood";
+        final String context3 = "rogue";
+        final String context4 = "normals";
 
-        Set<String> contexts = new HashSet<String>();
+        final Set<String> contexts = new HashSet<String>();
         contexts.add(context1);
         contexts.add(context2);
         contexts.add(context3);
@@ -213,22 +217,22 @@ public class TestContextBatchBuilder extends TestCase
 
         addContext(context4, Arrays.asList(moduleKey4));
 
-        List<PluginResource> resources = builder.build(contexts);
+        final Iterable<PluginResource> resources = builder.build(contexts);
 
-        assertEquals(4, resources.size());
-        assertEquals("/download/contextbatch/js/normals/batch.js", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/css/normals/batch.css", resources.get(1).getUrl());
-        assertEquals("/download/contextbatch/js/xmen,brotherhood,rogue/batch.js", resources.get(2).getUrl());
-        assertEquals("/download/contextbatch/css/xmen,brotherhood,rogue/batch.css", resources.get(3).getUrl());
+        assertEquals(4, size(resources));
+        assertEquals("/download/contextbatch/js/normals/batch.js", get(resources, 0).getUrl());
+        assertEquals("/download/contextbatch/css/normals/batch.css", get(resources, 1).getUrl());
+        assertEquals("/download/contextbatch/js/xmen,brotherhood,rogue/batch.js", get(resources, 2).getUrl());
+        assertEquals("/download/contextbatch/css/xmen,brotherhood,rogue/batch.css", get(resources, 3).getUrl());
 
-        assertEquals(4, builder.getAllIncludedResources().size());
+        assertEquals(4, size(builder.getAllIncludedResources()));
     }
 
     public void testContextParams() throws Exception
     {
-        String context1 = "xmen";
-        String context2 = "brotherhood";
-        Set<String> contexts = new HashSet<String>();
+        final String context1 = "xmen";
+        final String context2 = "brotherhood";
+        final Set<String> contexts = new HashSet<String>();
         contexts.add(context1);
         contexts.add(context2);
 
@@ -242,25 +246,25 @@ public class TestContextBatchBuilder extends TestCase
         addModuleDescriptor(moduleKey2, resourceDescriptors2);
         addContext(context2, Arrays.asList(moduleKey2));
 
-        List<PluginResource> resources = builder.build(contexts);
+        final Iterable<PluginResource> resources = builder.build(contexts);
 
-        assertEquals(6, resources.size());
-        assertEquals("/download/contextbatch/css/xmen/batch.css?ieonly=true", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/js/xmen/batch.js", resources.get(1).getUrl());
-        assertEquals("/download/contextbatch/css/xmen/batch.css", resources.get(2).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood/batch.css?ieonly=true", resources.get(3).getUrl());
-        assertEquals("/download/contextbatch/js/brotherhood/batch.js", resources.get(4).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood/batch.css", resources.get(5).getUrl());
+        assertEquals(6, size(resources));
+        assertEquals("/download/contextbatch/css/xmen/batch.css?ieonly=true", get(resources, 0).getUrl());
+        assertEquals("/download/contextbatch/js/xmen/batch.js", get(resources, 1).getUrl());
+        assertEquals("/download/contextbatch/css/xmen/batch.css", get(resources, 2).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood/batch.css?ieonly=true", get(resources, 3).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood/batch.js", get(resources, 4).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood/batch.css", get(resources, 5).getUrl());
 
-        assertEquals(2, builder.getAllIncludedResources().size());
+        assertEquals(2, size(builder.getAllIncludedResources()));
     }
 
     public void testContextParamsInDependencies() throws Exception
     {
-        String context1 = "xmen";
-        String context2 = "brotherhood";
-        String context3 = "rogue";
-        Set<String> contexts = new HashSet<String>();
+        final String context1 = "xmen";
+        final String context2 = "brotherhood";
+        final String context3 = "rogue";
+        final Set<String> contexts = new HashSet<String>();
         contexts.add(context1);
         contexts.add(context2);
         contexts.add(context3);
@@ -271,7 +275,8 @@ public class TestContextBatchBuilder extends TestCase
         final List<ResourceDescriptor> resourceDescriptors2 = TestUtils.createResourceDescriptors("magneto.js", "magneto-ie.css", "sabretooth.css");
 
         final String dependentModule1 = "rogue-resources";
-        final List<ResourceDescriptor> dependentResourceDescriptors1 = TestUtils.createResourceDescriptors("nightcrawler.js", "nightcrawler.css", "gambit.css");
+        final List<ResourceDescriptor> dependentResourceDescriptors1 = TestUtils.createResourceDescriptors("nightcrawler.js", "nightcrawler.css",
+            "gambit.css");
 
         addModuleDescriptor(moduleKey1, resourceDescriptors1);
         addContext(context1, Arrays.asList(moduleKey1));
@@ -280,38 +285,38 @@ public class TestContextBatchBuilder extends TestCase
         addModuleDescriptor(moduleKey2, resourceDescriptors2);
         addContext(context2, Arrays.asList(moduleKey2));
 
-        List<PluginResource> resources = builder.build(contexts);
+        final Iterable<PluginResource> resources = builder.build(contexts);
 
         // We currently batch all resource params even if there isn't any overlap in a particular context/param combination
-        assertEquals(6, resources.size());
-        assertEquals("/download/contextbatch/css/brotherhood/batch.css?ieonly=true", resources.get(0).getUrl());
-        assertEquals("/download/contextbatch/js/brotherhood/batch.js", resources.get(1).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood/batch.css", resources.get(2).getUrl());
-        assertEquals("/download/contextbatch/js/xmen,rogue/batch.js", resources.get(3).getUrl());
-        assertEquals("/download/contextbatch/css/xmen,rogue/batch.css?ieonly=true", resources.get(4).getUrl());
-        assertEquals("/download/contextbatch/css/xmen,rogue/batch.css", resources.get(5).getUrl());
+        assertEquals(6, size(resources));
+        assertEquals("/download/contextbatch/css/brotherhood/batch.css?ieonly=true", get(resources, 0).getUrl());
+        assertEquals("/download/contextbatch/js/brotherhood/batch.js", get(resources, 1).getUrl());
+        assertEquals("/download/contextbatch/css/brotherhood/batch.css", get(resources, 2).getUrl());
+        assertEquals("/download/contextbatch/js/xmen,rogue/batch.js", get(resources, 3).getUrl());
+        assertEquals("/download/contextbatch/css/xmen,rogue/batch.css?ieonly=true", get(resources, 4).getUrl());
+        assertEquals("/download/contextbatch/css/xmen,rogue/batch.css", get(resources, 5).getUrl());
 
-        assertEquals(3, builder.getAllIncludedResources().size());
+        assertEquals(3, size(builder.getAllIncludedResources()));
     }
 
-    private void addContext(String context, List<String> descriptors)
+    private void addContext(final String context, final List<String> descriptors)
     {
-        List<String> fullKeyDescriptors = new ArrayList<String>();
+        final List<String> fullKeyDescriptors = new ArrayList<String>();
 
-        for (String key : descriptors)
+        for (final String key : descriptors)
         {
             fullKeyDescriptors.add(PLUGIN_KEY + key);
         }
 
-        when(mockDependencyResolver.getDependenciesInContext(context, Collections.<String>emptySet())).thenReturn(fullKeyDescriptors);
+        when(mockDependencyResolver.getDependenciesInContext(context, Collections.<String> emptySet())).thenReturn(fullKeyDescriptors);
     }
 
-    private void addModuleDescriptor(String moduleKey, List<ResourceDescriptor> descriptors)
+    private void addModuleDescriptor(final String moduleKey, final List<ResourceDescriptor> descriptors)
     {
-        String completeKey = PLUGIN_KEY + moduleKey;
+        final String completeKey = PLUGIN_KEY + moduleKey;
 
-        List<PluginResource> pluginResources = new ArrayList<PluginResource>();
-        for (ResourceDescriptor descriptor : descriptors)
+        final List<PluginResource> pluginResources = new ArrayList<PluginResource>();
+        for (final ResourceDescriptor descriptor : descriptors)
         {
             pluginResources.add(new SinglePluginResource(descriptor.getName(), completeKey, false, descriptor.getParameters()));
         }

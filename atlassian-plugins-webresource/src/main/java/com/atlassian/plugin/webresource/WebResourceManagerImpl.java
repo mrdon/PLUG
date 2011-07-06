@@ -1,15 +1,26 @@
 package com.atlassian.plugin.webresource;
 
+import static com.google.common.collect.Iterables.concat;
+import static com.google.common.collect.Iterables.contains;
+
 import com.atlassian.plugin.ModuleDescriptor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.*;
-
-import com.atlassian.plugin.PluginInformation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -44,19 +55,19 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     private static final boolean IGNORE_SUPERBATCHING = false;
 
-    public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration)
+    public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration)
     {
-        this(pluginResourceLocator,  webResourceIntegration, new WebResourceUrlProviderImpl(webResourceIntegration), new DefaultResourceBatchingConfiguration());
+        this(pluginResourceLocator, webResourceIntegration, new WebResourceUrlProviderImpl(webResourceIntegration),
+            new DefaultResourceBatchingConfiguration());
     }
 
-    public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration,
-                                  WebResourceUrlProvider webResourceUrlProvider, ResourceBatchingConfiguration batchingConfiguration)
+    public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration, final WebResourceUrlProvider webResourceUrlProvider, final ResourceBatchingConfiguration batchingConfiguration)
     {
-        this(pluginResourceLocator, webResourceIntegration, webResourceUrlProvider, batchingConfiguration, new DefaultResourceDependencyResolver(webResourceIntegration, batchingConfiguration));
+        this(pluginResourceLocator, webResourceIntegration, webResourceUrlProvider, batchingConfiguration, new DefaultResourceDependencyResolver(
+            webResourceIntegration, batchingConfiguration));
     }
 
-    public WebResourceManagerImpl(PluginResourceLocator pluginResourceLocator, WebResourceIntegration webResourceIntegration,
-        WebResourceUrlProvider webResourceUrlProvider, ResourceBatchingConfiguration batchingConfiguration, ResourceDependencyResolver dependencyResolver)
+    public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration, final WebResourceUrlProvider webResourceUrlProvider, final ResourceBatchingConfiguration batchingConfiguration, final ResourceDependencyResolver dependencyResolver)
     {
         this.pluginResourceLocator = pluginResourceLocator;
         this.webResourceIntegration = webResourceIntegration;
@@ -65,16 +76,16 @@ public class WebResourceManagerImpl implements WebResourceManager
         this.dependencyResolver = dependencyResolver;
     }
 
-    public void requireResource(String moduleCompleteKey)
+    public void requireResource(final String moduleCompleteKey)
     {
         log.debug("Requiring resource: " + moduleCompleteKey);
         getIncludedResourceNames().addAll(dependencyResolver.getDependencies(moduleCompleteKey, batchingConfiguration.isSuperBatchingEnabled()));
     }
 
-    public void requireResourcesForContext(String context)
+    public void requireResourcesForContext(final String context)
     {
         getIncludedContexts().add(context);
-	}
+    }
 
     private Set<String> getIncludedContexts()
     {
@@ -112,21 +123,21 @@ public class WebResourceManagerImpl implements WebResourceManager
      *
      * @see #includeResources(Writer, UrlMode, WebResourceFilter)
      */
-    public void includeResources(Writer writer)
+    public void includeResources(final Writer writer)
     {
         includeResources(writer, UrlMode.AUTO);
     }
 
-    public void includeResources(Iterable<String> moduleCompleteKeys, Writer writer, UrlMode urlMode)
+    public void includeResources(final Iterable<String> moduleCompleteKeys, final Writer writer, final UrlMode urlMode)
     {
-        LinkedHashSet<String> resources = new LinkedHashSet<String>();
-        for (String moduleCompleteKey : moduleCompleteKeys)
+        final LinkedHashSet<String> resources = new LinkedHashSet<String>();
+        for (final String moduleCompleteKey : moduleCompleteKeys)
         {
             // Include resources from the super batch as we don't include the super batch itself
-            Set<String> dependencies = dependencyResolver.getDependencies(moduleCompleteKey, false);
+            final Set<String> dependencies = dependencyResolver.getDependencies(moduleCompleteKey, false);
             resources.addAll(dependencies);
         }
-        writeResourceTags(getModuleResources(resources, Collections.<String>emptyList(), DefaultWebResourceFilter.INSTANCE), writer, urlMode);
+        writeResourceTags(getModuleResources(resources, Collections.<String> emptyList(), DefaultWebResourceFilter.INSTANCE), writer, urlMode);
     }
 
     /**
@@ -135,7 +146,7 @@ public class WebResourceManagerImpl implements WebResourceManager
      *
      * @see #includeResources(Writer, UrlMode, WebResourceFilter)
      */
-    public void includeResources(Writer writer, UrlMode urlMode)
+    public void includeResources(final Writer writer, final UrlMode urlMode)
     {
         includeResources(writer, urlMode, DefaultWebResourceFilter.INSTANCE);
     }
@@ -149,7 +160,7 @@ public class WebResourceManagerImpl implements WebResourceManager
      * @param webResourceFilter the resource filter to filter resources on
      * @since 2.4
      */
-    public void includeResources(Writer writer, UrlMode urlMode, WebResourceFilter webResourceFilter)
+    public void includeResources(final Writer writer, final UrlMode urlMode, final WebResourceFilter webResourceFilter)
     {
         writeIncludedResources(writer, urlMode, webResourceFilter);
         clear();
@@ -172,7 +183,7 @@ public class WebResourceManagerImpl implements WebResourceManager
      *
      * @see #getRequiredResources(UrlMode, WebResourceFilter)
      */
-    public String getRequiredResources(UrlMode urlMode)
+    public String getRequiredResources(final UrlMode urlMode)
     {
         return getRequiredResources(urlMode, DefaultWebResourceFilter.INSTANCE);
     }
@@ -187,7 +198,7 @@ public class WebResourceManagerImpl implements WebResourceManager
      * @return a String of the resource tags
      * @since 2.4
      */
-    public String getRequiredResources(UrlMode urlMode, WebResourceFilter webResourceFilter)
+    public String getRequiredResources(final UrlMode urlMode, final WebResourceFilter webResourceFilter)
     {
         final StringWriter writer = new StringWriter();
         writeIncludedResources(writer, urlMode, webResourceFilter);
@@ -197,20 +208,19 @@ public class WebResourceManagerImpl implements WebResourceManager
     /**
      * Write all currently included resources to the given writer.
      */
-    private void writeIncludedResources(Writer writer, UrlMode urlMode, WebResourceFilter filter)
+    private void writeIncludedResources(final Writer writer, final UrlMode urlMode, final WebResourceFilter filter)
     {
-        List<PluginResource> resourcesToInclude = new ArrayList<PluginResource>();
-        resourcesToInclude.addAll(getSuperBatchResources(filter));
+        Iterable<PluginResource> resourcesToInclude = getSuperBatchResources(filter);
 
         // TODO - move this calculation to requireResource
-        ContextBatchBuilder builder = new ContextBatchBuilder(pluginResourceLocator, dependencyResolver);
-        resourcesToInclude.addAll(builder.build(getIncludedContexts(), filter));
-        for (String skippedResource : builder.getSkippedResources())
+        final ContextBatchBuilder builder = new ContextBatchBuilder(pluginResourceLocator, dependencyResolver);
+        resourcesToInclude = concat(resourcesToInclude, builder.build(getIncludedContexts(), filter));
+        for (final String skippedResource : builder.getSkippedResources())
         {
             requireResource(skippedResource);
         }
 
-        resourcesToInclude.addAll(getModuleResources(getIncludedResourceNames(), builder.getAllIncludedResources(), filter));
+        resourcesToInclude = concat(resourcesToInclude, getModuleResources(getIncludedResourceNames(), builder.getAllIncludedResources(), filter));
 
         writeResourceTags(resourcesToInclude, writer, urlMode);
     }
@@ -221,29 +231,31 @@ public class WebResourceManagerImpl implements WebResourceManager
      *
      * Package private so it can be tested independently.
      */
-    List<PluginResource> getSuperBatchResources(WebResourceFilter filter)
+    List<PluginResource> getSuperBatchResources(final WebResourceFilter filter)
     {
         if (!batchingConfiguration.isSuperBatchingEnabled())
+        {
             return Collections.emptyList();
+        }
 
-        LinkedHashSet<String> superBatchModuleKeys = dependencyResolver.getSuperBatchDependencies();
-        List<PluginResource> resources = new ArrayList<PluginResource>();
+        final LinkedHashSet<String> superBatchModuleKeys = dependencyResolver.getSuperBatchDependencies();
+        final List<PluginResource> resources = new ArrayList<PluginResource>();
 
         // This is necessarily quite complicated. We need distinct superbatch resources for each combination of
         // resourceFormatter (i.e. separate CSS or JS resources), and also each unique combination of
         // BATCH_PARAMS (i.e. separate superbatches for print stylesheets, IE only stylesheets, and IE only print
         // stylesheets if they ever exist in the future)
-        for (WebResourceFormatter formatter : webResourceFormatters)
+        for (final WebResourceFormatter formatter : webResourceFormatters)
         {
-            Set<Map<String, String>> alreadyIncluded = new HashSet<Map<String, String>>();
-            for (String moduleKey : superBatchModuleKeys)
+            final Set<Map<String, String>> alreadyIncluded = new HashSet<Map<String, String>>();
+            for (final String moduleKey : superBatchModuleKeys)
             {
-                for (PluginResource pluginResource : pluginResourceLocator.getPluginResources(moduleKey))
+                for (final PluginResource pluginResource : pluginResourceLocator.getPluginResources(moduleKey))
                 {
                     if (formatter.matches(pluginResource.getResourceName()) && filter.matches(pluginResource.getResourceName()))
                     {
-                        Map<String, String> batchParamsMap = new HashMap<String, String>(PluginResourceLocator.BATCH_PARAMS.length);
-                        for (String s : PluginResourceLocator.BATCH_PARAMS)
+                        final Map<String, String> batchParamsMap = new HashMap<String, String>(PluginResourceLocator.BATCH_PARAMS.length);
+                        for (final String s : PluginResourceLocator.BATCH_PARAMS)
                         {
                             batchParamsMap.put(s, pluginResource.getParams().get(s));
                         }
@@ -260,24 +272,28 @@ public class WebResourceManagerImpl implements WebResourceManager
         return resources;
     }
 
-    private List<PluginResource> getModuleResources(Set<String> webResourcePluginModuleKeys, List<String> batchedModules, WebResourceFilter filter)
+    private Iterable<PluginResource> getModuleResources(final Iterable<String> webResourcePluginModuleKeys, final Iterable<String> batchedModules, final WebResourceFilter filter)
     {
-        List<PluginResource> includedResources = new ArrayList<PluginResource>();
-        for (String moduleKey: webResourcePluginModuleKeys)
+        final List<PluginResource> includedResources = new ArrayList<PluginResource>();
+        for (final String moduleKey : webResourcePluginModuleKeys)
         {
-            if (batchedModules.contains(moduleKey))
+            if (contains(batchedModules, moduleKey))
             {
                 // skip this resource if it is already in a batch
                 continue;
             }
 
-            List<PluginResource> moduleResources = pluginResourceLocator.getPluginResources(moduleKey);
-            for (PluginResource moduleResource : moduleResources)
+            final List<PluginResource> moduleResources = pluginResourceLocator.getPluginResources(moduleKey);
+            for (final PluginResource moduleResource : moduleResources)
             {
                 if (filter.matches(moduleResource.getResourceName()))
+                {
                     includedResources.add(moduleResource);
+                }
                 else
+                {
                     log.debug("Resource [" + moduleResource.getResourceName() + "] excluded by filter");
+                }
             }
         }
         return includedResources;
@@ -287,13 +303,13 @@ public class WebResourceManagerImpl implements WebResourceManager
      * Write the tags for the given set of resources to the writer. Writing will be done in order of
      * webResourceFormatters so that all CSS resources will be output before Javascript.
      */
-    private void writeResourceTags(List<PluginResource> resourcesToInclude, Writer writer, UrlMode urlMode)
+    private void writeResourceTags(final Iterable<PluginResource> resourcesToInclude, final Writer writer, final UrlMode urlMode)
     {
-        for (WebResourceFormatter formatter : webResourceFormatters)
+        for (final WebResourceFormatter formatter : webResourceFormatters)
         {
-            for (Iterator<PluginResource> iter = resourcesToInclude.iterator(); iter.hasNext();)
+            for (final Iterator<PluginResource> iter = resourcesToInclude.iterator(); iter.hasNext();)
             {
-                PluginResource resource = iter.next();
+                final PluginResource resource = iter.next();
                 if (formatter.matches(resource.getResourceName()))
                 {
                     writeResourceTag(urlMode, resource, formatter, writer);
@@ -302,14 +318,15 @@ public class WebResourceManagerImpl implements WebResourceManager
             }
         }
 
-        for (PluginResource resource : resourcesToInclude)
+        for (final PluginResource resource : resourcesToInclude)
         {
-            writeContentAndSwallowErrors("<!-- Error loading resource \"" + resource.getModuleCompleteKey() + "\".  No resource formatter matches \"" + resource.getResourceName() + "\" -->\n",
+            writeContentAndSwallowErrors(
+                "<!-- Error loading resource \"" + resource.getModuleCompleteKey() + "\".  No resource formatter matches \"" + resource.getResourceName() + "\" -->\n",
                 writer);
         }
     }
 
-    private void writeResourceTag(UrlMode urlMode, PluginResource resource, WebResourceFormatter formatter, Writer writer)
+    private void writeResourceTag(final UrlMode urlMode, final PluginResource resource, final WebResourceFormatter formatter, final Writer writer)
     {
         String url = resource.getUrl();
         if (resource.isCacheSupported())
@@ -323,31 +340,32 @@ public class WebResourceManagerImpl implements WebResourceManager
         writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writer);
     }
 
-    public void requireResource(String moduleCompleteKey, Writer writer)
+    public void requireResource(final String moduleCompleteKey, final Writer writer)
     {
         requireResource(moduleCompleteKey, writer, UrlMode.AUTO);
     }
 
-    public void requireResource(String moduleCompleteKey, Writer writer, UrlMode urlMode)
+    public void requireResource(final String moduleCompleteKey, final Writer writer, final UrlMode urlMode)
     {
-        LinkedHashSet<String> allDependentModuleKeys = dependencyResolver.getDependencies(moduleCompleteKey, IGNORE_SUPERBATCHING);
-        List<PluginResource> resourcesToInclude = getModuleResources(allDependentModuleKeys, Collections.<String>emptyList(), DefaultWebResourceFilter.INSTANCE);
+        final Set<String> allDependentModuleKeys = dependencyResolver.getDependencies(moduleCompleteKey, IGNORE_SUPERBATCHING);
+        final Iterable<String> empty = Collections.<String> emptyList();
+        final Iterable<PluginResource> resourcesToInclude = getModuleResources(allDependentModuleKeys, empty, DefaultWebResourceFilter.INSTANCE);
         writeResourceTags(resourcesToInclude, writer, urlMode);
     }
 
-    public String getResourceTags(String moduleCompleteKey)
+    public String getResourceTags(final String moduleCompleteKey)
     {
         return getResourceTags(moduleCompleteKey, UrlMode.AUTO);
     }
 
-    public String getResourceTags(String moduleCompleteKey, UrlMode urlMode)
+    public String getResourceTags(final String moduleCompleteKey, final UrlMode urlMode)
     {
         final StringWriter writer = new StringWriter();
         requireResource(moduleCompleteKey, writer, urlMode);
         return writer.toString();
     }
 
-    private void writeContentAndSwallowErrors(String content, Writer writer)
+    private void writeContentAndSwallowErrors(final String content, final Writer writer)
     {
         try
         {
@@ -364,17 +382,17 @@ public class WebResourceManagerImpl implements WebResourceManager
         return getStaticResourcePrefix(UrlMode.AUTO);
     }
 
-    public String getStaticResourcePrefix(UrlMode urlMode)
+    public String getStaticResourcePrefix(final UrlMode urlMode)
     {
         return webResourceUrlProvider.getStaticResourcePrefix(urlMode);
     }
 
-    public String getStaticResourcePrefix(String resourceCounter)
+    public String getStaticResourcePrefix(final String resourceCounter)
     {
         return getStaticResourcePrefix(resourceCounter, UrlMode.AUTO);
     }
 
-    public String getStaticResourcePrefix(String resourceCounter, UrlMode urlMode)
+    public String getStaticResourcePrefix(final String resourceCounter, final UrlMode urlMode)
     {
         return webResourceUrlProvider.getStaticResourcePrefix(resourceCounter, urlMode);
     }
@@ -393,12 +411,12 @@ public class WebResourceManagerImpl implements WebResourceManager
      * @return "{base url}/s/{build num}/{system counter}/{plugin version}/_/download/resources/{plugin.key:module.key}/{resource.name}"
      */
     @SuppressWarnings("unchecked")
-    public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName)
+    public String getStaticPluginResource(final ModuleDescriptor moduleDescriptor, final String resourceName)
     {
         return getStaticPluginResource(moduleDescriptor, resourceName, UrlMode.AUTO);
     }
 
-    public String getStaticPluginResource(ModuleDescriptor moduleDescriptor, String resourceName, UrlMode urlMode)
+    public String getStaticPluginResource(final ModuleDescriptor moduleDescriptor, final String resourceName, final UrlMode urlMode)
     {
         return webResourceUrlProvider.getStaticPluginResourceUrl(moduleDescriptor, resourceName, urlMode);
     }
@@ -410,7 +428,7 @@ public class WebResourceManagerImpl implements WebResourceManager
      */
     @Deprecated
     @SuppressWarnings("unchecked")
-    public String getStaticPluginResourcePrefix(ModuleDescriptor moduleDescriptor, String resourceName)
+    public String getStaticPluginResourcePrefix(final ModuleDescriptor moduleDescriptor, final String resourceName)
     {
         return getStaticPluginResource(moduleDescriptor, resourceName);
     }
@@ -420,12 +438,6 @@ public class WebResourceManagerImpl implements WebResourceManager
      */
     @Deprecated
     private static final String REQUEST_CACHE_MODE_KEY = "plugin.webresource.mode";
-
-    /**
-     * @deprecated Since 2.2
-     */
-    @Deprecated
-    private static final IncludeMode DEFAULT_INCLUDE_MODE = WebResourceManager.DELAYED_INCLUDE_MODE;
 
     /**
      * @deprecated Since 2.2.

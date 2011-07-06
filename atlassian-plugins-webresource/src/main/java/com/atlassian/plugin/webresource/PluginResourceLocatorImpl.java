@@ -1,22 +1,22 @@
 package com.atlassian.plugin.webresource;
 
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.servlet.DownloadableResource;
+import com.atlassian.plugin.servlet.ServletContextFactory;
+import com.atlassian.plugin.util.PluginUtils;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import com.atlassian.plugin.util.PluginUtils;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.servlet.DownloadableResource;
-import com.atlassian.plugin.servlet.ServletContextFactory;
 
 /**
  * Default implementation of {@link PluginResourceLocator}.
@@ -38,38 +38,37 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     public PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory)
     {
-        this(webResourceIntegration, servletContextFactory, new WebResourceUrlProviderImpl(webResourceIntegration), new DefaultResourceDependencyResolver(webResourceIntegration, new DefaultResourceBatchingConfiguration()));
+        this(webResourceIntegration, servletContextFactory, new WebResourceUrlProviderImpl(webResourceIntegration),
+            new DefaultResourceDependencyResolver(webResourceIntegration, new DefaultResourceBatchingConfiguration()));
     }
 
-    public PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory,
-        final WebResourceUrlProvider webResourceUrlProvider, final ResourceBatchingConfiguration resourceBatchingConfiguration)
+    public PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider, final ResourceBatchingConfiguration resourceBatchingConfiguration)
     {
-        this(webResourceIntegration, servletContextFactory, webResourceUrlProvider, new DefaultResourceDependencyResolver(webResourceIntegration, resourceBatchingConfiguration));
+        this(webResourceIntegration, servletContextFactory, webResourceUrlProvider, new DefaultResourceDependencyResolver(webResourceIntegration,
+            resourceBatchingConfiguration));
     }
 
-    private PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory,
-        final WebResourceUrlProvider webResourceUrlProvider, final ResourceDependencyResolver dependencyResolver)
+    private PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider, final ResourceDependencyResolver dependencyResolver)
     {
-        this.pluginAccessor = webResourceIntegration.getPluginAccessor();
+        pluginAccessor = webResourceIntegration.getPluginAccessor();
         this.webResourceUrlProvider = webResourceUrlProvider;
-        SingleDownloadableResourceBuilder singlePluginBuilder = new SingleDownloadableResourceBuilder(pluginAccessor, servletContextFactory);
-        builders = Collections.unmodifiableList(Arrays.asList(
-            new SuperBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor, webResourceUrlProvider, singlePluginBuilder),
-            new SuperBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder),
+        final SingleDownloadableResourceBuilder singlePluginBuilder = new SingleDownloadableResourceBuilder(pluginAccessor, servletContextFactory);
+        builders = Collections.unmodifiableList(Arrays.asList(new SuperBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor,
+            webResourceUrlProvider, singlePluginBuilder), new SuperBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder),
             new ContextBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor, webResourceUrlProvider, singlePluginBuilder),
-            new ContextBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder),
-            new SingleBatchDownloadableResourceBuilder(pluginAccessor, webResourceUrlProvider, singlePluginBuilder),
-            singlePluginBuilder
-        ));
+            new ContextBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder), new SingleBatchDownloadableResourceBuilder(pluginAccessor,
+                webResourceUrlProvider, singlePluginBuilder), singlePluginBuilder));
 
     }
 
     public boolean matches(final String url)
     {
-        for (DownloadableResourceBuilder builder : builders)
+        for (final DownloadableResourceBuilder builder : builders)
         {
             if (builder.matches(url))
+            {
                 return true;
+            }
         }
 
         return false;
@@ -79,12 +78,13 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
     {
         try
         {
-            for (DownloadableResourceBuilder builder : builders)
+            for (final DownloadableResourceBuilder builder : builders)
             {
                 if (builder.matches(url))
+                {
                     return builder.parse(url, queryParams);
+                }
             }
-
         }
         catch (final UrlParseException e)
         {
@@ -112,7 +112,8 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             if (singleMode || skipBatch(resourceDescriptor))
             {
                 final boolean cache = !"false".equalsIgnoreCase(resourceDescriptor.getParameter("cache"));
-                resources.add(new SinglePluginResource(resourceDescriptor.getName(), moduleDescriptor.getCompleteKey(), cache, resourceDescriptor.getParameters()));
+                resources.add(new SinglePluginResource(resourceDescriptor.getName(), moduleDescriptor.getCompleteKey(), cache,
+                    resourceDescriptor.getParameters()));
             }
             else
             {
@@ -148,7 +149,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
      */
     Boolean isBatchingOff()
     {
-        String explicitSetting = System.getProperty(PLUGIN_WEBRESOURCE_BATCHING_OFF);
+        final String explicitSetting = System.getProperty(PLUGIN_WEBRESOURCE_BATCHING_OFF);
         if (explicitSetting != null)
         {
             return Boolean.parseBoolean(explicitSetting);
@@ -163,8 +164,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
     private boolean skipBatch(final ResourceDescriptor resourceDescriptor)
     {
         // you can't batch forwarded requests
-        return "false".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_BATCH_PARAM))
-            || "webContext".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_SOURCE_PARAM));
+        return "false".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_BATCH_PARAM)) || "webContext".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_SOURCE_PARAM));
     }
 
     private BatchPluginResource createBatchResource(final String moduleCompleteKey, final ResourceDescriptor resourceDescriptor)
@@ -181,7 +181,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             }
         }
 
-        return new BatchPluginResource(moduleCompleteKey, type, params, Collections.<DownloadableResource>emptyList());
+        return new BatchPluginResource(moduleCompleteKey, type, params, Collections.<DownloadableResource> emptyList());
     }
 
     public String getResourceUrl(final String moduleCompleteKey, final String resourceName)
