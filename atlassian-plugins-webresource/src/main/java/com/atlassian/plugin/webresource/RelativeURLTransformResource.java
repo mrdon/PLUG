@@ -21,7 +21,6 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -63,23 +62,16 @@ final class RelativeURLTransformResource implements DownloadableResource
 
     String transform(final String originalContent)
     {
-        final String urlPrefix = getUrlPrefix();
         final Function<Matcher, String> replacer = new Function<Matcher, String>()
         {
+            final String urlPrefix = getUrlPrefix();
+
             public String apply(final Matcher matcher)
             {
-                return doReplace(urlPrefix, matcher);
+                return matcher.group() + urlPrefix;
             }
         };
-        final Pattern p = Pattern.compile(CSS_URL_PATTERN);
-        final SearchAndReplacer grep = new SearchAndReplacer(p, replacer);
-
-        return grep.replaceAll(originalContent);
-    }
-
-    private String doReplace(final String prefix, final Matcher matcher)
-    {
-        return matcher.group() + prefix;
+        return new SearchAndReplacer(CSS_URL_PATTERN, replacer).replaceAll(originalContent);
     }
 
     private String getUrlPrefix()
@@ -104,17 +96,14 @@ final class RelativeURLTransformResource implements DownloadableResource
             response.setContentType(contentType);
         }
 
-        OutputStream out;
         try
         {
-            out = response.getOutputStream();
+            streamResource(response.getOutputStream());
         }
         catch (final IOException e)
         {
             throw new DownloadException(e);
         }
-
-        streamResource(out);
     }
 
     public void streamResource(final OutputStream out) throws DownloadException

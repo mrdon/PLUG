@@ -18,26 +18,31 @@ public class SearchAndReplacer
      * @param pattern the pattern to find in the input
      * @param replacer a function that gives replacement text for the given match
      */
-    public SearchAndReplacer(Pattern pattern, Function<Matcher, String> replacer) {
+    public SearchAndReplacer(final Pattern pattern, final Function<Matcher, String> replacer)
+    {
         this.pattern = pattern;
         this.replacer = replacer;
     }
 
-    /**
-     * Replace all occurences of the pattern in the input, using the given function
-     */
-    public String replaceAll(String input)
+    public SearchAndReplacer(final String pattern, final Function<Matcher, String> replacer)
     {
-        Matcher matcher = pattern.matcher(input);
-        StringBuffer output = new StringBuffer();
+        this(Pattern.compile(pattern), replacer);
+    }
+
+    /**
+     * Replace all occurrences of the pattern in the input, using the given function
+     */
+    public String replaceAll(final String input)
+    {
+        final Matcher matcher = pattern.matcher(input);
+        final StringBuffer output = new StringBuffer();
         while (matcher.find())
         {
-            String r = replacer.apply(matcher);
+            final String r = replacer.apply(matcher);
             matcher.appendReplacement(output, "");
             output.append(r);
         }
         matcher.appendTail(output);
         return output.toString();
-
     }
 }
