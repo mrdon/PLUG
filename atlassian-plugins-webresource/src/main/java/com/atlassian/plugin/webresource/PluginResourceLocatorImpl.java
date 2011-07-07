@@ -1,5 +1,7 @@
 package com.atlassian.plugin.webresource;
 
+import static com.atlassian.plugin.webresource.AbstractBatchResourceBuilder.skipBatch;
+
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
@@ -159,12 +161,6 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             return Boolean.parseBoolean(System.getProperty(PluginUtils.ATLASSIAN_DEV_MODE));
         }
 
-    }
-
-    private boolean skipBatch(final ResourceDescriptor resourceDescriptor)
-    {
-        // you can't batch forwarded requests
-        return "false".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_BATCH_PARAM)) || "webContext".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_SOURCE_PARAM));
     }
 
     private BatchPluginResource createBatchResource(final String moduleCompleteKey, final ResourceDescriptor resourceDescriptor)
