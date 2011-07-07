@@ -117,7 +117,7 @@ class ContextBatchBuilder
             public Iterable<PluginResource> apply(final ContextBatch batch)
             {
                 return batch.buildPluginResources();
-            };
+            }
         }));
     }
 
