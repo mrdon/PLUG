@@ -13,14 +13,14 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -33,21 +33,13 @@ import javax.servlet.http.HttpServletResponse;
  */
 final class RelativeURLTransformResource implements DownloadableResource
 {
-    static final String UTF8 = "UTF-8";
-    static final String CSS_URL_PATTERN = new String("url\\s*\\(\\s*+([\"'])?+(?!/|https?://|data:)");
+    static final Charset UTF8 = Charset.forName("UTF-8");
+    static final Pattern CSS_URL_PATTERN = Pattern.compile("url\\s*\\(\\s*+([\"'])?+(?!/|https?://|data:)");
 
     static boolean matches(final ResourceDescriptor resource)
     {
         return CssWebResource.FORMATTER.matches(resource.getName());
     }
-
-    static final Predicate<ResourceDescriptor> matcher = new Predicate<ResourceDescriptor>()
-    {
-        public boolean apply(final ResourceDescriptor input)
-        {
-            return matches(input);
-        }
-    };
 
     private final WebResourceUrlProvider webResourceUrlProvider;
     private final ModuleDescriptor<?> moduleDescriptor;
@@ -114,11 +106,7 @@ final class RelativeURLTransformResource implements DownloadableResource
         try
         {
             final String originalContent = new String(delegateOut.toByteArray(), UTF8);
-            IOUtils.copy(new StringReader(transform(originalContent)), out, UTF8);
-        }
-        catch (final UnsupportedEncodingException impossible)
-        {
-            throw new DownloadException(impossible);
+            IOUtils.copy(new StringReader(transform(originalContent)), out, UTF8.name());
         }
         catch (final IOException e)
         {
