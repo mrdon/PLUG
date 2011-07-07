@@ -1,5 +1,6 @@
 package com.atlassian.plugin.webresource;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.atlassian.plugin.ModuleDescriptor;
@@ -65,8 +66,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
         final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("webresources.css");
         resourceDescriptors.add(TestUtils.createResourceDescriptor("webresources-nocache.css", queryParams));
 
-        moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(MODULE_KEY, plugin, resourceDescriptors);
-        when(mockPluginAccessor.getEnabledPluginModule(MODULE_KEY)).thenReturn((ModuleDescriptor) moduleDescriptor);
+        addModuleDescriptor(resourceDescriptors);
 
         final DownloadableResource resource = builder.parse("/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css",
             Collections.<String, String> emptyMap());
@@ -81,8 +81,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
     public void testParse() throws Exception
     {
         final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("webresources.css");
-        moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(MODULE_KEY, plugin, resourceDescriptors);
-        when(mockPluginAccessor.getEnabledPluginModule(MODULE_KEY)).thenReturn((ModuleDescriptor) moduleDescriptor);
+        addModuleDescriptor(resourceDescriptors);
 
         final DownloadableResource resource = builder.parse("/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css",
             Collections.<String, String> emptyMap());
@@ -104,8 +103,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
 
         final List<ResourceDescriptor> resourceDescriptors = new ArrayList<ResourceDescriptor>();
         resourceDescriptors.add(TestUtils.createResourceDescriptor("webresources.css", queryParams));
-        moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(MODULE_KEY, plugin, resourceDescriptors);
-        when(mockPluginAccessor.getEnabledPluginModule(MODULE_KEY)).thenReturn((ModuleDescriptor) moduleDescriptor);
+        addModuleDescriptor(resourceDescriptors);
 
         final DownloadableResource resource = builder.parse("/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css", queryParams);
         final BatchPluginResource batchResource = (BatchPluginResource) resource;
@@ -127,8 +125,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
 
         final List<ResourceDescriptor> resourceDescriptors = new ArrayList<ResourceDescriptor>();
         resourceDescriptors.add(TestUtils.createResourceDescriptor("webresources.css", queryParams));
-        moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(MODULE_KEY, plugin, resourceDescriptors);
-        when(mockPluginAccessor.getEnabledPluginModule(MODULE_KEY)).thenReturn((ModuleDescriptor) moduleDescriptor);
+        addModuleDescriptor(resourceDescriptors);
 
         final DownloadableResource resource = builder.parse("/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css", queryParams);
         final BatchPluginResource batchResource = (BatchPluginResource) resource;
@@ -149,8 +146,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
         queryParams.put("foo", "bar");
         final List<ResourceDescriptor> resourceDescriptors = new ArrayList<ResourceDescriptor>();
         resourceDescriptors.add(TestUtils.createResourceDescriptor("webresources.css", queryParams));
-        moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(MODULE_KEY, plugin, resourceDescriptors);
-        when(mockPluginAccessor.getEnabledPluginModule(MODULE_KEY)).thenReturn((ModuleDescriptor) moduleDescriptor);
+        addModuleDescriptor(resourceDescriptors);
 
         final DownloadableResource resource = builder.parse("/random/stuff/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css",
             queryParams);
@@ -172,21 +168,17 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
 
         final List<ResourceDescriptor> resourceDescriptors = new ArrayList<ResourceDescriptor>();
         resourceDescriptors.add(TestUtils.createResourceDescriptor("webresources.js", params));
-        moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(MODULE_KEY, plugin, resourceDescriptors);
-        when(mockPluginAccessor.getEnabledPluginModule(MODULE_KEY)).thenReturn((ModuleDescriptor) moduleDescriptor);
+
+        addModuleDescriptor(resourceDescriptors);
 
         final String moduleKey = MODULE_KEY;
         final BatchPluginResource batchResource = new BatchPluginResource(moduleKey, "js", params, Collections.<DownloadableResource> emptyList());
         final URI uri = new URI(batchResource.getUrl());
         final BatchPluginResource parsedBatchResource = (BatchPluginResource) builder.parse(uri.getPath(), params);
-        assertNull(parsedBatchResource);
-        //TODO previously this was not null as there was a null entry in 
-        // the Iterable<DownloadableResource> returned by the AbstractBatchResourceBuilder.resolve
-        // need to look at this and find out why, perhaps change this test to resolve an actual downloadableResource
-        //        assertEquals(batchResource.getType(), parsedBatchResource.getType());
-        //        assertEquals(batchResource.getModuleCompleteKey(), parsedBatchResource.getModuleCompleteKey());
-        //        assertEquals(batchResource.getParams(), parsedBatchResource.getParams());
-        //        assertEquals(moduleKey + ".js", parsedBatchResource.getResourceName());
+        assertEquals(batchResource.getType(), parsedBatchResource.getType());
+        assertEquals(batchResource.getModuleCompleteKey(), parsedBatchResource.getModuleCompleteKey());
+        assertEquals(batchResource.getParams(), parsedBatchResource.getParams());
+        assertEquals(moduleKey + ".js", parsedBatchResource.getResourceName());
     }
 
     public void testParseInvlaidUrlThrowsException()
@@ -199,6 +191,20 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
         catch (final UrlParseException e)
         {
             //expected
+        }
+    }
+
+
+    private void addModuleDescriptor(List<ResourceDescriptor> resourceDescriptors)
+    {
+        moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(MODULE_KEY, plugin, resourceDescriptors);
+        when(mockPluginAccessor.getEnabledPluginModule(MODULE_KEY)).thenReturn((ModuleDescriptor) moduleDescriptor);
+
+        for (ResourceDescriptor resourceDescriptor : resourceDescriptors)
+        {
+            // We don't really care what the resource is as long as the finder doesn't return null.
+            DownloadableResource downloadableResourceInBatch = mock(DownloadableResource.class);
+            when(mockResourceFinder.find(MODULE_KEY, resourceDescriptor.getName())).thenReturn(downloadableResourceInBatch);
         }
     }
 }

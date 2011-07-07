@@ -18,6 +18,7 @@ interface DownloadableResourceBuilder
 
     /**
      * Parses the url and params and then builds a resource to upload
+     * If the resource cannot be found null is returned.
      * @param path - the url
      * @param params - query parameters provided in the url
      * @return a resource to upload

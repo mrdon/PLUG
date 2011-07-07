@@ -61,7 +61,6 @@ public class TestContextBatchSubResourceBuilder extends TestCase
         assertTrue(builder.matches(path));
         DownloadableResource resource = builder.parse(path, Collections.<String, String>emptyMap());
         BatchSubResource batchResource = (BatchSubResource) resource;
-        assertEquals("png", batchResource.getType());
         assertEquals("images/foo.png", batchResource.getResourceName());
         assertTrue(batchResource.isEmpty());
 
@@ -82,7 +81,6 @@ public class TestContextBatchSubResourceBuilder extends TestCase
 
         DownloadableResource resource = builder.parse(path, Collections.<String, String>emptyMap());
         BatchSubResource batchResource = (BatchSubResource) resource;
-        assertEquals("png", batchResource.getType());
         assertEquals("images/foo.png", batchResource.getResourceName());
         assertFalse(batchResource.isEmpty());
 
@@ -104,7 +102,6 @@ public class TestContextBatchSubResourceBuilder extends TestCase
 
         DownloadableResource resource = builder.parse(path, Collections.<String, String>emptyMap());
         BatchSubResource batchResource = (BatchSubResource) resource;
-        assertEquals("png", batchResource.getType());
         assertEquals("images/foo.png", batchResource.getResourceName());
         assertFalse(batchResource.isEmpty());
 

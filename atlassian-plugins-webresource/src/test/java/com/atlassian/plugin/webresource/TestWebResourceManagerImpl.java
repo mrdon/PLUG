@@ -42,7 +42,7 @@ public class TestWebResourceManagerImpl extends TestCase
         when(mockWebResourceIntegration.getPluginAccessor()).thenReturn(mockPluginAccessor);
 
         resourceBatchingConfiguration = new TestResourceBatchingConfiguration();
-        pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, null);
+        pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, null, mockUrlProvider);
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, mockUrlProvider, resourceBatchingConfiguration);
 
         when(mockUrlProvider.getBaseUrl()).thenReturn(BASEURL);

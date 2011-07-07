@@ -21,7 +21,7 @@ public interface PluginResourceLocator
     /**
      * Returns a {@link DownloadableResource} represented by the given url and query params.
      * {@link #matches(String)} should be called before invoking this method. If the url is
-     * not understood by the locator, null will be returned.
+     * not understood by the locator or the resource cannot be found, null will be returned.
      */
     DownloadableResource getDownloadableResource(String url, Map<String, String> queryParams);
 

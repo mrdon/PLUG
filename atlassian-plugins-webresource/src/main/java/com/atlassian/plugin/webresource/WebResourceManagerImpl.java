@@ -55,9 +55,9 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     private static final boolean IGNORE_SUPERBATCHING = false;
 
-    public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration)
+    public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration, final WebResourceUrlProvider webResourceUrlProvider)
     {
-        this(pluginResourceLocator, webResourceIntegration, new WebResourceUrlProviderImpl(webResourceIntegration),
+        this(pluginResourceLocator, webResourceIntegration, webResourceUrlProvider,
             new DefaultResourceBatchingConfiguration());
     }
 

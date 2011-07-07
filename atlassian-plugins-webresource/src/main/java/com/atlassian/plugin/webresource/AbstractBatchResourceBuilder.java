@@ -65,7 +65,7 @@ abstract class AbstractBatchResourceBuilder implements DownloadableResourceBuild
             public DownloadableResource apply(final ResourceDescriptor from)
             {
                 final DownloadableResource result = resourceFinder.find(desc.getCompleteKey(), from.getName());
-                if (RelativeURLTransformResource.matches(from))
+                if (result != null && RelativeURLTransformResource.matches(from))
                 {
                     return new RelativeURLTransformResource(webResourceUrlProvider, desc, result);
                 }

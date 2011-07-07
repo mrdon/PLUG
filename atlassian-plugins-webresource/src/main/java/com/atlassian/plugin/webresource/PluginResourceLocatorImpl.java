@@ -38,10 +38,9 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
     static final String RESOURCE_SOURCE_PARAM = "source";
     static final String RESOURCE_BATCH_PARAM = "batch";
 
-    public PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory)
+    public PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider)
     {
-        this(webResourceIntegration, servletContextFactory, new WebResourceUrlProviderImpl(webResourceIntegration),
-            new DefaultResourceDependencyResolver(webResourceIntegration, new DefaultResourceBatchingConfiguration()));
+        this(webResourceIntegration, servletContextFactory, webResourceUrlProvider, new DefaultResourceDependencyResolver(webResourceIntegration, new DefaultResourceBatchingConfiguration()));
     }
 
     public PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider, final ResourceBatchingConfiguration resourceBatchingConfiguration)

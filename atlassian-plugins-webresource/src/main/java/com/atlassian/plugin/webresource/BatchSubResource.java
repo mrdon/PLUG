@@ -18,7 +18,7 @@ import java.util.Map;
  * <code>/download/contextbatch/css/contexta/images/foo.png</code>
  * @since 2.10
  */
-public class BatchSubResource implements BatchResource, DownloadableResource, PluginResource
+public class BatchSubResource implements DownloadableResource
 {
     private BatchPluginResource delegate;
     private String resourceName;
@@ -59,44 +59,14 @@ public class BatchSubResource implements BatchResource, DownloadableResource, Pl
         return delegate.isEmpty();
     }
 
-    public String getUrl()
-    {
-        throw new UnsupportedOperationException("A sub batch resource should only be served not requested.");
-    }
-
-    public Map<String, String> getParams()
-    {
-        return delegate.getParams();
-    }
-
-    public String getVersion(WebResourceIntegration integration)
-    {
-        throw new UnsupportedOperationException("A sub batch resource should only be served not requested.");
-    }
-
-    public String getType()
-    {
-        return delegate.getType();
-    }
-
-    public boolean isCacheSupported()
-    {
-        return true;
-    }
-
     public String getResourceName()
     {
         return resourceName;
     }
 
-    public String getModuleCompleteKey()
-    {
-        return "subbatch";
-    }
-
     @Override
     public String toString()
     {
-        return "[Subbatch name=" + resourceName + ", type=" + getType() + ", params=" + getParams() + "]";
+        return "[Subbatch module=" + delegate.getModuleCompleteKey() + " name=" + resourceName + "]";
     }
 }
