@@ -47,16 +47,10 @@ abstract class AbstractBatchResourceBuilder implements DownloadableResourceBuild
         final ModuleDescriptor<?> desc = pluginAccessor.getEnabledPluginModule(moduleKey);
         if (desc == null)
         {
-            if (log.isInfoEnabled())
-            {
-                log.info("Resource batching configuration refers to plugin that does not exist: " + moduleKey);
-            }
+            log.info("Resource batching configuration refers to plugin that does not exist: {}", moduleKey);
             return emptyList();
         }
-        if (log.isDebugEnabled())
-        {
-            log.debug("searching resources in: " + moduleKey);
-        }
+        log.debug("searching resources in: {}", moduleKey);
 
         final Iterable<ResourceDescriptor> downloadDescriptors = filter(desc.getResourceDescriptors(), new TypeFilter(DOWNLOAD_TYPE));
         final Iterable<ResourceDescriptor> inBatch = filter(downloadDescriptors, new Predicate<ResourceDescriptor>()
@@ -66,7 +60,6 @@ abstract class AbstractBatchResourceBuilder implements DownloadableResourceBuild
                 return isResourceInBatch(resourceDescriptor, batchType, batchParams);
             }
         });
-        //final Iterable<ResourceDescriptor> matched = filter(inBatch, RelativeURLTransformResource.matcher);
         final Iterable<DownloadableResource> resources = transform(inBatch, new Function<ResourceDescriptor, DownloadableResource>()
         {
             public DownloadableResource apply(final ResourceDescriptor from)
@@ -77,7 +70,7 @@ abstract class AbstractBatchResourceBuilder implements DownloadableResourceBuild
                     return new RelativeURLTransformResource(webResourceUrlProvider, desc, result);
                 }
                 return result;
-            };
+            }
         });
 
         return filter(resources, notNull());
@@ -115,7 +108,6 @@ abstract class AbstractBatchResourceBuilder implements DownloadableResourceBuild
                 return false;
             }
         }
-
         return true;
     }
 
@@ -124,9 +116,10 @@ abstract class AbstractBatchResourceBuilder implements DownloadableResourceBuild
         return endsWith(resourceDescriptor.getName(), ".", type);
     }
 
-    private boolean skipBatch(final ResourceDescriptor resourceDescriptor)
+    static boolean skipBatch(final ResourceDescriptor resourceDescriptor)
     {
         // you can't batch forwarded requests
-        return "false".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_BATCH_PARAM)) || "webContext".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_SOURCE_PARAM));
+        final boolean doNotBatch = "false".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_BATCH_PARAM));
+        return doNotBatch || "webContext".equalsIgnoreCase(resourceDescriptor.getParameter(RESOURCE_SOURCE_PARAM));
     }
 }
