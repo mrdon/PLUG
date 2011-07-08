@@ -2,7 +2,7 @@ package com.atlassian.plugin.webresource.transformer;
 
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
-import org.apache.commons.io.IOUtils;
+import com.google.common.base.Function;
 
 import java.io.*;
 
@@ -39,31 +39,13 @@ public abstract class AbstractStringTransformedDownloadableResource extends Abst
 
     public void streamResource(OutputStream out) throws DownloadException
     {
-        ByteArrayOutputStream delegateOut = new ByteArrayOutputStream();
-        try
+        TransformerUtils.transformAndStreamResource(getOriginalResource(), getEncoding(), out, new Function<String, String>()
         {
-            getOriginalResource().streamResource(delegateOut);
-        }
-        catch (DownloadException e)
-        {
-            throw e;
-        }
-        try
-        {
-            String originalContent = new String(delegateOut.toByteArray(), getEncoding());
-            String transformedContent = transform(originalContent);
-            IOUtils.copy(new StringReader(transformedContent.toString()), out, getEncoding());
-        }
-        catch (UnsupportedEncodingException e)
-        {
-            // should never happen
-            throw new DownloadException(e);
-        }
-        catch (IOException e)
-        {
-            throw new DownloadException("Unable to stream to the output", e);
-        }
-
+            public String apply(String originalContent)
+            {
+                return transform(originalContent);
+            }
+        });
     }
 
     /**

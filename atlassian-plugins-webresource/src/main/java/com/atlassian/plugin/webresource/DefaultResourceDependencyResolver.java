@@ -2,6 +2,7 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Stack;
@@ -43,7 +44,7 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
             {
                 for (String moduleKey : batchingConfiguration.getSuperBatchModuleCompleteKeys())
                 {
-                    resolveDependencies(moduleKey, webResourceNames, Collections.emptySet(), new Stack<String>());
+                    resolveDependencies(moduleKey, webResourceNames, Collections.emptySet(), new Stack<String>(), null);
                 }
             }
             synchronized (this)
@@ -52,15 +53,42 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
                 superBatchVersion = version;
             }
         }
-        return new LinkedHashSet(superBatchResources);
+        return new LinkedHashSet<String>(superBatchResources);
     }
 
     public LinkedHashSet<String> getDependencies(String moduleKey, boolean excludeSuperBatchedResources)
     {
         LinkedHashSet<String> orderedResourceKeys = new LinkedHashSet<String>();
         Set<String> superBatchResources = excludeSuperBatchedResources ? getSuperBatchDependencies() : Collections.<String>emptySet();
-        resolveDependencies(moduleKey, orderedResourceKeys, superBatchResources, new Stack<String>());
+        resolveDependencies(moduleKey, orderedResourceKeys, superBatchResources, new Stack<String>(), null);
         return orderedResourceKeys;
+    }
+
+    public List<String> getDependenciesInContext(String context)
+    {
+        return getDependenciesInContext(context, new LinkedHashSet<String>());
+    }
+
+    public List<String> getDependenciesInContext(String context, Set<String> skippedResources)
+    {
+        List<String> contextResources = new ArrayList<String>();
+        List<WebResourceModuleDescriptor> descriptors = webResourceIntegration.getPluginAccessor().getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class);
+        for (WebResourceModuleDescriptor descriptor : descriptors)
+        {
+            if (descriptor.getContexts().contains(context))
+            {
+                LinkedHashSet<String> dependencies = new LinkedHashSet<String>();
+                Set<String> superBatchResources = getSuperBatchDependencies();
+                resolveDependencies(descriptor.getCompleteKey(), dependencies, superBatchResources, new Stack<String>(), skippedResources);
+                for (String dependency : dependencies) {
+                    if (!contextResources.contains(dependency))
+                    {
+                        contextResources.add(dependency);
+                    }
+                }
+            }
+        }
+        return contextResources;
     }
 
     /**
@@ -75,9 +103,10 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
      * @param orderedResourceKeys an ordered list set where the resources are added in order
      * @param superBatchResources the set of super batch resources to exclude when resolving dependencies
      * @param stack where we are in the dependency tree
+     * @param skippedResources if not null, all resources with conditions are skipped and added to this set.
      */
     private void resolveDependencies(final String moduleKey, final LinkedHashSet<String> orderedResourceKeys,
-        final Set superBatchResources, final Stack<String> stack)
+        final Set superBatchResources, final Stack<String> stack, Set<String> skippedResources)
     {
         if (superBatchResources.contains(moduleKey))
         {
@@ -100,7 +129,12 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
             return;
         }
 
-        if (!((WebResourceModuleDescriptor) moduleDescriptor).shouldDisplay())
+        if (skippedResources != null && ((WebResourceModuleDescriptor) moduleDescriptor).getCondition() != null)
+        {
+            skippedResources.add(moduleKey);
+            return;
+        }
+        else if (!((WebResourceModuleDescriptor) moduleDescriptor).shouldDisplay())
         {
             log.debug("Cannot include web resource module {} as its condition fails", moduleDescriptor.getCompleteKey());
             return;
@@ -118,7 +152,7 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
             {
                 if (!orderedResourceKeys.contains(dependency))
                 {
-                    resolveDependencies(dependency, orderedResourceKeys, superBatchResources, stack);
+                    resolveDependencies(dependency, orderedResourceKeys, superBatchResources, stack, skippedResources);
                 }
             }
         }
