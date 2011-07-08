@@ -1,11 +1,12 @@
 package com.atlassian.plugin.webresource;
 
-import static com.google.common.collect.Iterables.get;
+import static com.google.common.collect.Iterables.find;
 import static com.google.common.collect.Iterables.size;
 import static org.mockito.Mockito.when;
 
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
+import com.google.common.base.Predicate;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -28,7 +29,7 @@ public class TestContextBatchBuilder extends TestCase
     private PluginResourceLocator mockPluginResourceLocator;
 
     private ContextBatchBuilder builder;
-
+    
     @Override
     public void setUp() throws Exception
     {
@@ -70,10 +71,10 @@ public class TestContextBatchBuilder extends TestCase
         final Iterable<PluginResource> resources = builder.build(contexts);
 
         assertEquals(4, size(resources));
-        assertEquals("/download/contextbatch/js/xmen/batch.js", get(resources, 0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen/batch.css", get(resources, 1).getUrl());
-        assertEquals("/download/contextbatch/js/brotherhood/batch.js", get(resources, 2).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood/batch.css", get(resources, 3).getUrl());
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/xmen/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/xmen/batch.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/brotherhood/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/brotherhood/batch.css")));
 
         assertEquals(2, size(builder.getAllIncludedResources()));
     }
@@ -99,8 +100,8 @@ public class TestContextBatchBuilder extends TestCase
         final Iterable<PluginResource> resources = builder.build(contexts);
 
         assertEquals(2, size(resources));
-        assertEquals("/download/contextbatch/js/xmen,brotherhood/batch.js", get(resources, 0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen,brotherhood/batch.css", get(resources, 1).getUrl());
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/xmen,brotherhood/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/xmen,brotherhood/batch.css")));
 
         assertEquals(2, size(builder.getAllIncludedResources()));
     }
@@ -134,10 +135,10 @@ public class TestContextBatchBuilder extends TestCase
         final Iterable<PluginResource> resources = builder.build(contexts);
 
         assertEquals(4, size(resources));
-        assertEquals("/download/contextbatch/js/xmen/batch.js", get(resources, 0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen/batch.css", get(resources, 1).getUrl());
-        assertEquals("/download/contextbatch/js/brotherhood/batch.js", get(resources, 2).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood/batch.css", get(resources, 3).getUrl());
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/xmen/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/xmen/batch.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/brotherhood/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/brotherhood/batch.css")));
 
         assertEquals(4, size(builder.getAllIncludedResources()));
     }
@@ -175,8 +176,8 @@ public class TestContextBatchBuilder extends TestCase
         final Iterable<PluginResource> resources = builder.build(contexts);
 
         assertEquals(2, size(resources));
-        assertEquals("/download/contextbatch/js/xmen,government/batch.js", get(resources, 0).getUrl());
-        assertEquals("/download/contextbatch/css/xmen,government/batch.css", get(resources, 1).getUrl());
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/xmen,government/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/xmen,government/batch.css")));
 
         assertEquals(3, size(builder.getAllIncludedResources()));
     }
@@ -220,10 +221,10 @@ public class TestContextBatchBuilder extends TestCase
         final Iterable<PluginResource> resources = builder.build(contexts);
 
         assertEquals(4, size(resources));
-        assertEquals("/download/contextbatch/js/normals/batch.js", get(resources, 0).getUrl());
-        assertEquals("/download/contextbatch/css/normals/batch.css", get(resources, 1).getUrl());
-        assertEquals("/download/contextbatch/js/xmen,brotherhood,rogue/batch.js", get(resources, 2).getUrl());
-        assertEquals("/download/contextbatch/css/xmen,brotherhood,rogue/batch.css", get(resources, 3).getUrl());
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/normals/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/normals/batch.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/xmen,brotherhood,rogue/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/xmen,brotherhood,rogue/batch.css")));
 
         assertEquals(4, size(builder.getAllIncludedResources()));
     }
@@ -249,12 +250,12 @@ public class TestContextBatchBuilder extends TestCase
         final Iterable<PluginResource> resources = builder.build(contexts);
 
         assertEquals(6, size(resources));
-        assertEquals("/download/contextbatch/css/xmen/batch.css?ieonly=true", get(resources, 0).getUrl());
-        assertEquals("/download/contextbatch/js/xmen/batch.js", get(resources, 1).getUrl());
-        assertEquals("/download/contextbatch/css/xmen/batch.css", get(resources, 2).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood/batch.css?ieonly=true", get(resources, 3).getUrl());
-        assertEquals("/download/contextbatch/js/brotherhood/batch.js", get(resources, 4).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood/batch.css", get(resources, 5).getUrl());
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/xmen/batch.css?ieonly=true")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/xmen/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/xmen/batch.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/brotherhood/batch.css?ieonly=true")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/brotherhood/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/brotherhood/batch.css")));
 
         assertEquals(2, size(builder.getAllIncludedResources()));
     }
@@ -289,12 +290,12 @@ public class TestContextBatchBuilder extends TestCase
 
         // We currently batch all resource params even if there isn't any overlap in a particular context/param combination
         assertEquals(6, size(resources));
-        assertEquals("/download/contextbatch/css/brotherhood/batch.css?ieonly=true", get(resources, 0).getUrl());
-        assertEquals("/download/contextbatch/js/brotherhood/batch.js", get(resources, 1).getUrl());
-        assertEquals("/download/contextbatch/css/brotherhood/batch.css", get(resources, 2).getUrl());
-        assertEquals("/download/contextbatch/js/xmen,rogue/batch.js", get(resources, 3).getUrl());
-        assertEquals("/download/contextbatch/css/xmen,rogue/batch.css?ieonly=true", get(resources, 4).getUrl());
-        assertEquals("/download/contextbatch/css/xmen,rogue/batch.css", get(resources, 5).getUrl());
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/brotherhood/batch.css?ieonly=true")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/brotherhood/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/brotherhood/batch.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/xmen,rogue/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/xmen,rogue/batch.css?ieonly=true")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/xmen,rogue/batch.css")));
 
         assertEquals(3, size(builder.getAllIncludedResources()));
     }
@@ -322,5 +323,20 @@ public class TestContextBatchBuilder extends TestCase
         }
 
         when(mockPluginResourceLocator.getPluginResources(completeKey)).thenReturn(pluginResources);
+    }
+    
+    class IsResourceWithUrl implements Predicate<PluginResource>
+    {
+        private final String url;
+
+        public IsResourceWithUrl(String url)
+        {
+            this.url = url;
+        }
+
+        public boolean apply(PluginResource resource)
+        {
+            return resource.getUrl().equals(url); 
+        }
     }
 }
