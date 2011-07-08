@@ -24,7 +24,7 @@ public class TransformerUtils
      * @param out - the output stream
      * @param transform - a function for transforming the content
      * @throws DownloadException - thrown if it is not possible to stream the output
-     * @since 2.10
+     * @since 2.9.0
      */
     public static void transformAndStreamResource(DownloadableResource originalResource, String encoding, OutputStream out, Function<String, String> transform) throws DownloadException
     {

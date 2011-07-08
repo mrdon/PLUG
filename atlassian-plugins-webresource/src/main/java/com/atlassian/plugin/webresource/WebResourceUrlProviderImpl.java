@@ -6,7 +6,7 @@ import com.atlassian.plugin.PluginInformation;
 /**
  * The default implementation of {@link WebResourceUrlProvider}.
  *
- * @since 2.10
+ * @since 2.9.0
  */
 public class WebResourceUrlProviderImpl implements WebResourceUrlProvider
 {

@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 /**
  * Performs a search and replace function on a given input.
- * @since 2.10
+ * @since 2.9.0
  */
 public class SearchAndReplacer
 {

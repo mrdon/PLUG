@@ -1,36 +1,29 @@
 package com.atlassian.plugin.webresource;
 
-import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
-import static com.atlassian.plugin.webresource.SinglePluginResource.URL_PREFIX;
-
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.webresource.transformer.SearchAndReplacer;
-
 import com.atlassian.plugin.webresource.transformer.TransformerUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-import java.util.regex.Matcher;
+import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.regex.Matcher;
+
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
+import static com.atlassian.plugin.webresource.SinglePluginResource.URL_PREFIX;
 
 /**
  * Web resource that wraps an existing resource so that it can be transformed.
  * This wrapper converts relative urls in CSS resources into absolute urls.
  * 
- * @since 2.10
+ * @since 2.9.0
  */
 final class RelativeURLTransformResource implements DownloadableResource
 {

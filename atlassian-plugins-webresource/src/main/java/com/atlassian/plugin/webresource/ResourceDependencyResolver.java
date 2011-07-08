@@ -32,7 +32,7 @@ interface ResourceDependencyResolver
      * If no resources are defined for the given context an empty set is returned.
      * @param context - the context to retrieve dependencies from.
      * @return an ordered list of the resources in a given context and its dependencies.
-     * @since 2.10
+     * @since 2.9.0
      */
     public List<String> getDependenciesInContext(@NotNull String context);
 
@@ -43,7 +43,7 @@ interface ResourceDependencyResolver
      * @param context - the context to retrieve dependencies from.
      * @param skippedResources - a list that all the resources that are skipped are added to.
      * @return an ordered list of the resources in a given context and its dependencies.
-     * @since 2.10
+     * @since 2.9.0
      */
     public List<String> getDependenciesInContext(@NotNull String context, @NotNull Set<String> skippedResources);
 }

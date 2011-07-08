@@ -11,7 +11,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 /**
- * @since 2.10
+ * Produces a batch containing the resources defined in a single web resource module descriptor
+ * @since 2.9.0
  */
 class SingleBatchDownloadableResourceBuilder extends AbstractBatchResourceBuilder
 {

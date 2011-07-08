@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
  * is simply there to make the number of path-parts identical with other resources, so relative URLs will still work
  * in CSS files.
  *
- * @since 2.10
+ * @since 2.9.0
  */
 class ContextBatchPluginResource implements DownloadableResource, BatchResource, PluginResource
 {

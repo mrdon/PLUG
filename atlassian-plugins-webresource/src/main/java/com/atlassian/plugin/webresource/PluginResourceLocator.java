@@ -37,7 +37,7 @@ public interface PluginResourceLocator
      *
      * @param pluginModuleKey a plugin module's complete key
      * @param resourceName the name of the resource described in the module
-     * @deprecated As of 2.10.0, replaced by {@link WebResourceUrlProvider#getResourceUrl(String, String)}
+     * @deprecated As of 2.9.0, replaced by {@link WebResourceUrlProvider#getResourceUrl(String, String)}
      */
     @Deprecated
     String getResourceUrl(String pluginModuleKey, String resourceName);

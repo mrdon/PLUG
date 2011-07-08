@@ -19,7 +19,7 @@ import java.util.Set;
  * The batches are constructed in such a way that no batch is dependent on another.
  * The output batches and resources may be intermingled so as to preserve the input order as much as possible.
  *
- * @since 2.10
+ * @since 2.9.0
  */
 class ContextBatchBuilder
 {

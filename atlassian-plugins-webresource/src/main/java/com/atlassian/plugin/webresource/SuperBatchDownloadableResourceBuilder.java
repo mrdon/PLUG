@@ -13,7 +13,8 @@ import com.google.common.collect.ImmutableList;
 import java.util.Map;
 
 /**
- * @since 2.10
+ * Produces a batch containing all the defined super batch dependencies
+ * @since 2.9.0
  */
 class SuperBatchDownloadableResourceBuilder extends AbstractBatchResourceBuilder
 {

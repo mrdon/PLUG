@@ -12,7 +12,7 @@ import static com.atlassian.plugin.webresource.SuperBatchPluginResource.URL_PREF
  * In practice, the resources url should be transformed via the
  * {{com.atlassian.plugin.webresource.RelativeURLTransformResource}}.
  * This builder is in place in case this does not happen
- * @since 2.10
+ * @since 2.9.0
  */
 public class SuperBatchSubResourceBuilder implements DownloadableResourceBuilder
 {

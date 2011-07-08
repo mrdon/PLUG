@@ -5,7 +5,7 @@ import com.atlassian.plugin.ModuleDescriptor;
 /**
  * Provides the prefixes a 'system' static resource as well as the base url of the application
  * to be used as a prefix for other web resources.
- * @since 2.10
+ * @since 2.9.0
  */
 public interface WebResourceUrlProvider
 {
@@ -27,7 +27,7 @@ public interface WebResourceUrlProvider
      * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
      *                decide
      * @return A prefix that can be used to prefix 'static system' resources.
-     * @since 2.10
+     * @since 2.9.0
      */
     String getStaticResourcePrefix(UrlMode urlMode);
 
@@ -54,7 +54,7 @@ public interface WebResourceUrlProvider
      * @param urlMode         specifies whether to use absolute URLs, relative URLs, or allow the concrete
      *                        implementation to decide
      * @return A prefix that can be used to prefix 'static system' resources.
-     * @since 2.10
+     * @since 2.9.0
      */
     String getStaticResourcePrefix(String resourceCounter, UrlMode urlMode);
 

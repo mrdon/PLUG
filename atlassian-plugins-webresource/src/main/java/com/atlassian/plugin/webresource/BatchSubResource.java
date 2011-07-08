@@ -16,7 +16,7 @@ import java.util.Map;
  * This is typically the case for CSS in the superbatch or context batch with relative urls to images. For example:
  * <code>/download/superbatch/css/images/foo.png</code>
  * <code>/download/contextbatch/css/contexta/images/foo.png</code>
- * @since 2.10
+ * @since 2.9.0
  */
 public class BatchSubResource implements DownloadableResource
 {
