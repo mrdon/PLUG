@@ -1,20 +1,19 @@
 package com.atlassian.plugin.impl;
 
+import com.atlassian.plugin.JarPluginArtifact;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginArtifactBackedPlugin;
 import com.atlassian.plugin.classloader.PluginClassLoader;
 import com.atlassian.plugin.loaders.classloading.DeploymentUnit;
-import com.atlassian.plugin.PluginArtifact;
-import com.atlassian.plugin.JarPluginArtifact;
-import com.atlassian.plugin.PluginState;
+import org.apache.commons.lang.Validate;
 
 import java.io.InputStream;
 import java.net.URL;
 
-import org.apache.commons.lang.Validate;
-
 /**
  * A dynamically loaded plugin is loaded through the plugin class loader.
  */
-public class DefaultDynamicPlugin extends AbstractPlugin
+public class DefaultDynamicPlugin extends AbstractPlugin implements PluginArtifactBackedPlugin
 {
     private final PluginArtifact pluginArtifact;
     private final PluginClassLoader loader;

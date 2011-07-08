@@ -4,6 +4,7 @@ import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.IllegalPluginStateException;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginArtifactBackedPlugin;
 import com.atlassian.plugin.PluginState;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
@@ -24,7 +25,13 @@ import com.atlassian.plugin.osgi.external.ListableModuleDescriptorFactory;
 import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.lang.Validate;
 import org.dom4j.Element;
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.BundleListener;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
@@ -48,7 +55,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * leaves this class to manage the {@link PluginState} and interactions with the event system.
  */
 //@Threadsafe
-public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin, ContainerManagedPlugin
+public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin, ContainerManagedPlugin, PluginArtifactBackedPlugin
 {
     private final Map<String, Element> moduleElements = new HashMap<String, Element>();
     private final PluginEventManager pluginEventManager;
@@ -60,7 +67,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     public static final String ATLASSIAN_PLUGIN_KEY = "Atlassian-Plugin-Key";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final BundleListener bundleStopListener;
-    private final PluginArtifact pluginArtifact;
+    private final PluginArtifact originalPluginArtifact;
 
     // Until the framework is actually done starting we want to ignore @RequiresRestart. Where this comes into play
     // is when we have one version of a plugin (e.g. via bundled-plugins.zip) installed but then discover a newer
@@ -69,14 +76,14 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
     // meaningless.
     private volatile boolean frameworkStarted = false;
 
-    public OsgiPlugin(final String key, final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginEventManager pluginEventManager)
+    public OsgiPlugin(final String key, final OsgiContainerManager mgr, final PluginArtifact artifact, final PluginArtifact originalPluginArtifact, final PluginEventManager pluginEventManager)
     {
         Validate.notNull(key, "The plugin key is required");
         Validate.notNull(mgr, "The osgi container is required");
         Validate.notNull(artifact, "The osgi container is required");
         Validate.notNull(pluginEventManager, "The osgi container is required");
 
-        this.pluginArtifact = artifact;
+        this.originalPluginArtifact = originalPluginArtifact;
         this.helper = new OsgiPluginUninstalledHelper(key, mgr, artifact);
         this.pluginEventManager = pluginEventManager;
         this.packageAdmin = extractPackageAdminFromOsgi(mgr);
@@ -103,7 +110,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         this.pluginEventManager = pluginEventManager;
         this.packageAdmin = null;
         this.bundleStopListener = null;
-        this.pluginArtifact = null;
+        this.originalPluginArtifact = null;
     }
 
     /**
@@ -139,13 +146,9 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         return true;
     }
 
-    /**
-     * @return pluginArtifact of this plugin
-     * @since 2.9.0
-     */
     public PluginArtifact getPluginArtifact()
     {
-        return pluginArtifact;
+        return originalPluginArtifact;
     }
 
     /**

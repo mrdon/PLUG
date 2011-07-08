@@ -1,18 +1,15 @@
 package com.atlassian.plugin.osgi.factory;
 
-import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginArtifactBackedPlugin;
 import com.atlassian.plugin.PluginException;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginState;
-import com.atlassian.plugin.Resourced;
-import com.atlassian.plugin.elements.ResourceDescriptor;
-import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.impl.AbstractPlugin;
 import com.atlassian.plugin.osgi.util.BundleClassLoaderAccessor;
 import com.atlassian.plugin.util.resource.AlternativeDirectoryResourceLoader;
 import org.apache.commons.lang.Validate;
-import org.dom4j.Element;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
@@ -21,24 +18,23 @@ import org.osgi.framework.SynchronousBundleListener;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Plugin that wraps an OSGi bundle that has no plugin descriptor.
  */
-public class OsgiBundlePlugin extends AbstractPlugin
+public class OsgiBundlePlugin extends AbstractPlugin implements PluginArtifactBackedPlugin
 {
 
     private final Bundle bundle;
     private final Date dateLoaded;
     private final ClassLoader bundleClassLoader;
     private final SynchronousBundleListener bundleStopListener;
+    private final PluginArtifact pluginArtifact;
 
-    public OsgiBundlePlugin(final Bundle bundle, final String key, final PluginEventManager pluginEventManager)
+    public OsgiBundlePlugin(final Bundle bundle, final String key, final PluginArtifact pluginArtifact, final PluginEventManager pluginEventManager)
     {
+        this.pluginArtifact = pluginArtifact;
         bundleClassLoader = BundleClassLoaderAccessor.getClassLoader(bundle, new AlternativeDirectoryResourceLoader());
         Validate.notNull(bundle);
         this.bundle = bundle;
@@ -156,5 +152,10 @@ public class OsgiBundlePlugin extends AbstractPlugin
     public ClassLoader getClassLoader()
     {
         return bundleClassLoader;
+    }
+
+    public PluginArtifact getPluginArtifact()
+    {
+        return pluginArtifact;
     }
 }

@@ -268,17 +268,13 @@ public class DefaultPluginTransformer implements PluginTransformer
     {
         // get a temp file
         File tempFile = new File(bundleCacheDir, generateCacheName(zipFile));
-
-        // delete it, otherwise you cannot rename your existing zip to it.
-        byte[] buf = new byte[64 * 1024];
-
-
+        
         ZipInputStream zin = null;
         ZipOutputStream out = null;
         try
         {
             zin = new ZipInputStream(new FileInputStream(zipFile));
-            out = new ZipOutputStream(new FileOutputStream(tempFile));
+            out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile)));
             out.setLevel(Deflater.NO_COMPRESSION);
 
             ZipEntry entry = zin.getNextEntry();
@@ -290,9 +286,7 @@ public class DefaultPluginTransformer implements PluginTransformer
                     // Add ZIP entry to output stream.
                     out.putNextEntry(new ZipEntry(name));
                     // Transfer bytes from the ZIP file to the output file
-                    int len;
-                    while ((len = zin.read(buf)) > 0)
-                        out.write(buf, 0, len);
+                    IOUtils.copyLarge(zin,out);
                 }
                 entry = zin.getNextEntry();
             }
@@ -308,11 +302,7 @@ public class DefaultPluginTransformer implements PluginTransformer
                     // Add ZIP entry to output stream.
                     out.putNextEntry(new ZipEntry(fentry.getKey()));
                     // Transfer bytes from the file to the ZIP file
-                    int len;
-                    while ((len = in.read(buf)) > 0)
-                    {
-                        out.write(buf, 0, len);
-                    }
+                    IOUtils.copyLarge(in,out);
                     // Complete the entry
                     out.closeEntry();
                 }

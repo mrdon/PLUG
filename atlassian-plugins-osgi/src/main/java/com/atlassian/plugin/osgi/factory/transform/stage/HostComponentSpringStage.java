@@ -20,6 +20,8 @@ import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
+import java.io.FilterInputStream;
 import java.util.*;
 import java.util.jar.Manifest;
 import java.util.zip.ZipInputStream;
@@ -173,13 +175,12 @@ public class HostComponentSpringStage implements TransformStage
     private void findUsedHostComponents(Set<String> allHostComponents, Set<String> matchedHostComponents, List<String> innerJarPaths, InputStream
             jarStream) throws IOException
     {
-
         Set<String> entries = new HashSet<String>();
         Set<String> superClassNames = new HashSet<String>();
         ZipInputStream zin = null;
         try
         {
-            zin = new ZipInputStream(jarStream);
+            zin = new ZipInputStream(new BufferedInputStream(jarStream));
             ZipEntry zipEntry;
             while ((zipEntry = zin.getNextEntry()) != null)
             {
@@ -187,7 +188,7 @@ public class HostComponentSpringStage implements TransformStage
                 if (path.endsWith(".class"))
                 {
                     entries.add(path.substring(0, path.length() - ".class".length()));
-                    Clazz cls = new Clazz(path, new UnclosableInputStream(zin));
+                    Clazz cls = new Clazz(path, new BufferedInputStream(new UnclosableFilterInputStream(zin)));
                     superClassNames.add(cls.getSuperClassName());
                     Set<String> referredClasses = cls.getReferredClasses();
                     for (String ref : referredClasses)
@@ -202,7 +203,7 @@ public class HostComponentSpringStage implements TransformStage
                 }
                 else if (path.endsWith(".jar") && innerJarPaths.contains(path))
                 {
-                    findUsedHostComponents(allHostComponents, matchedHostComponents, Collections.<String>emptyList(), new UnclosableInputStream(zin));
+                    findUsedHostComponents(allHostComponents, matchedHostComponents, Collections.<String>emptyList(), new UnclosableFilterInputStream(zin));
                 }
             }
         }
@@ -285,18 +286,11 @@ public class HostComponentSpringStage implements TransformStage
     /**
      * Wrapper for the zip input stream to prevent clients from closing it when reading entries
      */
-    private static class UnclosableInputStream extends InputStream
+    private static class UnclosableFilterInputStream extends FilterInputStream
     {
-        private final InputStream delegate;
-
-        public UnclosableInputStream(InputStream delegate)
+        public UnclosableFilterInputStream(InputStream delegate)
         {
-            this.delegate = delegate;
-        }
-
-        public int read() throws IOException
-        {
-            return delegate.read();
+            super(delegate);
         }
 
         @Override
