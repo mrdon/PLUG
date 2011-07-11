@@ -226,8 +226,8 @@ public class TestContextBatchBuilder extends TestCase
         assertEquals(4, size(resources));
         assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/normals/batch.js")));
         assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/normals/batch.css")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/xmen,brotherhood,rogue/batch.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/xmen,brotherhood,rogue/batch.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/brotherhood,xmen,rogue/batch.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/brotherhood,xmen,rogue/batch.css")));
 
         assertEquals(4, size(builder.getAllIncludedResources()));
     }
