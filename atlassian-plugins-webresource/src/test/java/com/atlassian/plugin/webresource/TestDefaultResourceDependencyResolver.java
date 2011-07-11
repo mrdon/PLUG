@@ -1,10 +1,14 @@
 package com.atlassian.plugin.webresource;
 
+import static com.google.common.collect.Iterables.isEmpty;
+import static com.google.common.collect.Iterables.size;
+import static org.mockito.Mockito.when;
+
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
-import junit.framework.TestCase;
+
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -15,9 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.google.common.collect.Iterables.isEmpty;
-import static com.google.common.collect.Iterables.size;
-import static org.mockito.Mockito.when;
+import junit.framework.TestCase;
 
 public class TestDefaultResourceDependencyResolver extends TestCase
 {
@@ -27,12 +29,12 @@ public class TestDefaultResourceDependencyResolver extends TestCase
     private PluginAccessor mockPluginAccessor;
     @Mock
     private ResourceBatchingConfiguration mockBatchingConfiguration;
-    
+
     private ResourceDependencyResolver dependencyResolver;
 
     private Plugin testPlugin;
-    private List<String> superBatchKeys = new ArrayList<String>();
-    private List<WebResourceModuleDescriptor> moduleDescriptors = new ArrayList<WebResourceModuleDescriptor>();
+    private final List<String> superBatchKeys = new ArrayList<String>();
+    private final List<WebResourceModuleDescriptor> moduleDescriptors = new ArrayList<WebResourceModuleDescriptor>();
 
     @Override
     protected void setUp() throws Exception
@@ -43,6 +45,7 @@ public class TestDefaultResourceDependencyResolver extends TestCase
 
         MockitoAnnotations.initMocks(this);
         when(mockWebResourceIntegration.getPluginAccessor()).thenReturn(mockPluginAccessor);
+        when(mockWebResourceIntegration.getSuperBatchVersion()).thenReturn("1");
         when(mockPluginAccessor.getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class)).thenReturn(moduleDescriptors);
         when(mockBatchingConfiguration.isSuperBatchingEnabled()).thenReturn(true);
         when(mockBatchingConfiguration.getSuperBatchModuleCompleteKeys()).thenReturn(superBatchKeys);
@@ -73,9 +76,9 @@ public class TestDefaultResourceDependencyResolver extends TestCase
 
     public void testGetSuperBatchDependenciesInOrder()
     {
-        String superBatchResource1 = "plugin.key:resource1";
-        String superBatchResource2 = "plugin.key:resource2";
-        String superBatchResource3 = "plugin.key:resource3";
+        final String superBatchResource1 = "plugin.key:resource1";
+        final String superBatchResource2 = "plugin.key:resource2";
+        final String superBatchResource3 = "plugin.key:resource3";
 
         superBatchKeys.add(superBatchResource1);
         superBatchKeys.add(superBatchResource2);
@@ -87,15 +90,15 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         addModuleDescriptor(superBatchResource2);
         addModuleDescriptor(superBatchResource3);
 
-        Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getSuperBatchDependencies();
+        final Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getSuperBatchDependencies();
         assertNotNull(resources);
         assertOrder(resources, superBatchResource1, superBatchResource2, superBatchResource3);
     }
 
     public void testGetSuperBatchDependenciesWithCylicDependency()
     {
-        String superBatchResource1 = "plugin.key:resource1";
-        String superBatchResource2 = "plugin.key:resource2";
+        final String superBatchResource1 = "plugin.key:resource1";
+        final String superBatchResource2 = "plugin.key:resource2";
 
         superBatchKeys.add(superBatchResource1);
         superBatchKeys.add(superBatchResource2);
@@ -105,25 +108,25 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         addModuleDescriptor(superBatchResource1, Arrays.asList(superBatchResource2));
         addModuleDescriptor(superBatchResource2, Arrays.asList(superBatchResource1));
 
-        Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getSuperBatchDependencies();
+        final Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getSuperBatchDependencies();
         assertNotNull(resources);
         assertOrder(resources, superBatchResource2, superBatchResource1);
     }
 
     public void testGetSuperBatchDependenciesWithDependencies()
     {
-        String superBatchResource1 = "test.atlassian:super1";
-        String superBatchResource2 = "test.atlassian:super2";
+        final String superBatchResource1 = "test.atlassian:super1";
+        final String superBatchResource2 = "test.atlassian:super2";
 
         superBatchKeys.add(superBatchResource1);
         superBatchKeys.add(superBatchResource2);
         when(mockWebResourceIntegration.getSuperBatchVersion()).thenReturn("1.0");
 
         // dependcies
-        String resourceA = "test.atlassian:a";
-        String resourceB = "test.atlassian:b";
-        String resourceC = "test.atlassian:c";
-        String resourceD = "test.atlassian:d";
+        final String resourceA = "test.atlassian:a";
+        final String resourceB = "test.atlassian:b";
+        final String resourceC = "test.atlassian:c";
+        final String resourceD = "test.atlassian:d";
 
         // super batch 1 depends on A, B
         addModuleDescriptor(resourceA);
@@ -135,16 +138,16 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         addModuleDescriptor(resourceC, Arrays.asList(resourceD));
         addModuleDescriptor(superBatchResource2, Collections.singletonList(resourceC));
 
-        Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getSuperBatchDependencies();
+        final Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getSuperBatchDependencies();
         assertNotNull(resources);
         assertOrder(resources, resourceA, resourceB, superBatchResource1, resourceD, resourceC, superBatchResource2);
     }
 
     public void testGetDependenciesExcludesSuperBatch()
     {
-        String superBatchResource1 = "test.atlassian:super1";
-        String superBatchResource2 = "test.atlassian:super2";
-        String moduleKey = "test.atlassian:foo";
+        final String superBatchResource1 = "test.atlassian:super1";
+        final String superBatchResource2 = "test.atlassian:super2";
+        final String moduleKey = "test.atlassian:foo";
 
         superBatchKeys.add(superBatchResource1);
         superBatchKeys.add(superBatchResource2);
@@ -155,16 +158,16 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         addModuleDescriptor(superBatchResource1);
         addModuleDescriptor(superBatchResource2);
 
-        Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependencies(moduleKey, true);
+        final Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependencies(moduleKey, true);
         assertNotNull(resources);
         assertOrder(resources, moduleKey);
     }
 
     public void testGetDependenciesIncludesSuperBatch()
     {
-        String superBatchResource1 = "test.atlassian:super1";
-        String superBatchResource2 = "test.atlassian:super2";
-        String moduleKey = "test.atlassian:foo";
+        final String superBatchResource1 = "test.atlassian:super1";
+        final String superBatchResource2 = "test.atlassian:super2";
+        final String moduleKey = "test.atlassian:foo";
 
         superBatchKeys.add(superBatchResource1);
         superBatchKeys.add(superBatchResource2);
@@ -175,23 +178,23 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         addModuleDescriptor(superBatchResource1);
         addModuleDescriptor(superBatchResource2);
 
-        Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependencies(moduleKey, false);
+        final Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependencies(moduleKey, false);
         assertNotNull(resources);
         assertOrder(resources, superBatchResource1, moduleKey);
     }
 
     public void testGetDependenciesInContext()
     {
-        String moduleKey1 = "test.atlassian:foo";
-        String moduleKey2 = "test.atlassian:bar";
+        final String moduleKey1 = "test.atlassian:foo";
+        final String moduleKey2 = "test.atlassian:bar";
 
         final String context1 = "connie";
-        Set<String> contexts1 = new HashSet<String>(Arrays.asList(context1));
+        final Set<String> contexts1 = new HashSet<String>(Arrays.asList(context1));
         final String context2 = "jira";
-        Set<String> contexts2 = new HashSet<String>(Arrays.asList(context2));
+        final Set<String> contexts2 = new HashSet<String>(Arrays.asList(context2));
 
-        addModuleDescriptor(moduleKey1, Collections.<String>emptyList(), contexts1);
-        addModuleDescriptor(moduleKey2, Collections.<String>emptyList(), contexts2);
+        addModuleDescriptor(moduleKey1, Collections.<String> emptyList(), contexts1);
+        addModuleDescriptor(moduleKey2, Collections.<String> emptyList(), contexts2);
 
         Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependenciesInContext(context1);
         assertOrder(resources, moduleKey1);
@@ -202,29 +205,29 @@ public class TestDefaultResourceDependencyResolver extends TestCase
 
     public void testGetDependenciesInContextWithMultipleEntries()
     {
-        String moduleKey1 = "test.atlassian:foo";
-        String moduleKey2 = "test.atlassian:bar";
+        final String moduleKey1 = "test.atlassian:foo";
+        final String moduleKey2 = "test.atlassian:bar";
 
         final String context = "connie";
-        Set<String> contexts = new HashSet<String>(Arrays.asList(context));
+        final Set<String> contexts = new HashSet<String>(Arrays.asList(context));
 
-        addModuleDescriptor(moduleKey1, Collections.<String>emptyList(), contexts);
-        addModuleDescriptor(moduleKey2, Collections.<String>emptyList(), contexts);
+        addModuleDescriptor(moduleKey1, Collections.<String> emptyList(), contexts);
+        addModuleDescriptor(moduleKey2, Collections.<String> emptyList(), contexts);
 
-        Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependenciesInContext(context);
+        final Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependenciesInContext(context);
         assertOrder(resources, moduleKey1, moduleKey2);
     }
 
     public void testGetDependenciesInContextWithSharedDependenciesInDifferentContexts()
     {
-        String moduleKey1 = "test.atlassian:foo";
-        String moduleKey2 = "test.atlassian:bar";
-        String sharedModuleKey = "test.atlassian:shared";
+        final String moduleKey1 = "test.atlassian:foo";
+        final String moduleKey2 = "test.atlassian:bar";
+        final String sharedModuleKey = "test.atlassian:shared";
 
         final String context1 = "connie";
-        Set<String> contexts1 = new HashSet<String>(Arrays.asList(context1));
+        final Set<String> contexts1 = new HashSet<String>(Arrays.asList(context1));
         final String context2 = "jira";
-        Set<String> contexts2 = new HashSet<String>(Arrays.asList(context2));
+        final Set<String> contexts2 = new HashSet<String>(Arrays.asList(context2));
 
         addModuleDescriptor(moduleKey1, Arrays.asList(sharedModuleKey), contexts1);
         addModuleDescriptor(moduleKey2, Arrays.asList(sharedModuleKey), contexts2);
@@ -240,62 +243,58 @@ public class TestDefaultResourceDependencyResolver extends TestCase
 
     public void testGetDependenciesInContextWithSharedDependenciesInTheSameContext()
     {
-        String moduleKey1 = "test.atlassian:foo";
-        String moduleKey2 = "test.atlassian:bar";
-        String sharedModuleKey = "test.atlassian:shared";
+        final String moduleKey1 = "test.atlassian:foo";
+        final String moduleKey2 = "test.atlassian:bar";
+        final String sharedModuleKey = "test.atlassian:shared";
 
         final String context = "connie";
-        Set<String> contexts = new HashSet<String>(Arrays.asList(context));
+        final Set<String> contexts = new HashSet<String>(Arrays.asList(context));
 
         addModuleDescriptor(moduleKey1, Arrays.asList(sharedModuleKey), contexts);
         addModuleDescriptor(moduleKey2, Arrays.asList(sharedModuleKey), contexts);
         // Even if the parent is added last, it should appear first in the list.
         addModuleDescriptor(sharedModuleKey);
 
-        Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependenciesInContext(context);
+        final Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependenciesInContext(context);
         assertOrder(resources, sharedModuleKey, moduleKey1, moduleKey2);
     }
 
     public void testGetDependenciesInContextWithDuplicateResources()
     {
-        String moduleKey1 = "test.atlassian:foo";
-        String parentModuleKey = "test.atlassian:parent";
+        final String moduleKey1 = "test.atlassian:foo";
+        final String parentModuleKey = "test.atlassian:parent";
 
         final String context1 = "connie";
-        Set<String> contexts1 = new HashSet<String>(Arrays.asList(context1));
+        final Set<String> contexts1 = new HashSet<String>(Arrays.asList(context1));
 
-        addModuleDescriptor(parentModuleKey, Collections.<String>emptyList(), contexts1);
+        addModuleDescriptor(parentModuleKey, Collections.<String> emptyList(), contexts1);
         addModuleDescriptor(moduleKey1, Arrays.asList(parentModuleKey), contexts1);
 
-        Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependenciesInContext(context1);
+        final Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependenciesInContext(context1);
         assertOrder(resources, parentModuleKey, moduleKey1);
     }
 
     public void testSkippedConditions() throws ClassNotFoundException
     {
         testPlugin = TestUtils.createTestPlugin("test.atlassian", "1", AlwaysTrueCondition.class, AlwaysFalseCondition.class);
-        String moduleKey1 = "test.atlassian:foo";
-        String parentModuleKey = "test.atlassian:parent";
-        String skippedParentModuleKey = "test.atlassian:skipped-parent";
-        String skippedModuleKey = "test.atlassian:skipped";
+        final String moduleKey1 = "test.atlassian:foo";
+        final String parentModuleKey = "test.atlassian:parent";
+        final String skippedParentModuleKey = "test.atlassian:skipped-parent";
+        final String skippedModuleKey = "test.atlassian:skipped";
 
         final String context1 = "connie";
-        Set<String> contexts1 = new HashSet<String>(Arrays.asList(context1));
+        final Set<String> contexts1 = new HashSet<String>(Arrays.asList(context1));
 
-        addModuleDescriptor(parentModuleKey, Collections.<String>emptyList(), contexts1);
+        addModuleDescriptor(parentModuleKey, Collections.<String> emptyList(), contexts1);
         addModuleDescriptor(moduleKey1, Arrays.asList(parentModuleKey), contexts1);
-        addModuleDescriptor(skippedParentModuleKey, Collections.<String>emptyList());
+        addModuleDescriptor(skippedParentModuleKey, Collections.<String> emptyList());
 
-        WebResourceModuleDescriptor skippedModuleDescriptor =  new WebResourceModuleDescriptorBuilder(testPlugin, "skipped")
-                .setCondition(AlwaysTrueCondition.class)
-                .addDescriptor("skipped.js")
-                .addDependency(skippedParentModuleKey)
-                .addContext(context1)
-                .build();
+        final WebResourceModuleDescriptor skippedModuleDescriptor = new WebResourceModuleDescriptorBuilder(testPlugin, "skipped").setCondition(
+            AlwaysTrueCondition.class).addDescriptor("skipped.js").addDependency(skippedParentModuleKey).addContext(context1).build();
         addModuleDescriptor(skippedModuleDescriptor);
 
-        Set<String> skippedResources = new HashSet<String>();
-        Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependenciesInContext(context1, skippedResources);
+        final Set<String> skippedResources = new HashSet<String>();
+        final Iterable<WebResourceModuleDescriptor> resources = dependencyResolver.getDependenciesInContext(context1, skippedResources);
         assertOrder(resources, parentModuleKey, moduleKey1);
 
         // The parent shouldn't be included
@@ -303,37 +302,38 @@ public class TestDefaultResourceDependencyResolver extends TestCase
         assertEquals(skippedModuleKey, skippedResources.toArray()[0]);
     }
 
-    private void addModuleDescriptor(String moduleKey)
+    private void addModuleDescriptor(final String moduleKey)
     {
-        addModuleDescriptor(moduleKey, Collections.<String>emptyList());
+        addModuleDescriptor(moduleKey, Collections.<String> emptyList());
     }
 
-    private void addModuleDescriptor(String moduleKey, List<String> dependencies)
+    private void addModuleDescriptor(final String moduleKey, final List<String> dependencies)
     {
-        addModuleDescriptor(moduleKey, dependencies, Collections.<String>emptySet());
+        addModuleDescriptor(moduleKey, dependencies, Collections.<String> emptySet());
     }
 
-    private void addModuleDescriptor(String moduleKey, List<String> dependencies, Set<String> contexts)
+    private void addModuleDescriptor(final String moduleKey, final List<String> dependencies, final Set<String> contexts)
     {
         final WebResourceModuleDescriptor webResourceModuleDescriptor = TestUtils.createWebResourceModuleDescriptor(moduleKey, testPlugin,
-                Collections.<ResourceDescriptor>emptyList(), dependencies, contexts);
+            Collections.<ResourceDescriptor> emptyList(), dependencies, contexts);
 
         addModuleDescriptor(webResourceModuleDescriptor);
     }
 
-    private void addModuleDescriptor(WebResourceModuleDescriptor webResourceModuleDescriptor)
+    private void addModuleDescriptor(final WebResourceModuleDescriptor webResourceModuleDescriptor)
     {
         moduleDescriptors.add(webResourceModuleDescriptor);
 
-        when(mockPluginAccessor.getEnabledPluginModule(webResourceModuleDescriptor.getCompleteKey())).thenReturn((ModuleDescriptor) webResourceModuleDescriptor);
+        when(mockPluginAccessor.getEnabledPluginModule(webResourceModuleDescriptor.getCompleteKey())).thenReturn(
+            (ModuleDescriptor) webResourceModuleDescriptor);
     }
 
-    private void assertOrder(Iterable<WebResourceModuleDescriptor> resources, String... expectedResources)
+    private void assertOrder(final Iterable<WebResourceModuleDescriptor> resources, final String... expectedResources)
     {
         assertEquals(size(resources), expectedResources.length);
 
         int i = 0;
-        for(WebResourceModuleDescriptor resource : resources)
+        for (final WebResourceModuleDescriptor resource : resources)
         {
             assertEquals(expectedResources[i], resource.getCompleteKey());
             i++;
