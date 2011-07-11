@@ -129,14 +129,12 @@ class ContextBatch
         }
         catch (NoSuchAlgorithmException e)
         {
-            log.error("Error building md5 digest", e);
+            throw new AssertionError("MD5 hashing algorithm is not available.");
         }
         catch (UnsupportedEncodingException e)
         {
-            log.error("Error decoding module descriptor key from UTF-8", e);
+            throw new AssertionError("UTF-8 encoding is not available.");
         }
-
-        return "1";
     }
 
     String getKey()
