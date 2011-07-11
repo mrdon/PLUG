@@ -11,38 +11,38 @@ import java.util.regex.Pattern;
  */
 public class SearchAndReplacer
 {
+    public static SearchAndReplacer create(final Pattern pattern, final Function<Matcher, CharSequence> replacer)
+    {
+        return new SearchAndReplacer(pattern, replacer);
+    }
+
     private final Pattern pattern;
-    private final Function<Matcher, String> replacer;
+    private final Function<Matcher, CharSequence> replacer;
 
     /**
      * @param pattern the pattern to find in the input
      * @param replacer a function that gives replacement text for the given match
      */
-    public SearchAndReplacer(final Pattern pattern, final Function<Matcher, String> replacer)
+    SearchAndReplacer(final Pattern pattern, final Function<Matcher, CharSequence> replacer)
     {
         this.pattern = pattern;
         this.replacer = replacer;
     }
 
-    public SearchAndReplacer(final String pattern, final Function<Matcher, String> replacer)
-    {
-        this(Pattern.compile(pattern), replacer);
-    }
-
     /**
      * Replace all occurrences of the pattern in the input, using the given function
      */
-    public String replaceAll(final String input)
+    public CharSequence replaceAll(final CharSequence input)
     {
         final Matcher matcher = pattern.matcher(input);
         final StringBuffer output = new StringBuffer();
         while (matcher.find())
         {
-            final String r = replacer.apply(matcher);
+            final CharSequence sequence = replacer.apply(matcher);
             matcher.appendReplacement(output, "");
-            output.append(r);
+            output.append(sequence);
         }
         matcher.appendTail(output);
-        return output.toString();
+        return output;
     }
 }

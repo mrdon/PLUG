@@ -1,15 +1,17 @@
 package com.atlassian.plugin.webresource;
 
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.servlet.DownloadableResource;
-import junit.framework.TestCase;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
 import static com.atlassian.plugin.webresource.SinglePluginResource.URL_PREFIX;
 import static org.mockito.Mockito.when;
+
+import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.servlet.DownloadableResource;
+
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import junit.framework.TestCase;
 
 public class TestRelativeURLTransformResource extends TestCase
 {
@@ -59,6 +61,10 @@ public class TestRelativeURLTransformResource extends TestCase
     public void testReplaceAbsoluteSkipped()
     {
         assertTransformWorked("/absolute.png", "/absolute.png");
+    }
+
+    public void testReplaceAbsoluteSkippedFQ()
+    {
         assertTransformWorked("http://atlassian.com/test/absolute.png", "http://atlassian.com/test/absolute.png");
     }
 
@@ -69,24 +75,41 @@ public class TestRelativeURLTransformResource extends TestCase
 
     public void testReplaceDataUriSkipped()
     {
-        assertTransformWorked("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAARCAYAAAA", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAARCAYAAAA");
+        assertTransformWorked("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAARCAYAAAA",
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAARCAYAAAA");
     }
 
     public void testReplaceRelativeWithFunkyCharacters()
     {
-        assertTransformWorked("http://www.f\u00F8tex.dk", "http://www.f\u00F8tex.dk");
         assertTransformWorked("/f\u00F8tex/absolute.png", "/f\u00F8tex/absolute.png");
+    }
+
+    public void testReplaceRelativeWithFunkyCharactersFQ()
+    {
+        assertTransformWorked("http://www.f\u00F8tex.dk", "http://www.f\u00F8tex.dk");
+    }
+
+    public void testReplaceRelativeWithFunkyCharactersTxPrefix()
+    {
         assertTransformWorked(TRANSFORM_PREFIX + "f\u00F8tex.png", "f\u00F8tex.png");
     }
 
     public void testReplaceRelativeWithNumbers()
     {
-        assertTransformWorked("http://192.168.1.1:8080/test/absolute.png", "http://192.168.1.1:8080/test/absolute.png");
         assertTransformWorked("/1/absolute.png", "/1/absolute.png");
+    }
+
+    public void testReplaceRelativeWithNumbersFQ()
+    {
+        assertTransformWorked("http://192.168.1.1:8080/test/absolute.png", "http://192.168.1.1:8080/test/absolute.png");
+    }
+
+    public void testReplaceRelativeWithNumbersTxPrefix()
+    {
         assertTransformWorked(TRANSFORM_PREFIX + "../relative1.png", "../relative1.png");
     }
 
-    private void assertTransformWorked(String expectedUrl, String originalUrl)
+    private void assertTransformWorked(final String expectedUrl, final String originalUrl)
     {
         assertTransformWorked("url(%s)", expectedUrl, originalUrl);
         assertTransformWorked("url( %s )", expectedUrl, originalUrl);
@@ -99,10 +122,10 @@ public class TestRelativeURLTransformResource extends TestCase
         assertTransformWorked("url ('%s' )", expectedUrl, originalUrl);
     }
 
-    private void assertTransformWorked(String format, String expectedUrl, String originalUrl)
+    private void assertTransformWorked(final String format, final String expectedUrl, final String originalUrl)
     {
-        String original = String.format(".test { blahblah %s }", String.format(format, originalUrl));
-        String expected = String.format(".test { blahblah %s }", String.format(format, expectedUrl));
-        assertEquals(expected, transformResource.transform(original));
+        final String original = String.format(".test { blahblah %s }", String.format(format, originalUrl));
+        final String expected = String.format(".test { blahblah %s }", String.format(format, expectedUrl));
+        assertEquals(expected, transformResource.transform(original).toString());
     }
 }

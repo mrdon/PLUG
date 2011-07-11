@@ -21,9 +21,9 @@ import java.nio.charset.Charset;
  *   {
  *       public DownloadableResource transform(Element configElement, ResourceLocation location, String filePath, DownloadableResource nextResource)
  *       {
- *           return new AbstractStringTransformedDownloadableResource(nextResource)
+ *           return new CharSequenceDownloadableResource(nextResource)
  *           {
- *               protected String transform(String originalContent)
+ *               protected CharSequence transform(CharSequence originalContent)
  *               {
  *                   return "Prefix: "  + originalContent;
  *               }
@@ -32,43 +32,36 @@ import java.nio.charset.Charset;
  *    }
  * </pre>
  *
- * @since 2.5.0
- * @deprecated since 2.9.0 use {@link CharSequenceDownloadableResource} instead
+ * @since 2.9.0
  */
-@Deprecated
-public abstract class AbstractStringTransformedDownloadableResource extends AbstractTransformedDownloadableResource
+public abstract class CharSequenceDownloadableResource extends AbstractTransformedDownloadableResource
 {
-    private final Function<CharSequence, CharSequence> transformer = new Function<CharSequence, CharSequence>()
-    {
-        public CharSequence apply(final CharSequence originalContent)
-        {
-            return transform(originalContent.toString());
-        }
-    };
-
-    public AbstractStringTransformedDownloadableResource(final DownloadableResource originalResource)
+    protected CharSequenceDownloadableResource(final DownloadableResource originalResource)
     {
         super(originalResource);
     }
 
     public void streamResource(final OutputStream out) throws DownloadException
     {
-        transformAndStreamResource(getOriginalResource(), Charset.forName(getEncoding()), out, transformer);
+        transformAndStreamResource(getOriginalResource(), UTF8, out, new Function<CharSequence, CharSequence>()
+        {
+            public CharSequence apply(final CharSequence originalContent)
+            {
+                return transform(originalContent);
+            }
+        });
     }
 
-    /**
-     * @return the encoding used to read the original resource and encode the transformed string
-     */
-    protected String getEncoding()
+    protected Charset encoding()
     {
-        return UTF8.name();
+        return UTF8;
     }
 
     /**
      * Override this method to transform the original content into a new format.
      *
-     * @param originalContent The original content from the original downloadable resource.
-     * @return The transformed content you want returned
+     * @param original The content from the original resource.
+     * @return transformed content
      */
-    protected abstract String transform(String originalContent);
+    protected abstract CharSequence transform(CharSequence original);
 }
