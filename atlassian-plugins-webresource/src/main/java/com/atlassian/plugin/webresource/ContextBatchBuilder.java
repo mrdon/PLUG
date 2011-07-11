@@ -23,7 +23,7 @@ import java.util.Set;
  */
 class ContextBatchBuilder
 {
-    private static final Logger log = LoggerFactory.getLogger(WebResourceManagerImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(ContextBatchBuilder.class);
 
     private final PluginResourceLocator pluginResourceLocator;
     private final ResourceDependencyResolver dependencyResolver;

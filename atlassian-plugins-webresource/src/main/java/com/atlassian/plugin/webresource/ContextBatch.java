@@ -8,9 +8,14 @@ import static com.google.common.collect.Iterables.contains;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Sets.newHashSet;
 
+import com.atlassian.plugin.ModuleDescriptor;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import org.apache.commons.codec.binary.Hex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -29,8 +34,10 @@ import java.util.Set;
  */
 class ContextBatch
 {
+    private static Logger log = LoggerFactory.getLogger(ContextBatch.class);
     private static final String UTF8 = "UTF-8";
     private static final String MD5 = "MD5";
+    private static final Ordering<ModuleDescriptor<?>> MODULE_KEY_ORDERING = Ordering.natural().onResultOf(new TransformDescriptorToKey());
 
     /**
      * Merges two context batches into a single context batch.
@@ -63,9 +70,13 @@ class ContextBatch
     {
         this.key = key;
         this.contexts = copyOf(contexts);
-        this.resources = copyOf(resources);
         this.resourceParams = newHashSet(resourceParams);
 
+        // Note: Ordering is important in producing a consistent hash.
+        // But, dependency order is not important when producing the PluginResource,
+        // it is only important when we serve the resource. So it is safe to reorder
+        // this.
+        this.resources = ImmutableSortedSet.copyOf(MODULE_KEY_ORDERING, resources);
         // A convenience object to make searching easier
         this.resourceKeys =  transform(resources, new TransformDescriptorToKey());
     }
@@ -110,19 +121,19 @@ class ContextBatch
             for (WebResourceModuleDescriptor moduleDescriptor : resources)
             {
                 String version = moduleDescriptor.getPlugin().getPluginInformation().getVersion();
-                String resourceKey = moduleDescriptor.getCompleteKey() + version;
-                md5.update(resourceKey.getBytes(UTF8));
+                md5.update(moduleDescriptor.getCompleteKey().getBytes(UTF8));
+                md5.update(version.getBytes(UTF8));
             }
 
             return new String(Hex.encodeHex(md5.digest()));
         }
         catch (NoSuchAlgorithmException e)
         {
-            e.printStackTrace();
+            log.error("Error building md5 digest", e);
         }
         catch (UnsupportedEncodingException e)
         {
-            e.printStackTrace();
+            log.error("Error decoding module descriptor key from UTF-8", e);
         }
 
         return "1";

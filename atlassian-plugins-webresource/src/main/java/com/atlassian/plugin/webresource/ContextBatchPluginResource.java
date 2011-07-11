@@ -33,7 +33,7 @@ class ContextBatchPluginResource implements DownloadableResource, BatchResource,
     private final String resourceName;
     private final String key;
     private final Iterable<String> contexts;
-    private String hash;
+    private final String hash;
 
     ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params)
     {
