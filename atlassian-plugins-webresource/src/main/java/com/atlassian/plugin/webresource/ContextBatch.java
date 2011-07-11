@@ -114,7 +114,6 @@ class ContextBatch
                 md5.update(resourceKey.getBytes(UTF8));
             }
 
-
             return new String(Hex.encodeHex(md5.digest()));
         }
         catch (NoSuchAlgorithmException e)
