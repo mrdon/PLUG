@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Resource batching configuration for the {@link WebResourceManagerImpl}.
  *
- * Currently contains the configuration for super batch support.
+ * Currently contains the configuration for batch support.
  */
 public interface ResourceBatchingConfiguration
 {
@@ -23,4 +23,11 @@ public interface ResourceBatchingConfiguration
      * and any dependency resolution for resources will stop if the dependency is in the superbatch.
      */
     List<String> getSuperBatchModuleCompleteKeys();
+
+    /**
+     * Determines whether web resources in the same context should be batched together.
+     * @return if true, web resources in the same context are batched together.
+     * @since 2.9.0
+     */
+    boolean isContextBatchingEnabled();
 }

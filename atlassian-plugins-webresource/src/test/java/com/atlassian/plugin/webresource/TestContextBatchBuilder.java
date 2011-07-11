@@ -27,6 +27,8 @@ public class TestContextBatchBuilder extends TestCase
     private ResourceDependencyResolver mockDependencyResolver;
     @Mock
     private PluginResourceLocator mockPluginResourceLocator;
+    @Mock
+    private  ResourceBatchingConfiguration mockBatchingConfiguration;
 
     private ContextBatchBuilder builder;
     private Plugin testPlugin;
@@ -37,8 +39,9 @@ public class TestContextBatchBuilder extends TestCase
         super.setUp();
         MockitoAnnotations.initMocks(this);
 
-        builder = new ContextBatchBuilder(mockPluginResourceLocator, mockDependencyResolver);
+        builder = new ContextBatchBuilder(mockPluginResourceLocator, mockDependencyResolver, mockBatchingConfiguration);
         testPlugin = TestUtils.createTestPlugin();
+        when(mockBatchingConfiguration.isContextBatchingEnabled()).thenReturn(true);
     }
 
     @Override
@@ -46,6 +49,7 @@ public class TestContextBatchBuilder extends TestCase
     {
         mockPluginResourceLocator = null;
         mockDependencyResolver = null;
+        mockBatchingConfiguration = null;
 
         builder = null;
         testPlugin = null;
@@ -301,6 +305,38 @@ public class TestContextBatchBuilder extends TestCase
         assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/xmen,rogue/batch.css")));
 
         assertEquals(3, size(builder.getAllIncludedResources()));
+    }
+
+    public void testSkippedModules() throws Exception
+    {
+        when(mockBatchingConfiguration.isContextBatchingEnabled()).thenReturn(false);
+        final String context1 = "xmen";
+        final String context2 = "brotherhood";
+        final Set<String> contexts = new HashSet<String>();
+        contexts.add(context1);
+        contexts.add(context2);
+
+        final String moduleKey1 = "xavier-resources";
+        final String moduleKey2 = "magneto-resources";
+        final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("professorx.js", "professorx.css", "cyclops.css");
+        final List<ResourceDescriptor> resourceDescriptors2 = TestUtils.createResourceDescriptors("magneto.js", "magneto.css", "sabretooth.css");
+
+        addModuleDescriptor(moduleKey1, resourceDescriptors1);
+        addModuleDescriptor(moduleKey2, resourceDescriptors2);
+        addContext(context1, Arrays.asList(moduleKey1, moduleKey2));
+        addContext(context2, Arrays.asList(moduleKey1, moduleKey2));
+
+        final Iterable<PluginResource> resources = builder.build(contexts);
+
+        assertEquals(6, size(resources));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/resources/test.atlassian:xavier-resources/professorx.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/resources/test.atlassian:xavier-resources/professorx.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/resources/test.atlassian:xavier-resources/cyclops.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/resources/test.atlassian:magneto-resources/magneto.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/resources/test.atlassian:magneto-resources/magneto.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/resources/test.atlassian:magneto-resources/sabretooth.css")));
+
+        assertEquals(2, size(builder.getAllIncludedResources()));
     }
 
     private void addContext(final String context, final List<String> descriptors)

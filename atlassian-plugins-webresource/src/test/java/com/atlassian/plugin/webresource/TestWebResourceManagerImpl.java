@@ -30,7 +30,7 @@ public class TestWebResourceManagerImpl extends TestCase
     private WebResourceIntegration mockWebResourceIntegration = mock(WebResourceIntegration.class);
     private PluginAccessor mockPluginAccessor = mock(PluginAccessor.class);
     private final WebResourceUrlProvider mockUrlProvider = mock(WebResourceUrlProvider.class);
-    private TestResourceBatchingConfiguration resourceBatchingConfiguration;
+    private ResourceBatchingConfiguration mockBatchingConfiguration = mock(ResourceBatchingConfiguration.class);
     private PluginResourceLocator pluginResourceLocator;
     private WebResourceManagerImpl webResourceManager;
     private Plugin testPlugin;
@@ -47,10 +47,9 @@ public class TestWebResourceManagerImpl extends TestCase
         when(mockWebResourceIntegration.getPluginAccessor()).thenReturn(mockPluginAccessor);
         when(mockWebResourceIntegration.getSuperBatchVersion()).thenReturn(SYSTEM_BUILD_NUMBER);
 
-        resourceBatchingConfiguration = new TestResourceBatchingConfiguration();
         pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, null, mockUrlProvider);
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, mockUrlProvider,
-            resourceBatchingConfiguration);
+            mockBatchingConfiguration);
 
         when(mockUrlProvider.getBaseUrl()).thenReturn(BASEURL);
         when(mockUrlProvider.getBaseUrl(UrlMode.ABSOLUTE)).thenReturn(BASEURL);
@@ -66,7 +65,7 @@ public class TestWebResourceManagerImpl extends TestCase
         mockPluginAccessor = null;
         mockWebResourceIntegration = null;
         testPlugin = null;
-        resourceBatchingConfiguration = null;
+        mockBatchingConfiguration = null;
 
         super.tearDown();
     }
@@ -222,6 +221,7 @@ public class TestWebResourceManagerImpl extends TestCase
 
     public void testGetResourceContext() throws Exception
     {
+        when(mockBatchingConfiguration.isContextBatchingEnabled()).thenReturn(true);
         final String resourceA = "test.atlassian:a";
         final String resourceB = "test.atlassian:b";
         final String resourceC = "test.atlassian:c";
@@ -278,6 +278,8 @@ public class TestWebResourceManagerImpl extends TestCase
 
     public void testGetResourceContextWithCondition() throws ClassNotFoundException, DocumentException
     {
+        when(mockBatchingConfiguration.isContextBatchingEnabled()).thenReturn(true);
+
         final String resource1 = "test.atlassian:cool-stuff";
         final String resource2 = "test.atlassian:hot-stuff";
         final Plugin plugin = TestUtils.createTestPlugin("test.atlassian", "1", AlwaysTrueCondition.class, AlwaysFalseCondition.class);
@@ -441,20 +443,11 @@ public class TestWebResourceManagerImpl extends TestCase
         final String resourceA = "test.atlassian:a";
         final String resourceB = "test.atlassian:b";
 
-        final ResourceBatchingConfiguration batchingConfiguration = new ResourceBatchingConfiguration()
-        {
-            public boolean isSuperBatchingEnabled()
-            {
-                return true;
-            }
+        final ResourceBatchingConfiguration mockBatchingConfiguration = mock(ResourceBatchingConfiguration.class);
+        when(mockBatchingConfiguration.isSuperBatchingEnabled()).thenReturn(true);
+        when(mockBatchingConfiguration.getSuperBatchModuleCompleteKeys()).thenReturn(Arrays.asList(resourceB));
 
-            public List<String> getSuperBatchModuleCompleteKeys()
-            {
-                return Arrays.asList(resourceB);
-            }
-        };
-
-        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, mockUrlProvider, batchingConfiguration);
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, mockUrlProvider, mockBatchingConfiguration);
 
         final List<ResourceDescriptor> resourceDescriptorsA = TestUtils.createResourceDescriptors("resourceA.css");
         final List<ResourceDescriptor> resourceDescriptorsB = TestUtils.createResourceDescriptors("resourceB.css");
@@ -750,7 +743,8 @@ public class TestWebResourceManagerImpl extends TestCase
 
     public void testRequireResourceInSuperbatch() throws ClassNotFoundException
     {
-        resourceBatchingConfiguration.enabled = true;
+        setupSuperBatch();
+
         final Map<String, Object> requestCache = setupRequestCache();
         mockOutSuperbatchPluginAccesses();
 
@@ -762,7 +756,8 @@ public class TestWebResourceManagerImpl extends TestCase
 
     public void testRequireResourceWithDependencyInSuperbatch() throws DocumentException, ClassNotFoundException
     {
-        resourceBatchingConfiguration.enabled = true;
+        setupSuperBatch();
+
         mockOutSuperbatchPluginAccesses();
 
         final Map<String, Object> requestCache = setupRequestCache();
@@ -779,7 +774,9 @@ public class TestWebResourceManagerImpl extends TestCase
 
     public void testSuperBatchResolution() throws DocumentException, ClassNotFoundException
     {
-        TestUtils.setupSuperbatchTestContent(resourceBatchingConfiguration, mockPluginAccessor, testPlugin);
+        setupSuperBatch();
+
+        TestUtils.setupSuperbatchTestContent(mockPluginAccessor, testPlugin);
 
         final List<PluginResource> cssResources = webResourceManager.getSuperBatchResources(CssWebResource.FORMATTER);
         assertEquals(2, cssResources.size());
@@ -796,6 +793,17 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(1, jsResources.size());
         assertEquals("batch.js", jsResources.get(0).getResourceName());
         assertEquals(0, jsResources.get(0).getParams().size());
+    }
+
+
+    private void setupSuperBatch()
+    {
+        when(mockBatchingConfiguration.isSuperBatchingEnabled()).thenReturn(true);
+        when(mockBatchingConfiguration.getSuperBatchModuleCompleteKeys()).thenReturn(Arrays.asList(
+                "test.atlassian:superbatch",
+                "test.atlassian:superbatch2",
+                "test.atlassian:missing-plugin"
+        ));
     }
 
     private void mockOutSuperbatchPluginAccesses() throws ClassNotFoundException

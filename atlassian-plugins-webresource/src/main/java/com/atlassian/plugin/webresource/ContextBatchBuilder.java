@@ -10,6 +10,7 @@ import com.google.common.base.Function;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -27,14 +28,16 @@ class ContextBatchBuilder
 
     private final PluginResourceLocator pluginResourceLocator;
     private final ResourceDependencyResolver dependencyResolver;
+    private final ResourceBatchingConfiguration batchingConfiguration;
 
     private final List<String> allIncludedResources = new ArrayList<String>();
     private final Set<String> skippedResources = new HashSet<String>();
 
-    ContextBatchBuilder(final PluginResourceLocator pluginResourceLocator, final ResourceDependencyResolver dependencyResolver)
+    ContextBatchBuilder(final PluginResourceLocator pluginResourceLocator, final ResourceDependencyResolver dependencyResolver, ResourceBatchingConfiguration batchingConfiguration)
     {
         this.pluginResourceLocator = pluginResourceLocator;
         this.dependencyResolver = dependencyResolver;
+        this.batchingConfiguration = batchingConfiguration;
     }
 
     Iterable<PluginResource> build(final Iterable<String> includedContexts)
@@ -44,6 +47,11 @@ class ContextBatchBuilder
 
     Iterable<PluginResource> build(final Iterable<String> includedContexts, final WebResourceFilter filter)
     {
+        if (!batchingConfiguration.isContextBatchingEnabled())
+        {
+             return getUnbatchedResources(includedContexts, filter);
+        }
+
         // There are three levels to consider here. In order:
         // 1. Type (CSS/JS)
         // 2. Parameters (ieOnly, media, etc)
@@ -119,6 +127,39 @@ class ContextBatchBuilder
                 return batch.buildPluginResources();
             }
         }));
+    }
+
+    // If context batching is not enabled, then just add all the resources that would have been added in the context anyway.
+    private Iterable<PluginResource> getUnbatchedResources(final Iterable<String> includedContexts, final WebResourceFilter filter)
+    {
+        LinkedHashSet<PluginResource> includedResources = new LinkedHashSet<PluginResource>();
+        for (final String context : includedContexts)
+        {
+            Iterable<WebResourceModuleDescriptor> contextResources = dependencyResolver.getDependenciesInContext(context, skippedResources);
+
+            for (final WebResourceModuleDescriptor contextResource : contextResources)
+            {
+                if (!allIncludedResources.contains(contextResource.getCompleteKey()))
+                {
+                    final List<PluginResource> moduleResources = pluginResourceLocator.getPluginResources(contextResource.getCompleteKey());
+                    for (final PluginResource moduleResource : moduleResources)
+                    {
+                        if (filter.matches(moduleResource.getResourceName()))
+                        {
+                            includedResources.add(moduleResource);
+                        }
+                        else
+                        {
+                            log.debug("Resource [" + moduleResource.getResourceName() + "] excluded by filter");
+                        }
+                    }
+
+                    allIncludedResources.add(contextResource.getCompleteKey());
+                }
+            }
+        }
+
+        return includedResources;
     }
 
     Iterable<String> getAllIncludedResources()

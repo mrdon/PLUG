@@ -18,4 +18,9 @@ public class DefaultResourceBatchingConfiguration implements ResourceBatchingCon
     {
         return Collections.emptyList();
     }
+
+    public boolean isContextBatchingEnabled()
+    {
+        return false;
+    }
 }

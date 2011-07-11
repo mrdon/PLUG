@@ -133,11 +133,9 @@ public class TestUtils
         return new ResourceDescriptor(DocumentHelper.parseText(xml).getRootElement());
     }
 
-    static void setupSuperbatchTestContent(TestResourceBatchingConfiguration resourceBatchingConfiguration, PluginAccessor mockPluginAccessor, Plugin testPlugin)
+    static void setupSuperbatchTestContent(PluginAccessor mockPluginAccessor, Plugin testPlugin)
             throws DocumentException
     {
-        resourceBatchingConfiguration.enabled = true;
-
         ResourceDescriptor masterCssResource = TestUtils.createResourceDescriptor("master.css");
         ResourceDescriptor ieOnlyasterCssResource = TestUtils.createResourceDescriptor("master.css", Collections.singletonMap("ieonly", "true"));
         ResourceDescriptor irrelevantParameterCssResource = TestUtils.createResourceDescriptor("two.css", Collections.singletonMap("fish", "true"));
