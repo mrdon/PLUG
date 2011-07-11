@@ -33,18 +33,25 @@ class ContextBatchPluginResource implements DownloadableResource, BatchResource,
     private final String resourceName;
     private final String key;
     private final Iterable<String> contexts;
+    private String hash;
 
-    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String type, final Map<String, String> params)
+    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params)
     {
-        this(key, contexts, type, params, Collections.<DownloadableResource> emptyList());
+        this(key, contexts, hash, type, params, Collections.<DownloadableResource> emptyList());
     }
 
     ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources)
+    {
+        this(key, contexts, null, type, params, resources);
+    }
+
+    private ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources)
     {
         resourceName = DEFAULT_RESOURCE_NAME_PREFIX + "." + type;
         delegate = new BatchPluginResource(null, type, params, resources);
         this.key = key;
         this.contexts = contexts;
+        this.hash = hash;
     }
 
     Iterable<String> getContexts()
@@ -92,7 +99,7 @@ class ContextBatchPluginResource implements DownloadableResource, BatchResource,
 
     public String getVersion(final WebResourceIntegration integration)
     {
-        return integration.getSuperBatchVersion();
+        return hash;
     }
 
     public String getType()

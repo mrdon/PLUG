@@ -10,7 +10,11 @@ import static com.google.common.collect.Sets.newHashSet;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import org.apache.commons.codec.binary.Hex;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +29,9 @@ import java.util.Set;
  */
 class ContextBatch
 {
+    private static final String UTF8 = "UTF-8";
+    private static final String MD5 = "MD5";
+
     /**
      * Merges two context batches into a single context batch.
      * @param b1 - the context to merge into
@@ -35,7 +42,7 @@ class ContextBatch
     {
         final String key = b1.getKey() + CONTEXT_SEPARATOR + b2.getKey();
         final Iterable<String> contexts = concat(b1.getContexts(), b2.getContexts());
-        final Iterable<String> resources = concat(b1.getResources(), b2.getResources());
+        final Iterable<WebResourceModuleDescriptor> resources = concat(b1.getResources(), b2.getResources());
         // Merge assumes that the merged batched doesn't overlap with the current one.
         final Iterable<PluginResourceBatchParams> params = concat(b1.getResourceParams(), b2.getResourceParams());
         return new ContextBatch(key, contexts, resources, params);
@@ -43,25 +50,29 @@ class ContextBatch
 
     private final String key;
     private final Iterable<String> contexts;
-    private final Iterable<String> resources;
+    private final Iterable<WebResourceModuleDescriptor> resources;
+    private final Iterable<String> resourceKeys;
     private final Set<PluginResourceBatchParams> resourceParams;
 
-    ContextBatch(final String context, final Iterable<String> resources)
+    ContextBatch(final String context, final Iterable<WebResourceModuleDescriptor> resources)
     {
         this(context, ImmutableList.of(context), resources, ImmutableList.<PluginResourceBatchParams> of());
     }
 
-    ContextBatch(final String key, final Iterable<String> contexts, final Iterable<String> resources, final Iterable<PluginResourceBatchParams> resourceParams)
+    ContextBatch(final String key, final Iterable<String> contexts, final Iterable<WebResourceModuleDescriptor> resources, final Iterable<PluginResourceBatchParams> resourceParams)
     {
         this.key = key;
         this.contexts = copyOf(contexts);
         this.resources = copyOf(resources);
         this.resourceParams = newHashSet(resourceParams);
+
+        // A convenience object to make searching easier
+        this.resourceKeys =  transform(resources, new TransformDescriptorToKey());
     }
 
-    boolean isResourceIncluded(final String resource)
+    boolean isResourceIncluded(final String resourceModuleKey)
     {
-        return contains(resources, resource);
+        return contains(resourceKeys, resourceModuleKey);
     }
 
     void addResourceType(final PluginResource pluginResource)
@@ -81,13 +92,41 @@ class ContextBatch
 
     Iterable<PluginResource> buildPluginResources()
     {
+        final String hash = createHash();
         return transform(resourceParams, new Function<PluginResourceBatchParams, PluginResource>()
         {
             public PluginResource apply(final PluginResourceBatchParams param)
             {
-                return new ContextBatchPluginResource(key, contexts, param.getType(), param.getParameters());
+                return new ContextBatchPluginResource(key, contexts, hash, param.getType(), param.getParameters());
             }
         });
+    }
+
+    private String createHash()
+    {
+        try
+        {
+            MessageDigest md5 = MessageDigest.getInstance(MD5);
+            for (WebResourceModuleDescriptor moduleDescriptor : resources)
+            {
+                String version = moduleDescriptor.getPlugin().getPluginInformation().getVersion();
+                String resourceKey = moduleDescriptor.getCompleteKey() + version;
+                md5.update(resourceKey.getBytes(UTF8));
+            }
+
+
+            return new String(Hex.encodeHex(md5.digest()));
+        }
+        catch (NoSuchAlgorithmException e)
+        {
+            e.printStackTrace();
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            e.printStackTrace();
+        }
+
+        return "1";
     }
 
     String getKey()
@@ -100,7 +139,7 @@ class ContextBatch
         return contexts;
     }
 
-    Iterable<String> getResources()
+    Iterable<WebResourceModuleDescriptor> getResources()
     {
         return resources;
     }

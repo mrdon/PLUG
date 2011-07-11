@@ -1,8 +1,5 @@
 package com.atlassian.plugin.webresource;
 
-import static com.google.common.collect.Iterables.concat;
-import static com.google.common.collect.Iterables.contains;
-
 import com.atlassian.plugin.ModuleDescriptor;
 
 import org.slf4j.Logger;
@@ -21,6 +18,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.google.common.collect.Iterables.*;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -79,7 +78,8 @@ public class WebResourceManagerImpl implements WebResourceManager
     public void requireResource(final String moduleCompleteKey)
     {
         log.debug("Requiring resource: " + moduleCompleteKey);
-        getIncludedResourceNames().addAll(dependencyResolver.getDependencies(moduleCompleteKey, batchingConfiguration.isSuperBatchingEnabled()));
+        Iterable<String> dependencies = transformModuleDescriptorsToModuleKeys(dependencyResolver.getDependencies(moduleCompleteKey, batchingConfiguration.isSuperBatchingEnabled()));
+        addAll(getIncludedResourceNames(), dependencies);
     }
 
     public void requireResourcesForContext(final String context)
@@ -130,12 +130,12 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void includeResources(final Iterable<String> moduleCompleteKeys, final Writer writer, final UrlMode urlMode)
     {
-        final LinkedHashSet<String> resources = new LinkedHashSet<String>();
+        Iterable<String> resources = new LinkedHashSet<String>();
         for (final String moduleCompleteKey : moduleCompleteKeys)
         {
             // Include resources from the super batch as we don't include the super batch itself
-            final Set<String> dependencies = dependencyResolver.getDependencies(moduleCompleteKey, false);
-            resources.addAll(dependencies);
+            final Iterable<String> dependencies = transformModuleDescriptorsToModuleKeys(dependencyResolver.getDependencies(moduleCompleteKey, false));
+            resources = concat(resources, dependencies);
         }
         writeResourceTags(getModuleResources(resources, Collections.<String> emptyList(), DefaultWebResourceFilter.INSTANCE), writer, urlMode);
     }
@@ -238,7 +238,7 @@ public class WebResourceManagerImpl implements WebResourceManager
             return Collections.emptyList();
         }
 
-        final LinkedHashSet<String> superBatchModuleKeys = dependencyResolver.getSuperBatchDependencies();
+        final Iterable<WebResourceModuleDescriptor> superBatchModuleKeys = dependencyResolver.getSuperBatchDependencies();
         final List<PluginResource> resources = new ArrayList<PluginResource>();
 
         // This is necessarily quite complicated. We need distinct superbatch resources for each combination of
@@ -248,9 +248,9 @@ public class WebResourceManagerImpl implements WebResourceManager
         for (final WebResourceFormatter formatter : webResourceFormatters)
         {
             final Set<Map<String, String>> alreadyIncluded = new HashSet<Map<String, String>>();
-            for (final String moduleKey : superBatchModuleKeys)
+            for (final WebResourceModuleDescriptor moduleDescriptor : superBatchModuleKeys)
             {
-                for (final PluginResource pluginResource : pluginResourceLocator.getPluginResources(moduleKey))
+                for (final PluginResource pluginResource : pluginResourceLocator.getPluginResources(moduleDescriptor.getCompleteKey()))
                 {
                     if (formatter.matches(pluginResource.getResourceName()) && filter.matches(pluginResource.getResourceName()))
                     {
@@ -347,7 +347,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void requireResource(final String moduleCompleteKey, final Writer writer, final UrlMode urlMode)
     {
-        final Set<String> allDependentModuleKeys = dependencyResolver.getDependencies(moduleCompleteKey, IGNORE_SUPERBATCHING);
+        final Iterable<String> allDependentModuleKeys = transformModuleDescriptorsToModuleKeys(dependencyResolver.getDependencies(moduleCompleteKey, IGNORE_SUPERBATCHING));
         final Iterable<String> empty = Collections.<String> emptyList();
         final Iterable<PluginResource> resourcesToInclude = getModuleResources(allDependentModuleKeys, empty, DefaultWebResourceFilter.INSTANCE);
         writeResourceTags(resourcesToInclude, writer, urlMode);
@@ -419,6 +419,11 @@ public class WebResourceManagerImpl implements WebResourceManager
     public String getStaticPluginResource(final ModuleDescriptor moduleDescriptor, final String resourceName, final UrlMode urlMode)
     {
         return webResourceUrlProvider.getStaticPluginResourceUrl(moduleDescriptor, resourceName, urlMode);
+    }
+
+    private Iterable<String> transformModuleDescriptorsToModuleKeys(Iterable<WebResourceModuleDescriptor> descriptors)
+    {
+        return transform(descriptors, new TransformDescriptorToKey());
     }
 
     /* Deprecated methods */

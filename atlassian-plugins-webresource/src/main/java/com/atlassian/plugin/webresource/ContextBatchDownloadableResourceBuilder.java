@@ -47,11 +47,12 @@ class ContextBatchDownloadableResourceBuilder extends AbstractBatchResourceBuild
         Iterable<DownloadableResource> resources = ImmutableList.of();
         for (final String context : contexts)
         {
-            for (final String moduleKey : dependencyResolver.getDependenciesInContext(context))
+            for (final WebResourceModuleDescriptor moduleDescriptor : dependencyResolver.getDependenciesInContext(context))
             {
+                String moduleKey = moduleDescriptor.getCompleteKey();
                 if (!alreadyIncluded.contains(moduleKey))
                 {
-                    resources = concat(resources, resolve(moduleKey, type, params));
+                    resources = concat(resources, resolve(moduleDescriptor, type, params));
                     alreadyIncluded.add(moduleKey);
                 }
             }

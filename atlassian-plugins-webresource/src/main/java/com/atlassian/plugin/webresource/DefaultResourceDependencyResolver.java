@@ -3,6 +3,7 @@ package com.atlassian.plugin.webresource;
 import com.atlassian.plugin.ModuleDescriptor;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Stack;
@@ -12,6 +13,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.collect.Iterables.contains;
+
 class DefaultResourceDependencyResolver implements ResourceDependencyResolver
 {
     private static final Logger log = LoggerFactory.getLogger(DefaultResourceDependencyResolver.class);
@@ -20,7 +23,7 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
     private final ResourceBatchingConfiguration batchingConfiguration;
 
     private String superBatchVersion;
-    private LinkedHashSet<String> superBatchResources;
+    private LinkedHashMap<String, WebResourceModuleDescriptor> superBatchResources;
 
     public DefaultResourceDependencyResolver(WebResourceIntegration webResourceIntegration, ResourceBatchingConfiguration batchingConfiguration)
     {
@@ -28,59 +31,77 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
         this.batchingConfiguration = batchingConfiguration;
     }
 
-    public LinkedHashSet<String> getSuperBatchDependencies()
+    public Iterable<WebResourceModuleDescriptor> getSuperBatchDependencies()
     {
         if (!batchingConfiguration.isSuperBatchingEnabled())
         {
             log.warn("Super batching not enabled, but getSuperBatchDependencies() called. Returning empty set.");
-            return new LinkedHashSet<String>();
+            return Collections.emptyList();
         }
 
+        return getSuperBatchResourcesMap().values();
+    }
+
+    private Iterable<String> getSuperBatchDependencyKeys()
+    {
+        if (!batchingConfiguration.isSuperBatchingEnabled())
+        {
+            log.warn("Super batching not enabled, but getSuperBatchDependencies() called. Returning empty set.");
+            return Collections.emptyList();
+        }
+
+        return getSuperBatchResourcesMap().keySet();
+    }
+
+    private LinkedHashMap<String, WebResourceModuleDescriptor> getSuperBatchResourcesMap()
+    {
         String version = webResourceIntegration.getSuperBatchVersion();
         if (superBatchVersion == null || !superBatchVersion.equals(version))
         {
-            LinkedHashSet<String> webResourceNames = new LinkedHashSet<String>();
+            // The linked hash map ensures that order is preserved
+            LinkedHashMap<String, WebResourceModuleDescriptor> webResources = new LinkedHashMap<String, WebResourceModuleDescriptor>();
             if (batchingConfiguration.getSuperBatchModuleCompleteKeys() != null)
             {
                 for (String moduleKey : batchingConfiguration.getSuperBatchModuleCompleteKeys())
                 {
-                    resolveDependencies(moduleKey, webResourceNames, Collections.emptySet(), new Stack<String>(), null);
+                    resolveDependencies(moduleKey, webResources, Collections.<String>emptyList(), new Stack<String>(), null);
                 }
             }
             synchronized (this)
             {
-                superBatchResources = webResourceNames;
+                superBatchResources = webResources;
                 superBatchVersion = version;
             }
         }
-        return new LinkedHashSet<String>(superBatchResources);
+
+        return superBatchResources;
     }
 
-    public LinkedHashSet<String> getDependencies(String moduleKey, boolean excludeSuperBatchedResources)
+    public Iterable<WebResourceModuleDescriptor> getDependencies(String moduleKey, boolean excludeSuperBatchedResources)
     {
-        LinkedHashSet<String> orderedResourceKeys = new LinkedHashSet<String>();
-        Set<String> superBatchResources = excludeSuperBatchedResources ? getSuperBatchDependencies() : Collections.<String>emptySet();
-        resolveDependencies(moduleKey, orderedResourceKeys, superBatchResources, new Stack<String>(), null);
-        return orderedResourceKeys;
+        LinkedHashMap<String, WebResourceModuleDescriptor> orderedResources = new LinkedHashMap<String, WebResourceModuleDescriptor>();
+        Iterable<String> superBatchResources = excludeSuperBatchedResources ? getSuperBatchDependencyKeys() : Collections.<String>emptyList();
+        resolveDependencies(moduleKey, orderedResources, superBatchResources, new Stack<String>(), null);
+        return orderedResources.values();
     }
 
-    public List<String> getDependenciesInContext(String context)
+    public Iterable<WebResourceModuleDescriptor> getDependenciesInContext(String context)
     {
         return getDependenciesInContext(context, new LinkedHashSet<String>());
     }
 
-    public List<String> getDependenciesInContext(String context, Set<String> skippedResources)
+    public Iterable<WebResourceModuleDescriptor> getDependenciesInContext(String context, Set<String> skippedResources)
     {
-        List<String> contextResources = new ArrayList<String>();
+        List<WebResourceModuleDescriptor> contextResources = new ArrayList<WebResourceModuleDescriptor>();
         List<WebResourceModuleDescriptor> descriptors = webResourceIntegration.getPluginAccessor().getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class);
         for (WebResourceModuleDescriptor descriptor : descriptors)
         {
             if (descriptor.getContexts().contains(context))
             {
-                LinkedHashSet<String> dependencies = new LinkedHashSet<String>();
-                Set<String> superBatchResources = getSuperBatchDependencies();
+                LinkedHashMap<String, WebResourceModuleDescriptor> dependencies = new LinkedHashMap<String, WebResourceModuleDescriptor>();
+                Iterable<String> superBatchResources = getSuperBatchDependencyKeys();
                 resolveDependencies(descriptor.getCompleteKey(), dependencies, superBatchResources, new Stack<String>(), skippedResources);
-                for (String dependency : dependencies) {
+                for (WebResourceModuleDescriptor dependency : dependencies.values()) {
                     if (!contextResources.contains(dependency))
                     {
                         contextResources.add(dependency);
@@ -105,10 +126,10 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
      * @param stack where we are in the dependency tree
      * @param skippedResources if not null, all resources with conditions are skipped and added to this set.
      */
-    private void resolveDependencies(final String moduleKey, final LinkedHashSet<String> orderedResourceKeys,
-        final Set superBatchResources, final Stack<String> stack, Set<String> skippedResources)
+    private void resolveDependencies(final String moduleKey, final LinkedHashMap<String, WebResourceModuleDescriptor> orderedResourceKeys,
+        final Iterable<String> superBatchResources, final Stack<String> stack, Set<String> skippedResources)
     {
-        if (superBatchResources.contains(moduleKey))
+        if (contains(superBatchResources, moduleKey))
         {
             log.debug("Not requiring resource: " + moduleKey + " because it is part of a super-batch");
             return;
@@ -129,18 +150,20 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
             return;
         }
 
-        if (skippedResources != null && ((WebResourceModuleDescriptor) moduleDescriptor).getCondition() != null)
+        WebResourceModuleDescriptor webResourceModuleDescriptor = (WebResourceModuleDescriptor) moduleDescriptor;
+
+        if (skippedResources != null && webResourceModuleDescriptor.getCondition() != null)
         {
             skippedResources.add(moduleKey);
             return;
         }
-        else if (!((WebResourceModuleDescriptor) moduleDescriptor).shouldDisplay())
+        else if (!webResourceModuleDescriptor.shouldDisplay())
         {
             log.debug("Cannot include web resource module {} as its condition fails", moduleDescriptor.getCompleteKey());
             return;
         }
 
-        final List<String> dependencies = ((WebResourceModuleDescriptor) moduleDescriptor).getDependencies();
+        final List<String> dependencies = webResourceModuleDescriptor.getDependencies();
         if (log.isDebugEnabled())
         {
             log.debug("About to add resource [" + moduleKey + "] and its dependencies: " + dependencies);
@@ -150,7 +173,7 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
         {
             for (final String dependency : dependencies)
             {
-                if (!orderedResourceKeys.contains(dependency))
+                if (orderedResourceKeys.get(dependency) == null)
                 {
                     resolveDependencies(dependency, orderedResourceKeys, superBatchResources, stack, skippedResources);
                 }
@@ -160,6 +183,6 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
         {
             stack.pop();
         }
-        orderedResourceKeys.add(moduleKey);
+        orderedResourceKeys.put(moduleKey, webResourceModuleDescriptor);
     }
 }

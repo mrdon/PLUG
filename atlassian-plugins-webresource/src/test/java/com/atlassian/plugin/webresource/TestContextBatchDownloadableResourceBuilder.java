@@ -2,6 +2,7 @@ package com.atlassian.plugin.webresource;
 
 import static com.google.common.collect.Iterables.get;
 import static com.google.common.collect.Iterables.size;
+import static org.mockito.Mockito.when;
 
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.servlet.DownloadableResource;
@@ -52,6 +53,8 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
 
     public void testParseCss() throws UrlParseException
     {
+        final String context = "contexta";
+        createContext(context);
         final String path = "/download/contextbatch/css/contexta/batch.css";
         assertTrue(builder.matches(path));
         final DownloadableResource resource = builder.parse(path, Collections.<String, String> emptyMap());
@@ -60,11 +63,13 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
         assertEquals(batchResource.getUrl(), path);
         assertEquals("batch.css", batchResource.getResourceName());
         assertEquals(1, size(batchResource.getContexts()));
-        assertEquals("contexta", get(batchResource.getContexts(), 0));
+        assertEquals(context, get(batchResource.getContexts(), 0));
     }
 
     public void testParseCssWithMultipleContexts() throws UrlParseException
     {
+        createContext("contexta");
+        createContext("contextb");
         final String path = "/download/contextbatch/css/contexta,contextb/batch.css";
         assertTrue(builder.matches(path));
         final DownloadableResource resource = builder.parse(path, Collections.<String, String> emptyMap());
@@ -79,6 +84,7 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
 
     public void testParseJavascript() throws UrlParseException
     {
+        createContext("contexta");
         final String path = "/download/contextbatch/js/contexta/batch.js";
         assertTrue(builder.matches(path));
         final DownloadableResource resource = builder.parse(path, Collections.<String, String> emptyMap());
@@ -92,6 +98,7 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
 
     public void testParseWithParam() throws UrlParseException
     {
+        createContext("contexta");
         final String path = "/download/contextbatch/js/contexta/batch.js";
         final Map<String, String> params = Collections.singletonMap("ieOnly", "true");
         final DownloadableResource resource = builder.parse(path, params);
@@ -103,6 +110,7 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
 
     public void testParseWithParams() throws UrlParseException
     {
+        createContext("contexta");
         final String path = "/download/contextbatch/js/contexta/batch.js";
         final Map<String, String> params = new TreeMap<String, String>();
         params.put("ieOnly", "true");
@@ -119,5 +127,10 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
         assertTrue("correct path", builder.matches("/download/contextbatch/css/contexta/batch.css"));
         assertFalse("wrong path", builder.matches("/download/contextbatch/js/contexta/batch.css"));
         assertFalse("wrong path", builder.matches("/download/contextbatch/css/contexta/image.png"));
+    }
+
+    private void createContext(String context)
+    {
+        when(mockDependencyResolver.getDependenciesInContext(context)).thenReturn(Collections.<WebResourceModuleDescriptor>emptyList());
     }
 }

@@ -36,9 +36,9 @@ class SuperBatchDownloadableResourceBuilder extends AbstractBatchResourceBuilder
     {
         final String type = ResourceUtils.getType(path);
         Iterable<DownloadableResource> resources = ImmutableList.of();
-        for (final String moduleKey : dependencyResolver.getSuperBatchDependencies())
+        for (final WebResourceModuleDescriptor moduleDescriptor : dependencyResolver.getSuperBatchDependencies())
         {
-            resources = concat(resources, resolve(moduleKey, type, params));
+            resources = concat(resources, resolve(moduleDescriptor, type, params));
         }
         return new SuperBatchPluginResource(type, params, resources);
     }

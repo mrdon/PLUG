@@ -52,7 +52,12 @@ abstract class AbstractBatchResourceBuilder implements DownloadableResourceBuild
         }
         log.debug("searching resources in: {}", moduleKey);
 
-        final Iterable<ResourceDescriptor> downloadDescriptors = filter(desc.getResourceDescriptors(), new TypeFilter(DOWNLOAD_TYPE));
+        return resolve(desc, batchType, batchParams);
+    }
+
+    Iterable<DownloadableResource> resolve(final ModuleDescriptor<?> moduleDescriptor, final String batchType, final Map<String, String> batchParams)
+    {
+        final Iterable<ResourceDescriptor> downloadDescriptors = filter(moduleDescriptor.getResourceDescriptors(), new TypeFilter(DOWNLOAD_TYPE));
         final Iterable<ResourceDescriptor> inBatch = filter(downloadDescriptors, new Predicate<ResourceDescriptor>()
         {
             public boolean apply(final ResourceDescriptor resourceDescriptor)
@@ -64,10 +69,10 @@ abstract class AbstractBatchResourceBuilder implements DownloadableResourceBuild
         {
             public DownloadableResource apply(final ResourceDescriptor from)
             {
-                final DownloadableResource result = resourceFinder.find(desc.getCompleteKey(), from.getName());
+                final DownloadableResource result = resourceFinder.find(moduleDescriptor.getCompleteKey(), from.getName());
                 if (result != null && RelativeURLTransformResource.matches(from))
                 {
-                    return new RelativeURLTransformResource(webResourceUrlProvider, desc, result);
+                    return new RelativeURLTransformResource(webResourceUrlProvider, moduleDescriptor, result);
                 }
                 return result;
             }

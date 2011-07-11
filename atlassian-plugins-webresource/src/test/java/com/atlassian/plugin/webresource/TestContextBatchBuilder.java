@@ -4,6 +4,7 @@ import static com.google.common.collect.Iterables.find;
 import static com.google.common.collect.Iterables.size;
 import static org.mockito.Mockito.when;
 
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
 import com.google.common.base.Predicate;
@@ -21,7 +22,6 @@ import junit.framework.TestCase;
 
 public class TestContextBatchBuilder extends TestCase
 {
-    public static final String PLUGIN_KEY = "test.atlassian:";
 
     @Mock
     private ResourceDependencyResolver mockDependencyResolver;
@@ -29,6 +29,7 @@ public class TestContextBatchBuilder extends TestCase
     private PluginResourceLocator mockPluginResourceLocator;
 
     private ContextBatchBuilder builder;
+    private Plugin testPlugin;
     
     @Override
     public void setUp() throws Exception
@@ -37,6 +38,7 @@ public class TestContextBatchBuilder extends TestCase
         MockitoAnnotations.initMocks(this);
 
         builder = new ContextBatchBuilder(mockPluginResourceLocator, mockDependencyResolver);
+        testPlugin = TestUtils.createTestPlugin();
     }
 
     @Override
@@ -46,6 +48,7 @@ public class TestContextBatchBuilder extends TestCase
         mockDependencyResolver = null;
 
         builder = null;
+        testPlugin = null;
 
         super.tearDown();
     }
@@ -302,19 +305,20 @@ public class TestContextBatchBuilder extends TestCase
 
     private void addContext(final String context, final List<String> descriptors)
     {
-        final List<String> fullKeyDescriptors = new ArrayList<String>();
+        final List<WebResourceModuleDescriptor> moduleDescriptors = new ArrayList<WebResourceModuleDescriptor>();
 
-        for (final String key : descriptors)
+        for (final String moduleKey : descriptors)
         {
-            fullKeyDescriptors.add(PLUGIN_KEY + key);
+            final String completeKey = testPlugin.getKey() + ":" + moduleKey;
+            moduleDescriptors.add(TestUtils.createWebResourceModuleDescriptor(completeKey, testPlugin));
         }
 
-        when(mockDependencyResolver.getDependenciesInContext(context, Collections.<String> emptySet())).thenReturn(fullKeyDescriptors);
+        when(mockDependencyResolver.getDependenciesInContext(context, Collections.<String> emptySet())).thenReturn(moduleDescriptors);
     }
 
     private void addModuleDescriptor(final String moduleKey, final List<ResourceDescriptor> descriptors)
     {
-        final String completeKey = PLUGIN_KEY + moduleKey;
+        final String completeKey = testPlugin.getKey() + ":" + moduleKey;
 
         final List<PluginResource> pluginResources = new ArrayList<PluginResource>();
         for (final ResourceDescriptor descriptor : descriptors)

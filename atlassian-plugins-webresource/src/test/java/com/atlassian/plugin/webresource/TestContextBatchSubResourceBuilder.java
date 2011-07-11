@@ -1,5 +1,6 @@
 package com.atlassian.plugin.webresource;
 
+import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import junit.framework.TestCase;
 import org.dom4j.DocumentException;
@@ -23,6 +24,7 @@ public class TestContextBatchSubResourceBuilder extends TestCase
     private DownloadableResourceFinder mockResourceFinder;
 
     private ContextBatchSubResourceBuilder builder;
+    private Plugin testPlugin;
 
     @Override
     public void setUp() throws Exception
@@ -31,6 +33,8 @@ public class TestContextBatchSubResourceBuilder extends TestCase
 
         MockitoAnnotations.initMocks(this);
         builder = new ContextBatchSubResourceBuilder(mockDependencyResolver, mockResourceFinder);
+
+        testPlugin = TestUtils.createTestPlugin();
     }
 
     @Override
@@ -40,6 +44,7 @@ public class TestContextBatchSubResourceBuilder extends TestCase
         mockResourceFinder = null;
 
         builder = null;
+        testPlugin = null;
 
         super.tearDown();
     }
@@ -56,7 +61,8 @@ public class TestContextBatchSubResourceBuilder extends TestCase
         String path = "/download/contextbatch/css/contexta/images/foo.png";
 
         String moduleKey = "contextb-resources";
-        when(mockDependencyResolver.getDependenciesInContext("contexta")).thenReturn(Arrays.asList(moduleKey));
+        WebResourceModuleDescriptor moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(moduleKey, testPlugin);
+        when(mockDependencyResolver.getDependenciesInContext("contexta")).thenReturn(Arrays.asList(moduleDescriptor));
 
         assertTrue(builder.matches(path));
         DownloadableResource resource = builder.parse(path, Collections.<String, String>emptyMap());
@@ -75,8 +81,9 @@ public class TestContextBatchSubResourceBuilder extends TestCase
         DownloadableResource imageResource = mock(DownloadableResource.class);
         when(mockResourceFinder.find(moduleKey, "images/foo.png")).thenReturn(imageResource);
 
-        List<String> contextDependencies = new ArrayList<String>();
-        contextDependencies.add(moduleKey);
+        WebResourceModuleDescriptor moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(moduleKey, testPlugin);
+        List<WebResourceModuleDescriptor> contextDependencies = new ArrayList<WebResourceModuleDescriptor>();
+        contextDependencies.add(moduleDescriptor);
         when(mockDependencyResolver.getDependenciesInContext("contextb")).thenReturn(contextDependencies);
 
         DownloadableResource resource = builder.parse(path, Collections.<String, String>emptyMap());
@@ -95,10 +102,11 @@ public class TestContextBatchSubResourceBuilder extends TestCase
         DownloadableResource imageResource = mock(DownloadableResource.class);
         when(mockResourceFinder.find(moduleKey, "images/foo.png")).thenReturn(imageResource);
 
-        List<String> contextDependencies = new ArrayList<String>();
-        contextDependencies.add(moduleKey);
+        WebResourceModuleDescriptor moduleDescriptor = TestUtils.createWebResourceModuleDescriptor(moduleKey, testPlugin);
+        List<WebResourceModuleDescriptor> contextDependencies = new ArrayList<WebResourceModuleDescriptor>();
+        contextDependencies.add(moduleDescriptor);
         when(mockDependencyResolver.getDependenciesInContext("contextb")).thenReturn(contextDependencies);
-        when(mockDependencyResolver.getDependenciesInContext("contexta")).thenReturn(Collections.<String>emptyList());
+        when(mockDependencyResolver.getDependenciesInContext("contexta")).thenReturn(Collections.<WebResourceModuleDescriptor>emptyList());
 
         DownloadableResource resource = builder.parse(path, Collections.<String, String>emptyMap());
         BatchSubResource batchResource = (BatchSubResource) resource;

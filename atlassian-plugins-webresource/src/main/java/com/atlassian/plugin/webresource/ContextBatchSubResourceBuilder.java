@@ -51,9 +51,9 @@ public class ContextBatchSubResourceBuilder implements DownloadableResourceBuild
 
         for (String context : getContexts(key))
         {
-            for (String moduleKey : dependencyResolver.getDependenciesInContext(context))
+            for (WebResourceModuleDescriptor moduleDescriptor : dependencyResolver.getDependenciesInContext(context))
             {
-                DownloadableResource resource = resourceFinder.find(moduleKey, resourceName);
+                DownloadableResource resource = resourceFinder.find(moduleDescriptor.getCompleteKey(), resourceName);
 
                 if (resource != null)
                 {

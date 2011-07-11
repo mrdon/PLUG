@@ -54,12 +54,12 @@ class ContextBatchBuilder
         {
             final ContextBatch contextBatch = new ContextBatch(context, dependencyResolver.getDependenciesInContext(context, skippedResources));
             final List<ContextBatch> mergeList = new ArrayList<ContextBatch>();
-            for (final String contextResource : contextBatch.getResources())
+            for (final WebResourceModuleDescriptor contextResource : contextBatch.getResources())
             {
                 // only go deeper if it is not already included
-                if (!allIncludedResources.contains(contextResource))
+                if (!allIncludedResources.contains(contextResource.getCompleteKey()))
                 {
-                    for (final PluginResource pluginResource : pluginResourceLocator.getPluginResources(contextResource))
+                    for (final PluginResource pluginResource : pluginResourceLocator.getPluginResources(contextResource.getCompleteKey()))
                     {
                         if (filter.matches(pluginResource.getResourceName()))
                         {
@@ -67,7 +67,7 @@ class ContextBatchBuilder
                         }
                     }
 
-                    allIncludedResources.add(contextResource);
+                    allIncludedResources.add(contextResource.getCompleteKey());
                 }
                 else
                 {
@@ -75,11 +75,11 @@ class ContextBatchBuilder
                     // IMPORTANT: Don't add the overlapping resource to the batch otherwise there'll be duplicates
                     for (final ContextBatch batch : batches)
                     {
-                        if (!mergeList.contains(batch) && batch.isResourceIncluded(contextResource))
+                        if (!mergeList.contains(batch) && batch.isResourceIncluded(contextResource.getCompleteKey()))
                         {
                             if (log.isDebugEnabled())
                             {
-                                log.debug("Context: {} shares a resource with {}: {}", new String[] { context, batch.getKey(), contextResource });
+                                log.debug("Context: {} shares a resource with {}: {}", new String[] { context, batch.getKey(), contextResource.getCompleteKey() });
                             }
 
                             mergeList.add(batch);

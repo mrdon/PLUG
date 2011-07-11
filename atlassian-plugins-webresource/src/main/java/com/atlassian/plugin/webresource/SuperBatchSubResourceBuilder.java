@@ -35,9 +35,9 @@ public class SuperBatchSubResourceBuilder implements DownloadableResourceBuilder
         String type = ResourceUtils.getType(path);
         String resourceName = getResourceName(path);
 
-        for (String moduleKey : dependencyResolver.getSuperBatchDependencies())
+        for (WebResourceModuleDescriptor moduleDescriptor : dependencyResolver.getSuperBatchDependencies())
         {
-            DownloadableResource resource = resourceFinder.find(moduleKey, resourceName);
+            DownloadableResource resource = resourceFinder.find(moduleDescriptor.getCompleteKey(), resourceName);
 
             if (resource != null)
             {

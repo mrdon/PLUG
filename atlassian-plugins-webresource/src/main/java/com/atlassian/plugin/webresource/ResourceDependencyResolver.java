@@ -2,8 +2,6 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.util.concurrent.NotNull;
 
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 interface ResourceDependencyResolver
@@ -14,7 +12,7 @@ interface ResourceDependencyResolver
      * Implementations are expected to use the {@link ResourceBatchingConfiguration} provided.
      * @return an ordered set of the super batch resources and its dependencies.
      */
-    public LinkedHashSet<String> getSuperBatchDependencies();
+    public Iterable<WebResourceModuleDescriptor> getSuperBatchDependencies();
 
     /**
      * Returns an ordered set of the given resource and its dependencies. To exclude resource dependencies
@@ -24,7 +22,7 @@ interface ResourceDependencyResolver
      * @param excludeSuperBatchedResources whether or not to exclude resources that are part of the super batch.
      * @return an ordered set of the given resource and its dependencies
      */
-    public LinkedHashSet<String> getDependencies(String moduleKey, boolean excludeSuperBatchedResources);
+    public Iterable<WebResourceModuleDescriptor> getDependencies(String moduleKey, boolean excludeSuperBatchedResources);
 
     /**
      * Returns an ordered list of the resources in a given context and its dependencies.
@@ -34,7 +32,7 @@ interface ResourceDependencyResolver
      * @return an ordered list of the resources in a given context and its dependencies.
      * @since 2.9.0
      */
-    public List<String> getDependenciesInContext(@NotNull String context);
+    public Iterable<WebResourceModuleDescriptor> getDependenciesInContext(@NotNull String context);
 
     /**
      * Returns an ordered list of the resources in a given context and its dependencies.
@@ -45,5 +43,5 @@ interface ResourceDependencyResolver
      * @return an ordered list of the resources in a given context and its dependencies.
      * @since 2.9.0
      */
-    public List<String> getDependenciesInContext(@NotNull String context, @NotNull Set<String> skippedResources);
+    public Iterable<WebResourceModuleDescriptor> getDependenciesInContext(@NotNull String context, @NotNull Set<String> skippedResources);
 }

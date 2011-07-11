@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static org.mockito.Mockito.when;
+
 public class TestSuperBatchDownloadableResourceBuilder extends TestCase
 {
     @Mock
@@ -30,6 +32,8 @@ public class TestSuperBatchDownloadableResourceBuilder extends TestCase
         
         MockitoAnnotations.initMocks(this);
         builder = new SuperBatchDownloadableResourceBuilder(mockDependencyResolver, mockPluginAccessor, mockWebResourceUrlProvider, mockResourceFinder);
+
+        when(mockDependencyResolver.getSuperBatchDependencies()).thenReturn(Collections.<WebResourceModuleDescriptor>emptyList());
     }
 
     @Override

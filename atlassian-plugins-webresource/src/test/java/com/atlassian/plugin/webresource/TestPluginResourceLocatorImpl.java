@@ -578,7 +578,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         final ContextBatchPluginResource contextBatchPluginResource = (ContextBatchPluginResource) resource;
         assertEquals(1, size(contextBatchPluginResource.getContexts()));
         assertEquals(context, get(contextBatchPluginResource.getContexts(), 0));
-        verify(mockPluginAccessor, times(4)).getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY);
+        verify(mockPluginAccessor, times(3)).getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY);
     }
 
     public void testGetDownloadableMergedContextBatchResource() throws Exception
@@ -618,8 +618,8 @@ public class TestPluginResourceLocatorImpl extends TestCase
         assertEquals(context1, get(contextBatchPluginResource.getContexts(), 0));
         assertEquals(context2, get(contextBatchPluginResource.getContexts(), 1));
 
-        verify(mockPluginAccessor, times(4)).getEnabledPluginModule(completeKey1);
-        verify(mockPluginAccessor, times(4)).getEnabledPluginModule(completeKey2);
+        verify(mockPluginAccessor, times(3)).getEnabledPluginModule(completeKey1);
+        verify(mockPluginAccessor, times(3)).getEnabledPluginModule(completeKey2);
     }
 
     public void testGetDownloadableMergedContextBatchResourceWithOverlap() throws Exception
@@ -665,14 +665,13 @@ public class TestPluginResourceLocatorImpl extends TestCase
         assertEquals(context1, get(contextBatchPluginResource.getContexts(), 0));
         assertEquals(context2, get(contextBatchPluginResource.getContexts(), 1));
 
-        verify(mockPluginAccessor, times(4)).getEnabledPluginModule(completeKey1);
-        verify(mockPluginAccessor, times(4)).getEnabledPluginModule(completeKey2);
+        verify(mockPluginAccessor, times(3)).getEnabledPluginModule(completeKey1);
+        verify(mockPluginAccessor, times(3)).getEnabledPluginModule(completeKey2);
 
         // TODO - work out a better way to ensure that the parent isn't included twice.
         // 2 for dependency resolution
-        // 1 for resource expansion
         // 1 for resource descriptor download
-        verify(mockPluginAccessor, times(4)).getEnabledPluginModule(parentKey);
+        verify(mockPluginAccessor, times(3)).getEnabledPluginModule(parentKey);
     }
 
     public void testSplitLastPathPart()
