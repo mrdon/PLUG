@@ -668,7 +668,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
         verify(mockPluginAccessor, times(3)).getEnabledPluginModule(completeKey1);
         verify(mockPluginAccessor, times(3)).getEnabledPluginModule(completeKey2);
 
-        // TODO - work out a better way to ensure that the parent isn't included twice.
+        // TODO - BN 2.9.0 - work out a better way to ensure that the parent isn't included twice.
         // 2 for dependency resolution
         // 1 for resource descriptor download
         verify(mockPluginAccessor, times(3)).getEnabledPluginModule(parentKey);

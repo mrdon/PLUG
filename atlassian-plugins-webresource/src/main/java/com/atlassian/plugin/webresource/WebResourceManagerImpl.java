@@ -212,7 +212,6 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         Iterable<PluginResource> resourcesToInclude = getSuperBatchResources(filter);
 
-        // TODO - move this calculation to requireResource
         final ContextBatchBuilder builder = new ContextBatchBuilder(pluginResourceLocator, dependencyResolver);
         resourcesToInclude = concat(resourcesToInclude, builder.build(getIncludedContexts(), filter));
         for (final String skippedResource : builder.getSkippedResources())
