@@ -148,10 +148,6 @@ class ContextBatchBuilder
                         {
                             includedResources.add(moduleResource);
                         }
-                        else
-                        {
-                            log.debug("Resource [" + moduleResource.getResourceName() + "] excluded by filter");
-                        }
                     }
 
                     allIncludedResources.add(contextResource.getCompleteKey());
