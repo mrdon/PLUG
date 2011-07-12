@@ -4,8 +4,8 @@ import static com.atlassian.plugin.webresource.ContextBatchPluginResource.URL_PR
 
 import com.atlassian.plugin.servlet.DownloadableResource;
 
-import java.util.Arrays;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,33 +38,31 @@ public class ContextBatchSubResourceBuilder implements DownloadableResourceBuild
     public DownloadableResource parse(final String path, final Map<String, String> params) throws UrlParseException
     {
         final Matcher m = CONTEXT_BATCH_PATTERN.matcher(path);
-
         if (!m.find())
         {
             throw new UrlParseException("Context batch url could not be parsed.");
         }
 
-        final String type = ResourceUtils.getType(path);
-        final String resourceName = m.group(2);
         final String key = m.group(1);
+        final String resourceName = m.group(2);
+        final String type = ResourceUtils.getType(path);
 
         for (final String context : getContexts(key))
         {
             for (final WebResourceModuleDescriptor moduleDescriptor : dependencyResolver.getDependenciesInContext(context))
             {
                 final DownloadableResource resource = resourceFinder.find(moduleDescriptor.getCompleteKey(), resourceName);
-
                 if (resource != null)
                 {
-                    return new BatchSubResource(resourceName, type, params, Arrays.asList(resource));
+                    return new BatchSubResource(resourceName, type, params, ImmutableList.of(resource));
                 }
             }
         }
         return new BatchSubResource(resourceName, type, params);
     }
 
-    private List<String> getContexts(final String key)
+    private String[] getContexts(final String key)
     {
-        return Arrays.asList(key.split(ContextBatchPluginResource.CONTEXT_SEPARATOR));
+        return key.split(ContextBatchPluginResource.CONTEXT_SEPARATOR);
     }
 }
