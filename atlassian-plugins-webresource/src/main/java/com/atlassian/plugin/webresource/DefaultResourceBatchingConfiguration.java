@@ -1,5 +1,7 @@
 package com.atlassian.plugin.webresource;
 
+import com.atlassian.plugin.util.PluginUtils;
+
 import java.util.List;
 import java.util.Collections;
 
@@ -9,6 +11,8 @@ import java.util.Collections;
  */
 public class DefaultResourceBatchingConfiguration implements ResourceBatchingConfiguration
 {
+    public static final String PLUGIN_WEBRESOURCE_BATCHING_OFF = "plugin.webresource.batching.off";
+
     public boolean isSuperBatchingEnabled()
     {
         return false;
@@ -22,5 +26,18 @@ public class DefaultResourceBatchingConfiguration implements ResourceBatchingCon
     public boolean isContextBatchingEnabled()
     {
         return false;
+    }
+
+    public boolean isPluginWebResourceBatchingEnabled()
+    {
+        final String explicitSetting = System.getProperty(PLUGIN_WEBRESOURCE_BATCHING_OFF);
+        if (explicitSetting != null)
+        {
+            return Boolean.parseBoolean(explicitSetting);
+        }
+        else
+        {
+            return Boolean.parseBoolean(System.getProperty(PluginUtils.ATLASSIAN_DEV_MODE));
+        }
     }
 }

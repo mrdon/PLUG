@@ -47,7 +47,7 @@ public class TestWebResourceManagerImpl extends TestCase
         when(mockWebResourceIntegration.getPluginAccessor()).thenReturn(mockPluginAccessor);
         when(mockWebResourceIntegration.getSuperBatchVersion()).thenReturn(SYSTEM_BUILD_NUMBER);
 
-        pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, null, mockUrlProvider);
+        pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, null, mockUrlProvider, mockBatchingConfiguration);
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, mockUrlProvider,
             mockBatchingConfiguration);
 
@@ -55,6 +55,7 @@ public class TestWebResourceManagerImpl extends TestCase
         when(mockUrlProvider.getBaseUrl(UrlMode.ABSOLUTE)).thenReturn(BASEURL);
         when(mockUrlProvider.getBaseUrl(UrlMode.AUTO)).thenReturn("");
         when(mockUrlProvider.getBaseUrl(UrlMode.RELATIVE)).thenReturn("");
+        when(mockBatchingConfiguration.isPluginWebResourceBatchingEnabled()).thenReturn(true);
         testPlugin = TestUtils.createTestPlugin();
     }
 
@@ -667,30 +668,23 @@ public class TestWebResourceManagerImpl extends TestCase
         final String completeModuleKey = "test.atlassian:" + moduleKey;
 
         final List<ResourceDescriptor> resources = TestUtils.createResourceDescriptors("foo.css", "foo-bar.js", "atlassian.css",
-            "atlassian-plugins.js");
+                "atlassian-plugins.js");
 
         setupRequestCache();
         mockEnabledPluginModule(completeModuleKey, TestUtils.createWebResourceModuleDescriptor(completeModuleKey, testPlugin, resources));
 
         // easier to test which resources were included by the filter with batching turned off
-        System.setProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF, "true");
-        try
-        {
-            webResourceManager.requireResource(completeModuleKey);
-            final String atlassianResources = webResourceManager.getRequiredResources(UrlMode.RELATIVE, atlassianFilter);
-            assertEquals(-1, atlassianResources.indexOf("foo"));
-            assertTrue(atlassianResources.contains("atlassian.css"));
-            assertTrue(atlassianResources.contains("atlassian-plugins.js"));
+        when(mockBatchingConfiguration.isPluginWebResourceBatchingEnabled()).thenReturn(false);
+        webResourceManager.requireResource(completeModuleKey);
+        final String atlassianResources = webResourceManager.getRequiredResources(UrlMode.RELATIVE, atlassianFilter);
+        assertEquals(-1, atlassianResources.indexOf("foo"));
+        assertTrue(atlassianResources.contains("atlassian.css"));
+        assertTrue(atlassianResources.contains("atlassian-plugins.js"));
 
-            final String allResources = webResourceManager.getRequiredResources(UrlMode.RELATIVE, bogusFilter);
-            for (final ResourceDescriptor resource : resources)
-            {
-                assertTrue(allResources.contains(resource.getName()));
-            }
-        }
-        finally
+        final String allResources = webResourceManager.getRequiredResources(UrlMode.RELATIVE, bogusFilter);
+        for (final ResourceDescriptor resource : resources)
         {
-            System.setProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF, "false");
+            assertTrue(allResources.contains(resource.getName()));
         }
     }
 

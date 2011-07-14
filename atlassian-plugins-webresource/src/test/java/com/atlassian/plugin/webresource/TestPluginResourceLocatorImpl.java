@@ -17,7 +17,6 @@ import com.atlassian.plugin.servlet.DownloadableClasspathResource;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.ForwardableResource;
 import com.atlassian.plugin.servlet.ServletContextFactory;
-import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.webresource.transformer.WebResourceTransformer;
 import com.atlassian.plugin.webresource.transformer.WebResourceTransformerModuleDescriptor;
 
@@ -80,37 +79,6 @@ public class TestPluginResourceLocatorImpl extends TestCase
         super.tearDown();
     }
 
-    public void testIsBatchingOff()
-    {
-        try
-        {
-            System.clearProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF);
-            System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "true");
-            assertTrue(pluginResourceLocator.isBatchingOff());
-
-            System.setProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF, "true");
-            System.clearProperty(PluginUtils.ATLASSIAN_DEV_MODE);
-            assertTrue(pluginResourceLocator.isBatchingOff());
-
-            System.clearProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF);
-            System.clearProperty(PluginUtils.ATLASSIAN_DEV_MODE);
-            assertFalse(pluginResourceLocator.isBatchingOff());
-
-            System.clearProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF);
-            System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "false");
-            assertFalse(pluginResourceLocator.isBatchingOff());
-
-            System.setProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF, "false");
-            System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "true");
-            assertFalse(pluginResourceLocator.isBatchingOff());
-        }
-        finally
-        {
-            System.clearProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF);
-            System.clearProperty(PluginUtils.ATLASSIAN_DEV_MODE);
-        }
-    }
-
     public void testMatches()
     {
         assertTrue(pluginResourceLocator.matches("/download/superbatch/css/batch.css"));
@@ -144,27 +112,20 @@ public class TestPluginResourceLocatorImpl extends TestCase
         when(mockPluginAccessor.getEnabledPluginModule(TEST_MODULE_COMPLETE_KEY)).thenReturn(
             (ModuleDescriptor) TestUtils.createWebResourceModuleDescriptor(TEST_MODULE_COMPLETE_KEY, mockPlugin, resourceDescriptors));
 
-        System.setProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF, "true");
-        try
+        when(mockBatchingConfiguration.isPluginWebResourceBatchingEnabled()).thenReturn(false);
+        final List<PluginResource> resources = pluginResourceLocator.getPluginResources(TEST_MODULE_COMPLETE_KEY);
+        assertEquals(3, resources.size());
+        // ensure the resources still have their parameters
+        for (final PluginResource resource : resources)
         {
-            final List<PluginResource> resources = pluginResourceLocator.getPluginResources(TEST_MODULE_COMPLETE_KEY);
-            assertEquals(3, resources.size());
-            // ensure the resources still have their parameters
-            for (final PluginResource resource : resources)
+            if (resource.getResourceName().contains("ie"))
             {
-                if (resource.getResourceName().contains("ie"))
-                {
-                    assertEquals("true", resource.getParams().get("ieonly"));
-                }
-                else
-                {
-                    assertNull(resource.getParams().get("ieonly"));
-                }
+                assertEquals("true", resource.getParams().get("ieonly"));
             }
-        }
-        finally
-        {
-            System.setProperty(PluginResourceLocatorImpl.PLUGIN_WEBRESOURCE_BATCHING_OFF, "false");
+            else
+            {
+                assertNull(resource.getParams().get("ieonly"));
+            }
         }
     }
 
@@ -172,6 +133,8 @@ public class TestPluginResourceLocatorImpl extends TestCase
     {
         final Plugin mockPlugin = mock(Plugin.class);
         when(mockPlugin.getPluginsVersion()).thenReturn(1);
+
+        when(mockBatchingConfiguration.isPluginWebResourceBatchingEnabled()).thenReturn(true);
 
         final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("master-ie.css", "master.css", "comments.css");
 
@@ -198,6 +161,8 @@ public class TestPluginResourceLocatorImpl extends TestCase
         final Plugin mockPlugin = mock(Plugin.class);
         when(mockPlugin.getPluginsVersion()).thenReturn(1);
 
+        when(mockBatchingConfiguration.isPluginWebResourceBatchingEnabled()).thenReturn(true);
+
         final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("master.css", "comments.css");
         final Map<String, String> nonBatchParams = new TreeMap<String, String>();
         nonBatchParams.put("batch", "false");
@@ -222,6 +187,8 @@ public class TestPluginResourceLocatorImpl extends TestCase
     {
         final Plugin mockPlugin = mock(Plugin.class);
         when(mockPlugin.getPluginsVersion()).thenReturn(1);
+
+        when(mockBatchingConfiguration.isPluginWebResourceBatchingEnabled()).thenReturn(true);
 
         final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("master.css", "comments.css");
         final Map<String, String> params = new TreeMap<String, String>();

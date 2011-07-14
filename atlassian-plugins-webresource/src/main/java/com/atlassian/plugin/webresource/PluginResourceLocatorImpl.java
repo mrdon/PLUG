@@ -7,7 +7,6 @@ import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.ServletContextFactory;
-import com.atlassian.plugin.util.PluginUtils;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -29,10 +28,9 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 {
     private static final Logger log = LoggerFactory.getLogger(PluginResourceLocatorImpl.class);
 
-    public static final String PLUGIN_WEBRESOURCE_BATCHING_OFF = "plugin.webresource.batching.off";
-
     final private PluginAccessor pluginAccessor;
     final private WebResourceUrlProvider webResourceUrlProvider;
+    final private ResourceBatchingConfiguration batchingConfiguration;
     final private List<DownloadableResourceBuilder> builders;
 
     static final String RESOURCE_SOURCE_PARAM = "source";
@@ -40,19 +38,21 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
 
     public PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider)
     {
-        this(webResourceIntegration, servletContextFactory, webResourceUrlProvider, new DefaultResourceDependencyResolver(webResourceIntegration, new DefaultResourceBatchingConfiguration()));
+        this(webResourceIntegration, servletContextFactory, webResourceUrlProvider, new DefaultResourceBatchingConfiguration());
     }
 
-    public PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider, final ResourceBatchingConfiguration resourceBatchingConfiguration)
+    public PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider,
+                                     final ResourceBatchingConfiguration batchingConfiguration)
     {
-        this(webResourceIntegration, servletContextFactory, webResourceUrlProvider, new DefaultResourceDependencyResolver(webResourceIntegration,
-            resourceBatchingConfiguration));
+        this(webResourceIntegration, servletContextFactory, webResourceUrlProvider, new DefaultResourceDependencyResolver(webResourceIntegration, batchingConfiguration), batchingConfiguration);
     }
 
-    private PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider, final ResourceDependencyResolver dependencyResolver)
+    private PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider,
+                                      final ResourceDependencyResolver dependencyResolver, final ResourceBatchingConfiguration batchingConfiguration)
     {
-        pluginAccessor = webResourceIntegration.getPluginAccessor();
+        this.pluginAccessor = webResourceIntegration.getPluginAccessor();
         this.webResourceUrlProvider = webResourceUrlProvider;
+        this.batchingConfiguration = batchingConfiguration;
         final SingleDownloadableResourceBuilder singlePluginBuilder = new SingleDownloadableResourceBuilder(pluginAccessor, servletContextFactory);
         builders = Collections.unmodifiableList(Arrays.asList(new SuperBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor,
             webResourceUrlProvider, singlePluginBuilder), new SuperBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder),
@@ -105,7 +105,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             return Collections.emptyList();
         }
 
-        final boolean singleMode = isBatchingOff();
+        final boolean singleMode = !batchingConfiguration.isPluginWebResourceBatchingEnabled();
         final List<PluginResource> resources = new ArrayList<PluginResource>();
 
         for (final ResourceDescriptor resourceDescriptor : moduleDescriptor.getResourceDescriptors())
@@ -143,23 +143,6 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         }
 
         return new String[] { resourcePath.substring(0, indexOfSlash + 1), resourcePath.substring(indexOfSlash + 1) };
-    }
-
-    /**
-     * @return True if either it is explicitly turned off or in dev mode
-     */
-    Boolean isBatchingOff()
-    {
-        final String explicitSetting = System.getProperty(PLUGIN_WEBRESOURCE_BATCHING_OFF);
-        if (explicitSetting != null)
-        {
-            return Boolean.parseBoolean(explicitSetting);
-        }
-        else
-        {
-            return Boolean.parseBoolean(System.getProperty(PluginUtils.ATLASSIAN_DEV_MODE));
-        }
-
     }
 
     private BatchPluginResource createBatchResource(final String moduleCompleteKey, final ResourceDescriptor resourceDescriptor)
