@@ -176,6 +176,14 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
         disableMultipleBundleVersions = val;
     }
 
+    /**
+     * Clears export cache.
+     */
+    public void clearExportCache()
+    {
+        exportsBuilder.clearExportCache();
+    }
+
     @SuppressWarnings ({ "UnusedDeclaration" })
     @PluginEventListener
     public void onStart(final PluginFrameworkStartingEvent event)
@@ -213,8 +221,6 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
     public void start() throws OsgiContainerException
     {
-
-
         if (isRunning())
         {
             return;

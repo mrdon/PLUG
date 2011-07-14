@@ -51,9 +51,11 @@ class ExportsBuilder
     /**
      * Gets the framework exports taking into account host components and package scanner configuration.
      * <p>
-     * This information cannot change without a system restart, so we determine this once and then cache the value.
+     * Often, this information will not change without a system restart, so we determine this once and then cache the value.
      * The cache is only useful if the plugin system is thrown away and re-initialised. This is done thousands of times
      * during JIRA functional testing, and the cache was added to speed this up.
+     *
+     * If needed, call {@link #clearExportCache()} to clear the cache.
      *
      * @param regs The list of host component registrations
      * @param packageScannerConfig The configuration for the package scanning
@@ -66,6 +68,15 @@ class ExportsBuilder
             exportStringCache = determineExports(regs, packageScannerConfig);
         }
         return exportStringCache;
+    }
+
+    /**
+     * Clears the export string cache. This results in {@link #getExports(java.util.List, com.atlassian.plugin.osgi.container.PackageScannerConfiguration)}
+     * having to recalculate the export string next time which can significantly slow down the start up time of plugin framework.
+     */
+    public void clearExportCache()
+    {
+        exportStringCache = null;
     }
 
     /**
