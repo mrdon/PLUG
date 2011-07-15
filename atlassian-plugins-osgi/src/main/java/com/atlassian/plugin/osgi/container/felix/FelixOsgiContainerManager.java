@@ -248,6 +248,7 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
             bootDelegation = "weblogic,weblogic.*," +
                              "META-INF.services," +
                              "com.yourkit,com.yourkit.*," +
+                             "com.chronon,com.chronon.*," +
                              "com.jprofiler,com.jprofiler.*," +
                              "org.apache.xerces,org.apache.xerces.*," +
                              "org.apache.xalan,org.apache.xalan.*," +
