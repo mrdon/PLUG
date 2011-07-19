@@ -196,6 +196,9 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
                 {
                     return batch.resources;
                 }
+
+                // The super batch has been updated so recreate the batch
+                lazy.reset();
             }
         }
     }
