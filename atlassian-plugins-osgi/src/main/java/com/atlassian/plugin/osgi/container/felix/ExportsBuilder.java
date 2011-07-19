@@ -73,6 +73,7 @@ class ExportsBuilder
     /**
      * Clears the export string cache. This results in {@link #getExports(java.util.List, com.atlassian.plugin.osgi.container.PackageScannerConfiguration)}
      * having to recalculate the export string next time which can significantly slow down the start up time of plugin framework.
+     * @since 2.9.0
      */
     public void clearExportCache()
     {

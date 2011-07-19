@@ -178,6 +178,8 @@ public class FelixOsgiContainerManager implements OsgiContainerManager
 
     /**
      * Clears export cache.
+     *
+     * @since 2.9.0
      */
     public void clearExportCache()
     {
