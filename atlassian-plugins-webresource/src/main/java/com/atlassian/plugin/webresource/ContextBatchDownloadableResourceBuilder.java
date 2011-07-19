@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Constructs a context batch resource for download
+ * @since 2.9.0
+ */
 class ContextBatchDownloadableResourceBuilder extends AbstractBatchResourceBuilder
 {
     private static final Logger log = LoggerFactory.getLogger(ContextBatchDownloadableResourceBuilder.class);

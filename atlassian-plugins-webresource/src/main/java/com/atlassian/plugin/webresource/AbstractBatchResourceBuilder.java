@@ -23,6 +23,7 @@ import java.util.Map;
 
 /**
  * This class is used to add individual resources into a larger batch resource.
+ * @since 2.9.0
  */
 abstract class AbstractBatchResourceBuilder implements DownloadableResourceBuilder
 {

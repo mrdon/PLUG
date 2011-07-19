@@ -18,6 +18,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
+/**
+ * Constructs a single resource for download
+ * @since 2.9.0
+ */
 public class SingleDownloadableResourceBuilder implements DownloadableResourceBuilder, DownloadableResourceFinder
 {
     private static final String DOWNLOAD_TYPE = "download";

@@ -6,6 +6,7 @@ import java.util.Map;
 
 /**
  * Constructs a plugin resource from a given url
+ * @since 2.9.0
  */
 interface DownloadableResourceBuilder
 {
