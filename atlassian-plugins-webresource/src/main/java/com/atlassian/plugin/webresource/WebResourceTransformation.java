@@ -20,13 +20,13 @@ import java.util.Map;
  *
  * @since 2.5.0
  */
-class WebResourceTransformation
+public class WebResourceTransformation
 {
     private final String extension;
     private final Map<String, Element> transformerElements;
     private Logger log = LoggerFactory.getLogger(WebResourceTransformation.class);
 
-    WebResourceTransformation(Element element)
+    public WebResourceTransformation(Element element)
     {
         Validate.notNull(element.attribute("extension"));
         
@@ -40,7 +40,7 @@ class WebResourceTransformation
         transformerElements = Collections.unmodifiableMap(transformers);
     }
 
-    boolean matches(ResourceLocation location)
+    public boolean matches(ResourceLocation location)
     {
         String loc = location.getLocation();
         if (loc == null || "".equals(loc.trim()))
@@ -50,7 +50,7 @@ class WebResourceTransformation
         return loc.endsWith(extension);
     }
 
-    DownloadableResource transformDownloadableResource(PluginAccessor pluginAccessor, DownloadableResource resource, ResourceLocation resourceLocation, String filePath)
+    public DownloadableResource transformDownloadableResource(PluginAccessor pluginAccessor, DownloadableResource resource, ResourceLocation resourceLocation, String filePath)
     {
         DownloadableResource lastResource = resource;
         for (Map.Entry<String, Element> entry : transformerElements.entrySet())
