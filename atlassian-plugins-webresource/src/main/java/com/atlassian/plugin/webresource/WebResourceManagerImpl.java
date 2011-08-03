@@ -1,16 +1,20 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
-
+import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,7 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.google.common.collect.Iterables.*;
+import static com.google.common.collect.Iterables.addAll;
+import static com.google.common.collect.Iterables.concat;
+import static com.google.common.collect.Iterables.contains;
+import static com.google.common.collect.Iterables.transform;
 
 /**
  * A handy super-class that handles most of the resource management.
@@ -51,28 +58,30 @@ public class WebResourceManagerImpl implements WebResourceManager
     protected final ResourceBatchingConfiguration batchingConfiguration;
     protected final ResourceDependencyResolver dependencyResolver;
     protected static final List<WebResourceFormatter> webResourceFormatters = Arrays.asList(CssWebResource.FORMATTER, JavascriptWebResource.FORMATTER);
+    private final String tempdir;
 
     private static final boolean IGNORE_SUPERBATCHING = false;
 
     public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration, final WebResourceUrlProvider webResourceUrlProvider)
     {
         this(pluginResourceLocator, webResourceIntegration, webResourceUrlProvider,
-            new DefaultResourceBatchingConfiguration());
+                new DefaultResourceBatchingConfiguration());
     }
 
     public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration, final WebResourceUrlProvider webResourceUrlProvider, final ResourceBatchingConfiguration batchingConfiguration)
     {
         this(pluginResourceLocator, webResourceIntegration, webResourceUrlProvider, batchingConfiguration, new DefaultResourceDependencyResolver(
-            webResourceIntegration, batchingConfiguration));
+                webResourceIntegration, batchingConfiguration),System.getProperty("java.io.tmpdir"));
     }
 
-    public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration, final WebResourceUrlProvider webResourceUrlProvider, final ResourceBatchingConfiguration batchingConfiguration, final ResourceDependencyResolver dependencyResolver)
+    public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration, final WebResourceUrlProvider webResourceUrlProvider, final ResourceBatchingConfiguration batchingConfiguration, final ResourceDependencyResolver dependencyResolver, final String temp)
     {
         this.pluginResourceLocator = pluginResourceLocator;
         this.webResourceIntegration = webResourceIntegration;
         this.webResourceUrlProvider = webResourceUrlProvider;
         this.batchingConfiguration = batchingConfiguration;
         this.dependencyResolver = dependencyResolver;
+        this.tempdir = temp;
     }
 
     public void requireResource(final String moduleCompleteKey)
@@ -232,43 +241,102 @@ public class WebResourceManagerImpl implements WebResourceManager
      */
     List<PluginResource> getSuperBatchResources(final WebResourceFilter filter)
     {
-        if (!batchingConfiguration.isSuperBatchingEnabled())
-        {
-            return Collections.emptyList();
-        }
-
-        final Iterable<WebResourceModuleDescriptor> superBatchModuleKeys = dependencyResolver.getSuperBatchDependencies();
-        final List<PluginResource> resources = new ArrayList<PluginResource>();
-
-        // This is necessarily quite complicated. We need distinct superbatch resources for each combination of
-        // resourceFormatter (i.e. separate CSS or JS resources), and also each unique combination of
-        // BATCH_PARAMS (i.e. separate superbatches for print stylesheets, IE only stylesheets, and IE only print
-        // stylesheets if they ever exist in the future)
-        for (final WebResourceFormatter formatter : webResourceFormatters)
-        {
-            final Set<Map<String, String>> alreadyIncluded = new HashSet<Map<String, String>>();
-            for (final WebResourceModuleDescriptor moduleDescriptor : superBatchModuleKeys)
-            {
-                for (final PluginResource pluginResource : pluginResourceLocator.getPluginResources(moduleDescriptor.getCompleteKey()))
+         if (!batchingConfiguration.isSuperBatchingEnabled())
                 {
-                    if (formatter.matches(pluginResource.getResourceName()) && filter.matches(pluginResource.getResourceName()))
-                    {
-                        final Map<String, String> batchParamsMap = new HashMap<String, String>(PluginResourceLocator.BATCH_PARAMS.length);
-                        for (final String s : PluginResourceLocator.BATCH_PARAMS)
-                        {
-                            batchParamsMap.put(s, pluginResource.getParams().get(s));
-                        }
+                    return Collections.emptyList();
+                }
 
-                        if (!alreadyIncluded.contains(batchParamsMap))
+                final Iterable<WebResourceModuleDescriptor> superBatchModuleKeys = dependencyResolver.getSuperBatchDependencies();
+                final List<PluginResource> resources = new ArrayList<PluginResource>();
+                final List<PluginResource> pluginResources = new ArrayList<PluginResource>();
+                // as we need to sort the plugin resources to create a consistent hash we keep a reference with the order in it
+                final List<PluginResource> orderedPluginResources = new ArrayList<PluginResource>();
+
+                // This is necessarily quite complicated. We need distinct superbatch resources for each combination of
+                // resourceFormatter (i.e. separate CSS or JS resources), and also each unique combination of
+                // BATCH_PARAMS (i.e. separate superbatches for print stylesheets, IE only stylesheets, and IE only print
+                // stylesheets if they ever exist in the future)
+                for (final WebResourceFormatter formatter : webResourceFormatters)
+                {
+                    final Set<Map<String, String>> alreadyIncluded = new HashSet<Map<String, String>>();
+                    for (final WebResourceModuleDescriptor moduleDescriptor : superBatchModuleKeys)
+                    {
+                        for (final PluginResource pluginResource : pluginResourceLocator.getPluginResources(moduleDescriptor.getCompleteKey()))
                         {
-                            resources.add(SuperBatchPluginResource.createBatchFor(pluginResource));
-                            alreadyIncluded.add(batchParamsMap);
+                            if (formatter.matches(pluginResource.getResourceName()) && filter.matches(pluginResource.getResourceName()))
+                            {
+                                final Map<String, String> batchParamsMap = new HashMap<String, String>(PluginResourceLocator.BATCH_PARAMS.length);
+                                for (final String s : PluginResourceLocator.BATCH_PARAMS)
+                                {
+                                    batchParamsMap.put(s, pluginResource.getParams().get(s));
+                                }
+
+                                if (!alreadyIncluded.contains(batchParamsMap))
+                                {
+                                    pluginResources.add(pluginResource);
+                                    alreadyIncluded.add(batchParamsMap);
+                                    orderedPluginResources.add(pluginResource);
+                                }
+                            }
                         }
                     }
                 }
+                Collections.sort(pluginResources, new Comparator<PluginResource>()
+                {
+                    public int compare(PluginResource o1, PluginResource o2)
+                    {
+                        return o1.getModuleCompleteKey().compareTo(o2.getModuleCompleteKey());
+                    }
+                });
+                String hash = createHash(pluginResources);
+                for (PluginResource resource : orderedPluginResources)
+                {
+                    resources.add(SuperBatchPluginResource.createBatchFor(resource, hash,tempdir));
+                }
+                return resources;
+    }
+
+
+    private String createHash(List<PluginResource> resources)
+    {
+        try
+        {
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            for (PluginResource moduleDescriptor : resources)
+            {
+                String version = moduleDescriptor.getVersion(webResourceIntegration);
+                md5.update(moduleDescriptor.getModuleCompleteKey().getBytes("UTF8"));
+                md5.update(version.getBytes("UTF8"));
+                List<Map.Entry<String, String>> params = new ArrayList<Map.Entry<String, String>>(moduleDescriptor.getParams().entrySet());
+                Collections.sort(params, new Comparator<Map.Entry<String, String>>()
+                {
+                    public int compare(Map.Entry<String, String> o1, Map.Entry<String, String> o2)
+                    {
+                        int cmpvalue = o1.getKey().compareTo(o2.getKey());
+                        if (cmpvalue == 0)
+                        {
+                            cmpvalue = o1.getValue().compareTo(o2.getValue());
+                        }
+                        return cmpvalue;
+                    }
+                });
+                for (Map.Entry<String, String> entry : params)
+                {
+                    md5.update((entry.getKey() + entry.getValue()).getBytes("UTF8"));
+                }
+
             }
+
+            return new String(Hex.encodeHex(md5.digest()));
         }
-        return resources;
+        catch (NoSuchAlgorithmException e)
+        {
+            throw new AssertionError("MD5 hashing algorithm is not available.");
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            throw new AssertionError("UTF-8 encoding is not available.");
+        }
     }
 
     private Iterable<PluginResource> getModuleResources(final Iterable<String> webResourcePluginModuleKeys, final Iterable<String> batchedModules, final WebResourceFilter filter)
@@ -306,7 +374,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         for (final WebResourceFormatter formatter : webResourceFormatters)
         {
-            for (final Iterator<PluginResource> iter = resourcesToInclude.iterator(); iter.hasNext();)
+            for (final Iterator<PluginResource> iter = resourcesToInclude.iterator(); iter.hasNext(); )
             {
                 final PluginResource resource = iter.next();
                 if (formatter.matches(resource.getResourceName()))
@@ -320,8 +388,8 @@ public class WebResourceManagerImpl implements WebResourceManager
         for (final PluginResource resource : resourcesToInclude)
         {
             writeContentAndSwallowErrors(
-                "<!-- Error loading resource \"" + resource.getModuleCompleteKey() + "\".  No resource formatter matches \"" + resource.getResourceName() + "\" -->\n",
-                writer);
+                    "<!-- Error loading resource \"" + resource.getModuleCompleteKey() + "\".  No resource formatter matches \"" + resource.getResourceName() + "\" -->\n",
+                    writer);
         }
     }
 
@@ -347,7 +415,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     public void requireResource(final String moduleCompleteKey, final Writer writer, final UrlMode urlMode)
     {
         final Iterable<String> allDependentModuleKeys = transformModuleDescriptorsToModuleKeys(dependencyResolver.getDependencies(moduleCompleteKey, IGNORE_SUPERBATCHING));
-        final Iterable<String> empty = Collections.<String> emptyList();
+        final Iterable<String> empty = Collections.<String>emptyList();
         final Iterable<PluginResource> resourcesToInclude = getModuleResources(allDependentModuleKeys, empty, DefaultWebResourceFilter.INSTANCE);
         writeResourceTags(resourcesToInclude, writer, urlMode);
     }

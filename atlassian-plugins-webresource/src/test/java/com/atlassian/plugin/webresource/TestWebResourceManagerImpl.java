@@ -262,8 +262,9 @@ public class TestWebResourceManagerImpl extends TestCase
         assertFalse(resources.contains(resourceA + ".css"));
         assertFalse(resources.contains(resourceB + ".css"));
         assertFalse(resources.contains(resourceC + ".css"));
-        assertTrue(resources.contains("/contextbatch/css/foo/batch.css"));
-        assertFalse(resources.contains("/contextbatch/css/bar/batch.css"));
+
+        assertTrue(resources.contains("/contextbatch/css/foo/foo_a6045e8e76822787d19e62e3cf5dd6a5.css"));
+        assertFalse(resources.contains("/contextbatch/css/bar/bar_369d7a334f58d41a61669b5aac5b6a88.css"));
 
         // write includes for all resources for "bar":
         webResourceManager.requireResourcesForContext("bar");
@@ -273,8 +274,8 @@ public class TestWebResourceManagerImpl extends TestCase
         assertFalse(resources.contains(resourceA + ".css"));
         assertFalse(resources.contains(resourceB + ".css"));
         assertFalse(resources.contains(resourceC + ".css"));
-        assertFalse(resources.contains("/contextbatch/css/foo/batch.css"));
-        assertTrue(resources.contains("/contextbatch/css/bar/batch.css"));
+        assertFalse(resources.contains("/contextbatch/css/foo/foo_a6045e8e76822787d19e62e3cf5dd6a5.css"));
+        assertTrue(resources.contains("/contextbatch/css/bar/bar_369d7a334f58d41a61669b5aac5b6a88.css"));
     }
 
     public void testGetResourceContextWithCondition() throws ClassNotFoundException, DocumentException
@@ -311,7 +312,7 @@ public class TestWebResourceManagerImpl extends TestCase
         final String tags = webResourceManager.getRequiredResources();
         assertTrue(tags.contains(resource1));
         assertFalse(tags.contains(resource2));
-        assertTrue(tags.contains("foo/batch.js"));
+        assertTrue(tags.contains("/foo/foo_80f2593e8641c02cafef7727e4f6ac68.js"));
     }
 
     private Map<String, Object> setupRequestCache()
@@ -776,16 +777,16 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(2, cssResources.size());
 
         final SuperBatchPluginResource superBatch1 = (SuperBatchPluginResource) cssResources.get(0);
-        assertEquals("batch.css", superBatch1.getResourceName());
+        assertEquals("sb_33a9c72540155dbdeb470414b0adaad6.css", superBatch1.getResourceName());
         assertTrue(superBatch1.getParams().isEmpty());
 
         final SuperBatchPluginResource superBatch2 = (SuperBatchPluginResource) cssResources.get(1);
-        assertEquals("batch.css", superBatch2.getResourceName());
+        assertEquals("sb_33a9c72540155dbdeb470414b0adaad6.css", superBatch2.getResourceName());
         assertEquals("true", superBatch2.getParams().get("ieonly"));
 
         final List<PluginResource> jsResources = webResourceManager.getSuperBatchResources(JavascriptWebResource.FORMATTER);
         assertEquals(1, jsResources.size());
-        assertEquals("batch.js", jsResources.get(0).getResourceName());
+        assertEquals("sb_c721541e16398e213c9c41317cfab394.js", jsResources.get(0).getResourceName());
         assertEquals(0, jsResources.get(0).getParams().size());
     }
 

@@ -38,6 +38,7 @@ class ContextBatch
     private static final String UTF8 = "UTF-8";
     private static final String MD5 = "MD5";
     private static final Ordering<ModuleDescriptor<?>> MODULE_KEY_ORDERING = Ordering.natural().onResultOf(new TransformDescriptorToKey());
+    private final String tempPath;
 
     /**
      * Merges two context batches into a single context batch.
@@ -52,7 +53,7 @@ class ContextBatch
         final Iterable<WebResourceModuleDescriptor> resources = concat(b1.getResources(), b2.getResources());
         // Merge assumes that the merged batched doesn't overlap with the current one.
         final Iterable<PluginResourceBatchParams> params = concat(b1.getResourceParams(), b2.getResourceParams());
-        return new ContextBatch(key, contexts, resources, params);
+        return new ContextBatch(key, contexts, resources, params,b1.tempPath);
     }
 
     private final String key;
@@ -61,16 +62,17 @@ class ContextBatch
     private final Iterable<String> resourceKeys;
     private final Set<PluginResourceBatchParams> resourceParams;
 
-    ContextBatch(final String context, final Iterable<WebResourceModuleDescriptor> resources)
+    ContextBatch(final String context, final Iterable<WebResourceModuleDescriptor> resources,String temp)
     {
-        this(context, ImmutableList.of(context), resources, ImmutableList.<PluginResourceBatchParams> of());
+        this(context, ImmutableList.of(context), resources, ImmutableList.<PluginResourceBatchParams> of(),temp);
     }
 
-    ContextBatch(final String key, final Iterable<String> contexts, final Iterable<WebResourceModuleDescriptor> resources, final Iterable<PluginResourceBatchParams> resourceParams)
+    ContextBatch(final String key, final Iterable<String> contexts, final Iterable<WebResourceModuleDescriptor> resources, final Iterable<PluginResourceBatchParams> resourceParams,String temp)
     {
         this.key = key;
         this.contexts = copyOf(contexts);
         this.resourceParams = newHashSet(resourceParams);
+        this.tempPath = temp;
 
         // Note: Ordering is important in producing a consistent hash.
         // But, dependency order is not important when producing the PluginResource,
@@ -108,7 +110,7 @@ class ContextBatch
         {
             public PluginResource apply(final PluginResourceBatchParams param)
             {
-                return new ContextBatchPluginResource(key, contexts, hash, param.getType(), param.getParameters());
+                return new ContextBatchPluginResource(key, contexts, hash, param.getType(), param.getParameters(),tempPath);
             }
         });
     }

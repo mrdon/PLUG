@@ -17,6 +17,7 @@ import com.atlassian.plugin.servlet.DownloadableClasspathResource;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.ForwardableResource;
 import com.atlassian.plugin.servlet.ServletContextFactory;
+import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.webresource.transformer.WebResourceTransformer;
 import com.atlassian.plugin.webresource.transformer.WebResourceTransformerModuleDescriptor;
 
@@ -54,11 +55,14 @@ public class TestPluginResourceLocatorImpl extends TestCase
     private static final String TEST_MODULE_KEY = "web-resources";
     private static final String TEST_MODULE_COMPLETE_KEY = TEST_PLUGIN_KEY + ":" + TEST_MODULE_KEY;
 
+    private String originalDevModeValue;
+
     @Override
     protected void setUp() throws Exception
     {
         super.setUp();
-
+        originalDevModeValue = System.getProperty(PluginUtils.ATLASSIAN_DEV_MODE);
+        System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE,"TRUE");
         MockitoAnnotations.initMocks(this);
         when(mockWebResourceIntegration.getPluginAccessor()).thenReturn(mockPluginAccessor);
 
@@ -75,7 +79,10 @@ public class TestPluginResourceLocatorImpl extends TestCase
         mockServletContextFactory = null;
         mockBatchingConfiguration = null;
         mockWebResourceUrlProvider = null;
-
+        if(originalDevModeValue!=null)
+            System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE,originalDevModeValue);
+        else
+            System.getProperties().remove(PluginUtils.ATLASSIAN_DEV_MODE);
         super.tearDown();
     }
 
@@ -452,7 +459,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
     public void testGetDownloadableSuperBatchResource() throws Exception
     {
-        final String url = "/download/superbatch/css/batch.css";
+        final String url = "/download/superbatch/css/sb_12345.css";
 
         final Plugin testPlugin = TestUtils.createTestPlugin(TEST_PLUGIN_KEY, "1");
         final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("atlassian.css", "master.css");
