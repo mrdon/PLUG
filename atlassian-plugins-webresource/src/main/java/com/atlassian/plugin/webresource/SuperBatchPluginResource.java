@@ -2,12 +2,14 @@ package com.atlassian.plugin.webresource;
 
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
+import static com.atlassian.plugin.util.Either.getOrThrow;
 
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.util.Either;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.collect.Function;
+
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -42,36 +44,36 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
     private final String hash;
     private final String filePath;
 
-     private Function<String, Either<DownloadException,InputStream>> transformer = new Function<String, Either<DownloadException,InputStream>>()
+    private final Function<String, Either<DownloadException, InputStream>> transformer = new Function<String, Either<DownloadException, InputStream>>()
     {
-        public Either<DownloadException,InputStream> get(final String input)
+        public Either<DownloadException, InputStream> get(final String input)
         {
-            File f = new File(filePath, input + "." + delegate.getType());
+            final File f = new File(filePath, input + "." + delegate.getType());
             try
             {
                 if (!f.exists()) //not constructed yet
                 {
-                    FileOutputStream fout = new FileOutputStream(f);
+                    final FileOutputStream fout = new FileOutputStream(f);
                     delegate.streamResource(fout);
                     fout.flush();
                     fout.close();
                 }
-                return Either.right((InputStream)new FileInputStream(f));
+                return Either.right((InputStream) new FileInputStream(f));
             }
-            catch (IOException e)
+            catch (final IOException e)
             {
                 return Either.left(new DownloadException(e));
             }
-            catch (DownloadException e)
+            catch (final DownloadException e)
             {
                 return Either.left(new DownloadException(e));
             }
         }
     };
 
-    public static SuperBatchPluginResource createBatchFor(final PluginResource pluginResource, String hash, String temp)
+    public static SuperBatchPluginResource createBatchFor(final PluginResource pluginResource, final String hash, final String temp)
     {
-        return new SuperBatchPluginResource(ResourceUtils.getType(pluginResource.getResourceName()), pluginResource.getParams(), hash,temp);
+        return new SuperBatchPluginResource(ResourceUtils.getType(pluginResource.getResourceName()), pluginResource.getParams(), hash, temp);
     }
 
     /**
@@ -79,22 +81,22 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
      * @param type the type of resource (CSS/JS)
      * @param params the parameters (ieOnly,media)
      */
-    public SuperBatchPluginResource(final String type, final Map<String, String> params, String hash, String temp)
+    public SuperBatchPluginResource(final String type, final Map<String, String> params, final String hash, final String temp)
     {
-        this(type, params, Collections.<DownloadableResource> emptyList(),hash,temp);
+        this(type, params, Collections.<DownloadableResource> emptyList(), hash, temp);
     }
 
-    public SuperBatchPluginResource(final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, String hash, String temp)
+    public SuperBatchPluginResource(final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, final String hash, final String temp)
     {
-        this(generateResourceName(type,hash), type, params, resources,hash,temp);
+        this(generateResourceName(type, hash), type, params, resources, hash, temp);
     }
 
-    protected SuperBatchPluginResource(final String resourceName, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources,String hash,String temp)
+    protected SuperBatchPluginResource(final String resourceName, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, final String hash, final String temp)
     {
         this.resourceName = resourceName;
         delegate = new BatchPluginResource(null, type, params, resources);
         this.hash = hash;
-        this.filePath = temp;
+        filePath = temp;
     }
 
     public boolean isResourceModified(final HttpServletRequest request, final HttpServletResponse response)
@@ -104,42 +106,35 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
 
     public void serveResource(final HttpServletRequest request, final HttpServletResponse response) throws DownloadException
     {
-        if(Boolean.getBoolean(PluginUtils.ATLASSIAN_DEV_MODE))
+        if (Boolean.getBoolean(PluginUtils.ATLASSIAN_DEV_MODE))
         {
-            delegate.serveResource(request,response);
+            delegate.serveResource(request, response);
             return;
         }
         try
         {
-            OutputStream out = response.getOutputStream();
-            Enumeration<String> na = request.getParameterNames();
-            if(na.hasMoreElements())
+            final OutputStream out = response.getOutputStream();
+            final Enumeration<String> na = request.getParameterNames();
+            if (na.hasMoreElements())
             {
-                StringBuilder sb = new StringBuilder();
+                final StringBuilder sb = new StringBuilder();
                 sb.append(hash);
 
-                while(na.hasMoreElements())
+                while (na.hasMoreElements())
                 {
-                    String name = na.nextElement();
+                    final String name = na.nextElement();
                     sb.append(name).append(request.getParameter(name));
                 }
-                Either<DownloadException,InputStream> result =transformer.get(Integer.toString(sb.toString().hashCode()));
-                if(result.isRight())
-                {
-                    streamResource(result.right(),out);
-                }
-                else
-                {
-                    throw result.left();
-                }
-            }else
+                streamResource(getOrThrow(transformer.get(Integer.toString(sb.toString().hashCode()))), out);
+            }
+            else
             {
                 streamResource(out);
             }
         }
-        catch(IOException e)
+        catch (final IOException e)
         {
-          throw new DownloadException(e);
+            throw new DownloadException(e);
         }
     }
 
@@ -151,15 +146,7 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
         }
         else
         {
-            Either<DownloadException,InputStream> result = transformer.get(hash);
-            if(result.isRight())
-            {
-                streamResource(result.right(), out);
-            }
-            else
-            {
-                throw result.left();
-            }
+            streamResource(getOrThrow(transformer.get(hash)), out);
         }
     }
 
@@ -197,7 +184,7 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
             }
             catch (final IOException e)
             {
-               throw new DownloadException(e);
+                throw new DownloadException(e);
             }
         }
     }
@@ -251,16 +238,16 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
         return "[Superbatch name=" + resourceName + ", type=" + getType() + ", params=" + getParams() + "]";
     }
 
-    private static String generateResourceName(String type, String hash)
+    private static String generateResourceName(final String type, final String hash)
     {
         if (Boolean.getBoolean(PluginUtils.ATLASSIAN_DEV_MODE))
         {
-           return DEFAULT_RESOURCE_NAME_PREFIX + "." + type;
+            return DEFAULT_RESOURCE_NAME_PREFIX + "." + type;
         }
         else
         {
-           return DEFAULT_RESOURCE_NAME_PREFIX+"_"+hash + "." + type;
+            return DEFAULT_RESOURCE_NAME_PREFIX + "_" + hash + "." + type;
         }
     }
-    
+
 }

@@ -1,14 +1,17 @@
 package com.atlassian.plugin.webresource;
 
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
+import static com.atlassian.plugin.util.Either.getOrThrow;
+
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.util.Either;
 import com.atlassian.plugin.util.PluginUtils;
 import com.atlassian.plugin.util.collect.Function;
+
 import org.apache.commons.io.IOUtils;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -18,8 +21,8 @@ import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Map;
 
-import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
-import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Represents a batch of all resources that declare themselves as part of a given context(s).
@@ -43,44 +46,46 @@ class ContextBatchPluginResource implements DownloadableResource, BatchResource,
     private final String hash;
     private final String type;
     private final String filePath;
-    private final Function<String, Either<DownloadException,InputStream>> transformer = new Function<String,  Either<DownloadException,InputStream>>()
+    private final Function<String, Either<DownloadException, InputStream>> transformer = new Function<String, Either<DownloadException, InputStream>>()
     {
-        public  Either<DownloadException,InputStream> get(final String input)
+        public Either<DownloadException, InputStream> get(final String input)
         {
-            File f = new File(filePath, input + "." + type);
-            try
+            final File f = new File(filePath, input + "." + type);
             {
-                if (!f.exists()) //not constructed yet
+                try
                 {
-                    FileOutputStream fout = new FileOutputStream(f);
-                    delegate.streamResource(fout);
-                    fout.flush();
-                    fout.close();
+                    if (!f.exists())
+                    {
+                        final FileOutputStream fout = new FileOutputStream(f);
+                        delegate.streamResource(fout);
+                        fout.flush();
+                        fout.close();
+                    }
+                    return Either.right((InputStream) new FileInputStream(f));
                 }
-                return Either.right((InputStream)new FileInputStream(f));
-            }
-            catch (IOException e)
-            {
-               return Either.left(new DownloadException(e));
-            }
-            catch (DownloadException e)
-            {
-                return Either.left(new DownloadException(e));
+                catch (final IOException e)
+                {
+                    return Either.left(new DownloadException(e));
+                }
+                catch (final DownloadException e)
+                {
+                    return Either.left(e);
+                }
             }
         }
     };
 
-    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params, String filePath)
+    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params, final String filePath)
     {
-        this(key, contexts, hash, type, params, Collections.<DownloadableResource>emptyList(),filePath);
+        this(key, contexts, hash, type, params, Collections.<DownloadableResource> emptyList(), filePath);
     }
 
-    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources,String filePath)
+    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, final String filePath)
     {
         this(key, contexts, null, type, params, resources, filePath);
     }
 
-    public ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, String filePath)
+    public ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, final String filePath)
     {
         if (Boolean.getBoolean(PluginUtils.ATLASSIAN_DEV_MODE))
         {
@@ -119,12 +124,11 @@ class ContextBatchPluginResource implements DownloadableResource, BatchResource,
         {
             try
             {
-                OutputStream out = response.getOutputStream();
-                streamResource(out);
+                streamResource(response.getOutputStream());
             }
-            catch(IOException e)
+            catch (final IOException e)
             {
-              throw new DownloadException(e);
+                throw new DownloadException(e);
             }
         }
     }
@@ -137,18 +141,9 @@ class ContextBatchPluginResource implements DownloadableResource, BatchResource,
         }
         else
         {
-            Either<DownloadException,InputStream> result = transformer.get(hash);
-            if(result.isRight())
-            {
-                streamResource(result.right(), out);
-            }
-            else
-            {
-                throw result.left();
-            }
+            streamResource(getOrThrow(transformer.get(hash)), out);
         }
     }
-
 
     /**
      * Copy from the supplied OutputStream to the supplied InputStream. Note
@@ -178,8 +173,7 @@ class ContextBatchPluginResource implements DownloadableResource, BatchResource,
             }
             catch (final IOException e)
             {
-               throw new DownloadException(e);
-
+                throw new DownloadException(e);
             }
         }
     }
