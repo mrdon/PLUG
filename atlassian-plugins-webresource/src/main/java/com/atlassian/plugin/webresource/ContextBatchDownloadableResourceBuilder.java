@@ -28,24 +28,17 @@ class ContextBatchDownloadableResourceBuilder extends AbstractBatchResourceBuild
 {
     private static final Logger log = LoggerFactory.getLogger(ContextBatchDownloadableResourceBuilder.class);
     private final ResourceDependencyResolver dependencyResolver;
-    private final String tempPath;
 
     ContextBatchDownloadableResourceBuilder(final ResourceDependencyResolver dependencyResolver, final PluginAccessor pluginAccessor, final WebResourceUrlProvider webResourceUrlProvider, final DownloadableResourceFinder resourceFinder)
     {
-        this(dependencyResolver,pluginAccessor,webResourceUrlProvider,resourceFinder,System.getProperty("java.io.tmpdir"));
-    }
-
-    ContextBatchDownloadableResourceBuilder(final ResourceDependencyResolver dependencyResolver, final PluginAccessor pluginAccessor, final WebResourceUrlProvider webResourceUrlProvider, final DownloadableResourceFinder resourceFinder, final String temp)
-    {
-            super(pluginAccessor, webResourceUrlProvider, resourceFinder);
-            this.dependencyResolver = dependencyResolver;
-            this.tempPath = temp;
+        super(pluginAccessor, webResourceUrlProvider, resourceFinder);
+        this.dependencyResolver = dependencyResolver;
     }
 
     public boolean matches(final String path)
     {
         final String type = ResourceUtils.getType(path);
-        return (path.indexOf(URL_PREFIX + type) > -1);
+        return (path.indexOf(URL_PREFIX + type) > -1) && endsWith(path, DEFAULT_RESOURCE_NAME_PREFIX, ".", type);
     }
 
     public ContextBatchPluginResource parse(final String path, final Map<String, String> params)
@@ -53,11 +46,6 @@ class ContextBatchDownloadableResourceBuilder extends AbstractBatchResourceBuild
         final String type = ResourceUtils.getType(path);
         final String key = getKey(path);
         final List<String> contexts = getContexts(key);
-        String hash = path.substring(path.lastIndexOf("/")+1);
-        int index = hash.lastIndexOf(".");
-        hash = hash.substring(0,index==-1?hash.length():index);
-        index = hash.indexOf("_");
-        hash = hash.substring(index==-1?hash.length():index + 1);
 
         final Set<String> alreadyIncluded = newHashSet();
         Iterable<DownloadableResource> resources = ImmutableList.of();
@@ -73,7 +61,7 @@ class ContextBatchDownloadableResourceBuilder extends AbstractBatchResourceBuild
                 }
             }
         }
-       return new ContextBatchPluginResource(key, contexts,hash, type, params, resources,tempPath);
+        return new ContextBatchPluginResource(key, contexts, type, params, resources);
     }
 
     private String getKey(final String path)

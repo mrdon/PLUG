@@ -29,22 +29,15 @@ class ContextBatchBuilder
     private final PluginResourceLocator pluginResourceLocator;
     private final ResourceDependencyResolver dependencyResolver;
     private final ResourceBatchingConfiguration batchingConfiguration;
-    private final String tempDir;
 
     private final List<String> allIncludedResources = new ArrayList<String>();
     private final Set<String> skippedResources = new HashSet<String>();
 
     ContextBatchBuilder(final PluginResourceLocator pluginResourceLocator, final ResourceDependencyResolver dependencyResolver, ResourceBatchingConfiguration batchingConfiguration)
     {
-        this(pluginResourceLocator,dependencyResolver,batchingConfiguration,System.getProperty("java.io.tmpdir"));
-    }
-
-    ContextBatchBuilder(final PluginResourceLocator pluginResourceLocator, final ResourceDependencyResolver dependencyResolver, ResourceBatchingConfiguration batchingConfiguration, final String temp)
-    {
         this.pluginResourceLocator = pluginResourceLocator;
         this.dependencyResolver = dependencyResolver;
         this.batchingConfiguration = batchingConfiguration;
-        this.tempDir = temp;
     }
 
     Iterable<PluginResource> build(final Iterable<String> includedContexts)
@@ -67,7 +60,7 @@ class ContextBatchBuilder
 
         for (final String context : includedContexts)
         {
-            final ContextBatch contextBatch = new ContextBatch(context, dependencyResolver.getDependenciesInContext(context, skippedResources),tempDir);
+            final ContextBatch contextBatch = new ContextBatch(context, dependencyResolver.getDependenciesInContext(context, skippedResources));
             final List<ContextBatch> mergeList = new ArrayList<ContextBatch>();
             for (final WebResourceModuleDescriptor contextResource : contextBatch.getResources())
             {

@@ -49,46 +49,46 @@ public class TestSuperBatchDownloadableResourceBuilder extends TestCase
     
     public void testParseCss() throws UrlParseException
     {
-        String path = "/download/superbatch/css/"+SuperBatchPluginResource.DEFAULT_RESOURCE_NAME_PREFIX+"_.css";
+        String path = "/download/superbatch/css/batch.css";
         assertTrue(builder.matches(path));
         DownloadableResource resource = builder.parse(path, Collections.<String, String>emptyMap());
         SuperBatchPluginResource batchResource = (SuperBatchPluginResource) resource;
         assertEquals("css", batchResource.getType());
         assertEquals(batchResource.getUrl(), path);
-        assertEquals("sb_.css", batchResource.getResourceName());
+        assertEquals("batch.css", batchResource.getResourceName());
     }
 
     // For some reason the download manager doesn't strip context paths before sending it in to be matched.
     public void testParseWithContextPath()
     {
-        assertTrue(builder.matches("/confluence/download/superbatch/css/sb_.css"));
+        assertTrue(builder.matches("/confluence/download/superbatch/css/batch.css"));
     }
 
     public void testParseJavascript() throws UrlParseException
     {
-        String path = "/download/superbatch/js/"+SuperBatchPluginResource.DEFAULT_RESOURCE_NAME_PREFIX+"_.js";
+        String path = "/download/superbatch/js/batch.js";
         assertTrue(builder.matches(path));
         DownloadableResource resource = builder.parse(path, Collections.<String, String>emptyMap());
         SuperBatchPluginResource batchResource = (SuperBatchPluginResource) resource;
         assertEquals("js", batchResource.getType());
         assertEquals(batchResource.getUrl(), path);
-        assertEquals("sb_.js", batchResource.getResourceName());
+        assertEquals("batch.js", batchResource.getResourceName());
     }
 
     public void testParseWithParam() throws UrlParseException
     {
-        String path="/download/superbatch/js/"+SuperBatchPluginResource.DEFAULT_RESOURCE_NAME_PREFIX+"_.js";
+        String path="/download/superbatch/js/batch.js";
         Map<String, String> params = Collections.singletonMap("ieOnly", "true");
         DownloadableResource resource = builder.parse(path, params);
         SuperBatchPluginResource batchResource = (SuperBatchPluginResource) resource;
         assertEquals(params, batchResource.getParams());
         assertEquals(path + "?ieOnly=true", batchResource.getUrl());
-        assertEquals("sb_.js", batchResource.getResourceName());
+        assertEquals("batch.js", batchResource.getResourceName());
     }
 
     public void testParseWithParams() throws UrlParseException
     {
-        String path="/download/superbatch/js/"+SuperBatchPluginResource.DEFAULT_RESOURCE_NAME_PREFIX+"_.js";
+        String path="/download/superbatch/js/batch.js";
         Map<String, String> params = new TreeMap<String, String>();
         params.put("ieOnly", "true");
         params.put("zomg", "false");
@@ -96,12 +96,12 @@ public class TestSuperBatchDownloadableResourceBuilder extends TestCase
         SuperBatchPluginResource batchResource = (SuperBatchPluginResource) resource;
         assertEquals(params, batchResource.getParams());
         assertEquals(path + "?ieOnly=true&zomg=false", batchResource.getUrl());
-        assertEquals("sb_.js", batchResource.getResourceName());
+        assertEquals("batch.js", batchResource.getResourceName());
     }
 
     public void testNotSuperbatches()
     {
-        assertFalse("wrong path", builder.matches("/download/superbitch/css/sb_.css"));
+        assertFalse("wrong path", builder.matches("/download/superbitch/css/batch.css"));
         assertFalse("wrong path", builder.matches("/download/superbatch/css/images/foo.png"));
     }
 }

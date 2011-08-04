@@ -8,7 +8,6 @@ import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.ServletContextFactory;
 
-import com.atlassian.plugin.util.TempDirectoryProvider;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,25 +44,19 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
     public PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider,
                                      final ResourceBatchingConfiguration batchingConfiguration)
     {
-        this(webResourceIntegration, servletContextFactory, webResourceUrlProvider, new DefaultResourceDependencyResolver(webResourceIntegration, batchingConfiguration), batchingConfiguration,System.getProperty("java.io.tmpdir"));
-    }
-
-    public PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider,
-                                     final ResourceBatchingConfiguration batchingConfiguration,final TempDirectoryProvider tempDirectoryProvider)
-    {
-        this(webResourceIntegration, servletContextFactory, webResourceUrlProvider, new DefaultResourceDependencyResolver(webResourceIntegration, batchingConfiguration), batchingConfiguration, tempDirectoryProvider.getTemporaryPath());
+        this(webResourceIntegration, servletContextFactory, webResourceUrlProvider, new DefaultResourceDependencyResolver(webResourceIntegration, batchingConfiguration), batchingConfiguration);
     }
 
     private PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider,
-                                      final ResourceDependencyResolver dependencyResolver, final ResourceBatchingConfiguration batchingConfiguration, String tempdirectory)
+                                      final ResourceDependencyResolver dependencyResolver, final ResourceBatchingConfiguration batchingConfiguration)
     {
         this.pluginAccessor = webResourceIntegration.getPluginAccessor();
         this.webResourceUrlProvider = webResourceUrlProvider;
         this.batchingConfiguration = batchingConfiguration;
         final SingleDownloadableResourceBuilder singlePluginBuilder = new SingleDownloadableResourceBuilder(pluginAccessor, servletContextFactory);
         builders = Collections.unmodifiableList(Arrays.asList(new SuperBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor,
-            webResourceUrlProvider, singlePluginBuilder,tempdirectory), new SuperBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder),
-            new ContextBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor, webResourceUrlProvider, singlePluginBuilder,tempdirectory),
+            webResourceUrlProvider, singlePluginBuilder), new SuperBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder),
+            new ContextBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor, webResourceUrlProvider, singlePluginBuilder),
             new ContextBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder), new SingleBatchDownloadableResourceBuilder(pluginAccessor,
                 webResourceUrlProvider, singlePluginBuilder), singlePluginBuilder));
 
