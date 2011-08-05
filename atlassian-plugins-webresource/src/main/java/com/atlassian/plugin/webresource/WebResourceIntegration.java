@@ -2,6 +2,7 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.PluginAccessor;
 
+import java.io.File;
 import java.util.Map;
 
 /**
@@ -90,5 +91,17 @@ public interface WebResourceIntegration
      * @return null if the url should not have a locale component
      */
     String getStaticResourceLocale();
+
+    /**
+     * A reference to the temporary directory the application want the plugin system to use. The temporary directory can
+     * be cleared at any time by the application and can be used by the plugin system to cache things like batches or
+     * other things that can easily be re-generated. It is recommended that this directory is unique to the plugin system
+     * such as /apphome/temp/plugincache/. The directory does not need to exist.
+     * @return a File reference to the temporary directory. This can not return null, if the application does not have
+     * a preference it can append a unique name to the directory given by the "java.io.tempdir" system property
+     *  and return it as a File.
+     * @since 2.9.0
+     */
+    File getTemporaryDirectory();
 
 }
