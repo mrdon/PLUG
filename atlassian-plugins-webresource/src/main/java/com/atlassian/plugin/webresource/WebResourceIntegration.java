@@ -95,11 +95,12 @@ public interface WebResourceIntegration
     /**
      * A reference to the temporary directory the application want the plugin system to use. The temporary directory can
      * be cleared at any time by the application and can be used by the plugin system to cache things like batches or
-     * other things that can easily be re-generated. It is recommended that this directory is unique to the plugin system
-     * such as /apphome/temp/plugincache/. The directory does not need to exist.
+     * other things that can easily be re-generated. It is recommended that this directory be /apphome/tmp/webresources.
+     * The plugin system can delete any or all files it sees fit that exists under this directory at any time.
+     * The directory does not need to exist. 
      * @return a File reference to the temporary directory. This can not return null, if the application does not have
      * a preference it can append a unique name to the directory given by the "java.io.tempdir" system property
-     *  and return it as a File.
+     *  and return it as a File. NOTE it should NOT return the java.io.tempdir but a unique directory underneath that.
      * @since 2.9.0
      */
     File getTemporaryDirectory();
