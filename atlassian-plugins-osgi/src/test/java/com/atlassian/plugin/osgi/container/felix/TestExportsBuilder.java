@@ -86,7 +86,12 @@ public class TestExportsBuilder extends TestCase
             System.setProperty("java.specification.version", "1.5");
             String exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
             assertFalse(exports.contains("javax.script"));
+            
             System.setProperty("java.specification.version", "1.6");
+            exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
+            assertTrue(exports.contains("javax.script"));
+
+            System.setProperty("java.specification.version", "1.7");
             exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
             assertTrue(exports.contains("javax.script"));
         }
@@ -95,7 +100,6 @@ public class TestExportsBuilder extends TestCase
             System.setProperty("java.specification.version", jdkVersion);
         }
     }
-
 
     public void testGenerateExports() throws MalformedURLException
     {

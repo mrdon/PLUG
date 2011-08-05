@@ -98,7 +98,8 @@ class ExportsBuilder
         constructJdkExports(origExports, JDK_PACKAGES_PATH);
         origExports.append(",");
 
-        if (System.getProperty("java.specification.version").equals("1.6")) {
+        if (System.getProperty("java.specification.version").equals("1.6")
+                || System.getProperty("java.specification.version").equals("1.7")) {
             constructJdkExports(origExports, JDK6_PACKAGES_PATH);
             origExports.append(",");
         }
