@@ -66,7 +66,7 @@ public class TestExportsBuilder extends TestCase
         assertTrue(imports.contains("javax.swing.event"));
     }
 
-    public void testConstructJdkExportsWithJdk5And6()
+    public void testConstructJdkExportsWithJdk5And6And7()
     {
         String jdkVersion = System.getProperty("java.specification.version");
         try
@@ -74,7 +74,12 @@ public class TestExportsBuilder extends TestCase
             System.setProperty("java.specification.version", "1.5");
             String exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
             assertFalse(exports.contains("javax.script"));
+
             System.setProperty("java.specification.version", "1.6");
+            exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
+            assertTrue(exports.contains("javax.script"));
+
+            System.setProperty("java.specification.version", "1.7");
             exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
             assertTrue(exports.contains("javax.script"));
         }
