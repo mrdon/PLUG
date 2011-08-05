@@ -101,7 +101,8 @@ class ExportsBuilder
         copyUnlessExist(exportPackages, parseExportFile(JDK_PACKAGES_PATH));
 
         // may need jdk6 packages too.
-        if (System.getProperty("java.specification.version").equals("1.6")) {
+        if (System.getProperty("java.specification.version").equals("1.6")
+                || System.getProperty("java.specification.version").equals("1.7")) {
             copyUnlessExist(exportPackages, parseExportFile(JDK6_PACKAGES_PATH));
         }
 
