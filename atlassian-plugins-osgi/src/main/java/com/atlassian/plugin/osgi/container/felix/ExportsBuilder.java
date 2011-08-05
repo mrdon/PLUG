@@ -33,6 +33,10 @@ import java.util.Map;
  */
 class ExportsBuilder
 {
+    static final String JDK_5 = "1.5";
+    static final String JDK_6 = "1.6";
+    static final String JDK_7 = "1.7";
+
     static final String OSGI_PACKAGES_PATH = "osgi-packages.txt";
     static final String JDK_PACKAGES_PATH = "jdk-packages.txt";
     static final String JDK6_PACKAGES_PATH = "jdk6-packages.txt";
@@ -113,7 +117,7 @@ class ExportsBuilder
         copyUnlessExist(exportPackages, parseExportFile(JDK_PACKAGES_PATH));
 
         // may need jdk6 packages too.
-        if (System.getProperty("java.specification.version").equals("1.6")) {
+        if (isRunningJdk6OrLater()) {
             copyUnlessExist(exportPackages, parseExportFile(JDK6_PACKAGES_PATH));
         }
 
@@ -144,6 +148,17 @@ class ExportsBuilder
         }
 
         return exports;
+    }
+
+    private boolean isRunningJdk6OrLater()
+    {
+        return getJavaVersion().equals(JDK_6)
+                || getJavaVersion().equals(JDK_7);
+    }
+
+    static String getJavaVersion()
+    {
+        return System.getProperty("java.specification.version");
     }
 
     private void enforceFrameworkVersion(Map<String, String> exportPackages)

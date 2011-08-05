@@ -32,9 +32,8 @@ import java.util.List;
 public class TestExportsBuilder extends TestCase
 {
     private ExportsBuilder builder;
-  private String osgiVersionString;
 
-  @Override
+    @Override
     public void setUp() throws Exception
     {
         builder = new ExportsBuilder();
@@ -66,22 +65,29 @@ public class TestExportsBuilder extends TestCase
         assertTrue(imports.contains("javax.swing.event"));
     }
 
-    public void testConstructJdkExportsWithJdk5And6()
+    public void testConstructJdkExportsWithJdk5And6And7()
     {
-        String jdkVersion = System.getProperty("java.specification.version");
+        final String jdkVersion = ExportsBuilder.getJavaVersion();
         try
         {
-            System.setProperty("java.specification.version", "1.5");
-            String exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
-            assertFalse(exports.contains("javax.script"));
-            System.setProperty("java.specification.version", "1.6");
-            exports = builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
-            assertTrue(exports.contains("javax.script"));
+            setJavaVersion(ExportsBuilder.JDK_5);
+            assertFalse(exports().contains("javax.script"));
+
+            setJavaVersion(ExportsBuilder.JDK_6);
+            assertTrue(exports().contains("javax.script"));
+
+            setJavaVersion(ExportsBuilder.JDK_7);
+            assertTrue(exports().contains("javax.script"));
         }
         finally
         {
-            System.setProperty("java.specification.version", jdkVersion);
+            setJavaVersion(jdkVersion);
         }
+    }
+
+    private String exports()
+    {
+        return builder.determineExports(new ArrayList<HostComponentRegistration>(), new DefaultPackageScannerConfiguration());
     }
 
     public void testDetermineExportWhileConflictExists()
@@ -126,7 +132,7 @@ public class TestExportsBuilder extends TestCase
 
         String exports = builder.determineExports(ImmutableList.<HostComponentRegistration>of(new MockRegistration(new Dummy1(){}, Dummy1.class)), config);
 
-        osgiVersionString = new DefaultOsgiVersionConverter().getVersion(PluginFrameworkUtils.getPluginFrameworkVersion());
+        final String osgiVersionString = new DefaultOsgiVersionConverter().getVersion(PluginFrameworkUtils.getPluginFrameworkVersion());
         assertTrue("any packages under com.atlassian.plugin must be exported as the framework version: " + osgiVersionString + ", but is: " + exports,
                 exports.contains("com.atlassian.plugin.testpackage1;version=" + osgiVersionString + ","));
         assertFalse("any packages under com.atlassian.plugin must be exported as the framework version",
@@ -160,7 +166,7 @@ public class TestExportsBuilder extends TestCase
         config.setJarExcludes(Collections.<String>emptyList());
         try
         {
-            exports = builder.generateExports(config);
+            builder.generateExports(config);
             fail("Should have thrown an exception");
         }
         catch (IllegalStateException ex)
@@ -174,7 +180,7 @@ public class TestExportsBuilder extends TestCase
         config.setServletContext(null);
         try
         {
-            exports = builder.generateExports(config);
+            builder.generateExports(config);
             fail("Should have thrown an exception");
         }
         catch (IllegalStateException ex)
@@ -212,7 +218,8 @@ public class TestExportsBuilder extends TestCase
         assertEquals(0, pkgsToFind);
     }
 
-
-
-
+    private static void setJavaVersion(String jdkVersion)
+    {
+        System.setProperty("java.specification.version", jdkVersion);
+    }
 }
