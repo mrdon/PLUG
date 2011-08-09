@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.atlassian.plugins</groupId>
         <artifactId>atlassian-plugins-parent</artifactId>
-        <version>2.6.5</version>
+        <version>2.6.6-SNAPSHOT</version>
     </parent>
 
     <artifactId>atlassian-plugins-osgi-events</artifactId>
