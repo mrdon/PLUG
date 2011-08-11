@@ -33,13 +33,11 @@ import java.util.Map;
  */
 class ExportsBuilder
 {
-    static final String JDK_5 = "1.5";
     static final String JDK_6 = "1.6";
     static final String JDK_7 = "1.7";
 
     static final String OSGI_PACKAGES_PATH = "osgi-packages.txt";
     static final String JDK_PACKAGES_PATH = "jdk-packages.txt";
-    static final String JDK6_PACKAGES_PATH = "jdk6-packages.txt";
 
     private static Logger log = LoggerFactory.getLogger(ExportsBuilder.class);
     private static String exportStringCache;
@@ -115,11 +113,6 @@ class ExportsBuilder
 
         // The second part is JDK packages.
         copyUnlessExist(exportPackages, parseExportFile(JDK_PACKAGES_PATH));
-
-        // may need jdk6 packages too.
-        if (isRunningJdk6OrLater()) {
-            copyUnlessExist(exportPackages, parseExportFile(JDK6_PACKAGES_PATH));
-        }
 
         // Third part by scanning packages available via classloader. The versions are determined by jar names.
         Collection<ExportPackage> scannedPackages = generateExports(packageScannerConfig);

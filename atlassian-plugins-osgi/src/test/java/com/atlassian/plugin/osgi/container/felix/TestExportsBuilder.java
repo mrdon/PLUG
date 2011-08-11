@@ -70,9 +70,6 @@ public class TestExportsBuilder extends TestCase
         final String jdkVersion = ExportsBuilder.getJavaVersion();
         try
         {
-            setJavaVersion(ExportsBuilder.JDK_5);
-            assertFalse(exports().contains("javax.script"));
-
             setJavaVersion(ExportsBuilder.JDK_6);
             assertTrue(exports().contains("javax.script"));
 
