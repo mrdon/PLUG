@@ -31,6 +31,8 @@ import java.util.List;
 
 public class TestExportsBuilder extends TestCase
 {
+    private static final String JAVA_VERSION_KEY = "java.specification.version";
+    
     private ExportsBuilder builder;
 
     @Override
@@ -65,9 +67,9 @@ public class TestExportsBuilder extends TestCase
         assertTrue(imports.contains("javax.swing.event"));
     }
 
-    public void testConstructJdkExportsWithJdk5And6And7()
+    public void testConstructJdkExportsWithJdk6And7()
     {
-        final String jdkVersion = ExportsBuilder.getJavaVersion();
+        final String jdkVersion = getJavaVersion();
         try
         {
             setJavaVersion(ExportsBuilder.JDK_6);
@@ -217,6 +219,12 @@ public class TestExportsBuilder extends TestCase
 
     private static void setJavaVersion(String jdkVersion)
     {
-        System.setProperty("java.specification.version", jdkVersion);
+        System.setProperty(JAVA_VERSION_KEY, jdkVersion);
     }
+
+    private String getJavaVersion()
+    {
+        return System.getProperty(JAVA_VERSION_KEY);
+    }
+
 }

@@ -143,17 +143,6 @@ class ExportsBuilder
         return exports;
     }
 
-    private boolean isRunningJdk6OrLater()
-    {
-        return getJavaVersion().equals(JDK_6)
-                || getJavaVersion().equals(JDK_7);
-    }
-
-    static String getJavaVersion()
-    {
-        return System.getProperty("java.specification.version");
-    }
-
     private void enforceFrameworkVersion(Map<String, String> exportPackages)
     {
         final String frameworkVersion = PluginFrameworkUtils.getPluginFrameworkVersion();
