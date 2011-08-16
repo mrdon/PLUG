@@ -7,6 +7,7 @@ import static com.atlassian.plugin.webresource.SuperBatchPluginResource.DEFAULT_
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Sets.newHashSet;
 
+import com.atlassian.plugin.FileCacheService;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.servlet.DownloadableResource;
 
@@ -15,7 +16,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import java.io.File;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,17 +31,25 @@ class ContextBatchDownloadableResourceBuilder extends AbstractBatchResourceBuild
 {
     private static final Logger log = LoggerFactory.getLogger(ContextBatchDownloadableResourceBuilder.class);
     private final ResourceDependencyResolver dependencyResolver;
+    private final FileCacheService fileCacheService;
+    private static final Set<String> validTypes = new HashSet<String>(3); //we only ever expect to have 2 entries, and 2/0.75 (the load factor) gives 2.7 so setting the size to 3 means it is never re-hashed
+    static{
+        validTypes.add("js");
+        validTypes.add("css");
+    }
 
-    ContextBatchDownloadableResourceBuilder(final ResourceDependencyResolver dependencyResolver, final PluginAccessor pluginAccessor, final WebResourceUrlProvider webResourceUrlProvider, final DownloadableResourceFinder resourceFinder)
+
+    ContextBatchDownloadableResourceBuilder(final ResourceDependencyResolver dependencyResolver, final PluginAccessor pluginAccessor, final WebResourceUrlProvider webResourceUrlProvider, final DownloadableResourceFinder resourceFinder, final FileCacheService temp)
     {
-        super(pluginAccessor, webResourceUrlProvider, resourceFinder);
-        this.dependencyResolver = dependencyResolver;
+            super(pluginAccessor, webResourceUrlProvider, resourceFinder);
+            this.dependencyResolver = dependencyResolver;
+            this.fileCacheService = temp;
     }
 
     public boolean matches(final String path)
     {
         final String type = ResourceUtils.getType(path);
-        return (path.indexOf(URL_PREFIX + type) > -1) && endsWith(path, DEFAULT_RESOURCE_NAME_PREFIX, ".", type);
+        return (path.indexOf(URL_PREFIX + type) > -1) && validTypes.contains(type);
     }
 
     public ContextBatchPluginResource parse(final String path, final Map<String, String> params)
@@ -46,6 +57,7 @@ class ContextBatchDownloadableResourceBuilder extends AbstractBatchResourceBuild
         final String type = ResourceUtils.getType(path);
         final String key = getKey(path);
         final List<String> contexts = getContexts(key);
+        final String hash = ResourceUtils.hash(ResourceUtils.getFileName(path));
 
         final Set<String> alreadyIncluded = newHashSet();
         Iterable<DownloadableResource> resources = ImmutableList.of();
@@ -61,7 +73,7 @@ class ContextBatchDownloadableResourceBuilder extends AbstractBatchResourceBuild
                 }
             }
         }
-        return new ContextBatchPluginResource(key, contexts, type, params, resources);
+       return new ContextBatchPluginResource(key, contexts,hash, type, params, resources,fileCacheService);
     }
 
     private String getKey(final String path)

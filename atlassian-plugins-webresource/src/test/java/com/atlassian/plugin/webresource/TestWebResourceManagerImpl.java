@@ -11,6 +11,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
+import com.atlassian.plugin.util.PluginUtils;
 import org.dom4j.DocumentException;
 
 import java.io.StringWriter;
@@ -262,8 +263,8 @@ public class TestWebResourceManagerImpl extends TestCase
         assertFalse(resources.contains(resourceA + ".css"));
         assertFalse(resources.contains(resourceB + ".css"));
         assertFalse(resources.contains(resourceC + ".css"));
-        assertTrue(resources.contains("/contextbatch/css/foo/batch.css"));
-        assertFalse(resources.contains("/contextbatch/css/bar/batch.css"));
+        assertTrue(resources.contains("/contextbatch/css/foo/foo.css"));
+        assertFalse(resources.contains("/contextbatch/css/bar/bar.css"));
 
         // write includes for all resources for "bar":
         webResourceManager.requireResourcesForContext("bar");
@@ -273,8 +274,8 @@ public class TestWebResourceManagerImpl extends TestCase
         assertFalse(resources.contains(resourceA + ".css"));
         assertFalse(resources.contains(resourceB + ".css"));
         assertFalse(resources.contains(resourceC + ".css"));
-        assertFalse(resources.contains("/contextbatch/css/foo/batch.css"));
-        assertTrue(resources.contains("/contextbatch/css/bar/batch.css"));
+        assertFalse(resources.contains("/contextbatch/css/foo/foo.css"));
+        assertTrue(resources.contains("/contextbatch/css/bar/bar.css"));
     }
 
     public void testGetResourceContextWithCondition() throws ClassNotFoundException, DocumentException
@@ -311,7 +312,7 @@ public class TestWebResourceManagerImpl extends TestCase
         final String tags = webResourceManager.getRequiredResources();
         assertTrue(tags.contains(resource1));
         assertFalse(tags.contains(resource2));
-        assertTrue(tags.contains("foo/batch.js"));
+        assertTrue(tags.contains("foo/foo.js"));
     }
 
     private Map<String, Object> setupRequestCache()
@@ -769,24 +770,39 @@ public class TestWebResourceManagerImpl extends TestCase
     public void testSuperBatchResolution() throws DocumentException, ClassNotFoundException
     {
         setupSuperBatch();
+        String value = System.getProperty(PluginUtils.ATLASSIAN_DEV_MODE);
+        System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "true");
+        try
+        {
+            TestUtils.setupSuperbatchTestContent(mockPluginAccessor, testPlugin);
 
-        TestUtils.setupSuperbatchTestContent(mockPluginAccessor, testPlugin);
+            final List<PluginResource> cssResources = webResourceManager.getSuperBatchResources(CssWebResource.FORMATTER);
+            assertEquals(2, cssResources.size());
 
-        final List<PluginResource> cssResources = webResourceManager.getSuperBatchResources(CssWebResource.FORMATTER);
-        assertEquals(2, cssResources.size());
+            final SuperBatchPluginResource superBatch1 = (SuperBatchPluginResource) cssResources.get(0);
+            assertEquals("superbatch.css", superBatch1.getResourceName());
+            assertTrue(superBatch1.getParams().isEmpty());
 
-        final SuperBatchPluginResource superBatch1 = (SuperBatchPluginResource) cssResources.get(0);
-        assertEquals("batch.css", superBatch1.getResourceName());
-        assertTrue(superBatch1.getParams().isEmpty());
+            final SuperBatchPluginResource superBatch2 = (SuperBatchPluginResource) cssResources.get(1);
+            assertEquals("superbatch.css", superBatch2.getResourceName());
+            assertEquals("true", superBatch2.getParams().get("ieonly"));
 
-        final SuperBatchPluginResource superBatch2 = (SuperBatchPluginResource) cssResources.get(1);
-        assertEquals("batch.css", superBatch2.getResourceName());
-        assertEquals("true", superBatch2.getParams().get("ieonly"));
-
-        final List<PluginResource> jsResources = webResourceManager.getSuperBatchResources(JavascriptWebResource.FORMATTER);
-        assertEquals(1, jsResources.size());
-        assertEquals("batch.js", jsResources.get(0).getResourceName());
-        assertEquals(0, jsResources.get(0).getParams().size());
+            final List<PluginResource> jsResources = webResourceManager.getSuperBatchResources(JavascriptWebResource.FORMATTER);
+            assertEquals(1, jsResources.size());
+            assertEquals("superbatch.js", jsResources.get(0).getResourceName());
+            assertEquals(0, jsResources.get(0).getParams().size());
+        }
+        finally
+        {
+            if (value == null)
+            {
+                System.getProperties().remove(PluginUtils.ATLASSIAN_DEV_MODE);
+            }
+            else
+            {
+                System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, value);
+            }
+        }
     }
 
 
