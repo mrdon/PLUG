@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
 
@@ -465,6 +467,43 @@ public class TestWebResourceManagerImpl extends TestCase
         final String result = requiredResourceWriter.toString();
         assertTrue(result.contains(resourceB));
     }
+
+    public void testIncludeResourcesWithSharedDependencies() throws Exception
+    {
+        final String resourceA = "test.atlassian:a";
+        final String resourceB = "test.atlassian:b";
+        final String resourceShared = "test.atlassian:c";
+
+        when(mockBatchingConfiguration.getSuperBatchModuleCompleteKeys()).thenReturn(Arrays.asList(resourceB));
+
+        webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, mockUrlProvider, mockBatchingConfiguration);
+
+        final List<ResourceDescriptor> resourceDescriptorsA = TestUtils.createResourceDescriptors("resourceA.css");
+        final List<ResourceDescriptor> resourceDescriptorsB = TestUtils.createResourceDescriptors("resourceB.css");
+        final List<ResourceDescriptor> resourceDescriptorsShared = TestUtils.createResourceDescriptors("resourceC.css");
+
+        // A depends on C
+        mockEnabledPluginModule(resourceA, TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA,
+            Collections.singletonList(resourceShared)));
+        // B depends on C
+        mockEnabledPluginModule(resourceB, TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, resourceDescriptorsB,
+            Collections.singletonList(resourceShared)));
+        mockEnabledPluginModule(resourceShared, TestUtils.createWebResourceModuleDescriptor(resourceShared, testPlugin, resourceDescriptorsShared,
+            Collections.<String> emptyList()));
+
+        final StringWriter requiredResourceWriter = new StringWriter();
+        webResourceManager.includeResources(Arrays.<String> asList(resourceA, resourceB), requiredResourceWriter, UrlMode.ABSOLUTE);
+        final String result = requiredResourceWriter.toString();
+        assertTrue(result.contains(resourceA));
+        assertTrue(result.contains(resourceB));
+
+        Pattern resourceCount = Pattern.compile("/download/batch/test\\.atlassian:c/test\\.atlassian:c.css");
+        Matcher m = resourceCount.matcher(result);
+
+        assertTrue(m.find());
+        assertFalse(m.find(m.end()));
+    }
+
 
     public void testRequireResourcesAreClearedAfterIncludesResourcesIsCalled() throws Exception
     {

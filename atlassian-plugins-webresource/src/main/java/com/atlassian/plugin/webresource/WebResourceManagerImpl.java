@@ -146,12 +146,12 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void includeResources(final Iterable<String> moduleCompleteKeys, final Writer writer, final UrlMode urlMode)
     {
-        Iterable<String> resources = new LinkedHashSet<String>();
+        Set<String> resources = new LinkedHashSet<String>();
         for (final String moduleCompleteKey : moduleCompleteKeys)
         {
             // Include resources from the super batch as we don't include the super batch itself
             final Iterable<String> dependencies = transformModuleDescriptorsToModuleKeys(dependencyResolver.getDependencies(moduleCompleteKey, false));
-            resources = concat(resources, dependencies);
+            addAll(resources, dependencies);
         }
         writeResourceTags(getModuleResources(resources, Collections.<String> emptyList(), DefaultWebResourceFilter.INSTANCE), writer, urlMode);
     }
