@@ -2,11 +2,14 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.FileCacheService;
 import com.atlassian.plugin.ModuleDescriptor;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
@@ -146,13 +149,16 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void includeResources(final Iterable<String> moduleCompleteKeys, final Writer writer, final UrlMode urlMode)
     {
-        Set<String> resources = new LinkedHashSet<String>();
+        Iterable<String> resources = Lists.newArrayList();
         for (final String moduleCompleteKey : moduleCompleteKeys)
         {
             // Include resources from the super batch as we don't include the super batch itself
             final Iterable<String> dependencies = transformModuleDescriptorsToModuleKeys(dependencyResolver.getDependencies(moduleCompleteKey, false));
-            addAll(resources, dependencies);
+            resources = concat(resources, dependencies);
         }
+
+        // Resolve duplicates
+        resources = ImmutableSet.copyOf(resources);
         writeResourceTags(getModuleResources(resources, Collections.<String> emptyList(), DefaultWebResourceFilter.INSTANCE), writer, urlMode);
     }
 
