@@ -844,6 +844,132 @@ public class TestWebResourceManagerImpl extends TestCase
         }
     }
 
+    // First part: push onto a non-empty WRM context and write out.
+    //             Check that the expected resources are included in the inner write out and that the outer resources aren't included
+    // Second part: after popping, write the outer resources out, checking that we didn't get the inner resources and that we did get
+    //              the resources which were on the stack before pushing.
+    public void testPushAndPopExclusivity() throws Exception
+    {
+
+        final String moduleKey1 = "cool-resources";
+        final String moduleKey2 = "hot-resources";
+        final String completeModuleKey1 = "test.atlassian:" + moduleKey1;
+        final String completeModuleKey2 = "test.atlassian:" + moduleKey2;
+
+        final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.js", "cool.css", "more-cool.css");
+        final List<ResourceDescriptor> resourceDescriptors2 = TestUtils.createResourceDescriptors("hot.js", "hot.css", "more-hot.css");
+
+        final Plugin plugin = TestUtils.createTestPlugin();
+
+        setupRequestCache();
+
+        mockEnabledPluginModule(completeModuleKey1, TestUtils.createWebResourceModuleDescriptor(completeModuleKey1, plugin, resourceDescriptors1));
+        mockEnabledPluginModule(completeModuleKey2, TestUtils.createWebResourceModuleDescriptor(completeModuleKey2, plugin, resourceDescriptors2));
+
+        final String cssRef1 = completeModuleKey1 + "/" + completeModuleKey1 + ".css";
+        final String cssRef2 = completeModuleKey2 + "/" + completeModuleKey2 + ".css";
+        final String jsRef1 = completeModuleKey1 + "/" + completeModuleKey1 + ".js";
+        final String jsRef2 = completeModuleKey2 + "/" + completeModuleKey2 + ".js";
+
+        // test includeResources(writer, type) method
+        webResourceManager.requireResource(completeModuleKey1);
+        Object context = webResourceManager.push();
+        webResourceManager.requireResource(completeModuleKey2);
+
+        StringWriter writer = new StringWriter();
+        webResourceManager.includeResources(writer);
+        String resources = writer.toString();
+
+        assertTrue(!resources.contains(cssRef1));
+        assertTrue(resources.contains(cssRef2));
+
+        assertTrue(!resources.contains(jsRef1));
+        assertTrue(resources.contains(jsRef2));
+
+        webResourceManager.pop(context);
+
+        writer = new StringWriter();
+        webResourceManager.includeResources(writer);
+        resources = writer.toString();
+
+        assertTrue(resources.contains(cssRef1));
+        assertTrue(!resources.contains(cssRef2));
+
+        assertTrue(resources.contains(jsRef1));
+        assertTrue(!resources.contains(jsRef2));
+
+    }
+
+    // Push onto an empty WRM context, pop and write out, checking that we didn't get any resources
+    public void testPushAndPopOnEmptyBase() throws ClassNotFoundException, DocumentException
+    {
+        final String moduleKey1 = "cool-resources";
+        final String completeModuleKey1 = "test.atlassian:" + moduleKey1;
+
+        final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.js", "cool.css", "more-cool.css");
+
+        final Plugin plugin = TestUtils.createTestPlugin();
+
+        setupRequestCache();
+
+        mockEnabledPluginModule(completeModuleKey1, TestUtils.createWebResourceModuleDescriptor(completeModuleKey1, plugin, resourceDescriptors1));
+
+        final String cssRef1 = completeModuleKey1 + "/" + completeModuleKey1 + ".css";
+        final String jsRef1 = completeModuleKey1 + "/" + completeModuleKey1 + ".js";
+
+        // test includeResources(writer, type) method
+        Object context = webResourceManager.push();
+
+        webResourceManager.requireResource(completeModuleKey1);
+
+        StringWriter writer = new StringWriter();
+        webResourceManager.includeResources(writer);
+        String resources = writer.toString();
+
+        assertTrue(resources.contains(cssRef1));
+        assertTrue(resources.contains(jsRef1));
+
+        webResourceManager.pop(context);
+
+        writer = new StringWriter();
+        webResourceManager.includeResources(writer);
+        resources = writer.toString();
+
+        assertTrue(!resources.contains(cssRef1));
+        assertTrue(!resources.contains(jsRef1));
+    }
+
+    // push onto an empty context, require but don't include resources, pop and ensure that we've still got no resources
+    public void testPushAndPopWithoutWriting() throws ClassNotFoundException, DocumentException
+    {
+        final String moduleKey1 = "cool-resources";
+        final String completeModuleKey1 = "test.atlassian:" + moduleKey1;
+
+        final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.js", "cool.css", "more-cool.css");
+
+        final Plugin plugin = TestUtils.createTestPlugin();
+
+        setupRequestCache();
+
+        mockEnabledPluginModule(completeModuleKey1, TestUtils.createWebResourceModuleDescriptor(completeModuleKey1, plugin, resourceDescriptors1));
+
+        final String cssRef1 = completeModuleKey1 + "/" + completeModuleKey1 + ".css";
+        final String jsRef1 = completeModuleKey1 + "/" + completeModuleKey1 + ".js";
+
+        // test includeResources(writer, type) method
+        Object context = webResourceManager.push();
+
+        webResourceManager.requireResource(completeModuleKey1);
+        webResourceManager.pop(context);
+
+        StringWriter writer = new StringWriter();
+        webResourceManager.includeResources(writer);
+        String resources = writer.toString();
+
+        // check that we didn't get these resources (meaning that the require resources call never caused the module to be included)
+        assertTrue(!resources.contains(cssRef1));
+        assertTrue(!resources.contains(jsRef1));
+    }
 
     private void setupSuperBatch()
     {

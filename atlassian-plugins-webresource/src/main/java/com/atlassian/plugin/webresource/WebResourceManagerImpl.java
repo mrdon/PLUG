@@ -501,6 +501,42 @@ public class WebResourceManagerImpl implements WebResourceManager
         return webResourceUrlProvider.getStaticPluginResourceUrl(moduleDescriptor, resourceName, urlMode);
     }
 
+    public Object push()
+    {
+        //Get the contexts and resources for the current state
+        Set<String> contexts = getOrCreateFromRequestCache(REQUEST_CACHE_CONTEXT_KEY);
+        Set<String> resources = getOrCreateFromRequestCache(REQUEST_CACHE_RESOURCE_KEY);
+
+        // wrap them into a WebResourceRequestContext
+        WebResourceRequestContext context = new WebResourceRequestContext();
+        context.setContexts(contexts);
+        context.setResources(resources);
+
+        //and delete them from the request cache
+        final Map<String, Object> cache = webResourceIntegration.getRequestCache();
+        cache.remove(REQUEST_CACHE_CONTEXT_KEY);
+        cache.remove(REQUEST_CACHE_RESOURCE_KEY);
+        return context;
+    }
+
+    public void pop(Object oldState)
+    {
+        // try and get an WebResourceRequestContext out of oldState
+        WebResourceRequestContext oldContext;
+        try {
+            oldContext = (WebResourceRequestContext) oldState;
+        } catch (ClassCastException e) {
+            // if the object was the wrong type return
+            return;
+        }
+
+        final Map<String, Object> cache = webResourceIntegration.getRequestCache();
+
+        cache.put(REQUEST_CACHE_CONTEXT_KEY, oldContext.getContexts());
+        cache.put(REQUEST_CACHE_RESOURCE_KEY, oldContext.getResources());
+
+    }
+
     private Iterable<String> transformModuleDescriptorsToModuleKeys(Iterable<WebResourceModuleDescriptor> descriptors)
     {
         return transform(descriptors, new TransformDescriptorToKey());

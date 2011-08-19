@@ -434,6 +434,21 @@ public interface WebResourceManager
     void setIncludeMode(IncludeMode includeMode);
 
     /**
+     * Pushes a new context onto the WebResourceManager. Resources required before calling push will not be included until a matching pop call is made
+     *
+     * @return a reference to the state of the WebResourceManager before this push call was made. Clients must hold onto this reference to provide it
+     * to WebResourceManager on calling pop.
+     */
+    Object push();
+
+    /**
+     * pops a previously pushed context.
+     *
+     * @param oldState an Object returned from a prior push call
+     */
+    void pop(Object oldState);
+
+    /**
      * @deprecated Since 2.2. Use {@link #requireResource(String, Writer, UrlMode)} instead.
      */
     @Deprecated
