@@ -8,15 +8,18 @@ import static com.google.common.collect.Iterables.contains;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Sets.newHashSet;
 
-import com.atlassian.plugin.FileCacheService;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +38,6 @@ class ContextBatch
     private static final String UTF8 = "UTF-8";
     private static final String MD5 = "MD5";
     private static final Ordering<ModuleDescriptor<?>> MODULE_KEY_ORDERING = Ordering.natural().onResultOf(new TransformDescriptorToKey());
-    private final FileCacheService fileCacheService;
 
     /**
      * Merges two context batches into a single context batch.
@@ -50,7 +52,7 @@ class ContextBatch
         final Iterable<WebResourceModuleDescriptor> resources = concat(b1.getResources(), b2.getResources());
         // Merge assumes that the merged batched doesn't overlap with the current one.
         final Iterable<PluginResourceBatchParams> params = concat(b1.getResourceParams(), b2.getResourceParams());
-        return new ContextBatch(key, contexts, resources, params,b1.fileCacheService);
+        return new ContextBatch(key, contexts, resources, params);
     }
 
     private final String key;
@@ -59,17 +61,16 @@ class ContextBatch
     private final Iterable<String> resourceKeys;
     private final Set<PluginResourceBatchParams> resourceParams;
 
-    ContextBatch(final String context, final Iterable<WebResourceModuleDescriptor> resources, final FileCacheService temp)
+    ContextBatch(final String context, final Iterable<WebResourceModuleDescriptor> resources)
     {
-        this(context, ImmutableList.of(context), resources, ImmutableList.<PluginResourceBatchParams> of(),temp);
+        this(context, ImmutableList.of(context), resources, ImmutableList.<PluginResourceBatchParams> of());
     }
 
-    ContextBatch(final String key, final Iterable<String> contexts, final Iterable<WebResourceModuleDescriptor> resources, final Iterable<PluginResourceBatchParams> resourceParams, final FileCacheService temp)
+    ContextBatch(final String key, final Iterable<String> contexts, final Iterable<WebResourceModuleDescriptor> resources, final Iterable<PluginResourceBatchParams> resourceParams)
     {
         this.key = key;
         this.contexts = copyOf(contexts);
         this.resourceParams = newHashSet(resourceParams);
-        this.fileCacheService = temp;
 
         // Note: Ordering is important in producing a consistent hash.
         // But, dependency order is not important when producing the PluginResource,
@@ -102,17 +103,39 @@ class ContextBatch
 
     Iterable<PluginResource> buildPluginResources()
     {
-        final String hash = ResourceUtils.createHash(resources);
+        final String hash = createHash();
         return transform(resourceParams, new Function<PluginResourceBatchParams, PluginResource>()
         {
             public PluginResource apply(final PluginResourceBatchParams param)
             {
-                return new ContextBatchPluginResource(key, contexts, hash, param.getType(), param.getParameters(), fileCacheService);
+                return new ContextBatchPluginResource(key, contexts, hash, param.getType(), param.getParameters());
             }
         });
     }
 
+    private String createHash()
+    {
+        try
+        {
+            MessageDigest md5 = MessageDigest.getInstance(MD5);
+            for (WebResourceModuleDescriptor moduleDescriptor : resources)
+            {
+                String version = moduleDescriptor.getPlugin().getPluginInformation().getVersion();
+                md5.update(moduleDescriptor.getCompleteKey().getBytes(UTF8));
+                md5.update(version.getBytes(UTF8));
+            }
 
+            return new String(Hex.encodeHex(md5.digest()));
+        }
+        catch (NoSuchAlgorithmException e)
+        {
+            throw new AssertionError("MD5 hashing algorithm is not available.");
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            throw new AssertionError("UTF-8 encoding is not available.");
+        }
+    }
 
     String getKey()
     {

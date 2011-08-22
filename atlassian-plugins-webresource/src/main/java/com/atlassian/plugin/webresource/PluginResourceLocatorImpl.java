@@ -2,15 +2,12 @@ package com.atlassian.plugin.webresource;
 
 import static com.atlassian.plugin.webresource.AbstractBatchResourceBuilder.skipBatch;
 
-import com.atlassian.plugin.FileCacheService;
-import com.atlassian.plugin.FileCacheServiceImpl;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.ServletContextFactory;
 
-import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +32,6 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
     final private WebResourceUrlProvider webResourceUrlProvider;
     final private ResourceBatchingConfiguration batchingConfiguration;
     final private List<DownloadableResourceBuilder> builders;
-    final private FileCacheService fileCacheService;
 
     static final String RESOURCE_SOURCE_PARAM = "source";
     static final String RESOURCE_BATCH_PARAM = "batch";
@@ -57,11 +53,10 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
         this.pluginAccessor = webResourceIntegration.getPluginAccessor();
         this.webResourceUrlProvider = webResourceUrlProvider;
         this.batchingConfiguration = batchingConfiguration;
-        fileCacheService = new FileCacheServiceImpl(webResourceIntegration,Integer.getInteger(PluginUtils.FILE_CACHE_SIZE, 10));
         final SingleDownloadableResourceBuilder singlePluginBuilder = new SingleDownloadableResourceBuilder(pluginAccessor, servletContextFactory);
         builders = Collections.unmodifiableList(Arrays.asList(new SuperBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor,
-            webResourceUrlProvider, singlePluginBuilder, fileCacheService), new SuperBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder),
-            new ContextBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor, webResourceUrlProvider, singlePluginBuilder, fileCacheService),
+            webResourceUrlProvider, singlePluginBuilder), new SuperBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder),
+            new ContextBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor, webResourceUrlProvider, singlePluginBuilder),
             new ContextBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder), new SingleBatchDownloadableResourceBuilder(pluginAccessor,
                 webResourceUrlProvider, singlePluginBuilder), singlePluginBuilder));
 

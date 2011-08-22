@@ -3,13 +3,11 @@ package com.atlassian.plugin.webresource;
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Iterables.transform;
 
-import com.atlassian.plugin.FileCacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -31,17 +29,15 @@ class ContextBatchBuilder
     private final PluginResourceLocator pluginResourceLocator;
     private final ResourceDependencyResolver dependencyResolver;
     private final ResourceBatchingConfiguration batchingConfiguration;
-    private final FileCacheService fileCacheService;
 
     private final List<String> allIncludedResources = new ArrayList<String>();
     private final Set<String> skippedResources = new HashSet<String>();
 
-    ContextBatchBuilder(final PluginResourceLocator pluginResourceLocator, final ResourceDependencyResolver dependencyResolver, ResourceBatchingConfiguration batchingConfiguration, final FileCacheService temp)
+    ContextBatchBuilder(final PluginResourceLocator pluginResourceLocator, final ResourceDependencyResolver dependencyResolver, ResourceBatchingConfiguration batchingConfiguration)
     {
         this.pluginResourceLocator = pluginResourceLocator;
         this.dependencyResolver = dependencyResolver;
         this.batchingConfiguration = batchingConfiguration;
-        this.fileCacheService = temp;
     }
 
     Iterable<PluginResource> build(final Iterable<String> includedContexts)
@@ -64,7 +60,7 @@ class ContextBatchBuilder
 
         for (final String context : includedContexts)
         {
-            final ContextBatch contextBatch = new ContextBatch(context, dependencyResolver.getDependenciesInContext(context, skippedResources), fileCacheService);
+            final ContextBatch contextBatch = new ContextBatch(context, dependencyResolver.getDependenciesInContext(context, skippedResources));
             final List<ContextBatch> mergeList = new ArrayList<ContextBatch>();
             for (final WebResourceModuleDescriptor contextResource : contextBatch.getResources())
             {

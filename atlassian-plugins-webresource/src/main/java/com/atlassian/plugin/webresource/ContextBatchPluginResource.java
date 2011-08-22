@@ -1,30 +1,28 @@
 package com.atlassian.plugin.webresource;
 
-import com.atlassian.plugin.FileCacheService;
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
+
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
-import com.atlassian.plugin.util.PluginUtils;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Map;
 
-import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
-import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Represents a batch of all resources that declare themselves as part of a given context(s).
- * <p/>
+ *
  * The URL for batch resources is /download/contextbatch/&lt;type>/&lt;contextname>/batch.&lt;type. The additional type part in the path
  * is simply there to make the number of path-parts identical with other resources, so relative URLs will still work
  * in CSS files.
  *
  * @since 2.9.0
  */
-class ContextBatchPluginResource extends AbstractFileCacheResource implements DownloadableResource, BatchResource, PluginResource
+class ContextBatchPluginResource implements DownloadableResource, BatchResource, PluginResource
 {
     static final String CONTEXT_SEPARATOR = ",";
 
@@ -37,31 +35,23 @@ class ContextBatchPluginResource extends AbstractFileCacheResource implements Do
     private final Iterable<String> contexts;
     private final String hash;
 
-    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params, final FileCacheService fileCacheService)
+    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params)
     {
-        this(key, contexts, hash, type, params, Collections.<DownloadableResource>emptyList(), fileCacheService);
+        this(key, contexts, hash, type, params, Collections.<DownloadableResource> emptyList());
     }
 
-    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, final FileCacheService cacheService)
+    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources)
     {
-        this(key, contexts, null, type, params, resources, cacheService);
+        this(key, contexts, null, type, params, resources);
     }
 
-    public ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, final FileCacheService fileCacheService)
+    private ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources)
     {
-        super(fileCacheService);
-        if(isFileCacheEnabled()){
-            resourceName = key + "-" +hash +"." + type;
-        }
-        else
-        {
-            resourceName = key +"." + type;
-        }
-
+        resourceName = DEFAULT_RESOURCE_NAME_PREFIX + "." + type;
         delegate = new BatchPluginResource(null, type, params, resources);
         this.key = key;
         this.contexts = contexts;
-        this.hash = ammendHashWithLocale(hash); //we only need this to pick the file, the hash in the resource name is irrelevant to us here.
+        this.hash = hash;
     }
 
     Iterable<String> getContexts()
@@ -76,33 +66,12 @@ class ContextBatchPluginResource extends AbstractFileCacheResource implements Do
 
     public void serveResource(final HttpServletRequest request, final HttpServletResponse response) throws DownloadException
     {
-        if (Boolean.getBoolean(PluginUtils.ATLASSIAN_DEV_MODE))
-        {
-            delegate.serveResource(request, response);
-        }
-        else
-        {
-            try
-            {
-                streamResource(response.getOutputStream());
-            }
-            catch (final IOException e)
-            {
-                throw new DownloadException(e);
-            }
-        }
+        delegate.serveResource(request, response);
     }
 
     public void streamResource(final OutputStream out) throws DownloadException
     {
-        if (isFileCacheEnabled())
-        {
-            streamResource(getStream(hash, delegate.getType(), delegate), out);
-        }
-        else
-        {
-            delegate.streamResource(out);
-        }
+        delegate.streamResource(out);
     }
 
     public String getContentType()

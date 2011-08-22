@@ -20,13 +20,6 @@ public class PluginUtils
     public static final String ATLASSIAN_DEV_MODE = "atlassian.dev.mode";
 
     /**
-     * Used to customise the size of the LRU cache for files. This effectively controls how many files will be created
-     * by the file cache. Providing a negative number results in undefined behaviour.
-     * @since 2.9.3
-     */
-    public static final String FILE_CACHE_SIZE = "atlassian.file.cache.size";
-
-    /**
      * System property for storing and retrieving the time the plugin system will wait for the enabling of a plugin in
      * seconds
      * @since 2.3.6
