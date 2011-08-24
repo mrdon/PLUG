@@ -1,6 +1,5 @@
 package com.atlassian.plugin.osgi.util;
 
-import aQute.lib.header.OSGiHeader;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.util.ClassLoaderUtils;

@@ -1,12 +1,9 @@
 package com.atlassian.plugin.osgi.factory.transform.model;
 
-import aQute.lib.header.OSGiHeader;
-
 import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
 
-import org.apache.commons.lang.Validate;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 
 /**
