@@ -8,7 +8,7 @@
 
     <groupId>com.atlassian.plugins</groupId>
     <artifactId>atlassian-plugins-parent</artifactId>
-    <version>2.9.1-alpha2-newbnd-SNAPSHOT</version>
+    <version>2.9.1-alpha2-newbnd</version>
     <packaging>pom</packaging>
 
     <name>Atlassian Plugins - Parent POM</name>
@@ -32,9 +32,9 @@
     </ciManagement>
 
     <scm>
-        <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.9.1-alpha2</connection>
-        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.9.1-alpha2</developerConnection>
-        <url>https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.9.1-alpha2</url>
+        <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.9.1-alpha2-newbnd</connection>
+        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.9.1-alpha2-newbnd</developerConnection>
+        <url>https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.9.1-alpha2-newbnd</url>
     </scm>
 
     <modules>
