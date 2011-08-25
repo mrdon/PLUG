@@ -4,5 +4,5 @@ import com.atlassian.plugin.osgi.factory.transform.test.SomeClass;
 
 public interface Barable
 {
-    SomeClass getSomeClass();
+    @DummyAnnotation SomeClass getSomeClass(Integer blah);
 }

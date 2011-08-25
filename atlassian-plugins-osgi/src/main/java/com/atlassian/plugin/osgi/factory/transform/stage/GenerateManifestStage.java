@@ -83,6 +83,7 @@ public class GenerateManifestStage implements TransformStage
                     // skip any manifest manipulation by bnd
                     return;
                 }
+                // otherwise, it is system determined.
                 else
                 {
                     // Possibly necessary due to Spring XML creation

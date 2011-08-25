@@ -1,5 +1,7 @@
 package com.atlassian.plugin.osgi.util;
 
+import aQute.lib.osgi.ClassDataCollector;
+import aQute.lib.osgi.Resource;
 import aQute.libg.header.OSGiHeader;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
@@ -10,6 +12,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -18,6 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -237,31 +242,84 @@ public class OsgiHeaderUtil
         if (log.isDebugEnabled())
             log.debug("Crawling "+className);
 
-        InputStream in = null;
+        StreamResource classResource = null;
         try
         {
-            in = ClassLoaderUtils.getResourceAsStream(className, OsgiHeaderUtil.class);
+            InputStream in = ClassLoaderUtils.getResourceAsStream(className, OsgiHeaderUtil.class);
+//            URL classUrl = ClassLoaderUtils.getResource(className, OsgiHeaderUtil.class);
 
             if (in == null)
             {
                 log.error("Cannot find interface "+className);
                 return;
             }
-            Clazz clz = new Clazz(className, in);
 
-            // ignore java packages.
-            packageImports.addAll(Sets.filter(clz.getReferred().keySet(), JAVA_PACKAGE_FILTER));
+//            if (classUrl == null)
+//            {
+//                log.error("Cannot find interface "+className);
+//                return;
+//            }
+            classResource = new StreamResource(in);
+            aQute.lib.osgi.Clazz clazz = new aQute.lib.osgi.Clazz(className, classResource);
 
             // ignore classes in java packages.
-            Set<String> referredClasses = Sets.filter(clz.getReferredClasses(), JAVA_CLASS_FILTER);
+            final Set<String> allReferredClasses = new HashSet<String>();
+            try
+            {
+                // TODO: Perhaps, we should start scanning for annotation as well. It is doable via this ClassDataCollector.
+                clazz.parseClassFileWithCollector(new ClassDataCollector() {
+
+                    @Override
+                    public void extendsClass(String name)
+                    {
+                        allReferredClasses.add(name);
+                    }
+
+                    @Override
+                    public void implementsInterfaces(String[] names)
+                    {
+                        for(String name:names)
+                        {
+                            allReferredClasses.add(name);
+                        }
+                    }
+
+                    @Override
+                    public void addReference(String name)
+                    {
+                        // the class name is in the form "abc.def.ghi" instead of "abc/def/ghi" which is different from others for unknown reason.
+                        allReferredClasses.add(StringUtils.replace(name, ".", "/"));
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                throw new IOException("Error parsing class file", e);
+            }
+
+            Set<String> referredClasses = Sets.filter(allReferredClasses, JAVA_CLASS_FILTER);
             for (String ref : referredClasses)
-                crawlReferenceTree(ref, scannedClasses, packageImports, level-1);
+            {
+                crawlReferenceTree(ref + ".class", scannedClasses, packageImports, level-1);
+            }
+
+            // ignore java packages.
+            packageImports.addAll(Sets.filter(clazz.getReferred(), JAVA_PACKAGE_FILTER));
+
+//            // ignore classes in java packages.
+//            Set<String> referredClasses = Sets.filter(clzgetReferredClasses(), JAVA_CLASS_FILTER);
+//            for (String ref : referredClasses)
+//                crawlReferenceTree(ref, scannedClasses, packageImports, level-1);
         }
         finally
         {
-            IOUtils.closeQuietly(in);
+            if (classResource != null)
+            {
+                classResource.close();
+            }
         }
     }
+
 
     /**
      * Parses an OSGi header line into a map structure
@@ -415,5 +473,46 @@ public class OsgiHeaderUtil
         sb.delete(0, 1);
 
         return sb.toString();
+    }
+
+    public static class StreamResource implements Resource
+    {
+        private String extra;
+        private InputStream inputStream;
+
+        public StreamResource(InputStream inputStream)
+        {
+            this.inputStream = inputStream;
+        }
+
+        public InputStream openInputStream() throws Exception
+        {
+            return inputStream;
+        }
+
+        public void write(OutputStream out) throws Exception
+        {
+            throw new UnsupportedOperationException("Not for write");
+        }
+
+        public long lastModified()
+        {
+            return -1;
+        }
+
+        public void setExtra(String extra)
+        {
+            this.extra = extra;
+        }
+
+        public String getExtra()
+        {
+            return extra;
+        }
+
+        public void close()
+        {
+            IOUtils.closeQuietly(inputStream);
+        }
     }
 }
