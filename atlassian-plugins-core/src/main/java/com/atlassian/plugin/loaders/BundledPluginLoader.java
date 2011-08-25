@@ -1,6 +1,8 @@
 package com.atlassian.plugin.loaders;
 
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginArtifact;
+import com.atlassian.plugin.PluginArtifactBackedPlugin;
 import com.atlassian.plugin.event.PluginEventManager;
 import com.atlassian.plugin.factories.PluginFactory;
 import com.atlassian.plugin.impl.AbstractDelegatingPlugin;
@@ -37,6 +39,10 @@ public class BundledPluginLoader extends ScanningPluginLoader
     @Override
     protected Plugin postProcess(final Plugin plugin)
     {
+        if (plugin instanceof PluginArtifactBackedPlugin)
+        {
+            return new BundledPluginArtifactBackedPluginDelegate((PluginArtifactBackedPlugin)plugin);
+        }
         return new BundledPluginDelegate(plugin);
     }
 
@@ -97,7 +103,7 @@ public class BundledPluginLoader extends ScanningPluginLoader
     /**
      * Delegate that overrides methods to enforce bundled plugin behavior
      *
-     * @Since 2.2.0
+     * @since 2.2.0
      */
     private static class BundledPluginDelegate extends AbstractDelegatingPlugin
     {
@@ -117,6 +123,26 @@ public class BundledPluginLoader extends ScanningPluginLoader
         public boolean isDeleteable()
         {
             return false;
+        }
+    }
+
+    /**
+     * Delegate that overrides methods to enforce bundled plugin behavior for {@link PluginArtifactBackedPlugin} implementors
+     * @since 2.9.3
+     */
+    private static class BundledPluginArtifactBackedPluginDelegate extends BundledPluginDelegate implements PluginArtifactBackedPlugin
+    {
+        private final PluginArtifactBackedPlugin delegate;
+
+        private BundledPluginArtifactBackedPluginDelegate(final PluginArtifactBackedPlugin delegate)
+        {
+            super(delegate);
+            this.delegate = delegate;
+        }
+
+        public PluginArtifact getPluginArtifact()
+        {
+            return delegate.getPluginArtifact();
         }
     }
 }
