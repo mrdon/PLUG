@@ -119,7 +119,7 @@ public class GenerateManifestStage implements TransformStage
                 properties.put(Analyzer.BUNDLE_VERSION, info.getVersion());
 
                 // remove the verbose Include-Resource entry from generated manifest
-                properties.put(Analyzer.REMOVE_HEADERS, Analyzer.INCLUDE_RESOURCE);
+                properties.put(Analyzer.REMOVEHEADERS, Analyzer.INCLUDE_RESOURCE);
 
                 header(properties, Analyzer.BUNDLE_DESCRIPTION, info.getDescription());
                 header(properties, Analyzer.BUNDLE_NAME, parser.getKey());
@@ -336,7 +336,11 @@ public class GenerateManifestStage implements TransformStage
         {
             if (!exImport.startsWith("java."))
             {
-                Map attrs = originalImports.get(exImport);
+                // the extraImportPackage here can be in the form 'package;version=blah'. We only use the package component to check if it's already required.
+                final String extraImportPackage = StringUtils.split(exImport, ';')[0];
+
+                Map attrs = originalImports.get(extraImportPackage);
+                // if the package is already required by the import directive supplied by plugin developer, we use the supplied one.
                 if (attrs != null)
                 {
                     Object resolution = attrs.get(RESOLUTION_DIRECTIVE);
@@ -345,6 +349,7 @@ public class GenerateManifestStage implements TransformStage
                         attrs.put(RESOLUTION_DIRECTIVE, Constants.RESOLUTION_MANDATORY);
                     }
                 }
+                // otherwise, it is system determined.
                 else
                 {
                     originalImports.put(exImport, Collections.<String, String>emptyMap());

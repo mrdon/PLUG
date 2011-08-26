@@ -461,9 +461,9 @@ public class TestHostComponentSpringStage extends TestCase
                 {
                     assertTrue(add(new StubHostComponentRegistration("foo", new Fooable()
                     {
-                        public SomeClass getSomeClass()
+                        public SomeClass getSomeClass(Integer blah)
                         {
-                            return null;  //To change body of implemented methods use File | Settings | File Templates.
+                            return null;
                         }
                     }, Barable.class, Fooable.class)));
                 }

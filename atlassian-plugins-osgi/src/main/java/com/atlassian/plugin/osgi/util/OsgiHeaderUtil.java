@@ -1,15 +1,17 @@
 package com.atlassian.plugin.osgi.util;
 
-import aQute.lib.header.OSGiHeader;
+import aQute.lib.osgi.Clazz;
+import aQute.libg.header.OSGiHeader;
 import com.atlassian.plugin.osgi.factory.OsgiPlugin;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.util.ClassUtils;
+import com.atlassian.plugin.osgi.util.ClassBinaryScanner.InputStreamResource;
+import com.atlassian.plugin.osgi.util.ClassBinaryScanner.ScanResult;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import org.apache.commons.io.IOUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -237,31 +239,40 @@ public class OsgiHeaderUtil
         if (log.isDebugEnabled())
             log.debug("Crawling "+className);
 
-        InputStream in = null;
+        InputStreamResource classBinaryResource = null;
         try
         {
-            in = ClassLoaderUtils.getResourceAsStream(className, OsgiHeaderUtil.class);
-
+            // look for the class binary by asking class loader.
+            InputStream in = ClassLoaderUtils.getResourceAsStream(className, OsgiHeaderUtil.class);
             if (in == null)
             {
-                log.error("Cannot find interface "+className);
+                log.error("Cannot find class: [" + className + "]");
                 return;
             }
-            Clazz clz = new Clazz(className, in);
 
-            // ignore java packages.
-            packageImports.addAll(Sets.filter(clz.getReferred().keySet(), JAVA_PACKAGE_FILTER));
+            // read the class binary and scan it.
+            classBinaryResource = new InputStreamResource(in);
+            final ScanResult scanResult = ClassBinaryScanner.scanClassBinary(new Clazz(className, classBinaryResource));
 
-            // ignore classes in java packages.
-            Set<String> referredClasses = Sets.filter(clz.getReferredClasses(), JAVA_CLASS_FILTER);
+            // remember all the imported packages. ignore java packages.
+            packageImports.addAll(Sets.filter(scanResult.getReferredPackages(), JAVA_PACKAGE_FILTER));
+
+            // crawl
+            Set<String> referredClasses = Sets.filter(scanResult.getReferredClasses(), JAVA_CLASS_FILTER);
             for (String ref : referredClasses)
-                crawlReferenceTree(ref, scannedClasses, packageImports, level-1);
+            {
+                crawlReferenceTree(ref + ".class", scannedClasses, packageImports, level-1);
+            }
         }
         finally
         {
-            IOUtils.closeQuietly(in);
+            if (classBinaryResource != null)
+            {
+                classBinaryResource.close();
+            }
         }
     }
+
 
     /**
      * Parses an OSGi header line into a map structure
@@ -416,4 +427,5 @@ public class OsgiHeaderUtil
 
         return sb.toString();
     }
+
 }

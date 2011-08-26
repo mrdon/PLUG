@@ -483,7 +483,7 @@ public class TestGenerateManifestStage extends TestCase
         context.getBndInstructions().put("Export-Package", "!*.internal.*,*");
         final Attributes attrs = executeStage(context);
         assertEquals("test.plugin", attrs.getValue(Constants.BUNDLE_SYMBOLICNAME));
-        assertEquals("foo", attrs.getValue(Constants.EXPORT_PACKAGE));
+        assertEquals("foo;version=\"1.0\"", attrs.getValue(Constants.EXPORT_PACKAGE));
     }
 
     public void testGenerateManifestWithHostAndExternalImports() throws Exception

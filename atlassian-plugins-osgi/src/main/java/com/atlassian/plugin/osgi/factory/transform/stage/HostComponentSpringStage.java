@@ -1,5 +1,6 @@
 package com.atlassian.plugin.osgi.factory.transform.stage;
 
+import aQute.lib.osgi.Clazz;
 import com.atlassian.plugin.osgi.factory.transform.TransformStage;
 import com.atlassian.plugin.osgi.factory.transform.TransformContext;
 import com.atlassian.plugin.osgi.factory.transform.PluginTransformationException;
@@ -8,11 +9,13 @@ import com.atlassian.plugin.osgi.factory.transform.model.SystemExports;
 import com.atlassian.plugin.osgi.hostcomponents.HostComponentRegistration;
 import com.atlassian.plugin.osgi.hostcomponents.PropertyBuilder;
 import com.atlassian.plugin.osgi.hostcomponents.ComponentRegistrar;
-import com.atlassian.plugin.osgi.util.Clazz;
+import com.atlassian.plugin.osgi.util.ClassBinaryScanner;
 import com.atlassian.plugin.osgi.util.OsgiHeaderUtil;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.util.ClassLoaderUtils;
 import com.atlassian.plugin.util.PluginUtils;
+import com.atlassian.plugin.osgi.util.ClassBinaryScanner.InputStreamResource;
+import com.atlassian.plugin.osgi.util.ClassBinaryScanner.ScanResult;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.apache.commons.io.IOUtils;
@@ -188,17 +191,17 @@ public class HostComponentSpringStage implements TransformStage
                 if (path.endsWith(".class"))
                 {
                     entries.add(path.substring(0, path.length() - ".class".length()));
-                    Clazz cls = new Clazz(path, new BufferedInputStream(new UnclosableFilterInputStream(zin)));
-                    superClassNames.add(cls.getSuperClassName());
-                    Set<String> referredClasses = cls.getReferredClasses();
-                    for (String ref : referredClasses)
+                    final Clazz cls = new Clazz(path, new InputStreamResource(new BufferedInputStream(new UnclosableFilterInputStream(zin))));
+                    final ScanResult scanResult = ClassBinaryScanner.scanClassBinary(cls);
+
+                    superClassNames.add(scanResult.getSuperClass());
+                    for (String ref : scanResult.getReferredClasses())
                     {
-                        String name = TransformStageUtils.jarPathToClassName(ref);
+                        String name = TransformStageUtils.jarPathToClassName(ref + ".class");
                         if (allHostComponents.contains(name))
                         {
                             matchedHostComponents.add(name);
                         }
-
                     }
                 }
                 else if (path.endsWith(".jar") && innerJarPaths.contains(path))
