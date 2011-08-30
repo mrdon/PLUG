@@ -1,6 +1,7 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
@@ -430,18 +431,16 @@ public class WebResourceManagerImpl implements WebResourceManager
         return webResourceUrlProvider.getStaticPluginResourceUrl(moduleDescriptor, resourceName, urlMode);
     }
 
-    public void executeInNewContext(Callable<Void> nestedExecution) throws Exception
+    public <T> T executeInNewContext(Supplier<T> nestedExecution)
     {
-
+        // store state
         WebResourceRequestState state = preserveState();
-        try
-        {
-            nestedExecution.call();
-        }
-        finally
-        {
-            restoreState(state);
-        }
+        // execute the 'callback', storing the return value
+        T executionReturn = nestedExecution.get();
+        // restore state
+        restoreState(state);
+        // and return what we got from the nestedExecution
+        return executionReturn;
     }
 
     private WebResourceRequestState preserveState()

@@ -1,9 +1,9 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
+import com.google.common.base.Supplier;
 
 import java.io.Writer;
-import java.util.concurrent.Callable;
 
 /**
  * Manage 'css', 'javascript' and other 'resources' that are usually linked at the top of pages using {@code <script>
@@ -435,16 +435,19 @@ public interface WebResourceManager
     void setIncludeMode(IncludeMode includeMode);
 
     /**
-     * Executes a callable within a new WebResourceManager context. The request-local state manipulated by requireResource
+     * Executes a Supplier within a new WebResourceManager context. The request-local state manipulated by requireResource
      * and requireResourcesForContext is preserved, an empty state is initialized for the execution of nestedExecution and
      * after the nestedExecution is run, the old state is restored.
+     *
+     * If no return is required from the nestedExecution then Suppier<Void> can be used.
      *
      * Useful for rendering of pages which include nested pages (such as gadgets), which need to resolve the requirements
      * of the inner pages without polluting the outer page's resources.
      *
      * @param nestedExecution the code to be executed in the empty context.
+     * @return the value returned by nestedExection.get()
      */
-    void executeInNewContext(Callable<Void> nestedExecution) throws Exception;
+    <T> T executeInNewContext(Supplier<T> nestedExecution);
 
     /**
      * @deprecated Since 2.2. Use {@link #requireResource(String, Writer, UrlMode)} instead.

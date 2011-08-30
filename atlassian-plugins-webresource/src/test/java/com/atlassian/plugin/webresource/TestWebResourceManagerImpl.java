@@ -11,6 +11,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 
+import com.google.common.base.Supplier;
 import org.dom4j.DocumentException;
 
 import java.io.StringWriter;
@@ -858,9 +859,9 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // test includeResources(writer, type) method
         webResourceManager.requireResource(completeModuleKey1);
-        webResourceManager.executeInNewContext(new Callable<Void>()
+        webResourceManager.executeInNewContext(new Supplier<Void>()
         {
-            public Void call() throws Exception
+            public Void get()
             {
                 webResourceManager.requireResource(completeModuleKey2);
 
@@ -908,9 +909,9 @@ public class TestWebResourceManagerImpl extends TestCase
         final String jsRef1 = completeModuleKey1 + "/" + completeModuleKey1 + ".js";
 
         // test includeResources(writer, type) method
-        webResourceManager.executeInNewContext(new Callable<Void>()
+        webResourceManager.executeInNewContext(new Supplier<Void>()
         {
-            public Void call() throws Exception
+            public Void get()
             {
                 webResourceManager.requireResource(completeModuleKey1);
 
@@ -952,9 +953,9 @@ public class TestWebResourceManagerImpl extends TestCase
         final String jsRef1 = completeModuleKey1 + "/" + completeModuleKey1 + ".js";
 
         // test includeResources(writer, type) method
-        webResourceManager.executeInNewContext(new Callable<Void>()
+        webResourceManager.executeInNewContext(new Supplier<Void>()
         {
-            public Void call() throws Exception
+            public Void get()
             {
                 webResourceManager.requireResource(completeModuleKey1);
                 return null;
@@ -1006,15 +1007,15 @@ public class TestWebResourceManagerImpl extends TestCase
         webResourceManager.requireResource(completeModuleKey1);
 
         // nest middle resource context (requests module 2)
-        webResourceManager.executeInNewContext(new Callable<Void>()
+        webResourceManager.executeInNewContext(new Supplier<Void>()
         {
-            public Void call() throws Exception
+            public Void get()
             {
                 webResourceManager.requireResource(completeModuleKey2);
                 // nest inner-most resource context (requests module 3)
-                webResourceManager.executeInNewContext(new Callable<Void>()
+                webResourceManager.executeInNewContext(new Supplier<Void>()
                 {
-                    public Void call() throws Exception
+                    public Void get()
                     {
                         webResourceManager.requireResource(completeModuleKey3);
 
