@@ -446,6 +446,7 @@ public interface WebResourceManager
      *
      * @param nestedExecution the code to be executed in the empty context.
      * @return the value returned by nestedExection.get()
+     * @since 2.10.0
      */
     <T> T executeInNewContext(Supplier<T> nestedExecution);
 

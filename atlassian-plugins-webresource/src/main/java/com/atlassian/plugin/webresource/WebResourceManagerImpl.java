@@ -433,41 +433,26 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public <T> T executeInNewContext(Supplier<T> nestedExecution)
     {
+        // store a reference to the cache
+        final Map<String, Object> requestCache = webResourceIntegration.getRequestCache();
         // store state
-        WebResourceRequestState state = preserveState();
-        // execute the 'callback', storing the return value
-        T executionReturn = nestedExecution.get();
-        // restore state
-        restoreState(state);
-        // and return what we got from the nestedExecution
-        return executionReturn;
-    }
+        final Map<String, Object> storedState = Collections.unmodifiableMap(requestCache);
 
-    private WebResourceRequestState preserveState()
-    {
-        //Get the contexts and resources for the current state
-        Set<String> contexts = getOrCreateFromRequestCache(REQUEST_CACHE_CONTEXT_KEY);
-        Set<String> resources = getOrCreateFromRequestCache(REQUEST_CACHE_RESOURCE_KEY);
-
-        // wrap them into a WebResourceRequestState
-        WebResourceRequestState state = new WebResourceRequestState();
-        state.setContexts(contexts);
-        state.setResources(resources);
-
-        //and delete them from the request cache
-        final Map<String, Object> cache = webResourceIntegration.getRequestCache();
-        cache.remove(REQUEST_CACHE_CONTEXT_KEY);
-        cache.remove(REQUEST_CACHE_RESOURCE_KEY);
-        return state;
-    }
-
-    private void restoreState(WebResourceRequestState oldState)
-    {
-        final Map<String, Object> cache = webResourceIntegration.getRequestCache();
-
-        cache.put(REQUEST_CACHE_CONTEXT_KEY, oldState.getContexts());
-        cache.put(REQUEST_CACHE_RESOURCE_KEY, oldState.getResources());
-
+        // clear the cache, as the nestedExecution must be executed in an empty environment
+        requestCache.clear();
+        // execute the 'callback', returning its return value
+        try
+        {
+            return nestedExecution.get();
+        }
+        finally
+        {
+            // restore state, regardless of what happened
+            // we have to clear first to handle the following case:
+            //    nestedExecution wrote to the cache with a key that isn't in storedState. In this case we don't want
+            requestCache.clear();
+            requestCache.putAll(storedState);
+        }
     }
 
     private Iterable<String> transformModuleDescriptorsToModuleKeys(Iterable<WebResourceModuleDescriptor> descriptors)
