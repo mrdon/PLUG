@@ -2,6 +2,7 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.ModuleDescriptor;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
@@ -20,7 +21,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
 import static com.google.common.collect.Iterables.addAll;
 import static com.google.common.collect.Iterables.concat;
@@ -436,7 +436,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         // store a reference to the cache
         final Map<String, Object> requestCache = webResourceIntegration.getRequestCache();
         // store state
-        final Map<String, Object> storedState = Collections.unmodifiableMap(requestCache);
+        final Map<String, Object> storedState = ImmutableMap.copyOf(requestCache);
 
         // clear the cache, as the nestedExecution must be executed in an empty environment
         requestCache.clear();
