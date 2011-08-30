@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,7 +52,7 @@ public class TestWebResourceManagerImpl extends TestCase
 
         pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, null, mockUrlProvider, mockBatchingConfiguration);
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, mockUrlProvider,
-            mockBatchingConfiguration);
+                mockBatchingConfiguration);
 
         when(mockUrlProvider.getBaseUrl()).thenReturn(BASEURL);
         when(mockUrlProvider.getBaseUrl(UrlMode.ABSOLUTE)).thenReturn(BASEURL);
@@ -110,9 +111,9 @@ public class TestWebResourceManagerImpl extends TestCase
         final Plugin plugin = TestUtils.createTestPlugin("test.atlassian", "1", AlwaysTrueCondition.class, AlwaysFalseCondition.class);
 
         mockEnabledPluginModule(resource1,
-            new WebResourceModuleDescriptorBuilder(plugin, "cool-stuff").setCondition(AlwaysTrueCondition.class).addDescriptor("cool.js").build());
+                new WebResourceModuleDescriptorBuilder(plugin, "cool-stuff").setCondition(AlwaysTrueCondition.class).addDescriptor("cool.js").build());
         mockEnabledPluginModule(resource2,
-            new WebResourceModuleDescriptorBuilder(plugin, "hot-stuff").setCondition(AlwaysFalseCondition.class).addDescriptor("hot.js").build());
+                new WebResourceModuleDescriptorBuilder(plugin, "hot-stuff").setCondition(AlwaysFalseCondition.class).addDescriptor("hot.js").build());
 
         setupRequestCache();
         webResourceManager.requireResource(resource1);
@@ -130,7 +131,7 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // cool-stuff depends on hot-stuff
         mockEnabledPluginModule(resource, TestUtils.createWebResourceModuleDescriptor(resource, testPlugin,
-            Collections.<ResourceDescriptor> emptyList(), Collections.singletonList(dependencyResource)));
+                Collections.<ResourceDescriptor>emptyList(), Collections.singletonList(dependencyResource)));
         mockEnabledPluginModule(dependencyResource, TestUtils.createWebResourceModuleDescriptor(dependencyResource, testPlugin));
 
         final Map<String, Object> requestCache = setupRequestCache();
@@ -150,11 +151,11 @@ public class TestWebResourceManagerImpl extends TestCase
         final Plugin plugin = TestUtils.createTestPlugin("test.atlassian", "1", AlwaysTrueCondition.class, AlwaysFalseCondition.class);
 
         mockEnabledPluginModule(
-            resource1,
-            new WebResourceModuleDescriptorBuilder(plugin, "cool-stuff").setCondition(AlwaysTrueCondition.class).addDependency(resource2).addDescriptor(
-                "cool.js").build());
+                resource1,
+                new WebResourceModuleDescriptorBuilder(plugin, "cool-stuff").setCondition(AlwaysTrueCondition.class).addDependency(resource2).addDescriptor(
+                        "cool.js").build());
         mockEnabledPluginModule(resource2,
-            new WebResourceModuleDescriptorBuilder(plugin, "hot-stuff").setCondition(AlwaysFalseCondition.class).addDescriptor("hot.js").build());
+                new WebResourceModuleDescriptorBuilder(plugin, "hot-stuff").setCondition(AlwaysFalseCondition.class).addDescriptor("hot.js").build());
 
         setupRequestCache();
         webResourceManager.requireResource(resource1);
@@ -171,9 +172,9 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // cool-stuff and hot-stuff depend on each other
         mockEnabledPluginModule(resource1, TestUtils.createWebResourceModuleDescriptor(resource1, testPlugin,
-            Collections.<ResourceDescriptor> emptyList(), Collections.singletonList(resource2)));
+                Collections.<ResourceDescriptor>emptyList(), Collections.singletonList(resource2)));
         mockEnabledPluginModule(resource2, TestUtils.createWebResourceModuleDescriptor(resource2, testPlugin,
-            Collections.<ResourceDescriptor> emptyList(), Collections.singletonList(resource1)));
+                Collections.<ResourceDescriptor>emptyList(), Collections.singletonList(resource1)));
 
         final Map<String, Object> requestCache = setupRequestCache();
         webResourceManager.requireResource(resource1);
@@ -195,15 +196,15 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // A depends on B, C
         mockEnabledPluginModule(resourceA, TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin,
-            Collections.<ResourceDescriptor> emptyList(), Arrays.asList(resourceB, resourceC)));
+                Collections.<ResourceDescriptor>emptyList(), Arrays.asList(resourceB, resourceC)));
         // B depends on D
         mockEnabledPluginModule(resourceB, TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin,
-            Collections.<ResourceDescriptor> emptyList(), Collections.singletonList(resourceD)));
+                Collections.<ResourceDescriptor>emptyList(), Collections.singletonList(resourceD)));
         // C has no dependencies
         mockEnabledPluginModule(resourceC, TestUtils.createWebResourceModuleDescriptor(resourceC, testPlugin));
         // D depends on E, A (cyclic dependency)
         mockEnabledPluginModule(resourceD, TestUtils.createWebResourceModuleDescriptor(resourceD, testPlugin,
-            Collections.<ResourceDescriptor> emptyList(), Arrays.asList(resourceE, resourceA)));
+                Collections.<ResourceDescriptor>emptyList(), Arrays.asList(resourceE, resourceA)));
         // E has no dependencies
         mockEnabledPluginModule(resourceE, TestUtils.createWebResourceModuleDescriptor(resourceE, testPlugin));
 
@@ -230,22 +231,22 @@ public class TestWebResourceManagerImpl extends TestCase
         final String resourceC = "test.atlassian:c";
 
         final WebResourceModuleDescriptor descriptor1 = TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin,
-            TestUtils.createResourceDescriptors("resourceA.css"), Collections.<String> emptyList(), Collections.<String> emptySet());
+                TestUtils.createResourceDescriptors("resourceA.css"), Collections.<String>emptyList(), Collections.<String>emptySet());
         final WebResourceModuleDescriptor descriptor2 = TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin,
-            TestUtils.createResourceDescriptors("resourceB.css"), Collections.<String> emptyList(), new HashSet<String>()
+                TestUtils.createResourceDescriptors("resourceB.css"), Collections.<String>emptyList(), new HashSet<String>()
+        {
             {
-                {
-                    add("foo");
-                }
-            });
+                add("foo");
+            }
+        });
         final WebResourceModuleDescriptor descriptor3 = TestUtils.createWebResourceModuleDescriptor(resourceC, testPlugin,
-            TestUtils.createResourceDescriptors("resourceC.css"), Collections.<String> emptyList(), new HashSet<String>()
+                TestUtils.createResourceDescriptors("resourceC.css"), Collections.<String>emptyList(), new HashSet<String>()
+        {
             {
-                {
-                    add("foo");
-                    add("bar");
-                }
-            });
+                add("foo");
+                add("bar");
+            }
+        });
 
         final List<WebResourceModuleDescriptor> descriptors = Arrays.asList(descriptor1, descriptor2, descriptor3);
 
@@ -287,25 +288,25 @@ public class TestWebResourceManagerImpl extends TestCase
         final String resource2 = "test.atlassian:hot-stuff";
         final Plugin plugin = TestUtils.createTestPlugin("test.atlassian", "1", AlwaysTrueCondition.class, AlwaysFalseCondition.class);
         final WebResourceModuleDescriptor resource1Descriptor = new WebResourceModuleDescriptorBuilder(plugin, "cool-stuff").setCondition(
-            AlwaysTrueCondition.class).addDescriptor("cool.js").addContext("foo").build();
+                AlwaysTrueCondition.class).addDescriptor("cool.js").addContext("foo").build();
         mockEnabledPluginModule(resource1, resource1Descriptor);
 
         final WebResourceModuleDescriptor resource2Descriptor = new WebResourceModuleDescriptorBuilder(plugin, "hot-stuff").setCondition(
-            AlwaysFalseCondition.class).addDescriptor("hot.js").addContext("foo").build();
+                AlwaysFalseCondition.class).addDescriptor("hot.js").addContext("foo").build();
         mockEnabledPluginModule(resource2, resource2Descriptor);
 
         final String resource3 = "test.atlassian:warm-stuff";
         final WebResourceModuleDescriptor resourceDescriptor3 = TestUtils.createWebResourceModuleDescriptor(resource3, testPlugin,
-            TestUtils.createResourceDescriptors("warm.js"), Collections.<String> emptyList(), new HashSet<String>()
+                TestUtils.createResourceDescriptors("warm.js"), Collections.<String>emptyList(), new HashSet<String>()
+        {
             {
-                {
-                    add("foo");
-                }
-            });
+                add("foo");
+            }
+        });
         mockEnabledPluginModule(resource3, resourceDescriptor3);
 
         when(mockPluginAccessor.getEnabledModuleDescriptorsByClass(WebResourceModuleDescriptor.class)).thenReturn(
-            asList(resource1Descriptor, resource2Descriptor, resourceDescriptor3));
+                asList(resource1Descriptor, resource2Descriptor, resourceDescriptor3));
 
         setupRequestCache();
         webResourceManager.requireResourcesForContext("foo");
@@ -333,16 +334,16 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // A depends on B, C
         mockEnabledPluginModule(resourceA, TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin,
-            Collections.<ResourceDescriptor> emptyList(), Arrays.asList(resourceB, resourceC)));
+                Collections.<ResourceDescriptor>emptyList(), Arrays.asList(resourceB, resourceC)));
         // B depends on D
         mockEnabledPluginModule(resourceB, TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin,
-            Collections.<ResourceDescriptor> emptyList(), Collections.singletonList(resourceD)));
+                Collections.<ResourceDescriptor>emptyList(), Collections.singletonList(resourceD)));
         // C depends on E
         mockEnabledPluginModule(resourceC, TestUtils.createWebResourceModuleDescriptor(resourceC, testPlugin,
-            Collections.<ResourceDescriptor> emptyList(), Collections.singletonList(resourceE)));
+                Collections.<ResourceDescriptor>emptyList(), Collections.singletonList(resourceE)));
         // D depends on C
         mockEnabledPluginModule(resourceD, TestUtils.createWebResourceModuleDescriptor(resourceD, testPlugin,
-            Collections.<ResourceDescriptor> emptyList(), Collections.singletonList(resourceC)));
+                Collections.<ResourceDescriptor>emptyList(), Collections.singletonList(resourceC)));
         // E has no dependencies
         mockEnabledPluginModule(resourceE, TestUtils.createWebResourceModuleDescriptor(resourceE, testPlugin));
 
@@ -369,9 +370,9 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // A depends on B
         mockEnabledPluginModule(resourceA, TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA,
-            Collections.singletonList(resourceB)));
+                Collections.singletonList(resourceB)));
         mockEnabledPluginModule(resourceB, TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, resourceDescriptorsB,
-            Collections.<String> emptyList()));
+                Collections.<String>emptyList()));
 
         final String s = webResourceManager.getResourceTags(resourceA);
         final int indexA = s.indexOf(resourceA);
@@ -389,10 +390,10 @@ public class TestWebResourceManagerImpl extends TestCase
         final List<ResourceDescriptor> resourceDescriptorsA = TestUtils.createResourceDescriptors("resourceA.css");
 
         mockEnabledPluginModule(resourceA, TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA,
-            Collections.<String> emptyList()));
+                Collections.<String>emptyList()));
 
         final StringWriter requiredResourceWriter = new StringWriter();
-        webResourceManager.includeResources(Arrays.<String> asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);
+        webResourceManager.includeResources(Arrays.<String>asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);
         final String result = requiredResourceWriter.toString();
         assertTrue(result.contains(resourceA));
     }
@@ -409,14 +410,14 @@ public class TestWebResourceManagerImpl extends TestCase
         when(mockWebResourceIntegration.getRequestCache()).thenReturn(requestCache);
 
         mockEnabledPluginModule(resourceA, TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA,
-            Collections.<String> emptyList()));
+                Collections.<String>emptyList()));
 
         mockEnabledPluginModule(resourceB, TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, resourceDescriptorsB,
-            Collections.<String> emptyList()));
+                Collections.<String>emptyList()));
 
         final StringWriter requiredResourceWriter = new StringWriter();
         webResourceManager.requireResource(resourceB);
-        webResourceManager.includeResources(Arrays.<String> asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);
+        webResourceManager.includeResources(Arrays.<String>asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);
         final String result = requiredResourceWriter.toString();
         assertFalse(result.contains(resourceB));
     }
@@ -431,12 +432,12 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // A depends on B
         mockEnabledPluginModule(resourceA, TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA,
-            Collections.singletonList(resourceB)));
+                Collections.singletonList(resourceB)));
         mockEnabledPluginModule(resourceB, TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, resourceDescriptorsB,
-            Collections.<String> emptyList()));
+                Collections.<String>emptyList()));
 
         final StringWriter requiredResourceWriter = new StringWriter();
-        webResourceManager.includeResources(Arrays.<String> asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);
+        webResourceManager.includeResources(Arrays.<String>asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);
         final String result = requiredResourceWriter.toString();
         assertTrue(result.contains(resourceB));
     }
@@ -457,12 +458,12 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // A depends on B
         mockEnabledPluginModule(resourceA, TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA,
-            Collections.singletonList(resourceB)));
+                Collections.singletonList(resourceB)));
         mockEnabledPluginModule(resourceB, TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, resourceDescriptorsB,
-            Collections.<String> emptyList()));
+                Collections.<String>emptyList()));
 
         final StringWriter requiredResourceWriter = new StringWriter();
-        webResourceManager.includeResources(Arrays.<String> asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);
+        webResourceManager.includeResources(Arrays.<String>asList(resourceA), requiredResourceWriter, UrlMode.ABSOLUTE);
         final String result = requiredResourceWriter.toString();
         assertTrue(result.contains(resourceB));
     }
@@ -483,15 +484,15 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // A depends on C
         mockEnabledPluginModule(resourceA, TestUtils.createWebResourceModuleDescriptor(resourceA, testPlugin, resourceDescriptorsA,
-            Collections.singletonList(resourceShared)));
+                Collections.singletonList(resourceShared)));
         // B depends on C
         mockEnabledPluginModule(resourceB, TestUtils.createWebResourceModuleDescriptor(resourceB, testPlugin, resourceDescriptorsB,
-            Collections.singletonList(resourceShared)));
+                Collections.singletonList(resourceShared)));
         mockEnabledPluginModule(resourceShared, TestUtils.createWebResourceModuleDescriptor(resourceShared, testPlugin, resourceDescriptorsShared,
-            Collections.<String> emptyList()));
+                Collections.<String>emptyList()));
 
         final StringWriter requiredResourceWriter = new StringWriter();
-        webResourceManager.includeResources(Arrays.<String> asList(resourceA, resourceB), requiredResourceWriter, UrlMode.ABSOLUTE);
+        webResourceManager.includeResources(Arrays.<String>asList(resourceA, resourceB), requiredResourceWriter, UrlMode.ABSOLUTE);
         final String result = requiredResourceWriter.toString();
         assertTrue(result.contains(resourceA));
         assertTrue(result.contains(resourceB));
@@ -644,7 +645,7 @@ public class TestWebResourceManagerImpl extends TestCase
         final ResourceDescriptor resourceDescriptor = TestUtils.createResourceDescriptor("no-cache.js", params);
 
         mockEnabledPluginModule(completeModuleKey, TestUtils.createWebResourceModuleDescriptor(completeModuleKey, testPlugin,
-            Collections.singletonList(resourceDescriptor)));
+                Collections.singletonList(resourceDescriptor)));
 
         return "src=\"" + (baseUrlExpected ? BASEURL : "") + BatchPluginResource.URL_PREFIX + "/" + completeModuleKey + "/" + completeModuleKey + ".js?cache=false";
     }
@@ -796,7 +797,7 @@ public class TestWebResourceManagerImpl extends TestCase
         final Map<String, Object> requestCache = setupRequestCache();
 
         mockEnabledPluginModule("test.atlassian:included-resource", TestUtils.createWebResourceModuleDescriptor("test.atlassian:included-resource",
-            testPlugin, Collections.<ResourceDescriptor> emptyList(), Collections.singletonList("test.atlassian:superbatch")));
+                testPlugin, Collections.<ResourceDescriptor>emptyList(), Collections.singletonList("test.atlassian:superbatch")));
 
         webResourceManager.requireResource("test.atlassian:included-resource");
 
@@ -828,11 +829,11 @@ public class TestWebResourceManagerImpl extends TestCase
         assertEquals(0, jsResources.get(0).getParams().size());
     }
 
-    // First part: push onto a non-empty WRM context and write out.
+    // First part: execute some WRM code on in a new context on top of a non-empty context and write out.
     //             Check that the expected resources are included in the inner write out and that the outer resources aren't included
-    // Second part: after popping, write the outer resources out, checking that we didn't get the inner resources and that we did get
-    //              the resources which were on the stack before pushing.
-    public void testPushAndPopExclusivity() throws Exception
+    // Second part: after the inner execution is completed, write the outer resources out, checking that we didn't get the inner resources and that we did get
+    //              the resources which were in the context before the inner execution.
+    public void testNestedContextExclusivity() throws Exception
     {
 
         final String moduleKey1 = "cool-resources";
@@ -857,35 +858,40 @@ public class TestWebResourceManagerImpl extends TestCase
 
         // test includeResources(writer, type) method
         webResourceManager.requireResource(completeModuleKey1);
-        Object context = webResourceManager.push();
-        webResourceManager.requireResource(completeModuleKey2);
+        webResourceManager.executeInNewContext(new Callable<Void>()
+        {
+            public Void call() throws Exception
+            {
+                webResourceManager.requireResource(completeModuleKey2);
+
+                StringWriter writer = new StringWriter();
+                webResourceManager.includeResources(writer);
+                String resources = writer.toString();
+
+                assertFalse(resources.contains(cssRef1));
+                assertTrue(resources.contains(cssRef2));
+
+                assertFalse(resources.contains(jsRef1));
+                assertTrue(resources.contains(jsRef2));
+                return null;
+            }
+        });
 
         StringWriter writer = new StringWriter();
         webResourceManager.includeResources(writer);
         String resources = writer.toString();
 
-        assertTrue(!resources.contains(cssRef1));
-        assertTrue(resources.contains(cssRef2));
-
-        assertTrue(!resources.contains(jsRef1));
-        assertTrue(resources.contains(jsRef2));
-
-        webResourceManager.pop(context);
-
-        writer = new StringWriter();
-        webResourceManager.includeResources(writer);
-        resources = writer.toString();
-
         assertTrue(resources.contains(cssRef1));
-        assertTrue(!resources.contains(cssRef2));
+        assertFalse(resources.contains(cssRef2));
 
         assertTrue(resources.contains(jsRef1));
-        assertTrue(!resources.contains(jsRef2));
+        assertFalse(resources.contains(jsRef2));
 
     }
 
-    // Push onto an empty WRM context, pop and write out, checking that we didn't get any resources
-    public void testPushAndPopOnEmptyBase() throws ClassNotFoundException, DocumentException
+    // Require and include some resource in an inner context with an empty outer context. Check that the inner context gets the expected resources.
+    // After the inner code is executed, check that we didn't get any resources in the outer context
+    public void testNestedContextOnEmptyBase() throws Exception
     {
         final String moduleKey1 = "cool-resources";
         final String completeModuleKey1 = "test.atlassian:" + moduleKey1;
@@ -902,29 +908,34 @@ public class TestWebResourceManagerImpl extends TestCase
         final String jsRef1 = completeModuleKey1 + "/" + completeModuleKey1 + ".js";
 
         // test includeResources(writer, type) method
-        Object context = webResourceManager.push();
+        webResourceManager.executeInNewContext(new Callable<Void>()
+        {
+            public Void call() throws Exception
+            {
+                webResourceManager.requireResource(completeModuleKey1);
 
-        webResourceManager.requireResource(completeModuleKey1);
+                StringWriter writer = new StringWriter();
+                webResourceManager.includeResources(writer);
+                String resources = writer.toString();
+
+                assertTrue(resources.contains(cssRef1));
+                assertTrue(resources.contains(jsRef1));
+
+                return null;
+            }
+        });
 
         StringWriter writer = new StringWriter();
         webResourceManager.includeResources(writer);
         String resources = writer.toString();
 
-        assertTrue(resources.contains(cssRef1));
-        assertTrue(resources.contains(jsRef1));
-
-        webResourceManager.pop(context);
-
-        writer = new StringWriter();
-        webResourceManager.includeResources(writer);
-        resources = writer.toString();
-
-        assertTrue(!resources.contains(cssRef1));
-        assertTrue(!resources.contains(jsRef1));
+        assertFalse(resources.contains(cssRef1));
+        assertFalse(resources.contains(jsRef1));
     }
 
-    // push onto an empty context, require but don't include resources, pop and ensure that we've still got no resources
-    public void testPushAndPopWithoutWriting() throws ClassNotFoundException, DocumentException
+    // Require (but not include) some resource in an inner context with an empty outer context. After the inner code is executed,
+    // check that we didn't get any resources in the outer context
+    public void testNestedContextWithoutWriting() throws Exception
     {
         final String moduleKey1 = "cool-resources";
         final String completeModuleKey1 = "test.atlassian:" + moduleKey1;
@@ -941,18 +952,116 @@ public class TestWebResourceManagerImpl extends TestCase
         final String jsRef1 = completeModuleKey1 + "/" + completeModuleKey1 + ".js";
 
         // test includeResources(writer, type) method
-        Object context = webResourceManager.push();
-
-        webResourceManager.requireResource(completeModuleKey1);
-        webResourceManager.pop(context);
+        webResourceManager.executeInNewContext(new Callable<Void>()
+        {
+            public Void call() throws Exception
+            {
+                webResourceManager.requireResource(completeModuleKey1);
+                return null;
+            }
+        });
 
         StringWriter writer = new StringWriter();
         webResourceManager.includeResources(writer);
         String resources = writer.toString();
 
         // check that we didn't get these resources (meaning that the require resources call never caused the module to be included)
-        assertTrue(!resources.contains(cssRef1));
-        assertTrue(!resources.contains(jsRef1));
+        assertFalse(resources.contains(cssRef1));
+        assertFalse(resources.contains(jsRef1));
+    }
+
+    // push content into the outer-most context, nest multiple non-empty executeInNewContext calls, ensuring that the expected content is
+    // written in each context
+    public void testMultipleNestedContexts() throws Exception
+    {
+        final String moduleKey1 = "cool-resources";
+        final String moduleKey2 = "hot-resources";
+        final String moduleKey3 = "warm-resources";
+        final String completeModuleKey1 = "test.atlassian:" + moduleKey1;
+        final String completeModuleKey2 = "test.atlassian:" + moduleKey2;
+        final String completeModuleKey3 = "test.atlassian:" + moduleKey3;
+
+        final List<ResourceDescriptor> resourceDescriptors1 = TestUtils.createResourceDescriptors("cool.js", "cool.css", "more-cool.css");
+        final List<ResourceDescriptor> resourceDescriptors2 = TestUtils.createResourceDescriptors("hot.js", "hot.css", "more-hot.css");
+        final List<ResourceDescriptor> resourceDescriptors3 = TestUtils.createResourceDescriptors("warm.js", "warm.css", "more-warm.css");
+
+        final Plugin plugin = TestUtils.createTestPlugin();
+
+        setupRequestCache();
+
+        mockEnabledPluginModule(completeModuleKey1, TestUtils.createWebResourceModuleDescriptor(completeModuleKey1, plugin, resourceDescriptors1));
+        mockEnabledPluginModule(completeModuleKey2, TestUtils.createWebResourceModuleDescriptor(completeModuleKey2, plugin, resourceDescriptors2));
+        mockEnabledPluginModule(completeModuleKey3, TestUtils.createWebResourceModuleDescriptor(completeModuleKey3, plugin, resourceDescriptors3));
+
+        final String cssRef1 = completeModuleKey1 + "/" + completeModuleKey1 + ".css";
+        final String cssRef2 = completeModuleKey2 + "/" + completeModuleKey2 + ".css";
+        final String cssRef3 = completeModuleKey3 + "/" + completeModuleKey3 + ".css";
+        final String jsRef1 = completeModuleKey1 + "/" + completeModuleKey1 + ".js";
+        final String jsRef2 = completeModuleKey2 + "/" + completeModuleKey2 + ".js";
+        final String jsRef3 = completeModuleKey3 + "/" + completeModuleKey3 + ".js";
+
+        setupRequestCache();
+
+        // require module 1 for outermost resource
+        webResourceManager.requireResource(completeModuleKey1);
+
+        // nest middle resource context (requests module 2)
+        webResourceManager.executeInNewContext(new Callable<Void>()
+        {
+            public Void call() throws Exception
+            {
+                webResourceManager.requireResource(completeModuleKey2);
+                // nest inner-most resource context (requests module 3)
+                webResourceManager.executeInNewContext(new Callable<Void>()
+                {
+                    public Void call() throws Exception
+                    {
+                        webResourceManager.requireResource(completeModuleKey3);
+
+                        // check that the inner-most context only got module 3
+                        StringWriter writer = new StringWriter();
+                        webResourceManager.includeResources(writer);
+                        String resources = writer.toString();
+
+                        assertTrue(resources.contains(cssRef3));
+                        assertTrue(resources.contains(jsRef3));
+                        assertFalse(resources.contains(cssRef1));
+                        assertFalse(resources.contains(jsRef1));
+                        assertFalse(resources.contains(cssRef2));
+                        assertFalse(resources.contains(jsRef2));
+
+                        return null;
+                    }
+                });
+
+                // check that the middle context only got module 2
+                StringWriter writer = new StringWriter();
+                webResourceManager.includeResources(writer);
+                String resources = writer.toString();
+
+                assertTrue(resources.contains(cssRef2));
+                assertTrue(resources.contains(jsRef2));
+                assertFalse(resources.contains(cssRef1));
+                assertFalse(resources.contains(jsRef1));
+                assertFalse(resources.contains(cssRef3));
+                assertFalse(resources.contains(jsRef3));
+
+                return null;
+            }
+        });
+
+        // check that the outer context only got module 1
+
+        StringWriter writer = new StringWriter();
+        webResourceManager.includeResources(writer);
+        String resources = writer.toString();
+
+        assertTrue(resources.contains(cssRef1));
+        assertTrue(resources.contains(jsRef1));
+        assertFalse(resources.contains(cssRef2));
+        assertFalse(resources.contains(jsRef2));
+        assertFalse(resources.contains(cssRef3));
+        assertFalse(resources.contains(jsRef3));
     }
 
     private void setupSuperBatch()

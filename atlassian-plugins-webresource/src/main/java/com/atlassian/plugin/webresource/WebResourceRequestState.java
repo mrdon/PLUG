@@ -6,13 +6,13 @@ import java.util.Set;
 /**
  * Container class for the state of a WebResourceManager
  */
-public class WebResourceRequestContext
+class WebResourceRequestState
 {
     private Set<String> resources;
     private Set<String> contexts;
 
     // constructor sets empty sets to ensure non-null values
-    public WebResourceRequestContext()
+    public WebResourceRequestState()
     {
         this.resources = new HashSet<String>();
         this.contexts = new HashSet<String>();

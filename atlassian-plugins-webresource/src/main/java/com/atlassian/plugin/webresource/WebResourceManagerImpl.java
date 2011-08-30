@@ -19,6 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import static com.google.common.collect.Iterables.addAll;
 import static com.google.common.collect.Iterables.concat;
@@ -145,7 +146,7 @@ public class WebResourceManagerImpl implements WebResourceManager
         // Resolve duplicates
         resources = ImmutableSet.copyOf(resources);
         writeResourceTags(getModuleResources(resources, Collections.<String>emptyList(),
-            DefaultWebResourceFilter.INSTANCE), writer, urlMode);
+                DefaultWebResourceFilter.INSTANCE), writer, urlMode);
     }
 
     /**
@@ -429,39 +430,44 @@ public class WebResourceManagerImpl implements WebResourceManager
         return webResourceUrlProvider.getStaticPluginResourceUrl(moduleDescriptor, resourceName, urlMode);
     }
 
-    public Object push()
+    public void executeInNewContext(Callable<Void> nestedExecution) throws Exception
+    {
+
+        WebResourceRequestState state = preserveState();
+        try
+        {
+            nestedExecution.call();
+        }
+        finally
+        {
+            restoreState(state);
+        }
+    }
+
+    private WebResourceRequestState preserveState()
     {
         //Get the contexts and resources for the current state
         Set<String> contexts = getOrCreateFromRequestCache(REQUEST_CACHE_CONTEXT_KEY);
         Set<String> resources = getOrCreateFromRequestCache(REQUEST_CACHE_RESOURCE_KEY);
 
-        // wrap them into a WebResourceRequestContext
-        WebResourceRequestContext context = new WebResourceRequestContext();
-        context.setContexts(contexts);
-        context.setResources(resources);
+        // wrap them into a WebResourceRequestState
+        WebResourceRequestState state = new WebResourceRequestState();
+        state.setContexts(contexts);
+        state.setResources(resources);
 
         //and delete them from the request cache
         final Map<String, Object> cache = webResourceIntegration.getRequestCache();
         cache.remove(REQUEST_CACHE_CONTEXT_KEY);
         cache.remove(REQUEST_CACHE_RESOURCE_KEY);
-        return context;
+        return state;
     }
 
-    public void pop(Object oldState)
+    private void restoreState(WebResourceRequestState oldState)
     {
-        // try and get an WebResourceRequestContext out of oldState
-        WebResourceRequestContext oldContext;
-        try {
-            oldContext = (WebResourceRequestContext) oldState;
-        } catch (ClassCastException e) {
-            // if the object was the wrong type return
-            return;
-        }
-
         final Map<String, Object> cache = webResourceIntegration.getRequestCache();
 
-        cache.put(REQUEST_CACHE_CONTEXT_KEY, oldContext.getContexts());
-        cache.put(REQUEST_CACHE_RESOURCE_KEY, oldContext.getResources());
+        cache.put(REQUEST_CACHE_CONTEXT_KEY, oldState.getContexts());
+        cache.put(REQUEST_CACHE_RESOURCE_KEY, oldState.getResources());
 
     }
 

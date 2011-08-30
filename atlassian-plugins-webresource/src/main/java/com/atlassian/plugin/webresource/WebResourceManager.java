@@ -3,6 +3,7 @@ package com.atlassian.plugin.webresource;
 import com.atlassian.plugin.ModuleDescriptor;
 
 import java.io.Writer;
+import java.util.concurrent.Callable;
 
 /**
  * Manage 'css', 'javascript' and other 'resources' that are usually linked at the top of pages using {@code <script>
@@ -434,19 +435,16 @@ public interface WebResourceManager
     void setIncludeMode(IncludeMode includeMode);
 
     /**
-     * Pushes a new context onto the WebResourceManager. Resources required before calling push will not be included until a matching pop call is made
+     * Executes a callable within a new WebResourceManager context. The request-local state manipulated by requireResource
+     * and requireResourcesForContext is preserved, an empty state is initialized for the execution of nestedExecution and
+     * after the nestedExecution is run, the old state is restored.
      *
-     * @return a reference to the state of the WebResourceManager before this push call was made. Clients must hold onto this reference to provide it
-     * to WebResourceManager on calling pop.
-     */
-    Object push();
-
-    /**
-     * pops a previously pushed context.
+     * Useful for rendering of pages which include nested pages (such as gadgets), which need to resolve the requirements
+     * of the inner pages without polluting the outer page's resources.
      *
-     * @param oldState an Object returned from a prior push call
+     * @param nestedExecution the code to be executed in the empty context.
      */
-    void pop(Object oldState);
+    void executeInNewContext(Callable<Void> nestedExecution) throws Exception;
 
     /**
      * @deprecated Since 2.2. Use {@link #requireResource(String, Writer, UrlMode)} instead.
