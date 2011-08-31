@@ -9,9 +9,6 @@ import static com.google.common.collect.Iterables.transform;
 
 import com.atlassian.plugin.ModuleDescriptor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -26,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,8 +44,6 @@ import java.util.Set;
  */
 public class WebResourceManagerImpl implements WebResourceManager
 {
-    private static final Logger log = LoggerFactory.getLogger(WebResourceManagerImpl.class);
-
     static final String STATIC_RESOURCE_PREFIX = "s";
     static final String STATIC_RESOURCE_SUFFIX = "_";
 
@@ -85,13 +81,8 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     public void requireResource(final String moduleCompleteKey)
     {
-        if (log.isDebugEnabled())
-        {
-            log.debug("Requiring resource: " + moduleCompleteKey);
-        }
         final boolean batchingEnabled = batchingConfiguration.isSuperBatchingEnabled();
-        final Iterable<WebResourceModuleDescriptor> deps = dependencyResolver.getDependencies(moduleCompleteKey, batchingEnabled);
-        addAll(getIncludedResourceNames(), toModuleKeys(deps));
+        addAll(getIncludedResourceNames(), toModuleKeys(dependencyResolver.getDependencies(moduleCompleteKey, batchingEnabled)));
     }
 
     public void requireResourcesForContext(final String context)
@@ -249,25 +240,24 @@ public class WebResourceManagerImpl implements WebResourceManager
 
         for (final PluginResource resource : resourcesToInclude)
         {
-            writeContentAndSwallowErrors(
-                "<!-- Error loading resource \"" + resource.getModuleCompleteKey() + "\".  No resource formatter matches \"" + resource.getResourceName() + "\" -->\n",
-                writer);
+            writeContentAndSwallowErrors(writer, "<!-- Error loading resource \"", resource.getModuleCompleteKey(),
+                "\".  No resource formatter matches \"", resource.getResourceName(), "\" -->\n");
         }
         return writer;
     }
 
     private void writeResourceTag(final UrlMode urlMode, final PluginResource resource, final WebResourceFormatter formatter, final Writer writer)
     {
-        String url = resource.getUrl();
+        final String prefix;
         if (resource.isCacheSupported())
         {
-            url = webResourceUrlProvider.getStaticResourcePrefix(resource.getVersion(webResourceIntegration), urlMode) + url;
+            prefix = webResourceUrlProvider.getStaticResourcePrefix(resource.getVersion(webResourceIntegration), urlMode);
         }
         else
         {
-            url = webResourceUrlProvider.getBaseUrl(urlMode) + url;
+            prefix = webResourceUrlProvider.getBaseUrl(urlMode);
         }
-        writeContentAndSwallowErrors(formatter.formatResource(url, resource.getParams()), writer);
+        writeContentAndSwallowErrors(writer, formatter.formatResource(prefix + resource.getUrl(), resource.getParams()));
     }
 
     public void requireResource(final String moduleCompleteKey, final Writer writer, final UrlMode urlMode)
@@ -330,7 +320,7 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     private Iterable<PluginResource> getModuleResources(final Iterable<String> webResourcePluginModuleKeys, final Iterable<String> batchedModules, final WebResourceFilter filter)
     {
-        final List<PluginResource> includedResources = new ArrayList<PluginResource>();
+        final List<PluginResource> includedResources = new LinkedList<PluginResource>(); // use linked list as it gets removed from when writing
         for (final String moduleKey : webResourcePluginModuleKeys)
         {
             if (contains(batchedModules, moduleKey))
@@ -346,25 +336,22 @@ public class WebResourceManagerImpl implements WebResourceManager
                 {
                     includedResources.add(moduleResource);
                 }
-                else
-                {
-                    log.debug("Resource [" + moduleResource.getResourceName() + "] excluded by filter");
-                }
             }
         }
         return includedResources;
     }
 
-    private void writeContentAndSwallowErrors(final String content, final Writer writer)
+    private void writeContentAndSwallowErrors(final Writer writer, final String... contents)
     {
         try
         {
-            writer.write(content);
+            for (final String content : contents)
+            {
+                writer.write(content);
+            }
         }
-        catch (final IOException e)
-        {
-            log.debug("Ignoring", e);
-        }
+        catch (final IOException ignore)
+        {}
     }
 
     private Set<String> getIncludedContexts()
@@ -392,7 +379,6 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     private void clear()
     {
-        log.debug("Clearing included resources and contexts");
         getIncludedResourceNames().clear();
         getIncludedContexts().clear();
     }
