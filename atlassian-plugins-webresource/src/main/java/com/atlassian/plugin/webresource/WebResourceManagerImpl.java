@@ -387,4 +387,74 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         return transform(descriptors, new TransformDescriptorToKey());
     }
+
+    //
+    // deprecated impl to be removed in 3.0, only here for backwards compatibility not to be used
+    //
+
+    @Deprecated
+    public String getRequiredResources()
+    {
+        return getRequiredResources(UrlMode.AUTO);
+    }
+
+    @Deprecated
+    public String getResourceTags(final String moduleCompleteKey)
+    {
+        return getResourceTags(moduleCompleteKey, UrlMode.AUTO);
+    }
+
+    @Deprecated
+    public String getStaticPluginResource(final ModuleDescriptor<?> moduleDescriptor, final String resourceName)
+    {
+        return getStaticPluginResource(moduleDescriptor, resourceName, UrlMode.AUTO);
+    }
+
+    @Deprecated
+    public String getStaticPluginResource(final String moduleCompleteKey, final String resourceName)
+    {
+        return getStaticPluginResource(moduleCompleteKey, resourceName, UrlMode.AUTO);
+    }
+
+    @Deprecated
+    public String getStaticPluginResourcePrefix(final ModuleDescriptor<?> moduleDescriptor, final String resourceName)
+    {
+        return getStaticPluginResource(moduleDescriptor, resourceName, UrlMode.AUTO);
+    }
+
+    @Deprecated
+    public String getStaticResourcePrefix()
+    {
+        return webResourceUrlProvider.getStaticResourcePrefix(UrlMode.AUTO);
+    }
+
+    @Deprecated
+    public String getStaticResourcePrefix(final UrlMode urlMode)
+    {
+        return webResourceUrlProvider.getStaticResourcePrefix(urlMode);
+    }
+
+    @Deprecated
+    public String getStaticResourcePrefix(final String resourceCounter)
+    {
+        return getStaticResourcePrefix(resourceCounter, UrlMode.AUTO);
+    }
+
+    @Deprecated
+    public void includeResources(final Writer writer)
+    {
+        includeResources(writer, UrlMode.AUTO);
+    }
+
+    @Deprecated
+    public void requireResource(final String moduleCompleteKey, final Writer writer)
+    {
+        requireResource(moduleCompleteKey, writer, UrlMode.AUTO);
+    }
+
+    @Deprecated
+    public void setIncludeMode(final IncludeMode includeMode)
+    {
+        webResourceIntegration.getRequestCache().put("plugin.webresource.mode", includeMode);
+    }
 }

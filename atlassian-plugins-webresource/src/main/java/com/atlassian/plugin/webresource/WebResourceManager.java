@@ -161,6 +161,30 @@ public interface WebResourceManager
 
     // Deprecated methods
 
+   /**
+     * A helper method to return a prefix for 'system' static resources.  Generally the implementation will return
+     * <p/>
+     * {@code /s/{build num}/{system counter}/_}
+     * <p/>
+     * Note that the servlet context is prepended, and there is no trailing slash.
+     * <p/>
+     * Typical usage is to replace:
+     * <p/>
+     * {@code <%= request.getContextPath() %>/styles/global.css} with {@code <%= webResourceManager.getStaticResourcePrefix()
+     * %>/styles/global.css}
+     * <p/>
+     * This method returns a URL in either a relative or an absolute format, depending on the value of {@code urlMode}.
+     * See {@link UrlMode} for details of the different options for URL format.
+     *
+     * @param urlMode specifies whether to use absolute URLs, relative URLs, or allow the concrete implementation to
+     *                decide
+     * @return A prefix that can be used to prefix 'static system' resources.
+     * @since 2.3.0
+     * @deprecated As of 2.9.0, replaced by {@link WebResourceUrlProvider#getStaticResourcePrefix(UrlMode)}
+     */
+    @Deprecated
+    String getStaticResourcePrefix(UrlMode urlMode);
+
     /**
      * A helper method to return a prefix for 'system' static resources.  This method should be used for resources that
      * change more frequently than system resources, and therefore have their own resource counter.
@@ -242,4 +266,102 @@ public interface WebResourceManager
      */
     @Deprecated
     String getStaticPluginResource(ModuleDescriptor<?> moduleDescriptor, String resourceName, UrlMode urlMode);
+
+    //
+    // deprecated since 2.3 or earlier
+    //
+
+    /**
+    * @deprecated As of 2.3.0, replaced by {@link #includeResources(Writer, UrlMode)}
+    */
+    @Deprecated
+    void includeResources(Writer writer);
+
+    /**
+     * @deprecated As of 2.3.0, replaced by {@link #getRequiredResources(UrlMode)}
+     */
+    @Deprecated
+    String getRequiredResources();
+
+    /**
+     * @deprecated As of 2.3.0, replaced by {@link #requireResource(String, Writer, UrlMode)}
+     */
+    @Deprecated
+    void requireResource(String moduleCompleteKey, Writer writer);
+
+    /**
+     * @deprecated As of 2.3.0, replaced by {@link #getResourceTags(String, UrlMode)}
+     */
+    @Deprecated
+    String getResourceTags(String moduleCompleteKey);
+
+    /**
+     * @deprecated As of 2.3.0, replaced by {@link #getStaticResourcePrefix(UrlMode)}
+     */
+    @Deprecated
+    String getStaticResourcePrefix();
+
+    /**
+     * @deprecated As of 2.3.0, replaced by {@link #getStaticResourcePrefix(String, UrlMode)}
+     */
+    @Deprecated
+    String getStaticResourcePrefix(String resourceCounter);
+
+    /**
+     * @deprecated As of 2.3.0, replaced by {@link #getStaticPluginResource(String, String, UrlMode)}
+     */
+    @Deprecated
+    String getStaticPluginResource(String moduleCompleteKey, String resourceName);
+
+    /**
+     * @deprecated As of 2.3.0, replaced by {@link #getStaticPluginResource(ModuleDescriptor, String, UrlMode)}
+     */
+    @Deprecated
+    String getStaticPluginResource(ModuleDescriptor<?> moduleDescriptor, String resourceName);
+
+    /**
+     * @deprecated Since 2.2 Use #getStaticPluginResource instead
+     */
+    @Deprecated
+    String getStaticPluginResourcePrefix(ModuleDescriptor<?> moduleDescriptor, String resourceName);
+
+    /**
+     * @see #INLINE_INCLUDE_MODE
+     * @deprecated Since 2.2.
+     */
+    @Deprecated
+    void setIncludeMode(IncludeMode includeMode);
+
+    /**
+     * @deprecated Since 2.2. Use {@link #requireResource(String, Writer, UrlMode)} instead.
+     */
+    @Deprecated
+    public static final IncludeMode DELAYED_INCLUDE_MODE = new IncludeMode()
+    {
+        public String getModeName()
+        {
+            return "delayed";
+        }
+    };
+
+    /**
+     * @deprecated Since 2.2. Use {@link #requireResource(String)}  instead.
+     */
+    @Deprecated
+    public static final IncludeMode INLINE_INCLUDE_MODE = new IncludeMode()
+    {
+        public String getModeName()
+        {
+            return "inline";
+        }
+    };
+
+    /**
+     * @deprecated Since 2.2
+     */
+    @Deprecated
+    public static interface IncludeMode
+    {
+        public String getModeName();
+    }
 }
