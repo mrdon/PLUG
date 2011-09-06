@@ -21,6 +21,8 @@ import com.atlassian.plugin.elements.ResourceLocation;
 /**
  * Delegating plugin that supports easy wrapping
  * 
+ * Note: this class has a natural ordering that is inconsistent with equals
+ * 
  * @since 2.2.0
  */
 public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plugin>, AutowireCapablePlugin
@@ -257,25 +259,6 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
     public String toString()
     {
         return delegate.toString();
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return delegate.hashCode();
-    }
-
-    @Override
-    public boolean equals(final Object obj)
-    {
-        if (this == obj)
-            return true;
-        
-        if(obj instanceof AbstractDelegatingPlugin)
-        {
-            return delegate.equals(((AbstractDelegatingPlugin)obj).delegate);    
-        }
-        return false;
     }
 
     /**
