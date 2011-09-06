@@ -268,7 +268,14 @@ public abstract class AbstractDelegatingPlugin implements Plugin, Comparable<Plu
     @Override
     public boolean equals(final Object obj)
     {
-        return delegate.equals(obj);
+        if (this == obj)
+            return true;
+        
+        if(obj instanceof AbstractDelegatingPlugin)
+        {
+            return delegate.equals(((AbstractDelegatingPlugin)obj).delegate);    
+        }
+        return false;
     }
 
     /**
