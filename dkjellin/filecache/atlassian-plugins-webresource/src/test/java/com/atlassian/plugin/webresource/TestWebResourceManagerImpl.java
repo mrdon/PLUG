@@ -13,6 +13,7 @@ import com.atlassian.plugin.elements.ResourceDescriptor;
 
 import org.dom4j.DocumentException;
 
+import java.io.File;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,6 +49,7 @@ public class TestWebResourceManagerImpl extends TestCase
 
         when(mockWebResourceIntegration.getPluginAccessor()).thenReturn(mockPluginAccessor);
         when(mockWebResourceIntegration.getSuperBatchVersion()).thenReturn(SYSTEM_BUILD_NUMBER);
+        when(mockWebResourceIntegration.getTemporaryDirectory()).thenReturn(new File(System.getProperty("java.io.tmpdir"),"test"));
 
         pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, null, mockUrlProvider, mockBatchingConfiguration);
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, mockUrlProvider,
@@ -264,8 +266,8 @@ public class TestWebResourceManagerImpl extends TestCase
         assertFalse(resources.contains(resourceA + ".css"));
         assertFalse(resources.contains(resourceB + ".css"));
         assertFalse(resources.contains(resourceC + ".css"));
-        assertTrue(resources.contains("/contextbatch/css/foo/batch.css"));
-        assertFalse(resources.contains("/contextbatch/css/bar/batch.css"));
+        assertTrue(resources.contains("/contextbatch/css/a6045e8e76822787d19e62e3cf5dd6a5/foo/foo.css"));
+        assertFalse(resources.contains("/contextbatch/css/369d7a334f58d41a61669b5aac5b6a88/bar/bar.css"));
 
         // write includes for all resources for "bar":
         webResourceManager.requireResourcesForContext("bar");
@@ -275,8 +277,8 @@ public class TestWebResourceManagerImpl extends TestCase
         assertFalse(resources.contains(resourceA + ".css"));
         assertFalse(resources.contains(resourceB + ".css"));
         assertFalse(resources.contains(resourceC + ".css"));
-        assertFalse(resources.contains("/contextbatch/css/foo/batch.css"));
-        assertTrue(resources.contains("/contextbatch/css/bar/batch.css"));
+        assertFalse(resources.contains("/contextbatch/css/a6045e8e76822787d19e62e3cf5dd6a5/foo/foo.css"));
+        assertTrue(resources.contains("/contextbatch/css/369d7a334f58d41a61669b5aac5b6a88/bar/bar.css"));
     }
 
     public void testGetResourceContextWithCondition() throws ClassNotFoundException, DocumentException
@@ -313,7 +315,7 @@ public class TestWebResourceManagerImpl extends TestCase
         final String tags = webResourceManager.getRequiredResources();
         assertTrue(tags.contains(resource1));
         assertFalse(tags.contains(resource2));
-        assertTrue(tags.contains("foo/batch.js"));
+        assertTrue(tags.contains("foo/foo.js"));
     }
 
     private Map<String, Object> setupRequestCache()

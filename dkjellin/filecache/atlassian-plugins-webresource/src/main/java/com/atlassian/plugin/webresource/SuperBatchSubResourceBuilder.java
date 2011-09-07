@@ -5,6 +5,8 @@ import com.atlassian.plugin.servlet.DownloadableResource;
 import java.util.Arrays;
 import java.util.Map;
 
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
 import static com.atlassian.plugin.webresource.SuperBatchPluginResource.URL_PREFIX;
 
 /**
@@ -27,7 +29,7 @@ public class SuperBatchSubResourceBuilder implements DownloadableResourceBuilder
 
     public boolean matches(String path)
     {
-        return path.indexOf(URL_PREFIX) > -1;
+        return path.indexOf(PATH_SEPARATOR + SERVLET_PATH + URL_PREFIX) > -1;
     }
 
     public DownloadableResource parse(String path, Map<String, String> params) throws UrlParseException

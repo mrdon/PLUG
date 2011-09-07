@@ -1,17 +1,18 @@
 package com.atlassian.plugin.webresource;
 
-import static com.atlassian.plugin.webresource.AbstractBatchResourceBuilder.skipBatch;
-
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.plugin.cache.filecache.FileCache;
+import com.atlassian.plugin.cache.filecache.impl.LRUFileCache;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.ServletContextFactory;
-
+import com.atlassian.plugin.util.PluginUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,9 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static com.atlassian.plugin.webresource.AbstractBatchResourceBuilder.skipBatch;
+
 /**
  * Default implementation of {@link PluginResourceLocator}.
- * 
+ *
  * @since 2.2
  */
 public class PluginResourceLocatorImpl implements PluginResourceLocator
@@ -50,14 +53,23 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
     private PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider,
                                       final ResourceDependencyResolver dependencyResolver, final ResourceBatchingConfiguration batchingConfiguration)
     {
+        FileCache fileCache = null;
+        try
+        {
+            fileCache = new LRUFileCache(webResourceIntegration, Integer.getInteger(PluginUtils.FILE_CACHE_SIZE, 200));
+        }
+        catch (IOException e)
+        {
+            log.error("Could not create file cache object, will startup with filecaching disabled, please investigate the cause and correct it.", e);
+        }
         this.pluginAccessor = webResourceIntegration.getPluginAccessor();
         this.webResourceUrlProvider = webResourceUrlProvider;
         this.batchingConfiguration = batchingConfiguration;
         final SingleDownloadableResourceBuilder singlePluginBuilder = new SingleDownloadableResourceBuilder(pluginAccessor, servletContextFactory);
         builders = Collections.unmodifiableList(Arrays.asList(new SuperBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor,
-            webResourceUrlProvider, singlePluginBuilder), new SuperBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder),
-            new ContextBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor, webResourceUrlProvider, singlePluginBuilder),
-            new ContextBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder), new SingleBatchDownloadableResourceBuilder(pluginAccessor,
+                webResourceUrlProvider, singlePluginBuilder, fileCache), new SuperBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder),
+                new ContextBatchDownloadableResourceBuilder(dependencyResolver, pluginAccessor, webResourceUrlProvider, singlePluginBuilder,fileCache),
+                new ContextBatchSubResourceBuilder(dependencyResolver, singlePluginBuilder), new SingleBatchDownloadableResourceBuilder(pluginAccessor,
                 webResourceUrlProvider, singlePluginBuilder), singlePluginBuilder));
 
     }
@@ -114,7 +126,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             {
                 final boolean cache = !"false".equalsIgnoreCase(resourceDescriptor.getParameter("cache"));
                 resources.add(new SinglePluginResource(resourceDescriptor.getName(), moduleDescriptor.getCompleteKey(), cache,
-                    resourceDescriptor.getParameters()));
+                        resourceDescriptor.getParameters()));
             }
             else
             {
@@ -142,7 +154,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             return null;
         }
 
-        return new String[] { resourcePath.substring(0, indexOfSlash + 1), resourcePath.substring(indexOfSlash + 1) };
+        return new String[]{resourcePath.substring(0, indexOfSlash + 1), resourcePath.substring(indexOfSlash + 1)};
     }
 
     private BatchPluginResource createBatchResource(final String moduleCompleteKey, final ResourceDescriptor resourceDescriptor)
@@ -159,7 +171,7 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
             }
         }
 
-        return new BatchPluginResource(moduleCompleteKey, type, params, Collections.<DownloadableResource> emptyList());
+        return new BatchPluginResource(moduleCompleteKey, type, params, Collections.<DownloadableResource>emptyList());
     }
 
     public String getResourceUrl(final String moduleCompleteKey, final String resourceName)

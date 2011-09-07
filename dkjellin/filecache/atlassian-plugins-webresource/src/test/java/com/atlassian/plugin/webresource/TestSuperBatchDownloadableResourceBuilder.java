@@ -17,21 +17,21 @@ public class TestSuperBatchDownloadableResourceBuilder extends TestCase
     @Mock
     private DefaultResourceDependencyResolver mockDependencyResolver;
     @Mock
-    private PluginAccessor mockPluginAccessor;   
+    private PluginAccessor mockPluginAccessor;
     @Mock
     private WebResourceUrlProvider mockWebResourceUrlProvider;
     @Mock
     private DownloadableResourceFinder mockResourceFinder;
-    
+
     private SuperBatchDownloadableResourceBuilder builder;
 
     @Override
     public void setUp() throws Exception
     {
         super.setUp();
-        
+
         MockitoAnnotations.initMocks(this);
-        builder = new SuperBatchDownloadableResourceBuilder(mockDependencyResolver, mockPluginAccessor, mockWebResourceUrlProvider, mockResourceFinder);
+        builder = new SuperBatchDownloadableResourceBuilder(mockDependencyResolver, mockPluginAccessor, mockWebResourceUrlProvider, mockResourceFinder, null);
 
         when(mockDependencyResolver.getSuperBatchDependencies()).thenReturn(Collections.<WebResourceModuleDescriptor>emptyList());
     }
@@ -43,18 +43,18 @@ public class TestSuperBatchDownloadableResourceBuilder extends TestCase
         mockPluginAccessor = null;
         mockWebResourceUrlProvider = null;
         mockResourceFinder = null;
-        
+
         super.tearDown();
     }
-    
+
     public void testParseCss() throws UrlParseException
     {
-        String path = "/download/superbatch/css/batch.css";
-        assertTrue(builder.matches(path));
+        String path = "/superbatch/css/batch.css";
+        assertTrue(builder.matches("/download" +path));
         DownloadableResource resource = builder.parse(path, Collections.<String, String>emptyMap());
         SuperBatchPluginResource batchResource = (SuperBatchPluginResource) resource;
         assertEquals("css", batchResource.getType());
-        assertEquals(batchResource.getUrl(), path);
+        assertEquals(path, batchResource.getUrl());
         assertEquals("batch.css", batchResource.getResourceName());
     }
 
@@ -66,18 +66,18 @@ public class TestSuperBatchDownloadableResourceBuilder extends TestCase
 
     public void testParseJavascript() throws UrlParseException
     {
-        String path = "/download/superbatch/js/batch.js";
-        assertTrue(builder.matches(path));
+        String path = "/superbatch/js/batch.js";
+        assertTrue(builder.matches("/download" + path));
         DownloadableResource resource = builder.parse(path, Collections.<String, String>emptyMap());
         SuperBatchPluginResource batchResource = (SuperBatchPluginResource) resource;
         assertEquals("js", batchResource.getType());
-        assertEquals(batchResource.getUrl(), path);
+        assertEquals(path, batchResource.getUrl());
         assertEquals("batch.js", batchResource.getResourceName());
     }
 
     public void testParseWithParam() throws UrlParseException
     {
-        String path="/download/superbatch/js/batch.js";
+        String path = "/superbatch/js/batch.js";
         Map<String, String> params = Collections.singletonMap("ieOnly", "true");
         DownloadableResource resource = builder.parse(path, params);
         SuperBatchPluginResource batchResource = (SuperBatchPluginResource) resource;
@@ -88,7 +88,7 @@ public class TestSuperBatchDownloadableResourceBuilder extends TestCase
 
     public void testParseWithParams() throws UrlParseException
     {
-        String path="/download/superbatch/js/batch.js";
+        String path = "/superbatch/js/batch.js";
         Map<String, String> params = new TreeMap<String, String>();
         params.put("ieOnly", "true");
         params.put("zomg", "false");
@@ -104,4 +104,5 @@ public class TestSuperBatchDownloadableResourceBuilder extends TestCase
         assertFalse("wrong path", builder.matches("/download/superbitch/css/batch.css"));
         assertFalse("wrong path", builder.matches("/download/superbatch/css/images/foo.png"));
     }
+
 }

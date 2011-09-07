@@ -1,21 +1,17 @@
 package com.atlassian.plugin.webresource;
 
-import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
-import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
-import static com.google.common.collect.ImmutableList.copyOf;
-import static com.google.common.collect.Iterables.any;
-
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.cache.filecache.StreamProvider;
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -23,20 +19,22 @@ import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
+import static com.google.common.collect.ImmutableList.copyOf;
+import static com.google.common.collect.Iterables.any;
 
 /**
  * Represents a batch of plugin resources. <p/>
- *
+ * <p/>
  * It provides methods to parse and generate urls to locate a batch of plugin resources. <p/>
- *
+ * <p/>
  * Note BatchPluginResource is also a type of {@link DownloadableResource}. The underlying implementation simply
  * keeps a list of {@link DownloadableResource} of which this batch represents and delegates method calls.
- * 
+ *
  * @since 2.2
  */
-public class BatchPluginResource implements DownloadableResource, PluginResource, BatchResource
+public class BatchPluginResource implements DownloadableResource, PluginResource, BatchResource, StreamProvider
 {
     private static final Logger log = LoggerFactory.getLogger(BatchPluginResource.class);
 
@@ -56,13 +54,14 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * For example: test.plugin:resources.js
      * <p/>
      * Note that name of the batch does not identify what the batch includes and could have been static e.g. batch.js
+     *
      * @param moduleCompleteKey - the key of the plugin module
-     * @param type - the type of resource (CSS/JS)
-     * @param params - the parameters of the resource (ieonly, media, etc)
+     * @param type              - the type of resource (CSS/JS)
+     * @param params            - the parameters of the resource (ieonly, media, etc)
      */
     public BatchPluginResource(final String moduleCompleteKey, final String type, final Map<String, String> params)
     {
-        this(moduleCompleteKey + "." + type, moduleCompleteKey, type, params, Collections.<DownloadableResource> emptyList());
+        this(moduleCompleteKey + "." + type, moduleCompleteKey, type, params, Collections.<DownloadableResource>emptyList());
     }
 
     /**
@@ -71,10 +70,11 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * <p/>
      * This constructor includes the resources that are contained in the batch, and so is primarily for use
      * when serving the resource.
+     *
      * @param moduleCompleteKey - the key of the plugin module
-     * @param type - the type of resource (CSS/JS)
-     * @param params - the parameters of the resource (ieonly, media, etc)
-     * @param resources - the resources included in the batch.
+     * @param type              - the type of resource (CSS/JS)
+     * @param params            - the parameters of the resource (ieonly, media, etc)
+     * @param resources         - the resources included in the batch.
      */
     public BatchPluginResource(final String moduleCompleteKey, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources)
     {
@@ -84,11 +84,12 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
     /**
      * This constructor should only ever be used internally within this class. It does not ensure that the resourceName's
      * file extension is the same as the given type. It is up to the calling code to ensure this.
-     * @param resourceName - the full name of the resource
+     *
+     * @param resourceName      - the full name of the resource
      * @param moduleCompleteKey - the key of the plugin module
-     * @param type - the type of resource (CSS/JS)
-     * @param params - the parameters of the resource (ieonly, media, etc)
-     * @param resources - the resources included in the batch.
+     * @param type              - the type of resource (CSS/JS)
+     * @param params            - the parameters of the resource (ieonly, media, etc)
+     * @param resources         - the resources included in the batch.
      */
     BatchPluginResource(final String resourceName, final String moduleCompleteKey, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources)
     {
@@ -116,6 +117,18 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
                 return resource.isResourceModified(request, response);
             }
         });
+    }
+
+    public void produceStream(OutputStream dest) throws IOException
+    {
+        try
+        {
+            streamResource(dest);
+        }
+        catch (DownloadException e)
+        {
+            throw new IOException(e);
+        }
     }
 
     public void serveResource(final HttpServletRequest request, final HttpServletResponse response) throws DownloadException
@@ -152,7 +165,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
 
     /**
      * Returns a url string in the format: /download/batch/MODULE_COMPLETE_KEY/resourceName?PARAMS
-     *
+     * <p/>
      * e.g. /download/batch/example.plugin:webresources/example.plugin:webresources.css?ie=true
      * <p/>
      * It is important for the url structure to be:
@@ -277,7 +290,8 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * to put a new line between files
      *
      * @param response the HTTP response
-     * @throws com.atlassian.plugin.servlet.DownloadException wraps an IOException (probably client abort)
+     * @throws com.atlassian.plugin.servlet.DownloadException
+     *          wraps an IOException (probably client abort)
      */
     private static void writeNewLine(final HttpServletResponse response) throws DownloadException
     {

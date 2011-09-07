@@ -26,6 +26,13 @@ public class PluginUtils
      */
     public static final String ATLASSIAN_PLUGINS_ENABLE_WAIT = "atlassian.plugins.enable.wait";
 
+     /**
+     * Used to customise the size of the LRU cache for files. This effectively controls how many files will be created
+     * by the file cache. Providing a negative number results in undefined behaviour.
+     * @since 2.10.0
+     */
+    public static final String FILE_CACHE_SIZE = "atlassian.file.cache.size";
+
     /**
      * Determines if a plugin requires a restart after being installed at runtime.  Looks for the annotation
      * {@link RequiresRestart} on the plugin's module descriptors.

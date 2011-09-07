@@ -108,7 +108,7 @@ class ContextBatch
         {
             public PluginResource apply(final PluginResourceBatchParams param)
             {
-                return new ContextBatchPluginResource(key, contexts, hash, param.getType(), param.getParameters());
+                return new ContextBatchPluginResource(key, contexts, hash, param.getType(), param.getParameters(),null, hash);
             }
         });
     }

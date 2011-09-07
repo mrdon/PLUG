@@ -36,7 +36,7 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
 
         MockitoAnnotations.initMocks(this);
         builder = new ContextBatchDownloadableResourceBuilder(mockDependencyResolver, mockPluginAccessor, mockWebResourceUrlProvider,
-            mockResourceFinder);
+            mockResourceFinder,null);
     }
 
     @Override
@@ -55,13 +55,13 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
     {
         final String context = "contexta";
         createContext(context);
-        final String path = "/download/contextbatch/css/contexta/batch.css";
+        final String path = "/contextbatch/css/null/contexta/contexta.css";
         assertTrue(builder.matches(path));
         final DownloadableResource resource = builder.parse(path, Collections.<String, String> emptyMap());
         final ContextBatchPluginResource batchResource = (ContextBatchPluginResource) resource;
         assertEquals("css", batchResource.getType());
-        assertEquals(batchResource.getUrl(), path);
-        assertEquals("batch.css", batchResource.getResourceName());
+        assertEquals(path,batchResource.getUrl());
+        assertEquals("contexta.css", batchResource.getResourceName());
         assertEquals(1, size(batchResource.getContexts()));
         assertEquals(context, get(batchResource.getContexts(), 0));
     }
@@ -70,13 +70,13 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
     {
         createContext("contexta");
         createContext("contextb");
-        final String path = "/download/contextbatch/css/contexta,contextb/batch.css";
+        final String path = "/contextbatch/css/null/contexta,contextb/contexta,contextb.css";
         assertTrue(builder.matches(path));
         final DownloadableResource resource = builder.parse(path, Collections.<String, String> emptyMap());
         final ContextBatchPluginResource batchResource = (ContextBatchPluginResource) resource;
         assertEquals("css", batchResource.getType());
-        assertEquals(batchResource.getUrl(), path);
-        assertEquals("batch.css", batchResource.getResourceName());
+        assertEquals(path, batchResource.getUrl());
+        assertEquals("contexta,contextb.css", batchResource.getResourceName());
         assertEquals(2, size(batchResource.getContexts()));
         assertEquals("contexta", get(batchResource.getContexts(), 0));
         assertEquals("contextb", get(batchResource.getContexts(), 1));
@@ -85,13 +85,13 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
     public void testParseJavascript() throws UrlParseException
     {
         createContext("contexta");
-        final String path = "/download/contextbatch/js/contexta/batch.js";
+        final String path = "/contextbatch/js/null/contexta/contexta.js";
         assertTrue(builder.matches(path));
         final DownloadableResource resource = builder.parse(path, Collections.<String, String> emptyMap());
         final ContextBatchPluginResource batchResource = (ContextBatchPluginResource) resource;
         assertEquals("js", batchResource.getType());
-        assertEquals(batchResource.getUrl(), path);
-        assertEquals("batch.js", batchResource.getResourceName());
+        assertEquals(path,batchResource.getUrl());
+        assertEquals("contexta.js", batchResource.getResourceName());
         assertEquals(1, size(batchResource.getContexts()));
         assertEquals("contexta", get(batchResource.getContexts(), 0));
     }
@@ -99,19 +99,19 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
     public void testParseWithParam() throws UrlParseException
     {
         createContext("contexta");
-        final String path = "/download/contextbatch/js/contexta/batch.js";
+        final String path = "/contextbatch/js/null/contexta/contexta.js";
         final Map<String, String> params = Collections.singletonMap("ieOnly", "true");
         final DownloadableResource resource = builder.parse(path, params);
         final ContextBatchPluginResource batchResource = (ContextBatchPluginResource) resource;
         assertEquals(params, batchResource.getParams());
         assertEquals(path + "?ieOnly=true", batchResource.getUrl());
-        assertEquals("batch.js", batchResource.getResourceName());
+        assertEquals("contexta.js", batchResource.getResourceName());
     }
 
     public void testParseWithParams() throws UrlParseException
     {
         createContext("contexta");
-        final String path = "/download/contextbatch/js/contexta/batch.js";
+        final String path = "/contextbatch/js/null/contexta/contexta.js";
         final Map<String, String> params = new TreeMap<String, String>();
         params.put("ieOnly", "true");
         params.put("zomg", "false");
@@ -119,12 +119,12 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
         final ContextBatchPluginResource batchResource = (ContextBatchPluginResource) resource;
         assertEquals(params, batchResource.getParams());
         assertEquals(path + "?ieOnly=true&zomg=false", batchResource.getUrl());
-        assertEquals("batch.js", batchResource.getResourceName());
+        assertEquals("contexta.js", batchResource.getResourceName());
     }
 
     public void testMatch()
     {
-        assertTrue("correct path", builder.matches("/download/contextbatch/css/contexta/batch.css"));
+        assertTrue("correct path", builder.matches("/download/contextbatch/css/null/contexta/contexta.css"));
         assertFalse("wrong path", builder.matches("/download/contextbatch/js/contexta/batch.css"));
         assertFalse("wrong path", builder.matches("/download/contextbatch/css/contexta/image.png"));
     }
