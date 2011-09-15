@@ -33,11 +33,11 @@ public class DefaultResourceBatchingConfiguration implements ResourceBatchingCon
         final String explicitSetting = System.getProperty(PLUGIN_WEBRESOURCE_BATCHING_OFF);
         if (explicitSetting != null)
         {
-            return Boolean.parseBoolean(explicitSetting);
+            return !Boolean.parseBoolean(explicitSetting);
         }
         else
         {
-            return Boolean.parseBoolean(System.getProperty(PluginUtils.ATLASSIAN_DEV_MODE));
+            return !Boolean.parseBoolean(System.getProperty(PluginUtils.ATLASSIAN_DEV_MODE));
         }
     }
 }
