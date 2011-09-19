@@ -51,7 +51,7 @@
  * </td>
  * <td class="confluenceTd"><ul>
  * 	<li>Plugin enabled via starting OSGi bundle directly</li>
- * 	<li>﻿OSGi bundle installed via OSGi apis</li>
+ * 	<li>OSGi bundle installed via OSGi apis</li>
  * </ul>
  * </td>
  * </tr>
@@ -74,7 +74,7 @@
  * </td>
  * </tr>
  * <tr>
- * <td class="confluenceTd"> ﻿PluginUninstalledEvent <br class="atl-forced-newline"> </td>
+ * <td class="confluenceTd"> PluginUninstalledEvent <br class="atl-forced-newline"> </td>
  * <td class="confluenceTd"><ul>
  * 	<li>Explicitly uninstalled via PluginController</li>
  * </ul>
