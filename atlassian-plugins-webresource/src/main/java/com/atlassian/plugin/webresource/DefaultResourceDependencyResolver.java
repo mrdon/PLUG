@@ -186,7 +186,7 @@ class DefaultResourceDependencyResolver implements ResourceDependencyResolver
         {
             if (!batchingConfiguration.isSuperBatchingEnabled())
             {
-                log.warn("Super batching not enabled, but getSuperBatchDependencies() called. Returning empty.");
+                log.debug("Super batching not enabled, but getSuperBatchDependencies() called. Returning empty.");
                 return emptyMap();
             }
             while (true)
