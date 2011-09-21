@@ -174,12 +174,11 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
         getStore().save(getBuilder().clearPluginRestartState().toState());
 
-        pluginEventManager.broadcast(new PluginFrameworkStartedEvent(this, this));
         stopWatch.stop();
         log.info("Plugin system started in " + stopWatch);
         tracker.setState(StateTracker.State.STARTED);
-
         validateRequiredPlugins();
+        pluginEventManager.broadcast(new PluginFrameworkStartedEvent(this, this));
     }
 
     private void validateRequiredPlugins() throws PluginException
