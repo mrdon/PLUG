@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 public class RequiredPluginValidator
 {
@@ -19,25 +20,22 @@ public class RequiredPluginValidator
     {
         this.pluginAccessor = pluginAccessor;
         this.requiredPluginProvider = requiredPluginProvider;
-        errors = new ArrayList<String>();
+        errors = new HashSet<String>();
     }
 
     /**
      * Validates that the plugins specified in the {@link ClasspathFilePluginMetadata} are enabled.
      *
-     * Returns true if all of the plugins and modules are enabled, false otherwise.
+     * Returns a Collection of all of the keys that did not validate
      *
-     * @return True if the plugins and modules are enabled, false otherwise.
+     * @return A Collection of plugin and module keys that did not validate.
      */
-    public boolean validate()
+    public Collection<String> validate()
     {
-        boolean isValid = true;
-
         for (String key : requiredPluginProvider.getRequiredPluginKeys())
         {
             if (!pluginAccessor.isPluginEnabled(key))
             {
-                isValid = false;
                 log.error("Plugin Not Enabled: " + key);
                 errors.add(key);
             }
@@ -47,22 +45,11 @@ public class RequiredPluginValidator
         {
             if (!pluginAccessor.isPluginModuleEnabled(key))
             {
-                isValid = false;
                 log.error("Plugin Module Not Enabled: " + key);
                 errors.add(key);
             }
         }
 
-        return isValid;
-    }
-
-    /**
-     * The collection of error strings if the validation failed. An empty collection otherwise.
-     *
-     * @return A collection of error strings.
-     */
-    public Collection<String> getErrors()
-    {
         return errors;
     }
 }

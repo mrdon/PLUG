@@ -6,6 +6,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -55,8 +56,7 @@ public class TestRequiredPluginValidator extends TestCase
         Mockito.when(pluginAccessor.isPluginEnabled(Mockito.anyString())).thenReturn(true);
         Mockito.when(pluginAccessor.isPluginModuleEnabled(Mockito.anyString())).thenReturn(true);
         RequiredPluginValidator validator = new RequiredPluginValidator(pluginAccessor, provider);
-        assertTrue(validator.validate());
-        assertTrue(validator.getErrors().isEmpty());
+        assertTrue(validator.validate().size() == 0);
     }
 
     public void testValidateFails()
@@ -65,8 +65,8 @@ public class TestRequiredPluginValidator extends TestCase
         Mockito.when(pluginAccessor.isPluginEnabled(PLUGIN_KEY)).thenReturn(false);
         Mockito.when(pluginAccessor.isPluginModuleEnabled(Mockito.anyString())).thenReturn(true);
         RequiredPluginValidator validator = new RequiredPluginValidator(pluginAccessor, provider);
-        assertFalse(validator.validate());
-        assertTrue(validator.getErrors().contains(PLUGIN_KEY));
-        assertEquals(1, validator.getErrors().size());
+        Collection<String> errors = validator.validate();
+        assertTrue(errors.size() == 1);
+        assertTrue(errors.contains(PLUGIN_KEY));
     }
 }

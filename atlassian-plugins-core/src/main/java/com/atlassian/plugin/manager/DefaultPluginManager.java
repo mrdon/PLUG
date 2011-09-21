@@ -184,11 +184,12 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     private void validateRequiredPlugins() throws PluginException
     {
         RequiredPluginValidator validator = new RequiredPluginValidator(this, new ClasspathFilePluginMetadata());
-        if (!validator.validate())
+        Collection<String> errors = validator.validate();
+        if (errors.size() > 0)
         {
             log.error("Unable to validate required plugins or modules - plugin system shutting down");
             log.error("Failures:");
-            for (String error : validator.getErrors())
+            for (String error : errors)
             {
                 log.error("\t{}", error);
             }
