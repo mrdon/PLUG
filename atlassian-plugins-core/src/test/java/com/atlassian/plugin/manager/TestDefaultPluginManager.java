@@ -29,6 +29,7 @@ import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.loaders.SinglePluginLoader;
 import com.atlassian.plugin.loaders.classloading.AbstractTestClassLoader;
 import com.atlassian.plugin.manager.store.MemoryPluginPersistentStateStore;
+import com.atlassian.plugin.metadata.ClasspathFilePluginMetadata;
 import com.atlassian.plugin.mock.*;
 import com.atlassian.plugin.module.ModuleFactory;
 import com.atlassian.plugin.parsers.DescriptorParser;
@@ -43,8 +44,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -2167,6 +2170,100 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
             fail("Should not have thrown an exception!");
         }
         assertTrue(listener.isCalled());
+    }
+
+    private void writeToFile(String file, String line) throws IOException
+    {
+        final String resourceName = ClasspathFilePluginMetadata.class.getPackage().getName().replace(".", "/") + "/" + file;
+        URL resource = getClass().getClassLoader().getResource(resourceName);
+
+        FileOutputStream fout = new FileOutputStream(resource.getFile(), false);
+        fout.write(line.getBytes(), 0, line.length());
+        fout.close();
+
+    }
+
+    public void testExceptionOnRequiredPluginNotEnabling() throws Exception
+    {
+        try
+        {
+            writeToFile("application-required-modules.txt", "foo.required:bar");
+            writeToFile("application-required-plugins.txt", "foo.required");
+
+            final Mock mockPluginLoader = new Mock(PluginLoader.class);
+            final ModuleDescriptor<Object> badModuleDescriptor = new AbstractModuleDescriptor<Object>(ModuleFactory.LEGACY_MODULE_FACTORY)
+            {
+                @Override
+                public String getKey()
+                {
+                    return "bar";
+                }
+
+                @Override
+                public String getCompleteKey()
+                {
+                    return "foo.required:bar";
+                }
+
+                @Override
+                public void enabled()
+                {
+                    throw new IllegalArgumentException("Cannot enable");
+                }
+
+                @Override
+                public Object getModule()
+                {
+                    return null;
+                }
+            };
+
+            final AbstractModuleDescriptor goodModuleDescriptor = mock(AbstractModuleDescriptor.class);
+            when(goodModuleDescriptor.getKey()).thenReturn("baz");
+            when(goodModuleDescriptor.getCompleteKey()).thenReturn("foo.required:baz");
+
+            Plugin plugin = new StaticPlugin()
+            {
+                @Override
+                public Collection<ModuleDescriptor<?>> getModuleDescriptors()
+                {
+                    return Arrays.<ModuleDescriptor<?>>asList(goodModuleDescriptor, badModuleDescriptor);
+                }
+
+                @Override
+                public ModuleDescriptor<Object> getModuleDescriptor(final String key)
+                {
+                    return badModuleDescriptor;
+                }
+            };
+            plugin.setKey("foo.required");
+            plugin.setEnabledByDefault(true);
+            plugin.setPluginInformation(new PluginInformation());
+
+            mockPluginLoader.expectAndReturn("loadAllPlugins", C.ANY_ARGS, Collections.singletonList(plugin));
+
+            @SuppressWarnings("unchecked")
+            final PluginLoader loader = (PluginLoader) mockPluginLoader.proxy();
+            pluginLoaders.add(loader);
+
+            try
+            {
+                manager.init();
+            }
+            catch(PluginException e)
+            {
+                // expected
+                assertEquals("Unable to validate required plugins or modules", e.getMessage());
+                return;
+            }
+            fail("A PluginException is expected when trying to initialize the plugins system with required plugins that do not load.");
+        }
+        finally
+        {
+            // remove references from required files
+            writeToFile("application-required-modules.txt", "");
+            writeToFile("application-required-plugins.txt", "");
+        }
     }
 
     public static class ThingsAreWrongListener

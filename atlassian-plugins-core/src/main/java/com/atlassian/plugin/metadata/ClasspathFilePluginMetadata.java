@@ -31,7 +31,7 @@ import static org.apache.commons.io.IOUtils.readLines;
  *
  * @since 2.6
  */
-public class ClasspathFilePluginMetadata implements PluginMetadata
+public class ClasspathFilePluginMetadata implements PluginMetadata, RequiredPluginProvider
 {
     final static String APPLICATION_PROVIDED_PLUGINS_FILENAME = "application-provided-plugins.txt";
     final static String APPLICATION_REQUIRED_PLUGINS_FILENAME = "application-required-plugins.txt";
@@ -68,6 +68,16 @@ public class ClasspathFilePluginMetadata implements PluginMetadata
     public boolean required(final ModuleDescriptor<?> module)
     {
         return requiredModuleKeys.contains(module.getCompleteKey());
+    }
+
+    public Set<String> getRequiredPluginKeys()
+    {
+        return requiredPluginKeys;
+    }
+
+    public Set<String> getRequiredModuleKeys()
+    {
+        return requiredModuleKeys;
     }
 
     private Set<String> getStringsFromFile(final String fileName)

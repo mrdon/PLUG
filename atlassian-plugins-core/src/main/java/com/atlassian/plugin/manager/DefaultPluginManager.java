@@ -49,6 +49,8 @@ import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.loaders.DynamicPluginLoader;
 import com.atlassian.plugin.loaders.PluginLoader;
 import com.atlassian.plugin.manager.PluginPersistentState.Builder;
+import com.atlassian.plugin.metadata.ClasspathFilePluginMetadata;
+import com.atlassian.plugin.metadata.RequiredPluginValidator;
 import com.atlassian.plugin.parsers.DescriptorParserFactory;
 import com.atlassian.plugin.predicate.EnabledModulePredicate;
 import com.atlassian.plugin.predicate.EnabledPluginPredicate;
@@ -176,6 +178,24 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         stopWatch.stop();
         log.info("Plugin system started in " + stopWatch);
         tracker.setState(StateTracker.State.STARTED);
+
+        validateRequiredPlugins();
+    }
+
+    private void validateRequiredPlugins() throws PluginException
+    {
+        RequiredPluginValidator validator = new RequiredPluginValidator(this, new ClasspathFilePluginMetadata());
+        if (!validator.validate())
+        {
+            log.error("Unable to validate required plugins or modules - plugin system shutting down");
+            log.error("Failures:");
+            for (String error : validator.getErrors())
+            {
+                log.error("\t{}", error);
+            }
+            shutdown();
+            throw new PluginException("Unable to validate required plugins or modules");
+        }
     }
 
     /**
