@@ -17,22 +17,6 @@ public class TestResourceUtils extends TestCase
         assertEquals("", ResourceUtils.getType("/superbatch/js/foo"));
     }
 
-    public void testCacheKeyNoParameters() throws Exception
-    {
-        String path = "/Jerome/Jerome/the/metronome";
-        assertEquals(path, ResourceUtils.buildCacheKey(path, Collections.<String, String>emptyMap()));
-    }
-
-    public void testCacheKeyWithParameters() throws Exception
-    {
-        String path = "/They/won/t/recognize/you";
-        Map<String,String> map = new HashMap<String, String>();
-        map.put("They","ll");
-        map.put("recognize","me");
-        assertEquals(path+"Theyllrecognizeme",ResourceUtils.buildCacheKey(path,map));
-
-    }
-
     public void testCacheKeyParameterOrder() throws Exception
     {
         String path = "/A/year/is/a/long/time";

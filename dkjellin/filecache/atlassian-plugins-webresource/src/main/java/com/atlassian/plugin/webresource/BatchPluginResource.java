@@ -1,7 +1,7 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.cache.filecache.StreamProvider;
+import com.atlassian.plugin.cache.filecache.FileCacheStreamProvider;
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.google.common.base.Predicate;
@@ -34,7 +34,7 @@ import static com.google.common.collect.Iterables.any;
  *
  * @since 2.2
  */
-public class BatchPluginResource implements DownloadableResource, PluginResource, BatchResource, StreamProvider
+public class BatchPluginResource implements DownloadableResource, PluginResource, BatchResource, FileCacheStreamProvider
 {
     private static final Logger log = LoggerFactory.getLogger(BatchPluginResource.class);
 
@@ -119,7 +119,7 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         });
     }
 
-    public void produceStream(OutputStream dest) throws IOException
+    public void writeStream(OutputStream dest) throws IOException
     {
         try
         {

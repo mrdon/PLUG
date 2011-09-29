@@ -2,7 +2,8 @@ package com.atlassian.plugin.cache.filecache.impl;
 
 
 import com.atlassian.plugin.cache.filecache.FileCache;
-import com.atlassian.plugin.cache.filecache.StreamProvider;
+import com.atlassian.plugin.cache.filecache.FileCacheKey;
+import com.atlassian.plugin.cache.filecache.FileCacheStreamProvider;
 import com.atlassian.plugin.webresource.WebResourceIntegration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * This implementation does not remember its state across restarts.
@@ -31,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * - other cache-size checks will block
  * <p/>
  * <p/>
+ *
  * @since 2.10.0
  */
 public class LRUFileCache implements FileCache
@@ -41,45 +45,43 @@ public class LRUFileCache implements FileCache
     private final File tmpDir;
     private final int maxFiles;
 
-    private final LinkedHashMap<String, CachedFile> nodes;
-    private final Object nodesLock = new Object();
+    private final LinkedHashMap<FileCacheKey, CachedFile> nodes;
+    private final Lock nodesLock = new ReentrantLock();
     private static final Logger log = LoggerFactory.getLogger(LRUFileCache.class);
 
     private final AtomicInteger filenameCounter = new AtomicInteger(0);
 
     /**
      * Sole constructor.
+     *
      * @param webResourceIntegration provides information as to where to store cache files.
-     * @param maxFiles maximum number of files to retain. This class will try to honour this but at any point there may be
-     * more or less files on disk, it is not an absolute number that will never be exceeded.
+     * @param maxFiles               maximum number of files to retain. This class will try to honour this but at any point there may be
+     *                               more or less files on disk, it is not an absolute number that will never be exceeded.
      * @throws IOException if the temp directory could not be created, or is not a directory.
      */
     public LRUFileCache(WebResourceIntegration webResourceIntegration, int maxFiles) throws IOException
     {
-        this.tmpDir =webResourceIntegration.getTemporaryDirectory();
+        this.tmpDir = webResourceIntegration.getTemporaryDirectory();
 
-        if(maxFiles < 1)
+        if (maxFiles < 1)
         {
             throw new IllegalArgumentException("Max files can not be less than one");
         }
         this.maxFiles = maxFiles;
 
-        nodes = new LinkedHashMap<String, CachedFile>(16, 0.75f, true);
+        nodes = new LinkedHashMap<FileCacheKey, CachedFile>(16, 0.75f, true);
 
-        if(!tmpDir.mkdirs())
+        if (!tmpDir.mkdirs())
         {
             //if the directory exists the above will return false, and if it does exist we must clear it as we do not allow for restarts
-            if(tmpDir.exists())
+            if (tmpDir.exists() && tmpDir.isDirectory())
             {
-                File[]  files = tmpDir.listFiles();
-                if(files!=null)
+                File[] files = tmpDir.listFiles();
+                for (File f : files)
                 {
-                    for(File f : files)
+                    if (!f.delete())
                     {
-                        if(!f.delete())
-                        {
-                            log.warn("Could not delete file: " +f.getAbsolutePath());
-                        }
+                        log.warn("Could not delete file: " + f.getAbsolutePath());
                     }
                 }
             }
@@ -91,23 +93,26 @@ public class LRUFileCache implements FileCache
 
     }
 
-      /**
+    /**
      * Stream from file cache if we have it cached, otherwise create a new file and stream from it.
-     * @param key any non-null, non-empty string that identifies the cached item
-     * @param dest where to write the cached item to
+     *
+     *
+     * @param key   any non-null, non-empty string that identifies the cached item
+     * @param dest  where to write the cached item to
      * @param input provides the underlying item on a cache-miss
      * @throws IOException if anything goes wrong and recovery is not possible during streaming.
      */
-    public void stream(String key, OutputStream dest, StreamProvider input) throws IOException
+    public void stream(FileCacheKey key, OutputStream dest, FileCacheStreamProvider input) throws IOException
     {
         streamImpl(key, dest, input);
     }
 
     /**
      * Stream from file if exists, otherwise create file and stream from it.
+     *
      * @return true if there was a cache-hit
      */
-    boolean streamImpl(String key, OutputStream dest, StreamProvider input) throws IOException
+    boolean streamImpl(FileCacheKey key, OutputStream dest, FileCacheStreamProvider input) throws IOException
     {
 
         // putting things into and out of the nodes map is locked, and calling delete() on a node
@@ -120,10 +125,9 @@ public class LRUFileCache implements FileCache
         try
         {
             CachedFile.StreamResult result;
-            do
-            {
 
-                synchronized (nodesLock)
+                nodesLock.lock();
+                try
                 {
                     cachedFile = nodes.get(key);
                     if (cachedFile == null)
@@ -133,45 +137,45 @@ public class LRUFileCache implements FileCache
                         newNode = true;
                     }
                 }
+                finally
+                {
+                    nodesLock.unlock();
+                }
 
                 result = cachedFile.stream(dest, input);
-
-
-            }
-            while (result == CachedFile.StreamResult.TRY_AGAIN);
         }
         catch (IOException e)
         {
-            if (newNode)
-            {
-                clean(key);
-            }
+
+            clean(key, newNode);
             throw e;
         }
         catch (RuntimeException e)
         {
-            if (newNode)
-            {
-                clean(key);
-            }
+            clean(key, newNode);
             throw e;
         }
         finally
         {
             if (newNode)
             {
+                nodesLock.lock();
                 // update the size of the cache, and maybe evict some nodes
-                synchronized (nodesLock)
+                try
                 {
                     while (nodes.size() > maxFiles)
                     {
-                        Iterator<Map.Entry<String, CachedFile>> iterator = nodes.entrySet().iterator();
-                        Map.Entry<String, CachedFile> evictEntry = iterator.next();
+                        Iterator<Map.Entry<FileCacheKey, CachedFile>> iterator = nodes.entrySet().iterator();
+                        Map.Entry<FileCacheKey, CachedFile> evictEntry = iterator.next();
                         iterator.remove();
 
                         CachedFile evictee = evictEntry.getValue();
                         evictee.delete();
                     }
+                }
+                finally
+                {
+                    nodesLock.unlock();
                 }
             }
         }
@@ -180,16 +184,31 @@ public class LRUFileCache implements FileCache
         return !newNode;
     }
 
-    private void clean(String key)
+    private void clean(FileCacheKey key, boolean newNode)
     {
-        CachedFile item;
-        synchronized (nodesLock)
+        if (newNode)
         {
-            item = nodes.remove(key);
-        }
-        if(item!=null)
-        {
-            item.delete();
+            CachedFile item;
+            nodesLock.lock();
+            try
+            {
+                item = nodes.remove(key);
+            }
+            finally
+            {
+                nodesLock.unlock();
+            }
+            if (item != null)
+            {
+                try
+                {
+                    item.delete();
+                }
+                catch (IOException e)
+                {
+                    log.warn("Could not delete file ", e);
+                }
+            }
         }
     }
 
@@ -197,14 +216,6 @@ public class LRUFileCache implements FileCache
     {
         int id = filenameCounter.incrementAndGet();
         File file = new File(tmpDir, id + EXT);
-        if (file.exists())
-        {
-            // delete it, we own this directory
-            if (!file.delete())
-            {
-                throw new IOException("Could not create file cache file because of undeletable existing file " + file.getAbsolutePath());
-            }
-        }
         return new CachedFile(file);
     }
 }

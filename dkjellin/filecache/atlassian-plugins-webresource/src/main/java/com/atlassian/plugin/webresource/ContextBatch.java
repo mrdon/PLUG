@@ -9,6 +9,7 @@ import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Sets.newHashSet;
 
 import com.atlassian.plugin.ModuleDescriptor;
+import com.atlassian.plugin.cache.filecache.impl.NonCachingFileCache;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -108,7 +110,7 @@ class ContextBatch
         {
             public PluginResource apply(final PluginResourceBatchParams param)
             {
-                return new ContextBatchPluginResource(key, contexts, hash, param.getType(), param.getParameters(),null, hash);
+                return new ContextBatchPluginResource(key, contexts, hash, param.getType(), param.getParameters(),new NonCachingFileCache(), ResourceUtils.buildCacheKey(hash, Collections.<String, String>emptyMap()));
             }
         });
     }

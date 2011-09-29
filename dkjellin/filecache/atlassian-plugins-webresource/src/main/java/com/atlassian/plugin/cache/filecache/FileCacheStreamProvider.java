@@ -9,12 +9,14 @@ import java.io.OutputStream;
  * implement this interface. This interface gives the file cache a means to get hold of the contents that will be cached.
  * @since 2.10.0
  */
-public interface StreamProvider {
+public interface FileCacheStreamProvider
+{
     /**
      * Produce the complete stream and write to the designated output stream. Classes implementing this method should not
      * close the output stream.
+     *
      * @param dest designated output stream.
      * @throws IOException If something goes awry while writing the file.
      */
-    void produceStream(OutputStream dest) throws IOException;
+    void writeStream(OutputStream dest) throws IOException;
 }

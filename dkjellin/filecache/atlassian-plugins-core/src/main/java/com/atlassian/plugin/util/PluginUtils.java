@@ -31,7 +31,7 @@ public class PluginUtils
      * by the file cache. Providing a negative number results in undefined behaviour.
      * @since 2.10.0
      */
-    public static final String FILE_CACHE_SIZE = "atlassian.file.cache.size";
+    public static final String FILE_CACHE_SIZE = new String("atlassian.file.cache.size");
 
     /**
      * Determines if a plugin requires a restart after being installed at runtime.  Looks for the annotation

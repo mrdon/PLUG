@@ -1,8 +1,12 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.cache.filecache.FileCache;
+import com.atlassian.plugin.cache.filecache.FileCacheKey;
+import com.atlassian.plugin.cache.filecache.impl.NonCachingFileCache;
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
+import com.atlassian.util.concurrent.NotNull;
+
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,7 +33,7 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
     private final BatchPluginResource delegate;
     private final String resourceName;
     private final FileCache fileCache;
-    private final String url;
+    private final FileCacheKey cacheKey;
 
     public static SuperBatchPluginResource createBatchFor(final PluginResource pluginResource)
     {
@@ -44,20 +48,21 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
      */
     public SuperBatchPluginResource(final String type, final Map<String, String> params)
     {
-        this(type, params, Collections.<DownloadableResource>emptyList(), null, "invalid");
+        this(type, params, Collections.<DownloadableResource>emptyList(), new NonCachingFileCache(), ResourceUtils.buildCacheKey("invalid",Collections.<String, String>emptyMap()));
     }
 
-    public SuperBatchPluginResource(final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, FileCache fileCache, String path)
+    public SuperBatchPluginResource(final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, FileCache fileCache, FileCacheKey cacheKey)
     {
-        this(DEFAULT_RESOURCE_NAME_PREFIX + "." + type, type, params, resources, fileCache, path);
+        this(DEFAULT_RESOURCE_NAME_PREFIX + "." + type, type, params, resources, fileCache, cacheKey);
     }
 
-    protected SuperBatchPluginResource(final String resourceName, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, FileCache fileCache, String path)
+    protected SuperBatchPluginResource(final String resourceName, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources,@NotNull FileCache fileCache, @NotNull FileCacheKey cacheKey)
     {
         this.resourceName = resourceName;
         delegate = new BatchPluginResource(null, type, params, resources);
+
         this.fileCache = fileCache;
-        this.url = path;
+        this.cacheKey = cacheKey;
     }
 
     public boolean isResourceModified(final HttpServletRequest request, final HttpServletResponse response)
@@ -67,14 +72,9 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
 
     public void serveResource(final HttpServletRequest request, final HttpServletResponse response) throws DownloadException
     {
-        if (fileCache == null)
-        {
-            delegate.serveResource(request, response);
-            return;
-        }
         try
         {
-            fileCache.stream(url, response.getOutputStream(), delegate);
+            fileCache.stream(cacheKey, response.getOutputStream(), delegate);
         }
         catch (IOException e)
         {
@@ -84,14 +84,9 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
 
     public void streamResource(final OutputStream out) throws DownloadException
     {
-        if(fileCache == null)
-        {
-            delegate.streamResource(out);
-            return;
-        }
         try
         {
-            fileCache.stream(url, out, delegate);
+            fileCache.stream(cacheKey, out, delegate);
         }
         catch (IOException e)
         {

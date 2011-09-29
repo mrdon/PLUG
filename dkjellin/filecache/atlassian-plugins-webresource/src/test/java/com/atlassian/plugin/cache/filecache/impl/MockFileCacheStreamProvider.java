@@ -1,6 +1,6 @@
 package com.atlassian.plugin.cache.filecache.impl;
 
-import com.atlassian.plugin.cache.filecache.StreamProvider;
+import com.atlassian.plugin.cache.filecache.FileCacheStreamProvider;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -9,16 +9,16 @@ import java.io.OutputStream;
  * Class to simplify testing the file caching.
  * @since 2.10.0
  */
-class MockStreamProvider implements StreamProvider
+class MockFileCacheStreamProvider implements FileCacheStreamProvider
 {
     final byte[] bytes;
     boolean producedStream = false;
 
-    MockStreamProvider(byte[] bytes) {
+    MockFileCacheStreamProvider(byte[] bytes) {
         this.bytes = bytes;
     }
 
-    public void produceStream(OutputStream dest) throws IOException {
+    public void writeStream(OutputStream dest) throws IOException {
         producedStream = true;
         dest.write(bytes);
     }

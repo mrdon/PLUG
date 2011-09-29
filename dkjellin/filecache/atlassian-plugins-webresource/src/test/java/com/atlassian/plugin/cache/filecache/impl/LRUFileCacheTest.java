@@ -1,5 +1,6 @@
 package com.atlassian.plugin.cache.filecache.impl;
 
+import com.atlassian.plugin.cache.filecache.FileCacheKey;
 import com.atlassian.plugin.webresource.WebResourceIntegration;
 import junit.framework.TestCase;
 
@@ -33,31 +34,31 @@ public class LRUFileCacheTest extends TestCase {
         byte[] bfile = "this is the other one".getBytes();
         byte[] cfile = "this is yet another one".getBytes();
 
-        cache(cache, "a", afile, false);
-        cache(cache, "a", afile, true);
+        cache(cache, new MockCacheKey("a"), afile, false);
+        cache(cache, new MockCacheKey("a"), afile, true);
 
-        cache(cache, "b", bfile, false);
-        cache(cache, "b", bfile, true);
+        cache(cache, new MockCacheKey("b"), bfile, false);
+        cache(cache, new MockCacheKey("b"), bfile, true);
 
-        cache(cache, "a", afile, true); // still a hit
+        cache(cache, new MockCacheKey("a"), afile, true); // still a hit
 
-        cache(cache, "c", cfile, false);
-        cache(cache, "c", cfile, true);
+        cache(cache, new MockCacheKey("c"), cfile, false);
+        cache(cache, new MockCacheKey("c"), cfile, true);
 
-        cache(cache, "a", afile, true); // still a hit
+        cache(cache, new MockCacheKey("a"), afile, true); // still a hit
 
-        cache(cache, "b", bfile, false); // but a miss, evicted
-        cache(cache, "b", bfile, true);
-        cache(cache, "c", cfile, false); // but c should have fallen out
+        cache(cache, new MockCacheKey("b"), bfile, false); // but a miss, evicted
+        cache(cache, new MockCacheKey("b"), bfile, true);
+        cache(cache, new MockCacheKey("c"), cfile, false); // but c should have fallen out
 
 
     }
 
 
 
-    private void cache(LRUFileCache cache, String key, byte[] bytes, boolean hitExpected) throws Exception {
+    private void cache(LRUFileCache cache, FileCacheKey key, byte[] bytes, boolean hitExpected) throws Exception {
         ByteArrayOutputStream dest = new ByteArrayOutputStream();
-        MockStreamProvider input = new MockStreamProvider(bytes);
+        MockFileCacheStreamProvider input = new MockFileCacheStreamProvider(bytes);
         boolean hit = cache.streamImpl(key, dest, input);
         assertEquals(hitExpected, hit);
         assertEquals(!hitExpected, input.producedStream);
@@ -65,6 +66,35 @@ public class LRUFileCacheTest extends TestCase {
         assertEquals(bytes.length, actualBytes.length);
         for (int i = 0; i < bytes.length; i++) {
             assertEquals(bytes[i], actualBytes[i]);
+        }
+    }
+
+    private static class MockCacheKey implements FileCacheKey
+    {
+        final String key;
+
+        private MockCacheKey(String key)
+        {
+            this.key = key;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            MockCacheKey that = (MockCacheKey) o;
+
+            if (key != null ? !key.equals(that.key) : that.key != null) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return key != null ? key.hashCode() : 0;
         }
     }
 

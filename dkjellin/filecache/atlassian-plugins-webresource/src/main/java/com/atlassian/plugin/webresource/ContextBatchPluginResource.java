@@ -1,8 +1,10 @@
 package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.cache.filecache.FileCache;
+import com.atlassian.plugin.cache.filecache.FileCacheKey;
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
+import com.atlassian.util.concurrent.NotNull;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -34,20 +36,20 @@ class ContextBatchPluginResource implements DownloadableResource, BatchResource,
     private final String key;
     private final Iterable<String> contexts;
     private final String hash;
-    private final String cacheKey;
+    private final FileCacheKey cacheKey;
     private final FileCache fileCache;
 
-    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params, final FileCache fileCache, final String cacheKey)
+    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params, final FileCache fileCache, final FileCacheKey cacheKey)
     {
         this(key, contexts, hash, type, params, Collections.<DownloadableResource>emptyList(), fileCache, cacheKey);
     }
 
-    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, final FileCache fileCache, final String cacheKey)
+    ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, final FileCache fileCache, final FileCacheKey cacheKey)
     {
         this(key, contexts, null, type, params, resources, fileCache, cacheKey);
     }
 
-    private ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, final FileCache fileCache, final String cacheKey)
+    private ContextBatchPluginResource(final String key, final Iterable<String> contexts, final String hash, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, @NotNull final FileCache fileCache, @NotNull final FileCacheKey cacheKey)
     {
         resourceName = key + "." + type;
         delegate = new BatchPluginResource(null, type, params, resources);
@@ -70,11 +72,6 @@ class ContextBatchPluginResource implements DownloadableResource, BatchResource,
 
     public void serveResource(final HttpServletRequest request, final HttpServletResponse response) throws DownloadException
     {
-        if (fileCache == null)
-        {
-            delegate.serveResource(request, response);
-            return;
-        }
         try
         {
             fileCache.stream(cacheKey, response.getOutputStream(), delegate);
@@ -87,11 +84,6 @@ class ContextBatchPluginResource implements DownloadableResource, BatchResource,
 
     public void streamResource(final OutputStream out) throws DownloadException
     {
-        if (fileCache == null)
-        {
-            delegate.streamResource(out);
-            return;
-        }
         try
         {
             fileCache.stream(cacheKey, out, delegate);

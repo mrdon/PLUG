@@ -1,7 +1,7 @@
 package com.atlassian.plugin.cache.filecache.impl;
 
 
-import com.atlassian.plugin.cache.filecache.StreamProvider;
+import com.atlassian.plugin.cache.filecache.FileCacheStreamProvider;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +11,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
@@ -25,7 +26,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * The stream() and delete() methods can be called in any combination.
  * <p/>
  * If the call to stream() worked, it will return some type of SUCCESS.
- * If the file has already been deleted, stream() will return TRY_AGAIN.
  * <p/>
  * This implementation will concurrently execute calls to stream().
  * A call to delete() will block untill all current calls to stream() have finished.
@@ -39,21 +39,17 @@ class CachedFile
 {
     private static final Logger LOG = LoggerFactory.getLogger(CachedFile.class);
 
-    static enum State
-    {
-        UNCREATED, EXISTS, EVICTED
-    }
 
     static enum StreamResult
     {
-        SUCCESS_CACHED, SUCCESS_CREATED, TRY_AGAIN
+        SUCCESS_CACHED, SUCCESS_CREATED
     }
 
     private final File file;
-    private transient State state;
+//    private transient State state;
 
     /**
-     * controls access to state
+     * controls access to file
      */
     final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -61,16 +57,16 @@ class CachedFile
      * Sole constructor.
      * @param file file to create/read when requested.
      */
-    public CachedFile(File file)
+    public CachedFile(File file) throws IOException
     {
         this.file = file;
         if (file.exists())
         {
-            this.state = State.EXISTS;
-        }
-        else
-        {
-            this.state = State.UNCREATED;
+            // delete it, we own this directory
+            if (!file.delete())
+            {
+                throw new IOException("Could not create file cache file because of undeletable existing file " + file.getAbsolutePath());
+            }
         }
     }
 
@@ -78,46 +74,60 @@ class CachedFile
      * Stream the file to the destination, making use of the cached file if it exists.
      * @throws IOException on any error caching the file, or writing the file to dest
      */
-    public StreamResult stream(OutputStream dest, StreamProvider input) throws IOException
+    public StreamResult stream(OutputStream dest, FileCacheStreamProvider input) throws IOException
     {
-        boolean cacheHit = createIfNeeded(input);
-        try
-        {
+        boolean cacheHit = true;
+
+            Lock currentLock;
             lock.readLock().lock();
+            currentLock = lock.readLock();
 
-            if (state == State.EVICTED)
+            try
             {
-                return StreamResult.TRY_AGAIN;
-            }
+                if (!file.exists()) //file has been deleted, we need to re-create it
+                {
+                    lock.readLock().unlock();
+                    lock.writeLock().lock();
+                    currentLock = lock.writeLock();
 
-            FileInputStream cachein = new FileInputStream(file);
-            IOUtils.copyLarge(cachein, dest);
-            cachein.close();
-        }
-        finally
-        {
-            lock.readLock().unlock();
-        }
+                    if (!file.exists()) //someone else may have written the file while we waited for the writelock..
+                    {
+                        cacheHit = false;
+                        streamToFile(input);
+                    }
+                    lock.readLock().lock(); //downgrading the lock
+                    lock.writeLock().unlock();
+                    currentLock = lock.readLock();
+                    streamToDestination(new FileInputStream(file), dest);
+                }
+                else
+                {
+                    streamToDestination(new FileInputStream(file), dest);
+                }
+            }
+            finally
+            {
+                currentLock.unlock();
+            }
 
         return cacheHit ? StreamResult.SUCCESS_CACHED : StreamResult.SUCCESS_CREATED;
     }
 
 
     /**
-     * Delete the file and change state to EVICTED,
+     * Delete the file, will block until all current reads are completed.
      */
-    public void delete()
+    public void delete() throws IOException
     {
         try
         {
             lock.writeLock().lock(); // no other readers! safe to delete
-            state = State.EVICTED;
 
             if (file.exists())
             {
                 if (!file.delete())
                 {
-                    LOG.warn("Could not delete cache file " + file);
+                    throw new IOException("Could not delete cache file " + file);
                 }
             }
         }
@@ -127,62 +137,37 @@ class CachedFile
         }
     }
 
-    private boolean createIfNeeded(StreamProvider input) throws IOException
-    {
-        boolean cacheHit = true;
-        lock.readLock().lock();
-        try
-        {
-            if (state == State.EXISTS && !file.exists()) //file has been deleted outside of our control, we must re-create it
-            {
-                lock.readLock().unlock();
-                lock.writeLock().lock();
-                try
-                {
-                    state = State.UNCREATED;
-                }
-                finally
-                {
-                    lock.writeLock().unlock();
-                }
-                lock.readLock().lock();//is this needed?
-            }
-        }
-        finally
-        {
-            lock.readLock().unlock();
-        }
-        if (state == State.UNCREATED)
-        {
-            try
-            {
-                lock.writeLock().lock();
-                if (state == State.UNCREATED)
-                {
-                    cacheHit = false;
-                    streamToFile(input);
-                    state = State.EXISTS;
-                }
-            }
-            finally
-            {
-                lock.writeLock().unlock();
-            }
-        }
-        return cacheHit;
-    }
 
-    private void streamToFile(StreamProvider input) throws IOException
+    private void streamToFile(FileCacheStreamProvider input) throws IOException
     {
         OutputStream cacheout = null;
         try
         {
             cacheout = new BufferedOutputStream(new FileOutputStream(file));
-            input.produceStream(cacheout);
+            input.writeStream(cacheout);
         }
         finally
         {
             IOUtils.closeQuietly(cacheout);
+        }
+    }
+
+    /**
+     * Copies the in stream to the out stream and closes the in stream when done.
+     * @param in source stream
+     * @param out destination stream
+     * @throws IOException should any errors occur.
+     */
+    private void streamToDestination(InputStream in, OutputStream out) throws  IOException
+    {
+        try
+        {
+            IOUtils.copyLarge(in, out);
+        }
+        finally
+        {
+            in.close();
+            out.flush();
         }
     }
 

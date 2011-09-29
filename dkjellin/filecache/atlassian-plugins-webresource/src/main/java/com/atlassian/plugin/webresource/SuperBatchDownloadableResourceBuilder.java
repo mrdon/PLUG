@@ -2,6 +2,7 @@ package com.atlassian.plugin.webresource;
 
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.cache.filecache.FileCache;
+import com.atlassian.plugin.cache.filecache.FileCacheKey;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.google.common.collect.ImmutableList;
 
@@ -50,7 +51,7 @@ class SuperBatchDownloadableResourceBuilder extends AbstractBatchResourceBuilder
         {
             resources = concat(resources, resolve(moduleDescriptor, type, params));
         }
-        final String cachekey = ResourceUtils.buildCacheKey(path, params);
+        final FileCacheKey cachekey = ResourceUtils.buildCacheKey(path, params);
         return new SuperBatchPluginResource(type, params, resources, fileCache, cachekey);
     }
 

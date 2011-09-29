@@ -41,7 +41,7 @@ class ContextBatchDownloadableResourceBuilder extends AbstractBatchResourceBuild
     public boolean matches(final String path)
     {
         final String type = ResourceUtils.getType(path);
-        return (path.indexOf(URL_PREFIX + type) > -1) && validTypes.contains(type);
+        return (path.contains(URL_PREFIX + type)) && validTypes.contains(type);
     }
 
     public ContextBatchPluginResource parse(final String path, final Map<String, String> params)
