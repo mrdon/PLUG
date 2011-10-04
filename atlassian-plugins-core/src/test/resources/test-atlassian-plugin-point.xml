@@ -11,7 +11,7 @@
     
     
     <!--  Define a plugin point -->
-    <!-- <module-type key="my-plugin-point" class="com.atlassian.plugin.descriptors.MyPluginPoint"  /> -->
+    <!-- <module-type key="book" class="com.atlassian.plugin.descriptors.MyPluginPoint"  /> -->
 
 
     <!-- Use the plugin point -->
