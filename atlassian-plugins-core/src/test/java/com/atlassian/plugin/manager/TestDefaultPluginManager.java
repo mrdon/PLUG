@@ -3,6 +3,7 @@ package com.atlassian.plugin.manager;
 import com.atlassian.plugin.*;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.descriptors.MockUnusedModuleDescriptor;
+import com.atlassian.plugin.descriptors.MyPluginPoint;
 import com.atlassian.plugin.descriptors.RequiresRestart;
 import com.atlassian.plugin.event.PluginEventListener;
 import com.atlassian.plugin.event.PluginEventManager;
@@ -57,8 +58,6 @@ import java.util.List;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class TestDefaultPluginManager extends AbstractTestClassLoader
 {
@@ -115,7 +114,10 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
 
         moduleDescriptorFactory.addModuleDescriptor("animal", MockAnimalModuleDescriptor.class);
         moduleDescriptorFactory.addModuleDescriptor("mineral", MockMineralModuleDescriptor.class);
+        moduleDescriptorFactory.addModuleDescriptor("library", MyPluginPoint.class);
         manager.init();
+        List<? extends ModuleDescriptor> md = manager.getEnabledModuleDescriptorsByClass(ModuleDescriptor.class);
+        
 
         assertEquals(2, manager.getPlugins().size());
         assertEquals(1, manager.getEnabledPlugins().size());
