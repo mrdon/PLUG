@@ -112,6 +112,8 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
     private final PluginEnabler pluginEnabler = new PluginEnabler(this, this);
     private final StateTracker tracker = new StateTracker();
 
+    private final boolean verifyRequiredPlugins;
+
     /**
      * Installer used for storing plugins. Used by
      * {@link #installPlugin(PluginArtifact)}.
@@ -125,12 +127,18 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
 
     public DefaultPluginManager(final PluginPersistentStateStore store, final List<PluginLoader> pluginLoaders, final ModuleDescriptorFactory moduleDescriptorFactory, final PluginEventManager pluginEventManager)
     {
+        this(store, pluginLoaders, moduleDescriptorFactory, pluginEventManager, false);
+    }
+
+    public DefaultPluginManager(final PluginPersistentStateStore store, final List<PluginLoader> pluginLoaders, final ModuleDescriptorFactory moduleDescriptorFactory, final PluginEventManager pluginEventManager, boolean verifyRequiredPlugins)
+    {
         this.pluginLoaders = notNull("Plugin Loaders list must not be null.", pluginLoaders);
         this.store = notNull("PluginPersistentStateStore must not be null.", store);
         this.moduleDescriptorFactory = notNull("ModuleDescriptorFactory must not be null.", moduleDescriptorFactory);
         this.pluginEventManager = notNull("PluginEventManager must not be null.", pluginEventManager);
 
         this.pluginEventManager.register(this);
+        this.verifyRequiredPlugins = verifyRequiredPlugins;
         classLoader = new PluginsClassLoader(null, this, pluginEventManager);
     }
 
@@ -177,7 +185,10 @@ public class DefaultPluginManager implements PluginController, PluginAccessor, P
         stopWatch.stop();
         log.info("Plugin system started in " + stopWatch);
         tracker.setState(StateTracker.State.STARTED);
-        validateRequiredPlugins();
+        if (verifyRequiredPlugins)
+        {
+            validateRequiredPlugins();
+        }
         pluginEventManager.broadcast(new PluginFrameworkStartedEvent(this, this));
     }
 
