@@ -84,7 +84,7 @@ public class TestDefaultPluginManager extends AbstractTestClassLoader
         pluginLoaders = new ArrayList<PluginLoader>();
         moduleDescriptorFactory = new DefaultModuleDescriptorFactory(new DefaultHostContainer());
 
-        manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, pluginEventManager);
+        manager = new DefaultPluginManager(pluginStateStore, pluginLoaders, moduleDescriptorFactory, pluginEventManager, true);
     }
 
     @Override
