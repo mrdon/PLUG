@@ -8,7 +8,7 @@
 
     <groupId>com.atlassian.plugins</groupId>
     <artifactId>atlassian-plugins-parent</artifactId>
-    <version>2.10.1-guava</version>
+    <version>2.10.2-guava-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Atlassian Plugins - Parent POM</name>
@@ -32,9 +32,9 @@
     </ciManagement>
 
     <scm>
-        <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.10.1-guava</connection>
-        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.10.1-guava</developerConnection>
-        <url>https://studio.atlassian.com/svn/PLUG/tags/atlassian-plugins-parent-2.10.1-guava</url>
+        <connection>scm:svn:https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.10.x</connection>
+        <developerConnection>scm:svn:https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.10.x</developerConnection>
+        <url>https://studio.atlassian.com/svn/PLUG/branches/atlassian-plugins-2.10.x</url>
     </scm>
 
     <modules>
