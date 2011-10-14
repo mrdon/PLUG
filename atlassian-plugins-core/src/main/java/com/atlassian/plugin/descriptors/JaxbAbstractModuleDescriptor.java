@@ -71,7 +71,7 @@ public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleD
      * Implements the module by transforming 'element' into 'configuration' using JAXB
      */
     @Override
-    public void init(Plugin plugin, Element element) throws PluginParseException
+    final public void init(Plugin plugin, Element element) throws PluginParseException
     {
         super.init(plugin, element);
 
