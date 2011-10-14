@@ -37,9 +37,7 @@ import com.google.common.collect.Lists;
  * </ul>
  * 
  * @param <T>
- *            the JAXB class that you want to read your configuration from
- * @param <U>
- *            the class returned by getModule()
+ *            the JAXB class that you want to read your configuration into
  * @since 2.11
  * 
  * 
