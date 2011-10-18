@@ -1,10 +1,13 @@
 package com.atlassian.plugin.webresource;
 
+import com.atlassian.plugin.AutowireCapablePlugin;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.descriptors.AbstractModuleDescriptor;
 import com.atlassian.plugin.hostcontainer.HostContainer;
+import com.atlassian.plugin.module.ContainerManagedPlugin;
 import com.atlassian.plugin.web.Condition;
+import com.atlassian.plugin.web.WebFragmentHelper;
 import com.atlassian.plugin.web.conditions.ConditionLoadingException;
 import com.atlassian.plugin.web.descriptors.ConditionElementParser;
 import com.atlassian.plugin.web.descriptors.ConditionalDescriptor;
@@ -41,7 +44,14 @@ public class WebResourceModuleDescriptor extends AbstractModuleDescriptor<Void> 
                 try
                 {
                     Class<Condition> conditionClass = plugin.loadClass(className, this.getClass());
-                    return hostContainer.create(conditionClass);
+                    if (plugin instanceof ContainerManagedPlugin)
+                    {
+                        return ((ContainerManagedPlugin) plugin).getContainerAccessor().createBean(conditionClass);
+                    }
+                    else
+                    {
+                        return hostContainer.create(conditionClass);
+                    }
                 }
                 catch (ClassNotFoundException e)
                 {
