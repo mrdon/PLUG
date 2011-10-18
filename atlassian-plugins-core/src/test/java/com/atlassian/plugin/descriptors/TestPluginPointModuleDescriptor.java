@@ -44,7 +44,7 @@ public class TestPluginPointModuleDescriptor extends TestCase
                         "</book>").getRootElement());
 
         // Check it was properly parsed
-        Book bean = descriptor.getModule();
+        Book bean = descriptor.getConfiguration();
         assertNotNull(bean);
         assertEquals("Raising Children", bean.getTitle());
     }
@@ -58,7 +58,7 @@ public class TestPluginPointModuleDescriptor extends TestCase
                 DocumentHelper.parseText("<book key=\"key\" />").getRootElement());
 
         // Check it was properly parsed, with no title given
-        Book bean = descriptor.getModule();
+        Book bean = descriptor.getConfiguration();
         assertNotNull(bean);
         assertEquals(null, bean.getTitle());
     }

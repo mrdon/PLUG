@@ -10,6 +10,8 @@ import javax.xml.bind.util.JAXBResult;
 
 import org.dom4j.Element;
 
+import sun.security.action.GetLongAction;
+
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginParseException;
@@ -38,11 +40,12 @@ import com.google.common.collect.Lists;
  * 
  * @param <T>
  *            the JAXB class that you want to read your configuration into
+ * @param <M> the module class. You may use Void.
  * @since 2.11
  * 
  * 
  */
-public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleDescriptor.Bean> extends AbstractModuleDescriptor<T>
+public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleDescriptor.Bean, M> extends AbstractModuleDescriptor<M>
 {
     /** The Jaxb bean into which the configuration is parsed */
     protected T configuration;
@@ -77,7 +80,14 @@ public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleD
         {
             String elementXml = element.asXML();
             ByteArrayInputStream input = new ByteArrayInputStream(elementXml.getBytes("UTF-8"));
-            configuration = JAXB.unmarshal(input, jaxbClass);
+            try
+            {
+                configuration = JAXB.unmarshal(input, jaxbClass);
+            }
+            catch (RuntimeException exception)
+            {
+                throw new RuntimeException("Couldn't parse the XML into " + jaxbClass.getCanonicalName() + ": " + elementXml, exception);
+            }
         }
         catch (UnsupportedEncodingException e)
         {
@@ -86,17 +96,25 @@ public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleD
 
         init(plugin, configuration);
     }
-
+    
+    /**
+     * Implementations may implement this method but don't have to.
+     */
     @Override
-    public T getModule()
+    public M getModule()
+    {
+        return null;
+    }
+
+    public T getConfiguration()
     {
         return configuration;
     }
 
     /**
-     * Convenience method to list instances of plugin points in the atlassian-plugin.xml files.
-     * It is also possible to retrieve them using {@link PluginAccessor#getEnabledModuleDescriptorsByClass(Class)} then to call getModule() on the returned
-     * objects.
+     * Convenience method to list instances of plugin points in the atlassian-plugin.xml files and return their configuration.
+     * It is also possible to retrieve them using {@link PluginAccessor#getEnabledModuleDescriptorsByClass(Class)} then to call getConfiguration()
+     * on the returned objects.
      * 
      * @param pluginPointClass
      *            the class that you want plugin points of
@@ -104,16 +122,16 @@ public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleD
      *            the plugin accessor which you can get injected from your contructor
      * @return instances of the plugin point
      */
-    public static <T extends JaxbAbstractModuleDescriptor.Bean, U extends JaxbAbstractModuleDescriptor<T>> List<T> getInstances(
+    public static <T extends JaxbAbstractModuleDescriptor.Bean, U extends JaxbAbstractModuleDescriptor<T, ?>> List<T> getInstances(
             Class<? extends U> pluginPointClass, PluginAccessor pluginAccessor)
     {
         List<? extends U> moduleDescriptors = pluginAccessor.getEnabledModuleDescriptorsByClass(pluginPointClass);
-        List<T> beans = Lists.transform(moduleDescriptors, new Function<JaxbAbstractModuleDescriptor, T>()
+        List<T> beans = Lists.transform(moduleDescriptors, new Function<JaxbAbstractModuleDescriptor<T, ?>, T>()
         {
             @Override
-            public T apply(JaxbAbstractModuleDescriptor descriptor)
+            public T apply(JaxbAbstractModuleDescriptor<T, ?> descriptor)
             {
-                return (T) descriptor.getModule();
+                return (T) descriptor.getConfiguration();
             }
         });
 
@@ -121,7 +139,7 @@ public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleD
     }
 
     /**
-     * Marker interface that tells this bean is designed to describe an Atlassian Plugin Point.
+     * Marker interface that tells this bean is a configuration bean for the plugin framework.
      * <p>
      * This interface is especially used by developers and helps to discover plugin points.
      * </p>
