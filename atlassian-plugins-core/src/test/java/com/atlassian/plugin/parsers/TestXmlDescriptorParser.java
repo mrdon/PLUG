@@ -31,6 +31,7 @@ public class TestXmlDescriptorParser extends TestCase
         PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
         Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
         mockFactory.expect("getModuleDescriptorClass", "unknown-plugin");
+        mockFactory.expect("getModuleDescriptorClass", "unknown-plugin");
 
         // create a Plugin for testing
         Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
@@ -125,6 +126,7 @@ public class TestXmlDescriptorParser extends TestCase
         PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
         Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
         mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), MockAnimalModuleDescriptor.class);
+        mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), MockAnimalModuleDescriptor.class);
 
         // create a Plugin for testing
         Plugin testPlugin = new DefaultDynamicPlugin((PluginArtifact) new Mock(PluginArtifact.class).proxy(), classLoader);
@@ -159,6 +161,7 @@ public class TestXmlDescriptorParser extends TestCase
         // mock up some supporting objects
         PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
         Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
+        mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), MockAnimalModuleDescriptor.class);
         mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), MockAnimalModuleDescriptor.class);
 
         // create a Plugin for testing
@@ -228,6 +231,7 @@ public class TestXmlDescriptorParser extends TestCase
         PluginClassLoader classLoader = new PluginClassLoader(new File(getTestFile("ap-plugins") + "/" + DUMMY_PLUGIN_FILE));
         Mock mockFactory = new Mock(ModuleDescriptorFactory.class);
         MockAnimalModuleDescriptor descriptor = new MockAnimalModuleDescriptor("velocity", "edit");
+        mockFactory.expectAndReturn("getModuleDescriptorClass", C.args(C.eq("animal")), null);
         mockFactory.expectAndReturn("getModuleDescriptor", C.args(C.eq("animal")), descriptor);
 
         // create a Plugin for testing

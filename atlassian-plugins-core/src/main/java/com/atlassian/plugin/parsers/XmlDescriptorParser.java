@@ -206,7 +206,7 @@ public class XmlDescriptorParser implements DescriptorParser
         // When there's a problem loading a module, return an UnrecognisedModuleDescriptor with error
         catch (final Throwable e)
         {
-            e.printStackTrace();
+           // e.printStackTrace();
             final UnrecognisedModuleDescriptor descriptor = UnrecognisedModuleDescriptorFactory.createUnrecognisedModuleDescriptor(plugin, element,
                 e, moduleDescriptorFactory);
 
@@ -232,7 +232,7 @@ public class XmlDescriptorParser implements DescriptorParser
         catch (final Exception e)
         {
             final UnloadableModuleDescriptor descriptor = UnloadableModuleDescriptorFactory.createUnloadableModuleDescriptor(plugin, element, e,
-                moduleDescriptorFactory);
+                    moduleDescriptorFactory);
 
             log.error("There were problems loading the module '" + name + "'. The module and its plugin have been disabled.");
             log.error(descriptor.getErrorText(), e);
