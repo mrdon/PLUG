@@ -190,7 +190,7 @@ public class XmlDescriptorParser implements DescriptorParser
         {
             //if we're annotated with jaxb, unmarshall the descriptor
             final Class<? extends ModuleDescriptor> moduleDescriptorClazz = moduleDescriptorFactory.getModuleDescriptorClass(name);
-            if(AbstractMarshalledDescriptor.class.isAssignableFrom(moduleDescriptorClazz) && moduleDescriptorClazz.isAnnotationPresent(XmlRootElement.class))
+            if(moduleDescriptorClazz != null && AbstractMarshalledDescriptor.class.isAssignableFrom(moduleDescriptorClazz) && moduleDescriptorClazz.isAnnotationPresent(XmlRootElement.class))
             {
                 String elementXml = element.asXML();
                 ByteArrayInputStream input = new ByteArrayInputStream(elementXml.getBytes("UTF-8"));
