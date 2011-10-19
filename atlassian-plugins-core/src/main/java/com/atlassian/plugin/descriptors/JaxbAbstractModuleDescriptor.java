@@ -114,44 +114,12 @@ public abstract class JaxbAbstractModuleDescriptor<C extends AbstractJaxbConfigu
     }
 
     /**
-     * Implementations may implement this method but don't have to.
+     * Returns the configuration of this module descriptor.
+     * @return the configuration
      */
-    @Override
-    public M getModule()
-    {
-        return null;
-    }
-
-    public C getConfiguration()
+    protected C getConfiguration()
     {
         return configuration;
-    }
-
-    /**
-     * Convenience method to list instances of plugin points in the atlassian-plugin.xml files and return their configuration.
-     * It is also possible to retrieve them using {@link PluginAccessor#getEnabledModuleDescriptorsByClass(Class)} then to call getConfiguration()
-     * on the returned objects.
-     * 
-     * @param pluginPointClass
-     *            the class that you want plugin points of
-     * @param pluginAccessor
-     *            the plugin accessor which you can get injected from your contructor
-     * @return instances of the plugin point
-     */
-    public static <T extends AbstractJaxbConfigurationBean, U extends JaxbAbstractModuleDescriptor<T, ?>> List<T> getInstances(
-            Class<? extends U> pluginPointClass, PluginAccessor pluginAccessor)
-    {
-        List<? extends U> moduleDescriptors = pluginAccessor.getEnabledModuleDescriptorsByClass(pluginPointClass);
-        List<T> beans = Lists.transform(moduleDescriptors, new Function<JaxbAbstractModuleDescriptor<T, ?>, T>()
-        {
-            @Override
-            public T apply(JaxbAbstractModuleDescriptor<T, ?> descriptor)
-            {
-                return (T) descriptor.getConfiguration();
-            }
-        });
-
-        return ImmutableList.copyOf(beans);
     }
 
     public void destroy(Plugin plugin)

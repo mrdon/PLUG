@@ -72,13 +72,15 @@ public class TestPluginPointModuleDescriptor extends TestCase
         DefaultPluginManager manager = createDefaultPluginManager("test-atlassian-plugin-point.xml");
 
         // Test you can get the instances of a plugin point
-        List<? extends Book> instances = JaxbAbstractModuleDescriptor.getInstances(MyPluginPoint.class, manager);
+        List<MyPluginPoint> instances = manager.getEnabledModuleDescriptorsByClass(MyPluginPoint.class);
         assertEquals(2, instances.size());
+        Book book1 = instances.get(0).getConfiguration();
+        Book book2 = instances.get(1).getConfiguration();
 
-        assertEquals("Fighting With Bears", instances.get(0).getTitle());
-        assertEquals("book1", instances.get(0).getKey());
-        assertEquals(null, instances.get(1).getTitle());
-        assertEquals("book2", instances.get(1).getKey());
+        assertEquals("Fighting With Bears", book1.getTitle());
+        assertEquals("book1", book1.getKey());
+        assertEquals(null, book2.getTitle());
+        assertEquals("book2", book2.getKey());
     }
 
     public void testGetInstancesWithEmptyPlugin() throws PluginParseException, DocumentException
@@ -89,7 +91,7 @@ public class TestPluginPointModuleDescriptor extends TestCase
         DefaultPluginManager manager = createDefaultPluginManager("test-bad-plugin.xml");
 
         // Test getInstances returns an empty list when there's no such instance in the descriptor
-        List<? extends Book> instances = JaxbAbstractModuleDescriptor.getInstances(MyPluginPoint.class, manager);
+        List<MyPluginPoint> instances = manager.getEnabledModuleDescriptorsByClass(MyPluginPoint.class);
         assertEquals(0, instances.size());
     }
 
