@@ -6,10 +6,7 @@ import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginInformation;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.Resources;
-import com.atlassian.plugin.descriptors.UnloadableModuleDescriptor;
-import com.atlassian.plugin.descriptors.UnloadableModuleDescriptorFactory;
-import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptor;
-import com.atlassian.plugin.descriptors.UnrecognisedModuleDescriptorFactory;
+import com.atlassian.plugin.descriptors.*;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.util.PluginUtils;
 
@@ -21,12 +18,16 @@ import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
+import javax.xml.bind.JAXB;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Provides access to the descriptor information retrieved from an XML InputStream.
@@ -187,11 +188,25 @@ public class XmlDescriptorParser implements DescriptorParser
         // Try to retrieve the module descriptor
         try
         {
-            moduleDescriptorDescriptor = moduleDescriptorFactory.getModuleDescriptor(name);
+            //if we're annotated with jaxb, unmarshall the descriptor
+            final Class<? extends ModuleDescriptor> moduleDescriptorClazz = moduleDescriptorFactory.getModuleDescriptorClass(name);
+            if(AbstractMarshalledDescriptor.class.isAssignableFrom(moduleDescriptorClazz) && moduleDescriptorClazz.isAnnotationPresent(XmlRootElement.class))
+            {
+                String elementXml = element.asXML();
+                ByteArrayInputStream input = new ByteArrayInputStream(elementXml.getBytes("UTF-8"));
+
+                moduleDescriptorDescriptor = JAXB.unmarshal(input, moduleDescriptorClazz);
+
+                
+            } else {
+
+                moduleDescriptorDescriptor = moduleDescriptorFactory.getModuleDescriptor(name);
+            }
         }
         // When there's a problem loading a module, return an UnrecognisedModuleDescriptor with error
         catch (final Throwable e)
         {
+            e.printStackTrace();
             final UnrecognisedModuleDescriptor descriptor = UnrecognisedModuleDescriptorFactory.createUnrecognisedModuleDescriptor(plugin, element,
                 e, moduleDescriptorFactory);
 
