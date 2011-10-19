@@ -80,9 +80,7 @@ public abstract class JaxbAbstractModuleDescriptor<C extends AbstractJaxbConfigu
      * @param configuration
      *            the configuration
      */
-    public void init(Plugin plugin, C configuration)
-    {
-    };
+    public abstract void init(Plugin plugin, C configuration);
 
     /**
      * Implements the module by transforming 'element' into 'configuration' using JAXB
