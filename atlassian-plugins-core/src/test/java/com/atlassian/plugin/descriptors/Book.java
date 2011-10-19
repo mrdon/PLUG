@@ -5,9 +5,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.atlassian.plugin.elements.AbstractJaxbConfigurationBean;
+
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Book implements JaxbAbstractModuleDescriptor.Bean
+public class Book extends AbstractJaxbConfigurationBean
 {
     @XmlElement
     protected String title;
@@ -27,7 +29,7 @@ public class Book implements JaxbAbstractModuleDescriptor.Bean
     @Override
     public String toString()
     {
-        return "Book [title=" + getTitle() + "]";
+        return "Book [title=" + getTitle() + ", key=" + getKey() + "]";
     }
 
     public String getTitle()

@@ -3,18 +3,20 @@ package com.atlassian.plugin.descriptors;
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
 import javax.xml.bind.JAXB;
-import javax.xml.bind.util.JAXBResult;
 
 import org.dom4j.Element;
 
-import sun.security.action.GetLongAction;
-
+import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.StateAware;
+import com.atlassian.plugin.elements.AbstractJaxbConfigurationBean;
+import com.atlassian.plugin.elements.ResourceDescriptor;
+import com.atlassian.plugin.elements.ResourceLocation;
 import com.atlassian.plugin.module.ModuleFactory;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -38,22 +40,34 @@ import com.google.common.collect.Lists;
  * <li>Retrieve the instances using {@link #getInstances(Class, PluginAccessor)} or the methods of {@link PluginAccessor}.</li>
  * </ul>
  * 
- * @param <T>
+ * @param <C>
  *            the JAXB class that you want to read your configuration into
- * @param <M> the module class. You may use Void.
+ * @param <M>
+ *            the module class. You may use Void.
  * @since 2.11
  * 
  * 
  */
-public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleDescriptor.Bean, M> extends AbstractModuleDescriptor<M>
+public abstract class JaxbAbstractModuleDescriptor<C extends AbstractJaxbConfigurationBean, M> implements ModuleDescriptor<M>, StateAware
 {
     /** The Jaxb bean into which the configuration is parsed */
-    protected T configuration;
-    private final Class<T> jaxbClass;
+    protected C configuration;
+    private final Class<C> jaxbClass;
 
-    public JaxbAbstractModuleDescriptor(ModuleFactory moduleFactory, Class<T> jaxbClass)
+    private final AbstractModuleDescriptor<M> delegatedModuleDescriptor;
+    protected ModuleFactory moduleFactory;
+
+    public JaxbAbstractModuleDescriptor(ModuleFactory moduleFactory, Class<C> jaxbClass)
     {
-        super(moduleFactory);
+        delegatedModuleDescriptor = new AbstractModuleDescriptor<M>(moduleFactory)
+        {
+            @Override
+            public M getModule()
+            {
+                return null;
+            }
+        };
+        this.moduleFactory = moduleFactory;
         this.jaxbClass = jaxbClass;
     }
 
@@ -66,7 +80,9 @@ public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleD
      * @param configuration
      *            the configuration
      */
-    public abstract void init(Plugin plugin, T configuration);
+    public void init(Plugin plugin, C configuration)
+    {
+    };
 
     /**
      * Implements the module by transforming 'element' into 'configuration' using JAXB
@@ -74,7 +90,7 @@ public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleD
     @Override
     final public void init(Plugin plugin, Element element) throws PluginParseException
     {
-        super.init(plugin, element);
+        delegatedModuleDescriptor.init(plugin, element);
 
         try
         {
@@ -96,7 +112,7 @@ public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleD
 
         init(plugin, configuration);
     }
-    
+
     /**
      * Implementations may implement this method but don't have to.
      */
@@ -106,7 +122,7 @@ public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleD
         return null;
     }
 
-    public T getConfiguration()
+    public C getConfiguration()
     {
         return configuration;
     }
@@ -122,7 +138,7 @@ public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleD
      *            the plugin accessor which you can get injected from your contructor
      * @return instances of the plugin point
      */
-    public static <T extends JaxbAbstractModuleDescriptor.Bean, U extends JaxbAbstractModuleDescriptor<T, ?>> List<T> getInstances(
+    public static <T extends AbstractJaxbConfigurationBean, U extends JaxbAbstractModuleDescriptor<T, ?>> List<T> getInstances(
             Class<? extends U> pluginPointClass, PluginAccessor pluginAccessor)
     {
         List<? extends U> moduleDescriptors = pluginAccessor.getEnabledModuleDescriptorsByClass(pluginPointClass);
@@ -138,14 +154,145 @@ public abstract class JaxbAbstractModuleDescriptor<T extends JaxbAbstractModuleD
         return ImmutableList.copyOf(beans);
     }
 
-    /**
-     * Marker interface that tells this bean is a configuration bean for the plugin framework.
-     * <p>
-     * This interface is especially used by developers and helps to discover plugin points.
-     * </p>
-     */
-    public interface Bean
+    public void destroy(Plugin plugin)
     {
-        // No required method, this is a marker interface
+        delegatedModuleDescriptor.destroy(plugin);
     }
+
+    public boolean isEnabledByDefault()
+    {
+        return delegatedModuleDescriptor.isEnabledByDefault();
+    }
+
+    public boolean isSystemModule()
+    {
+        return delegatedModuleDescriptor.isSystemModule();
+    }
+
+    public String getCompleteKey()
+    {
+        return delegatedModuleDescriptor.getCompleteKey();
+    }
+
+    public String getPluginKey()
+    {
+        return delegatedModuleDescriptor.getPluginKey();
+    }
+
+    public String getKey()
+    {
+        return delegatedModuleDescriptor.getKey();
+    }
+
+    public String getName()
+    {
+        return delegatedModuleDescriptor.getName();
+    }
+
+    public Class<M> getModuleClass()
+    {
+        return delegatedModuleDescriptor.getModuleClass();
+    }
+
+    public String getDescription()
+    {
+        return delegatedModuleDescriptor.getDescription();
+    }
+
+    public Map<String, String> getParams()
+    {
+        return delegatedModuleDescriptor.getParams();
+    }
+
+    public String getI18nNameKey()
+    {
+        return delegatedModuleDescriptor.getI18nNameKey();
+    }
+
+    public String getDescriptionKey()
+    {
+        return delegatedModuleDescriptor.getDescriptionKey();
+    }
+
+    public List<ResourceDescriptor> getResourceDescriptors()
+    {
+        return delegatedModuleDescriptor.getResourceDescriptors();
+    }
+
+    public List<ResourceDescriptor> getResourceDescriptors(String type)
+    {
+        return delegatedModuleDescriptor.getResourceDescriptors(type);
+    }
+
+    public ResourceLocation getResourceLocation(String type, String name)
+    {
+        return delegatedModuleDescriptor.getResourceLocation(type, name);
+    }
+
+    public ResourceDescriptor getResourceDescriptor(String type, String name)
+    {
+        return delegatedModuleDescriptor.getResourceDescriptor(type, name);
+    }
+
+    public Float getMinJavaVersion()
+    {
+        return delegatedModuleDescriptor.getMinJavaVersion();
+    }
+
+    public boolean satisfiesMinJavaVersion()
+    {
+        return delegatedModuleDescriptor.satisfiesMinJavaVersion();
+    }
+
+    /**
+     * Sets the plugin for the ModuleDescriptor
+     * 
+     * @param plugin
+     *            The plugin to set for this descriptor.
+     */
+    public void setPlugin(Plugin plugin)
+    {
+        delegatedModuleDescriptor.setPlugin(plugin);
+    }
+
+    public Plugin getPlugin()
+    {
+        return delegatedModuleDescriptor.getPlugin();
+    }
+
+    public boolean equals(Object obj)
+    {
+        return new ModuleDescriptors.EqualsBuilder().descriptor(this).isEqualTo(obj);
+    }
+
+    public int hashCode()
+    {
+        return new ModuleDescriptors.HashCodeBuilder().descriptor(this).toHashCode();
+    }
+
+    public String toString()
+    {
+        return delegatedModuleDescriptor.toString();
+    }
+
+    /**
+     * Enables the descriptor by loading the module class. Classes overriding
+     * this method MUST call super.enabled() before their own enabling code.
+     * 
+     * @since 2.1.0
+     */
+    public void enabled()
+    {
+        delegatedModuleDescriptor.enabled();
+    }
+
+    /**
+     * Disables the module descriptor. Classes overriding this method MUST call
+     * super.disabled() after their own disabling code.
+     */
+    public void disabled()
+    {
+        delegatedModuleDescriptor.disabled();
+    }
+
 }

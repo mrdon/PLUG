@@ -61,6 +61,7 @@ public class TestPluginPointModuleDescriptor extends TestCase
         Book bean = descriptor.getConfiguration();
         assertNotNull(bean);
         assertEquals(null, bean.getTitle());
+        assertEquals("key", bean.getKey());
     }
 
     public void testGetInstances() throws PluginParseException, DocumentException
@@ -75,7 +76,9 @@ public class TestPluginPointModuleDescriptor extends TestCase
         assertEquals(2, instances.size());
 
         assertEquals("Fighting With Bears", instances.get(0).getTitle());
+        assertEquals("book1", instances.get(0).getKey());
         assertEquals(null, instances.get(1).getTitle());
+        assertEquals("book2", instances.get(1).getKey());
     }
 
     public void testGetInstancesWithEmptyPlugin() throws PluginParseException, DocumentException
