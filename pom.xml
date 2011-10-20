@@ -64,56 +64,10 @@
                     </systemProperties>
                 </configuration>
             </plugin>
-            <plugin>
-                <!-- Deploy to the maven1 repo, necessary as maven1 can't resolve snapshots -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-one-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>m1-deploy</id>
-                        <configuration>
-                            <remoteRepositoryId>atlassian-m1-repository</remoteRepositoryId>
-                            <remoteRepositoryUrl>dav:https://maven.atlassian.com/maven1</remoteRepositoryUrl>
-                        </configuration>
-                        <goals>
-                            <goal>deploy-maven-one-repository</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>m1-install</id>
-                        <goals>
-                            <goal>install-maven-one-repository</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
     <profiles>
-        <profile>
-            <id>maven-one</id>
-            <activation>
-                <property>
-                    <name>m1</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-one-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>install-maven-one-repository</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
         <profile>
             <id>clover.optimize</id>
             <build>
