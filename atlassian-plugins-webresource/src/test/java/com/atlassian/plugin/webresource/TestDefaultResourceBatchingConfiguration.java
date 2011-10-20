@@ -19,38 +19,41 @@ public class TestDefaultResourceBatchingConfiguration extends TestCase
     public void tearDown() throws Exception
     {
         batchingConfiguration = null;
+        System.clearProperty(DefaultResourceBatchingConfiguration.PLUGIN_WEBRESOURCE_BATCHING_OFF);
+        System.clearProperty(PluginUtils.ATLASSIAN_DEV_MODE);
         super.tearDown();
     }
 
-    public void testIsPluginWebResourceBatchingEnabled()
+    public void testBatchingIsEnabledWhenNotInDevModeAndBatchingIsNotOff()
     {
-        try
-        {
-            System.clearProperty(DefaultResourceBatchingConfiguration.PLUGIN_WEBRESOURCE_BATCHING_OFF);
-            System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "true");
-            assertFalse(batchingConfiguration.isPluginWebResourceBatchingEnabled());
+        assertTrue(batchingConfiguration.isPluginWebResourceBatchingEnabled());
+    }
 
-            System.setProperty(DefaultResourceBatchingConfiguration.PLUGIN_WEBRESOURCE_BATCHING_OFF, "true");
-            System.clearProperty(PluginUtils.ATLASSIAN_DEV_MODE);
-            assertFalse(batchingConfiguration.isPluginWebResourceBatchingEnabled());
-
-            System.clearProperty(DefaultResourceBatchingConfiguration.PLUGIN_WEBRESOURCE_BATCHING_OFF);
-            System.clearProperty(PluginUtils.ATLASSIAN_DEV_MODE);
-            assertTrue(batchingConfiguration.isPluginWebResourceBatchingEnabled());
-
-            System.clearProperty(DefaultResourceBatchingConfiguration.PLUGIN_WEBRESOURCE_BATCHING_OFF);
-            System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "false");
-            assertTrue(batchingConfiguration.isPluginWebResourceBatchingEnabled());
-
-            System.setProperty(DefaultResourceBatchingConfiguration.PLUGIN_WEBRESOURCE_BATCHING_OFF, "false");
-            System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "true");
-            assertTrue(batchingConfiguration.isPluginWebResourceBatchingEnabled());
-        }
-        finally
-        {
-            System.clearProperty(DefaultResourceBatchingConfiguration.PLUGIN_WEBRESOURCE_BATCHING_OFF);
-            System.clearProperty(PluginUtils.ATLASSIAN_DEV_MODE);
-        }
+    public void testBatchingIsDisabledWhenInDevMode()
+    {
+        System.clearProperty(DefaultResourceBatchingConfiguration.PLUGIN_WEBRESOURCE_BATCHING_OFF);
+        System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "true");
+        assertFalse(batchingConfiguration.isPluginWebResourceBatchingEnabled());
     }
     
+    public void testBatchingIsDisabledWhenBatchingIsOff()
+    {
+        System.setProperty(DefaultResourceBatchingConfiguration.PLUGIN_WEBRESOURCE_BATCHING_OFF, "true");
+        System.clearProperty(PluginUtils.ATLASSIAN_DEV_MODE);
+        assertFalse(batchingConfiguration.isPluginWebResourceBatchingEnabled());
+    }
+    
+    public void testBatchingIsEnabledWhenDevModeIsFalse()
+    {
+        System.clearProperty(DefaultResourceBatchingConfiguration.PLUGIN_WEBRESOURCE_BATCHING_OFF);
+        System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "false");
+        assertTrue(batchingConfiguration.isPluginWebResourceBatchingEnabled());
+    }
+    
+    public void testBatchingIsEnabledWhenInDevModeAndBatchingIsExplicitlyNotOff()
+    {
+        System.setProperty(DefaultResourceBatchingConfiguration.PLUGIN_WEBRESOURCE_BATCHING_OFF, "false");
+        System.setProperty(PluginUtils.ATLASSIAN_DEV_MODE, "true");
+        assertTrue(batchingConfiguration.isPluginWebResourceBatchingEnabled());
+    }
 }
