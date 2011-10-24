@@ -1,5 +1,6 @@
 package com.atlassian.plugin.osgi.external;
 
+import com.atlassian.plugin.HostContainerProvider;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.hostcontainer.HostContainer;
@@ -14,7 +15,7 @@ import java.util.Set;
  *
  * @since 2.1
  */
-public class SingleModuleDescriptorFactory<T extends ModuleDescriptor<?>> implements ListableModuleDescriptorFactory
+public class SingleModuleDescriptorFactory<T extends ModuleDescriptor<?>> implements ListableModuleDescriptorFactory, HostContainerProvider
 {
     private final String type;
     private final Class<T> moduleDescriptorClass;

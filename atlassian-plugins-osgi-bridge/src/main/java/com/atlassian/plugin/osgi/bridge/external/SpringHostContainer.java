@@ -24,6 +24,16 @@ public class SpringHostContainer implements HostContainer, ApplicationContextAwa
         return (T) applicationContext.getAutowireCapableBeanFactory().createBean(moduleClass, AutowireCapableBeanFactory.AUTOWIRE_AUTODETECT, false);
     }
 
+    public void autowire(Object bean) throws IllegalArgumentException
+    {
+        if (applicationContext == null)
+        {
+            throw new IllegalStateException("Application context missing");
+        }
+
+        applicationContext.getAutowireCapableBeanFactory().autowireBeanProperties(bean,AutowireCapableBeanFactory.AUTOWIRE_AUTODETECT,false);
+    }
+
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException
     {
         this.applicationContext = applicationContext;

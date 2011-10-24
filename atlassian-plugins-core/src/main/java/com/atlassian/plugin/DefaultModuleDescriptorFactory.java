@@ -20,7 +20,7 @@ import com.atlassian.util.concurrent.CopyOnWriteMap;
  * Default implementation of a descriptor factory that allows filtering of
  * descriptor keys
  */
-public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
+public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory,HostContainerProvider
 {
     private static Logger log = LoggerFactory.getLogger(DefaultModuleDescriptorFactory.class);
 
@@ -165,5 +165,10 @@ public class DefaultModuleDescriptorFactory implements ModuleDescriptorFactory
             this.permittedModuleKeys.clear();
             this.permittedModuleKeys.addAll(permittedModuleKeys);
         }
+    }
+
+    public HostContainer getHostContainer()
+    {
+        return hostContainer;
     }
 }

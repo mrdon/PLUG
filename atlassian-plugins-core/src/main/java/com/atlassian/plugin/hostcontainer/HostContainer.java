@@ -19,4 +19,13 @@ public interface HostContainer
      * @throws IllegalArgumentException If unable to instantiate the class
      */
     <T> T create(Class<T> moduleClass) throws IllegalArgumentException;
+
+    /**
+     * Autowires an existing beans instance. This is primarily used with JAXB beans that are instantiated with a no-arg
+     * constructor.  Actual method of autowiring may vary between implementations.
+     *
+     * @param bean The bean object to autowire
+     * @throws IllegalArgumentException If unable to autowire the bean
+     */
+    void autowire(Object bean) throws IllegalArgumentException;
 }

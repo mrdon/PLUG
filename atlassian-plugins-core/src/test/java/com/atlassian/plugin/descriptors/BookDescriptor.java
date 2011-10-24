@@ -1,11 +1,9 @@
 package com.atlassian.plugin.descriptors;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.*;
 
 import com.atlassian.plugin.Plugin;
+import com.atlassian.plugin.PluginAccessor;
 
 /**
  * @since version
@@ -14,6 +12,9 @@ import com.atlassian.plugin.Plugin;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class BookDescriptor extends AbstractMarshalledDescriptor<Void>
 {
+    @XmlTransient
+    private PluginAccessor pluginAccessor;
+
     @XmlElement
     protected String title;
 
@@ -31,6 +32,16 @@ public class BookDescriptor extends AbstractMarshalledDescriptor<Void>
     public void setTitle(String title)
     {
         this.title = title;
+    }
+
+    public PluginAccessor getPluginAccessor()
+    {
+        return pluginAccessor;
+    }
+
+    public void setPluginAccessor(PluginAccessor pluginAccessor)
+    {
+        this.pluginAccessor = pluginAccessor;
     }
 
     @Override

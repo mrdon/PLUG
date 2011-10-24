@@ -21,6 +21,13 @@
         </dependency>
         <dependency>
             <groupId>com.atlassian.plugins</groupId>
+            <artifactId>atlassian-plugins-core</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugins</groupId>
             <artifactId>atlassian-plugins-osgi-events</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>

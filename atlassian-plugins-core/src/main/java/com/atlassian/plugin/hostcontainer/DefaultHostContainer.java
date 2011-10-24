@@ -28,4 +28,9 @@ public class DefaultHostContainer implements HostContainer
             throw new IllegalArgumentException("Unable to access constructor", e);
         }
     }
+
+    public void autowire(Object bean) throws IllegalArgumentException
+    {
+        //nothing to do
+    }
 }

@@ -75,6 +75,11 @@ public class SimpleConstructorHostContainer implements HostContainer
         throw new IllegalArgumentException("Unable to match any constructor for class " + moduleClass);
     }
 
+    public void autowire(Object bean) throws IllegalArgumentException
+    {
+        //nothing to do
+    }
+
     @SuppressWarnings("unchecked")
     private <T> Collection<Constructor<T>> findConstructorsLargestFirst(final Class<T> moduleClass)
     {

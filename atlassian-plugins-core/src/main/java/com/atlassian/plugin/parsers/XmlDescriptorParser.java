@@ -1,12 +1,8 @@
 package com.atlassian.plugin.parsers;
 
-import com.atlassian.plugin.ModuleDescriptor;
-import com.atlassian.plugin.ModuleDescriptorFactory;
-import com.atlassian.plugin.Plugin;
-import com.atlassian.plugin.PluginInformation;
-import com.atlassian.plugin.PluginParseException;
-import com.atlassian.plugin.Resources;
+import com.atlassian.plugin.*;
 import com.atlassian.plugin.descriptors.*;
+import com.atlassian.plugin.hostcontainer.HostContainer;
 import com.atlassian.plugin.impl.UnloadablePluginFactory;
 import com.atlassian.plugin.util.PluginUtils;
 
@@ -196,6 +192,11 @@ public class XmlDescriptorParser implements DescriptorParser
                 ByteArrayInputStream input = new ByteArrayInputStream(elementXml.getBytes("UTF-8"));
 
                 moduleDescriptorDescriptor = JAXB.unmarshal(input, moduleDescriptorClazz);
+
+                //we need to autowire if we have a host container
+                if(HostContainerProvider.class.isAssignableFrom(moduleDescriptorFactory.getClass())) {
+                    ((HostContainerProvider) moduleDescriptorFactory).getHostContainer().autowire(moduleDescriptorDescriptor);
+                }
 
                 
             } else {
