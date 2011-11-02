@@ -2,6 +2,7 @@ package com.atlassian.plugin.cache.filecache.impl;
 
 
 import com.atlassian.plugin.cache.filecache.FileCacheStreamProvider;
+import com.atlassian.plugin.servlet.DownloadException;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * After any call to stream(), fileSize() will return the size of the cached file. Before the first call to stream(),
  * this value is undefined.
  *
- * @since 2.10.0
+ * @since 2.11.0
  */
 class CachedFile
 {
@@ -74,7 +75,7 @@ class CachedFile
      * Stream the file to the destination, making use of the cached file if it exists.
      * @throws IOException on any error caching the file, or writing the file to dest
      */
-    public StreamResult stream(OutputStream dest, FileCacheStreamProvider input) throws IOException
+    public StreamResult stream(OutputStream dest, FileCacheStreamProvider input) throws DownloadException
     {
         boolean cacheHit = true;
 
@@ -98,11 +99,11 @@ class CachedFile
                     lock.readLock().lock(); //downgrading the lock
                     lock.writeLock().unlock();
                     currentLock = lock.readLock();
-                    streamToDestination(new FileInputStream(file), dest);
+                    streamToDestination(dest);
                 }
                 else
                 {
-                    streamToDestination(new FileInputStream(file), dest);
+                    streamToDestination(dest);
                 }
             }
             finally
@@ -117,7 +118,7 @@ class CachedFile
     /**
      * Delete the file, will block until all current reads are completed.
      */
-    public void delete() throws IOException
+    public void delete() throws DownloadException
     {
         try
         {
@@ -127,7 +128,7 @@ class CachedFile
             {
                 if (!file.delete())
                 {
-                    throw new IOException("Could not delete cache file " + file);
+                    throw new DownloadException("Could not delete cache file " + file);
                 }
             }
         }
@@ -138,13 +139,17 @@ class CachedFile
     }
 
 
-    private void streamToFile(FileCacheStreamProvider input) throws IOException
+    private void streamToFile(FileCacheStreamProvider input) throws DownloadException
     {
         OutputStream cacheout = null;
         try
         {
             cacheout = new BufferedOutputStream(new FileOutputStream(file));
             input.writeStream(cacheout);
+        }
+        catch(IOException e)
+        {
+            throw new DownloadException(e);
         }
         finally
         {
@@ -154,20 +159,25 @@ class CachedFile
 
     /**
      * Copies the in stream to the out stream and closes the in stream when done.
-     * @param in source stream
      * @param out destination stream
      * @throws IOException should any errors occur.
      */
-    private void streamToDestination(InputStream in, OutputStream out) throws  IOException
+    private void streamToDestination(OutputStream out) throws  DownloadException
     {
+        InputStream in = null;
         try
         {
+            in = new FileInputStream(file);
             IOUtils.copyLarge(in, out);
+            out.flush();
+        }
+        catch(IOException e)
+        {
+            throw new DownloadException(e);
         }
         finally
         {
-            in.close();
-            out.flush();
+            IOUtils.closeQuietly(in);
         }
     }
 

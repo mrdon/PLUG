@@ -1,13 +1,5 @@
 package com.atlassian.plugin.webresource;
 
-import static com.atlassian.plugin.webresource.ContextBatchPluginResource.CONTEXT_SEPARATOR;
-import static com.atlassian.plugin.webresource.ResourceUtils.getType;
-import static com.google.common.collect.ImmutableList.copyOf;
-import static com.google.common.collect.Iterables.concat;
-import static com.google.common.collect.Iterables.contains;
-import static com.google.common.collect.Iterables.transform;
-import static com.google.common.collect.Sets.newHashSet;
-
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.cache.filecache.impl.NonCachingFileCache;
 import com.google.common.base.Function;
@@ -21,11 +13,18 @@ import org.slf4j.LoggerFactory;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import static com.atlassian.plugin.webresource.ContextBatchPluginResource.CONTEXT_SEPARATOR;
+import static com.atlassian.plugin.webresource.ResourceUtils.getType;
+import static com.google.common.collect.ImmutableList.copyOf;
+import static com.google.common.collect.Iterables.concat;
+import static com.google.common.collect.Iterables.contains;
+import static com.google.common.collect.Iterables.transform;
+import static com.google.common.collect.Sets.newHashSet;
 
 /**
  * An intermediary object used for constructing and merging context batches.
@@ -65,7 +64,7 @@ class ContextBatch
 
     ContextBatch(final String context, final Iterable<WebResourceModuleDescriptor> resources)
     {
-        this(context, ImmutableList.of(context), resources, ImmutableList.<PluginResourceBatchParams> of());
+        this(context, ImmutableList.of(context), resources, ImmutableList.<PluginResourceBatchParams>of());
     }
 
     ContextBatch(final String key, final Iterable<String> contexts, final Iterable<WebResourceModuleDescriptor> resources, final Iterable<PluginResourceBatchParams> resourceParams)
@@ -80,7 +79,7 @@ class ContextBatch
         // this.
         this.resources = ImmutableSortedSet.copyOf(MODULE_KEY_ORDERING, resources);
         // A convenience object to make searching easier
-        this.resourceKeys =  transform(resources, new TransformDescriptorToKey());
+        this.resourceKeys = transform(resources, new TransformDescriptorToKey());
     }
 
     boolean isResourceIncluded(final String resourceModuleKey)
@@ -110,7 +109,7 @@ class ContextBatch
         {
             public PluginResource apply(final PluginResourceBatchParams param)
             {
-                return new ContextBatchPluginResource(key, contexts, hash, param.getType(), param.getParameters(),new NonCachingFileCache(), ResourceUtils.buildCacheKey(hash, Collections.<String, String>emptyMap()));
+                return new ContextBatchPluginResource(key, contexts, hash, param.getType(), param.getParameters(), new NonCachingFileCache(), ResourceUtils.buildCacheKey(hash, Collections.<String, String>emptyMap()));
             }
         });
     }
@@ -125,6 +124,13 @@ class ContextBatch
                 String version = moduleDescriptor.getPlugin().getPluginInformation().getVersion();
                 md5.update(moduleDescriptor.getCompleteKey().getBytes(UTF8));
                 md5.update(version.getBytes(UTF8));
+                long date = moduleDescriptor.getPlugin().getDateLoaded().getTime();
+                byte[] b = new byte[8];
+                for (int i = 0; i < 8; i++)
+                {
+                    b[7 - i] = (byte) (date >>> (i * 8));
+                }
+                md5.update(b);
             }
 
             return new String(Hex.encodeHex(md5.digest()));

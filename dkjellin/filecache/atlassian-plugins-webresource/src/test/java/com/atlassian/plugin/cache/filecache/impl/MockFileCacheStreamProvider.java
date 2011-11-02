@@ -1,13 +1,14 @@
 package com.atlassian.plugin.cache.filecache.impl;
 
 import com.atlassian.plugin.cache.filecache.FileCacheStreamProvider;
+import com.atlassian.plugin.servlet.DownloadException;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 /**
  * Class to simplify testing the file caching.
- * @since 2.10.0
+ * @since 2.11.0
  */
 class MockFileCacheStreamProvider implements FileCacheStreamProvider
 {
@@ -18,8 +19,14 @@ class MockFileCacheStreamProvider implements FileCacheStreamProvider
         this.bytes = bytes;
     }
 
-    public void writeStream(OutputStream dest) throws IOException {
+    public void writeStream(OutputStream dest) throws DownloadException {
         producedStream = true;
-        dest.write(bytes);
+        try
+        {
+            dest.write(bytes);
+        }catch(IOException e)
+        {
+            throw new DownloadException(e);
+        }
     }
 }

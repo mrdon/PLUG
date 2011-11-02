@@ -4,6 +4,7 @@ import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.cache.filecache.FileCache;
 import com.atlassian.plugin.cache.filecache.impl.LRUFileCache;
+import com.atlassian.plugin.cache.filecache.impl.NonCachingFileCache;
 import com.atlassian.plugin.elements.ResourceDescriptor;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.servlet.ServletContextFactory;
@@ -53,14 +54,18 @@ public class PluginResourceLocatorImpl implements PluginResourceLocator
     private PluginResourceLocatorImpl(final WebResourceIntegration webResourceIntegration, final ServletContextFactory servletContextFactory, final WebResourceUrlProvider webResourceUrlProvider,
                                       final ResourceDependencyResolver dependencyResolver, final ResourceBatchingConfiguration batchingConfiguration)
     {
-        FileCache fileCache = null;
-        try
+
+        FileCache fileCache = new NonCachingFileCache();
+        if(!Boolean.getBoolean(PluginUtils.DISABLE_FILE_CACHE))
         {
-            fileCache = new LRUFileCache(webResourceIntegration, Integer.getInteger(PluginUtils.FILE_CACHE_SIZE, 200));
-        }
-        catch (IOException e)
-        {
-            log.error("Could not create file cache object, will startup with filecaching disabled, please investigate the cause and correct it.", e);
+            try
+            {
+                fileCache = new LRUFileCache(webResourceIntegration.getTemporaryDirectory(), Integer.getInteger(PluginUtils.FILE_CACHE_SIZE, 200));
+            }
+            catch (IOException e)
+            {
+                log.error("Could not create file cache object, will startup with filecaching disabled, please investigate the cause and correct it.", e);
+            }
         }
         this.pluginAccessor = webResourceIntegration.getPluginAccessor();
         this.webResourceUrlProvider = webResourceUrlProvider;

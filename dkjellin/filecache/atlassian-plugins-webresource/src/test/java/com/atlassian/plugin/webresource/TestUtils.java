@@ -14,6 +14,7 @@ import org.mockito.Matchers;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -169,6 +170,7 @@ public class TestUtils
         pluginInfo.setVersion(version);
         when(plugin.getPluginInformation()).thenReturn(pluginInfo);
         when(plugin.getKey()).thenReturn(pluginKey);
+        when(plugin.getDateLoaded()).thenReturn(new Date(1234567890l));
         for (Class loadableClass : loadableClasses)
         {
             when(plugin.loadClass(Matchers.eq(loadableClass.getName()), (Class<?>) any())).thenReturn((Class<Object>) TestUtils.class.getClassLoader().loadClass(loadableClass.getName()));

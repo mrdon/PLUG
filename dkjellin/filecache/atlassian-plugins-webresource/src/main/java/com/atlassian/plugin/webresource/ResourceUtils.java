@@ -9,6 +9,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 class ResourceUtils
 {
@@ -33,38 +35,21 @@ class ResourceUtils
      * @param path leading path to use in the cache key. Can not be null.
      * @param params parameters, these will be appended in a deterministic order without any added characters. Can not be null
      * @return a FileCacheKey that can be used as a unique cache key. This method will never return null.
-     * @since 2.10.0
+     * @since 2.11.0
      */
     public static FileCacheKey buildCacheKey(@NotNull String path, @NotNull Map<String, String> params)
     {
 
-
-        List<ParamEntry> sortedParams = new ArrayList<ParamEntry>(params.size());
-        for(Map.Entry<String,String> entry: params.entrySet())
-        {
-            sortedParams.add(new ParamEntry(entry.getKey(),entry.getValue()));
-        }
-        Collections.sort(sortedParams, new Comparator<ParamEntry>()
-        {
-            public int compare(ParamEntry o1, ParamEntry o2)
-            {
-                if (o1.getKey().equals(o2.getKey()))
-                {
-                    return o1.getValue().compareTo(o2.getValue());
-                }
-                return o1.getKey().compareTo(o2.getKey());
-            }
-        });
-
+        SortedMap<String, String> sortedParams = new TreeMap<String, String>(params);
         return new UrlBasedFileCacheKey(path,sortedParams);
     }
 
     private static class UrlBasedFileCacheKey implements FileCacheKey
     {
         private final String url;
-        private final List<ParamEntry> sortedArguments;
+        private final SortedMap<String,String> sortedArguments;
 
-        private UrlBasedFileCacheKey(@NotNull String url, @NotNull List<ParamEntry> sortedArguments)
+        private UrlBasedFileCacheKey(@NotNull String url, @NotNull SortedMap<String,String> sortedArguments)
         {
             this.sortedArguments = sortedArguments;
             this.url = url;
@@ -99,50 +84,6 @@ class ResourceUtils
                     "sortedArguments=" + sortedArguments +
                     ", url='" + url + '\'' +
                     '}';
-        }
-    }
-
-    private static class ParamEntry
-    {
-        private final String key;
-        private final String value;
-
-        private ParamEntry(@NotNull String key, @NotNull String value)
-        {
-            this.key = key;
-            this.value = value;
-        }
-
-        public String getKey()
-        {
-            return key;
-        }
-
-        public String getValue()
-        {
-            return value;
-        }
-
-        @Override
-        public boolean equals(Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            ParamEntry that = (ParamEntry) o;
-
-            if (!key.equals(that.key)) return false;
-            if (!value.equals(that.value)) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            int result = key.hashCode();
-            result = 31 * result + value.hashCode();
-            return result;
         }
     }
 }

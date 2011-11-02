@@ -4,6 +4,7 @@ package com.atlassian.plugin.cache.filecache.impl;
 import com.atlassian.plugin.cache.filecache.FileCache;
 import com.atlassian.plugin.cache.filecache.FileCacheKey;
 import com.atlassian.plugin.cache.filecache.FileCacheStreamProvider;
+import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.webresource.WebResourceIntegration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p/>
  * <p/>
  *
- * @since 2.10.0
+ * @since 2.11.0
  */
 public class LRUFileCache implements FileCache
 {
@@ -54,14 +55,14 @@ public class LRUFileCache implements FileCache
     /**
      * Sole constructor.
      *
-     * @param webResourceIntegration provides information as to where to store cache files.
+     * @param tempDir provides information as to where to store cache files.
      * @param maxFiles               maximum number of files to retain. This class will try to honour this but at any point there may be
      *                               more or less files on disk, it is not an absolute number that will never be exceeded.
      * @throws IOException if the temp directory could not be created, or is not a directory.
      */
-    public LRUFileCache(WebResourceIntegration webResourceIntegration, int maxFiles) throws IOException
+    public LRUFileCache(File tempDir, int maxFiles) throws IOException
     {
-        this.tmpDir = webResourceIntegration.getTemporaryDirectory();
+        this.tmpDir = tempDir;
 
         if (maxFiles < 1)
         {
@@ -102,7 +103,7 @@ public class LRUFileCache implements FileCache
      * @param input provides the underlying item on a cache-miss
      * @throws IOException if anything goes wrong and recovery is not possible during streaming.
      */
-    public void stream(FileCacheKey key, OutputStream dest, FileCacheStreamProvider input) throws IOException
+    public void stream(FileCacheKey key, OutputStream dest, FileCacheStreamProvider input) throws DownloadException
     {
         streamImpl(key, dest, input);
     }
@@ -112,20 +113,14 @@ public class LRUFileCache implements FileCache
      *
      * @return true if there was a cache-hit
      */
-    boolean streamImpl(FileCacheKey key, OutputStream dest, FileCacheStreamProvider input) throws IOException
+    boolean streamImpl(FileCacheKey key, OutputStream dest, FileCacheStreamProvider input) throws DownloadException
     {
-
-        // putting things into and out of the nodes map is locked, and calling delete() on a node
-        // is locked. But stream() is called outside of the lock and so can happen before/during/after
-        // a call to delete(), and hence we loop until the stream it works.
 
         boolean newNode = false;
 
         CachedFile cachedFile = null;
         try
         {
-            CachedFile.StreamResult result;
-
                 nodesLock.lock();
                 try
                 {
@@ -142,13 +137,13 @@ public class LRUFileCache implements FileCache
                     nodesLock.unlock();
                 }
 
-                result = cachedFile.stream(dest, input);
+                cachedFile.stream(dest, input);
         }
         catch (IOException e)
         {
 
             clean(key, newNode);
-            throw e;
+            new DownloadException(e);
         }
         catch (RuntimeException e)
         {
@@ -204,7 +199,7 @@ public class LRUFileCache implements FileCache
                 {
                     item.delete();
                 }
-                catch (IOException e)
+                catch (DownloadException e)
                 {
                     log.warn("Could not delete file ", e);
                 }

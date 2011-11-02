@@ -31,7 +31,10 @@ class SingleBatchDownloadableResourceBuilder extends AbstractBatchResourceBuilde
     public DownloadableResource parse(final String path, final Map<String, String> params) throws UrlParseException
     {
         final String type = ResourceUtils.getType(path);
-        final int startIndex = path.indexOf(URL_PREFIX) + URL_PREFIX.length() + 1;
+        final int localeIndex = path.indexOf(URL_PREFIX) + URL_PREFIX.length();
+        final int versionIndex = path.indexOf('/',localeIndex+1); //+1 since we are not interested in the current / but the next one
+        final int startIndex = path.indexOf('/',versionIndex+1)+1;
+
         final String typeAndModuleKey = path.substring(startIndex);
         final String[] parts = typeAndModuleKey.split("/", 2);
 

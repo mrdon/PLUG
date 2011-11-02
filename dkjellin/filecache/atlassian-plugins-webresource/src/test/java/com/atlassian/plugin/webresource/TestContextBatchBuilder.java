@@ -78,10 +78,10 @@ public class TestContextBatchBuilder extends TestCase
         final Iterable<PluginResource> resources = builder.build(contexts);
 
         assertEquals(4, size(resources));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/js/00040a35e68b8e370bb43ddec972aacd/xmen/xmen.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/00040a35e68b8e370bb43ddec972aacd/xmen/xmen.css")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/js/453ceb95a24786ee267d705be69fc309/brotherhood/brotherhood.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/453ceb95a24786ee267d705be69fc309/brotherhood/brotherhood.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/ba9394ce2d73b547a4d49cdea3bde6b4/xmen/xmen.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/ba9394ce2d73b547a4d49cdea3bde6b4/xmen/xmen.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/723073c3e3bd53ef52eb8f81381d3ab6/brotherhood/brotherhood.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/723073c3e3bd53ef52eb8f81381d3ab6/brotherhood/brotherhood.css")));
 
         assertEquals(2, size(builder.getAllIncludedResources()));
     }
@@ -107,8 +107,8 @@ public class TestContextBatchBuilder extends TestCase
         final Iterable<PluginResource> resources = builder.build(contexts);
 
         assertEquals(2, size(resources));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/js/39b2ed30dd5a3f2653392cf6cee82e2d/xmen,brotherhood/xmen,brotherhood.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/39b2ed30dd5a3f2653392cf6cee82e2d/xmen,brotherhood/xmen,brotherhood.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/2faf0174e1d08bc9b672cd69425bf865/xmen,brotherhood/xmen,brotherhood.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/2faf0174e1d08bc9b672cd69425bf865/xmen,brotherhood/xmen,brotherhood.css")));
 
         assertEquals(2, size(builder.getAllIncludedResources()));
     }
@@ -142,10 +142,10 @@ public class TestContextBatchBuilder extends TestCase
         final Iterable<PluginResource> resources = builder.build(contexts);
 
         assertEquals(4, size(resources));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/js/1a0ca733909aa660e61686aa54fd2215/xmen/xmen.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/1a0ca733909aa660e61686aa54fd2215/xmen/xmen.css")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/js/1e97fcefd1becffa81ffcdc68dab43fe/brotherhood/brotherhood.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/1e97fcefd1becffa81ffcdc68dab43fe/brotherhood/brotherhood.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/1eec4ef1bd4de327b12c172fe9269e53/xmen/xmen.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/1eec4ef1bd4de327b12c172fe9269e53/xmen/xmen.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/a839f03b82593a26781606f04b754807/brotherhood/brotherhood.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/a839f03b82593a26781606f04b754807/brotherhood/brotherhood.css")));
 
         assertEquals(4, size(builder.getAllIncludedResources()));
     }
@@ -183,8 +183,8 @@ public class TestContextBatchBuilder extends TestCase
         final Iterable<PluginResource> resources = builder.build(contexts);
 
         assertEquals(2, size(resources));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/js/199a618dcbd3a794c6cb21683aa986c5/xmen,government/xmen,government.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/199a618dcbd3a794c6cb21683aa986c5/xmen,government/xmen,government.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/d409f6d9a389eb121203cfbbb2b6ff80/xmen,government/xmen,government.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/d409f6d9a389eb121203cfbbb2b6ff80/xmen,government/xmen,government.css")));
 
         assertEquals(3, size(builder.getAllIncludedResources()));
     }
@@ -228,10 +228,10 @@ public class TestContextBatchBuilder extends TestCase
         final Iterable<PluginResource> resources = builder.build(contexts);
 
         assertEquals(4, size(resources));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/js/0eca0eb040fa2a5e83c3921f0016d1b2/normals/normals.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/0eca0eb040fa2a5e83c3921f0016d1b2/normals/normals.css")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/js/10e6b68d0c77c7fba718bbde5f7fd2d0/brotherhood,xmen,rogue/brotherhood,xmen,rogue.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/10e6b68d0c77c7fba718bbde5f7fd2d0/brotherhood,xmen,rogue/brotherhood,xmen,rogue.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/46fa75082406dbcdc44212d8674a2c47/normals/normals.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/46fa75082406dbcdc44212d8674a2c47/normals/normals.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/755a7f04aa263e70ef32e58d57d69325/brotherhood,xmen,rogue/brotherhood,xmen,rogue.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/755a7f04aa263e70ef32e58d57d69325/brotherhood,xmen,rogue/brotherhood,xmen,rogue.css")));
 
         assertEquals(4, size(builder.getAllIncludedResources()));
     }
@@ -257,12 +257,12 @@ public class TestContextBatchBuilder extends TestCase
         final Iterable<PluginResource> resources = builder.build(contexts);
 
         assertEquals(6, size(resources));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/00040a35e68b8e370bb43ddec972aacd/xmen/xmen.css?ieonly=true")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/js/00040a35e68b8e370bb43ddec972aacd/xmen/xmen.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/00040a35e68b8e370bb43ddec972aacd/xmen/xmen.css")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/453ceb95a24786ee267d705be69fc309/brotherhood/brotherhood.css?ieonly=true")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/js/453ceb95a24786ee267d705be69fc309/brotherhood/brotherhood.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/453ceb95a24786ee267d705be69fc309/brotherhood/brotherhood.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/ba9394ce2d73b547a4d49cdea3bde6b4/xmen/xmen.css?ieonly=true")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/ba9394ce2d73b547a4d49cdea3bde6b4/xmen/xmen.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/ba9394ce2d73b547a4d49cdea3bde6b4/xmen/xmen.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/723073c3e3bd53ef52eb8f81381d3ab6/brotherhood/brotherhood.css?ieonly=true")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/723073c3e3bd53ef52eb8f81381d3ab6/brotherhood/brotherhood.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/723073c3e3bd53ef52eb8f81381d3ab6/brotherhood/brotherhood.css")));
 
         assertEquals(2, size(builder.getAllIncludedResources()));
     }
@@ -297,12 +297,12 @@ public class TestContextBatchBuilder extends TestCase
 
         // We currently batch all resource params even if there isn't any overlap in a particular context/param combination
         assertEquals(6, size(resources));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/453ceb95a24786ee267d705be69fc309/brotherhood/brotherhood.css?ieonly=true")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/js/453ceb95a24786ee267d705be69fc309/brotherhood/brotherhood.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/453ceb95a24786ee267d705be69fc309/brotherhood/brotherhood.css")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/js/12817427edd1b1b16690b1b612b70155/xmen,rogue/xmen,rogue.js")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/12817427edd1b1b16690b1b612b70155/xmen,rogue/xmen,rogue.css?ieonly=true")));
-        assertNotNull(find(resources, new IsResourceWithUrl("/contextbatch/css/12817427edd1b1b16690b1b612b70155/xmen,rogue/xmen,rogue.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/723073c3e3bd53ef52eb8f81381d3ab6/brotherhood/brotherhood.css?ieonly=true")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/723073c3e3bd53ef52eb8f81381d3ab6/brotherhood/brotherhood.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/723073c3e3bd53ef52eb8f81381d3ab6/brotherhood/brotherhood.css")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/js/2457a127c8d235e21b4c707c25fd0d08/xmen,rogue/xmen,rogue.js")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/2457a127c8d235e21b4c707c25fd0d08/xmen,rogue/xmen,rogue.css?ieonly=true")));
+        assertNotNull(find(resources, new IsResourceWithUrl("/download/contextbatch/css/2457a127c8d235e21b4c707c25fd0d08/xmen,rogue/xmen,rogue.css")));
 
         assertEquals(3, size(builder.getAllIncludedResources()));
     }

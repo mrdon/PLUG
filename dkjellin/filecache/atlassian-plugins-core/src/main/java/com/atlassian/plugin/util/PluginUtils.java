@@ -29,9 +29,16 @@ public class PluginUtils
      /**
      * Used to customise the size of the LRU cache for files. This effectively controls how many files will be created
      * by the file cache. Providing a negative number results in undefined behaviour.
-     * @since 2.10.0
+     * @since 2.11.0
      */
     public static final String FILE_CACHE_SIZE = new String("atlassian.file.cache.size");
+
+    /**
+     * Used to disable the file cache should that be desired. Setting this value to true will disable the
+     * file caching completely for all places it is used.
+     * @since 2.11.0
+     */
+    public static final String DISABLE_FILE_CACHE = new String("atlassian.file.cache.disable");
 
     /**
      * Determines if a plugin requires a restart after being installed at runtime.  Looks for the annotation

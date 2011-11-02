@@ -49,7 +49,7 @@ public class TestSuperBatchDownloadableResourceBuilder extends TestCase
 
     public void testParseCss() throws UrlParseException
     {
-        String path = "/superbatch/css/batch.css";
+        String path = "/download/superbatch/css/batch.css";
         assertTrue(builder.matches("/download" +path));
         DownloadableResource resource = builder.parse(path, Collections.<String, String>emptyMap());
         SuperBatchPluginResource batchResource = (SuperBatchPluginResource) resource;
@@ -66,7 +66,7 @@ public class TestSuperBatchDownloadableResourceBuilder extends TestCase
 
     public void testParseJavascript() throws UrlParseException
     {
-        String path = "/superbatch/js/batch.js";
+        String path = "/download/superbatch/js/batch.js";
         assertTrue(builder.matches("/download" + path));
         DownloadableResource resource = builder.parse(path, Collections.<String, String>emptyMap());
         SuperBatchPluginResource batchResource = (SuperBatchPluginResource) resource;
@@ -77,7 +77,7 @@ public class TestSuperBatchDownloadableResourceBuilder extends TestCase
 
     public void testParseWithParam() throws UrlParseException
     {
-        String path = "/superbatch/js/batch.js";
+        String path="/download/superbatch/js/batch.js";
         Map<String, String> params = Collections.singletonMap("ieOnly", "true");
         DownloadableResource resource = builder.parse(path, params);
         SuperBatchPluginResource batchResource = (SuperBatchPluginResource) resource;
@@ -88,7 +88,7 @@ public class TestSuperBatchDownloadableResourceBuilder extends TestCase
 
     public void testParseWithParams() throws UrlParseException
     {
-        String path = "/superbatch/js/batch.js";
+        String path="/download/superbatch/js/batch.js";
         Map<String, String> params = new TreeMap<String, String>();
         params.put("ieOnly", "true");
         params.put("zomg", "false");

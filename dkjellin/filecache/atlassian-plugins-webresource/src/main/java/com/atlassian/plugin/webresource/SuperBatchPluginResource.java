@@ -6,7 +6,7 @@ import com.atlassian.plugin.cache.filecache.impl.NonCachingFileCache;
 import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.util.concurrent.NotNull;
-
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,9 +25,9 @@ import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARA
  * is simply there to make the number of path-parts identical with other resources, so relative URLs will still work
  * in CSS files.
  */
-public class SuperBatchPluginResource implements DownloadableResource, BatchResource, PluginResource
+public class SuperBatchPluginResource implements DownloadableResource, BatchResource, CacheablePluginResource
 {
-    static final String URL_PREFIX = PATH_SEPARATOR + "superbatch" + PATH_SEPARATOR;
+    static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + "superbatch" + PATH_SEPARATOR;
     static final String DEFAULT_RESOURCE_NAME_PREFIX = "batch";
 
     private final BatchPluginResource delegate;
@@ -48,7 +48,7 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
      */
     public SuperBatchPluginResource(final String type, final Map<String, String> params)
     {
-        this(type, params, Collections.<DownloadableResource>emptyList(), new NonCachingFileCache(), ResourceUtils.buildCacheKey("invalid",Collections.<String, String>emptyMap()));
+        this(type, params, Collections.<DownloadableResource>emptyList(), new NonCachingFileCache(), ResourceUtils.buildCacheKey("invalid", Collections.<String, String>emptyMap()));
     }
 
     public SuperBatchPluginResource(final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, FileCache fileCache, FileCacheKey cacheKey)
@@ -56,7 +56,7 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
         this(DEFAULT_RESOURCE_NAME_PREFIX + "." + type, type, params, resources, fileCache, cacheKey);
     }
 
-    protected SuperBatchPluginResource(final String resourceName, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources,@NotNull FileCache fileCache, @NotNull FileCacheKey cacheKey)
+    protected SuperBatchPluginResource(final String resourceName, final String type, final Map<String, String> params, final Iterable<DownloadableResource> resources, @NotNull FileCache fileCache, @NotNull FileCacheKey cacheKey)
     {
         this.resourceName = resourceName;
         delegate = new BatchPluginResource(null, type, params, resources);
@@ -84,14 +84,7 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
 
     public void streamResource(final OutputStream out) throws DownloadException
     {
-        try
-        {
-            fileCache.stream(cacheKey, out, delegate);
-        }
-        catch (IOException e)
-        {
-            throw new DownloadException(e);
-        }
+        fileCache.stream(cacheKey, out, delegate);
     }
 
     public String getContentType()
@@ -102,6 +95,14 @@ public class SuperBatchPluginResource implements DownloadableResource, BatchReso
     public boolean isEmpty()
     {
         return delegate.isEmpty();
+    }
+
+    public String getCacheUrl(WebResourceIntegration integration)
+    {
+        final StringBuilder buf = new StringBuilder(URL_PREFIX.length() + 20);
+        buf.append(URL_PREFIX).append(integration.getStaticResourceLocale()).append(PATH_SEPARATOR).append(getVersion(integration)).append(PATH_SEPARATOR).append(getType()).append(PATH_SEPARATOR).append(resourceName);
+        delegate.addParamsToUrl(buf, delegate.getParams());
+        return buf.toString();
     }
 
     public String getUrl()

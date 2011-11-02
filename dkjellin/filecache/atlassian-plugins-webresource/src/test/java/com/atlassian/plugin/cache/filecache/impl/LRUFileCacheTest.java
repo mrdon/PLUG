@@ -13,22 +13,9 @@ import static org.mockito.Mockito.when;
 
 public class LRUFileCacheTest extends TestCase {
 
-    private WebResourceIntegration mockWebResourceIntegration =  mock(WebResourceIntegration.class);
-
-    @Override
-    public void setUp() throws Exception {
-         when(mockWebResourceIntegration.getTemporaryDirectory()).thenReturn(new File(System.getProperty("java.io.tmpdir"),"test"));
-    }
-
-    @Override
-    public void tearDown() throws Exception
-    {
-        mockWebResourceIntegration = null;
-        super.tearDown();
-    }
 
     public void testSizeLRU() throws Exception {
-        LRUFileCache cache = new LRUFileCache(mockWebResourceIntegration, 2);
+        LRUFileCache cache = new LRUFileCache(new File(System.getProperty("java.io.tmpdir"),"test"), 2);
 
         byte[] afile = "this is the first one".getBytes();
         byte[] bfile = "this is the other one".getBytes();

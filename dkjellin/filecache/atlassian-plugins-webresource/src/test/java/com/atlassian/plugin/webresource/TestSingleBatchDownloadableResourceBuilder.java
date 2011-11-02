@@ -68,12 +68,12 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
 
         addModuleDescriptor(resourceDescriptors);
 
-        final DownloadableResource resource = builder.parse("/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css",
+        final DownloadableResource resource = builder.parse("/download/batch/en/1/" + MODULE_KEY + "/test.plugin:webresources.css",
             Collections.<String, String> emptyMap());
         final BatchPluginResource batchResource = (BatchPluginResource) resource;
         assertTrue(batchResource.isCacheSupported());
 
-        final DownloadableResource resource2 = builder.parse("/download/batch/" + MODULE_KEY + "/test.plugin:webresources-nocache.css", queryParams);
+        final DownloadableResource resource2 = builder.parse("/download/batch/en/1/" + MODULE_KEY + "/test.plugin:webresources-nocache.css", queryParams);
         final BatchPluginResource batchResource2 = (BatchPluginResource) resource2;
         assertFalse(batchResource2.isCacheSupported());
     }
@@ -83,7 +83,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
         final List<ResourceDescriptor> resourceDescriptors = TestUtils.createResourceDescriptors("webresources.css");
         addModuleDescriptor(resourceDescriptors);
 
-        final DownloadableResource resource = builder.parse("/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css",
+        final DownloadableResource resource = builder.parse("/download/batch/en/1/" + MODULE_KEY + "/test.plugin:webresources.css",
             Collections.<String, String> emptyMap());
 
         final BatchPluginResource batchResource = (BatchPluginResource) resource;
@@ -105,7 +105,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
         resourceDescriptors.add(TestUtils.createResourceDescriptor("webresources.css", queryParams));
         addModuleDescriptor(resourceDescriptors);
 
-        final DownloadableResource resource = builder.parse("/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css", queryParams);
+        final DownloadableResource resource = builder.parse("/download/batch/en/1/" + MODULE_KEY + "/test.plugin:webresources.css", queryParams);
         final BatchPluginResource batchResource = (BatchPluginResource) resource;
         assertEquals("css", batchResource.getType());
         assertEquals(MODULE_KEY, batchResource.getModuleCompleteKey());
@@ -127,7 +127,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
         resourceDescriptors.add(TestUtils.createResourceDescriptor("webresources.css", queryParams));
         addModuleDescriptor(resourceDescriptors);
 
-        final DownloadableResource resource = builder.parse("/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css", queryParams);
+        final DownloadableResource resource = builder.parse("/download/batch/en/1/" + MODULE_KEY + "/test.plugin:webresources.css", queryParams);
         final BatchPluginResource batchResource = (BatchPluginResource) resource;
         assertEquals("css", batchResource.getType());
         assertEquals(MODULE_KEY, batchResource.getModuleCompleteKey());
@@ -148,7 +148,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
         resourceDescriptors.add(TestUtils.createResourceDescriptor("webresources.css", queryParams));
         addModuleDescriptor(resourceDescriptors);
 
-        final DownloadableResource resource = builder.parse("/random/stuff/download/batch/" + MODULE_KEY + "/test.plugin:webresources.css",
+        final DownloadableResource resource = builder.parse("/random/stuff/download/batch/en/1/" + MODULE_KEY + "/test.plugin:webresources.css",
             queryParams);
         final BatchPluginResource batchResource = (BatchPluginResource) resource;
         assertEquals("css", batchResource.getType());
@@ -185,7 +185,7 @@ public class TestSingleBatchDownloadableResourceBuilder extends TestCase
     {
         try
         {
-            builder.parse("/download/batch/blah.css", Collections.<String, String> emptyMap());
+            builder.parse("/download/batch/en/1/blah.css", Collections.<String, String> emptyMap());
             fail("Should have thrown exception for invalid url");
         }
         catch (final UrlParseException e)

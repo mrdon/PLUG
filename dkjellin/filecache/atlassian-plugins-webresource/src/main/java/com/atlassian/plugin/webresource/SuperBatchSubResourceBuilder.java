@@ -29,7 +29,7 @@ public class SuperBatchSubResourceBuilder implements DownloadableResourceBuilder
 
     public boolean matches(String path)
     {
-        return path.indexOf(PATH_SEPARATOR + SERVLET_PATH + URL_PREFIX) > -1;
+        return path.contains(URL_PREFIX);
     }
 
     public DownloadableResource parse(String path, Map<String, String> params) throws UrlParseException

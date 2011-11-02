@@ -1,5 +1,7 @@
 package com.atlassian.plugin.cache.filecache;
 
+import com.atlassian.plugin.servlet.DownloadException;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -16,6 +18,6 @@ public interface FileCache {
      * @param input provides the underlying item on a cache-miss
      * @throws IOException if there was an error writing to dest, or reading from input, or reading from the cache
      */
-    void stream(FileCacheKey key, OutputStream dest, FileCacheStreamProvider input) throws IOException;
+    void stream(FileCacheKey key, OutputStream dest, FileCacheStreamProvider input) throws DownloadException;
 
 }

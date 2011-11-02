@@ -55,7 +55,7 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
     {
         final String context = "contexta";
         createContext(context);
-        final String path = "/contextbatch/css/null/contexta/contexta.css";
+        final String path = "/download/contextbatch/css/null/contexta/contexta.css";
         assertTrue(builder.matches(path));
         final DownloadableResource resource = builder.parse(path, Collections.<String, String> emptyMap());
         final ContextBatchPluginResource batchResource = (ContextBatchPluginResource) resource;
@@ -70,7 +70,7 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
     {
         createContext("contexta");
         createContext("contextb");
-        final String path = "/contextbatch/css/null/contexta,contextb/contexta,contextb.css";
+        final String path = "/download/contextbatch/css/null/contexta,contextb/contexta,contextb.css";
         assertTrue(builder.matches(path));
         final DownloadableResource resource = builder.parse(path, Collections.<String, String> emptyMap());
         final ContextBatchPluginResource batchResource = (ContextBatchPluginResource) resource;
@@ -85,7 +85,7 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
     public void testParseJavascript() throws UrlParseException
     {
         createContext("contexta");
-        final String path = "/contextbatch/js/null/contexta/contexta.js";
+        final String path = "/download/contextbatch/js/null/contexta/contexta.js";
         assertTrue(builder.matches(path));
         final DownloadableResource resource = builder.parse(path, Collections.<String, String> emptyMap());
         final ContextBatchPluginResource batchResource = (ContextBatchPluginResource) resource;
@@ -99,7 +99,7 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
     public void testParseWithParam() throws UrlParseException
     {
         createContext("contexta");
-        final String path = "/contextbatch/js/null/contexta/contexta.js";
+        final String path = "/download/contextbatch/js/null/contexta/contexta.js";
         final Map<String, String> params = Collections.singletonMap("ieOnly", "true");
         final DownloadableResource resource = builder.parse(path, params);
         final ContextBatchPluginResource batchResource = (ContextBatchPluginResource) resource;
@@ -111,7 +111,7 @@ public class TestContextBatchDownloadableResourceBuilder extends TestCase
     public void testParseWithParams() throws UrlParseException
     {
         createContext("contexta");
-        final String path = "/contextbatch/js/null/contexta/contexta.js";
+        final String path = "/download/contextbatch/js/null/contexta/contexta.js";
         final Map<String, String> params = new TreeMap<String, String>();
         params.put("ieOnly", "true");
         params.put("zomg", "false");

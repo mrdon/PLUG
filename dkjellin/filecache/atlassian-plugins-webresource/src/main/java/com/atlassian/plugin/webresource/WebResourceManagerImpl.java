@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
-import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
 import static com.google.common.collect.Iterables.addAll;
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Iterables.contains;
@@ -237,7 +235,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     /**
      * Get all super-batch resources that match the given filter. If superbatching is disabled this will just
      * return the empty list.
-     * <p/>
+     *
      * Package private so it can be tested independently.
      */
     List<PluginResource> getSuperBatchResources(final WebResourceFilter filter)
@@ -337,15 +335,19 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     private void writeResourceTag(final UrlMode urlMode, final PluginResource resource, final WebResourceFormatter formatter, final Writer writer)
     {
-        String url = resource.getUrl();
+        String url;
+        if(resource instanceof CacheablePluginResource)
+        {
+            url = ((CacheablePluginResource) resource).getCacheUrl(webResourceIntegration);
+        }
+        else
+        {
+            url = resource.getUrl();
+        }
         if (resource.isCacheSupported())
         {
-            if (!url.startsWith(PATH_SEPARATOR + SERVLET_PATH))
-            {
-                url = SERVLET_PATH + PATH_SEPARATOR + webResourceIntegration.getStaticResourceLocale() + PATH_SEPARATOR + resource.getVersion(webResourceIntegration) + (url.startsWith("/") ? url : (PATH_SEPARATOR + url));
+            url = webResourceUrlProvider.getStaticResourcePrefix(resource.getVersion(webResourceIntegration), urlMode) + url;
             }
-            url = webResourceUrlProvider.getStaticResourcePrefix(resource.getVersion(webResourceIntegration), urlMode) + (url.startsWith("/") ? url : (PATH_SEPARATOR + url));
-        }
         else
         {
             url = webResourceUrlProvider.getBaseUrl(urlMode) + url;

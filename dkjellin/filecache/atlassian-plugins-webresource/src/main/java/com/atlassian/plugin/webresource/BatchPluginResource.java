@@ -34,14 +34,14 @@ import static com.google.common.collect.Iterables.any;
  *
  * @since 2.2
  */
-public class BatchPluginResource implements DownloadableResource, PluginResource, BatchResource, FileCacheStreamProvider
+public class BatchPluginResource implements DownloadableResource, CacheablePluginResource, BatchResource, FileCacheStreamProvider
 {
     private static final Logger log = LoggerFactory.getLogger(BatchPluginResource.class);
 
     /**
      * The url prefix for a batch of plugin resources: "/download/batch/"
      */
-    static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + "batch";
+    static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + "batch" +PATH_SEPARATOR;
 
     private final String type;
     private final String moduleCompleteKey;
@@ -119,16 +119,9 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
         });
     }
 
-    public void writeStream(OutputStream dest) throws IOException
+    public void writeStream(OutputStream dest) throws DownloadException
     {
-        try
-        {
-            streamResource(dest);
-        }
-        catch (DownloadException e)
-        {
-            throw new IOException(e);
-        }
+        streamResource(dest);
     }
 
     public void serveResource(final HttpServletRequest request, final HttpServletResponse response) throws DownloadException
@@ -172,11 +165,31 @@ public class BatchPluginResource implements DownloadableResource, PluginResource
      * 1. the same number of sectioned paths as the SinglePluginResource
      * 2. include the module completey key in the path before the resource name
      * This is due to css resources referencing other resources such as images in relative path forms.
+     * @param integration WebResourceIntegration to allow the resource to have locale and version information in the url.
+     */
+    public String getCacheUrl(WebResourceIntegration integration)
+    {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(URL_PREFIX).append(integration.getStaticResourceLocale()).append(PATH_SEPARATOR).append(getVersion(integration)).append(PATH_SEPARATOR).append(moduleCompleteKey).append(PATH_SEPARATOR).append(resourceName);
+        addParamsToUrl(sb, params);
+        return sb.toString();
+    }
+
+    /**
+     * Returns a url string in the format: /download/batch/MODULE_COMPLETE_KEY/resourceName?PARAMS
+     * <p/>
+     * e.g. /download/batch/example.plugin:webresources/example.plugin:webresources.css?ie=true
+     * <p/>
+     * It is important for the url structure to be:
+     * 1. the same number of sectioned paths as the SinglePluginResource
+     * 2. include the module completey key in the path before the resource name
+     * This is due to css resources referencing other resources such as images in relative path forms.
      */
     public String getUrl()
     {
         final StringBuilder sb = new StringBuilder();
-        sb.append(URL_PREFIX).append(PATH_SEPARATOR).append(moduleCompleteKey).append(PATH_SEPARATOR).append(resourceName);
+        //we need to include a 'locale' and a 'version' to make the parser significantly easier to maintain, so we put dummy values in here as we can not reasonably guess these values
+        sb.append(URL_PREFIX).append("locale").append(PATH_SEPARATOR).append("0.0").append(PATH_SEPARATOR).append(moduleCompleteKey).append(PATH_SEPARATOR).append(resourceName);
         addParamsToUrl(sb, params);
         return sb.toString();
     }

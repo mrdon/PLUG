@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARATOR;
+import static com.atlassian.plugin.servlet.AbstractFileServerServlet.SERVLET_PATH;
 
 
 /**
@@ -25,11 +26,11 @@ import static com.atlassian.plugin.servlet.AbstractFileServerServlet.PATH_SEPARA
  *
  * @since 2.9.0
  */
-class ContextBatchPluginResource implements DownloadableResource, BatchResource, PluginResource
+class ContextBatchPluginResource implements DownloadableResource, BatchResource, CacheablePluginResource
 {
     static final String CONTEXT_SEPARATOR = ",";
 
-    static final String URL_PREFIX = PATH_SEPARATOR + "contextbatch" + PATH_SEPARATOR;
+    static final String URL_PREFIX = PATH_SEPARATOR + SERVLET_PATH + PATH_SEPARATOR + "contextbatch" + PATH_SEPARATOR;
 
     private final BatchPluginResource delegate;
     private final String resourceName;
@@ -84,14 +85,7 @@ class ContextBatchPluginResource implements DownloadableResource, BatchResource,
 
     public void streamResource(final OutputStream out) throws DownloadException
     {
-        try
-        {
-            fileCache.stream(cacheKey, out, delegate);
-        }
-        catch (IOException e)
-        {
-            throw new DownloadException(e);
-        }
+        fileCache.stream(cacheKey, out, delegate);
     }
 
     public String getContentType()
@@ -102,6 +96,14 @@ class ContextBatchPluginResource implements DownloadableResource, BatchResource,
     boolean isEmpty()
     {
         return delegate.isEmpty();
+    }
+
+    public String getCacheUrl(WebResourceIntegration integration)
+    {
+        final StringBuilder buf = new StringBuilder(URL_PREFIX.length() + 20);
+        buf.append(URL_PREFIX).append(getType()).append(PATH_SEPARATOR).append(integration.getStaticResourceLocale()).append(PATH_SEPARATOR).append(hash).append(PATH_SEPARATOR).append(key).append(PATH_SEPARATOR).append(resourceName);
+        delegate.addParamsToUrl(buf, delegate.getParams());
+        return buf.toString();
     }
 
     public String getUrl()

@@ -40,7 +40,7 @@ class SuperBatchDownloadableResourceBuilder extends AbstractBatchResourceBuilder
     public boolean matches(final String path)
     {
         final String type = ResourceUtils.getType(path);
-        return (path.indexOf(PATH_SEPARATOR + SERVLET_PATH) != -1 && path.indexOf(URL_PREFIX) != -1) && endsWith(path, DEFAULT_RESOURCE_NAME_PREFIX, ".", type);
+        return (path.contains(PATH_SEPARATOR + SERVLET_PATH) && path.contains(URL_PREFIX) && endsWith(path, DEFAULT_RESOURCE_NAME_PREFIX, ".", type));
     }
 
     public SuperBatchPluginResource parse(final String path, final Map<String, String> params)
