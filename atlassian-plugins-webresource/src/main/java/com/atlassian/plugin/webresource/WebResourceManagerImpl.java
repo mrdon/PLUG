@@ -67,7 +67,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration, final WebResourceUrlProvider webResourceUrlProvider, final ResourceBatchingConfiguration batchingConfiguration)
     {
         this(pluginResourceLocator, webResourceIntegration, webResourceUrlProvider, batchingConfiguration, new DefaultResourceDependencyResolver(
-            webResourceIntegration, batchingConfiguration));
+                webResourceIntegration, batchingConfiguration));
     }
 
     public WebResourceManagerImpl(final PluginResourceLocator pluginResourceLocator, final WebResourceIntegration webResourceIntegration, final WebResourceUrlProvider webResourceUrlProvider, final ResourceBatchingConfiguration batchingConfiguration, final ResourceDependencyResolver dependencyResolver)
@@ -120,8 +120,8 @@ public class WebResourceManagerImpl implements WebResourceManager
      * Writes out the resource tags to the previously required resources called via requireResource methods for the
      * specified url mode and resource filter. Note that this method will clear the list of previously required resources.
      *
-     * @param writer the writer to write the links to
-     * @param urlMode the url mode to write resource url links in
+     * @param writer            the writer to write the links to
+     * @param urlMode           the url mode to write resource url links in
      * @param webResourceFilter the resource filter to filter resources on
      * @since 2.4
      */
@@ -147,8 +147,8 @@ public class WebResourceManagerImpl implements WebResourceManager
      * for the specified url mode and resource filter. Note that this method will NOT clear the list of previously
      * required resources.
      *
-     * @param urlMode the url mode to write out the resource tags
-     * @param webResourceFilter the web resource filter to filter resources on
+     * @param urlMode           the url mode to write out the resource tags
+     * @param filter the web resource filter to filter resources on
      * @return a String of the resource tags
      * @since 2.4
      */
@@ -227,7 +227,7 @@ public class WebResourceManagerImpl implements WebResourceManager
     {
         for (final WebResourceFormatter formatter : webResourceFormatters)
         {
-            for (final Iterator<PluginResource> iter = resourcesToInclude.iterator(); iter.hasNext();)
+            for (final Iterator<PluginResource> iter = resourcesToInclude.iterator(); iter.hasNext(); )
             {
                 final PluginResource resource = iter.next();
                 if (formatter.matches(resource.getResourceName()))
@@ -248,16 +248,24 @@ public class WebResourceManagerImpl implements WebResourceManager
 
     private void writeResourceTag(final UrlMode urlMode, final PluginResource resource, final WebResourceFormatter formatter, final Writer writer)
     {
-        final String prefix;
-        if (resource.isCacheSupported())
+        String url;
+        if(resource instanceof CacheablePluginResource)
         {
-            prefix = webResourceUrlProvider.getStaticResourcePrefix(resource.getVersion(webResourceIntegration), urlMode);
+            url = ((CacheablePluginResource) resource).getCacheUrl(webResourceIntegration);
         }
         else
         {
-            prefix = webResourceUrlProvider.getBaseUrl(urlMode);
+            url = resource.getUrl();
         }
-        writeContentAndSwallowErrors(writer, formatter.formatResource(prefix + resource.getUrl(), resource.getParams()));
+        if (resource.isCacheSupported())
+        {
+            url = webResourceUrlProvider.getStaticResourcePrefix(resource.getVersion(webResourceIntegration), urlMode) + url;
+            }
+        else
+        {
+            url = webResourceUrlProvider.getBaseUrl(urlMode) + url;
+        }
+        writeContentAndSwallowErrors(writer, formatter.formatResource(url, resource.getParams()));
     }
 
     public void requireResource(final String moduleCompleteKey, final Writer writer, final UrlMode urlMode)

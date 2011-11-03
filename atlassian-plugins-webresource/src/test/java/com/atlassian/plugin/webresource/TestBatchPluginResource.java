@@ -22,7 +22,7 @@ public class TestBatchPluginResource extends TestCase
     {
         final BatchPluginResource resource = new BatchPluginResource("test.plugin:webresources", "js", Collections.<String, String> emptyMap(),
             Collections.<DownloadableResource> emptyList());
-        assertEquals("/download/batch/test.plugin:webresources/test.plugin:webresources.js", resource.getUrl());
+        assertEquals("/download/batch/locale/0.0/test.plugin:webresources/test.plugin:webresources.js", resource.getUrl());
     }
 
     public void testGetUrlWithParams()
@@ -33,7 +33,7 @@ public class TestBatchPluginResource extends TestCase
 
         final BatchPluginResource resource = new BatchPluginResource("test.plugin:webresources", "js", params,
             Collections.<DownloadableResource> emptyList());
-        assertEquals("/download/batch/test.plugin:webresources/test.plugin:webresources.js?conditionalComment=lt+IE+9&foo=bar", resource.getUrl());
+        assertEquals("/download/batch/locale/0.0/test.plugin:webresources/test.plugin:webresources.js?conditionalComment=lt+IE+9&foo=bar", resource.getUrl());
     }
 
     public void testEquals()

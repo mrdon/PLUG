@@ -25,6 +25,7 @@ import org.dom4j.Element;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,7 +62,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
         MockitoAnnotations.initMocks(this);
         when(mockWebResourceIntegration.getPluginAccessor()).thenReturn(mockPluginAccessor);
-
+        when(mockWebResourceIntegration.getTemporaryDirectory()).thenReturn(new File(System.getProperty("java.io.tmpdir"),"test"));
         pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, mockServletContextFactory, mockWebResourceUrlProvider,
             mockBatchingConfiguration);
     }
@@ -363,7 +364,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
     public void testGetDownloadableBatchResource() throws Exception
     {
-        final String url = "/download/batch/" + TEST_MODULE_COMPLETE_KEY + "/all.css";
+        final String url = "/download/batch/locale/1.0/" + TEST_MODULE_COMPLETE_KEY + "/all.css";
         final String ieResourceName = "master-ie.css";
         final Map<String, String> params = new TreeMap<String, String>();
         params.put("ieonly", "true");
@@ -390,7 +391,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
     public void testGetDownloadableBatchResourceWithConditionalComments() throws Exception
     {
-        final String url = "/download/batch/" + TEST_MODULE_COMPLETE_KEY + "/all.css";
+        final String url = "/download/batch/locale/1.0/" + TEST_MODULE_COMPLETE_KEY + "/all.css";
         final String ieResourceName = "master-conditional.css";
         final Map<String, String> params = new TreeMap<String, String>();
         params.put("conditionalComment", "IE");
@@ -418,7 +419,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
 
     public void testGetDownloadableBatchResourceWhenModuleIsUnkown() throws Exception
     {
-        final String url = "/download/batch/" + TEST_MODULE_COMPLETE_KEY + "invalid.stuff" + "/all.css";
+        final String url = "/download/batch/locale/1.0/" + TEST_MODULE_COMPLETE_KEY + "invalid.stuff" + "/all.css";
         final Map<String, String> params = new TreeMap<String, String>();
         params.put("ieonly", "true");
 
@@ -431,7 +432,7 @@ public class TestPluginResourceLocatorImpl extends TestCase
     public void testGetDownloadableBatchResourceFallbacksToSingle() throws Exception
     {
         final String resourceName = "images/foo.png";
-        final String url = "/download/batch/" + TEST_MODULE_COMPLETE_KEY + "/" + resourceName;
+        final String url = "/download/batch/locale/1.0/" + TEST_MODULE_COMPLETE_KEY + "/" + resourceName;
 
         final Plugin mockPlugin = mock(Plugin.class);
         final ModuleDescriptor mockModuleDescriptor = mock(ModuleDescriptor.class);

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.io.File;
 
 import junit.framework.TestCase;
 
@@ -50,6 +51,8 @@ public class TestWebResourceManagerImpl extends TestCase
 
         when(mockWebResourceIntegration.getPluginAccessor()).thenReturn(mockPluginAccessor);
         when(mockWebResourceIntegration.getSuperBatchVersion()).thenReturn(SYSTEM_BUILD_NUMBER);
+        when(mockWebResourceIntegration.getTemporaryDirectory()).thenReturn(new File(System.getProperty("java.io.tmpdir"),"test"));
+        when(mockWebResourceIntegration.getStaticResourceLocale()).thenReturn("en");
 
         pluginResourceLocator = new PluginResourceLocatorImpl(mockWebResourceIntegration, null, mockUrlProvider, mockBatchingConfiguration);
         webResourceManager = new WebResourceManagerImpl(pluginResourceLocator, mockWebResourceIntegration, mockUrlProvider, mockBatchingConfiguration);
@@ -265,8 +268,8 @@ public class TestWebResourceManagerImpl extends TestCase
         assertFalse(resources.contains(resourceA + ".css"));
         assertFalse(resources.contains(resourceB + ".css"));
         assertFalse(resources.contains(resourceC + ".css"));
-        assertTrue(resources.contains("/contextbatch/css/foo/batch.css"));
-        assertFalse(resources.contains("/contextbatch/css/bar/batch.css"));
+        assertTrue(resources.contains("/download/contextbatch/css/en/dc265b6ded947cfb59087ea613a33790/foo/foo.css"));
+        assertFalse(resources.contains("/download/contextbatch/css/en/7fa81fc2e4036ae7656775874fe6401c/bar/bar.css"));
 
         // write includes for all resources for "bar":
         webResourceManager.requireResourcesForContext("bar");
@@ -276,8 +279,8 @@ public class TestWebResourceManagerImpl extends TestCase
         assertFalse(resources.contains(resourceA + ".css"));
         assertFalse(resources.contains(resourceB + ".css"));
         assertFalse(resources.contains(resourceC + ".css"));
-        assertFalse(resources.contains("/contextbatch/css/foo/batch.css"));
-        assertTrue(resources.contains("/contextbatch/css/bar/batch.css"));
+        assertFalse(resources.contains("/download/contextbatch/css/en/dc265b6ded947cfb59087ea613a33790/foo/foo.css"));
+        assertTrue(resources.contains("/download/contextbatch/css/en/7fa81fc2e4036ae7656775874fe6401c/bar/bar.css"));
     }
 
     public void testGetResourceContextWithCondition() throws ClassNotFoundException, DocumentException
@@ -314,7 +317,7 @@ public class TestWebResourceManagerImpl extends TestCase
         final String tags = webResourceManager.getRequiredResources(UrlMode.AUTO);
         assertTrue(tags.contains(resource1));
         assertFalse(tags.contains(resource2));
-        assertTrue(tags.contains("foo/batch.js"));
+        assertTrue(tags.contains("foo/foo.js"));
     }
 
     private Map<String, Object> setupRequestCache()
@@ -497,8 +500,8 @@ public class TestWebResourceManagerImpl extends TestCase
         assertTrue(result.contains(resourceA));
         assertTrue(result.contains(resourceB));
 
-        final Pattern resourceCount = Pattern.compile("/download/batch/test\\.atlassian:c/test\\.atlassian:c.css");
-        final Matcher m = resourceCount.matcher(result);
+        Pattern resourceCount = Pattern.compile("/download/batch/en/1/test\\.atlassian:c/test\\.atlassian:c.css");
+        Matcher m = resourceCount.matcher(result);
 
         assertTrue(m.find());
         assertFalse(m.find(m.end()));
@@ -538,8 +541,8 @@ public class TestWebResourceManagerImpl extends TestCase
         webResourceManager.includeResources(requiredResourceWriter, UrlMode.RELATIVE);
         assertEquals(requiredResourceResult, requiredResourceWriter.toString());
 
-        assertTrue(requiredResourceResult.contains("href=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".css"));
-        assertTrue(requiredResourceResult.contains("src=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".js"));
+        assertTrue(requiredResourceResult.contains("href=\"" + staticBase + "en/1/" + completeModuleKey + "/" + completeModuleKey + ".css"));
+        assertTrue(requiredResourceResult.contains("src=\"" + staticBase + "en/1/" + completeModuleKey + "/" + completeModuleKey + ".js"));
 
         // test resourceTag() methods
         final StringWriter resourceTagsWriter = new StringWriter();
@@ -578,8 +581,8 @@ public class TestWebResourceManagerImpl extends TestCase
         webResourceManager.includeResources(requiredResourceWriter, urlMode);
         assertEquals(requiredResourceResult, requiredResourceWriter.toString());
 
-        assertTrue(requiredResourceResult.contains("href=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".css"));
-        assertTrue(requiredResourceResult.contains("src=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".js"));
+        assertTrue(requiredResourceResult.contains("href=\"" + staticBase + "en/1/" + completeModuleKey + "/" + completeModuleKey + ".css"));
+        assertTrue(requiredResourceResult.contains("src=\"" + staticBase + "en/1/" + completeModuleKey + "/" + completeModuleKey + ".js"));
 
         // test resourceTag() methods
         final StringWriter resourceTagsWriter = new StringWriter();
@@ -646,7 +649,7 @@ public class TestWebResourceManagerImpl extends TestCase
         mockEnabledPluginModule(completeModuleKey, TestUtils.createWebResourceModuleDescriptor(completeModuleKey, testPlugin,
             Collections.singletonList(resourceDescriptor)));
 
-        return "src=\"" + (baseUrlExpected ? BASEURL : "") + BatchPluginResource.URL_PREFIX + "/" + completeModuleKey + "/" + completeModuleKey + ".js?cache=false";
+        return "src=\"" + (baseUrlExpected ? BASEURL : "") + BatchPluginResource.URL_PREFIX + "en/1/" + completeModuleKey + "/" + completeModuleKey + ".js?cache=false";
     }
 
     public void testGetRequiredResourcesWithFilter() throws Exception
@@ -667,8 +670,8 @@ public class TestWebResourceManagerImpl extends TestCase
         when(mockUrlProvider.getStaticResourcePrefix("1", UrlMode.ABSOLUTE)).thenReturn(staticPrefix);
         final String staticBase = staticPrefix + BatchPluginResource.URL_PREFIX;
 
-        final String cssRef = "href=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".css";
-        final String jsRef = "src=\"" + staticBase + "/" + completeModuleKey + "/" + completeModuleKey + ".js";
+        final String cssRef = "href=\"" + staticBase + "en/1/" + completeModuleKey + "/" + completeModuleKey + ".css";
+        final String jsRef = "src=\"" + staticBase + "en/1/" + completeModuleKey + "/" + completeModuleKey + ".js";
 
         // CSS
         String requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE, new CssWebResource());
@@ -752,10 +755,10 @@ public class TestWebResourceManagerImpl extends TestCase
         when(mockUrlProvider.getStaticResourcePrefix("1", UrlMode.ABSOLUTE)).thenReturn(staticPrefix);
         final String staticBase = staticPrefix + BatchPluginResource.URL_PREFIX;
 
-        final String cssRef1 = "href=\"" + staticBase + "/" + completeModuleKey1 + "/" + completeModuleKey1 + ".css";
-        final String cssRef2 = "href=\"" + staticBase + "/" + completeModuleKey2 + "/" + completeModuleKey2 + ".css";
-        final String jsRef1 = "src=\"" + staticBase + "/" + completeModuleKey1 + "/" + completeModuleKey1 + ".js";
-        final String jsRef2 = "src=\"" + staticBase + "/" + completeModuleKey2 + "/" + completeModuleKey2 + ".js";
+        final String cssRef1 = "href=\"" + staticBase + "en/1/" + completeModuleKey1 + "/" + completeModuleKey1 + ".css";
+        final String cssRef2 = "href=\"" + staticBase + "en/1/" + completeModuleKey2 + "/" + completeModuleKey2 + ".css";
+        final String jsRef1 = "src=\"" + staticBase + "en/1/" + completeModuleKey1 + "/" + completeModuleKey1 + ".js";
+        final String jsRef2 = "src=\"" + staticBase + "en/1/" + completeModuleKey2 + "/" + completeModuleKey2 + ".js";
 
         final String requiredResourceResult = webResourceManager.getRequiredResources(UrlMode.ABSOLUTE);
 
