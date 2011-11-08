@@ -460,7 +460,7 @@ public class OsgiPlugin extends AbstractPlugin implements AutowireCapablePlugin,
         {
             try
             {
-                if (getPluginState() == PluginState.ENABLING)
+                if (getPluginState() == PluginState.DISABLING)
                 {
                     logAndClearOustandingDependencies();
                 }
